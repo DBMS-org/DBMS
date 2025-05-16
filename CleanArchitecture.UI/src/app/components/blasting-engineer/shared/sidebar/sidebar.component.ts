@@ -14,6 +14,8 @@ export class SidebarComponent {
 
   menuItems = [
     { path: '/blasting-engineer/dashboard', icon: 'dashboard', label: 'Dashboard' },
-    // Add more menu items as needed
+    { path: '/blasting-engineer/csv-upload', icon: 'upload_file', label: 'CSV Upload' },
+    { path: '/blasting-engineer/drill-visualization', icon: 'view_in_ar', label: '3D Visualization' },
+    { path: '/blasting-engineer/drilling-pattern', icon: 'grid_on', label: 'Drilling Pattern' }
   ];
 }

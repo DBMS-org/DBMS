@@ -9,6 +9,7 @@ import { BlastingEngineerLayoutComponent } from './components/blasting-engineer/
 import { DashboardComponent as BlastingEngineerDashboardComponent } from './components/blasting-engineer/dashboard/dashboard.component';
 import { CsvUploadComponent } from './components/blasting-engineer/csv-upload/csv-upload.component';
 import { DrillVisualizationComponent } from './components/blasting-engineer/drill-visualization/drill-visualization.component';
+import { DrillingPatternCreatorComponent } from './components/blasting-engineer/drilling-pattern-creator/drilling-pattern-creator.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -30,7 +31,8 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: BlastingEngineerDashboardComponent },
       { path: 'csv-upload', component: CsvUploadComponent },
-      { path: 'drill-visualization', component: DrillVisualizationComponent }
+      { path: 'drill-visualization', component: DrillVisualizationComponent },
+      { path: 'drilling-pattern', component: DrillingPatternCreatorComponent }
     ]
   },
   { path: '', redirectTo: '/admin/dashboard', pathMatch: 'full' }

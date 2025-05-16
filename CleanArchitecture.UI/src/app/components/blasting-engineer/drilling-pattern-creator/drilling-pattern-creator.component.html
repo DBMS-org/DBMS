@@ -1,0 +1,44 @@
+<div class="pattern-creator-container">
+  <div class="toolbar">
+    <div class="settings-group">
+      <label>
+        Spacing (m):
+        <input type="number" [(ngModel)]="spacing" min="1" step="0.5">
+      </label>
+      <label>
+        Burden (m):
+        <input type="number" [(ngModel)]="burden" min="1" step="0.5">
+      </label>
+      <label>
+        Depth (m):
+        <input type="number" [(ngModel)]="depth" min="1" step="0.5">
+      </label>
+    </div>
+    <div class="actions-group">
+      <button 
+        class="placement-mode-btn" 
+        [class.active]="isHolePlacementMode"
+        (click)="toggleHolePlacementMode()">
+        <i class="material-icons">{{ isHolePlacementMode ? 'edit_off' : 'edit_location' }}</i>
+        {{ isHolePlacementMode ? 'Exit Hole Placement' : 'Place Holes' }}
+      </button>
+      <button (click)="onDeletePoint()" [disabled]="!selectedPoint">Delete Selected</button>
+      <button (click)="onClearAll()">Clear All</button>
+      <button (click)="onExportPattern()">Export Pattern</button>
+    </div>
+  </div>
+  <div class="canvas-container">
+    <canvas #canvas></canvas>
+  </div>
+  <div class="instructions">
+    <h3>Instructions:</h3>
+    <ul>
+      <li>Click the "Place Holes" button to enter hole placement mode</li>
+      <li>In hole placement mode, click on the canvas to add drill points</li>
+      <li>Click on existing points to select them</li>
+      <li>Use mouse wheel to zoom in/out</li>
+      <li>Hold Alt + Left click to pan the view</li>
+      <li>Middle mouse button to pan the view</li>
+    </ul>
+  </div>
+</div>
