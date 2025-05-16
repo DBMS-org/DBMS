@@ -1,0 +1,41 @@
+<header class="dashboard-header">
+  <h1>Admin Dashboard</h1>
+  <div class="user-info">
+    <span>Welcome, Admin</span>
+    <button class="logout-btn">Logout</button>
+  </div>
+</header>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <h3>Total Users</h3>
+    <p class="stat-number">{{ stats.totalUsers }}</p>
+  </div>
+  <div class="stat-card">
+    <h3>Active Users</h3>
+    <p class="stat-number">{{ stats.activeUsers }}</p>
+  </div>
+  <div class="stat-card">
+    <h3>Total Orders</h3>
+    <p class="stat-number">{{ stats.totalOrders }}</p>
+  </div>
+  <div class="stat-card">
+    <h3>Revenue</h3>
+    <p class="stat-number">${{ stats.revenue }}</p>
+  </div>
+</div>
+
+<section class="recent-activities">
+  <h2>Recent Activities</h2>
+  <div class="activity-list">
+    @for (activity of recentActivities; track activity.id) {
+      <div class="activity-item">
+        <div class="activity-content">
+          <strong>{{ activity.user }}</strong>
+          <span>{{ activity.action }}</span>
+        </div>
+        <span class="activity-time">{{ activity.time }}</span>
+      </div>
+    }
+  </div>
+</section>

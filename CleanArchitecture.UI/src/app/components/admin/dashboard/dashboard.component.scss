@@ -1,0 +1,132 @@
+.dashboard-container {
+  padding: 1rem;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  .subtitle {
+    margin: 0.5rem 0 0;
+    color: #666;
+    font-size: 1rem;
+  }
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e3f2fd;
+    color: #1976d2;
+
+    i {
+      font-size: 24px;
+    }
+  }
+
+  .stat-content {
+    flex: 1;
+
+    h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .stat-value {
+      margin: 0.5rem 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .stat-change {
+      margin: 0;
+      font-size: 0.875rem;
+      font-weight: 500;
+
+      &.positive {
+        color: #2e7d32;
+      }
+
+      &.negative {
+        color: #c62828;
+      }
+    }
+  }
+}
+
+.dashboard-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.chart-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+
+  h3 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  .chart-placeholder {
+    height: 300px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-charts {
+    grid-template-columns: 1fr;
+  }
+}

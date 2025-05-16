@@ -1,0 +1,25 @@
+.dashboard-container {
+  padding: 20px;
+}
+
+.dashboard-content {
+  margin-top: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+
+  h2 {
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  p {
+    color: #666;
+    line-height: 1.5;
+  }
+}

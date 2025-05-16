@@ -1,0 +1,152 @@
+.csv-upload-container {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+}
+
+.upload-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  width: 100%;
+  max-width: 600px;
+
+  h2 {
+    margin-bottom: 24px;
+    color: #333;
+    text-align: center;
+  }
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &.dragover {
+    border-color: #2196f3;
+    background-color: rgba(33, 150, 243, 0.1);
+  }
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: #666;
+}
+
+.or-text {
+  color: #666;
+  margin: 8px 0;
+}
+
+.file-input {
+  display: none;
+}
+
+.browse-button {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #e0e0e0;
+  }
+}
+
+.selected-file {
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  p {
+    margin: 0;
+    color: #333;
+  }
+}
+
+.remove-button {
+  background-color: #ff5252;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #ff1744;
+  }
+}
+
+.error-message {
+  color: #ff5252;
+  margin-bottom: 16px;
+  padding: 8px;
+  background-color: #ffebee;
+  border-radius: 4px;
+}
+
+.progress-container {
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress {
+  height: 100%;
+  background-color: #2196f3;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #666;
+}
+
+.upload-button {
+  width: 100%;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #1976d2;
+  }
+
+  &:disabled {
+    background-color: #bdbdbd;
+    cursor: not-allowed;
+  }
+}

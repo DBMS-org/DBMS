@@ -1,0 +1,85 @@
+<div class="users-container">
+  <div class="users-header">
+    <h1>Users</h1>
+    <button class="add-user-btn" (click)="addUser()">
+      <i class="material-icons">add</i>
+      Add New User
+    </button>
+  </div>
+
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="search-section">
+        <h3>Search</h3>
+        <div class="search-input">
+          <i class="material-icons">search</i>
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            (input)="onSearch()"
+            placeholder="Search by name, email or region..."
+          >
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h3>Filter</h3>
+        <div class="status-filter">
+          <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onSearch()">
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="users-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Oman Phone</th>
+          <th>Region</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of filteredUsers; track user.id) {
+          <tr>
+            <td>{{user.name}}</td>
+            <td>{{user.email}}</td>
+            <td>{{user.omanPhone}}</td>
+            <td>{{user.region}}</td>
+            <td>
+              <span class="status-badge" [class.active]="user.status === 'Active'">
+                {{user.status}}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="action-btn details" (click)="showUserDetails(user)">
+                <i class="material-icons">visibility</i>
+              </button>
+              <button class="action-btn edit" (click)="editUser(user.id)">
+                <i class="material-icons">edit</i>
+              </button>
+              <button class="action-btn delete" (click)="deleteUser(user.id)">
+                <i class="material-icons">delete</i>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (showAddUserModal) {
+  <app-add-user 
+    (close)="onCloseAddUser()" 
+    (save)="onSaveUser($event)"
+  ></app-add-user>
+}

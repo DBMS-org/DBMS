@@ -1,1 +1,1 @@
-Add .gitattributes, .gitignore, and LICENSE.txt.
+Add project files.

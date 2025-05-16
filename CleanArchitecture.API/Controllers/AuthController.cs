@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MediatR;
 using System.Security.Authentication;
-using CleanArchitecture.Application.DTOs;
+using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Application.Commands;
 
 namespace CleanArchitecture.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-   public class AuthController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
         private readonly ILogger<AuthController> _logger;
@@ -25,14 +25,14 @@ namespace CleanArchitecture.API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResultDto>> Login([FromBody] LoginDto loginDto)
+        public async Task<ActionResult<User>> Login([FromBody] User loginUser)
         {
             try
             {
                 var command = new LoginCommand
                 {
-                    Username = loginDto.Username,
-                    Password = loginDto.Password
+                    Username = loginUser.Username,
+                    Password = loginUser.PasswordHash // Note: In a real app, you'd need to handle password hashing properly
                 };
                 
                 var result = await _mediator.Send(command);
@@ -51,13 +51,13 @@ namespace CleanArchitecture.API.Controllers
         }
 
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        public async Task<IActionResult> ForgotPassword([FromBody] User user)
         {
             try
             {
                 var command = new ForgotPasswordCommand
                 {
-                    Email = model.Email
+                    Email = user.Email
                 };
                 
                 await _mediator.Send(command);
@@ -74,20 +74,14 @@ namespace CleanArchitecture.API.Controllers
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        public async Task<IActionResult> ResetPassword([FromBody] User user)
         {
-            if (model.NewPassword != model.ConfirmPassword)
-            {
-                return BadRequest(new { message = "Passwords do not match" });
-            }
-            
             try
             {
                 var command = new ResetPasswordCommand
                 {
-                    Email = model.Email,
-                    Token = model.Token,
-                    NewPassword = model.NewPassword
+                    Email = user.Email,
+                    NewPassword = user.PasswordHash // Note: In a real app, you'd need to handle password hashing properly
                 };
                 
                 var result = await _mediator.Send(command);
@@ -106,7 +100,7 @@ namespace CleanArchitecture.API.Controllers
         
         [Authorize]
         [HttpGet("user-info")]
-        public async Task<ActionResult<UserDto>> GetUserInfo()
+        public async Task<ActionResult<User>> GetUserInfo()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
@@ -116,12 +110,11 @@ namespace CleanArchitecture.API.Controllers
             // Get user info through a query
             // This would be implemented with a MediatR query
             
-            return Ok(new UserDto
+            return Ok(new User
             {
                 Id = int.Parse(userId),
                 Username = User.FindFirst(ClaimTypes.Name)?.Value,
-                Email = User.FindFirst(ClaimTypes.Email)?.Value,
-                Roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList()
+                Email = User.FindFirst(ClaimTypes.Email)?.Value
             });
         }
     }

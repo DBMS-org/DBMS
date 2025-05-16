@@ -2,17 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using CleanArchitecture.Infrastructure.Persistence;
-using CleanArchitecture.Domain.Interfaces.Repositories;
-using CleanArchitecture.Infrastructure.Persistence.Repositories;
-using CleanArchitecture.Application.Interfaces;
 using CleanArchitecture.Infrastructure.Services;
-using CleanArchitecture.Domain.Interfaces.Services;
+using CleanArchitecture.Infrastructure.Persistence.Repositories;
 
-namespace CleanArchitecture.Infrastructure;
+namespace CleanArchitecture.Infrastructure.Persistence;
 
 public static class ServiceRegistration
 {
-    public static void AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(
@@ -20,10 +17,12 @@ public static class ServiceRegistration
                 b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
 
         // Register repositories
-        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<UserRepository>();
 
         // Register services
-        services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<EmailService>();
+        services.AddScoped<TokenService>();
+
+        return services;
     }
 } 

@@ -5,7 +5,7 @@ using Microsoft.OpenApi.Models;
 using CleanArchitecture.API.Middleware;
 using CleanArchitecture.Application.Commands;
 using CleanArchitecture.Application.Validators;
-using CleanArchitecture.Infrastructure;
+using CleanArchitecture.Infrastructure.Persistence;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 
@@ -74,7 +74,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found in configuration"))),
             ClockSkew = TimeSpan.Zero
         };
     });

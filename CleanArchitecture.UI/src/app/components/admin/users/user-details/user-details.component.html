@@ -1,0 +1,82 @@
+<div class="user-details-page">
+  <div class="page-header">
+    <button class="back-btn" (click)="goBack()">
+      <i class="material-icons">arrow_back</i>
+      Back to Users
+    </button>
+    <div class="header-actions">
+      <button class="edit-btn" (click)="editUser()">
+        <i class="material-icons">edit</i>
+        Edit User
+      </button>
+    </div>
+  </div>
+
+  @if (user) {
+    <div class="user-details-content">
+      <div class="user-header">
+        <div class="user-title">
+          <h1>{{user.name}}</h1>
+          <span class="status-badge" [class.active]="user.status === 'Active'">
+            {{user.status}}
+          </span>
+        </div>
+        <p class="user-role">{{user.role}}</p>
+      </div>
+
+      <div class="details-grid">
+        <div class="details-section">
+          <h2>Basic Information</h2>
+          <div class="details-card">
+            <div class="detail-item">
+              <span class="label">Email</span>
+              <span class="value">{{user.email}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Role</span>
+              <span class="value">{{user.role}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Status</span>
+              <span class="value status-badge" [class.active]="user.status === 'Active'">
+                {{user.status}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <h2>Location</h2>
+          <div class="details-card">
+            <div class="detail-item">
+              <span class="label">Area</span>
+              <span class="value">{{user.area}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Region</span>
+              <span class="value">{{user.region}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">User is from this country</span>
+              <span class="value">{{user.country}}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <h2>Contact Information</h2>
+          <div class="details-card">
+            <div class="detail-item">
+              <span class="label">Oman Phone</span>
+              <span class="value">{{user.omanPhone}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Country Phone</span>
+              <span class="value">{{user.countryPhone}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
