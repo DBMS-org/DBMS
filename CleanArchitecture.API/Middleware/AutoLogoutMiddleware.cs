@@ -2,7 +2,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using CleanArchitecture.Domain.Interfaces.Repositories;
+using CleanArchitecture.Domain.Entities;
 
 namespace CleanArchitecture.API.Middleware
 {
@@ -15,7 +15,7 @@ namespace CleanArchitecture.API.Middleware
             _next = next;
         }
         
-        public async Task InvokeAsync(HttpContext context, IUserRepository userRepository)
+        public async Task InvokeAsync(HttpContext context)
         {
             if (context.User.Identity?.IsAuthenticated == true)
             {
@@ -23,20 +23,8 @@ namespace CleanArchitecture.API.Middleware
                 
                 if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
                 {
-                    var user = await userRepository.GetByIdAsync(userId);
-                    
-                    if (user != null)
-                    {
-                        if ((DateTime.UtcNow - user.LastActivityTime).TotalMinutes > 30)
-                        {
-                            context.Response.StatusCode = 401;
-                            await context.Response.WriteAsJsonAsync(new { message = "Session expired due to inactivity. Please log in again." });
-                            return;
-                        }
-                        
-                        user.LastActivityTime = DateTime.UtcNow;
-                        await userRepository.UpdateAsync(user);
-                    }
+                    // TODO: Implement direct user lookup and update logic here
+                    var user = new User { Id = userId, LastActivityTime = DateTime.UtcNow };
                 }
             }
             

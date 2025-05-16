@@ -1,0 +1,29 @@
+<div class="visualization-container">
+  <div class="controls-panel">
+    <div class="control-group">
+      <label for="colorScheme">Color Scheme:</label>
+      <select id="colorScheme" (change)="changeColorScheme($event)">
+        <option value="random">Random</option>
+        <option value="depth">Depth</option>
+        <option value="rockType">Rock Type</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <button (click)="toggleLabels()">
+        {{ showLabels ? 'Hide Labels' : 'Show Labels' }}
+      </button>
+      <button (click)="resetCamera()">Reset Camera</button>
+    </div>
+
+    <div class="keyboard-shortcuts">
+      <h3>Keyboard Shortcuts</h3>
+      <ul>
+        <li><kbd>R</kbd> - Reset Camera</li>
+        <li><kbd>L</kbd> - Toggle Labels</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="renderer-container"></div>
+</div>

@@ -1,0 +1,93 @@
+<div class="edit-user-page">
+  <div class="page-header">
+    <button class="back-btn" (click)="goBack()">
+      <i class="material-icons">arrow_back</i>
+      Back to User Details
+    </button>
+  </div>
+
+  @if (user) {
+    <div class="edit-user-content">
+      <div class="content-header">
+        <h1>Edit User</h1>
+      </div>
+
+      <form (ngSubmit)="onSubmit()" class="edit-user-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" [(ngModel)]="user.name" name="name" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" [(ngModel)]="user.email" name="email" required>
+          </div>
+
+          <div class="form-group">
+            <label for="role">Role</label>
+            <select id="role" [(ngModel)]="user.role" name="role" required>
+              @for (role of roles; track role) {
+                <option [value]="role">{{role}}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="area">Area</label>
+            <select id="area" [(ngModel)]="user.area" name="area" required>
+              <option value="">Select Area</option>
+              @for (area of areas; track area) {
+                <option [value]="area">{{area}}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="region">Region</label>
+            <select id="region" [(ngModel)]="user.region" name="region" required>
+              <option value="">Select Region</option>
+              @for (region of regions; track region) {
+                <option [value]="region">{{region}}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="country">User is from this country</label>
+            <select id="country" [(ngModel)]="user.country" name="country" required>
+              <option value="">Select Country</option>
+              @for (country of countries; track country) {
+                <option [value]="country">{{country}}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="omanPhone">Oman Phone</label>
+            <input type="tel" id="omanPhone" [(ngModel)]="user.omanPhone" name="omanPhone" required>
+          </div>
+
+          <div class="form-group">
+            <label for="countryPhone">Country Phone</label>
+            <input type="tel" id="countryPhone" [(ngModel)]="user.countryPhone" name="countryPhone">
+          </div>
+
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" [(ngModel)]="user.status" name="status" required>
+              @for (status of statuses; track status) {
+                <option [value]="status">{{status}}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" (click)="goBack()">Cancel</button>
+          <button type="submit" class="save-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  }
+</div>
