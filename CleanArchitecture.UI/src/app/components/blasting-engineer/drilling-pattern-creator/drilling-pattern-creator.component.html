@@ -30,8 +30,13 @@
   <div class="canvas-container">
     <canvas #canvas></canvas>
   </div>
-  <div class="instructions">
-    <h3>Instructions:</h3>
+  <div class="instructions-header">
+    <h3>Instructions</h3>
+    <button class="toggle-btn" (click)="toggleInstructions()">
+      <i class="material-icons">{{ showInstructions ? 'expand_less' : 'expand_more' }}</i>
+    </button>
+  </div>
+  <div class="instructions" *ngIf="showInstructions">
     <ul>
       <li>Click the "Place Holes" button to enter hole placement mode</li>
       <li>In hole placement mode, click on the canvas to add drill points</li>

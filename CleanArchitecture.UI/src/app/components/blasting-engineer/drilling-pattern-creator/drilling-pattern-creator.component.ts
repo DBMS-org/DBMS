@@ -32,6 +32,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
   private offsetX = 0;
   private offsetY = 0;
   public isHolePlacementMode = false;
+  public showInstructions = true;
 
   // Pattern settings
   spacing = 3; // meters
@@ -66,9 +67,6 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
     const rulerWidth = 40;
     const rulerHeight = 40;
     
-    // Clear the entire canvas first
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     // Draw ruler backgrounds
     ctx.fillStyle = '#f0f0f0';
     ctx.fillRect(0, 0, rulerWidth, canvas.height); // Vertical ruler
@@ -90,11 +88,10 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Draw vertical ruler measurements
-    const meterInPixels = this.gridSize * this.scale;
-    for (let y = rulerHeight; y < canvas.height; y += meterInPixels) {
-      const worldY = Math.round((y - this.offsetY - rulerHeight) / this.scale);
-      
+    // Draw vertical ruler measurements based on burden
+    const burdenInPixels = this.burden * this.gridSize * this.scale;
+    let burdenValue = 0;
+    for (let y = rulerHeight; y < canvas.height; y += burdenInPixels) {
       // Draw tick
       ctx.beginPath();
       ctx.moveTo(rulerWidth - 5, y);
@@ -102,13 +99,14 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
       ctx.stroke();
       
       // Draw measurement
-      ctx.fillText(`${worldY}m`, rulerWidth / 2, y);
+      ctx.fillText(`${burdenValue}m`, rulerWidth / 2, y);
+      burdenValue += this.burden;
     }
 
-    // Draw horizontal ruler measurements
-    for (let x = rulerWidth; x < canvas.width; x += meterInPixels) {
-      const worldX = Math.round((x - this.offsetX - rulerWidth) / this.scale);
-      
+    // Draw horizontal ruler measurements based on spacing
+    const spacingInPixels = this.spacing * this.gridSize * this.scale;
+    let spacingValue = 0;
+    for (let x = rulerWidth; x < canvas.width; x += spacingInPixels) {
       // Draw tick
       ctx.beginPath();
       ctx.moveTo(x, rulerHeight - 5);
@@ -116,7 +114,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
       ctx.stroke();
       
       // Draw measurement
-      ctx.fillText(`${worldX}m`, x, rulerHeight / 2);
+      ctx.fillText(`${spacingValue}m`, x, rulerHeight / 2);
+      spacingValue += this.spacing;
     }
   }
 
@@ -128,6 +127,9 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
     const rulerWidth = 40;
     const rulerHeight = 40;
     
+    // Clear the entire canvas first
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     // Draw rulers first
     this.drawRulers();
     
@@ -135,19 +137,25 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
     ctx.strokeStyle = '#ddd';
     ctx.lineWidth = 0.5;
 
-    // Draw vertical grid lines
-    for (let x = rulerWidth; x < canvas.width; x += this.gridSize * this.scale) {
+    // Calculate the starting positions considering offset and scale
+    const startX = rulerWidth + (this.offsetX % (this.spacing * this.gridSize * this.scale));
+    const startY = rulerHeight + (this.offsetY % (this.burden * this.gridSize * this.scale));
+
+    // Draw vertical grid lines with dynamic size based on spacing
+    const spacingInPixels = this.spacing * this.gridSize * this.scale;
+    for (let x = startX; x < canvas.width; x += spacingInPixels) {
       ctx.beginPath();
-      ctx.moveTo(x + this.offsetX, rulerHeight);
-      ctx.lineTo(x + this.offsetX, canvas.height);
+      ctx.moveTo(x, rulerHeight);
+      ctx.lineTo(x, canvas.height);
       ctx.stroke();
     }
 
-    // Draw horizontal grid lines
-    for (let y = rulerHeight; y < canvas.height; y += this.gridSize * this.scale) {
+    // Draw horizontal grid lines with dynamic size based on burden
+    const burdenInPixels = this.burden * this.gridSize * this.scale;
+    for (let y = startY; y < canvas.height; y += burdenInPixels) {
       ctx.beginPath();
-      ctx.moveTo(rulerWidth, y + this.offsetY);
-      ctx.lineTo(canvas.width, y + this.offsetY);
+      ctx.moveTo(rulerWidth, y);
+      ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
 
@@ -251,6 +259,12 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
     }
   }
 
+  private isWithinRulerArea(x: number, y: number): boolean {
+    const rulerWidth = 0;
+    const rulerHeight = 0;
+    return x < rulerWidth || y < rulerHeight;
+  }
+
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     const { x, y } = this.getCanvasCoordinates(event);
@@ -261,7 +275,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
       this.dragStartX = event.clientX;
       this.dragStartY = event.clientY;
       const canvas = this.canvasRef.nativeElement;
-      canvas.style.cursor = 'grabbing'; // Change to grabbing cursor while panning
+      canvas.style.cursor = 'grabbing';
     } else if (event.button === 0) {
       // Left click
       const clickedPoint = this.findPointAtPosition(x, y);
@@ -269,8 +283,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
       if (this.isHolePlacementMode) {
         if (clickedPoint) {
           this.selectedPoint = clickedPoint;
-        } else {
-          // Add new point
+        } else if (!this.isWithinRulerArea(x, y)) {
+          // Add new point only if not in ruler area
           const newPoint: DrillPoint = {
             x,
             y,
@@ -291,7 +305,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
           this.dragStartX = x;
           this.dragStartY = y;
           const canvas = this.canvasRef.nativeElement;
-          canvas.style.cursor = 'move'; // Change to move cursor while dragging
+          canvas.style.cursor = 'move';
         } else {
           this.selectedPoint = null;
         }
@@ -374,5 +388,14 @@ export class DrillingPatternCreatorComponent implements AfterViewInit {
     a.download = 'drilling-pattern.json';
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  toggleInstructions() {
+    this.showInstructions = !this.showInstructions;
+    // Add a small delay to allow the DOM to update
+    setTimeout(() => {
+      this.resizeCanvas();
+      this.drawGrid();
+    }, 0);
   }
 }

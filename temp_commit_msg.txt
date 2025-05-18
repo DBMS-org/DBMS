@@ -1,1 +1,1 @@
-Add initial implementation of Clean Architecture with UI components, authentication, and user management features. Includes setup for Angular components, services, and routing, along with basic styling and layout for the admin dashboard.
+Refactor user entity by removing unused role and permission classes. Update routing to include Drilling Pattern Creator component and add corresponding sidebar menu item.
