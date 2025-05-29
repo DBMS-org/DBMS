@@ -1,1 +1,1 @@
-Refactor user entity by removing unused role and permission classes. Update routing to include Drilling Pattern Creator component and add corresponding sidebar menu item.
+Enhance Drilling Pattern Creator component with collapsible instructions and improved styling. Implement toggle functionality for instructions visibility and adjust canvas rendering logic for better user experience.
