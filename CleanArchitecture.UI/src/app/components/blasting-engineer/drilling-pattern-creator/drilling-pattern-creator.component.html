@@ -1,49 +1,125 @@
-<div class="pattern-creator-container">
-  <div class="toolbar">
-    <div class="settings-group">
-      <label>
-        Spacing (m):
-        <input type="number" [(ngModel)]="spacing" min="1" step="0.5">
-      </label>
-      <label>
-        Burden (m):
-        <input type="number" [(ngModel)]="burden" min="1" step="0.5">
-      </label>
-      <label>
-        Depth (m):
-        <input type="number" [(ngModel)]="depth" min="1" step="0.5">
-      </label>
-    </div>
-    <div class="actions-group">
-      <button 
-        class="placement-mode-btn" 
-        [class.active]="isHolePlacementMode"
-        (click)="toggleHolePlacementMode()">
-        <i class="material-icons">{{ isHolePlacementMode ? 'edit_off' : 'edit_location' }}</i>
-        {{ isHolePlacementMode ? 'Exit Hole Placement' : 'Place Holes' }}
+<div class="pattern-creator-container" role="main" aria-label="Drilling Pattern Creator">
+  <div class="toolbar" role="toolbar" aria-label="Pattern Creator Tools">
+    <div class="toolbar-section" role="group" aria-label="Placement Controls">
+      <button mat-button
+              class="toolbar-button"
+              [class.active]="isHolePlacementMode"
+              (click)="toggleHolePlacementMode()"
+              matTooltip="Toggle hole placement mode"
+              [attr.aria-pressed]="isHolePlacementMode"
+              [attr.aria-label]="isHolePlacementMode ? 'Exit hole placement mode' : 'Enter hole placement mode'"
+              (keydown.enter)="toggleHolePlacementMode()"
+              (keydown.space)="toggleHolePlacementMode()">
+        <span class="material-icons" aria-hidden="true">
+          {{ isHolePlacementMode ? 'edit_off' : 'edit' }}
+        </span>
+        {{ isHolePlacementMode ? 'Exit Placement' : 'Place Holes' }}
       </button>
-      <button (click)="onDeletePoint()" [disabled]="!selectedPoint">Delete Selected</button>
-      <button (click)="onClearAll()">Clear All</button>
-      <button (click)="onExportPattern()">Export Pattern</button>
+
+      <button mat-button
+              class="toolbar-button"
+              [class.active]="isPreciseMode"
+              (click)="togglePreciseMode()"
+              matTooltip="Toggle precise grid snapping"
+              [attr.aria-pressed]="isPreciseMode"
+              [attr.aria-label]="isPreciseMode ? 'Exit precise mode' : 'Enter precise mode'"
+              (keydown.enter)="togglePreciseMode()"
+              (keydown.space)="togglePreciseMode()">
+        <span class="material-icons" aria-hidden="true">
+          {{ isPreciseMode ? 'grid_on' : 'grid_off' }}
+        </span>
+        {{ isPreciseMode ? 'Exit Precise Mode' : 'Precise Mode' }}
+      </button>
+    </div>
+
+    <div class="toolbar-section" role="group" aria-label="Point Management">
+      <button mat-button
+              class="toolbar-button"
+              (click)="onDeletePoint()"
+              [disabled]="!selectedPoint"
+              matTooltip="Delete selected point"
+              [attr.aria-label]="selectedPoint ? 'Delete selected point ' + selectedPoint.id : 'Delete point (disabled)'"
+              (keydown.enter)="onDeletePoint()"
+              (keydown.space)="onDeletePoint()">
+        <span class="material-icons" aria-hidden="true">delete</span>
+        Delete Point
+      </button>
+
+      <button mat-button
+              class="toolbar-button"
+              (click)="onClearAll()"
+              matTooltip="Clear all points">
+        <span class="material-icons" aria-hidden="true">clear_all</span>
+        Clear All
+      </button>
+    </div>
+
+    <div class="toolbar-section" role="group" aria-label="Pattern Actions">
+      <button mat-button
+              class="toolbar-button"
+              (click)="onExportPattern()"
+              matTooltip="Export pattern as JSON"
+              aria-label="Export pattern as JSON">
+        <span class="material-icons" aria-hidden="true">download</span>
+        Export
+      </button>
+
+      <button mat-button
+              class="toolbar-button help-button"
+              (mouseenter)="showInstructions = true"
+              (mouseleave)="showInstructions = false"
+              matTooltip="Show help"
+              [attr.aria-expanded]="showInstructions">
+        <span class="material-icons" aria-hidden="true">help_outline</span>
+        Help
+      </button>
     </div>
   </div>
-  <div class="canvas-container">
-    <canvas #canvas></canvas>
+
+  <div class="instructions-panel" *ngIf="showInstructions">
+    <div class="instructions-content">
+      <h3>How to Use</h3>
+      <ul>
+        <li>
+          <span class="material-icons">edit</span>
+          <span>Click "Place Holes" to start placing drill points</span>
+        </li>
+        <li>
+          <span class="material-icons">grid_on</span>
+          <span>Use "Precise Mode" for exact grid alignment</span>
+        </li>
+        <li>
+          <span class="material-icons">pan_tool</span>
+          <span>Middle-click or Alt+Left-click to pan</span>
+        </li>
+        <li>
+          <span class="material-icons">zoom_in</span>
+          <span>Use mouse wheel to zoom</span>
+        </li>
+        <li>
+          <span class="material-icons">keyboard_arrow_up</span>
+          <span>Use arrow keys to move selected point</span>
+        </li>
+      </ul>
+    </div>
   </div>
-  <div class="instructions-header">
-    <h3>Instructions</h3>
-    <button class="toggle-btn" (click)="toggleInstructions()">
-      <i class="material-icons">{{ showInstructions ? 'expand_less' : 'expand_more' }}</i>
-    </button>
+
+  <div class="canvas-container" #container>
+    <div class="cursor-position" *ngIf="cursorPosition">
+      X: {{ cursorPosition.x | number:'1.2-2' }}m, Y: {{ cursorPosition.y | number:'1.2-2' }}m
+    </div>
   </div>
-  <div class="instructions" *ngIf="showInstructions">
-    <ul>
-      <li>Click the "Place Holes" button to enter hole placement mode</li>
-      <li>In hole placement mode, click on the canvas to add drill points</li>
-      <li>Click on existing points to select them</li>
-      <li>Use mouse wheel to zoom in/out</li>
-      <li>Hold Alt + Left click to pan the view</li>
-      <li>Middle mouse button to pan the view</li>
-    </ul>
+
+  <div class="status-bar" role="status" aria-live="polite">
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">place</span>
+      <span *ngIf="cursorPosition">
+        Position: ({{ cursorPosition.x.toFixed(1) }}, {{ cursorPosition.y.toFixed(1) }})
+      </span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">settings</span>
+      <span>Scale: {{ scale.toFixed(2) }}x</span>
+    </div>
   </div>
 </div>

@@ -1,401 +1,329 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef, ChangeDetectionStrategy, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface DrillPoint {
-  x: number;
-  y: number;
-  id: string;
-  depth: number;
-  spacing: number;
-  burden: number;
-}
+import Konva from 'konva';
+import { CanvasService } from './services/canvas.service';
+import { DrillPointService } from './services/drill-point.service';
+import { DrillPoint, PatternSettings, PatternData, DrillingPatternError } from './models/drill-point.model';
+import { CANVAS_CONSTANTS } from './constants/canvas.constants';
 
 @Component({
   selector: 'app-drilling-pattern-creator',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './drilling-pattern-creator.component.html',
-  styleUrls: ['./drilling-pattern-creator.component.scss']
+  styleUrls: ['./drilling-pattern-creator.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DrillingPatternCreatorComponent implements AfterViewInit {
-  @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
-  private ctx!: CanvasRenderingContext2D;
-  private isDrawing = false;
-  private isDragging = false;
-  private dragStartX = 0;
-  private dragStartY = 0;
+export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
+  private stage!: Konva.Stage;
+  private gridLayer!: Konva.Layer;
+  private rulerLayer!: Konva.Layer;
+  private pointsLayer!: Konva.Layer;
+  private gridGroup!: Konva.Group;
+  private rulerGroup!: Konva.Group;
+  private drillPoints: DrillPoint[] = [];
   public selectedPoint: DrillPoint | null = null;
-  public drillPoints: DrillPoint[] = [];
-  private gridSize = 20;
-  private scale = 1;
+  public isHolePlacementMode = false;
+  public isPreciseMode = false;
+  public showInstructions = false;
+  public scale = 1;
   private offsetX = 0;
   private offsetY = 0;
-  public isHolePlacementMode = false;
-  public showInstructions = true;
+  private gridAnimationFrame = 0;
+  private gridAnimationTime = 0;
+  public cursorPosition: { x: number; y: number } | null = null;
+  private lastPointerX = 0;
+  private lastPointerY = 0;
+  private isDragging = false;
+  private draggedPoint: DrillPoint | null = null;
+  private drillPointObjects: Map<string, Konva.Group> = new Map();
+  private resizeTimeout: any;
 
-  // Pattern settings
-  spacing = 3; // meters
-  burden = 2.5; // meters
-  depth = 10; // meters
-  currentId = 1;
+  public readonly ARIA_LABELS = CANVAS_CONSTANTS.ARIA_LABELS;
+  readonly settings: PatternSettings = CANVAS_CONSTANTS.DEFAULT_SETTINGS;
 
-  ngAfterViewInit() {
-    const canvas = this.canvasRef.nativeElement;
-    this.ctx = canvas.getContext('2d')!;
-    this.resizeCanvas();
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private canvasService: CanvasService,
+    private drillPointService: DrillPointService
+  ) {}
+
+  ngAfterViewInit(): void {
+    this.initializeStage();
+    this.setupEventListeners();
+    this.setupZoomEvents();
     this.drawGrid();
-  }
-
-  @HostListener('window:resize')
-  onResize() {
-    this.resizeCanvas();
-    this.drawGrid();
-  }
-
-  private resizeCanvas() {
-    const canvas = this.canvasRef.nativeElement;
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-  }
-
-  private drawRulers() {
-    const canvas = this.canvasRef.nativeElement;
-    const ctx = this.ctx;
-    
-    // Ruler dimensions
-    const rulerWidth = 40;
-    const rulerHeight = 40;
-    
-    // Draw ruler backgrounds
-    ctx.fillStyle = '#f0f0f0';
-    ctx.fillRect(0, 0, rulerWidth, canvas.height); // Vertical ruler
-    ctx.fillRect(0, 0, canvas.width, rulerHeight); // Horizontal ruler
-    
-    // Draw ruler borders
-    ctx.strokeStyle = '#ccc';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(rulerWidth, 0);
-    ctx.lineTo(rulerWidth, canvas.height);
-    ctx.moveTo(0, rulerHeight);
-    ctx.lineTo(canvas.width, rulerHeight);
-    ctx.stroke();
-
-    // Set text style for measurements
-    ctx.fillStyle = '#333';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Draw vertical ruler measurements based on burden
-    const burdenInPixels = this.burden * this.gridSize * this.scale;
-    let burdenValue = 0;
-    for (let y = rulerHeight; y < canvas.height; y += burdenInPixels) {
-      // Draw tick
-      ctx.beginPath();
-      ctx.moveTo(rulerWidth - 5, y);
-      ctx.lineTo(rulerWidth, y);
-      ctx.stroke();
-      
-      // Draw measurement
-      ctx.fillText(`${burdenValue}m`, rulerWidth / 2, y);
-      burdenValue += this.burden;
-    }
-
-    // Draw horizontal ruler measurements based on spacing
-    const spacingInPixels = this.spacing * this.gridSize * this.scale;
-    let spacingValue = 0;
-    for (let x = rulerWidth; x < canvas.width; x += spacingInPixels) {
-      // Draw tick
-      ctx.beginPath();
-      ctx.moveTo(x, rulerHeight - 5);
-      ctx.lineTo(x, rulerHeight);
-      ctx.stroke();
-      
-      // Draw measurement
-      ctx.fillText(`${spacingValue}m`, x, rulerHeight / 2);
-      spacingValue += this.spacing;
-    }
-  }
-
-  private drawGrid() {
-    const canvas = this.canvasRef.nativeElement;
-    const ctx = this.ctx;
-    
-    // Ruler dimensions
-    const rulerWidth = 40;
-    const rulerHeight = 40;
-    
-    // Clear the entire canvas first
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw rulers first
     this.drawRulers();
-    
-    // Draw grid
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 0.5;
-
-    // Calculate the starting positions considering offset and scale
-    const startX = rulerWidth + (this.offsetX % (this.spacing * this.gridSize * this.scale));
-    const startY = rulerHeight + (this.offsetY % (this.burden * this.gridSize * this.scale));
-
-    // Draw vertical grid lines with dynamic size based on spacing
-    const spacingInPixels = this.spacing * this.gridSize * this.scale;
-    for (let x = startX; x < canvas.width; x += spacingInPixels) {
-      ctx.beginPath();
-      ctx.moveTo(x, rulerHeight);
-      ctx.lineTo(x, canvas.height);
-      ctx.stroke();
-    }
-
-    // Draw horizontal grid lines with dynamic size based on burden
-    const burdenInPixels = this.burden * this.gridSize * this.scale;
-    for (let y = startY; y < canvas.height; y += burdenInPixels) {
-      ctx.beginPath();
-      ctx.moveTo(rulerWidth, y);
-      ctx.lineTo(canvas.width, y);
-      ctx.stroke();
-    }
-
     this.drawDrillPoints();
   }
 
-  private drawDrillPoints() {
-    const rulerWidth = 40;
-    const rulerHeight = 40;
+  ngOnDestroy(): void {
+    if (this.stage) {
+      this.stage.destroy();
+    }
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    if (this.gridAnimationFrame) {
+      cancelAnimationFrame(this.gridAnimationFrame);
+    }
+  }
 
-    this.drillPoints.forEach(point => {
-      this.ctx.beginPath();
-      this.ctx.arc(
-        point.x * this.scale + this.offsetX + rulerWidth,
-        point.y * this.scale + this.offsetY + rulerHeight,
-        5,
-        0,
-        Math.PI * 2
-      );
-      
-      this.ctx.fillStyle = point === this.selectedPoint ? '#ff0000' : '#2196f3';
-      this.ctx.fill();
-      
-      this.ctx.strokeStyle = '#ffffff';
-      this.ctx.lineWidth = 2;
-      this.ctx.stroke();
+  private initializeStage(): void {
+    const container = this.containerRef.nativeElement;
+    const width = container.offsetWidth;
+    const height = container.offsetHeight;
 
-      this.ctx.fillStyle = '#000000';
-      this.ctx.font = 'bold 12px Arial';
-      this.ctx.fillText(
-        point.id,
-        point.x * this.scale + this.offsetX + rulerWidth + 8,
-        point.y * this.scale + this.offsetY + rulerHeight + 4
-      );
+    this.stage = new Konva.Stage({
+      container: container,
+      width: width,
+      height: height
+    });
+
+    // Create layers
+    this.gridLayer = new Konva.Layer();
+    this.rulerLayer = new Konva.Layer();
+    this.pointsLayer = new Konva.Layer();
+
+    // Add layers to stage
+    this.stage.add(this.rulerLayer);
+    this.stage.add(this.gridLayer);
+    this.stage.add(this.pointsLayer);
+
+    // Set layer order
+    this.rulerLayer.moveToBottom();
+    this.gridLayer.moveToBottom();
+    this.pointsLayer.moveToTop();
+  }
+
+  private setupEventListeners(): void {
+    this.stage.on('mousemove', (e) => {
+      const pointer = this.stage.getPointerPosition();
+      if (pointer) {
+        this.cursorPosition = this.canvasService.calculateGridCoordinates(
+          pointer,
+          this.scale,
+          this.offsetX,
+          this.offsetY
+        );
+        this.cdr.detectChanges();
+      }
+    });
+
+    this.stage.on('mousedown', (e) => {
+      if (this.isHolePlacementMode) {
+        const pointer = this.stage.getPointerPosition();
+        if (pointer) {
+          const coords = this.canvasService.calculateGridCoordinates(
+            pointer,
+            this.scale,
+            this.offsetX,
+            this.offsetY
+          );
+          this.addDrillPoint(coords.x, coords.y);
+        }
+      }
+    });
+
+    this.stage.on('dragstart', (e) => {
+      const group = e.target as Konva.Group;
+      const point = (group as any).data as DrillPoint;
+      if (point) {
+        this.draggedPoint = point;
+        this.isDragging = true;
+      }
+    });
+
+    this.stage.on('dragmove', (e) => {
+      if (this.isDragging && this.draggedPoint) {
+        const group = e.target as Konva.Group;
+        const pointer = this.stage.getPointerPosition();
+        if (pointer) {
+          const coords = this.canvasService.calculateGridCoordinates(
+            pointer,
+            this.scale,
+            this.offsetX,
+            this.offsetY
+          );
+          this.updateDrillPointPosition(this.draggedPoint, coords.x, coords.y);
+        }
+      }
+    });
+
+    this.stage.on('dragend', () => {
+      this.isDragging = false;
+      this.draggedPoint = null;
+    });
+
+    this.stage.on('click', (e) => {
+      if (!this.isHolePlacementMode) {
+        const group = e.target.getParent() as Konva.Group;
+        const point = (group as any).data as DrillPoint;
+        if (point) {
+          this.selectPoint(point);
+        } else {
+          this.selectPoint(null);
+        }
+      }
     });
   }
 
-  private getCanvasCoordinates(event: MouseEvent): { x: number; y: number } {
-    const canvas = this.canvasRef.nativeElement;
-    const rect = canvas.getBoundingClientRect();
-    const rulerWidth = 40;
-    const rulerHeight = 40;
-    
-    return {
-      x: (event.clientX - rect.left - this.offsetX - rulerWidth) / this.scale,
-      y: (event.clientY - rect.top - this.offsetY - rulerHeight) / this.scale
-    };
-  }
-
-  private findPointAtPosition(x: number, y: number): DrillPoint | null {
-    return this.drillPoints.find(point => {
-      const dx = point.x - x;
-      const dy = point.y - y;
-      return Math.sqrt(dx * dx + dy * dy) < 5 / this.scale;
-    }) || null;
-  }
-
-  private updateCursor(event: MouseEvent) {
-    const canvas = this.canvasRef.nativeElement;
-    const { x, y } = this.getCanvasCoordinates(event);
-    const pointUnderCursor = this.findPointAtPosition(x, y);
-
-    if (this.isHolePlacementMode) {
-      // In hole placement mode
-      if (pointUnderCursor) {
-        canvas.style.cursor = 'pointer'; // Show pointer when hovering over existing hole
-      } else {
-        canvas.style.cursor = 'crosshair'; // Show crosshair for placing new holes
-      }
-    } else {
-      // Not in hole placement mode
-      if (pointUnderCursor) {
-        canvas.style.cursor = 'move'; // Show move cursor when hovering over existing hole
-      } else if (event.altKey) {
-        canvas.style.cursor = 'grab'; // Show grab cursor when holding alt
-      } else {
-        canvas.style.cursor = 'default'; // Default cursor otherwise
-      }
-    }
-  }
-
-  @HostListener('mousemove', ['$event'])
-  onMouseMove(event: MouseEvent) {
-    this.updateCursor(event); // Update cursor on mouse move
-
-    if (this.isDrawing) {
-      // Panning
-      const dx = event.clientX - this.dragStartX;
-      const dy = event.clientY - this.dragStartY;
-      this.offsetX += dx;
-      this.offsetY += dy;
-      this.dragStartX = event.clientX;
-      this.dragStartY = event.clientY;
-      this.drawGrid();
-    } else if (this.isDragging && this.selectedPoint) {
-      // Dragging a point
-      const { x, y } = this.getCanvasCoordinates(event);
-      this.selectedPoint.x = x;
-      this.selectedPoint.y = y;
-      this.drawGrid();
-    }
-  }
-
-  private isWithinRulerArea(x: number, y: number): boolean {
-    const rulerWidth = 0;
-    const rulerHeight = 0;
-    return x < rulerWidth || y < rulerHeight;
-  }
-
-  @HostListener('mousedown', ['$event'])
-  onMouseDown(event: MouseEvent) {
-    const { x, y } = this.getCanvasCoordinates(event);
-    
-    if (event.button === 1 || (event.button === 0 && event.altKey)) {
-      // Pan mode
-      this.isDrawing = true;
-      this.dragStartX = event.clientX;
-      this.dragStartY = event.clientY;
-      const canvas = this.canvasRef.nativeElement;
-      canvas.style.cursor = 'grabbing';
-    } else if (event.button === 0) {
-      // Left click
-      const clickedPoint = this.findPointAtPosition(x, y);
+  private setupZoomEvents(): void {
+    // Listen for wheel events on the stage container
+    const container = this.stage.container();
+    container.addEventListener('wheel', (e: WheelEvent) => {
+      e.preventDefault();
       
-      if (this.isHolePlacementMode) {
-        if (clickedPoint) {
-          this.selectedPoint = clickedPoint;
-        } else if (!this.isWithinRulerArea(x, y)) {
-          // Add new point only if not in ruler area
-          const newPoint: DrillPoint = {
-            x,
-            y,
-            id: `DH${this.currentId++}`,
-            depth: this.depth,
-            spacing: this.spacing,
-            burden: this.burden
-          };
-          this.drillPoints.push(newPoint);
-          this.selectedPoint = newPoint;
-        }
-        this.drawGrid();
-      } else {
-        // Not in placement mode, just select or start dragging
-        if (clickedPoint) {
-          this.selectedPoint = clickedPoint;
-          this.isDragging = true;
-          this.dragStartX = x;
-          this.dragStartY = y;
-          const canvas = this.canvasRef.nativeElement;
-          canvas.style.cursor = 'move';
-        } else {
-          this.selectedPoint = null;
-        }
-        this.drawGrid();
-      }
-    }
-  }
-
-  @HostListener('mouseup')
-  onMouseUp() {
-    this.isDrawing = false;
-    this.isDragging = false;
-    const canvas = this.canvasRef.nativeElement;
-    this.updateCursor({ clientX: 0, clientY: 0 } as MouseEvent); // Reset cursor
-  }
-
-  @HostListener('keydown', ['$event'])
-  onKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Alt') {
-      const canvas = this.canvasRef.nativeElement;
-      canvas.style.cursor = 'grab';
-    }
-  }
-
-  @HostListener('keyup', ['$event'])
-  onKeyUp(event: KeyboardEvent) {
-    if (event.key === 'Alt') {
-      const canvas = this.canvasRef.nativeElement;
-      this.updateCursor({ clientX: 0, clientY: 0 } as MouseEvent);
-    }
-  }
-
-  @HostListener('wheel', ['$event'])
-  onMouseWheel(event: WheelEvent) {
-    event.preventDefault();
-    const delta = event.deltaY > 0 ? 0.9 : 1.1;
-    this.scale *= delta;
-    this.drawGrid();
-  }
-
-  toggleHolePlacementMode() {
-    this.isHolePlacementMode = !this.isHolePlacementMode;
-    const canvas = this.canvasRef.nativeElement;
-    canvas.style.cursor = this.isHolePlacementMode ? 'crosshair' : 'default';
-    this.selectedPoint = null;
-    this.drawGrid();
-  }
-
-  onDeletePoint() {
-    if (this.selectedPoint) {
-      const index = this.drillPoints.indexOf(this.selectedPoint);
-      if (index > -1) {
-        this.drillPoints.splice(index, 1);
-        this.selectedPoint = null;
-        this.drawGrid();
-      }
-    }
-  }
-
-  onClearAll() {
-    this.drillPoints = [];
-    this.selectedPoint = null;
-    this.drawGrid();
-  }
-
-  onExportPattern() {
-    const pattern = {
-      drillPoints: this.drillPoints,
-      settings: {
-        spacing: this.spacing,
-        burden: this.burden,
-        depth: this.depth
-      }
-    };
-    
-    const blob = new Blob([JSON.stringify(pattern, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'drilling-pattern.json';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  toggleInstructions() {
-    this.showInstructions = !this.showInstructions;
-    // Add a small delay to allow the DOM to update
-    setTimeout(() => {
-      this.resizeCanvas();
+      // Simple zoom factor calculation
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      this.scale *= delta;
+      
+      // Redraw everything
       this.drawGrid();
-    }, 0);
+      this.drawRulers();
+      this.drawDrillPoints();
+    }, { passive: false });
+  }
+
+  private drawGrid(): void {
+    if (this.gridGroup) {
+      this.gridGroup.destroy();
+    }
+
+    const cacheKey = `${this.scale}-${this.offsetX}-${this.offsetY}`;
+    if (!this.canvasService.handleGridCache(cacheKey, this.gridGroup, this.gridLayer)) {
+      this.gridGroup = this.canvasService.drawGrid(
+        this.gridLayer,
+        this.settings,
+        this.scale,
+        this.offsetX,
+        this.offsetY,
+        this.stage.width(),
+        this.stage.height()
+      );
+      this.gridLayer.add(this.gridGroup);
+      this.canvasService.updateGridCache(cacheKey, this.gridGroup);
+    }
+    this.gridLayer.batchDraw();
+  }
+
+  private drawRulers(): void {
+    if (this.rulerGroup) {
+      this.rulerGroup.destroy();
+    }
+
+    this.rulerGroup = this.canvasService.drawRulers(
+      this.rulerLayer,
+      this.settings,
+      this.scale,
+      this.stage.width(),
+      this.stage.height()
+    );
+    this.rulerLayer.add(this.rulerGroup);
+    this.rulerLayer.batchDraw();
+  }
+
+  private drawDrillPoints(): void {
+    this.drillPointObjects.forEach(group => {
+      group.destroy();
+    });
+    this.drillPointObjects.clear();
+
+    this.drillPoints.forEach(point => {
+      const group = this.canvasService.createDrillPointObject(
+        point,
+        this.scale,
+        this.offsetX,
+        this.offsetY,
+        this.isHolePlacementMode,
+        point === this.selectedPoint
+      );
+      this.drillPointObjects.set(point.id, group);
+      this.pointsLayer.add(group);
+    });
+    this.pointsLayer.batchDraw();
+  }
+
+  private addDrillPoint(x: number, y: number): void {
+    if (!this.drillPointService.validateCoordinates(x, y)) {
+      return;
+    }
+
+    if (!this.drillPointService.validateDrillPointCount(
+      this.drillPoints.length,
+      CANVAS_CONSTANTS.MAX_DRILL_POINTS
+    )) {
+      return;
+    }
+
+    const point = this.drillPointService.createDrillPoint(x, y, this.settings);
+    this.drillPoints.push(point);
+    this.drawDrillPoints();
+  }
+
+  private updateDrillPointPosition(point: DrillPoint, x: number, y: number): void {
+    if (!this.drillPointService.validateCoordinates(x, y)) {
+      return;
+    }
+
+    point.x = x;
+    point.y = y;
+    this.drawDrillPoints();
+  }
+
+  private selectPoint(point: DrillPoint | null): void {
+    this.selectedPoint = this.drillPointService.selectPoint(point, this.drillPoints);
+    this.drawDrillPoints();
+  }
+
+  toggleHolePlacementMode(): void {
+    this.toggleMode('holePlacement');
+  }
+
+  togglePreciseMode(): void {
+    this.toggleMode('precise');
+  }
+
+  private toggleMode(mode: 'holePlacement' | 'precise'): void {
+    const modeProperty = mode === 'holePlacement' ? 'isHolePlacementMode' : 'isPreciseMode';
+    this[modeProperty] = !this[modeProperty];
+    this.canvasService.setCanvasCursor(this.stage, this[modeProperty]);
+    if (mode === 'holePlacement') {
+      this.canvasService.updatePointSelectability(this.drillPointObjects, this.isHolePlacementMode);
+    }
+    this.drawDrillPoints();
+  }
+
+  onClearAll(): void {
+    this.drillPoints = this.drillPointService.clearPoints();
+    this.selectPoint(null);
+  }
+
+  onExportPattern(): void {
+    this.drillPointService.exportPattern(this.drillPoints, this.settings);
+  }
+
+  onDeletePoint(): void {
+    if (this.selectedPoint) {
+      this.drillPoints = this.drillPointService.removePoint(this.selectedPoint, this.drillPoints);
+      this.selectPoint(null);
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    this.resizeTimeout = setTimeout(() => {
+      const container = this.containerRef.nativeElement;
+      this.stage.width(container.offsetWidth);
+      this.stage.height(container.offsetHeight);
+      this.drawGrid();
+      this.drawRulers();
+      this.drawDrillPoints();
+    }, 250);
   }
 }
