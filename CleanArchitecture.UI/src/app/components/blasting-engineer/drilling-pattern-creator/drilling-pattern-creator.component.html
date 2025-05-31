@@ -19,6 +19,7 @@
       <button mat-button
               class="toolbar-button"
               [class.active]="isPreciseMode"
+              [class.precise-mode-active]="isPreciseMode"
               (click)="togglePreciseMode()"
               matTooltip="Toggle precise grid snapping"
               [attr.aria-pressed]="isPreciseMode"
@@ -30,6 +31,59 @@
         </span>
         {{ isPreciseMode ? 'Exit Precise Mode' : 'Precise Mode' }}
       </button>
+    </div>
+
+    <div class="toolbar-section" role="group" aria-label="Pattern Settings">
+      <div class="input-group">
+        <label for="spacing-input" class="input-label">
+          <span class="material-icons" aria-hidden="true">straighten</span>
+          Spacing (m)
+        </label>
+        <input 
+          id="spacing-input"
+          type="number" 
+          class="pattern-input"
+          [(ngModel)]="settings.spacing"
+          (ngModelChange)="onSpacingChange($event)"
+          min="0.5" 
+          max="10" 
+          step="0.1"
+          [attr.aria-label]="'Hole spacing in meters, current value: ' + settings.spacing">
+      </div>
+      
+      <div class="input-group">
+        <label for="burden-input" class="input-label">
+          <span class="material-icons" aria-hidden="true">height</span>
+          Burden (m)
+        </label>
+        <input 
+          id="burden-input"
+          type="number" 
+          class="pattern-input"
+          [(ngModel)]="settings.burden"
+          (ngModelChange)="onBurdenChange($event)"
+          min="0.5" 
+          max="10" 
+          step="0.1"
+          [attr.aria-label]="'Hole burden in meters, current value: ' + settings.burden">
+      </div>
+      
+      <div class="input-group">
+        <label for="depth-input" class="input-label">
+          <span class="material-icons" aria-hidden="true">vertical_align_bottom</span>
+          Depth (m)
+        </label>
+        <input 
+          id="depth-input"
+          type="number" 
+          class="pattern-input"
+          [(ngModel)]="settings.depth"
+          (ngModelChange)="onDepthChange($event)"
+          min="1" 
+          max="50" 
+          step="0.5"
+          [attr.aria-label]="'Hole depth in meters, current value: ' + settings.depth">
+      </div>
     </div>
 
     <div class="toolbar-section" role="group" aria-label="Point Management">
@@ -86,11 +140,23 @@
         </li>
         <li>
           <span class="material-icons">grid_on</span>
-          <span>Use "Precise Mode" for exact grid alignment</span>
+          <span>Use "Precise Mode" to snap holes exactly to grid intersections</span>
+        </li>
+        <li>
+          <span class="material-icons">my_location</span>
+          <span>Orange dots appear at grid intersections in Precise Mode</span>
+        </li>
+        <li>
+          <span class="material-icons">straighten</span>
+          <span>Adjust Spacing and Burden values to change grid pattern</span>
+        </li>
+        <li>
+          <span class="material-icons">vertical_align_bottom</span>
+          <span>Set Depth value for all drill holes</span>
         </li>
         <li>
           <span class="material-icons">pan_tool</span>
-          <span>Middle-click or Alt+Left-click to pan</span>
+          <span>Right-click and drag to pan the grid and rulers (limited to origin boundary)</span>
         </li>
         <li>
           <span class="material-icons">zoom_in</span>
@@ -100,26 +166,62 @@
           <span class="material-icons">keyboard_arrow_up</span>
           <span>Use arrow keys to move selected point</span>
         </li>
+        <li>
+          <span class="material-icons">drag_handle</span>
+          <span>Drag points to reposition (snaps to grid in Precise Mode)</span>
+        </li>
       </ul>
     </div>
   </div>
 
-  <div class="canvas-container" #container>
-    <div class="cursor-position" *ngIf="cursorPosition">
-      X: {{ cursorPosition.x | number:'1.2-2' }}m, Y: {{ cursorPosition.y | number:'1.2-2' }}m
+  <div class="canvas-container" 
+       #container
+       [class.precise-mode]="isPreciseMode"
+       [class.hole-placement-mode]="isHolePlacementMode"
+       [class.hole-placement-active]="isPreciseMode && isHolePlacementMode">
+    
+    <!-- Duplicate placement warning -->
+    <div class="duplicate-warning" *ngIf="duplicateAttemptMessage">
+      <span class="material-icons">warning</span>
+      {{ duplicateAttemptMessage }}
+    </div>
+    
+    <div class="cursor-position" 
+         *ngIf="cursorPosition"
+         [class.precise-mode]="isPreciseMode">
+      <span *ngIf="isPreciseMode">Grid Position: </span>
+      <span *ngIf="!isPreciseMode">Position: </span>
+      X: {{ formatValue(cursorPosition.x) }}m, Y: {{ formatValue(cursorPosition.y) }}m
     </div>
   </div>
 
-  <div class="status-bar" role="status" aria-live="polite">
+  <div class="status-bar" 
+       role="status" 
+       aria-live="polite"
+       [class.precise-mode]="isPreciseMode">
     <div class="status-item">
       <span class="material-icons" aria-hidden="true">place</span>
       <span *ngIf="cursorPosition">
-        Position: ({{ cursorPosition.x.toFixed(1) }}, {{ cursorPosition.y.toFixed(1) }})
+        <span *ngIf="isPreciseMode">Grid: </span>
+        <span *ngIf="!isPreciseMode">Position: </span>
+        ({{ formatValue(cursorPosition.x) }}, {{ formatValue(cursorPosition.y) }})
       </span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">straighten</span>
+      <span>Spacing: {{ formatValue(settings.spacing) }}m</span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">height</span>
+      <span>Burden: {{ formatValue(settings.burden) }}m</span>
     </div>
     <div class="status-item">
       <span class="material-icons" aria-hidden="true">settings</span>
       <span>Scale: {{ scale.toFixed(2) }}x</span>
+      <span *ngIf="isPreciseMode" style="margin-left: 1rem;">
+        <span class="material-icons" aria-hidden="true" style="font-size: 1rem; vertical-align: middle;">grid_on</span>
+        Precise Mode Active
+      </span>
     </div>
   </div>
 </div>
