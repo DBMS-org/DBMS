@@ -1,1 +1,1 @@
-Enhance Drilling Pattern Creator component with collapsible instructions and improved styling. Implement toggle functionality for instructions visibility and adjust canvas rendering logic for better user experience.
+Update dependencies and enhance Drilling Pattern Creator component with improved accessibility features, including ARIA roles and labels. Refactor canvas rendering logic to utilize Konva for better performance and user interaction, and implement new toolbar functionalities for managing drill points.

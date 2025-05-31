@@ -25,6 +25,19 @@ export class DrillPointService {
     return true;
   }
 
+  validateUniqueCoordinates(x: number, y: number, existingPoints: DrillPoint[]): boolean {
+    // Check if a drill point already exists at these coordinates
+    const duplicate = existingPoints.find(point => 
+      Math.abs(point.x - x) < 0.01 && Math.abs(point.y - y) < 0.01
+    );
+    
+    if (duplicate) {
+      console.warn(`A drill point already exists at coordinates (${x.toFixed(2)}, ${y.toFixed(2)})`);
+      return false;
+    }
+    return true;
+  }
+
   createDrillPoint(x: number, y: number, settings: PatternSettings): DrillPoint {
     return {
       x: Number(x.toFixed(2)),
@@ -48,6 +61,7 @@ export class DrillPointService {
   }
 
   clearPoints(): DrillPoint[] {
+    this.currentId = 1;
     return [];
   }
 
