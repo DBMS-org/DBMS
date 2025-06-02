@@ -7,14 +7,18 @@ import { CommonModule } from '@angular/common';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
 
 export interface DrillHole {
+  serialNumber: number;
   id: string;
   name?: string;
   easting: number;
   northing: number;
   elevation: number;
+  length: number;
   azimuth: number;
   dip: number;
   depth: number;
+  actualDepth: number;
+  stemming: number;
   rockType?: string;
   mineralContent?: number;
   createdAt?: string;
@@ -346,12 +350,22 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
 
     console.log('Data bounds:', { minX, maxX, minY, maxY, minZ, maxZ });
 
-    // Center the scene (reference approach)
+    // Center the scene
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
     const centerZ = (minZ + maxZ) / 2;
     
+    // Calculate the data spread for proper scaling
+    const rangeX = maxX - minX;
+    const rangeY = maxY - minY;
+    const rangeZ = maxZ - minZ;
+    const maxRange = Math.max(rangeX, rangeY, rangeZ);
+    
+    // Scale factor to normalize coordinates to a reasonable range (0-100 units)
+    const scaleFactor = maxRange > 0 ? 100 / maxRange : 1;
+    
     console.log('Scene center:', { centerX, centerY, centerZ });
+    console.log('Coordinate ranges:', { rangeX, rangeY, rangeZ, maxRange, scaleFactor });
     
     this.centerPoint.set(0, 0, 0); // Center of the scene
 
@@ -368,22 +382,18 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       
       console.log(`Creating drill hole ${index}:`, hole);
       
-      // Create drill hole with reference approach
-      const drillHole = this.createDrillHoleObject(hole, centerX, centerY, centerZ, index);
+      // Create drill hole with scaling
+      const drillHole = this.createDrillHoleObject(hole, centerX, centerY, centerZ, scaleFactor, index);
       drillGroup.add(drillHole);
       this.drillObjects.push(drillHole);
     });
 
     console.log(`Created ${this.drillObjects.length} drill hole objects`);
 
-    // Position camera to view all holes (reference approach)
-    const maxDimension = Math.max(
-      maxX - minX,
-      maxY - minY,
-      maxZ - minZ
-    );
-    const distance = maxDimension * 1.5;
-    console.log('Camera positioning:', { maxDimension, distance });
+    // Position camera to view all holes (use normalized coordinates)
+    const normalizedRange = 100; // Since we normalized to 100 units
+    const distance = normalizedRange * 2; // Position camera appropriately
+    console.log('Camera positioning:', { normalizedRange, distance });
     
     this.camera.position.set(distance, distance, distance);
     this.camera.lookAt(this.centerPoint);
@@ -396,22 +406,24 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     centerX: number,
     centerY: number,
     centerZ: number,
+    scaleFactor: number,
     index: number
   ): THREE.Object3D {
     // Create a group for this drill hole and its components
     const drillGroup = new THREE.Group();
     
-    // Use reference dimensions - simple and effective
-    const radius = 0.2; // Reference drill hole radius
-    const depth = Math.max(hole.depth * 0.1, 1); // Scale depth but keep reasonable
+    // Use scaled dimensions - adjust radius and depth based on scale
+    const radius = Math.max(0.5, 2 * scaleFactor); // Scaled radius but minimum 0.5
+    const depth = Math.max(hole.depth * scaleFactor * 0.1, 2); // Scale depth proportionally
     
     console.log(`Drill hole ${hole.id} sizing:`, {
       originalDepth: hole.depth,
       scaledDepth: depth,
-      radius: radius
+      radius: radius,
+      scaleFactor: scaleFactor
     });
     
-    // Create cylinder for the drill hole - reference geometry
+    // Create cylinder for the drill hole - scaled geometry
     const geometry = new THREE.CylinderGeometry(radius, radius, depth, 16);
     // Shift origin to bottom of cylinder
     geometry.translate(0, depth / 2, 0);
@@ -428,9 +440,11 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     cylinder.castShadow = true;
     cylinder.receiveShadow = true;
     
-    // Create a collar (top of drill hole) - reference dimensions
-    const collarGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.5, 16);
-    collarGeometry.translate(0, 0.25, 0);
+    // Create a collar (top of drill hole) - scaled dimensions
+    const collarRadius = radius * 2;
+    const collarHeight = Math.max(1, 2 * scaleFactor);
+    const collarGeometry = new THREE.CylinderGeometry(collarRadius, collarRadius, collarHeight, 16);
+    collarGeometry.translate(0, collarHeight / 2, 0);
     const collarMaterial = new THREE.MeshStandardMaterial({ 
       color: 0xdddddd,
       metalness: 0.5,
@@ -443,10 +457,10 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     drillGroup.add(cylinder);
     drillGroup.add(collar);
     
-    // Position the group (reference approach - direct coordinate difference)
-    const scaledX = (hole.easting - centerX);
-    const scaledY = (hole.elevation - centerZ);
-    const scaledZ = (hole.northing - centerY);
+    // Position the group (scaled coordinate approach)
+    const scaledX = (hole.easting - centerX) * scaleFactor;
+    const scaledY = (hole.elevation - centerZ) * scaleFactor;
+    const scaledZ = (hole.northing - centerY) * scaleFactor;
     
     console.log(`Positioning drill hole ${hole.id}:`, {
       original: { x: hole.easting, y: hole.elevation, z: hole.northing },
@@ -464,9 +478,11 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     // Then rotate around X axis for dip
     drillGroup.rotateX(dipRad);
 
-    // Add hole ID label - reference positioning
+    // Add hole ID label - scaled positioning
     const label = this.createHoleLabel(hole);
-    label.position.set(0, 1, 0); // Simple 1 unit above
+    const labelHeight = Math.max(5, 10 * scaleFactor); // Scale label height
+    label.position.set(0, labelHeight, 0);
+    label.scale.set(4 * scaleFactor, 1 * scaleFactor, 1); // Scale label size
     drillGroup.add(label);
     this.labelObjects.push(label);
 

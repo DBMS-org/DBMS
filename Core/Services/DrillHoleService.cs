@@ -109,7 +109,7 @@ namespace Core.Services
                     dataStarted = true;
                     
                     // Validate that we have the required columns for blast data
-                    var requiredHeaders = new[] { "sr no.", "id", "east", "north", "elev", "length", "azi", "dip" };
+                    var requiredHeaders = new[] { "sr no.", "id", "east", "north", "elev", "length", "azi", "dip", "actual dep", "stemming" };
                     var missingHeaders = requiredHeaders.Where(h => !headers.Contains(h)).ToList();
                     
                     if (missingHeaders.Any())
@@ -164,6 +164,9 @@ namespace Core.Services
 
                 switch (header)
                 {
+                    case "sr no.":
+                        drillHole.SerialNumber = ParseInt(value, "Serial Number", lineNumber);
+                        break;
                     case "id":
                         drillHole.Id = string.IsNullOrWhiteSpace(value) ? Guid.NewGuid().ToString() : value;
                         drillHole.Name = drillHole.Id; // Use ID as name for blast holes
@@ -178,13 +181,30 @@ namespace Core.Services
                         drillHole.Elevation = ParseDouble(value, "Elevation", lineNumber);
                         break;
                     case "length":
-                        drillHole.Depth = ParseDouble(value, "Depth/Length", lineNumber);
+                        drillHole.Length = ParseDouble(value, "Length", lineNumber);
+                        drillHole.Depth = drillHole.Length; // Set Depth same as Length for compatibility
                         break;
                     case "azi":
                         drillHole.Azimuth = ParseDouble(value, "Azimuth", lineNumber);
                         break;
                     case "dip":
                         drillHole.Dip = ParseDouble(value, "Dip", lineNumber);
+                        break;
+                    case "actual dep":
+                        drillHole.ActualDepth = ParseDouble(value, "Actual Depth", lineNumber);
+                        break;
+                    case "stemming":
+                        drillHole.Stemming = ParseDouble(value, "Stemming", lineNumber);
+                        break;
+                    // Explicitly ignore explosive-related fields
+                    case "total charg":
+                    case "emulsion":
+                    case "anfo":
+                    case "total explosive mass":
+                        // Ignore these fields as requested
+                        break;
+                    default:
+                        // Ignore any other unknown fields
                         break;
                 }
             }
@@ -251,6 +271,17 @@ namespace Core.Services
             return result;
         }
 
+        private static int ParseInt(string value, string fieldName, int lineNumber)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return 0; // Default to 0 for empty values in blast data
+
+            if (!int.TryParse(value, out int result))
+                throw new InvalidOperationException($"Line {lineNumber}: Invalid {fieldName} value '{value}'");
+
+            return result;
+        }
+
         private static void ValidateDrillHole(DrillHole drillHole)
         {
             if (string.IsNullOrWhiteSpace(drillHole.Id))
@@ -261,6 +292,15 @@ namespace Core.Services
 
             if (drillHole.Depth < 0)
                 throw new ArgumentException("DrillHole Depth cannot be negative");
+
+            if (drillHole.Length < 0)
+                throw new ArgumentException("DrillHole Length cannot be negative");
+
+            if (drillHole.ActualDepth < 0)
+                throw new ArgumentException("DrillHole Actual Depth cannot be negative");
+
+            if (drillHole.Stemming < 0)
+                throw new ArgumentException("DrillHole Stemming cannot be negative");
 
             // More lenient validation for blast hole data
             if (drillHole.Azimuth < 0 || drillHole.Azimuth > 360)
