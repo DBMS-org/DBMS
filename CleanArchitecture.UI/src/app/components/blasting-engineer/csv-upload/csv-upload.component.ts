@@ -6,14 +6,18 @@ import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 
 interface DrillHole {
+  serialNumber: number;
   id: string;
   name?: string;
   easting: number;
   northing: number;
   elevation: number;
+  length: number;
   depth: number;
   azimuth: number;
   dip: number;
+  actualDepth: number;
+  stemming: number;
   createdAt?: string;
   updatedAt?: string;
 }

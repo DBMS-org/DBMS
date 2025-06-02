@@ -3,19 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AddUserComponent } from './add-user/add-user.component';
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  area: string;
-  region: string;
-  country: string;
-  omanPhone: string;
-  countryPhone: string;
-  status: string;
-}
+import { UserService } from '../../../core/services/user.service';
+import { User, CreateUserRequest } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-users',
@@ -30,11 +19,41 @@ export class UsersComponent implements OnInit {
   searchQuery: string = '';
   statusFilter: string = '';
   showAddUserModal = false;
+  loading = false;
+  error: string | null = null;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private userService: UserService
+  ) {}
 
   ngOnInit() {
-    // TODO: Replace with actual API call
+    this.loadUsers();
+  }
+
+  loadUsers() {
+    this.loading = true;
+    this.error = null;
+    
+    this.userService.getUsers().subscribe({
+      next: (users) => {
+        this.users = users;
+        this.filteredUsers = [...this.users];
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = error.message;
+        this.loading = false;
+        console.error('Error loading users:', error);
+        
+        // Fallback to mock data if API fails
+        this.loadMockData();
+      }
+    });
+  }
+
+  private loadMockData() {
+    // Keep mock data as fallback
     this.users = [
       {
         id: 1,
@@ -46,7 +65,9 @@ export class UsersComponent implements OnInit {
         country: 'Oman',
         omanPhone: '+968 9876 5432',
         countryPhone: '+1 234 567 8900',
-        status: 'Active'
+        status: 'Active',
+        createdAt: new Date(),
+        updatedAt: new Date()
       },
       {
         id: 2,
@@ -58,7 +79,9 @@ export class UsersComponent implements OnInit {
         country: 'UAE',
         omanPhone: '+968 1234 5678',
         countryPhone: '+971 50 123 4567',
-        status: 'Active'
+        status: 'Active',
+        createdAt: new Date(),
+        updatedAt: new Date()
       },
       {
         id: 3,
@@ -70,7 +93,9 @@ export class UsersComponent implements OnInit {
         country: 'Oman',
         omanPhone: '+968 5555 6666',
         countryPhone: '+968 7777 8888',
-        status: 'Inactive'
+        status: 'Inactive',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ];
     this.filteredUsers = [...this.users];
@@ -105,11 +130,30 @@ export class UsersComponent implements OnInit {
     this.showAddUserModal = false;
   }
 
-  onSaveUser(user: User) {
-    // TODO: Replace with actual API call
-    this.users.push(user);
-    this.filteredUsers = [...this.users];
-    this.showAddUserModal = false;
+  onSaveUser(userData: CreateUserRequest) {
+    this.userService.createUser(userData).subscribe({
+      next: (newUser) => {
+        this.users.push(newUser);
+        this.filteredUsers = [...this.users];
+        this.showAddUserModal = false;
+        console.log('User created successfully:', newUser);
+      },
+      error: (error) => {
+        this.error = error.message;
+        console.error('Error creating user:', error);
+        // Still close modal and add to local list as fallback
+        const fallbackUser: User = {
+          ...userData,
+          id: Date.now(), // temporary ID
+          status: 'Active',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        this.users.push(fallbackUser);
+        this.filteredUsers = [...this.users];
+        this.showAddUserModal = false;
+      }
+    });
   }
 
   showUserDetails(user: User) {
@@ -121,7 +165,30 @@ export class UsersComponent implements OnInit {
   }
 
   deleteUser(userId: number) {
-    // TODO: Implement delete functionality
-    console.log('Delete user:', userId);
+    if (confirm('Are you sure you want to delete this user?')) {
+      this.userService.deleteUser(userId).subscribe({
+        next: () => {
+          this.users = this.users.filter(user => user.id !== userId);
+          this.filteredUsers = this.filteredUsers.filter(user => user.id !== userId);
+          console.log('User deleted successfully');
+        },
+        error: (error) => {
+          this.error = error.message;
+          console.error('Error deleting user:', error);
+        }
+      });
+    }
+  }
+
+  // Test database connection
+  testConnection() {
+    this.userService.testConnection().subscribe({
+      next: (result) => {
+        alert(`Connection successful! Database: ${result.database}, Users: ${result.userCount}`);
+      },
+      error: (error) => {
+        alert(`Connection failed: ${error.message}`);
+      }
+    });
   }
 }
