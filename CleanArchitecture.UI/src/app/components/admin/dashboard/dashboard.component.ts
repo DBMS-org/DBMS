@@ -12,7 +12,7 @@ import { DashboardHomeComponent } from './dashboard-home/dashboard-home.componen
     DashboardHomeComponent
   ],
   template: `
-    <app-dashboard-home></app-dashboard-home>
+      <app-dashboard-home></app-dashboard-home>
   `,
   styles: []
 })

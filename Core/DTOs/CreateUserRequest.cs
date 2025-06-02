@@ -13,6 +13,10 @@ namespace Core.DTOs
         [StringLength(255, ErrorMessage = "Email cannot exceed 255 characters")]
         public string Email { get; set; } = string.Empty;
         
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
+        public string Password { get; set; } = string.Empty;
+        
         [Required(ErrorMessage = "Role is required")]
         [StringLength(50, ErrorMessage = "Role cannot exceed 50 characters")]
         public string Role { get; set; } = string.Empty;

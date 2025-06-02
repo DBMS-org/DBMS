@@ -27,6 +27,7 @@ namespace Infrastructure.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.PasswordHash).IsRequired();
                 entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Area).HasMaxLength(100);
@@ -35,6 +36,7 @@ namespace Infrastructure.Data
                 entity.Property(e => e.OmanPhone).HasMaxLength(20);
                 entity.Property(e => e.CountryPhone).HasMaxLength(20);
                 entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.Name).IsUnique();
             });
 
             // Configure Role entity
@@ -126,7 +128,8 @@ namespace Infrastructure.Data
                 { 
                     Id = 1, 
                     Name = "System Administrator", 
-                    Email = "admin@dbms.com", 
+                    Email = "admin@dbms.com",
+                    PasswordHash = "$2a$11$K8QQfR6Z5j6XgkHjWo9xXeNqO7QDj9qQVvjBZjR8g1jzQzKL9Yd3W", // Password: "admin123"
                     Role = "Admin", 
                     Status = "Active",
                     Area = "Central",

@@ -23,15 +23,13 @@ export class AddUserComponent {
     region: '',
     country: '',
     omanPhone: '',
-    countryPhone: '',
-    status: 'Active'
+    countryPhone: ''
   };
 
-  roles = ['Admin', 'User'];
+  roles = ['Admin', 'blastingengineer'];
   areas = ['North', 'South', 'East', 'West'];
   regions = ['Muscat', 'Salalah', 'Sohar', 'Nizwa', 'Sur'];
   countries = ['Oman', 'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain'];
-  statuses = ['Active', 'Inactive'];
 
   onSubmit() {
     if (this.validatePassword()) {

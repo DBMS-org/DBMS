@@ -16,6 +16,9 @@ namespace Core.Entities
         public string Email { get; set; } = string.Empty;
         
         [Required]
+        public string PasswordHash { get; set; } = string.Empty;
+        
+        [Required]
         [MaxLength(50)]
         public string Role { get; set; } = string.Empty;
         
@@ -40,6 +43,7 @@ namespace Core.Entities
         [MaxLength(20)]
         public string CountryPhone { get; set; } = string.Empty;
         
+        public DateTime? LastLoginAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         

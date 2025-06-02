@@ -2,7 +2,11 @@ using Core.Interfaces;
 using Core.Services;
 using Infrastructure.Repositories;
 using Infrastructure.Data;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +31,29 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
+// Register Authentication services
+builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<JwtService>();
+
+// Add JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"] ?? "your-very-long-secret-key-here-make-it-at-least-32-characters";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"] ?? "DBMS-API",
+            ValidAudience = jwtSettings["Audience"] ?? "DBMS-UI",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+        };
+    });
 
 // Register DrillHole services
 builder.Services.AddSingleton<IDrillHoleRepository, DrillHoleRepository>();
@@ -61,6 +88,8 @@ app.UseHttpsRedirection();
 // Use CORS
 app.UseCors("AllowAngularApp");
 
+// Add Authentication and Authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
