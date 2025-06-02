@@ -1,92 +1,120 @@
-# Clean Architecture API
+# DBMS Project - Simplified Clean Architecture
 
-A .NET 8 Web API project following Clean Architecture principles.
+A simplified DBMS project with Angular frontend and .NET backend following Clean Architecture principles.
 
-## Project Structure
+## 📁 Project Structure
 
-The solution is organized into the following projects:
+```
+DBMS/
+├── Core/                          # Domain + Application Layer (Combined)
+│   ├── Entities/                  # Database entities and domain models
+│   ├── Interfaces/                # Contracts and repository interfaces
+│   ├── Services/                  # Business logic services
+│   ├── DTOs/                      # Data Transfer Objects
+│   └── Validators/                # Input validation logic
+├── Infrastructure/                # Data Access + External Services
+│   ├── Data/                      # DbContext, configurations, migrations
+│   ├── Repositories/              # Repository implementations
+│   └── Services/                  # External service implementations
+├── API/                          # Web API Layer
+│   ├── Controllers/               # API controllers
+│   ├── Middleware/                # Custom middleware
+│   └── Properties/                # Project properties
+├── CleanArchitecture.UI/          # Angular Frontend
+└── docs/                         # Documentation
+```
 
-- **CleanArchitecture.API**: The entry point of the application, containing controllers and API configurations
-- **CleanArchitecture.Application**: Contains business logic, interfaces, and DTOs
-- **CleanArchitecture.Domain**: Contains core business entities and interfaces
-- **CleanArchitecture.Infrastructure**: Contains implementations of interfaces and external services
+## 🚀 Getting Started
 
-## Prerequisites
-
+### Prerequisites
 - .NET 8 SDK
-- Visual Studio 2022 or Visual Studio Code
-- Git
+- Node.js (for Angular)
+- SQL Server or SQLite
+- Visual Studio 2022 or VS Code
 
-## Getting Started
-
-1. Clone the repository:
+### Backend Setup (To be implemented)
+1. Create .NET projects for each layer:
    ```bash
-   git clone [repository-url]
+   # From project root
+   dotnet new classlib -n Core
+   dotnet new classlib -n Infrastructure  
+   dotnet new webapi -n API
+   dotnet new sln -n DBMS
+   dotnet sln add Core Infrastructure API
    ```
 
-2. Navigate to the project directory:
+2. Add project references:
    ```bash
-   cd CleanArchitecture
+   dotnet add API reference Core Infrastructure
+   dotnet add Infrastructure reference Core
    ```
 
-3. Restore dependencies:
-   ```bash
-   dotnet restore
-   ```
-
-4. Run the application:
-   ```bash
-   dotnet run --project CleanArchitecture.API
-   ```
-
-## API Documentation
-
-The API documentation is available through Swagger UI at:
-```
-http://localhost:5000/swagger
+### Frontend Setup
+```bash
+cd CleanArchitecture.UI
+npm install
+ng serve
 ```
 
-### Available Endpoints
+## 🏗️ Architecture Benefits
 
-#### Weather Forecast
-- **GET** `/weatherforecast`
-  - Description: Retrieves weather forecast for the next 5 days
-  - Response: Array of `WeatherForecast` objects
-  - Content-Type: application/json
+**Simplified from original 5-layer to 3-layer architecture:**
 
-### WeatherForecast Model
-```json
-{
-  "date": "2024-04-10",
-  "temperatureC": 25,
-  "temperatureF": 77,
-  "summary": "Warm"
-}
-```
+1. **Core** (Domain + Application combined)
+   - Contains all business logic and entities
+   - No external dependencies
+   - Easy to test
 
-## Development
+2. **Infrastructure** (Data + External Services)
+   - Database implementations
+   - External API calls
+   - File system operations
 
-### Project Configuration
+3. **API** (Presentation Layer)
+   - Controllers and endpoints
+   - Authentication/Authorization
+   - Request/Response handling
 
-- The API runs on port 5000 by default
-- Swagger documentation is enabled in Development environment
-- XML documentation is enabled for better API documentation
+## 📋 Next Steps for Backend Implementation
 
-### Dependencies
+1. **Core Layer:**
+   - Define your database entities in `Entities/`
+   - Create repository interfaces in `Interfaces/`
+   - Implement business services in `Services/`
 
-- Microsoft.AspNetCore.OpenApi (8.0.14)
-- Swashbuckle.AspNetCore (6.6.2)
+2. **Infrastructure Layer:**
+   - Set up DbContext in `Data/`
+   - Implement repositories in `Repositories/`
+   - Configure database connections
+
+3. **API Layer:**
+   - Create controllers in `Controllers/`
+   - Set up dependency injection
+   - Configure Swagger/OpenAPI
+
+## 🔧 Recommended Tech Stack
+
+- **Backend:** .NET 8, Entity Framework Core, SQL Server/SQLite
+- **Frontend:** Angular 18, TypeScript, Bootstrap/Material
+- **Testing:** xUnit, Moq, Angular Testing Utilities
+- **Documentation:** Swagger/OpenAPI
+
+## 📚 Learning Resources
+
+- [Clean Architecture by Robert Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [.NET Clean Architecture Template](https://github.com/jasontaylordev/CleanArchitecture)
+- [Entity Framework Core Documentation](https://docs.microsoft.com/en-us/ef/core/)
 
 ## Clean Architecture Principles
 
-This project follows Clean Architecture principles:
+This simplified project follows Clean Architecture principles:
 
-1. **Dependency Rule**: Dependencies point inward
+1. **Dependency Rule**: Dependencies point inward toward the core
 2. **Separation of Concerns**: Each layer has a specific responsibility
 3. **Independence of Frameworks**: Core business logic is independent of frameworks
 4. **Testability**: Each layer can be tested independently
 
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -96,15 +124,7 @@ This project follows Clean Architecture principles:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
 
-## Contact
-
-- API Support: support@example.com
-- Project Link: [repository-url]
-
-## Acknowledgments
-
-- Clean Architecture by Robert C. Martin
-- ASP.NET Core Documentation
-- Swagger/OpenAPI Documentation 
+---
+**Note:** This is a simplified structure designed for learning DBMS concepts without getting overwhelmed by complex architecture patterns. 

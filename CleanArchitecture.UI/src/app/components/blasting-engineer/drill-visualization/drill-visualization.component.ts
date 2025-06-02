@@ -1,18 +1,24 @@
-import { Component, Input, ElementRef, OnInit, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, ElementRef, OnInit, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CommonModule } from '@angular/common';
+
+// Import the drill data service
+import { DrillDataService } from '../csv-upload/csv-upload.component';
 
 export interface DrillHole {
   id: string;
-  east: number;
-  north: number;
+  name?: string;
+  easting: number;
+  northing: number;
   elevation: number;
   azimuth: number;
   dip: number;
   depth: number;
   rockType?: string;
   mineralContent?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 @Component({
@@ -23,7 +29,7 @@ export interface DrillHole {
   imports: [CommonModule]
 })
 export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() drillData: DrillHole[] = [];
+  drillData: DrillHole[] = [];
   
   showLabels = true;
   private colorScheme = 'random';
@@ -37,13 +43,22 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   private animationFrameId?: number;
   private resizeObserver?: ResizeObserver;
 
-  constructor(private el: ElementRef) {}
+  constructor(private el: ElementRef, private drillDataService: DrillDataService) {}
 
   ngOnInit(): void {
+    console.log('DrillVisualizationComponent - ngOnInit called');
+    
+    // Load data from the service
+    this.drillData = this.drillDataService.getDrillData();
+    console.log('Loaded drill data from service:', this.drillData);
+    console.log('Data length:', this.drillData?.length);
+    
     this.initThreeJS();
   }
 
   ngAfterViewInit(): void {
+    console.log('DrillVisualizationComponent - ngAfterViewInit called');
+    console.log('DrillData at AfterViewInit:', this.drillData);
     this.createScene();
     this.animate();
     
@@ -90,10 +105,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   }
 
   resetCamera(): void {
-    const container = this.el.nativeElement.querySelector('.renderer-container');
-    if (!container) return;
-    
-    // Reset camera position
+    // Use reference camera position
     this.camera.position.set(10, 10, 10);
     this.camera.lookAt(this.centerPoint);
     this.controls.target.copy(this.centerPoint);
@@ -107,9 +119,11 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     });
   }
 
-  changeColorScheme(event: Event): void {
-    this.colorScheme = (event.target as HTMLSelectElement).value;
-    this.updateDrillColors();
+  changeColorScheme(value: string): void {
+    if (value) {
+      this.colorScheme = value;
+      this.updateDrillColors();
+    }
   }
 
   private updateDrillColors(): void {
@@ -198,7 +212,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       0.1,
       1000
     );
-    this.camera.position.set(10, 10, 10);
+    this.camera.position.set(10, 10, 10); // Reference camera position
 
     // Initialize renderer with better defaults
     this.renderer = new THREE.WebGLRenderer({
@@ -248,11 +262,11 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   }
 
   private createScene(): void {
-    // Add grid helper
+    // Add grid helper with reference dimensions
     const gridHelper = new THREE.GridHelper(100, 100, 0x888888, 0xcccccc);
     this.scene.add(gridHelper);
 
-    // Add axes helper with labels
+    // Add axes helper with reference size
     const axesHelper = new THREE.AxesHelper(10);
     this.scene.add(axesHelper);
     
@@ -308,26 +322,36 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   }
 
   private createDrillHoles(): void {
-    if (!this.drillData || this.drillData.length === 0) return;
+    console.log('Creating drill holes with data:', this.drillData);
+    console.log('Data length:', this.drillData?.length);
+    
+    if (!this.drillData || this.drillData.length === 0) {
+      console.log('No drill data available for visualization');
+      return;
+    }
 
-    // Calculate bounds for camera positioning
+    // Calculate bounds for camera positioning (using correct field names)
     let minX = Infinity, maxX = -Infinity;
     let minY = Infinity, maxY = -Infinity;
     let minZ = Infinity, maxZ = -Infinity;
 
     this.drillData.forEach((hole: DrillHole) => {
-      minX = Math.min(minX, hole.east);
-      maxX = Math.max(maxX, hole.east);
-      minY = Math.min(minY, hole.north);
-      maxY = Math.max(maxY, hole.north);
+      minX = Math.min(minX, hole.easting);
+      maxX = Math.max(maxX, hole.easting);
+      minY = Math.min(minY, hole.northing);
+      maxY = Math.max(maxY, hole.northing);
       minZ = Math.min(minZ, hole.elevation);
       maxZ = Math.max(maxZ, hole.elevation);
     });
 
-    // Center the scene
+    console.log('Data bounds:', { minX, maxX, minY, maxY, minZ, maxZ });
+
+    // Center the scene (reference approach)
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
     const centerZ = (minZ + maxZ) / 2;
+    
+    console.log('Scene center:', { centerX, centerY, centerZ });
     
     this.centerPoint.set(0, 0, 0); // Center of the scene
 
@@ -336,19 +360,31 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     this.scene.add(drillGroup);
 
     this.drillData.forEach((hole: DrillHole, index: number) => {
-      // Create instanced drill hole with improved geometry
+      // Skip holes with zero coordinates (invalid data)
+      if (hole.easting === 0 && hole.northing === 0 && hole.elevation === 0) {
+        console.log(`Skipping drill hole ${index} with zero coordinates:`, hole.id);
+        return;
+      }
+      
+      console.log(`Creating drill hole ${index}:`, hole);
+      
+      // Create drill hole with reference approach
       const drillHole = this.createDrillHoleObject(hole, centerX, centerY, centerZ, index);
       drillGroup.add(drillHole);
       this.drillObjects.push(drillHole);
     });
 
-    // Position camera to view all holes
+    console.log(`Created ${this.drillObjects.length} drill hole objects`);
+
+    // Position camera to view all holes (reference approach)
     const maxDimension = Math.max(
       maxX - minX,
       maxY - minY,
       maxZ - minZ
     );
     const distance = maxDimension * 1.5;
+    console.log('Camera positioning:', { maxDimension, distance });
+    
     this.camera.position.set(distance, distance, distance);
     this.camera.lookAt(this.centerPoint);
     this.controls.target.copy(this.centerPoint);
@@ -365,10 +401,20 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     // Create a group for this drill hole and its components
     const drillGroup = new THREE.Group();
     
-    // Create cylinder for the drill hole
-    const geometry = new THREE.CylinderGeometry(0.2, 0.2, hole.depth, 16);
+    // Use reference dimensions - simple and effective
+    const radius = 0.2; // Reference drill hole radius
+    const depth = Math.max(hole.depth * 0.1, 1); // Scale depth but keep reasonable
+    
+    console.log(`Drill hole ${hole.id} sizing:`, {
+      originalDepth: hole.depth,
+      scaledDepth: depth,
+      radius: radius
+    });
+    
+    // Create cylinder for the drill hole - reference geometry
+    const geometry = new THREE.CylinderGeometry(radius, radius, depth, 16);
     // Shift origin to bottom of cylinder
-    geometry.translate(0, hole.depth / 2, 0);
+    geometry.translate(0, depth / 2, 0);
     
     // Create material with color based on hole ID for consistency
     const hash = this.hashString(hole.id);
@@ -382,7 +428,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     cylinder.castShadow = true;
     cylinder.receiveShadow = true;
     
-    // Create a collar (top of drill hole) with larger radius
+    // Create a collar (top of drill hole) - reference dimensions
     const collarGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.5, 16);
     collarGeometry.translate(0, 0.25, 0);
     const collarMaterial = new THREE.MeshStandardMaterial({ 
@@ -397,12 +443,17 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     drillGroup.add(cylinder);
     drillGroup.add(collar);
     
-    // Position the group
-    drillGroup.position.set(
-      hole.east - centerX,
-      hole.elevation - centerZ,
-      hole.north - centerY
-    );
+    // Position the group (reference approach - direct coordinate difference)
+    const scaledX = (hole.easting - centerX);
+    const scaledY = (hole.elevation - centerZ);
+    const scaledZ = (hole.northing - centerY);
+    
+    console.log(`Positioning drill hole ${hole.id}:`, {
+      original: { x: hole.easting, y: hole.elevation, z: hole.northing },
+      positioned: { x: scaledX, y: scaledY, z: scaledZ }
+    });
+    
+    drillGroup.position.set(scaledX, scaledY, scaledZ);
 
     // Apply rotation based on azimuth and dip
     const azimuthRad = THREE.MathUtils.degToRad(hole.azimuth);
@@ -413,9 +464,9 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     // Then rotate around X axis for dip
     drillGroup.rotateX(dipRad);
 
-    // Add hole ID label with enhanced appearance
+    // Add hole ID label - reference positioning
     const label = this.createHoleLabel(hole);
-    label.position.set(0, 1, 0);
+    label.position.set(0, 1, 0); // Simple 1 unit above
     drillGroup.add(label);
     this.labelObjects.push(label);
 
@@ -500,5 +551,33 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     this.animationFrameId = requestAnimationFrame(() => this.animate());
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
+  }
+
+  private clearDrillObjects(): void {
+    // Remove all drill objects from scene
+    this.drillObjects.forEach(object => {
+      this.scene.remove(object);
+      if (object instanceof THREE.Mesh) {
+        object.geometry.dispose();
+        if (Array.isArray(object.material)) {
+          object.material.forEach(material => material.dispose());
+        } else {
+          object.material.dispose();
+        }
+      }
+    });
+    
+    // Remove all label objects from scene
+    this.labelObjects.forEach(label => {
+      this.scene.remove(label);
+      if (label.material instanceof THREE.SpriteMaterial) {
+        label.material.map?.dispose();
+        label.material.dispose();
+      }
+    });
+    
+    // Clear arrays
+    this.drillObjects = [];
+    this.labelObjects = [];
   }
 }

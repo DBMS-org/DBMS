@@ -1,47 +1,53 @@
+<!-- csv-upload.component.html -->
 <div class="csv-upload-container">
   <div class="upload-card">
-    <h2>Upload Drill Hole Data</h2>
-    
-    <div class="upload-area" [class.dragover]="isDragover" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
-      <div class="upload-content">
-        <i class="upload-icon">📁</i>
-        <p>Drag and drop your CSV file here</p>
-        <p class="or-text">or</p>
-        <input
-          type="file"
-          accept=".csv"
+    <h2>Upload Drill Plan Data</h2>
+    <p class="instructions">Please select a CSV file containing drill hole data</p>
+
+    <div class="upload-section">
+      <div class="file-input-wrapper">
+        <input 
+          type="file" 
+          id="csvFile" 
+          accept=".csv" 
           (change)="onFileSelected($event)"
-          #fileInput
+          [disabled]="isUploading"
           class="file-input"
-        />
-        <button class="browse-button" (click)="fileInput.click()">
-          Browse Files
+        >
+        <label for="csvFile" class="file-label">
+          {{ selectedFile ? selectedFile.name : 'Choose CSV file' }}
+        </label>
+      </div>
+
+      <div class="button-group">
+        <button 
+          (click)="uploadFile()" 
+          [disabled]="!selectedFile || isUploading"
+          class="upload-button"
+        >
+          {{ isUploading ? 'Uploading...' : 'Upload' }}
+        </button>
+        <button 
+          (click)="resetForm()" 
+          [disabled]="isUploading"
+          class="reset-button"
+        >
+          Reset
         </button>
       </div>
     </div>
 
-    <div *ngIf="selectedFile" class="selected-file">
-      <p>Selected file: {{ selectedFile.name }}</p>
-      <button class="remove-button" (click)="resetForm()">Remove</button>
-    </div>
-
-    <div *ngIf="uploadError" class="error-message">
-      {{ uploadError }}
-    </div>
-
+    <!-- Progress Bar -->
     <div *ngIf="isUploading" class="progress-container">
       <div class="progress-bar">
-        <div class="progress" [style.width.%]="uploadProgress"></div>
+        <div class="progress-fill" [style.width.%]="uploadProgress"></div>
       </div>
       <span class="progress-text">{{ uploadProgress }}%</span>
     </div>
 
-    <button
-      class="upload-button"
-      (click)="uploadFile()"
-      [disabled]="!selectedFile || isUploading"
-    >
-      {{ isUploading ? 'Uploading...' : 'Upload CSV' }}
-    </button>
+    <!-- Error Message -->
+    <div *ngIf="uploadError" class="error-message">
+      {{ uploadError }}
+    </div>
   </div>
 </div>

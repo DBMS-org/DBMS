@@ -1,16 +1,41 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+// csv-upload.component.ts
+import { Component, EventEmitter, Output, Injectable } from '@angular/core';
 import { HttpClient, HttpEventType } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 
 interface DrillHole {
   id: string;
-  east: number;
-  north: number;
+  name?: string;
+  easting: number;
+  northing: number;
   elevation: number;
   depth: number;
   azimuth: number;
   dip: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Service to share drill data between components
+@Injectable({
+  providedIn: 'root'
+})
+export class DrillDataService {
+  private drillData: DrillHole[] = [];
+  
+  setDrillData(data: DrillHole[]): void {
+    this.drillData = data;
+  }
+  
+  getDrillData(): DrillHole[] {
+    return this.drillData;
+  }
+  
+  clearDrillData(): void {
+    this.drillData = [];
+  }
 }
 
 @Component({
@@ -27,51 +52,22 @@ export class CsvUploadComponent {
   uploadProgress: number = 0;
   isUploading: boolean = false;
   uploadError: string | null = null;
-  isDragover: boolean = false;
 
-  // Updated to use the correct port 5166
-  private apiBaseUrl = 'https://localhost:5166';
-
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router, private drillDataService: DrillDataService) {}
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      this.validateAndSetFile(file);
-    }
-  }
-
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragover = true;
-  }
-
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragover = false;
-  }
-
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragover = false;
-
-    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-      const file = event.dataTransfer.files[0];
-      this.validateAndSetFile(file);
-    }
-  }
-
-  private validateAndSetFile(file: File): void {
-    if (file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')) {
-      this.selectedFile = file;
-      this.uploadError = null;
-    } else {
-      this.uploadError = 'Please select a valid CSV file';
-      this.selectedFile = null;
+      
+      // Validate file type
+      if (file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')) {
+        this.selectedFile = file;
+        this.uploadError = null;
+      } else {
+        this.uploadError = 'Please select a valid CSV file';
+        this.selectedFile = null;
+      }
     }
   }
 
@@ -88,12 +84,13 @@ export class CsvUploadComponent {
     const formData = new FormData();
     formData.append('file', this.selectedFile);
 
-    this.http.post<DrillHole[]>(`${this.apiBaseUrl}/api/DrillPlan/upload-csv`, formData, {
+    // Point to the backend API server on port 5019
+    const apiUrl = 'http://localhost:5019/api/DrillPlan/upload-csv';
+    console.log('Uploading to:', apiUrl);
+
+    this.http.post<DrillHole[]>(apiUrl, formData, {
       reportProgress: true,
-      observe: 'events',
-      headers: {
-        'Accept': 'application/json'
-      }
+      observe: 'events'
     }).pipe(
       finalize(() => {
         this.isUploading = false;
@@ -104,21 +101,25 @@ export class CsvUploadComponent {
           this.uploadProgress = Math.round(100 * event.loaded / event.total);
         } else if (event.type === HttpEventType.Response) {
           if (event.body) {
+            console.log('Upload successful:', event.body);
+            console.log('Data structure check:', event.body[0]);
+            console.log('CsvUploadComponent - About to emit dataLoaded event');
+            console.log('Event body length:', event.body.length);
+            
             this.dataLoaded.emit(event.body);
+            console.log('CsvUploadComponent - dataLoaded event emitted successfully');
+
+            // Store the data in the service and navigate
+            this.drillDataService.setDrillData(event.body);
+            console.log('DrillDataService - Data stored, navigating to visualization');
+
+            // Navigate to the drill visualization page
+            this.router.navigate(['/blasting-engineer/drill-visualization']);
           }
         }
       },
       error: (error) => {
-        console.error('Upload error:', error);
-        if (error.status === 0) {
-          this.uploadError = 'Unable to connect to the server. Please check if the server is running.';
-        } else if (error.status === 404) {
-          this.uploadError = 'API endpoint not found. Please check the API URL configuration.';
-        } else if (error.error instanceof ErrorEvent) {
-          this.uploadError = `Network error: ${error.error.message}`;
-        } else {
-          this.uploadError = error.error?.message || 'Failed to upload CSV file. Please try again.';
-        }
+        this.uploadError = error.error?.message || 'Failed to upload CSV file. Please try again.';
       }
     });
   }

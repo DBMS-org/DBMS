@@ -1,29 +1,32 @@
-<div class="visualization-container">
-  <div class="controls-panel">
-    <div class="control-group">
-      <label for="colorScheme">Color Scheme:</label>
-      <select id="colorScheme" (change)="changeColorScheme($event)">
-        <option value="random">Random</option>
-        <option value="depth">Depth</option>
-        <option value="rockType">Rock Type</option>
-      </select>
+<div class="drill-visualization-container">
+    <div class="chart-header">
+      <h2>3D Drill Plan Visualization</h2>
+      <div class="controls">
+        <select (change)="changeColorScheme($any($event.target).value)" class="color-scheme-select">
+          <option value="elevation">Color by Elevation</option>
+          <option value="depth">Color by Depth</option>
+          <option value="random">Random Colors</option>
+        </select>
+        <button (click)="toggleLabels()" class="control-button">
+          {{ showLabels ? 'Hide Labels' : 'Show Labels' }}
+        </button>
+        <button (click)="resetCamera()" class="control-button">Reset View</button>
+      </div>
     </div>
-    
-    <div class="control-group">
-      <button (click)="toggleLabels()">
-        {{ showLabels ? 'Hide Labels' : 'Show Labels' }}
-      </button>
-      <button (click)="resetCamera()">Reset Camera</button>
+  
+    <div class="visualization-container">
+      <div class="controls-info">
+        <p><strong>Controls:</strong> Click and drag to rotate • Scroll to zoom • Right-click to pan</p>
+        <p><strong>Keyboard:</strong> Press 'R' to reset camera • Press 'L' to toggle labels</p>
+        <div class="data-info">
+          <span><strong>Drill Holes:</strong> {{ drillData.length }}</span>
+          <span *ngIf="drillData.length > 0"><strong>Data Range:</strong> Real geographic coordinates scaled for visualization</span>
+        </div>
+      </div>
+      <div class="renderer-container"></div>
     </div>
-
-    <div class="keyboard-shortcuts">
-      <h3>Keyboard Shortcuts</h3>
-      <ul>
-        <li><kbd>R</kbd> - Reset Camera</li>
-        <li><kbd>L</kbd> - Toggle Labels</li>
-      </ul>
+  
+    <div *ngIf="drillData.length === 0" class="no-data">
+      <p>No drill data available for visualization.</p>
     </div>
   </div>
-
-  <div class="renderer-container"></div>
-</div>

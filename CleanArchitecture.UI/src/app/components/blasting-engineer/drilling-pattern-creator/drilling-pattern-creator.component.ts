@@ -157,7 +157,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   private setupEventListeners(): void {
-    this.stage.on('mousemove', (e) => {
+    this.stage.on('mousemove', (e: Konva.KonvaEventObject<MouseEvent>) => {
       const pointer = this.stage.getPointerPosition();
       if (pointer) {
         // Handle panning
@@ -199,117 +199,119 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
           if (this.panOffsetX !== prevPanOffsetX || this.panOffsetY !== prevPanOffsetY) {
             this.drawGrid();
             this.drawRulers();
-            this.drawDrillPoints();
           }
           
-          if (!hitBoundaryX && !hitBoundaryY) {
-            this.updateCursor('panning');
+          return;
+        }
+
+        // Handle drill point dragging
+        if (this.isDragging && this.draggedPoint) {
+          const scale = this.zoomService.getCurrentScale();
+          const worldX = (pointer.x + this.panOffsetX) / scale;
+          const worldY = (pointer.y + this.panOffsetY) / scale;
+          
+          if (this.isPreciseMode) {
+            const snapX = Math.round(worldX / this.settings.spacing) * this.settings.spacing;
+            const snapY = Math.round(worldY / this.settings.burden) * this.settings.burden;
+            this.updateDrillPointPosition(this.draggedPoint, snapX, snapY);
+          } else {
+            this.updateDrillPointPosition(this.draggedPoint, worldX, worldY);
           }
           return;
         }
-        
-        this.cursorPosition = this.canvasService.calculateGridCoordinates(
-          pointer,
-          this.scale,
-          this.offsetX + this.panOffsetX,
-          this.offsetY + this.panOffsetY,
-          this.isPreciseMode,
-          this.settings
-        );
-        this.cdr.detectChanges();
+
+        // Update cursor position if in hole placement mode
+        if (this.isHolePlacementMode) {
+          const scale = this.zoomService.getCurrentScale();
+          const worldX = (pointer.x + this.panOffsetX) / scale;
+          const worldY = (pointer.y + this.panOffsetY) / scale;
+          
+          this.cursorPosition = { x: worldX, y: worldY };
+          this.cdr.detectChanges();
+        }
       }
     });
 
-    this.stage.on('mousedown', (e) => {
-      const pointer = this.stage.getPointerPosition();
-      if (!pointer) return;
-
-      // Handle panning with right-click or middle-click (when not in hole placement mode)
-      if ((e.evt.button === 2 || e.evt.button === 1) && !this.isHolePlacementMode) {
-        this.isPanning = true;
-        this.panStartX = pointer.x;
-        this.panStartY = pointer.y;
-        this.updateCursor('panning');
-        e.evt.preventDefault();
-        return;
-      }
-
-      // Handle hole placement
-      if (this.isHolePlacementMode && e.evt.button === 0) {
-        const coords = this.canvasService.calculateGridCoordinates(
-          pointer,
-          this.scale,
-          this.offsetX + this.panOffsetX,
-          this.offsetY + this.panOffsetY,
-          this.isPreciseMode,
-          this.settings
-        );
-        this.addDrillPoint(coords.x, coords.y);
+    this.stage.on('mousedown', (e: Konva.KonvaEventObject<MouseEvent>) => {
+      if (e.evt.button === 0) { // Left click
+        if (this.isHolePlacementMode) {
+          this.placeDrillHole(e);
+        } else {
+          // Start panning
+          const pointer = this.stage.getPointerPosition();
+          if (pointer) {
+            this.isPanning = true;
+            this.panStartX = pointer.x;
+            this.panStartY = pointer.y;
+            this.updateCursor('panning');
+          }
+        }
       }
     });
 
-    this.stage.on('mouseup', (e) => {
-      if (this.isPanning) {
-        this.isPanning = false;
+    this.stage.on('mouseup', (e: Konva.KonvaEventObject<MouseEvent>) => {
+      this.isPanning = false;
+      this.isDragging = false;
+      this.draggedPoint = null;
+      
+      if (!this.isHolePlacementMode) {
         this.updateCursor('default');
       }
     });
 
-    this.stage.on('mouseleave', () => {
-      if (this.isPanning) {
-        this.isPanning = false;
-        this.updateCursor('default');
-      }
-    });
-
-    // Prevent context menu on right-click
-    this.stage.container().addEventListener('contextmenu', (e) => {
+    // Prevent right-click context menu on stage
+    this.stage.container().addEventListener('contextmenu', (e: Event) => {
       e.preventDefault();
     });
 
-    this.stage.on('dragstart', (e) => {
-      const group = e.target as Konva.Group;
-      const point = (group as any).data as DrillPoint;
-      if (point) {
-        this.draggedPoint = point;
+    this.stage.on('dragstart', (e: Konva.KonvaEventObject<DragEvent>) => {
+      if (e.target !== this.stage) {
         this.isDragging = true;
-        this.updateCursor('dragging');
+        this.isPanning = false;
+        
+        const pointId = e.target.attrs.pointId;
+        this.draggedPoint = this.drillPoints.find(p => p.id === pointId) || null;
       }
     });
 
-    this.stage.on('dragmove', (e) => {
-      if (this.isDragging && this.draggedPoint) {
-        const group = e.target as Konva.Group;
-        const pointer = this.stage.getPointerPosition();
-        if (pointer) {
-          const coords = this.canvasService.calculateGridCoordinates(
-            pointer,
-            this.scale,
-            this.offsetX + this.panOffsetX,
-            this.offsetY + this.panOffsetY,
-            this.isPreciseMode,
-            this.settings
-          );
-          this.updateDrillPointPosition(this.draggedPoint, coords.x, coords.y);
-        }
-      }
-    });
-
-    this.stage.on('dragend', () => {
-      this.isDragging = false;
-      this.draggedPoint = null;
-      this.updateCursor('default');
-    });
-
-    this.stage.on('click', (e) => {
-      if (!this.isHolePlacementMode && e.evt.button === 0) {
-        const group = e.target.getParent() as Konva.Group;
-        const point = (group as any).data as DrillPoint;
-        if (point) {
-          this.selectPoint(point);
+    this.stage.on('dragmove', (e: Konva.KonvaEventObject<DragEvent>) => {
+      if (this.draggedPoint) {
+        const scale = this.zoomService.getCurrentScale();
+        const position = e.target.position();
+        const worldX = (position.x + this.panOffsetX) / scale;
+        const worldY = (position.y + this.panOffsetY) / scale;
+        
+        if (this.isPreciseMode) {
+          const snapX = Math.round(worldX / this.settings.spacing) * this.settings.spacing;
+          const snapY = Math.round(worldY / this.settings.burden) * this.settings.burden;
+          
+          // Update both the object and the data
+          const scaledX = snapX * scale - this.panOffsetX;
+          const scaledY = snapY * scale - this.panOffsetY;
+          e.target.position({ x: scaledX, y: scaledY });
+          
+          this.draggedPoint.x = snapX;
+          this.draggedPoint.y = snapY;
         } else {
-          this.selectPoint(null);
+          this.draggedPoint.x = worldX;
+          this.draggedPoint.y = worldY;
         }
+      }
+    });
+
+    this.stage.on('click', (e: Konva.KonvaEventObject<MouseEvent>) => {
+      // Handle click on drill points
+      if (e.target !== this.stage) {
+        const pointId = e.target.attrs.pointId;
+        if (pointId) {
+          const point = this.drillPoints.find(p => p.id === pointId);
+          if (point) {
+            this.selectPoint(point);
+          }
+        }
+      } else {
+        // Clicked on empty space
+        this.selectPoint(null);
       }
     });
   }
@@ -390,6 +392,23 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       this.pointsLayer.add(group);
     });
     this.pointsLayer.batchDraw();
+  }
+
+  private placeDrillHole(e: Konva.KonvaEventObject<MouseEvent>): void {
+    const pointer = this.stage.getPointerPosition();
+    if (!pointer) return;
+
+    const scale = this.zoomService.getCurrentScale();
+    const worldX = (pointer.x + this.panOffsetX) / scale;
+    const worldY = (pointer.y + this.panOffsetY) / scale;
+
+    if (this.isPreciseMode) {
+      const snapX = Math.round(worldX / this.settings.spacing) * this.settings.spacing;
+      const snapY = Math.round(worldY / this.settings.burden) * this.settings.burden;
+      this.addDrillPoint(snapX, snapY);
+    } else {
+      this.addDrillPoint(worldX, worldY);
+    }
   }
 
   private addDrillPoint(x: number, y: number): void {

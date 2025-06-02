@@ -34,7 +34,11 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "three",
+              "three/examples/jsm/controls/OrbitControls.js"
+            ]
           },
           "configurations": {
             "production": {

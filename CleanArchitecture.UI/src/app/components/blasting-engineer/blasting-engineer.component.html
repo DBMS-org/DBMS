@@ -1,1 +1,4 @@
-<p>blasting-engineer works!</p>
+<div class="blasting-engineer-container">
+  <app-csv-upload (dataLoaded)="onDrillHolesLoaded($event)"></app-csv-upload>
+  <app-drill-visualization [drillData]="drillHoles"></app-drill-visualization>
+</div>
