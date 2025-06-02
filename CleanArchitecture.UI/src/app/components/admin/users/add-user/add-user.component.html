@@ -70,21 +70,12 @@
 
         <div class="form-group">
           <label for="omanPhone">Oman Phone</label>
-          <input type="tel" id="omanPhone" [(ngModel)]="user.omanPhone" name="omanPhone" required>
+          <input type="tel" id="omanPhone" [(ngModel)]="user.omanPhone" name="omanPhone" placeholder="+968 XXXX XXXX">
         </div>
 
         <div class="form-group">
           <label for="countryPhone">Country Phone</label>
-          <input type="tel" id="countryPhone" [(ngModel)]="user.countryPhone" name="countryPhone">
-        </div>
-
-        <div class="form-group">
-          <label for="status">Status</label>
-          <select id="status" [(ngModel)]="user.status" name="status" required>
-            @for (status of statuses; track status) {
-              <option [value]="status">{{status}}</option>
-            }
-          </select>
+          <input type="tel" id="countryPhone" [(ngModel)]="user.countryPhone" name="countryPhone" placeholder="+XXX XXXX XXXX">
         </div>
       </div>
 

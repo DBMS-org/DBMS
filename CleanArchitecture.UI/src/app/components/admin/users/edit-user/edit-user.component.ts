@@ -55,20 +55,20 @@ export class EditUserComponent implements OnInit {
         console.error('Error loading user for edit:', error);
         
         // Fallback to mock data if API fails
-        this.user = {
-          id: userId,
-          name: 'John Doe',
-          email: 'john@example.com',
-          role: 'Admin',
-          area: 'North',
-          region: 'Muscat',
-          country: 'Oman',
-          omanPhone: '+968 9876 5432',
-          countryPhone: '+1 234 567 8900',
+      this.user = {
+        id: userId,
+        name: 'John Doe',
+        email: 'john@example.com',
+        role: 'Admin',
+        area: 'North',
+        region: 'Muscat',
+        country: 'Oman',
+        omanPhone: '+968 9876 5432',
+        countryPhone: '+1 234 567 8900',
           status: 'Active',
           createdAt: new Date(),
           updatedAt: new Date()
-        };
+      };
       }
     });
   }
@@ -97,7 +97,7 @@ export class EditUserComponent implements OnInit {
         console.log('User updated successfully');
         this.saving = false;
         // Navigate back to user details
-        this.router.navigate(['/admin/users', this.user?.id]);
+    this.router.navigate(['/admin/users', this.user?.id]);
       },
       error: (error) => {
         this.error = error.message;

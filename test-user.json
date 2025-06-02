@@ -1,0 +1,11 @@
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "testpass123",
+  "role": "User",
+  "area": "Test Area",
+  "region": "Test Region",
+  "country": "Test Country",
+  "omanPhone": "+968 1234 5678",
+  "countryPhone": "+968 1234 5678"
+} 

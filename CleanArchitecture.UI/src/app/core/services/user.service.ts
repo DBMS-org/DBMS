@@ -39,6 +39,7 @@ export class UserService {
 
   // Create new user
   createUser(userRequest: CreateUserRequest): Observable<User> {
+    console.log('Sending user creation request:', userRequest);
     return this.http.post<User>(this.apiUrl, userRequest).pipe(
       map(user => ({
         ...user,
@@ -83,10 +84,23 @@ export class UserService {
       errorMessage = `Client Error: ${error.error.message}`;
     } else {
       // Server-side error
+      console.error('Full error response:', error);
+      
       if (error.status === 404) {
         errorMessage = 'User not found';
       } else if (error.status === 400) {
-        errorMessage = 'Invalid request data';
+        // Try to get specific validation errors from the response
+        if (typeof error.error === 'string') {
+          errorMessage = `Validation Error: ${error.error}`;
+        } else if (error.error && error.error.errors) {
+          // Handle model validation errors
+          const validationErrors = Object.values(error.error.errors).flat();
+          errorMessage = `Validation Errors: ${validationErrors.join(', ')}`;
+        } else if (error.error && error.error.message) {
+          errorMessage = `Validation Error: ${error.error.message}`;
+        } else {
+          errorMessage = 'Invalid request data - please check all required fields';
+        }
       } else if (error.status === 500) {
         errorMessage = 'Server error occurred';
       } else {

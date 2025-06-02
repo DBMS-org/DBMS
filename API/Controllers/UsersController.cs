@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
 using Core.Entities;
 using Core.DTOs;
+using Infrastructure.Services;
 
 namespace API.Controllers
 {
@@ -12,11 +13,16 @@ namespace API.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<UsersController> _logger;
+        private readonly PasswordService _passwordService;
 
-        public UsersController(ApplicationDbContext context, ILogger<UsersController> logger)
+        public UsersController(
+            ApplicationDbContext context, 
+            ILogger<UsersController> logger,
+            PasswordService passwordService)
         {
             _context = context;
             _logger = logger;
+            _passwordService = passwordService;
         }
 
         // GET: api/users
@@ -101,10 +107,23 @@ namespace API.Controllers
                     return BadRequest(ModelState);
                 }
 
+                // Check if user already exists by name or email
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Name == request.Name || u.Email == request.Email);
+
+                if (existingUser != null)
+                {
+                    return BadRequest("User with this name or email already exists");
+                }
+
+                // Hash the password
+                var hashedPassword = _passwordService.HashPassword(request.Password);
+
                 var user = new User
                 {
                     Name = request.Name,
                     Email = request.Email,
+                    PasswordHash = hashedPassword,
                     Role = request.Role,
                     Status = "Active", // Default status
                     Area = request.Area,

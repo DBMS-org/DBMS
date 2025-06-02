@@ -16,6 +16,7 @@ export interface User {
 export interface CreateUserRequest {
   name: string;
   email: string;
+  password: string;
   role: string;
   area: string;
   region: string;
@@ -35,6 +36,17 @@ export interface UpdateUserRequest {
   country: string;
   omanPhone: string;
   countryPhone: string;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: User;
+  message: string;
 }
 
 export interface DatabaseConnectionTest {
