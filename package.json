@@ -1,8 +1,10 @@
 {
+  "devDependencies": {
+    "@types/jest": "^29.5.14"
+  },
   "dependencies": {
-    "@types/fabric": "^5.3.10",
-    "bootstrap": "^5.3.3",
-    "fabric": "^6.6.6",
-    "konva": "^9.3.20"
+    "@types/three": "^0.176.0",
+    "chart.js": "^4.4.9",
+    "three": "^0.177.0"
   }
 }
