@@ -7,7 +7,7 @@
     <!-- Modal Header -->
     <div class="modal-header">
       <div class="modal-title">
-        <h3><i class="fas fa-project-diagram"></i> {{ project.name || project.project }}</h3>
+        <h3><i class="fas fa-project-diagram"></i> {{ project.name || project.projectType }}</h3>
         <span class="status-badge" [ngClass]="getStatusClass(project.status)">
           {{ project.status }}
         </span>
@@ -29,8 +29,8 @@
             <span>{{ project.region }}</span>
           </div>
           <div class="info-item">
-            <label>Project:</label>
-            <span>{{ project.project }}</span>
+            <label>Project Type:</label>
+            <span>{{ project.projectType }}</span>
           </div>
           <div class="info-item">
             <label>Status:</label>

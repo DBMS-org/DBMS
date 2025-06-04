@@ -1,8 +1,8 @@
 export interface Project {
-  id: string;
+  id: number;
   name: string;
   region: string;
-  project: string;
+  projectType: string;
   status: string;
   description?: string;
   startDate?: Date;
@@ -16,7 +16,7 @@ export interface Project {
 export interface CreateProjectRequest {
   name?: string;
   region: string;
-  project: string;
+  projectType: string;
   status: string;
   description?: string;
   startDate?: Date;
@@ -26,10 +26,10 @@ export interface CreateProjectRequest {
 }
 
 export interface UpdateProjectRequest {
-  id: string;
+  id: number;
   name?: string;
   region: string;
-  project: string;
+  projectType: string;
   status: string;
   description?: string;
   startDate?: Date;
@@ -39,8 +39,8 @@ export interface UpdateProjectRequest {
 }
 
 export interface ProjectSite {
-  id: string;
-  projectId: string;
+  id: number;
+  projectId: number;
   name: string;
   location: string;
   coordinates?: {

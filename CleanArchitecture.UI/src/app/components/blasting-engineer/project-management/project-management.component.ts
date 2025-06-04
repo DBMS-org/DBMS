@@ -60,10 +60,10 @@ export class ProjectManagementComponent implements OnInit {
     // Mock data as fallback
     this.projects = [
       {
-        id: '001',
+        id: 1,
         name: 'Project Alpha',
         region: 'Muscat',
-        project: 'Muttrah Construction',
+        projectType: 'Muttrah Construction',
         status: 'Active',
         description: 'Main construction project in Muttrah area',
         startDate: new Date('2024-01-15'),
@@ -74,10 +74,10 @@ export class ProjectManagementComponent implements OnInit {
         updatedAt: new Date()
       },
       {
-        id: '002',
+        id: 2,
         name: 'Project Beta',
         region: 'Dhofar',
-        project: 'Salalah Infrastructure',
+        projectType: 'Salalah Infrastructure',
         status: 'Active',
         description: 'Infrastructure development project',
         startDate: new Date('2024-02-01'),
@@ -88,10 +88,10 @@ export class ProjectManagementComponent implements OnInit {
         updatedAt: new Date()
       },
       {
-        id: '003',
+        id: 3,
         name: 'Project Gamma',
         region: 'Al Batinah North',
-        project: 'Sohar Industrial Zone',
+        projectType: 'Sohar Industrial Zone',
         status: 'Completed',
         description: 'Industrial zone construction project',
         startDate: new Date('2023-06-01'),
@@ -122,8 +122,8 @@ export class ProjectManagementComponent implements OnInit {
       filtered = filtered.filter(project => 
         project.name?.toLowerCase().includes(query) ||
         project.region.toLowerCase().includes(query) ||
-        project.project.toLowerCase().includes(query) ||
-        project.id.toLowerCase().includes(query)
+        project.projectType.toLowerCase().includes(query) ||
+        project.id.toString().includes(query)
       );
     }
 

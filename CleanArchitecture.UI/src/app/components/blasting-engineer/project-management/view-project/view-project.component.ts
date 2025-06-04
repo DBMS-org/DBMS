@@ -43,7 +43,7 @@ export class ViewProjectComponent {
   private loadMockSites() {
     this.projectSites = [
       {
-        id: '1',
+        id: 1,
         projectId: this.project!.id,
         name: 'Main Construction Site',
         location: 'Muscat, Oman',
@@ -53,7 +53,7 @@ export class ViewProjectComponent {
         updatedAt: new Date()
       },
       {
-        id: '2',
+        id: 2,
         projectId: this.project!.id,
         name: 'Secondary Site',
         location: 'Muttrah, Oman',

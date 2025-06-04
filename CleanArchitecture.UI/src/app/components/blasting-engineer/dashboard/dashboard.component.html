@@ -1,9 +1,199 @@
-<div class="dashboard-container">
-  <h1>Blasting Engineer Dashboard</h1>
-  <div class="dashboard-content">
-    <div class="card">
-      <h2>Welcome to Blasting Engineer Portal</h2>
-      <p>Manage your blasting operations and view important information here.</p>
+<header class="dashboard-header">
+  <div class="header-content">
+    <h1>Blasting Engineer Dashboard</h1>
+    <div class="user-info">
+      <div class="user-details" *ngIf="currentUser">
+        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
+        <div class="user-metadata">
+          <span class="user-role">Role: {{ currentUser.role }}</span>
+          <span class="user-location" *ngIf="getUserLocationInfo()">{{ getUserLocationInfo() }}</span>
+          <span class="last-login">{{ getLastLoginInfo() }}</span>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>
+</header>
+
+<div class="loading-container" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading dashboard...</p>
+</div>
+
+<div class="dashboard-content" *ngIf="!isLoading">
+  <!-- Main Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card projects">
+      <div class="stat-icon">
+        <i class="material-icons">work</i>
+      </div>
+      <div class="stat-content">
+        <h3>Total Projects</h3>
+        <p class="stat-number">{{ stats.totalProjects }}</p>
+      </div>
+    </div>
+    <div class="stat-card active">
+      <div class="stat-icon">
+        <i class="material-icons">trending_up</i>
+      </div>
+      <div class="stat-content">
+        <h3>Active Projects</h3>
+        <p class="stat-number">{{ stats.activeProjects }}</p>
+      </div>
+    </div>
+    <div class="stat-card patterns">
+      <div class="stat-icon">
+        <i class="material-icons">grid_on</i>
+      </div>
+      <div class="stat-content">
+        <h3>Patterns Created</h3>
+        <p class="stat-number">{{ stats.completedPatterns }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drill Data Quality Panel -->
+  <div class="data-quality-panel" *ngIf="drillData.length > 0">
+    <h3>Current Data Set Analysis</h3>
+    <div class="quality-grid">
+      <div class="quality-item">
+        <span class="quality-label">Data Quality:</span>
+        <span class="quality-value" [class]="getDataQualityClass()">{{ getDataQualityStatus() }}</span>
+      </div>
+      <div class="quality-item">
+        <span class="quality-label">Average Depth:</span>
+        <span class="quality-value">{{ quickStats.averageDepth }}m</span>
+      </div>
+      <div class="quality-item">
+        <span class="quality-label">Elevation Range:</span>
+        <span class="quality-value">{{ quickStats.minElevation }}m - {{ quickStats.maxElevation }}m</span>
+      </div>
+      <div class="quality-item">
+        <span class="quality-label">Total Drill Length:</span>
+        <span class="quality-value">{{ quickStats.totalDrillLength }}m</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Recent Activities -->
+    <section class="recent-activities">
+      <div class="section-header">
+        <h2>Recent Activities</h2>
+        <span class="filter-info" *ngIf="currentUser?.region">
+          (Your region: {{ currentUser?.region }})
+        </span>
+      </div>
+      <div class="activity-list">
+        <div *ngIf="recentActivities.length === 0" class="no-activities">
+          No recent activities found.
+        </div>
+        <div *ngFor="let activity of recentActivities; trackBy: trackActivity" class="activity-item">
+          <div class="activity-icon">
+            <i class="material-icons">{{ getActivityIcon(activity.action) }}</i>
+          </div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-user">{{ activity.userName }}</span>
+              <span class="activity-action">{{ activity.action }}</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-time">{{ getTimeFromNow(activity.timestamp) }}</span>
+              <span class="activity-region" *ngIf="activity.region">{{ activity.region }}</span>
+              <span class="activity-category">{{ activity.category }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Actions with Engineering Focus -->
+    <section class="quick-actions">
+      <h2>Engineering Tools</h2>
+      <div class="action-cards">
+        <div class="action-card upload" (click)="navigateToUpload()">
+          <div class="action-icon">
+            <i class="material-icons">cloud_upload</i>
+          </div>
+          <h3>Upload Drill Data</h3>
+          <p>Import CSV files with hole coordinates, depths, and parameters</p>
+          <div class="action-status">
+            <span *ngIf="drillData.length > 0">{{ drillData.length }} holes loaded</span>
+            <span *ngIf="drillData.length === 0">No data loaded</span>
+          </div>
+        </div>
+        
+        <div class="action-card projects" (click)="navigateToProjects()">
+          <div class="action-icon">
+            <i class="material-icons">folder</i>
+          </div>
+          <h3>Project Management</h3>
+          <p>Organize sites, manage drill plans, and track progress</p>
+          <div class="action-status">{{ stats.activeProjects }} active</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Recent Uploads Section -->
+  <section class="recent-uploads" *ngIf="recentUploads.length > 0">
+    <h2>Recent Data Uploads</h2>
+    <div class="uploads-list">
+      <div *ngFor="let upload of recentUploads" class="upload-item">
+        <div class="upload-icon">
+          <i class="material-icons">insert_drive_file</i>
+        </div>
+        <div class="upload-content">
+          <div class="upload-name">{{ upload.filename }}</div>
+          <div class="upload-meta">
+            <span class="upload-time">{{ formatDate(upload.uploadDate) }}</span>
+            <span class="upload-count">{{ upload.recordCount }} records</span>
+            <span class="upload-status status-{{ upload.status }}">{{ upload.status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- User Profile with Engineering Context -->
+  <section class="user-profile-summary" *ngIf="currentUser">
+    <h2>Engineer Profile</h2>
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <i class="material-icons">engineering</i>
+        </div>
+        <div class="profile-info">
+          <h3>{{ currentUser.name }}</h3>
+          <p>{{ currentUser.email }}</p>
+          <div class="engineer-specialization">
+            <span class="specialization-badge">Blasting & Drilling Engineer</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-details">
+        <div class="detail-item">
+          <strong>Specialization:</strong> {{ currentUser.role }}
+        </div>
+        <div class="detail-item" *ngIf="currentUser.region">
+          <strong>Operating Region:</strong> {{ currentUser.region }}
+        </div>
+        <div class="detail-item" *ngIf="currentUser.country">
+          <strong>Country:</strong> {{ currentUser.country }}
+        </div>
+        <div class="detail-item" *ngIf="currentUser.omanPhone">
+          <strong>Contact:</strong> {{ currentUser.omanPhone }}
+        </div>
+        <div class="detail-item">
+          <strong>Status:</strong> 
+          <span class="status-badge" [class]="'status-' + currentUser.status.toLowerCase()">
+            {{ currentUser.status }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <strong>Data Sets:</strong> {{ stats.uploadedDataSets }} uploaded
+        </div>
+      </div>
+    </div>
+  </section>
 </div>

@@ -16,6 +16,8 @@ namespace Infrastructure.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<DrillHole> DrillHoles { get; set; }
+        public DbSet<Project> Projects { get; set; }
+        public DbSet<ProjectSite> ProjectSites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -97,6 +99,45 @@ namespace Infrastructure.Data
                 entity.Property(e => e.Name).IsRequired();
             });
 
+            // Configure Project entity
+            modelBuilder.Entity<Project>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Region).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.ProjectType).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Description).HasMaxLength(1000);
+                entity.Property(e => e.Budget).HasColumnType("decimal(18,2)");
+                
+                // Foreign key relationship with User
+                entity.HasOne(e => e.AssignedUser)
+                      .WithMany()
+                      .HasForeignKey(e => e.AssignedUserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                      
+                entity.HasIndex(e => e.Name);
+            });
+
+            // Configure ProjectSite entity
+            modelBuilder.Entity<ProjectSite>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Location).HasMaxLength(200);
+                entity.Property(e => e.Coordinates).HasMaxLength(200);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                
+                // Foreign key relationship with Project
+                entity.HasOne(e => e.Project)
+                      .WithMany(e => e.ProjectSites)
+                      .HasForeignKey(e => e.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasIndex(e => e.ProjectId);
+            });
+
             // Seed initial data
             SeedData(modelBuilder);
         }
@@ -118,7 +159,11 @@ namespace Infrastructure.Data
                 new Permission { Id = 4, Name = "Delete User", Description = "Can delete users", Module = "Users", Action = "Delete", IsActive = true },
                 new Permission { Id = 5, Name = "View Dashboard", Description = "Can view dashboard", Module = "Dashboard", Action = "View", IsActive = true },
                 new Permission { Id = 6, Name = "Upload CSV", Description = "Can upload CSV files", Module = "DrillHole", Action = "Upload", IsActive = true },
-                new Permission { Id = 7, Name = "View DrillHoles", Description = "Can view drill holes", Module = "DrillHole", Action = "View", IsActive = true }
+                new Permission { Id = 7, Name = "View DrillHoles", Description = "Can view drill holes", Module = "DrillHole", Action = "View", IsActive = true },
+                new Permission { Id = 8, Name = "View Projects", Description = "Can view project list", Module = "Projects", Action = "View", IsActive = true },
+                new Permission { Id = 9, Name = "Create Project", Description = "Can create new projects", Module = "Projects", Action = "Create", IsActive = true },
+                new Permission { Id = 10, Name = "Edit Project", Description = "Can edit project details", Module = "Projects", Action = "Edit", IsActive = true },
+                new Permission { Id = 11, Name = "Delete Project", Description = "Can delete projects", Module = "Projects", Action = "Delete", IsActive = true }
             );
 
             // Seed Admin User
@@ -135,6 +180,83 @@ namespace Infrastructure.Data
                     Country = "Oman",
                     OmanPhone = "+968 9999 9999",
                     CountryPhone = "+968 9999 9999"
+                }
+            );
+
+            // Seed Sample Projects
+            modelBuilder.Entity<Project>().HasData(
+                new Project
+                {
+                    Id = 1,
+                    Name = "Muscat Infrastructure Development",
+                    Region = "Muscat",
+                    ProjectType = "Highway Construction",
+                    Status = "Active",
+                    Description = "Major highway development project in Muscat region",
+                    StartDate = new DateTime(2024, 1, 15),
+                    EndDate = new DateTime(2024, 12, 31),
+                    Budget = 5500000.00m,
+                    AssignedUserId = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                },
+                new Project
+                {
+                    Id = 2,
+                    Name = "Dhofar Mining Operations",
+                    Region = "Dhofar",
+                    ProjectType = "Mining Site Development",
+                    Status = "Active",
+                    Description = "Mining site expansion project in Dhofar region",
+                    StartDate = new DateTime(2024, 2, 1),
+                    EndDate = new DateTime(2024, 11, 30),
+                    Budget = 8200000.00m,
+                    AssignedUserId = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                },
+                new Project
+                {
+                    Id = 3,
+                    Name = "Sohar Industrial Zone",
+                    Region = "Al Batinah North",
+                    ProjectType = "Industrial Development",
+                    Status = "Completed",
+                    Description = "Industrial zone construction project in Sohar",
+                    StartDate = new DateTime(2023, 6, 1),
+                    EndDate = new DateTime(2023, 12, 31),
+                    Budget = 3200000.00m,
+                    AssignedUserId = 1,
+                    CreatedAt = DateTime.UtcNow.AddMonths(-6),
+                    UpdatedAt = DateTime.UtcNow.AddMonths(-1)
+                }
+            );
+
+            // Seed Sample Project Sites
+            modelBuilder.Entity<ProjectSite>().HasData(
+                new ProjectSite
+                {
+                    Id = 1,
+                    ProjectId = 1,
+                    Name = "Muscat Main Site",
+                    Location = "Muscat Highway Junction",
+                    Coordinates = "{\"Latitude\":23.5880,\"Longitude\":58.3829}",
+                    Status = "Active",
+                    Description = "Primary construction site for highway project",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                },
+                new ProjectSite
+                {
+                    Id = 2,
+                    ProjectId = 2,
+                    Name = "Dhofar Mining Pit A",
+                    Location = "Dhofar Mining Area",
+                    Coordinates = "{\"Latitude\":17.0194,\"Longitude\":54.1085}",
+                    Status = "Active",
+                    Description = "Main mining pit for ore extraction",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 }
             );
         }

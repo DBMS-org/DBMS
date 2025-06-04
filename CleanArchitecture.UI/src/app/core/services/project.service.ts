@@ -28,7 +28,7 @@ export class ProjectService {
   }
 
   // Get project by ID
-  getProject(id: string): Observable<Project> {
+  getProject(id: number): Observable<Project> {
     return this.http.get<Project>(`${this.apiUrl}/${id}`).pipe(
       map(project => ({
         ...project,
@@ -57,21 +57,21 @@ export class ProjectService {
   }
 
   // Update existing project
-  updateProject(id: string, projectRequest: UpdateProjectRequest): Observable<void> {
+  updateProject(id: number, projectRequest: UpdateProjectRequest): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${id}`, projectRequest).pipe(
       catchError(this.handleError)
     );
   }
 
   // Delete project
-  deleteProject(id: string): Observable<void> {
+  deleteProject(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
 
   // Get project sites
-  getProjectSites(projectId: string): Observable<ProjectSite[]> {
+  getProjectSites(projectId: number): Observable<ProjectSite[]> {
     return this.http.get<ProjectSite[]>(`${this.apiUrl}/${projectId}/sites`).pipe(
       map(sites => sites.map(site => ({
         ...site,

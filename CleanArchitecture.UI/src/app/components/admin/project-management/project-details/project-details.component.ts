@@ -20,10 +20,10 @@ export class ProjectDetailsComponent implements OnInit {
   
   // Form data for editing
   editForm: UpdateProjectRequest = {
-    id: '',
+    id: 0,
     name: '',
     region: '',
-    project: '',
+    projectType: '',
     status: '',
     description: '',
     startDate: undefined,
@@ -43,7 +43,7 @@ export class ProjectDetailsComponent implements OnInit {
 
   ngOnInit() {
     this.route.params.subscribe(params => {
-      const projectId = params['id'];
+      const projectId = +params['id'];
       if (projectId) {
         this.loadProject(projectId);
         this.loadProjectSites(projectId);
@@ -51,7 +51,7 @@ export class ProjectDetailsComponent implements OnInit {
     });
   }
 
-  loadProject(id: string) {
+  loadProject(id: number) {
     this.loading = true;
     this.error = null;
     
@@ -72,7 +72,7 @@ export class ProjectDetailsComponent implements OnInit {
     });
   }
 
-  loadProjectSites(projectId: string) {
+  loadProjectSites(projectId: number) {
     this.projectService.getProjectSites(projectId).subscribe({
       next: (sites) => {
         this.projectSites = sites;
@@ -85,13 +85,13 @@ export class ProjectDetailsComponent implements OnInit {
     });
   }
 
-  private loadMockProject(id: string) {
+  private loadMockProject(id: number) {
     // Mock project data as fallback
     this.project = {
       id: id,
       name: 'Project Alpha',
       region: 'Muscat',
-      project: 'Muttrah Construction',
+      projectType: 'Muttrah Construction',
       status: 'Active',
       description: 'This is a sample project description for Project Alpha. It includes various engineering and construction activities in the Muttrah area.',
       startDate: new Date('2024-01-15'),
@@ -104,11 +104,11 @@ export class ProjectDetailsComponent implements OnInit {
     this.initializeEditForm();
   }
 
-  private loadMockSites(projectId: string) {
+  private loadMockSites(projectId: number) {
     // Mock sites data as fallback
     this.projectSites = [
       {
-        id: '1',
+        id: 1,
         projectId: projectId,
         name: 'Main Construction Site',
         location: 'Muscat, Oman',
@@ -118,7 +118,7 @@ export class ProjectDetailsComponent implements OnInit {
         updatedAt: new Date()
       },
       {
-        id: '2',
+        id: 2,
         projectId: projectId,
         name: 'Secondary Site',
         location: 'Muttrah, Oman',
@@ -136,7 +136,7 @@ export class ProjectDetailsComponent implements OnInit {
         id: this.project.id,
         name: this.project.name,
         region: this.project.region,
-        project: this.project.project,
+        projectType: this.project.projectType,
         status: this.project.status,
         description: this.project.description || '',
         startDate: this.project.startDate,
@@ -205,13 +205,13 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   viewSiteDetails(site: ProjectSite) {
-    // Navigate to site details or open modal
     console.log('View site details:', site);
+    // TODO: Navigate to site details or open site modal
   }
 
   addNewSite() {
-    // Navigate to add site component or open modal
     console.log('Add new site for project:', this.project?.id);
+    // TODO: Navigate to add site component
   }
 
   getStatusClass(status: string): string {
@@ -235,7 +235,7 @@ export class ProjectDetailsComponent implements OnInit {
     if (!amount) return 'N/A';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'PKR'
+      currency: 'USD'
     }).format(amount);
   }
 
