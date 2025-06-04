@@ -21,6 +21,7 @@ export class SidebarComponent {
   navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/admin/dashboard' },
     { icon: 'people', label: 'Users', route: '/admin/users' },
+    { icon: 'work', label: 'Project Management', route: '/admin/project-management' },
     { icon: 'settings', label: 'Settings', route: '/admin/settings' }
   ];
 }
