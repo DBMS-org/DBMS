@@ -1,1 +1,1 @@
-Add JWT authentication support to API and UI. Update user management to include password hashing and validation. Enhance login component with role-based navigation and improve user creation request handling. Update appsettings for JWT configuration and add necessary package references.
+Add project management features to the UI, including new routes and sidebar items. Integrate Font Awesome for icons. Remove outdated project setup guide documentation.

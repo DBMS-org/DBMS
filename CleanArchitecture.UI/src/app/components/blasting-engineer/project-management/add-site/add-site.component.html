@@ -60,26 +60,6 @@
                 Site name is required
               </div>
             </div>
-
-            <div class="form-group">
-              <label for="siteLocation" class="form-label">
-                Location <span class="required">*</span>
-              </label>
-              <input
-                type="text"
-                id="siteLocation"
-                name="siteLocation"
-                class="form-control"
-                [(ngModel)]="siteData.location"
-                #siteLocation="ngModel"
-                required
-                placeholder="Enter site location"
-                [class.is-invalid]="siteLocation.invalid && siteLocation.touched"
-              />
-              <div *ngIf="siteLocation.invalid && siteLocation.touched" class="invalid-feedback">
-                Location is required
-              </div>
-            </div>
           </div>
 
           <div class="form-group">
@@ -96,69 +76,114 @@
         </div>
       </div>
 
-      <!-- Coordinates Card -->
+      <!-- Drilling Pattern Template Card -->
       <div class="form-card">
         <div class="card-header">
-          <h3><i class="fas fa-map-marker-alt"></i> Coordinates</h3>
+          <h3><i class="fas fa-th-large"></i> Drilling Pattern Template</h3>
         </div>
         <div class="card-body">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="latitude" class="form-label">
-                Latitude <span class="required">*</span>
-              </label>
-              <input
-                type="number"
-                id="latitude"
-                name="latitude"
-                class="form-control"
-                [(ngModel)]="siteData.coordinates.latitude"
-                #latitude="ngModel"
-                required
-                step="0.000001"
-                min="-90"
-                max="90"
-                placeholder="e.g., 23.5880"
-                [class.is-invalid]="latitude.invalid && latitude.touched"
-              />
-              <div *ngIf="latitude.invalid && latitude.touched" class="invalid-feedback">
-                <span *ngIf="latitude.errors?.['required']">Latitude is required</span>
-                <span *ngIf="latitude.errors?.['min'] || latitude.errors?.['max']">
-                  Latitude must be between -90 and 90
-                </span>
+          <div class="template-selection">
+            <label class="form-label">Select Template Type</label>
+            <div class="template-options">
+              
+              <!-- Class Diagram Template -->
+              <div class="template-option" 
+                   [class.selected]="siteData.templateType === 'class-diagram'"
+                   (click)="selectTemplate('class-diagram')">
+                <div class="template-preview">
+                  <div class="diagram-representation class-diagram">
+                    <div class="class-box"></div>
+                    <div class="class-box"></div>
+                    <div class="class-box main"></div>
+                    <div class="connection-line"></div>
+                  </div>
+                </div>
+                <div class="template-info">
+                  <h4>Square Pattern</h4>
+                  <p>Structured drilling layout with primary and secondary holes</p>
+                </div>
+                <div class="template-radio">
+                  <input type="radio" 
+                         name="templateType" 
+                         value="class-diagram"
+                         [(ngModel)]="siteData.templateType"
+                         id="class-template">
+                </div>
               </div>
-            </div>
 
-            <div class="form-group">
-              <label for="longitude" class="form-label">
-                Longitude <span class="required">*</span>
-              </label>
-              <input
-                type="number"
-                id="longitude"
-                name="longitude"
-                class="form-control"
-                [(ngModel)]="siteData.coordinates.longitude"
-                #longitude="ngModel"
-                required
-                step="0.000001"
-                min="-180"
-                max="180"
-                placeholder="e.g., 58.3829"
-                [class.is-invalid]="longitude.invalid && longitude.touched"
-              />
-              <div *ngIf="longitude.invalid && longitude.touched" class="invalid-feedback">
-                <span *ngIf="longitude.errors?.['required']">Longitude is required</span>
-                <span *ngIf="longitude.errors?.['min'] || longitude.errors?.['max']">
-                  Longitude must be between -180 and 180
-                </span>
+              <!-- Use Case Template -->
+              <div class="template-option" 
+                   [class.selected]="siteData.templateType === 'use-case'"
+                   (click)="selectTemplate('use-case')">
+                <div class="template-preview">
+                  <div class="diagram-representation use-case">
+                    <div class="actor-icon"></div>
+                    <div class="actor-legs"></div>
+                    <div class="use-case-oval"></div>
+                    <div class="boundary-box"></div>
+                    <div class="interaction-line"></div>
+                  </div>
+                </div>
+                <div class="template-info">
+                  <h4>Rectangle Pattern</h4>
+                  <p>Central blast point with surrounding support holes</p>
+                </div>
+                <div class="template-radio">
+                  <input type="radio" 
+                         name="templateType" 
+                         value="use-case"
+                         [(ngModel)]="siteData.templateType"
+                         id="use-case-template">
+                </div>
               </div>
+
+              <!-- Sequence Template -->
+              <div class="template-option" 
+                   [class.selected]="siteData.templateType === 'sequence'"
+                   (click)="selectTemplate('sequence')">
+                <div class="template-preview">
+                  <div class="diagram-representation sequence">
+                    <div class="sequence-actor"></div>
+                    <div class="sequence-actor"></div>
+                    <div class="sequence-message"></div>
+                    <div class="sequence-return"></div>
+                  </div>
+                </div>
+                <div class="template-info">
+                  <h4>Staggered Pattern</h4>
+                  <p>Time-sequenced drilling with controlled detonation order</p>
+                </div>
+                <div class="template-radio">
+                  <input type="radio" 
+                         name="templateType" 
+                         value="sequence"
+                         [(ngModel)]="siteData.templateType"
+                         id="sequence-template">
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <div class="coordinates-help">
-            <i class="fas fa-info-circle"></i>
-            <span>You can find coordinates using Google Maps or GPS devices</span>
+          <!-- Template Configuration -->
+          <div class="template-config" *ngIf="siteData.templateType">
+            <h4><i class="fas fa-cog"></i> Template Configuration</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="numberOfHoles" class="form-label">Number of Holes</label>
+                <input
+                  type="number"
+                  id="numberOfHoles"
+                  name="numberOfHoles"
+                  class="form-control"
+                  [(ngModel)]="siteData.numberOfHoles"
+                  min="1"
+                  max="1000"
+                  step="1"
+                  placeholder="e.g., 25"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

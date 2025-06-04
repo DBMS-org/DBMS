@@ -7,12 +7,9 @@ import { ProjectService } from '../../../../core/services/project.service';
 
 interface SiteFormData {
   name: string;
-  location: string;
   description: string;
-  coordinates: {
-    latitude: number | null;
-    longitude: number | null;
-  };
+  templateType: string;
+  numberOfHoles: number | null;
 }
 
 @Component({
@@ -30,12 +27,9 @@ export class AddSiteComponent implements OnInit {
 
   siteData: SiteFormData = {
     name: '',
-    location: '',
     description: '',
-    coordinates: {
-      latitude: null,
-      longitude: null
-    }
+    templateType: '',
+    numberOfHoles: null,
   };
 
   constructor(
@@ -114,6 +108,10 @@ export class AddSiteComponent implements OnInit {
     this.project = mockProjects.find(p => p.id === this.projectId) || mockProjects[0];
   }
 
+  selectTemplate(templateType: string) {
+    this.siteData.templateType = templateType;
+  }
+
   onSubmit(form: NgForm) {
     if (form.invalid) {
       // Mark all fields as touched to show validation errors
@@ -127,15 +125,14 @@ export class AddSiteComponent implements OnInit {
     this.error = null;
     this.successMessage = null;
 
-    // Create the site object
-    const newSite: Omit<ProjectSite, 'id' | 'createdAt' | 'updatedAt'> = {
+    // Create the site object with template information
+    const newSite = {
       projectId: this.projectId,
       name: this.siteData.name,
-      location: this.siteData.location,
       description: this.siteData.description || undefined,
-      coordinates: {
-        latitude: this.siteData.coordinates.latitude!,
-        longitude: this.siteData.coordinates.longitude!
+      templateType: this.siteData.templateType,
+      drillingConfig: {
+        numberOfHoles: this.siteData.numberOfHoles
       }
     };
 
@@ -146,16 +143,9 @@ export class AddSiteComponent implements OnInit {
         // this.projectService.addProjectSite(newSite).subscribe({...})
         
         this.isSubmitting = false;
-        this.successMessage = 'Site added successfully!';
         
-        // Reset form
-        form.resetForm();
-        this.resetFormData();
-
-        // Navigate back to sites list after a delay
-        setTimeout(() => {
-          this.goBack();
-        }, 2000);
+        // Navigate to drilling pattern creator instead of showing success message
+        this.router.navigate(['/blasting-engineer/drilling-pattern']);
 
       } catch (error) {
         this.isSubmitting = false;
@@ -168,12 +158,9 @@ export class AddSiteComponent implements OnInit {
   private resetFormData() {
     this.siteData = {
       name: '',
-      location: '',
       description: '',
-      coordinates: {
-        latitude: null,
-        longitude: null
-      }
+      templateType: '',
+      numberOfHoles: null,
     };
   }
 
