@@ -1,1 +1,1 @@
-Refactor Add Site component to implement template selection for drilling patterns. Remove location and coordinates fields, and introduce template type and number of holes inputs. Update styles for template options and configuration sections.
+Refactor user management by removing the 'Area' field from user-related entities and UI components. Enhance error handling in user creation and update processes, ensuring proper feedback for duplicate email entries. Update styles for error alerts in the user addition modal.

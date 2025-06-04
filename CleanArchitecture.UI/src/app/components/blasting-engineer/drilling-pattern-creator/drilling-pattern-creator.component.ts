@@ -41,6 +41,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private draggedPoint: DrillPoint | null = null;
   private drillPointObjects: Map<string, Konva.Group> = new Map();
   private resizeTimeout: any;
+  private isInitialized = false;
   
   // Panning functionality
   private isPanning = false;
@@ -77,15 +78,17 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   ngAfterViewInit(): void {
-    this.initializeStage();
-    this.setupEventListeners();
-    this.setupZoomService();
-    this.drawGrid();
-    this.drawRulers();
-    this.drawDrillPoints();
+    // Add a small delay to ensure the container is fully rendered
+    // This fixes the issue where grid doesn't show on initial navigation
+    setTimeout(() => {
+      this.initializeCanvas();
+    }, 0);
   }
 
   ngOnDestroy(): void {
+    console.log('Component destroying');
+    this.isInitialized = false;
+    
     // Clean up zoom events
     if (this.stage) {
       this.zoomService.removeZoomEvents(this.stage);
@@ -102,15 +105,61 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     }
   }
 
+  private initializeCanvas(): void {
+    if (this.isInitialized) {
+      console.log('Canvas already initialized, skipping');
+      return;
+    }
+
+    const container = this.containerRef.nativeElement;
+    
+    // Check if container has proper dimensions
+    if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+      console.log('Container not ready, retrying...');
+      // Retry after a short delay if container isn't ready
+      setTimeout(() => {
+        this.initializeCanvas();
+      }, 50);
+      return;
+    }
+
+    console.log('Initializing canvas with container size:', {
+      width: container.offsetWidth,
+      height: container.offsetHeight
+    });
+
+    // Clear grid cache to ensure fresh rendering after navigation
+    this.gridService.clearGridCache();
+
+    this.initializeStage();
+    this.setupEventListeners();
+    this.setupZoomService();
+    
+    // Mark as initialized before drawing
+    this.isInitialized = true;
+    
+    this.drawGrid();
+    this.drawRulers();
+    this.drawDrillPoints();
+
+    console.log('Initial canvas setup completed');
+  }
+
   private initializeStage(): void {
     const container = this.containerRef.nativeElement;
     const width = container.offsetWidth;
     const height = container.offsetHeight;
 
+    console.log('Creating Konva stage with dimensions:', { width, height });
+
+    // Ensure minimum dimensions
+    const finalWidth = Math.max(width, 300);
+    const finalHeight = Math.max(height, 200);
+
     this.stage = new Konva.Stage({
       container: container,
-      width: width,
-      height: height
+      width: finalWidth,
+      height: finalHeight
     });
 
     // Create layers
@@ -127,6 +176,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     this.rulerLayer.moveToBottom();
     this.gridLayer.moveToBottom();
     this.pointsLayer.moveToTop();
+
+    console.log('Stage initialized successfully');
   }
 
   private setupZoomService(): void {
@@ -145,15 +196,19 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         this.cdr.detectChanges();
       },
       onRedraw: () => {
-        // Redraw everything when zoom changes
-        this.drawGrid();
-        this.drawRulers();
-        this.drawDrillPoints();
+        // Only redraw if fully initialized
+        if (this.isInitialized) {
+          console.log('Zoom service requesting redraw');
+          this.drawGrid();
+          this.drawRulers();
+          this.drawDrillPoints();
+        }
       }
     });
 
     // Setup zoom events on the stage
     this.zoomService.setupZoomEvents(this.stage);
+    console.log('Zoom service setup completed');
   }
 
   private setupEventListeners(): void {
@@ -317,15 +372,43 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   private drawGrid(): void {
-    if (this.gridGroup) {
-      this.gridGroup.destroy();
-    }
-    if (this.intersectionGroup) {
-      this.intersectionGroup.destroy();
+    if (!this.isInitialized || !this.stage) {
+      console.log('Skipping grid draw - not initialized or no stage');
+      return;
     }
 
+    console.log('drawGrid called - Stage dimensions:', {
+      width: this.stage?.width(),
+      height: this.stage?.height(),
+      scale: this.scale,
+      offsetX: this.offsetX,
+      offsetY: this.offsetY,
+      panOffsetX: this.panOffsetX,
+      panOffsetY: this.panOffsetY,
+      isPreciseMode: this.isPreciseMode
+    });
+
     const cacheKey = `${this.scale}-${this.offsetX + this.panOffsetX}-${this.offsetY + this.panOffsetY}-${this.isPreciseMode}`;
-    if (!this.canvasService.handleGridCache(cacheKey, this.gridGroup, this.gridLayer)) {
+    console.log('Grid cache key:', cacheKey);
+    
+    // Always destroy intersection group to ensure proper precise mode handling
+    if (this.intersectionGroup) {
+      console.log('Destroying old intersection group');
+      this.intersectionGroup.destroy();
+      this.intersectionGroup = null as any;
+    }
+    
+    const isCached = this.canvasService.handleGridCache(cacheKey, this.gridGroup, this.gridLayer);
+    
+    if (!isCached) {
+      console.log('Drawing new grid with cache key:', cacheKey);
+      
+      // Destroy old grid group only when creating new ones
+      if (this.gridGroup) {
+        console.log('Destroying old grid group');
+        this.gridGroup.destroy();
+      }
+      
       this.gridGroup = this.canvasService.drawGrid(
         this.gridLayer,
         this.settings,
@@ -336,23 +419,32 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         this.stage.height()
       );
       
-      // Draw grid intersections when in precise mode
-      this.intersectionGroup = this.canvasService.drawGridIntersections(
-        this.gridLayer,
-        this.settings,
-        this.scale,
-        this.offsetX + this.panOffsetX,
-        this.offsetY + this.panOffsetY,
-        this.stage.width(),
-        this.stage.height(),
-        this.isPreciseMode
-      );
-      
       this.gridLayer.add(this.gridGroup);
-      this.gridLayer.add(this.intersectionGroup);
       this.canvasService.updateGridCache(cacheKey, this.gridGroup);
+      
+      console.log('Grid created and added to layer');
+    } else {
+      console.log('Using cached grid');
     }
+    
+    // Always create intersection group (whether cached or not) based on current precise mode
+    this.intersectionGroup = this.canvasService.drawGridIntersections(
+      this.gridLayer,
+      this.settings,
+      this.scale,
+      this.offsetX + this.panOffsetX,
+      this.offsetY + this.panOffsetY,
+      this.stage.width(),
+      this.stage.height(),
+      this.isPreciseMode
+    );
+    
+    this.gridLayer.add(this.intersectionGroup);
+    
+    console.log('Grid layer children count:', this.gridLayer.children.length);
+    console.log('Precise mode intersection points visible:', this.isPreciseMode);
     this.gridLayer.batchDraw();
+    console.log('Grid layer batch draw completed');
   }
 
   private drawRulers(): void {
@@ -560,13 +652,20 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
 
   private toggleMode(mode: 'holePlacement' | 'precise'): void {
     const modeProperty = mode === 'holePlacement' ? 'isHolePlacementMode' : 'isPreciseMode';
+    const previousValue = this[modeProperty];
     this[modeProperty] = !this[modeProperty];
+    
+    console.log(`Toggle ${mode} mode: ${previousValue} -> ${this[modeProperty]}`);
     
     // Set appropriate cursor based on mode
     if (mode === 'holePlacement') {
       this.canvasService.setCanvasCursor(this.stage, this.isHolePlacementMode ? 'crosshair' : 'default');
       this.canvasService.updatePointSelectability(this.drillPointObjects, this.isHolePlacementMode);
     } else if (mode === 'precise') {
+      // Clear grid cache when precise mode changes to force redraw
+      console.log('Clearing grid cache due to precise mode change');
+      this.gridService.clearGridCache();
+      
       // Redraw grid to show/hide intersection points
       this.drawGrid();
     }
