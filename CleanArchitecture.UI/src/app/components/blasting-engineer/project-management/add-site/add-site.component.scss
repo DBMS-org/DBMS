@@ -260,18 +260,409 @@
       }
     }
   }
+}
 
-  .coordinates-help {
-    background: rgba(102, 126, 234, 0.05);
-    border: 1px solid rgba(102, 126, 234, 0.2);
-    border-radius: 12px;
-    padding: 1rem;
-    margin-top: 1rem;
+// Template Selection Styling
+.template-selection {
+  margin-bottom: 2rem;
+
+  .form-label {
+    display: block;
+    margin-bottom: 1.5rem;
+    color: #374151;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .template-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .template-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+
+    &:hover {
+      border-color: #667eea;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
+    }
+
+    &.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+
+      .template-preview .diagram-representation {
+        border-color: #667eea;
+      }
+    }
+
+    .template-preview {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      background: #f8f9fa;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .template-info {
+      text-align: center;
+      margin-bottom: 1rem;
+
+      h4 {
+        margin: 0 0 0.5rem 0;
+        color: #2d3748;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+
+      p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+    }
+
+    .template-radio {
+      display: flex;
+      justify-content: center;
+
+      input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        accent-color: #667eea;
+      }
+    }
+  }
+}
+
+// Diagram Representations
+.diagram-representation {
+  width: 90px;
+  height: 70px;
+  position: relative;
+  background: white;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  padding: 8px;
+
+  // Class Diagram Style - Hierarchical boxes with connections
+  &.class-diagram {
+    .class-box {
+      position: absolute;
+      background: #87CEEB;
+      border: 2px solid #5F9EA0;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      // Top two boxes
+      &:nth-child(1) {
+        top: 2px;
+        left: 4px;
+        width: 24px;
+        height: 16px;
+      }
+
+      &:nth-child(2) {
+        top: 2px;
+        right: 4px;
+        width: 24px;
+        height: 16px;
+      }
+
+      // Bottom main box
+      &.main {
+        bottom: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 28px;
+        height: 18px;
+        background: #87CEEB;
+        border: 2px solid #5F9EA0;
+      }
+
+      // Add small rectangles inside to represent class attributes
+      &::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        right: 3px;
+        height: 1px;
+        background: #5F9EA0;
+      }
+    }
+
+    .connection-line {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 16px;
+      background: #5F9EA0;
+
+      // Add connecting lines from top boxes to main box
+      &::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: -14px;
+        width: 30px;
+        height: 2px;
+        background: #5F9EA0;
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: -14px;
+        width: 2px;
+        height: 8px;
+        background: #5F9EA0;
+      }
+    }
+
+    // Add right connection line
+    &::after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      right: 16px;
+      width: 2px;
+      height: 8px;
+      background: #5F9EA0;
+    }
+  }
+
+  // Use Case Style - Actor, oval, and boundary
+  &.use-case {
+    .actor-icon {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #87CEEB;
+      border: 2px solid #5F9EA0;
+
+      // Add body
+      &::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 12px;
+        background: #5F9EA0;
+      }
+
+      // Add arms
+      &::after {
+        content: '';
+        position: absolute;
+        top: 12px;
+        left: -2px;
+        width: 12px;
+        height: 2px;
+        background: #5F9EA0;
+      }
+    }
+
+    // Add legs to actor
+    .actor-icon ~ .actor-legs {
+      position: absolute;
+      top: 24px;
+      left: 6px;
+      width: 12px;
+      height: 8px;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 2px;
+        width: 2px;
+        height: 8px;
+        background: #5F9EA0;
+        transform: rotate(-15deg);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 2px;
+        width: 2px;
+        height: 8px;
+        background: #5F9EA0;
+        transform: rotate(15deg);
+      }
+    }
+
+    .use-case-oval {
+      position: absolute;
+      top: 12px;
+      right: 8px;
+      width: 36px;
+      height: 20px;
+      border-radius: 50%;
+      background: #87CEEB;
+      border: 2px solid #5F9EA0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .boundary-box {
+      position: absolute;
+      top: 38px;
+      left: 30px;
+      right: 6px;
+      height: 24px;
+      border: 2px solid #5F9EA0;
+      border-radius: 4px;
+      background: transparent;
+    }
+
+    .interaction-line {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 24px;
+      height: 2px;
+      background: #5F9EA0;
+
+      // Add arrow
+      &::after {
+        content: '';
+        position: absolute;
+        right: -4px;
+        top: -2px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid #5F9EA0;
+        border-top: 3px solid transparent;
+        border-bottom: 3px solid transparent;
+      }
+    }
+  }
+
+  // Sequence Style - Two lifelines with messages
+  &.sequence {
+    .sequence-actor {
+      position: absolute;
+      background: #87CEEB;
+      border: 2px solid #5F9EA0;
+      border-radius: 4px;
+
+      // Left actor box
+      &:nth-child(1) {
+        top: 2px;
+        left: 8px;
+        width: 20px;
+        height: 12px;
+      }
+
+      // Right actor box  
+      &:nth-child(2) {
+        top: 2px;
+        right: 8px;
+        width: 20px;
+        height: 12px;
+      }
+
+      // Add lifelines
+      &::after {
+        content: '';
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 40px;
+        background: #5F9EA0;
+        border-left: 1px dashed #5F9EA0;
+      }
+    }
+
+    .sequence-message {
+      position: absolute;
+      top: 24px;
+      left: 20px;
+      right: 20px;
+      height: 2px;
+      background: #5F9EA0;
+
+      &::after {
+        content: '';
+        position: absolute;
+        right: -4px;
+        top: -2px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid #5F9EA0;
+        border-top: 3px solid transparent;
+        border-bottom: 3px solid transparent;
+      }
+    }
+
+    .sequence-return {
+      position: absolute;
+      top: 36px;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: #5F9EA0;
+      border-top: 1px dashed #5F9EA0;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: -4px;
+        top: -2px;
+        width: 0;
+        height: 0;
+        border-right: 6px solid #5F9EA0;
+        border-top: 3px solid transparent;
+        border-bottom: 3px solid transparent;
+      }
+    }
+  }
+}
+
+// Template Configuration
+.template-config {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f1f5f9;
+
+  h4 {
+    margin: 0 0 1.5rem 0;
+    color: #374151;
+    font-weight: 700;
+    font-size: 1.2rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: #4338ca;
-    font-size: 0.9rem;
 
     i {
       color: #667eea;
@@ -397,6 +788,10 @@
     }
   }
 
+  .template-selection .template-options {
+    grid-template-columns: 1fr;
+  }
+
   .form-actions {
     padding: 1.5rem;
     border-radius: 16px;
@@ -432,6 +827,14 @@
 
     .form-group .form-control {
       padding: 0.75rem;
+    }
+  }
+
+  .template-selection .template-options .template-option {
+    padding: 1.25rem;
+    
+    .template-preview {
+      height: 100px;
     }
   }
 }
