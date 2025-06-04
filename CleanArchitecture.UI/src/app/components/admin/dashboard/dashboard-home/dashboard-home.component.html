@@ -1,42 +1,128 @@
-
 <header class="dashboard-header">
-  <h1>Admin Dashboard</h1>
-  <div class="user-info">
-    <span>Welcome, Admin</span>
-    <button class="logout-btn">Logout</button>
+  <div class="header-content">
+    <h1>Admin Dashboard</h1>
+    <div class="user-info">
+      <div class="user-details" *ngIf="currentUser">
+        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
+        <div class="user-metadata">
+          <span class="user-role">Role: {{ currentUser.role }}</span>
+          <span class="user-location" *ngIf="getUserLocationInfo()">{{ getUserLocationInfo() }}</span>
+          <span class="last-login">{{ getLastLoginInfo() }}</span>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
   </div>
 </header>
 
-<div class="stats-grid">
-  <div class="stat-card">
-    <h3>Total Users</h3>
-    <p class="stat-number">{{ stats.totalUsers }}</p>
-  </div>
-  <div class="stat-card">
-    <h3>Active Users</h3>
-    <p class="stat-number">{{ stats.activeUsers }}</p>
-  </div>
-  <div class="stat-card">
-    <h3>Total Orders</h3>
-    <p class="stat-number">{{ stats.totalOrders }}</p>
-  </div>
-  <div class="stat-card">
-    <h3>Revenue</h3>
-    <p class="stat-number">${{ stats.revenue }}</p>
-  </div>
+<div class="loading-container" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading dashboard...</p>
 </div>
 
-<section class="recent-activities">
-  <h2>Recent Activities</h2>
-  <div class="activity-list">
-    @for (activity of recentActivities; track activity.id) {
-      <div class="activity-item">
-        <div class="activity-content">
-          <strong>{{ activity.user }}</strong>
-          <span>{{ activity.action }}</span>
-        </div>
-        <span class="activity-time">{{ activity.time }}</span>
+<div class="dashboard-content" *ngIf="!isLoading">
+  <div class="stats-grid">
+    <div class="stat-card users">
+      <div class="stat-icon">
+        <i class="material-icons">people</i>
       </div>
-    }
+      <div class="stat-content">
+        <h3>Total Users</h3>
+        <p class="stat-number">{{ stats.totalUsers }}</p>
+      </div>
+    </div>
+    <div class="stat-card active">
+      <div class="stat-icon">
+        <i class="material-icons">verified_user</i>
+      </div>
+      <div class="stat-content">
+        <h3>Active Users</h3>
+        <p class="stat-number">{{ stats.activeUsers }}</p>
+      </div>
+    </div>
+    <div class="stat-card projects">
+      <div class="stat-icon">
+        <i class="material-icons">work</i>
+      </div>
+      <div class="stat-content">
+        <h3>Total Projects</h3>
+        <p class="stat-number">{{ stats.totalProjects }}</p>
+      </div>
+    </div>
+    <div class="stat-card active-projects">
+      <div class="stat-icon">
+        <i class="material-icons">trending_up</i>
+      </div>
+      <div class="stat-content">
+        <h3>Active Projects</h3>
+        <p class="stat-number">{{ stats.activeProjects }}</p>
+      </div>
+    </div>
   </div>
-</section>
+
+  <div class="content-grid">
+    <section class="recent-activities">
+      <div class="section-header">
+        <h2>Recent Activities</h2>
+        <span class="filter-info" *ngIf="currentUser?.region">
+          (Prioritized for {{ currentUser?.region }})
+        </span>
+      </div>
+      <div class="activity-list">
+        <div *ngIf="recentActivities.length === 0" class="no-activities">
+          No recent activities found.
+        </div>
+        <div *ngFor="let activity of recentActivities; trackBy: trackActivity" class="activity-item">
+          <div class="activity-icon">
+            <i class="material-icons">{{ getActivityIcon(activity.action) }}</i>
+          </div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <strong>{{ activity.user }}</strong>
+              <span>{{ activity.action }}</span>
+            </div>
+            <div class="activity-meta">
+              <span class="activity-time">{{ activity.time }}</span>
+              <span class="activity-region" *ngIf="activity.region">{{ activity.region }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="user-profile-summary" *ngIf="currentUser">
+      <h2>Your Profile Summary</h2>
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i class="material-icons">account_circle</i>
+          </div>
+          <div class="profile-info">
+            <h3>{{ currentUser.name }}</h3>
+            <p>{{ currentUser.email }}</p>
+          </div>
+        </div>
+        <div class="profile-details">
+          <div class="detail-item">
+            <strong>Role:</strong> {{ currentUser.role }}
+          </div>
+          <div class="detail-item" *ngIf="currentUser.region">
+            <strong>Region:</strong> {{ currentUser.region }}
+          </div>
+          <div class="detail-item" *ngIf="currentUser.country">
+            <strong>Country:</strong> {{ currentUser.country }}
+          </div>
+          <div class="detail-item" *ngIf="currentUser.omanPhone">
+            <strong>Oman Phone:</strong> {{ currentUser.omanPhone }}
+          </div>
+          <div class="detail-item">
+            <strong>Status:</strong> 
+            <span class="status-badge" [class]="'status-' + currentUser.status.toLowerCase()">
+              {{ currentUser.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

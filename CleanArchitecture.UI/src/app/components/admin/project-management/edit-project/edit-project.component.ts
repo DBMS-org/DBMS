@@ -15,13 +15,13 @@ export class EditProjectComponent implements OnInit {
   loading = false;
   error: string | null = null;
   successMessage: string | null = null;
-  projectId: string = '';
+  projectId: number = 0;
 
   // Form data
   projectForm: UpdateProjectRequest = {
-    id: '',
+    id: 0,
     region: '',
-    project: '',
+    projectType: '',
     status: 'Active',
     description: '',
     startDate: undefined,
@@ -39,7 +39,7 @@ export class EditProjectComponent implements OnInit {
 
   ngOnInit() {
     this.route.params.subscribe(params => {
-      this.projectId = params['id'];
+      this.projectId = +params['id'];
       if (this.projectId) {
         this.loadProject();
       }
@@ -72,7 +72,7 @@ export class EditProjectComponent implements OnInit {
       id: this.projectId,
       name: 'Project Alpha',
       region: 'Muscat',
-      project: 'Muttrah Construction',
+      projectType: 'Muttrah Construction',
       status: 'Active',
       description: 'Main construction project in Muttrah area',
       startDate: new Date('2024-01-15'),
@@ -90,7 +90,7 @@ export class EditProjectComponent implements OnInit {
     this.projectForm = {
       id: project.id,
       region: project.region,
-      project: project.project,
+      projectType: project.projectType,
       status: project.status,
       description: project.description || '',
       startDate: project.startDate,
@@ -140,8 +140,8 @@ export class EditProjectComponent implements OnInit {
       return false;
     }
 
-    if (!this.projectForm.project.trim()) {
-      this.error = 'Project is required';
+    if (!this.projectForm.projectType.trim()) {
+      this.error = 'Project Type is required';
       return false;
     }
 

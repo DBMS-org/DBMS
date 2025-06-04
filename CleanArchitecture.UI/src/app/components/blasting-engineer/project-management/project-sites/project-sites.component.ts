@@ -13,7 +13,7 @@ import { ProjectService } from '../../../../core/services/project.service';
 })
 export class ProjectSitesComponent implements OnInit {
   project: Project | null = null;
-  projectId: string = '';
+  projectId: number = 0;
   sites: ProjectSite[] = [];
   loading = false;
   error: string | null = null;
@@ -25,7 +25,7 @@ export class ProjectSitesComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.projectId = this.route.snapshot.paramMap.get('id') || '';
+    this.projectId = +(this.route.snapshot.paramMap.get('id') || '0');
     if (this.projectId) {
       this.loadProject();
       this.loadProjectSites();
@@ -53,10 +53,10 @@ export class ProjectSitesComponent implements OnInit {
     // Mock project data as fallback
     const mockProjects = [
       {
-        id: '001',
+        id: 1,
         name: 'Project Alpha',
         region: 'Muscat',
-        project: 'Muttrah Construction',
+        projectType: 'Muttrah Construction',
         status: 'Active',
         description: 'Main construction project in Muttrah area',
         startDate: new Date('2024-01-15'),
@@ -67,10 +67,10 @@ export class ProjectSitesComponent implements OnInit {
         updatedAt: new Date()
       },
       {
-        id: '002',
+        id: 2,
         name: 'Project Beta',
         region: 'Dhofar',
-        project: 'Salalah Infrastructure',
+        projectType: 'Salalah Infrastructure',
         status: 'Active',
         description: 'Infrastructure development project',
         startDate: new Date('2024-02-01'),
@@ -81,10 +81,10 @@ export class ProjectSitesComponent implements OnInit {
         updatedAt: new Date()
       },
       {
-        id: '003',
+        id: 3,
         name: 'Project Gamma',
         region: 'Al Batinah North',
-        project: 'Sohar Industrial Zone',
+        projectType: 'Sohar Industrial Zone',
         status: 'Completed',
         description: 'Industrial zone construction project',
         startDate: new Date('2023-06-01'),
@@ -115,11 +115,11 @@ export class ProjectSitesComponent implements OnInit {
 
     // Generate mock sites based on project region
     const projectRegion = this.project?.region || 'Muscat';
-    const projectName = this.project?.project || 'Default Project';
+    const projectName = this.project?.projectType || 'Default Project';
 
     this.sites = [
       {
-        id: '1',
+        id: 1,
         projectId: this.projectId,
         name: `${projectName} - Main Site`,
         location: `${projectRegion} Central Area`,
@@ -132,7 +132,7 @@ export class ProjectSitesComponent implements OnInit {
         updatedAt: new Date()
       },
       {
-        id: '2',
+        id: 2,
         projectId: this.projectId,
         name: `${projectName} - Secondary Site`,
         location: `${projectRegion} Industrial Zone`,

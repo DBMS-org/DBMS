@@ -65,9 +65,9 @@
       <tbody>
         <tr *ngFor="let project of filteredProjects" class="project-row">
           <td class="project-id">{{ project.id }}</td>
-          <td class="project-name" (click)="viewProjectDetails(project)">{{ project.name || project.project }}</td>
+          <td class="project-name" (click)="viewProjectDetails(project)">{{ project.name || project.projectType }}</td>
           <td class="project-region">{{ project.region }}</td>
-          <td class="project-area">{{ project.project }}</td>
+          <td class="project-area">{{ project.projectType }}</td>
           <td class="project-status">
             <span class="status-badge" [ngClass]="getStatusClass(project.status)">
               {{ project.status }}
