@@ -19,7 +19,6 @@ export class EditUserComponent implements OnInit {
   error: string | null = null;
 
   roles = ['Admin', 'BlastingEngineer', 'User'];
-  areas = ['North', 'South', 'East', 'West', 'Central'];
   regions = ['Muscat', 'Salalah', 'Sohar', 'Nizwa', 'Sur', 'Ibri', 'Rustaq'];
   countries = ['Oman', 'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain'];
   statuses = ['Active', 'Inactive'];
@@ -60,14 +59,13 @@ export class EditUserComponent implements OnInit {
         name: 'John Doe',
         email: 'john@example.com',
         role: 'Admin',
-        area: 'North',
         region: 'Muscat',
         country: 'Oman',
         omanPhone: '+968 9876 5432',
         countryPhone: '+1 234 567 8900',
-          status: 'Active',
-          createdAt: new Date(),
-          updatedAt: new Date()
+        status: 'Active',
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
       }
     });
@@ -85,7 +83,6 @@ export class EditUserComponent implements OnInit {
       email: this.user.email,
       role: this.user.role,
       status: this.user.status,
-      area: this.user.area,
       region: this.user.region,
       country: this.user.country,
       omanPhone: this.user.omanPhone,

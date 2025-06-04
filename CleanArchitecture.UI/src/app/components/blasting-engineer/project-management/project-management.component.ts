@@ -17,7 +17,6 @@ export class ProjectManagementComponent implements OnInit {
   filteredProjects: Project[] = [];
   searchQuery: string = '';
   statusFilter: string = '';
-  regionFilter: string = '';
   loading = false;
   error: string | null = null;
 
@@ -26,7 +25,6 @@ export class ProjectManagementComponent implements OnInit {
   isViewModalVisible = false;
 
   statusOptions = ['', 'Active', 'Inactive', 'Completed', 'On Hold', 'Cancelled'];
-  regionOptions = ['', 'Muscat', 'Dhofar', 'Musandam', 'Al Buraimi', 'Al Dakhiliyah', 'Al Dhahirah', 'Al Wusta', 'Al Batinah North', 'Al Batinah South', 'Ash Sharqiyah North', 'Ash Sharqiyah South'];
 
   constructor(
     private router: Router,
@@ -132,11 +130,6 @@ export class ProjectManagementComponent implements OnInit {
     // Apply status filter
     if (this.statusFilter) {
       filtered = filtered.filter(project => project.status === this.statusFilter);
-    }
-
-    // Apply region filter
-    if (this.regionFilter) {
-      filtered = filtered.filter(project => project.region === this.regionFilter);
     }
 
     this.filteredProjects = filtered;

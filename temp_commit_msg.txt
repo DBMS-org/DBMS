@@ -1,1 +1,1 @@
-Add project management features to the UI, including new routes and sidebar items. Integrate Font Awesome for icons. Remove outdated project setup guide documentation.
+Refactor Add Site component to implement template selection for drilling patterns. Remove location and coordinates fields, and introduce template type and number of holes inputs. Update styles for template options and configuration sections.

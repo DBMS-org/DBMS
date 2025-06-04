@@ -52,7 +52,6 @@ export class UserDetailsComponent implements OnInit {
           name: 'John Doe',
           email: 'john@example.com',
           role: 'Admin',
-          area: 'North',
           region: 'Muscat',
           country: 'Oman',
           omanPhone: '+968 9876 5432',

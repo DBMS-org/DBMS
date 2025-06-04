@@ -120,5 +120,6 @@
   <app-add-user 
     (close)="onCloseAddUser()" 
     (save)="onSaveUser($event)"
+    [error]="error"
   ></app-add-user>
 }

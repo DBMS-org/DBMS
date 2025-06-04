@@ -4,7 +4,6 @@ export interface User {
   email: string;
   role: string;
   status: string;
-  area: string;
   region: string;
   country: string;
   omanPhone: string;
@@ -31,7 +30,6 @@ export interface UpdateUserRequest {
   email: string;
   role: string;
   status: string;
-  area: string;
   region: string;
   country: string;
   omanPhone: string;

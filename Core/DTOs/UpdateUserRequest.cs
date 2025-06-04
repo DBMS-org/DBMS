@@ -23,9 +23,6 @@ namespace Core.DTOs
         [StringLength(20, ErrorMessage = "Status cannot exceed 20 characters")]
         public string Status { get; set; } = string.Empty;
         
-        [StringLength(100, ErrorMessage = "Area cannot exceed 100 characters")]
-        public string Area { get; set; } = string.Empty;
-        
         [StringLength(100, ErrorMessage = "Region cannot exceed 100 characters")]
         public string Region { get; set; } = string.Empty;
         

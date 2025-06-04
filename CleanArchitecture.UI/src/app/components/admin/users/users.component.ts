@@ -60,7 +60,6 @@ export class UsersComponent implements OnInit {
         name: 'John Doe',
         email: 'john@example.com',
         role: 'Admin',
-        area: 'North',
         region: 'Muscat',
         country: 'Oman',
         omanPhone: '+968 9876 5432',
@@ -74,7 +73,6 @@ export class UsersComponent implements OnInit {
         name: 'Jane Smith',
         email: 'jane@example.com',
         role: 'User',
-        area: 'South',
         region: 'Salalah',
         country: 'UAE',
         omanPhone: '+968 1234 5678',
@@ -88,7 +86,6 @@ export class UsersComponent implements OnInit {
         name: 'Bob Wilson',
         email: 'bob@example.com',
         role: 'User',
-        area: 'East',
         region: 'Sohar',
         country: 'Oman',
         omanPhone: '+968 5555 6666',
@@ -123,6 +120,7 @@ export class UsersComponent implements OnInit {
   }
 
   addUser() {
+    this.error = null; // Clear any previous errors
     this.showAddUserModal = true;
   }
 
@@ -136,22 +134,14 @@ export class UsersComponent implements OnInit {
         this.users.push(newUser);
         this.filteredUsers = [...this.users];
         this.showAddUserModal = false;
+        this.error = null; // Clear any previous errors
         console.log('User created successfully:', newUser);
       },
       error: (error) => {
         this.error = error.message;
         console.error('Error creating user:', error);
-        // Still close modal and add to local list as fallback
-        const fallbackUser: User = {
-          ...userData,
-          id: Date.now(), // temporary ID
-          status: 'Active',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        this.users.push(fallbackUser);
-        this.filteredUsers = [...this.users];
-        this.showAddUserModal = false;
+        // Don't close modal or add to local list when there's an error
+        // Keep the modal open so user can see the error and try again
       }
     });
   }

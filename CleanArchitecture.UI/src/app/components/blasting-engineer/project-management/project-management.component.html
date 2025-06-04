@@ -22,11 +22,6 @@
         <option *ngFor="let status of statusOptions.slice(1)" [value]="status">{{status}}</option>
       </select>
       
-      <select class="form-select" [(ngModel)]="regionFilter" (change)="onFilter()">
-        <option value="">All Regions</option>
-        <option *ngFor="let region of regionOptions.slice(1)" [value]="region">{{region}}</option>
-      </select>
-      
       <button class="btn btn-secondary filter-btn" (click)="onFilter()">
         Filter
       </button>
