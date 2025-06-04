@@ -27,9 +27,6 @@ namespace Core.Entities
         public string Status { get; set; } = string.Empty;
         
         [MaxLength(100)]
-        public string Area { get; set; } = string.Empty;
-        
-        [MaxLength(100)]
         public string Region { get; set; } = string.Empty;
         
         [MaxLength(100)]

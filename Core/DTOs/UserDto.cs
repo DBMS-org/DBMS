@@ -7,7 +7,6 @@ namespace Core.DTOs
         public string Email { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
-        public string Area { get; set; } = string.Empty;
         public string Region { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
         public string OmanPhone { get; set; } = string.Empty;

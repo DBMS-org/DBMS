@@ -39,7 +39,6 @@ namespace API.Controllers
                         Email = u.Email,
                         Role = u.Role,
                         Status = u.Status,
-                        Area = u.Area,
                         Region = u.Region,
                         Country = u.Country,
                         OmanPhone = u.OmanPhone,
@@ -78,7 +77,6 @@ namespace API.Controllers
                     Email = user.Email,
                     Role = user.Role,
                     Status = user.Status,
-                    Area = user.Area,
                     Region = user.Region,
                     Country = user.Country,
                     OmanPhone = user.OmanPhone,
@@ -107,15 +105,6 @@ namespace API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Check if user already exists by name or email
-                var existingUser = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Name == request.Name || u.Email == request.Email);
-
-                if (existingUser != null)
-                {
-                    return BadRequest("User with this name or email already exists");
-                }
-
                 // Hash the password
                 var hashedPassword = _passwordService.HashPassword(request.Password);
 
@@ -126,7 +115,6 @@ namespace API.Controllers
                     PasswordHash = hashedPassword,
                     Role = request.Role,
                     Status = "Active", // Default status
-                    Area = request.Area,
                     Region = request.Region,
                     Country = request.Country,
                     OmanPhone = request.OmanPhone,
@@ -143,7 +131,6 @@ namespace API.Controllers
                     Email = user.Email,
                     Role = user.Role,
                     Status = user.Status,
-                    Area = user.Area,
                     Region = user.Region,
                     Country = user.Country,
                     OmanPhone = user.OmanPhone,
@@ -153,6 +140,20 @@ namespace API.Controllers
                 };
 
                 return CreatedAtAction(nameof(GetUser), new { id = user.Id }, userDto);
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle unique constraint violations
+                if (ex.InnerException?.Message.Contains("IX_Users_Email") == true ||
+                    ex.InnerException?.Message.Contains("UNIQUE constraint failed") == true ||
+                    ex.InnerException?.Message.Contains("duplicate key") == true)
+                {
+                    _logger.LogWarning("Attempted to create user with duplicate email: {Email}", request.Email);
+                    return BadRequest("User with this email already exists");
+                }
+                
+                _logger.LogError(ex, "Database error occurred while creating user");
+                throw;
             }
             catch (Exception ex)
             {
@@ -187,7 +188,6 @@ namespace API.Controllers
                 user.Email = request.Email;
                 user.Role = request.Role;
                 user.Status = request.Status;
-                user.Area = request.Area;
                 user.Region = request.Region;
                 user.Country = request.Country;
                 user.OmanPhone = request.OmanPhone;

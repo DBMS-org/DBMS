@@ -30,7 +30,6 @@ namespace Infrastructure.Data
                 entity.Property(e => e.PasswordHash).IsRequired();
                 entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Area).HasMaxLength(100);
                 entity.Property(e => e.Region).HasMaxLength(100);
                 entity.Property(e => e.Country).HasMaxLength(100);
                 entity.Property(e => e.OmanPhone).HasMaxLength(20);
@@ -132,7 +131,6 @@ namespace Infrastructure.Data
                     PasswordHash = "$2a$11$K8QQfR6Z5j6XgkHjWo9xXeNqO7QDj9qQVvjBZjR8g1jzQzKL9Yd3W", // Password: "admin123"
                     Role = "Admin", 
                     Status = "Active",
-                    Area = "Central",
                     Region = "Muscat",
                     Country = "Oman",
                     OmanPhone = "+968 9999 9999",

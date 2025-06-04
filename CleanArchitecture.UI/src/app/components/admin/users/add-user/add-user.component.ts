@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 export class AddUserComponent {
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<any>();
+  @Input() error: string | null = null;
 
   user = {
     name: '',
@@ -19,7 +20,6 @@ export class AddUserComponent {
     password: '',
     confirmPassword: '',
     role: 'User',
-    area: '',
     region: '',
     country: '',
     omanPhone: '',
@@ -27,7 +27,6 @@ export class AddUserComponent {
   };
 
   roles = ['Admin', 'blastingengineer'];
-  areas = ['North', 'South', 'East', 'West'];
   regions = ['Muscat', 'Salalah', 'Sohar', 'Nizwa', 'Sur'];
   countries = ['Oman', 'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain'];
 

@@ -207,8 +207,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         // Handle drill point dragging
         if (this.isDragging && this.draggedPoint) {
           const scale = this.zoomService.getCurrentScale();
-          const worldX = (pointer.x + this.panOffsetX) / scale;
-          const worldY = (pointer.y + this.panOffsetY) / scale;
+          const worldX = (pointer.x - CANVAS_CONSTANTS.RULER_WIDTH - this.offsetX - this.panOffsetX) / (CANVAS_CONSTANTS.GRID_SIZE * scale);
+          const worldY = (pointer.y - CANVAS_CONSTANTS.RULER_HEIGHT - this.offsetY - this.panOffsetY) / (CANVAS_CONSTANTS.GRID_SIZE * scale);
           
           if (this.isPreciseMode) {
             const snapX = Math.round(worldX / this.settings.spacing) * this.settings.spacing;
@@ -223,8 +223,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         // Update cursor position if in hole placement mode
         if (this.isHolePlacementMode) {
           const scale = this.zoomService.getCurrentScale();
-          const worldX = (pointer.x + this.panOffsetX) / scale;
-          const worldY = (pointer.y + this.panOffsetY) / scale;
+          const worldX = (pointer.x - CANVAS_CONSTANTS.RULER_WIDTH - this.offsetX - this.panOffsetX) / (CANVAS_CONSTANTS.GRID_SIZE * scale);
+          const worldY = (pointer.y - CANVAS_CONSTANTS.RULER_HEIGHT - this.offsetY - this.panOffsetY) / (CANVAS_CONSTANTS.GRID_SIZE * scale);
           
           this.cursorPosition = { x: worldX, y: worldY };
           this.cdr.detectChanges();
@@ -278,16 +278,16 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       if (this.draggedPoint) {
         const scale = this.zoomService.getCurrentScale();
         const position = e.target.position();
-        const worldX = (position.x + this.panOffsetX) / scale;
-        const worldY = (position.y + this.panOffsetY) / scale;
+        const worldX = (position.x - CANVAS_CONSTANTS.RULER_WIDTH - this.offsetX - this.panOffsetX) / (CANVAS_CONSTANTS.GRID_SIZE * scale);
+        const worldY = (position.y - CANVAS_CONSTANTS.RULER_HEIGHT - this.offsetY - this.panOffsetY) / (CANVAS_CONSTANTS.GRID_SIZE * scale);
         
         if (this.isPreciseMode) {
           const snapX = Math.round(worldX / this.settings.spacing) * this.settings.spacing;
           const snapY = Math.round(worldY / this.settings.burden) * this.settings.burden;
           
           // Update both the object and the data
-          const scaledX = snapX * scale - this.panOffsetX;
-          const scaledY = snapY * scale - this.panOffsetY;
+          const scaledX = snapX * CANVAS_CONSTANTS.GRID_SIZE * scale + this.offsetX + this.panOffsetX + CANVAS_CONSTANTS.RULER_WIDTH;
+          const scaledY = snapY * CANVAS_CONSTANTS.GRID_SIZE * scale + this.offsetY + this.panOffsetY + CANVAS_CONSTANTS.RULER_HEIGHT;
           e.target.position({ x: scaledX, y: scaledY });
           
           this.draggedPoint.x = snapX;
@@ -374,12 +374,16 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   private drawDrillPoints(): void {
+    console.log('drawDrillPoints called, points count:', this.drillPoints.length);
+    
     this.drillPointObjects.forEach(group => {
       group.destroy();
     });
     this.drillPointObjects.clear();
 
-    this.drillPoints.forEach(point => {
+    this.drillPoints.forEach((point, index) => {
+      console.log(`Creating visual for point ${index}:`, point);
+      
       const group = this.canvasService.createDrillPointObject(
         point,
         this.scale,
@@ -388,10 +392,16 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         this.isHolePlacementMode,
         point === this.selectedPoint
       );
+      
+      console.log(`Created group for point ${point.id} at position:`, { x: group.x(), y: group.y() });
+      
       this.drillPointObjects.set(point.id, group);
       this.pointsLayer.add(group);
     });
+    
+    console.log('About to batch draw points layer');
     this.pointsLayer.batchDraw();
+    console.log('Batch draw completed');
   }
 
   private placeDrillHole(e: Konva.KonvaEventObject<MouseEvent>): void {
@@ -399,20 +409,39 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     if (!pointer) return;
 
     const scale = this.zoomService.getCurrentScale();
-    const worldX = (pointer.x + this.panOffsetX) / scale;
-    const worldY = (pointer.y + this.panOffsetY) / scale;
+    
+    // Fix coordinate calculation to account for rulers and grid size
+    const worldX = (pointer.x - CANVAS_CONSTANTS.RULER_WIDTH - this.offsetX - this.panOffsetX) / (CANVAS_CONSTANTS.GRID_SIZE * scale);
+    const worldY = (pointer.y - CANVAS_CONSTANTS.RULER_HEIGHT - this.offsetY - this.panOffsetY) / (CANVAS_CONSTANTS.GRID_SIZE * scale);
+
+    console.log('Click position:', { 
+      pointerX: pointer.x, 
+      pointerY: pointer.y, 
+      scale, 
+      panOffsetX: this.panOffsetX, 
+      panOffsetY: this.panOffsetY,
+      offsetX: this.offsetX,
+      offsetY: this.offsetY,
+      worldX, 
+      worldY 
+    });
 
     if (this.isPreciseMode) {
       const snapX = Math.round(worldX / this.settings.spacing) * this.settings.spacing;
       const snapY = Math.round(worldY / this.settings.burden) * this.settings.burden;
+      console.log('Precise mode - snapped to:', { snapX, snapY });
       this.addDrillPoint(snapX, snapY);
     } else {
+      console.log('Free mode - adding at:', { worldX, worldY });
       this.addDrillPoint(worldX, worldY);
     }
   }
 
   private addDrillPoint(x: number, y: number): void {
+    console.log('addDrillPoint called with:', { x, y });
+
     if (!this.drillPointService.validateCoordinates(x, y)) {
+      console.log('Invalid coordinates');
       return;
     }
 
@@ -446,11 +475,14 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       this.drillPoints.length,
       CANVAS_CONSTANTS.MAX_DRILL_POINTS
     )) {
+      console.log('Max drill points reached');
       return;
     }
 
     const point = this.drillPointService.createDrillPoint(x, y, this.settings);
+    console.log('Created drill point:', point);
     this.drillPoints.push(point);
+    console.log('Total drill points:', this.drillPoints.length);
     this.drawDrillPoints();
   }
 

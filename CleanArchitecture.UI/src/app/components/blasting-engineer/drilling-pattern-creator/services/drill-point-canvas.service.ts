@@ -18,6 +18,15 @@ export class DrillPointCanvasService {
     isHolePlacementMode: boolean,
     isSelected: boolean
   ): Konva.Group {
+    console.log('createDrillPointObject called with:', {
+      point,
+      scale,
+      offsetX,
+      offsetY,
+      isHolePlacementMode,
+      isSelected
+    });
+
     // Convert grid coordinates to canvas coordinates
     const gridToCanvas = (gridCoord: number, gridSize: number, scale: number, offset: number, rulerSize: number) => {
       return gridCoord * gridSize * scale + offset + rulerSize;
@@ -25,6 +34,14 @@ export class DrillPointCanvasService {
 
     const x = gridToCanvas(point.x, CANVAS_CONSTANTS.GRID_SIZE, scale, offsetX, CANVAS_CONSTANTS.RULER_WIDTH);
     const y = gridToCanvas(point.y, CANVAS_CONSTANTS.GRID_SIZE, scale, offsetY, CANVAS_CONSTANTS.RULER_HEIGHT);
+
+    console.log('Calculated canvas position:', { x, y });
+    console.log('CANVAS_CONSTANTS:', {
+      GRID_SIZE: CANVAS_CONSTANTS.GRID_SIZE,
+      RULER_WIDTH: CANVAS_CONSTANTS.RULER_WIDTH,
+      RULER_HEIGHT: CANVAS_CONSTANTS.RULER_HEIGHT,
+      POINT_RADIUS: CANVAS_CONSTANTS.POINT_RADIUS
+    });
 
     const group = new Konva.Group({
       x,
@@ -59,6 +76,8 @@ export class DrillPointCanvasService {
       originalX: point.x,
       originalY: point.y
     };
+
+    console.log('Created group with children:', group.children.length);
 
     return group;
   }
