@@ -1,0 +1,84 @@
+<div class="project-sites-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="breadcrumb-nav">
+        <button class="btn btn-link back-btn" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Back to Projects
+        </button>
+      </div>
+      <div class="page-title-section">
+        <h2 class="page-title">
+          <i class="fas fa-map-marker-alt"></i>
+          Project Sites
+        </h2>
+        <p class="project-name" *ngIf="project">{{ project.name || project.project }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Error Message -->
+    <div *ngIf="error" class="alert alert-danger">
+      {{ error }}
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="loading" class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading sites...</span>
+      </div>
+    </div>
+
+    <!-- Sites Content -->
+    <div *ngIf="!loading" class="sites-content">
+      <!-- Sites Header -->
+      <div class="sites-header">
+        <div class="sites-header-content">
+          <h3>Project Sites ({{ sites.length }})</h3>
+          <button class="btn btn-primary add-site-btn" (click)="addNewSite()">
+            <i class="fas fa-plus"></i> Add Site
+          </button>
+        </div>
+      </div>
+
+      <!-- Sites List -->
+      <div class="sites-list" *ngIf="sites.length > 0">
+        <div class="site-card" *ngFor="let site of sites">
+          <div class="site-header">
+            <div class="site-info">
+              <h5 class="site-name">{{ site.name }}</h5>
+              <p class="site-location">
+                <i class="fas fa-map-marker-alt"></i>
+                {{ site.location }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="site-details" *ngIf="site.description">
+            <p class="site-description">{{ site.description }}</p>
+          </div>
+          
+          <div class="site-meta">
+            <small class="text-muted">
+              Created: {{ site.createdAt | date:'short' }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Sites Message -->
+      <div class="no-sites" *ngIf="sites.length === 0">
+        <div class="empty-state">
+          <i class="fas fa-map-marker-alt fa-3x text-muted"></i>
+          <h4>No Sites Found</h4>
+          <p>This project doesn't have any sites yet.</p>
+          <button class="btn btn-primary" (click)="addNewSite()">
+            <i class="fas fa-plus"></i> Add First Site
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

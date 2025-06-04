@@ -1,0 +1,242 @@
+<div class="project-details-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-left">
+      <button class="btn btn-outline-secondary back-btn" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i> Back to Projects
+      </button>
+      <h2 class="page-title">{{ project?.name || 'Project Details' }}</h2>
+    </div>
+    <div class="header-right" *ngIf="project && !isEditing">
+      <button class="btn btn-primary edit-btn" (click)="toggleEdit()">
+        <i class="fas fa-edit"></i> Edit Project
+      </button>
+      <button class="btn btn-danger delete-btn" (click)="deleteProject()">
+        <i class="fas fa-trash"></i> Delete
+      </button>
+    </div>
+    <div class="header-right" *ngIf="isEditing">
+      <button class="btn btn-success save-btn" (click)="saveProject()">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+      <button class="btn btn-secondary cancel-btn" (click)="toggleEdit()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Project Details Content -->
+  <div *ngIf="project && !loading" class="content-section">
+    
+    <!-- Project Information Card -->
+    <div class="info-card">
+      <div class="card-header">
+        <h3><i class="fas fa-project-diagram"></i> Project Information</h3>
+        <span class="status-badge" [ngClass]="getStatusClass(project.status)">
+          {{ project.status }}
+        </span>
+      </div>
+      
+      <div class="card-body">
+        <div class="info-grid" *ngIf="!isEditing">
+          <div class="info-item">
+            <label>Project ID:</label>
+            <span>{{ project.id }}</span>
+          </div>
+          <div class="info-item">
+            <label>Project Name:</label>
+            <span>{{ project.name }}</span>
+          </div>
+          <div class="info-item">
+            <label>Region:</label>
+            <span>{{ project.region }}</span>
+          </div>
+          <div class="info-item">
+            <label>Project:</label>
+            <span>{{ project.project }}</span>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <span class="status-badge" [ngClass]="getStatusClass(project.status)">
+              {{ project.status }}
+            </span>
+          </div>
+          <div class="info-item">
+            <label>Budget:</label>
+            <span>{{ formatCurrency(project.budget) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Start Date:</label>
+            <span>{{ formatDate(project.startDate) }}</span>
+          </div>
+          <div class="info-item">
+            <label>End Date:</label>
+            <span>{{ formatDate(project.endDate) }}</span>
+          </div>
+          <div class="info-item full-width">
+            <label>Description:</label>
+            <span>{{ project.description || 'No description available' }}</span>
+          </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="edit-form" *ngIf="isEditing">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Project Name <span class="required">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="editForm.name" required>
+            </div>
+            <div class="form-group">
+              <label>Region <span class="required">*</span></label>
+              <select class="form-select" [(ngModel)]="editForm.region" required>
+                <option value="">Select Region</option>
+                <option *ngFor="let region of regionOptions" [value]="region">{{region}}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Project <span class="required">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="editForm.project" required>
+            </div>
+            <div class="form-group">
+              <label>Status <span class="required">*</span></label>
+              <select class="form-select" [(ngModel)]="editForm.status" required>
+                <option value="">Select Status</option>
+                <option *ngFor="let status of statusOptions" [value]="status">{{status}}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Budget</label>
+              <input type="number" class="form-control" [(ngModel)]="editForm.budget" placeholder="Enter budget amount">
+            </div>
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="date" class="form-control" [value]="formatDateForInput(editForm.startDate)" 
+                     (change)="onStartDateChange($event)">
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <input type="date" class="form-control" [value]="formatDateForInput(editForm.endDate)"
+                     (change)="onEndDateChange($event)">
+            </div>
+            <div class="form-group full-width">
+              <label>Description</label>
+              <textarea class="form-control" rows="4" [(ngModel)]="editForm.description" 
+                        placeholder="Enter project description"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Sites Card -->
+    <div class="info-card">
+      <div class="card-header">
+        <h3><i class="fas fa-map-marker-alt"></i> Project Sites</h3>
+        <button class="btn btn-primary add-site-btn" (click)="addNewSite()">
+          <i class="fas fa-plus"></i> Add Site
+        </button>
+      </div>
+      
+      <div class="card-body">
+        <div *ngIf="projectSites.length === 0" class="empty-sites">
+          <i class="fas fa-map fa-3x text-muted"></i>
+          <h4>No Sites Found</h4>
+          <p>No sites have been added to this project yet.</p>
+          <button class="btn btn-primary" (click)="addNewSite()">
+            <i class="fas fa-plus"></i> Add First Site
+          </button>
+        </div>
+
+        <div *ngIf="projectSites.length > 0" class="sites-grid">
+          <div *ngFor="let site of projectSites" class="site-card">
+            <div class="site-header">
+              <h4>{{ site.name }}</h4>
+              <button class="btn btn-sm btn-outline-primary" (click)="viewSiteDetails(site)">
+                <i class="fas fa-eye"></i> View
+              </button>
+            </div>
+            <div class="site-details">
+              <p><i class="fas fa-map-marker-alt"></i> {{ site.location }}</p>
+              <p *ngIf="site.description">{{ site.description }}</p>
+              <p class="site-coords" *ngIf="site.coordinates">
+                <i class="fas fa-globe"></i> 
+                Lat: {{ site.coordinates.latitude }}, 
+                Lng: {{ site.coordinates.longitude }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Timeline Card -->
+    <div class="info-card">
+      <div class="card-header">
+        <h3><i class="fas fa-calendar-alt"></i> Project Timeline</h3>
+      </div>
+      
+      <div class="card-body">
+        <div class="timeline-info">
+          <div class="timeline-item">
+            <div class="timeline-date">
+              <i class="fas fa-play-circle text-success"></i>
+              <span>{{ formatDate(project.startDate) }}</span>
+            </div>
+            <div class="timeline-content">
+              <h5>Project Started</h5>
+              <p>Project officially commenced</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-date">
+              <i class="fas fa-flag-checkered text-primary"></i>
+              <span>{{ formatDate(project.endDate) }}</span>
+            </div>
+            <div class="timeline-content">
+              <h5>Expected Completion</h5>
+              <p>Projected project completion date</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata Card -->
+    <div class="info-card">
+      <div class="card-header">
+        <h3><i class="fas fa-info-circle"></i> Metadata</h3>
+      </div>
+      
+      <div class="card-body">
+        <div class="metadata-grid">
+          <div class="metadata-item">
+            <label>Created:</label>
+            <span>{{ formatDate(project.createdAt) }}</span>
+          </div>
+          <div class="metadata-item">
+            <label>Last Updated:</label>
+            <span>{{ formatDate(project.updatedAt) }}</span>
+          </div>
+          <div class="metadata-item">
+            <label>Assigned User ID:</label>
+            <span>{{ project.assignedUserId || 'Not assigned' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

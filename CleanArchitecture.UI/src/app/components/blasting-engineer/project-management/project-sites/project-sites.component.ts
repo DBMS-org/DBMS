@@ -1,0 +1,176 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Project, ProjectSite } from '../../../../core/models/project.model';
+import { ProjectService } from '../../../../core/services/project.service';
+
+@Component({
+  selector: 'app-project-sites',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './project-sites.component.html',
+  styleUrl: './project-sites.component.scss'
+})
+export class ProjectSitesComponent implements OnInit {
+  project: Project | null = null;
+  projectId: string = '';
+  sites: ProjectSite[] = [];
+  loading = false;
+  error: string | null = null;
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private projectService: ProjectService
+  ) {}
+
+  ngOnInit() {
+    this.projectId = this.route.snapshot.paramMap.get('id') || '';
+    if (this.projectId) {
+      this.loadProject();
+      this.loadProjectSites();
+    }
+  }
+
+  loadProject() {
+    this.loading = true;
+    this.error = null;
+
+    this.projectService.getProject(this.projectId).subscribe({
+      next: (project) => {
+        this.project = project;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading project:', error);
+        // Fallback to mock data
+        this.loadMockProject();
+      }
+    });
+  }
+
+  private loadMockProject() {
+    // Mock project data as fallback
+    const mockProjects = [
+      {
+        id: '001',
+        name: 'Project Alpha',
+        region: 'Muscat',
+        project: 'Muttrah Construction',
+        status: 'Active',
+        description: 'Main construction project in Muttrah area',
+        startDate: new Date('2024-01-15'),
+        endDate: new Date('2024-12-31'),
+        budget: 2500000,
+        assignedUserId: 1,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date()
+      },
+      {
+        id: '002',
+        name: 'Project Beta',
+        region: 'Dhofar',
+        project: 'Salalah Infrastructure',
+        status: 'Active',
+        description: 'Infrastructure development project',
+        startDate: new Date('2024-02-01'),
+        endDate: new Date('2025-01-31'),
+        budget: 3000000,
+        assignedUserId: 2,
+        createdAt: new Date('2024-01-15'),
+        updatedAt: new Date()
+      },
+      {
+        id: '003',
+        name: 'Project Gamma',
+        region: 'Al Batinah North',
+        project: 'Sohar Industrial Zone',
+        status: 'Completed',
+        description: 'Industrial zone construction project',
+        startDate: new Date('2023-06-01'),
+        endDate: new Date('2023-12-31'),
+        budget: 1800000,
+        assignedUserId: 3,
+        createdAt: new Date('2023-06-01'),
+        updatedAt: new Date()
+      }
+    ];
+
+    this.project = mockProjects.find(p => p.id === this.projectId) || mockProjects[0];
+    this.loading = false;
+  }
+
+  loadProjectSites() {
+    if (!this.projectId) return;
+    
+    this.loading = true;
+    this.error = null;
+
+    // For now, using mock data since the service might not have sites endpoint
+    this.loadMockSites();
+  }
+
+  private loadMockSites() {
+    if (!this.project && !this.projectId) return;
+
+    // Generate mock sites based on project region
+    const projectRegion = this.project?.region || 'Muscat';
+    const projectName = this.project?.project || 'Default Project';
+
+    this.sites = [
+      {
+        id: '1',
+        projectId: this.projectId,
+        name: `${projectName} - Main Site`,
+        location: `${projectRegion} Central Area`,
+        coordinates: {
+          latitude: this.getRegionCoordinates(projectRegion).lat,
+          longitude: this.getRegionCoordinates(projectRegion).lng
+        },
+        description: 'Primary construction site for the project',
+        createdAt: new Date('2024-01-15'),
+        updatedAt: new Date()
+      },
+      {
+        id: '2',
+        projectId: this.projectId,
+        name: `${projectName} - Secondary Site`,
+        location: `${projectRegion} Industrial Zone`,
+        coordinates: {
+          latitude: this.getRegionCoordinates(projectRegion).lat + 0.01,
+          longitude: this.getRegionCoordinates(projectRegion).lng + 0.01
+        },
+        description: 'Secondary support site for logistics and storage',
+        createdAt: new Date('2024-02-01'),
+        updatedAt: new Date()
+      }
+    ];
+    
+    this.loading = false;
+  }
+
+  private getRegionCoordinates(region: string): { lat: number; lng: number } {
+    const coordinates: { [key: string]: { lat: number; lng: number } } = {
+      'Muscat': { lat: 23.5880, lng: 58.3829 },
+      'Dhofar': { lat: 17.0194, lng: 54.0924 },
+      'Musandam': { lat: 26.2100, lng: 56.3300 },
+      'Al Buraimi': { lat: 24.2488, lng: 55.7932 },
+      'Al Dakhiliyah': { lat: 22.9637, lng: 57.5339 },
+      'Al Dhahirah': { lat: 23.3668, lng: 56.3034 },
+      'Al Wusta': { lat: 20.1553, lng: 56.5136 },
+      'Al Batinah North': { lat: 24.3510, lng: 56.7069 },
+      'Al Batinah South': { lat: 23.6760, lng: 57.8500 },
+      'Ash Sharqiyah North': { lat: 22.6853, lng: 59.1363 },
+      'Ash Sharqiyah South': { lat: 21.5169, lng: 59.1721 }
+    };
+    return coordinates[region] || { lat: 23.5880, lng: 58.3829 };
+  }
+
+  goBack() {
+    this.router.navigate(['/blasting-engineer/project-management']);
+  }
+
+  addNewSite() {
+    this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites', 'new']);
+  }
+}

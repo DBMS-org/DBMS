@@ -1,0 +1,184 @@
+<div class="add-site-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="breadcrumb-nav">
+        <button class="btn btn-link back-btn" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Back to Sites
+        </button>
+      </div>
+      <div class="page-title-section">
+        <h2 class="page-title">
+          <i class="fas fa-plus-circle"></i>
+          Add New Site
+        </h2>
+        <p class="project-name" *ngIf="project">{{ project.name || project.project }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <i class="fas fa-check-circle"></i>
+      {{ successMessage }}
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="alert alert-danger">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ error }}
+    </div>
+
+    <!-- Add Site Form -->
+    <form #addSiteForm="ngForm" (ngSubmit)="onSubmit(addSiteForm)" class="add-site-form">
+      
+      <!-- Site Information Card -->
+      <div class="form-card">
+        <div class="card-header">
+          <h3><i class="fas fa-info-circle"></i> Site Information</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="siteName" class="form-label">
+                Site Name <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="siteName"
+                name="siteName"
+                class="form-control"
+                [(ngModel)]="siteData.name"
+                #siteName="ngModel"
+                required
+                placeholder="Enter site name"
+                [class.is-invalid]="siteName.invalid && siteName.touched"
+              />
+              <div *ngIf="siteName.invalid && siteName.touched" class="invalid-feedback">
+                Site name is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="siteLocation" class="form-label">
+                Location <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="siteLocation"
+                name="siteLocation"
+                class="form-control"
+                [(ngModel)]="siteData.location"
+                #siteLocation="ngModel"
+                required
+                placeholder="Enter site location"
+                [class.is-invalid]="siteLocation.invalid && siteLocation.touched"
+              />
+              <div *ngIf="siteLocation.invalid && siteLocation.touched" class="invalid-feedback">
+                Location is required
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="siteDescription" class="form-label">Description</label>
+            <textarea
+              id="siteDescription"
+              name="siteDescription"
+              class="form-control"
+              [(ngModel)]="siteData.description"
+              rows="4"
+              placeholder="Enter site description (optional)"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coordinates Card -->
+      <div class="form-card">
+        <div class="card-header">
+          <h3><i class="fas fa-map-marker-alt"></i> Coordinates</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="latitude" class="form-label">
+                Latitude <span class="required">*</span>
+              </label>
+              <input
+                type="number"
+                id="latitude"
+                name="latitude"
+                class="form-control"
+                [(ngModel)]="siteData.coordinates.latitude"
+                #latitude="ngModel"
+                required
+                step="0.000001"
+                min="-90"
+                max="90"
+                placeholder="e.g., 23.5880"
+                [class.is-invalid]="latitude.invalid && latitude.touched"
+              />
+              <div *ngIf="latitude.invalid && latitude.touched" class="invalid-feedback">
+                <span *ngIf="latitude.errors?.['required']">Latitude is required</span>
+                <span *ngIf="latitude.errors?.['min'] || latitude.errors?.['max']">
+                  Latitude must be between -90 and 90
+                </span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="longitude" class="form-label">
+                Longitude <span class="required">*</span>
+              </label>
+              <input
+                type="number"
+                id="longitude"
+                name="longitude"
+                class="form-control"
+                [(ngModel)]="siteData.coordinates.longitude"
+                #longitude="ngModel"
+                required
+                step="0.000001"
+                min="-180"
+                max="180"
+                placeholder="e.g., 58.3829"
+                [class.is-invalid]="longitude.invalid && longitude.touched"
+              />
+              <div *ngIf="longitude.invalid && longitude.touched" class="invalid-feedback">
+                <span *ngIf="longitude.errors?.['required']">Longitude is required</span>
+                <span *ngIf="longitude.errors?.['min'] || longitude.errors?.['max']">
+                  Longitude must be between -180 and 180
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="coordinates-help">
+            <i class="fas fa-info-circle"></i>
+            <span>You can find coordinates using Google Maps or GPS devices</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="goBack()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary"
+          [disabled]="addSiteForm.invalid || isSubmitting"
+        >
+          <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+          <i class="fas fa-plus" *ngIf="!isSubmitting"></i>
+          {{ isSubmitting ? 'Adding Site...' : 'Add Site' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
