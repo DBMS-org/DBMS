@@ -93,8 +93,14 @@ export class EditUserComponent implements OnInit {
       next: () => {
         console.log('User updated successfully');
         this.saving = false;
-        // Navigate back to user details
+        
+        // Add a small delay to ensure database transaction is committed
+        setTimeout(() => {
+          // Force complete navigation refresh to ensure fresh data
+          this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
     this.router.navigate(['/admin/users', this.user?.id]);
+          });
+        }, 500); // 500ms delay
       },
       error: (error) => {
         this.error = error.message;

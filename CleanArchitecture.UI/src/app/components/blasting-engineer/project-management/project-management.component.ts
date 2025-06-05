@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProjectService } from '../../../core/services/project.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Project } from '../../../core/models/project.model';
 import { ViewProjectComponent } from './view-project/view-project.component';
 
@@ -28,7 +29,8 @@ export class ProjectManagementComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -39,7 +41,8 @@ export class ProjectManagementComponent implements OnInit {
     this.loading = true;
     this.error = null;
     
-    this.projectService.getProjects().subscribe({
+    // Use role-based project filtering
+    this.projectService.getProjectsForCurrentUser().subscribe({
       next: (projects) => {
         this.projects = projects;
         this.filteredProjects = [...this.projects];
@@ -57,51 +60,59 @@ export class ProjectManagementComponent implements OnInit {
   }
 
   private loadMockData() {
-    // Mock data as fallback
-    this.projects = [
+    // Mock data as fallback - filter based on user role and region
+    const allMockProjects = [
       {
         id: 1,
-        name: 'Project Alpha',
+        name: 'Project Alpha - Muttrah Construction',
         region: 'Muscat',
-        projectType: 'Muttrah Construction',
         status: 'Active',
         description: 'Main construction project in Muttrah area',
         startDate: new Date('2024-01-15'),
         endDate: new Date('2024-12-31'),
-        budget: 2500000,
         assignedUserId: 1,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date()
       },
       {
         id: 2,
-        name: 'Project Beta',
+        name: 'Project Beta - Salalah Infrastructure',
         region: 'Dhofar',
-        projectType: 'Salalah Infrastructure',
         status: 'Active',
         description: 'Infrastructure development project',
         startDate: new Date('2024-02-01'),
         endDate: new Date('2025-01-31'),
-        budget: 3000000,
         assignedUserId: 2,
         createdAt: new Date('2024-01-15'),
         updatedAt: new Date()
       },
       {
         id: 3,
-        name: 'Project Gamma',
+        name: 'Project Gamma - Sohar Industrial Zone',
         region: 'Al Batinah North',
-        projectType: 'Sohar Industrial Zone',
         status: 'Completed',
         description: 'Industrial zone construction project',
         startDate: new Date('2023-06-01'),
         endDate: new Date('2023-12-31'),
-        budget: 1800000,
         assignedUserId: 3,
         createdAt: new Date('2023-06-01'),
         updatedAt: new Date()
       }
     ];
+
+    // Apply the same role-based filtering to mock data
+    const currentUser = this.authService.getCurrentUser();
+    
+    if (this.authService.isAdmin()) {
+      this.projects = allMockProjects;
+    } else if (this.authService.isBlastingEngineer() && currentUser?.region) {
+      this.projects = allMockProjects.filter(project => 
+        project.region.toLowerCase() === currentUser.region.toLowerCase()
+      );
+    } else {
+      this.projects = [];
+    }
+    
     this.filteredProjects = [...this.projects];
   }
 
@@ -122,7 +133,6 @@ export class ProjectManagementComponent implements OnInit {
       filtered = filtered.filter(project => 
         project.name?.toLowerCase().includes(query) ||
         project.region.toLowerCase().includes(query) ||
-        project.projectType.toLowerCase().includes(query) ||
         project.id.toString().includes(query)
       );
     }

@@ -20,8 +20,8 @@ export class EditProjectComponent implements OnInit {
   // Form data
   projectForm: UpdateProjectRequest = {
     id: 0,
+    name: '',
     region: '',
-    projectType: '',
     status: 'Active',
     description: '',
     startDate: undefined,
@@ -70,14 +70,12 @@ export class EditProjectComponent implements OnInit {
     // Mock project data as fallback
     const mockProject: Project = {
       id: this.projectId,
-      name: 'Project Alpha',
+      name: 'Project Alpha - Muttrah Construction',
       region: 'Muscat',
-      projectType: 'Muttrah Construction',
       status: 'Active',
       description: 'Main construction project in Muttrah area',
       startDate: new Date('2024-01-15'),
       endDate: new Date('2024-12-31'),
-      budget: 2500000,
       assignedUserId: 1,
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date()
@@ -89,8 +87,8 @@ export class EditProjectComponent implements OnInit {
   private initializeForm(project: Project) {
     this.projectForm = {
       id: project.id,
+      name: project.name,
       region: project.region,
-      projectType: project.projectType,
       status: project.status,
       description: project.description || '',
       startDate: project.startDate,
@@ -135,13 +133,13 @@ export class EditProjectComponent implements OnInit {
   }
 
   private validateForm(): boolean {
-    if (!this.projectForm.region) {
-      this.error = 'Region is required';
+    if (!this.projectForm.name.trim()) {
+      this.error = 'Project name is required';
       return false;
     }
 
-    if (!this.projectForm.projectType.trim()) {
-      this.error = 'Project Type is required';
+    if (!this.projectForm.region) {
+      this.error = 'Region is required';
       return false;
     }
 

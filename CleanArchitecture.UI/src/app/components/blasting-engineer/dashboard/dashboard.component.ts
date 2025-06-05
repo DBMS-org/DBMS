@@ -1,11 +1,14 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { ProjectService } from '../../../core/services/project.service';
+import { SiteService, ProjectSite } from '../../../core/services/site.service';
 import { UserActivityService } from '../../../core/services/user-activity.service';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
 import { User } from '../../../core/models/user.model';
+import { Project } from '../../../core/models/project.model';
 
 interface DrillHole {
   serialNumber: number;
@@ -38,12 +41,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   stats = {
     totalProjects: 0,
     activeProjects: 0,
+    totalSites: 0,
+    activeSites: 0,
     uploadedDataSets: 0,
     completedPatterns: 0,
     pendingReviews: 0
   };
 
   recentActivities: any[] = [];
+  userProjects: Project[] = [];
   drillData: DrillHole[] = [];
   recentUploads: any[] = [];
   quickStats = {
@@ -56,6 +62,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
+    private projectService: ProjectService,
+    private siteService: SiteService,
     private userActivityService: UserActivityService,
     private drillDataService: DrillDataService,
     private router: Router
@@ -63,9 +71,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscribeToCurrentUser();
-    this.loadDashboardData();
     this.loadDrillData();
-    this.userActivityService.initializeSampleActivities();
   }
 
   ngOnDestroy() {
@@ -78,24 +84,57 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (user) {
         console.log('Current logged-in blasting engineer:', user);
         this.loadUserSpecificData();
-        this.trackDashboardAccess();
       }
     });
   }
 
+  private loadUserSpecificData() {
+    this.loadDashboardData();
+  }
+
   private loadDashboardData() {
-    // Simulate loading data
-    setTimeout(() => {
-      this.stats = {
-        totalProjects: 12,
-        activeProjects: 8,
-        uploadedDataSets: this.drillData.length > 0 ? 5 : 0,
-        completedPatterns: 15,
-        pendingReviews: 3
-      };
-      this.loadRecentActivities();
-      this.isLoading = false;
-    }, 1000);
+    // Load real project and site statistics based on user role and region
+    forkJoin({
+      projects: this.projectService.getProjectsForCurrentUser(),
+      allSites: this.siteService.getAllSites()
+    }).subscribe({
+      next: ({ projects, allSites }) => {
+        this.userProjects = projects;
+        
+        // Filter sites that belong to user's projects
+        const userProjectIds = projects.map(p => p.id);
+        const userSites = allSites.filter(site => userProjectIds.includes(site.projectId));
+        
+        // Calculate statistics
+        this.stats.totalProjects = projects.length;
+        this.stats.activeProjects = projects.filter(p => p.status === 'Active').length;
+        this.stats.totalSites = userSites.length;
+        this.stats.activeSites = userSites.filter(s => s.status === 'Active').length;
+        this.stats.uploadedDataSets = this.drillData.length > 0 ? 5 : 0;
+        this.stats.completedPatterns = 15;
+        this.stats.pendingReviews = 3;
+        
+        // Generate site-related activities and incorporate into recent activities
+        this.generateSiteActivities(userSites);
+        this.loadRecentActivities();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading dashboard data:', error);
+        // Fallback to mock data
+        this.stats = {
+          totalProjects: 12,
+          activeProjects: 8,
+          totalSites: 8,
+          activeSites: 6,
+          uploadedDataSets: this.drillData.length > 0 ? 5 : 0,
+          completedPatterns: 15,
+          pendingReviews: 3
+        };
+        this.loadRecentActivities();
+        this.isLoading = false;
+      }
+    });
   }
 
   private loadDrillData() {
@@ -151,24 +190,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ];
   }
 
-  private loadUserSpecificData() {
-    if (!this.currentUser) return;
-
-    // Filter activities based on user region
-    this.recentActivities = this.userActivityService.getActivitiesPrioritizedByUserRegion();
-  }
-
   private loadRecentActivities() {
-    // Get activities from the activity service
-    this.recentActivities = this.userActivityService.getActivitiesPrioritizedByUserRegion();
-  }
-
-  private trackDashboardAccess() {
-    this.userActivityService.trackActivity(
-      'accessed dashboard',
-      'Blasting Engineer Dashboard accessed',
-      'other'
-    );
+    // Get all activities from the activity service
+    const allActivities = this.userActivityService.getActivitiesPrioritizedByUserRegion();
+    
+    // Filter to show only important activities
+    this.recentActivities = allActivities.filter(activity => {
+      const action = activity.action.toLowerCase();
+      
+      // Filter out unimportant activities
+      if (action.includes('dashboard access') || 
+          action.includes('accessed dashboard') ||
+          action.includes('navigated to')) {
+        return false;
+      }
+      
+      // Keep important activities
+      return action.includes('created') ||
+             action.includes('uploaded') ||
+             action.includes('completed') ||
+             action.includes('updated') ||
+             action.includes('logged out') ||
+             action.includes('assigned') ||
+             action.includes('reviewed') ||
+             action.includes('exported') ||
+             action.includes('generated');
+    });
   }
 
   logout() {
@@ -216,6 +263,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (action.includes('design') || action.includes('pattern')) return 'grid_on';
     if (action.includes('review')) return 'assessment';
     if (action.includes('export') || action.includes('report')) return 'description';
+    if (action.includes('created') && action.includes('site')) return 'place';
     if (action.includes('created')) return 'add_circle';
     if (action.includes('visualization') || action.includes('3D')) return '3d_rotation';
     if (action.includes('dashboard') || action.includes('accessed')) return 'dashboard';
@@ -223,12 +271,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   navigateToUpload() {
-    this.userActivityService.trackActivity('navigated to CSV upload', 'Accessed CSV upload page', 'upload');
     this.router.navigate(['/blasting-engineer/csv-upload']);
   }
 
   navigateToProjects() {
-    this.userActivityService.trackActivity('navigated to project management', 'Accessed project management', 'project');
+    this.router.navigate(['/blasting-engineer/project-management']);
+  }
+
+  navigateToSites() {
     this.router.navigate(['/blasting-engineer/project-management']);
   }
 
@@ -244,9 +294,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return `quality-${status.toLowerCase().replace(' ', '-')}`;
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: Date | string): string {
     const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    const dateObj = date instanceof Date ? date : new Date(date);
+    
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+      return 'Invalid date';
+    }
+    
+    const diffInHours = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
     
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${Math.floor(diffInHours)} hours ago`;
@@ -254,7 +311,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return `${Math.floor(diffInHours / 24)} days ago`;
   }
 
-  getTimeFromNow(timestamp: Date): string {
+  getTimeFromNow(timestamp: Date | string): string {
     return this.formatDate(timestamp);
+  }
+
+  private generateSiteActivities(sites: ProjectSite[]) {
+    // Get recent sites (created in last 7 days) and track as activities
+    const recentSites = sites
+      .filter(site => {
+        const siteDate = new Date(site.createdAt);
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        return siteDate > weekAgo;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3); // Only show 3 most recent
+
+    // Track site creation activities
+    recentSites.forEach(site => {
+      this.userActivityService.trackActivity(
+        `created site "${site.name}"`,
+        `New drilling site created at ${site.location}`,
+        'project'
+      );
+    });
   }
 }

@@ -183,6 +183,55 @@
   }
 }
 
+.sites-navigation {
+  text-align: center;
+  padding: 24px;
+  background: #f8fafc;
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #667eea;
+    background: #f1f5f9;
+  }
+
+  p {
+    margin: 0 0 16px 0;
+    color: #6b7280;
+    font-size: 1rem;
+  }
+
+  .sites-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    i {
+      font-size: 1.1rem;
+    }
+  }
+}
+
 .sites-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

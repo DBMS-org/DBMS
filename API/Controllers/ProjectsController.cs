@@ -36,12 +36,10 @@ namespace API.Controllers
                         Id = p.Id,
                         Name = p.Name,
                         Region = p.Region,
-                        ProjectType = p.ProjectType,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
                         EndDate = p.EndDate,
-                        Budget = p.Budget,
                         AssignedUserId = p.AssignedUserId,
                         AssignedUserName = p.AssignedUser != null ? p.AssignedUser.Name : null,
                         CreatedAt = p.CreatedAt,
@@ -91,12 +89,10 @@ namespace API.Controllers
                     Id = project.Id,
                     Name = project.Name,
                     Region = project.Region,
-                    ProjectType = project.ProjectType,
                     Status = project.Status,
                     Description = project.Description,
                     StartDate = project.StartDate,
                     EndDate = project.EndDate,
-                    Budget = project.Budget,
                     AssignedUserId = project.AssignedUserId,
                     AssignedUserName = project.AssignedUser?.Name,
                     CreatedAt = project.CreatedAt,
@@ -149,12 +145,10 @@ namespace API.Controllers
                 {
                     Name = request.Name,
                     Region = request.Region,
-                    ProjectType = request.ProjectType,
                     Status = request.Status,
                     Description = request.Description,
                     StartDate = request.StartDate,
                     EndDate = request.EndDate,
-                    Budget = request.Budget,
                     AssignedUserId = request.AssignedUserId
                 };
 
@@ -172,12 +166,10 @@ namespace API.Controllers
                     Id = createdProject!.Id,
                     Name = createdProject.Name,
                     Region = createdProject.Region,
-                    ProjectType = createdProject.ProjectType,
                     Status = createdProject.Status,
                     Description = createdProject.Description,
                     StartDate = createdProject.StartDate,
                     EndDate = createdProject.EndDate,
-                    Budget = createdProject.Budget,
                     AssignedUserId = createdProject.AssignedUserId,
                     AssignedUserName = createdProject.AssignedUser?.Name,
                     CreatedAt = createdProject.CreatedAt,
@@ -234,12 +226,10 @@ namespace API.Controllers
                 // Update project properties
                 project.Name = request.Name;
                 project.Region = request.Region;
-                project.ProjectType = request.ProjectType;
                 project.Status = request.Status;
                 project.Description = request.Description;
                 project.StartDate = request.StartDate;
                 project.EndDate = request.EndDate;
-                project.Budget = request.Budget;
                 project.AssignedUserId = request.AssignedUserId;
                 project.UpdatedAt = DateTime.UtcNow;
 
@@ -336,8 +326,7 @@ namespace API.Controllers
         public async Task<ActionResult<IEnumerable<ProjectDto>>> SearchProjects(
             [FromQuery] string? name = null,
             [FromQuery] string? region = null,
-            [FromQuery] string? status = null,
-            [FromQuery] string? projectType = null)
+            [FromQuery] string? status = null)
         {
             try
             {
@@ -361,23 +350,16 @@ namespace API.Controllers
                     query = query.Where(p => p.Status == status);
                 }
 
-                if (!string.IsNullOrEmpty(projectType))
-                {
-                    query = query.Where(p => p.ProjectType.Contains(projectType));
-                }
-
                 var projects = await query
                     .Select(p => new ProjectDto
                     {
                         Id = p.Id,
                         Name = p.Name,
                         Region = p.Region,
-                        ProjectType = p.ProjectType,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
                         EndDate = p.EndDate,
-                        Budget = p.Budget,
                         AssignedUserId = p.AssignedUserId,
                         AssignedUserName = p.AssignedUser != null ? p.AssignedUser.Name : null,
                         CreatedAt = p.CreatedAt,

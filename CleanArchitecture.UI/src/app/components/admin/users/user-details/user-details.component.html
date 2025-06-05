@@ -1,77 +1,227 @@
 <div class="user-details-page">
   <div class="page-header">
-    <button class="back-btn" (click)="goBack()">
-      <i class="material-icons">arrow_back</i>
-      Back to Users
-    </button>
+    <div class="header-left">
+      <button class="back-btn" (click)="goBack()">
+        <i class="material-icons">arrow_back</i>
+        <span>Back to Users</span>
+      </button>
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">Admin</span>
+        <i class="material-icons breadcrumb-separator">keyboard_arrow_right</i>
+        <span class="breadcrumb-item">Users</span>
+        <i class="material-icons breadcrumb-separator">keyboard_arrow_right</i>
+        <span class="breadcrumb-item active">User Details</span>
+      </div>
+    </div>
     <div class="header-actions">
       <button class="edit-btn" (click)="editUser()">
         <i class="material-icons">edit</i>
-        Edit User
+        <span>Edit User</span>
       </button>
     </div>
   </div>
 
   @if (user) {
     <div class="user-details-content">
-      <div class="user-header">
-        <div class="user-title">
-          <h1>{{user.name}}</h1>
-          <span class="status-badge" [class.active]="user.status === 'Active'">
-            {{user.status}}
-          </span>
-        </div>
-        <p class="user-role">{{user.role}}</p>
-      </div>
-
-      <div class="details-grid">
-        <div class="details-section">
-          <h2>Basic Information</h2>
-          <div class="details-card">
-            <div class="detail-item">
-              <span class="label">Email</span>
-              <span class="value">{{user.email}}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Role</span>
-              <span class="value">{{user.role}}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Status</span>
-              <span class="value status-badge" [class.active]="user.status === 'Active'">
+      <!-- Enhanced User Header Card -->
+      <div class="user-header-card">
+        <div class="user-avatar-section">
+          <div class="user-avatar">
+            <i class="material-icons">person</i>
+          </div>
+          <div class="user-info">
+            <div class="user-title">
+              <h1>{{user.name}}</h1>
+              <span class="status-badge" [class.active]="user.status === 'Active'">
+                <i class="material-icons">{{user.status === 'Active' ? 'check_circle' : 'cancel'}}</i>
                 {{user.status}}
               </span>
             </div>
+            <p class="user-role">
+              <i class="material-icons">work</i>
+              {{user.role}}
+            </p>
+            <p class="user-email">
+              <i class="material-icons">email</i>
+              {{user.email}}
+            </p>
+          </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="user-stats">
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="material-icons">location_on</i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Region</span>
+              <span class="stat-value">{{user.region}}</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="material-icons">flag</i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Origin</span>
+              <span class="stat-value">{{user.country}}</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="material-icons">schedule</i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Joined</span>
+              <span class="stat-value">{{getUserJoinedDate()}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enhanced Details Grid -->
+      <div class="details-grid">
+        <div class="details-section">
+          <div class="section-header">
+            <h2>
+              <i class="material-icons">person</i>
+              Basic Information
+            </h2>
+          </div>
+          <div class="details-card">
+            <div class="detail-item">
+              <div class="detail-icon">
+                <i class="material-icons">email</i>
+              </div>
+              <div class="detail-content">
+                <span class="label">Email Address</span>
+                <span class="value">{{user.email}}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">
+                <i class="material-icons">work</i>
+              </div>
+              <div class="detail-content">
+                <span class="label">Role</span>
+                <span class="value">{{user.role}}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-icon">
+                <i class="material-icons">{{user.status === 'Active' ? 'check_circle' : 'cancel'}}</i>
+              </div>
+              <div class="detail-content">
+                <span class="label">Account Status</span>
+                <span class="value status-badge" [class.active]="user.status === 'Active'">
+                  {{user.status}}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="details-section">
-          <h2>Location</h2>
+          <div class="section-header">
+            <h2>
+              <i class="material-icons">location_on</i>
+              Location & Origin
+            </h2>
+          </div>
           <div class="details-card">
             <div class="detail-item">
-              <span class="label">Region</span>
-              <span class="value">{{user.region}}</span>
+              <div class="detail-icon">
+                <i class="material-icons">location_city</i>
+              </div>
+              <div class="detail-content">
+                <span class="label">Current Region</span>
+                <span class="value">{{user.region}}</span>
+              </div>
             </div>
             <div class="detail-item">
-              <span class="label">Origin</span>
-              <span class="value">{{user.country}}</span>
+              <div class="detail-icon">
+                <i class="material-icons">flag</i>
+              </div>
+              <div class="detail-content">
+                <span class="label">Country of Origin</span>
+                <span class="value">{{user.country}}</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="details-section">
-          <h2>Contact Information</h2>
+          <div class="section-header">
+            <h2>
+              <i class="material-icons">phone</i>
+              Contact Information
+            </h2>
+          </div>
           <div class="details-card">
             <div class="detail-item">
-              <span class="label">Oman Phone</span>
-              <span class="value">{{user.omanPhone}}</span>
+              <div class="detail-icon">
+                <i class="material-icons">phone</i>
+              </div>
+              <div class="detail-content">
+                <span class="label">Oman Phone</span>
+                <span class="value">{{user.omanPhone}}</span>
+                <a href="tel:{{user.omanPhone}}" class="contact-action">
+                  <i class="material-icons">call</i>
+                </a>
+              </div>
             </div>
             <div class="detail-item">
-              <span class="label">Country Phone</span>
-              <span class="value">{{user.countryPhone}}</span>
+              <div class="detail-icon">
+                <i class="material-icons">smartphone</i>
+              </div>
+              <div class="detail-content">
+                <span class="label">Country Phone</span>
+                <span class="value">{{user.countryPhone}}</span>
+                <a href="tel:{{user.countryPhone}}" class="contact-action">
+                  <i class="material-icons">call</i>
+                </a>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Dynamic Activity Section -->
+      <div class="activity-section">
+        <div class="section-header">
+          <h2>
+            <i class="material-icons">history</i>
+            Recent Activity
+          </h2>
+        </div>
+        
+        @if (loadingActivities) {
+          <div class="activity-loading">
+            <div class="loading-spinner"></div>
+            <p>Loading activities...</p>
+          </div>
+        } @else if (activities.length === 0) {
+          <div class="no-activities">
+            <i class="material-icons">event_busy</i>
+            <p>No recent activity found</p>
+          </div>
+        } @else {
+          <div class="activity-timeline">
+            @for (activity of activities; track activity.id) {
+              <div class="activity-item" [ngClass]="getActivityTypeClass(activity.type)">
+                <div class="activity-icon">
+                  <i class="material-icons">{{activity.icon}}</i>
+                </div>
+                <div class="activity-content">
+                  <span class="activity-action">{{activity.action}}</span>
+                  <span class="activity-description">{{activity.description}}</span>
+                  <span class="activity-time">{{getFormattedTime(activity.timestamp)}}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
       </div>
     </div>
   }

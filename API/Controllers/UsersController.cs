@@ -43,8 +43,8 @@ namespace API.Controllers
                         Country = u.Country,
                         OmanPhone = u.OmanPhone,
                         CountryPhone = u.CountryPhone,
-                        CreatedAt = u.CreatedAt,
-                        UpdatedAt = u.UpdatedAt
+                        CreatedAt = DateTime.SpecifyKind(u.CreatedAt, DateTimeKind.Utc),
+                        UpdatedAt = DateTime.SpecifyKind(u.UpdatedAt, DateTimeKind.Utc)
                     })
                     .ToListAsync();
 
@@ -70,6 +70,12 @@ namespace API.Controllers
                     return NotFound($"User with ID {id} not found");
                 }
 
+                // Debug logging to check timezone handling
+                _logger.LogInformation("Raw DB timestamps for user {UserId}: CreatedAt={CreatedAt}, UpdatedAt={UpdatedAt}", 
+                    id, user.CreatedAt, user.UpdatedAt);
+                _logger.LogInformation("Current UTC time: {UtcNow}", DateTime.UtcNow);
+                _logger.LogInformation("Current local time: {LocalNow}", DateTime.Now);
+
                 var userDto = new UserDto
                 {
                     Id = user.Id,
@@ -81,8 +87,8 @@ namespace API.Controllers
                     Country = user.Country,
                     OmanPhone = user.OmanPhone,
                     CountryPhone = user.CountryPhone,
-                    CreatedAt = user.CreatedAt,
-                    UpdatedAt = user.UpdatedAt
+                    CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc),
+                    UpdatedAt = DateTime.SpecifyKind(user.UpdatedAt, DateTimeKind.Utc)
                 };
 
                 return Ok(userDto);
@@ -168,6 +174,8 @@ namespace API.Controllers
         {
             try
             {
+                _logger.LogInformation("UpdateUser called for ID: {UserId} with data: {@Request}", id, request);
+                
                 if (id != request.Id)
                 {
                     return BadRequest("ID mismatch");
@@ -184,6 +192,8 @@ namespace API.Controllers
                     return NotFound($"User with ID {id} not found");
                 }
 
+                _logger.LogInformation("User found. Current UpdatedAt: {CurrentUpdatedAt}", user.UpdatedAt);
+
                 user.Name = request.Name;
                 user.Email = request.Email;
                 user.Role = request.Role;
@@ -194,7 +204,11 @@ namespace API.Controllers
                 user.CountryPhone = request.CountryPhone;
                 user.UpdatedAt = DateTime.UtcNow;
 
+                _logger.LogInformation("Setting new UpdatedAt: {NewUpdatedAt}", user.UpdatedAt);
+
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation("User updated successfully. Final UpdatedAt: {FinalUpdatedAt}", user.UpdatedAt);
 
                 return NoContent();
             }

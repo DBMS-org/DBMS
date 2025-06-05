@@ -8,6 +8,7 @@ export interface User {
   country: string;
   omanPhone: string;
   countryPhone: string;
+  lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

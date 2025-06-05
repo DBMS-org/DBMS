@@ -23,12 +23,10 @@ export class ProjectDetailsComponent implements OnInit {
     id: 0,
     name: '',
     region: '',
-    projectType: '',
     status: '',
     description: '',
     startDate: undefined,
     endDate: undefined,
-    budget: undefined,
     assignedUserId: undefined
   };
 
@@ -89,14 +87,12 @@ export class ProjectDetailsComponent implements OnInit {
     // Mock project data as fallback
     this.project = {
       id: id,
-      name: 'Project Alpha',
+      name: 'Project Alpha - Muttrah Construction',
       region: 'Muscat',
-      projectType: 'Muttrah Construction',
       status: 'Active',
       description: 'This is a sample project description for Project Alpha. It includes various engineering and construction activities in the Muttrah area.',
       startDate: new Date('2024-01-15'),
       endDate: new Date('2024-12-31'),
-      budget: 2500000,
       assignedUserId: 1,
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date()
@@ -136,12 +132,10 @@ export class ProjectDetailsComponent implements OnInit {
         id: this.project.id,
         name: this.project.name,
         region: this.project.region,
-        projectType: this.project.projectType,
         status: this.project.status,
         description: this.project.description || '',
         startDate: this.project.startDate,
         endDate: this.project.endDate,
-        budget: this.project.budget,
         assignedUserId: this.project.assignedUserId
       };
     }
@@ -209,11 +203,6 @@ export class ProjectDetailsComponent implements OnInit {
     // TODO: Navigate to site details or open site modal
   }
 
-  addNewSite() {
-    console.log('Add new site for project:', this.project?.id);
-    // TODO: Navigate to add site component
-  }
-
   getStatusClass(status: string): string {
     switch (status.toLowerCase()) {
       case 'active':
@@ -229,14 +218,6 @@ export class ProjectDetailsComponent implements OnInit {
       default:
         return 'status-default';
     }
-  }
-
-  formatCurrency(amount: number | undefined): string {
-    if (!amount) return 'N/A';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
   }
 
   formatDate(date: Date | undefined): string {

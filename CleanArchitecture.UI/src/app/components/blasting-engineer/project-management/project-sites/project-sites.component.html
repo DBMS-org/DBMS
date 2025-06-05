@@ -12,7 +12,7 @@
           <i class="fas fa-map-marker-alt"></i>
           Project Sites
         </h2>
-        <p class="project-name" *ngIf="project">{{ project.name || project.projectType }}</p>
+        <p class="project-name" *ngIf="project">{{ project.name }}</p>
       </div>
     </div>
   </div>
@@ -53,6 +53,17 @@
                 <i class="fas fa-map-marker-alt"></i>
                 {{ site.location }}
               </p>
+              <span class="site-status" [class]="'status-' + site.status.toLowerCase()">
+                {{ site.status }}
+              </span>
+            </div>
+            <div class="site-actions">
+              <button class="btn btn-sm btn-outline-primary" (click)="editSite(site)" title="Edit Site">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" (click)="deleteSite(site)" title="Delete Site">
+                <i class="fas fa-trash"></i>
+              </button>
             </div>
           </div>
           
@@ -62,7 +73,10 @@
           
           <div class="site-meta">
             <small class="text-muted">
-              Created: {{ site.createdAt | date:'short' }}
+              Created: {{ formatDate(site.createdAt) }}
+            </small>
+            <small class="text-muted" *ngIf="site.coordinates">
+              • Lat: {{ site.coordinates.latitude.toFixed(4) }}, Lng: {{ site.coordinates.longitude.toFixed(4) }}
             </small>
           </div>
         </div>

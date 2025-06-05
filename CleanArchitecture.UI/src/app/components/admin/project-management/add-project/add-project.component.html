@@ -36,6 +36,18 @@
         <div class="card-body">
           <div class="form-grid">
             <div class="form-group">
+              <label for="name">Project Name <span class="required">*</span></label>
+              <input 
+                type="text" 
+                id="name"
+                class="form-control" 
+                [(ngModel)]="projectForm.name" 
+                name="name"
+                placeholder="Enter project name"
+                required>
+            </div>
+
+            <div class="form-group">
               <label for="region">Region <span class="required">*</span></label>
               <select 
                 id="region"
@@ -46,18 +58,6 @@
                 <option value="">Select Region</option>
                 <option *ngFor="let region of regionOptions" [value]="region">{{region}}</option>
               </select>
-            </div>
-
-            <div class="form-group">
-              <label for="projectType">Project Type <span class="required">*</span></label>
-              <input 
-                type="text" 
-                id="projectType"
-                class="form-control" 
-                [(ngModel)]="projectForm.projectType" 
-                name="projectType"
-                placeholder="Enter project type"
-                required>
             </div>
 
             <div class="form-group">
