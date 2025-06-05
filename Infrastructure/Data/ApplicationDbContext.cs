@@ -105,10 +105,8 @@ namespace Infrastructure.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Region).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.ProjectType).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Description).HasMaxLength(1000);
-                entity.Property(e => e.Budget).HasColumnType("decimal(18,2)");
                 
                 // Foreign key relationship with User
                 entity.HasOne(e => e.AssignedUser)
@@ -188,14 +186,12 @@ namespace Infrastructure.Data
                 new Project
                 {
                     Id = 1,
-                    Name = "Muscat Infrastructure Development",
+                    Name = "Muscat Infrastructure Development - Highway Construction",
                     Region = "Muscat",
-                    ProjectType = "Highway Construction",
                     Status = "Active",
                     Description = "Major highway development project in Muscat region",
                     StartDate = new DateTime(2024, 1, 15),
                     EndDate = new DateTime(2024, 12, 31),
-                    Budget = 5500000.00m,
                     AssignedUserId = 1,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -203,14 +199,12 @@ namespace Infrastructure.Data
                 new Project
                 {
                     Id = 2,
-                    Name = "Dhofar Mining Operations",
+                    Name = "Dhofar Mining Operations - Site Development",
                     Region = "Dhofar",
-                    ProjectType = "Mining Site Development",
                     Status = "Active",
                     Description = "Mining site expansion project in Dhofar region",
                     StartDate = new DateTime(2024, 2, 1),
                     EndDate = new DateTime(2024, 11, 30),
-                    Budget = 8200000.00m,
                     AssignedUserId = 1,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -218,14 +212,12 @@ namespace Infrastructure.Data
                 new Project
                 {
                     Id = 3,
-                    Name = "Sohar Industrial Zone",
+                    Name = "Sohar Industrial Zone - Development",
                     Region = "Al Batinah North",
-                    ProjectType = "Industrial Development",
                     Status = "Completed",
                     Description = "Industrial zone construction project in Sohar",
                     StartDate = new DateTime(2023, 6, 1),
                     EndDate = new DateTime(2023, 12, 31),
-                    Budget = 3200000.00m,
                     AssignedUserId = 1,
                     CreatedAt = DateTime.UtcNow.AddMonths(-6),
                     UpdatedAt = DateTime.UtcNow.AddMonths(-1)

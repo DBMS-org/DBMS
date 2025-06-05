@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Project, ProjectSite } from '../../../../core/models/project.model';
-import { ProjectService } from '../../../../core/services/project.service';
+import { Router } from '@angular/router';
+import { Project } from '../../../../core/models/project.model';
 
 @Component({
   selector: 'app-view-project',
@@ -14,64 +14,17 @@ export class ViewProjectComponent {
   @Input() isVisible: boolean = false;
   @Output() close = new EventEmitter<void>();
 
-  projectSites: ProjectSite[] = [];
-  loading = false;
-
-  constructor(private projectService: ProjectService) {}
-
-  ngOnChanges() {
-    if (this.project && this.isVisible) {
-      this.loadProjectSites();
-    }
-  }
-
-  loadProjectSites() {
-    if (!this.project) return;
-    
-    this.projectService.getProjectSites(this.project.id).subscribe({
-      next: (sites) => {
-        this.projectSites = sites;
-      },
-      error: (error) => {
-        console.error('Error loading project sites:', error);
-        // Fallback to mock sites
-        this.loadMockSites();
-      }
-    });
-  }
-
-  private loadMockSites() {
-    this.projectSites = [
-      {
-        id: 1,
-        projectId: this.project!.id,
-        name: 'Main Construction Site',
-        location: 'Muscat, Oman',
-        coordinates: { latitude: 23.5859, longitude: 58.4059 },
-        description: 'Primary construction site for the project',
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date()
-      },
-      {
-        id: 2,
-        projectId: this.project!.id,
-        name: 'Secondary Site',
-        location: 'Muttrah, Oman',
-        coordinates: { latitude: 23.6145, longitude: 58.5627 },
-        description: 'Secondary site for material storage and processing',
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date()
-      }
-    ];
-  }
+  constructor(private router: Router) {}
 
   closeModal() {
     this.close.emit();
   }
 
-  viewSiteDetails(site: ProjectSite) {
-    console.log('View site details:', site);
-    // TODO: Navigate to site details or open site modal
+  goToProjectSites() {
+    if (this.project) {
+      this.closeModal();
+      this.router.navigate(['/blasting-engineer/project-management', this.project.id, 'sites']);
+    }
   }
 
   getStatusClass(status: string): string {

@@ -46,25 +46,26 @@
       <thead>
         <tr>
           <th>ID</th>
-          <th>Name</th>
+          <th>Project Name</th>
           <th>Region</th>
-          <th>Project</th>
           <th>Status</th>
-          <th>View Details</th>
-          <th>Site</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let project of filteredProjects" class="project-row">
           <td class="project-id">{{ project.id }}</td>
-          <td class="project-name" (click)="viewProjectDetails(project)">{{ project.name || project.projectType }}</td>
+          <td class="project-name" (click)="viewProjectDetails(project)">{{ project.name }}</td>
           <td class="project-region">{{ project.region }}</td>
-          <td class="project-area">{{ project.projectType }}</td>
           <td class="project-status">
             <span class="status-badge" [ngClass]="getStatusClass(project.status)">
               {{ project.status }}
             </span>
           </td>
+          <td class="project-start-date">{{ project.startDate | date:'MMM dd, yyyy' }}</td>
+          <td class="project-end-date">{{ project.endDate | date:'MMM dd, yyyy' }}</td>
           <td class="project-actions">
             <div class="action-buttons">
               <button 
@@ -73,15 +74,13 @@
                 title="View Details">
                 <i class="fas fa-eye"></i>
               </button>
-            </div>
-          </td>
-          <td class="project-site">
             <button 
               class="btn btn-sm btn-outline-success site-btn" 
               (click)="viewProjectSites(project)"
               title="View Project Sites">
-              <i class="fas fa-map-marker-alt"></i> Sites
+                <i class="fas fa-map-marker-alt"></i>
             </button>
+            </div>
           </td>
         </tr>
       </tbody>

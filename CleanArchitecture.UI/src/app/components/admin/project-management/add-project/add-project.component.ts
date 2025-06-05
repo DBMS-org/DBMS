@@ -18,8 +18,8 @@ export class AddProjectComponent implements OnInit {
 
   // Form data
   projectForm: CreateProjectRequest = {
+    name: '',
     region: '',
-    projectType: '',
     status: 'Active',
     description: '',
     startDate: undefined,
@@ -76,13 +76,13 @@ export class AddProjectComponent implements OnInit {
   }
 
   private validateForm(): boolean {
-    if (!this.projectForm.region) {
-      this.error = 'Region is required';
+    if (!this.projectForm.name.trim()) {
+      this.error = 'Project name is required';
       return false;
     }
 
-    if (!this.projectForm.projectType.trim()) {
-      this.error = 'Project Type is required';
+    if (!this.projectForm.region) {
+      this.error = 'Region is required';
       return false;
     }
 
@@ -107,8 +107,8 @@ export class AddProjectComponent implements OnInit {
 
   resetForm() {
     this.projectForm = {
+      name: '',
       region: '',
-      projectType: '',
       status: 'Active',
       description: '',
       startDate: new Date(),

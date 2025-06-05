@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Project, CreateProjectRequest, UpdateProjectRequest, ProjectSite } from '../models/project.model';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +12,12 @@ import { Project, CreateProjectRequest, UpdateProjectRequest, ProjectSite } from
 export class ProjectService {
   private readonly apiUrl = `${environment.apiUrl}/api/projects`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
-  // Get all projects
+  // Get all projects (admin only)
   getProjects(): Observable<Project[]> {
     return this.http.get<Project[]>(this.apiUrl).pipe(
       map(projects => projects.map(project => ({
@@ -24,6 +28,30 @@ export class ProjectService {
         updatedAt: new Date(project.updatedAt)
       }))),
       catchError(this.handleError)
+    );
+  }
+
+  // Get projects filtered by current user role and region
+  getProjectsForCurrentUser(): Observable<Project[]> {
+    return this.getProjects().pipe(
+      map(projects => {
+        const currentUser = this.authService.getCurrentUser();
+        
+        // Admin can see all projects
+        if (this.authService.isAdmin()) {
+          return projects;
+        }
+        
+        // Blasting engineers can only see projects in their region
+        if (this.authService.isBlastingEngineer() && currentUser?.region) {
+          return projects.filter(project => 
+            project.region.toLowerCase() === currentUser.region.toLowerCase()
+          );
+        }
+        
+        // Default: return empty array if user doesn't have proper role/region
+        return [];
+      })
     );
   }
 

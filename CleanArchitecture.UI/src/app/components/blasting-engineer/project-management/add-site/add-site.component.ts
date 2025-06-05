@@ -2,11 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Project, ProjectSite } from '../../../../core/models/project.model';
+import { Project } from '../../../../core/models/project.model';
 import { ProjectService } from '../../../../core/services/project.service';
+import { SiteService, CreateSiteRequest } from '../../../../core/services/site.service';
 
 interface SiteFormData {
   name: string;
+  location: string;
   description: string;
   templateType: string;
   numberOfHoles: number | null;
@@ -28,6 +30,7 @@ export class AddSiteComponent implements OnInit {
 
   siteData: SiteFormData = {
     name: '',
+    location: '',
     description: '',
     templateType: '',
     numberOfHoles: null,
@@ -36,7 +39,8 @@ export class AddSiteComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private siteService: SiteService
   ) {}
 
   ngOnInit() {
@@ -59,61 +63,10 @@ export class AddSiteComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading project:', error);
-        // Fallback to mock data
-        this.loadMockProject();
+        this.error = 'Failed to load project information.';
+        this.loading = false;
       }
     });
-  }
-
-  private loadMockProject() {
-    // Mock project data as fallback
-    const mockProjects = [
-      {
-        id: 1,
-        name: 'Project Alpha',
-        region: 'Muscat',
-        projectType: 'Muttrah Construction',
-        status: 'Active',
-        description: 'Main construction project in Muttrah area',
-        startDate: new Date('2024-01-15'),
-        endDate: new Date('2024-12-31'),
-        budget: 2500000,
-        assignedUserId: 1,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date()
-      },
-      {
-        id: 2,
-        name: 'Project Beta',
-        region: 'Dhofar',
-        projectType: 'Salalah Infrastructure',
-        status: 'Active',
-        description: 'Infrastructure development project',
-        startDate: new Date('2024-02-01'),
-        endDate: new Date('2025-01-31'),
-        budget: 3000000,
-        assignedUserId: 2,
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date()
-      },
-      {
-        id: 3,
-        name: 'Project Gamma',
-        region: 'Al Batinah North',
-        projectType: 'Sohar Industrial Zone',
-        status: 'Completed',
-        description: 'Industrial zone construction project',
-        startDate: new Date('2023-06-01'),
-        endDate: new Date('2023-12-31'),
-        budget: 1800000,
-        assignedUserId: 3,
-        createdAt: new Date('2023-06-01'),
-        updatedAt: new Date()
-      }
-    ];
-
-    this.project = mockProjects.find(p => p.id === this.projectId) || mockProjects[0];
-    this.loading = false;
   }
 
   selectTemplate(templateType: string) {
@@ -133,39 +86,42 @@ export class AddSiteComponent implements OnInit {
     this.error = null;
     this.successMessage = null;
 
-    // Create the site object with template information
-    const newSite = {
+    // Create the site request object
+    const newSiteRequest: CreateSiteRequest = {
       projectId: this.projectId,
       name: this.siteData.name,
-      description: this.siteData.description || undefined,
-      templateType: this.siteData.templateType,
-      drillingConfig: {
-        numberOfHoles: this.siteData.numberOfHoles
-      }
+      location: this.siteData.location,
+      status: 'Active', // Default status
+      description: this.siteData.description || ''
     };
 
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        // In a real app, this would be a service call:
-        // this.projectService.addProjectSite(newSite).subscribe({...})
-        
+    // Create the site via the API
+    this.siteService.createSite(newSiteRequest).subscribe({
+      next: (createdSite) => {
         this.isSubmitting = false;
+        this.successMessage = `Site "${createdSite.name}" has been created successfully! Redirecting to drilling pattern creator...`;
         
-        // Navigate to drilling pattern creator instead of showing success message
-        this.router.navigate(['/blasting-engineer/drilling-pattern']);
-
-      } catch (error) {
+        // Reset form
+        this.resetFormData();
+        form.resetForm();
+        
+        // Navigate to drilling pattern creator after a brief delay
+        setTimeout(() => {
+          this.router.navigate(['/blasting-engineer/drilling-pattern']);
+        }, 2000);
+      },
+      error: (error) => {
         this.isSubmitting = false;
-        this.error = 'Failed to add site. Please try again.';
-        console.error('Error adding site:', error);
+        this.error = 'Failed to create site. Please try again.';
+        console.error('Error creating site:', error);
       }
-    }, 1500);
+    });
   }
 
   private resetFormData() {
     this.siteData = {
       name: '',
+      location: '',
       description: '',
       templateType: '',
       numberOfHoles: null,

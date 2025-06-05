@@ -41,6 +41,24 @@
         <p class="stat-number">{{ stats.activeProjects }}</p>
       </div>
     </div>
+    <div class="stat-card sites">
+      <div class="stat-icon">
+        <i class="material-icons">place</i>
+      </div>
+      <div class="stat-content">
+        <h3>Total Sites</h3>
+        <p class="stat-number">{{ stats.totalSites }}</p>
+      </div>
+    </div>
+    <div class="stat-card active-sites">
+      <div class="stat-icon">
+        <i class="material-icons">location_on</i>
+      </div>
+      <div class="stat-content">
+        <h3>Active Sites</h3>
+        <p class="stat-number">{{ stats.activeSites }}</p>
+      </div>
+    </div>
     <div class="stat-card patterns">
       <div class="stat-icon">
         <i class="material-icons">grid_on</i>
@@ -130,6 +148,15 @@
           <h3>Project Management</h3>
           <p>Organize sites, manage drill plans, and track progress</p>
           <div class="action-status">{{ stats.activeProjects }} active</div>
+        </div>
+        
+        <div class="action-card sites" (click)="navigateToSites()">
+          <div class="action-icon">
+            <i class="material-icons">location_city</i>
+          </div>
+          <h3>Site Management</h3>
+          <p>Manage drilling sites, locations, and site-specific operations</p>
+          <div class="action-status">{{ stats.activeSites }} active sites</div>
         </div>
       </div>
     </section>

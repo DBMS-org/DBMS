@@ -51,52 +51,18 @@ export class ProjectSitesComponent implements OnInit {
 
   private loadMockProject() {
     // Mock project data as fallback
-    const mockProjects = [
-      {
-        id: 1,
-        name: 'Project Alpha',
-        region: 'Muscat',
-        projectType: 'Muttrah Construction',
-        status: 'Active',
-        description: 'Main construction project in Muttrah area',
-        startDate: new Date('2024-01-15'),
-        endDate: new Date('2024-12-31'),
-        budget: 2500000,
-        assignedUserId: 1,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date()
-      },
-      {
-        id: 2,
-        name: 'Project Beta',
-        region: 'Dhofar',
-        projectType: 'Salalah Infrastructure',
-        status: 'Active',
-        description: 'Infrastructure development project',
-        startDate: new Date('2024-02-01'),
-        endDate: new Date('2025-01-31'),
-        budget: 3000000,
-        assignedUserId: 2,
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date()
-      },
-      {
-        id: 3,
-        name: 'Project Gamma',
-        region: 'Al Batinah North',
-        projectType: 'Sohar Industrial Zone',
-        status: 'Completed',
-        description: 'Industrial zone construction project',
-        startDate: new Date('2023-06-01'),
-        endDate: new Date('2023-12-31'),
-        budget: 1800000,
-        assignedUserId: 3,
-        createdAt: new Date('2023-06-01'),
-        updatedAt: new Date()
-      }
-    ];
-
-    this.project = mockProjects.find(p => p.id === this.projectId) || mockProjects[0];
+    this.project = {
+      id: this.projectId,
+      name: 'Project Alpha - Muttrah Construction',
+      region: 'Muscat',
+      status: 'Active',
+      description: 'Main construction project in Muttrah area',
+      startDate: new Date('2024-01-15'),
+      endDate: new Date('2024-12-31'),
+      assignedUserId: 1,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date()
+    };
     this.loading = false;
   }
 
@@ -115,7 +81,7 @@ export class ProjectSitesComponent implements OnInit {
 
     // Generate mock sites based on project region
     const projectRegion = this.project?.region || 'Muscat';
-    const projectName = this.project?.projectType || 'Default Project';
+    const projectName = this.project?.name || 'Default Project';
 
     this.sites = [
       {
@@ -168,5 +134,11 @@ export class ProjectSitesComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/admin/project-management']);
+  }
+
+  addSite() {
+    const projectName = this.project?.name || 'Default Project';
+    console.log(`Adding new site for project: ${projectName}`);
+    // TODO: Navigate to add site component
   }
 }

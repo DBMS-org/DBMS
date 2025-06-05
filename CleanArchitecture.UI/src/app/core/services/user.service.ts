@@ -27,11 +27,24 @@ export class UserService {
 
   // Get user by ID
   getUser(id: number): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/${id}`).pipe(
+    const headers = {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+    
+    // Add timestamp to URL for aggressive cache busting
+    const timestamp = new Date().getTime();
+    const url = `${this.apiUrl}/${id}?_t=${timestamp}`;
+    
+    return this.http.get<User>(url, { headers }).pipe(
       map(user => ({
         ...user,
+        // Parse as UTC timestamps - the backend should be sending ISO strings with Z suffix
         createdAt: new Date(user.createdAt),
-        updatedAt: new Date(user.updatedAt)
+        updatedAt: new Date(user.updatedAt),
+        // If lastLoginAt exists, parse it as UTC too
+        lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : undefined
       })),
       catchError(this.handleError)
     );
