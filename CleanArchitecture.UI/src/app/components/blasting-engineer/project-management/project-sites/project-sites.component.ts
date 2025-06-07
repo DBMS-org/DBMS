@@ -86,6 +86,17 @@ export class ProjectSitesComponent implements OnInit {
     this.addNewSite();
   }
 
+  uploadSurvey(site: ProjectSite) {
+    // Navigate to CSV upload page for survey data
+    this.router.navigate(['/blasting-engineer/csv-upload'], {
+      queryParams: { 
+        siteId: site.id, 
+        siteName: site.name,
+        projectId: this.projectId 
+      }
+    });
+  }
+
   editSite(site: ProjectSite) {
     // TODO: Navigate to edit site component when implemented
     console.log('Edit site:', site);

@@ -1,32 +1,106 @@
 <div class="drill-visualization-container">
-    <div class="chart-header">
-      <h2>3D Drill Plan Visualization</h2>
-      <div class="controls">
-        <select (change)="changeColorScheme($any($event.target).value)" class="color-scheme-select">
-          <option value="elevation">Color by Elevation</option>
-          <option value="depth">Color by Depth</option>
-          <option value="random">Random Colors</option>
-        </select>
-        <button (click)="toggleLabels()" class="control-button">
-          {{ showLabels ? 'Hide Labels' : 'Show Labels' }}
-        </button>
-        <button (click)="resetCamera()" class="control-button">Reset View</button>
-      </div>
-    </div>
-  
-    <div class="visualization-container">
-      <div class="controls-info">
-        <p><strong>Controls:</strong> Click and drag to rotate • Scroll to zoom • Right-click to pan</p>
-        <p><strong>Keyboard:</strong> Press 'R' to reset camera • Press 'L' to toggle labels</p>
-        <div class="data-info">
-          <span><strong>Drill Holes:</strong> {{ drillData.length }}</span>
-          <span *ngIf="drillData.length > 0"><strong>Data Range:</strong> Real geographic coordinates scaled for visualization</span>
-        </div>
-      </div>
-      <div class="renderer-container"></div>
-    </div>
-  
-    <div *ngIf="drillData.length === 0" class="no-data">
-      <p>No drill data available for visualization.</p>
+  <div class="header">
+    <h2>Drill Hole Visualization</h2>
+    <div class="controls">
+      <button (click)="toggle3DView()" class="btn btn-primary">
+        {{ show3DView ? '📊 Show Table' : '🎯 Show 3D' }}
+      </button>
+      <button (click)="toggleLabels()" class="btn btn-secondary" *ngIf="show3DView">
+        {{ showLabels ? '🏷️ Hide Labels' : '🏷️ Show Labels' }}
+      </button>
+      <button (click)="resetCamera()" class="btn btn-secondary" *ngIf="show3DView">
+        📷 Reset Camera
+      </button>
+      <button (click)="refreshData()" class="btn btn-primary">
+        🔄 Refresh Data
+      </button>
+      <span class="data-count" *ngIf="isDataLoaded">
+        📊 {{drillData.length}} drill holes loaded
+      </span>
     </div>
   </div>
+
+  <!-- 3D Visualization Section -->
+  <div *ngIf="show3DView && isDataLoaded" class="threejs-section">
+    <div class="viewer-info">
+      <p><strong>3D Controls:</strong> Left click + drag to rotate • Scroll to zoom • Right click + drag to pan</p>
+    </div>
+    <div class="threejs-container"></div>
+  </div>
+
+  <!-- Data Table Section -->
+  <div *ngIf="!show3DView && isDataLoaded" class="data-section">
+    <div class="data-summary">
+      <h3>📋 Data Summary</h3>
+      <p>Successfully loaded <strong>{{drillData.length}}</strong> drill holes from CSV upload.</p>
+    </div>
+
+    <!-- Drill Holes Table -->
+    <div class="data-table-container">
+      <h4>🔨 Drill Hole Details</h4>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Easting</th>
+            <th>Northing</th>
+            <th>Elevation</th>
+            <th>Depth</th>
+            <th>Azimuth</th>
+            <th>Dip</th>
+            <th>Stemming</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let hole of drillData; let i = index" [class.even]="i % 2 === 0">
+            <td><strong>{{hole.id}}</strong></td>
+            <td>{{hole.easting | number:'1.2-2'}}</td>
+            <td>{{hole.northing | number:'1.2-2'}}</td>
+            <td>{{hole.elevation | number:'1.2-2'}}</td>
+            <td>{{hole.depth | number:'1.1-1'}}m</td>
+            <td>{{hole.azimuth}}°</td>
+            <td>{{hole.dip}}°</td>
+            <td>{{hole.stemming | number:'1.1-1'}}m</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Coordinate Bounds Summary -->
+    <div class="bounds-summary" *ngIf="drillData.length > 0">
+      <h4>📍 Site Coordinates Range</h4>
+      <div class="bounds-grid">
+        <div class="bound-item">
+          <span class="label">Easting:</span>
+          <span class="value">{{getMinEasting() | number:'1.2-2'}} - {{getMaxEasting() | number:'1.2-2'}}</span>
+        </div>
+        <div class="bound-item">
+          <span class="label">Northing:</span>
+          <span class="value">{{getMinNorthing() | number:'1.2-2'}} - {{getMaxNorthing() | number:'1.2-2'}}</span>
+        </div>
+        <div class="bound-item">
+          <span class="label">Elevation:</span>
+          <span class="value">{{getMinElevation() | number:'1.2-2'}} - {{getMaxElevation() | number:'1.2-2'}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Data Section -->
+  <div *ngIf="!isDataLoaded" class="no-data-section">
+    <div class="no-data-message">
+      <h3>📁 No Drill Data Available</h3>
+      <p>No drill hole data has been uploaded yet.</p>
+      <p>Please upload a CSV file with drill data to visualize the holes.</p>
+      
+      <div class="actions">
+        <a href="/blasting-engineer/csv-upload" class="btn btn-upload">
+          📤 Upload CSV Data
+        </a>
+        <button (click)="refreshData()" class="btn btn-secondary">
+          🔄 Check for Data
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
