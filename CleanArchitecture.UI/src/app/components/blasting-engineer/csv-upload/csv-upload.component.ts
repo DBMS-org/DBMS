@@ -1,7 +1,7 @@
 // csv-upload.component.ts
-import { Component, EventEmitter, Output, Injectable } from '@angular/core';
+import { Component, EventEmitter, Output, Injectable, OnInit } from '@angular/core';
 import { HttpClient, HttpEventType } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 
@@ -49,7 +49,7 @@ export class DrillDataService {
   standalone: true,
   imports: [CommonModule]
 })
-export class CsvUploadComponent {
+export class CsvUploadComponent implements OnInit {
   @Output() dataLoaded = new EventEmitter<DrillHole[]>();
   
   selectedFile: File | null = null;
@@ -57,7 +57,21 @@ export class CsvUploadComponent {
   isUploading: boolean = false;
   uploadError: string | null = null;
 
-  constructor(private http: HttpClient, private router: Router, private drillDataService: DrillDataService) {}
+  // Site-specific properties
+  siteId: string | null = null;
+  siteName: string | null = null;
+  projectId: string | null = null;
+
+  constructor(private http: HttpClient, private router: Router, private drillDataService: DrillDataService, private activatedRoute: ActivatedRoute) {}
+
+  ngOnInit(): void {
+    // Handle query parameters
+    this.activatedRoute.queryParams.subscribe(params => {
+      this.siteId = params['siteId'] || null;
+      this.siteName = params['siteName'] || null;
+      this.projectId = params['projectId'] || null;
+    });
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -117,8 +131,11 @@ export class CsvUploadComponent {
             this.drillDataService.setDrillData(event.body);
             console.log('DrillDataService - Data stored, navigating to visualization');
 
+            // Add a small delay to ensure data is properly stored before navigation
+            setTimeout(() => {
             // Navigate to the drill visualization page
             this.router.navigate(['/blasting-engineer/drill-visualization']);
+            }, 100);
           }
         }
       },
@@ -133,5 +150,13 @@ export class CsvUploadComponent {
     this.uploadProgress = 0;
     this.isUploading = false;
     this.uploadError = null;
+  }
+
+  goBackToSites(): void {
+    if (this.projectId) {
+      this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites']);
+    } else {
+      this.router.navigate(['/blasting-engineer/project-management']);
+    }
   }
 }

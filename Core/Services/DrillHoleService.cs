@@ -110,7 +110,51 @@ namespace Core.Services
                     
                     // Validate that we have the required columns for blast data
                     var requiredHeaders = new[] { "sr no.", "id", "east", "north", "elev", "length", "azi", "dip", "actual dep", "stemming" };
-                    var missingHeaders = requiredHeaders.Where(h => !headers.Contains(h)).ToList();
+                    var missingHeaders = new List<string>();
+                    
+                    foreach (var required in requiredHeaders)
+                    {
+                        bool found = false;
+                        switch (required)
+                        {
+                            case "sr no.":
+                                found = headers.Any(h => h == "sr no." || h == "sr no" || h == "serial no." || h == "serial number");
+                                break;
+                            case "id":
+                                found = headers.Any(h => h == "id" || h == "hole id" || h == "holeid");
+                                break;
+                            case "east":
+                                found = headers.Any(h => h == "east" || h == "easting" || h == "x");
+                                break;
+                            case "north":
+                                found = headers.Any(h => h == "north" || h == "northing" || h == "y");
+                                break;
+                            case "elev":
+                                found = headers.Any(h => h == "elev" || h == "elevation" || h == "z");
+                                break;
+                            case "length":
+                                found = headers.Any(h => h == "length" || h == "hole length");
+                                break;
+                            case "azi":
+                                found = headers.Any(h => h == "azi" || h == "azimuth" || h == "bearing");
+                                break;
+                            case "dip":
+                                found = headers.Any(h => h == "dip" || h == "inclination" || h == "angle");
+                                break;
+                            case "actual dep":
+                                found = headers.Any(h => h == "actual dep" || h == "actualdep" || h == "actual depth" || h == "actual_depth");
+                                break;
+                            case "stemming":
+                                found = headers.Any(h => h == "stemming" || h == "stem");
+                                break;
+                            default:
+                                found = headers.Contains(required);
+                                break;
+                        }
+                        
+                        if (!found)
+                            missingHeaders.Add(required);
+                    }
                     
                     if (missingHeaders.Any())
                         throw new InvalidOperationException($"Missing required CSV headers: {string.Join(", ", missingHeaders)}");
@@ -165,35 +209,55 @@ namespace Core.Services
                 switch (header)
                 {
                     case "sr no.":
+                    case "sr no":
+                    case "serial no.":
+                    case "serial number":
                         drillHole.SerialNumber = ParseInt(value, "Serial Number", lineNumber);
                         break;
                     case "id":
+                    case "hole id":
+                    case "holeid":
                         drillHole.Id = string.IsNullOrWhiteSpace(value) ? Guid.NewGuid().ToString() : value;
                         drillHole.Name = drillHole.Id; // Use ID as name for blast holes
                         break;
                     case "east":
+                    case "easting":
+                    case "x":
                         drillHole.Easting = ParseDouble(value, "Easting", lineNumber);
                         break;
                     case "north":
+                    case "northing":
+                    case "y":
                         drillHole.Northing = ParseDouble(value, "Northing", lineNumber);
                         break;
                     case "elev":
+                    case "elevation":
+                    case "z":
                         drillHole.Elevation = ParseDouble(value, "Elevation", lineNumber);
                         break;
                     case "length":
+                    case "hole length":
                         drillHole.Length = ParseDouble(value, "Length", lineNumber);
                         drillHole.Depth = drillHole.Length; // Set Depth same as Length for compatibility
                         break;
                     case "azi":
+                    case "azimuth":
+                    case "bearing":
                         drillHole.Azimuth = ParseDouble(value, "Azimuth", lineNumber);
                         break;
                     case "dip":
+                    case "inclination":
+                    case "angle":
                         drillHole.Dip = ParseDouble(value, "Dip", lineNumber);
                         break;
                     case "actual dep":
+                    case "actualdep":
+                    case "actual depth":
+                    case "actual_depth":
                         drillHole.ActualDepth = ParseDouble(value, "Actual Depth", lineNumber);
                         break;
                     case "stemming":
+                    case "stem":
                         drillHole.Stemming = ParseDouble(value, "Stemming", lineNumber);
                         break;
                     // Explicitly ignore explosive-related fields
