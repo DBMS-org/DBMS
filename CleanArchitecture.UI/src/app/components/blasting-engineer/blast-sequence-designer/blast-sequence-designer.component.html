@@ -16,6 +16,13 @@
           <span class="material-icons">help_outline</span>
           <span class="button-text">Help</span>
         </button>
+        <button class="action-button simulator" 
+                (click)="goToSimulator()" 
+                [disabled]="connections.length === 0"
+                [title]="connections.length === 0 ? 'Create connections first' : 'Go to Simulator'">
+          <span class="material-icons">play_circle</span>
+          <span class="button-text">Simulate</span>
+        </button>
         <button class="action-button primary" (click)="backToPatternCreator()">
           <span class="material-icons">arrow_back</span>
           <span class="button-text">Back to Pattern Creator</span>

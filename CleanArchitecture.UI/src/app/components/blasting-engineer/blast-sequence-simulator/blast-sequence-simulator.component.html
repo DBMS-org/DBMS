@@ -1,0 +1,361 @@
+<div class="simulator-container" [class.fullscreen]="isFullscreen">
+  
+  <!-- Header with Navigation and Controls -->
+  <div class="simulator-header">
+    <div class="breadcrumb-nav">
+      <button 
+        class="nav-button" 
+        (click)="goToPatternCreator()"
+        title="Back to Pattern Creator">
+        <span class="material-icons">grid_on</span>
+        <span>Pattern</span>
+      </button>
+      <span class="material-icons nav-separator">chevron_right</span>
+      <button 
+        class="nav-button" 
+        (click)="goToSequenceDesigner()"
+        title="Back to Sequence Designer">
+        <span class="material-icons">timeline</span>
+        <span>Sequence</span>
+      </button>
+      <span class="material-icons nav-separator">chevron_right</span>
+      <div class="nav-button active">
+        <span class="material-icons">play_circle</span>
+        <span>Simulate</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="action-button secondary" (click)="exportVideo()" [disabled]="!patternData">
+        <span class="material-icons">videocam</span>
+        <span class="button-text">Export Video</span>
+      </button>
+      <button class="action-button secondary" (click)="exportReport()" [disabled]="!patternData">
+        <span class="material-icons">picture_as_pdf</span>
+        <span class="button-text">Export Report</span>
+      </button>
+      <button class="action-button icon-only" (click)="toggleFullscreen()" [title]="isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'">
+        <span class="material-icons">{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="simulator-content">
+    
+    <!-- Left Panel - View Controls and Settings -->
+    <div class="left-panel" [class.collapsed]="!showControlPanel">
+      <div class="panel-header">
+        <h3>View Controls</h3>
+        <button class="toggle-button" (click)="showControlPanel = !showControlPanel">
+          <span class="material-icons">{{ showControlPanel ? 'chevron_left' : 'chevron_right' }}</span>
+        </button>
+      </div>
+
+      <div class="panel-content" *ngIf="showControlPanel">
+        
+        <!-- View Mode Selection -->
+        <div class="control-section">
+          <h4>View Mode</h4>
+          <div class="view-mode-selector">
+            <button 
+              *ngFor="let mode of viewModes" 
+              class="view-mode-button"
+              [class.active]="selectedViewMode.id === mode.id"
+              (click)="onViewModeChange(mode)"
+              [title]="mode.description">
+              <span class="material-icons">{{ mode.icon }}</span>
+              <span class="mode-label">{{ mode.name }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Display Settings -->
+        <div class="control-section">
+          <h4>Display Settings</h4>
+          <div class="settings-group">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="simulationSettings.showTiming"
+                (change)="onSettingsChange({ showTiming: simulationSettings.showTiming })">
+              <span class="checkmark"></span>
+              Show Timing Labels
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="simulationSettings.showConnections"
+                (change)="onSettingsChange({ showConnections: simulationSettings.showConnections })">
+              <span class="checkmark"></span>
+              Show Connections
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="simulationSettings.showEffects"
+                (change)="onSettingsChange({ showEffects: simulationSettings.showEffects })">
+              <span class="checkmark"></span>
+              Show Blast Effects
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="simulationSettings.showSequenceNumbers"
+                (change)="onSettingsChange({ showSequenceNumbers: simulationSettings.showSequenceNumbers })">
+              <span class="checkmark"></span>
+              Show Hole Numbers
+            </label>
+          </div>
+        </div>
+
+        <!-- Effect Intensity -->
+        <div class="control-section">
+          <h4>Effect Intensity: {{ simulationSettings.effectIntensity }}%</h4>
+          <div class="slider-container">
+            <input 
+              type="range" 
+              class="intensity-slider"
+              min="0" 
+              max="100" 
+              step="5"
+              [(ngModel)]="simulationSettings.effectIntensity"
+              (input)="onSettingsChange({ effectIntensity: simulationSettings.effectIntensity })">
+          </div>
+        </div>
+
+        <!-- Animation Quality -->
+        <div class="control-section">
+          <h4>Animation Quality</h4>
+          <select 
+            class="quality-select"
+            [(ngModel)]="simulationSettings.animationQuality"
+            (change)="onSettingsChange({ animationQuality: simulationSettings.animationQuality })">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Main Simulation Area -->
+    <div class="simulation-area">
+      
+      <!-- Canvas Container -->
+      <div class="canvas-container">
+        <div 
+          #simulationCanvas
+          class="simulation-canvas"
+          style="width: 800px; height: 600px;">
+        </div>
+        
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" *ngIf="!patternData">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+          <p>Loading simulation data...</p>
+          <button class="action-button primary" (click)="goToSequenceDesigner()">
+            Go to Sequence Designer
+          </button>
+        </div>
+      </div>
+
+      <!-- Timeline Container -->
+      <div class="timeline-container">
+        <h4>Blast Timeline</h4>
+        <canvas 
+          #timelineCanvas
+          class="timeline-canvas"
+          (click)="onTimelineClick($event)"
+          [width]="800"
+          [height]="100">
+        </canvas>
+        
+        <!-- Timeline Info -->
+        <div class="timeline-info">
+          <span class="time-display">
+            {{ simulationState.currentTime | number:'1.0-0' }}ms / 
+            {{ simulationState.totalDuration | number:'1.0-0' }}ms
+          </span>
+          <span class="progress-display">
+            Step {{ simulationState.currentStep + 1 }} of {{ simulationState.totalSteps }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Playback Controls -->
+      <div class="playback-controls">
+        <button 
+          class="control-button play" 
+          (click)="play()" 
+          [disabled]="simulationState.isPlaying || !patternData"
+          title="Play">
+          <span class="material-icons">play_arrow</span>
+        </button>
+        
+        <button 
+          class="control-button pause" 
+          (click)="pause()" 
+          [disabled]="!simulationState.isPlaying"
+          title="Pause">
+          <span class="material-icons">pause</span>
+        </button>
+        
+        <button 
+          class="control-button stop" 
+          (click)="stop()" 
+          [disabled]="!simulationState.isPlaying && !simulationState.isPaused"
+          title="Stop">
+          <span class="material-icons">stop</span>
+        </button>
+        
+        <button 
+          class="control-button restart" 
+          (click)="restart()" 
+          [disabled]="!patternData"
+          title="Restart">
+          <span class="material-icons">replay</span>
+        </button>
+
+        <!-- Speed Control -->
+        <div class="speed-control">
+          <label>Speed:</label>
+          <select [(ngModel)]="simulationState.playbackSpeed" (change)="setPlaybackSpeed(simulationState.playbackSpeed)">
+            <option [value]="0.25">0.25x</option>
+            <option [value]="0.5">0.5x</option>
+            <option [value]="1">1x</option>
+            <option [value]="2">2x</option>
+            <option [value]="4">4x</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panels -->
+    <div class="right-panels">
+      
+      <!-- Metrics Panel -->
+      <div class="metrics-panel" [class.collapsed]="!showMetricsPanel">
+        <div class="panel-header">
+          <h3>Performance Metrics</h3>
+          <button class="toggle-button" (click)="showMetricsPanel = !showMetricsPanel">
+            <span class="material-icons">{{ showMetricsPanel ? 'chevron_right' : 'chevron_left' }}</span>
+          </button>
+        </div>
+
+        <div class="panel-content" *ngIf="showMetricsPanel">
+          <div class="metrics-grid">
+            <div class="metric-card efficiency">
+              <div class="metric-icon">
+                <span class="material-icons">speed</span>
+              </div>
+              <div class="metric-info">
+                <div class="metric-value">{{ metrics.efficiencyScore }}%</div>
+                <div class="metric-label">Efficiency</div>
+              </div>
+            </div>
+
+            <div class="metric-card safety">
+              <div class="metric-icon">
+                <span class="material-icons">security</span>
+              </div>
+              <div class="metric-info">
+                <div class="metric-value">{{ metrics.safetyScore }}%</div>
+                <div class="metric-label">Safety</div>
+              </div>
+            </div>
+
+            <div class="metric-card utilization">
+              <div class="metric-icon">
+                <span class="material-icons">timeline</span>
+              </div>
+              <div class="metric-info">
+                <div class="metric-value">{{ metrics.connectionUtilization }}%</div>
+                <div class="metric-label">Utilization</div>
+              </div>
+            </div>
+
+            <div class="metric-card timing">
+              <div class="metric-icon">
+                <span class="material-icons">schedule</span>
+              </div>
+              <div class="metric-info">
+                <div class="metric-value">{{ metrics.totalBlastTime | number:'1.0-0' }}ms</div>
+                <div class="metric-label">Total Time</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Validation Panel -->
+      <div class="validation-panel" [class.collapsed]="!showValidationPanel">
+        <div class="panel-header">
+          <h3>Validation Results</h3>
+          <button class="toggle-button" (click)="showValidationPanel = !showValidationPanel">
+            <span class="material-icons">{{ showValidationPanel ? 'chevron_right' : 'chevron_left' }}</span>
+          </button>
+        </div>
+
+        <div class="panel-content" *ngIf="showValidationPanel">
+          <div class="validation-summary">
+            <div class="summary-item" [class.success]="validation.isValid" [class.warning]="!validation.isValid">
+              <span class="material-icons">{{ validation.isValid ? 'check_circle' : 'warning' }}</span>
+              <span>{{ getValidationSummary() }}</span>
+            </div>
+          </div>
+
+          <!-- Errors -->
+          <div class="validation-section" *ngIf="validation.errors.length > 0">
+            <h4 class="error-header">
+              <span class="material-icons">error</span>
+              Errors ({{ validation.errors.length }})
+            </h4>
+            <div class="validation-list">
+              <div *ngFor="let error of validation.errors" class="validation-item error">
+                <span class="material-icons">error</span>
+                <span>{{ error.message }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Warnings -->
+          <div class="validation-section" *ngIf="validation.warnings.length > 0">
+            <h4 class="warning-header">
+              <span class="material-icons">warning</span>
+              Warnings ({{ validation.warnings.length }})
+            </h4>
+            <div class="validation-list">
+              <div *ngFor="let warning of validation.warnings" class="validation-item warning">
+                <span class="material-icons">warning</span>
+                <span>{{ warning.message }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Suggestions -->
+          <div class="validation-section" *ngIf="validation.suggestions.length > 0">
+            <h4 class="suggestion-header">
+              <span class="material-icons">lightbulb</span>
+              Suggestions ({{ validation.suggestions.length }})
+            </h4>
+            <div class="validation-list">
+              <div *ngFor="let suggestion of validation.suggestions" class="validation-item suggestion">
+                <span class="material-icons">lightbulb</span>
+                <div class="suggestion-content">
+                  <div class="suggestion-message">{{ suggestion.message }}</div>
+                  <div class="suggestion-improvement" *ngIf="suggestion.potentialImprovement">
+                    {{ suggestion.potentialImprovement }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

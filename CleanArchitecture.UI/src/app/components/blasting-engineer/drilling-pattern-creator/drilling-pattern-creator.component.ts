@@ -11,6 +11,7 @@ import { ZoomService } from './services/zoom.service';
 import { DrillPoint, PatternSettings } from './models/drill-point.model';
 import { CANVAS_CONSTANTS } from './constants/canvas.constants';
 import { PatternDataService } from '../shared/pattern-data.service';
+import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -68,6 +69,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     private drillPointService: DrillPointService,
     private zoomService: ZoomService,
     private patternDataService: PatternDataService,
+    private blastSequenceDataService: BlastSequenceDataService,
     private router: Router
   ) {}
 
@@ -694,7 +696,10 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     }
     
     const patternData = this.drillPointService.getPatternData(this.drillPoints, this.settings);
+    
+    // Export to both services for backward compatibility and new workflow
     this.patternDataService.setCurrentPattern(patternData);
+    this.blastSequenceDataService.setPatternData(patternData);
     
     // Navigate to blast sequence designer
     this.router.navigate(['/blasting-engineer/blast-sequence-designer']);

@@ -1,0 +1,114 @@
+export interface SimulationState {
+  isPlaying: boolean;
+  isPaused: boolean;
+  currentTime: number; // milliseconds
+  totalDuration: number; // milliseconds
+  playbackSpeed: number; // 0.25x to 4x
+  currentStep: number;
+  totalSteps: number;
+}
+
+export interface AnimationFrame {
+  time: number;
+  holeStates: Map<string, HoleAnimationState>;
+  connectionStates: Map<string, ConnectionAnimationState>;
+  activeEffects: BlastEffect[];
+}
+
+export enum HoleAnimationState {
+  READY = 'ready',
+  DETONATING = 'detonating', 
+  BLASTED = 'blasted'
+}
+
+export enum ConnectionAnimationState {
+  INACTIVE = 'inactive',
+  SIGNAL_PROPAGATING = 'signal_propagating',
+  SIGNAL_TRANSMITTED = 'signal_transmitted'
+}
+
+export interface BlastEffect {
+  id: string;
+  type: BlastEffectType;
+  holeId: string;
+  startTime: number;
+  duration: number;
+  intensity: number;
+  radius: number;
+  position: { x: number; y: number };
+}
+
+export enum BlastEffectType {
+  EXPLOSION = 'explosion',
+  SHOCKWAVE = 'shockwave',
+  DEBRIS = 'debris',
+  SMOKE = 'smoke'
+}
+
+export interface SimulationEvent {
+  time: number;
+  type: SimulationEventType;
+  targetId: string;
+  data?: any;
+}
+
+export enum SimulationEventType {
+  HOLE_DETONATE = 'hole_detonate',
+  SIGNAL_START = 'signal_start',
+  SIGNAL_ARRIVE = 'signal_arrive',
+  EFFECT_START = 'effect_start',
+  EFFECT_END = 'effect_end'
+}
+
+export interface SimulationSettings {
+  showTiming: boolean;
+  showConnections: boolean;
+  showEffects: boolean;
+  showSequenceNumbers: boolean;
+  effectIntensity: number; // 0-100%
+  animationQuality: 'low' | 'medium' | 'high';
+}
+
+export interface SimulationValidation {
+  isValid: boolean;
+  warnings: ValidationWarning[];
+  errors: ValidationError[];
+  suggestions: OptimizationSuggestion[];
+}
+
+export interface ValidationWarning {
+  type: 'timing_overlap' | 'delay_too_short' | 'connection_missing';
+  message: string;
+  affectedHoles: string[];
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface ValidationError {
+  type: 'invalid_delay' | 'circular_connection' | 'orphaned_hole';
+  message: string;
+  affectedElements: string[];
+  fixSuggestion?: string;
+}
+
+export interface OptimizationSuggestion {
+  type: 'reduce_total_time' | 'improve_sequence' | 'optimize_delays';
+  message: string;
+  potentialImprovement: string;
+  implementationHint: string;
+}
+
+export interface SimulationMetrics {
+  totalBlastTime: number;
+  averageDelayBetweenHoles: number;
+  maxSimultaneousDetonations: number;
+  efficiencyScore: number; // 0-100
+  safetyScore: number; // 0-100
+  connectionUtilization: number; // 0-100%
+}
+
+export interface TimelineMarker {
+  time: number;
+  label: string;
+  type: 'hole_blast' | 'sequence_start' | 'sequence_end' | 'milestone';
+  color: string;
+} 
