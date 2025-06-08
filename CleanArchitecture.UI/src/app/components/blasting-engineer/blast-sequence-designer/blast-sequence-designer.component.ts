@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Konva from 'konva';
 import { PatternDataService } from '../shared/pattern-data.service';
+import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
 import { 
   PatternData, 
   DrillPoint, 
@@ -78,12 +79,16 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   constructor(
     private cdr: ChangeDetectorRef,
     private patternDataService: PatternDataService,
+    private blastSequenceDataService: BlastSequenceDataService,
     private router: Router
   ) {}
 
   ngAfterViewInit(): void {
     this.loadPatternData();
     this.initializeCanvas();
+    
+    // Set current workflow step to sequence
+    this.blastSequenceDataService.setCurrentWorkflowStep('sequence');
   }
 
   ngOnDestroy(): void {
@@ -94,12 +99,20 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private loadPatternData(): void {
-    this.patternData = this.patternDataService.getCurrentPatternValue();
+    // Try to get pattern data from shared service first, then fallback to old service
+    this.patternData = this.blastSequenceDataService.getPatternData() || 
+                     this.patternDataService.getCurrentPatternValue();
+    
     if (!this.patternData) {
       console.warn('No pattern data available. Redirecting to pattern creator.');
       // Optionally redirect back to pattern creator
       // this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
     }
+    
+    // Load existing connections if any
+    this.connections = this.blastSequenceDataService.getConnections();
+    this.updateFilteredConnections();
+    
     this.cdr.detectChanges();
   }
 
@@ -652,6 +665,10 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     };
 
     this.connections.push(connection);
+    
+    // Update shared data service
+    this.blastSequenceDataService.addConnection(connection);
+    
     this.drawConnection(connection);
     this.currentSequence++;
     this.updateFilteredConnections();
@@ -1011,10 +1028,15 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
   clearAllConnections(): void {
     this.connections = [];
+    
+    // Update shared data service
+    this.blastSequenceDataService.clearConnections();
+    
     this.connectionObjects.forEach(obj => obj.destroy());
     this.connectionObjects.clear();
     this.connectionsLayer.draw();
     this.currentSequence = 1;
+    this.updateFilteredConnections();
     this.cdr.detectChanges();
   }
 
@@ -1044,6 +1066,12 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
   backToPatternCreator(): void {
     this.router.navigate(['/blasting-engineer/drilling-pattern']);
+  }
+
+  goToSimulator(): void {
+    if (this.connections.length > 0) {
+      this.router.navigate(['/blasting-engineer/blast-sequence-simulator']);
+    }
   }
 
   @HostListener('window:resize')
@@ -1120,6 +1148,9 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     const index = this.connections.findIndex(c => c.id === connection.id);
     if (index !== -1) {
       this.connections.splice(index, 1);
+      
+      // Update shared data service
+      this.blastSequenceDataService.removeConnection(connection.id);
       
       // Remove visual representation
       const connectionObj = this.connectionObjects.get(connection.id);
