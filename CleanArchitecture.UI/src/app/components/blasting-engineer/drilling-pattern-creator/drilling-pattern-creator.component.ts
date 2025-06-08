@@ -10,6 +10,8 @@ import { DrillPointService } from './services/drill-point.service';
 import { ZoomService } from './services/zoom.service';
 import { DrillPoint, PatternSettings } from './models/drill-point.model';
 import { CANVAS_CONSTANTS } from './constants/canvas.constants';
+import { PatternDataService } from '../shared/pattern-data.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-drilling-pattern-creator',
@@ -28,7 +30,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private gridGroup!: Konva.Group;
   private rulerGroup!: Konva.Group;
   private intersectionGroup!: Konva.Group;
-  private drillPoints: DrillPoint[] = [];
+  public drillPoints: DrillPoint[] = [];
   public selectedPoint: DrillPoint | null = null;
   public isHolePlacementMode = false;
   public isPreciseMode = false;
@@ -64,7 +66,9 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     private rulerService: RulerService,
     private drillPointCanvasService: DrillPointCanvasService,
     private drillPointService: DrillPointService,
-    private zoomService: ZoomService
+    private zoomService: ZoomService,
+    private patternDataService: PatternDataService,
+    private router: Router
   ) {}
 
   formatValue(value: number): string {
@@ -681,6 +685,19 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
 
   onExportPattern(): void {
     this.drillPointService.exportPattern(this.drillPoints, this.settings);
+  }
+
+  onExportToBlastDesigner(): void {
+    if (this.drillPoints.length === 0) {
+      console.warn('No drill points to export');
+      return;
+    }
+    
+    const patternData = this.drillPointService.getPatternData(this.drillPoints, this.settings);
+    this.patternDataService.setCurrentPattern(patternData);
+    
+    // Navigate to blast sequence designer
+    this.router.navigate(['/blasting-engineer/blast-sequence-designer']);
   }
 
   onDeletePoint(): void {

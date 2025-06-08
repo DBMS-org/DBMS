@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { DrillPoint, PatternData, PatternSettings } from '../models/drill-point.model';
+import { DrillPoint, PatternData, PatternSettings, BlastSequenceData } from '../models/drill-point.model';
 
 @Injectable({
   providedIn: 'root'
@@ -78,5 +78,21 @@ export class DrillPointService {
     a.download = 'drilling-pattern.json';
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  // New method for exporting to blast sequence designer
+  exportPatternForBlastDesign(drillPoints: DrillPoint[], settings: PatternSettings): PatternData {
+    return {
+      drillPoints: [...drillPoints], // Create a copy
+      settings: { ...settings }
+    };
+  }
+
+  // New method to get pattern data for sharing between components
+  getPatternData(drillPoints: DrillPoint[], settings: PatternSettings): PatternData {
+    return {
+      drillPoints: [...drillPoints],
+      settings: { ...settings }
+    };
   }
 } 
