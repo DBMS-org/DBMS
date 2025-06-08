@@ -14,6 +14,7 @@ import { BlastingEngineerLayoutComponent } from './components/blasting-engineer/
 import { DashboardComponent as BlastingEngineerDashboardComponent } from './components/blasting-engineer/dashboard/dashboard.component';
 import { CsvUploadComponent } from './components/blasting-engineer/csv-upload/csv-upload.component';
 import { DrillingPatternCreatorComponent } from './components/blasting-engineer/drilling-pattern-creator/drilling-pattern-creator.component';
+import { BlastSequenceDesignerComponent } from './components/blasting-engineer/blast-sequence-designer/blast-sequence-designer.component';
 import { DrillVisualizationComponent } from './components/blasting-engineer/drill-visualization/drill-visualization.component';
 import { ProjectManagementComponent as BlastingEngineerProjectManagementComponent } from './components/blasting-engineer/project-management/project-management.component';
 import { ProjectSitesComponent as BlastingEngineerProjectSitesComponent } from './components/blasting-engineer/project-management/project-sites/project-sites.component';
@@ -45,6 +46,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: BlastingEngineerDashboardComponent },
       { path: 'csv-upload', component: CsvUploadComponent },
       { path: 'drilling-pattern', component: DrillingPatternCreatorComponent },
+      { path: 'blast-sequence-designer', component: BlastSequenceDesignerComponent },
       { path: 'drill-visualization', component: DrillVisualizationComponent },
       { path: 'project-management', component: BlastingEngineerProjectManagementComponent },
       { path: 'project-management/:id/sites', component: BlastingEngineerProjectSitesComponent },

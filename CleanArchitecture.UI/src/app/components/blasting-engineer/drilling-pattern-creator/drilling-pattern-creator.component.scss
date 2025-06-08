@@ -617,3 +617,28 @@
     }
   }
 }
+
+.blast-designer-button {
+  background-color: #fff3e0 !important;
+  color: #f57c00 !important;
+  border: 1px solid #ffb74d !important;
+  
+  .material-icons {
+    color: #f57c00 !important;
+  }
+  
+  &:hover:not(:disabled) {
+    background-color: #ffe0b2 !important;
+    border-color: #ff9800 !important;
+  }
+  
+  &:disabled {
+    background-color: #fafafa !important;
+    color: #bdbdbd !important;
+    border-color: #e0e0e0 !important;
+    
+    .material-icons {
+      color: #bdbdbd !important;
+    }
+  }
+}

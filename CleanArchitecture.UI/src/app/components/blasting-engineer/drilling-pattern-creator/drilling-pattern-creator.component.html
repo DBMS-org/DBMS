@@ -119,6 +119,16 @@
       </button>
 
       <button mat-button
+              class="toolbar-button blast-designer-button"
+              (click)="onExportToBlastDesigner()"
+              [disabled]="drillPoints.length === 0"
+              matTooltip="Send pattern to Blast Sequence Designer"
+              aria-label="Send pattern to Blast Sequence Designer">
+        <span class="material-icons" aria-hidden="true">timeline</span>
+        To Blast Designer
+      </button>
+
+      <button mat-button
               class="toolbar-button help-button"
               (mouseenter)="showInstructions = true"
               (mouseleave)="showInstructions = false"
