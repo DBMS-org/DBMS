@@ -69,6 +69,15 @@ export interface SimulationSettings {
   animationQuality: 'low' | 'medium' | 'high';
 }
 
+export interface ViewSettings {
+  showGrid: boolean;
+  colorTheme: 'default' | 'dark' | 'high-contrast' | 'colorblind';
+  showHoleDetails: boolean;
+  showConnectionLabels: boolean;
+  highlightActiveConnections: boolean;
+  frameRate: 30 | 60;
+}
+
 export interface SimulationValidation {
   isValid: boolean;
   warnings: ValidationWarning[];
@@ -84,7 +93,7 @@ export interface ValidationWarning {
 }
 
 export interface ValidationError {
-  type: 'invalid_delay' | 'circular_connection' | 'orphaned_hole';
+  type: 'invalid_delay' | 'circular_connection' | 'orphaned_hole' | 'timing_conflict';
   message: string;
   affectedElements: string[];
   fixSuggestion?: string;

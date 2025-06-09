@@ -9,6 +9,7 @@ import { BlastSequenceDataService } from '../shared/services/blast-sequence-data
 import { 
   SimulationState, 
   SimulationSettings, 
+  ViewSettings,
   SimulationValidation,
   SimulationMetrics,
   AnimationFrame,
@@ -71,6 +72,14 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
     effectIntensity: 75,
     animationQuality: 'medium'
   };
+  viewSettings: ViewSettings = {
+    showGrid: true,
+    colorTheme: 'default',
+    showHoleDetails: false,
+    showConnectionLabels: true,
+    highlightActiveConnections: true,
+    frameRate: 60
+  };
   validation: SimulationValidation = {
     isValid: true,
     warnings: [],
@@ -111,7 +120,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
   ];
 
   // Canvas Configuration
-  private canvasConfig = {
+  canvasConfig = {
     width: 800,
     height: 600,
     padding: 50,
@@ -364,18 +373,22 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
     this.connectionShapes.clear();
     this.labelShapes.clear();
 
-    // First render a background grid for better visualization
-    this.renderBackgroundGrid();
+    // First render a background grid for better visualization (only if enabled)
+    if (this.viewSettings.showGrid) {
+      this.renderBackgroundGrid();
+    }
 
     // Render drill holes with enhanced styling
     this.patternData.drillPoints.forEach(hole => {
       this.renderAdvancedDrillHole(hole);
     });
 
-    // Render connections with enhanced styling
-    this.connections.forEach(conn => {
-      this.renderAdvancedConnection(conn);
-    });
+    // Render connections with enhanced styling (only if enabled)
+    if (this.simulationSettings.showConnections) {
+      this.connections.forEach(conn => {
+        this.renderAdvancedConnection(conn);
+      });
+    }
 
     // Add scale reference
     this.renderScaleReference();
@@ -391,6 +404,9 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
     const stageWidth = this.stage.width();
     const stageHeight = this.stage.height();
     
+    // Get grid color based on theme
+    const gridColor = this.getGridColorByTheme();
+    
     // Create grid lines
     const gridGroup = new Konva.Group({
       opacity: 0.3
@@ -400,7 +416,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
     for (let x = 0; x <= stageWidth; x += gridSize) {
       const line = new Konva.Line({
         points: [x, 0, x, stageHeight],
-        stroke: '#e0e0e0',
+        stroke: gridColor,
         strokeWidth: 0.5
       });
       gridGroup.add(line);
@@ -410,13 +426,22 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
     for (let y = 0; y <= stageHeight; y += gridSize) {
       const line = new Konva.Line({
         points: [0, y, stageWidth, y],
-        stroke: '#e0e0e0',
+        stroke: gridColor,
         strokeWidth: 0.5
       });
       gridGroup.add(line);
     }
 
     this.mainLayer.add(gridGroup);
+  }
+
+  private getGridColorByTheme(): string {
+    switch (this.viewSettings.colorTheme) {
+      case 'dark': return '#333333';
+      case 'high-contrast': return '#000000';
+      case 'colorblind': return '#cccccc';
+      default: return '#e0e0e0';
+    }
   }
 
   private renderAdvancedDrillHole(hole: any): void {
@@ -454,7 +479,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       shadowOffset: { x: 1, y: 1 }
     });
 
-    // Hole ID label with background
+    // Hole ID label with background (controlled by showSequenceNumbers)
     const labelBg = new Konva.Rect({
       x: -15,
       y: -30,
@@ -463,7 +488,8 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       fill: 'rgba(255,255,255,0.9)',
       stroke: '#ddd',
       strokeWidth: 1,
-      cornerRadius: 3
+      cornerRadius: 3,
+      visible: this.simulationSettings.showSequenceNumbers
     });
 
     const label = new Konva.Text({
@@ -475,7 +501,8 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       fontStyle: 'bold',
       fill: '#333',
       align: 'center',
-      width: 30
+      width: 30,
+      visible: this.simulationSettings.showSequenceNumbers
     });
 
     // Drill specifications text
@@ -488,7 +515,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       fill: '#666',
       align: 'center',
       width: 40,
-      visible: false // Initially hidden, show on hover
+      visible: this.viewSettings.showHoleDetails // Show/hide based on setting
     });
 
     group.add(depthRing);
@@ -528,14 +555,20 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
     group.on('mouseenter', () => {
       // Hover effects
       mainCircle.fill(this.getHoleColor(state).hover);
-      specsText.visible(true);
+      // Only show specs on hover if not permanently visible
+      if (!this.viewSettings.showHoleDetails) {
+        specsText.visible(true);
+      }
       document.body.style.cursor = 'pointer';
       this.mainLayer.batchDraw();
     });
 
     group.on('mouseleave', () => {
       mainCircle.fill(this.getHoleColor(state).fill);
-      specsText.visible(false);
+      // Only hide specs on leave if not permanently visible
+      if (!this.viewSettings.showHoleDetails) {
+        specsText.visible(false);
+      }
       document.body.style.cursor = 'default';
       this.mainLayer.batchDraw();
     });
@@ -562,16 +595,79 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
     const state = rawState === ConnectionAnimationState.SIGNAL_PROPAGATING ? 'SIGNAL_PROPAGATING' : 
                  rawState === ConnectionAnimationState.SIGNAL_TRANSMITTED ? 'SIGNAL_TRANSMITTED' : 'INACTIVE';
 
+    // Determine if this connection should be highlighted
+    const isActive = state === 'SIGNAL_PROPAGATING' || state === 'SIGNAL_TRANSMITTED';
+    const shouldHighlight = this.viewSettings.highlightActiveConnections && isActive;
+
     // Main connection line with enhanced styling
     const line = new Konva.Line({
       points: [fromX, fromY, toX, toY],
-      stroke: this.getConnectionColor(state),
-      strokeWidth: this.getConnectionWidth(state),
+      stroke: shouldHighlight ? '#ff9800' : this.getConnectionColor(state),
+      strokeWidth: shouldHighlight ? this.getConnectionWidth(state) + 2 : this.getConnectionWidth(state),
       dash: state === 'SIGNAL_PROPAGATING' ? [5, 5] : [],
-      shadowColor: 'rgba(0,0,0,0.2)',
-      shadowBlur: 2,
+      shadowColor: shouldHighlight ? 'rgba(255, 152, 0, 0.5)' : 'rgba(0,0,0,0.2)',
+      shadowBlur: shouldHighlight ? 6 : 2,
       shadowOffset: { x: 1, y: 1 }
     });
+
+    // Hidden points rendering if they exist
+    if (conn.startPoint && conn.endPoint) {
+      // Hidden start point (1) - positioned based on connection data
+      const startX = conn.startPoint.x * 60;
+      const startY = conn.startPoint.y * 60;
+      
+      const startPointCircle = new Konva.Circle({
+        x: startX,
+        y: startY,
+        radius: 6,
+        fill: state === 'SIGNAL_PROPAGATING' ? '#4CAF50' : 'rgba(255, 255, 255, 0.8)',
+        stroke: this.getConnectionColor(state),
+        strokeWidth: 2,
+        opacity: state === 'INACTIVE' ? 0.5 : 0.9,
+        visible: false // Hide wire points as requested
+      });
+      
+      const startPointLabel = new Konva.Text({
+        x: startX - 3,
+        y: startY - 4,
+        text: conn.startPoint.label,
+        fontSize: 8,
+        fill: 'black',
+        fontStyle: 'bold',
+        visible: false // Hide wire points as requested
+      });
+
+      // Hidden end point (2) - positioned based on connection data  
+      const endX = conn.endPoint.x * 60;
+      const endY = conn.endPoint.y * 60;
+      
+      const endPointCircle = new Konva.Circle({
+        x: endX,
+        y: endY,
+        radius: 6,
+        fill: state === 'SIGNAL_TRANSMITTED' ? '#FF5722' : 'rgba(255, 255, 255, 0.8)',
+        stroke: this.getConnectionColor(state),
+        strokeWidth: 2,
+        opacity: state === 'INACTIVE' ? 0.5 : 0.9,
+        visible: false // Hide wire points as requested
+      });
+      
+      const endPointLabel = new Konva.Text({
+        x: endX - 3,
+        y: endY - 4,
+        text: conn.endPoint.label,
+        fontSize: 8,
+        fill: 'black',
+        fontStyle: 'bold',
+        visible: false // Hide wire points as requested
+      });
+      
+      // Add hidden points to the connection group
+      connectionGroup.add(startPointCircle);
+      connectionGroup.add(startPointLabel);
+      connectionGroup.add(endPointCircle);
+      connectionGroup.add(endPointLabel);
+    }
 
     // Enhanced arrow
     const arrowPoints = this.calculateArrowPoints(
@@ -586,7 +682,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       closed: false
     });
 
-    // Timing label with background
+    // Timing label with background (controlled by showTiming)
     const midX = (fromX + toX) / 2;
     const midY = (fromY + toY) / 2;
     
@@ -598,7 +694,8 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       fill: 'rgba(255,255,255,0.9)',
       stroke: '#ddd',
       strokeWidth: 1,
-      cornerRadius: 3
+      cornerRadius: 3,
+      visible: this.simulationSettings.showTiming
     });
 
     const timingLabel = new Konva.Text({
@@ -610,13 +707,28 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       fontStyle: 'bold',
       fill: '#333',
       align: 'center',
-      width: 40
+      width: 40,
+      visible: this.simulationSettings.showTiming
+    });
+
+    // Wire sequence label for debugging
+    const sequenceLabel = new Konva.Text({
+      x: midX - 10,
+      y: midY - 25,
+      text: `${this.getConnectorTypeName(conn.connectorType)} ${conn.delay}ms`,
+      fontSize: 8,
+      fontFamily: 'Arial, sans-serif',
+      fontStyle: 'bold',
+      fill: this.getConnectionColor(state),
+      align: 'center',
+      visible: this.viewSettings.showConnectionLabels
     });
 
     connectionGroup.add(line);
     connectionGroup.add(arrow);
     connectionGroup.add(timingBg);
     connectionGroup.add(timingLabel);
+    connectionGroup.add(sequenceLabel);
 
     // Connection hover effects
     connectionGroup.on('mouseenter', () => {
@@ -756,35 +868,61 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
   }
 
   private getHoleColor(state: string): { fill: string; stroke: string; ring: string; hover: string } {
-    switch (state) {
-      case 'READY':
-        return {
-          fill: '#e3f2fd',
-          stroke: '#1976d2',
-          ring: '#bbdefb',
-          hover: '#bbdefb'
-        };
-      case 'DETONATING':
-        return {
-          fill: '#fff3e0',
-          stroke: '#f57f17',
-          ring: '#ffcc02',
-          hover: '#ffe082'
-        };
-      case 'BLASTED':
-        return {
-          fill: '#ffebee',
-          stroke: '#d32f2f',
-          ring: '#ef5350',
-          hover: '#ffcdd2'
-        };
-      default:
-        return {
-          fill: '#f5f5f5',
-          stroke: '#9e9e9e',
-          ring: '#e0e0e0',
-          hover: '#eeeeee'
-        };
+    const theme = this.viewSettings.colorTheme;
+    
+    if (theme === 'high-contrast') {
+      switch (state) {
+        case 'READY': return { fill: '#0000FF', stroke: '#000080', ring: '#E0E0FF', hover: '#4040FF' };
+        case 'DETONATING': return { fill: '#FF0000', stroke: '#CC0000', ring: '#FFE0E0', hover: '#FF4040' };
+        case 'BLASTED': return { fill: '#00FF00', stroke: '#00CC00', ring: '#E0FFE0', hover: '#40FF40' };
+        default: return { fill: '#808080', stroke: '#404040', ring: '#F0F0F0', hover: '#A0A0A0' };
+      }
+    } else if (theme === 'colorblind') {
+      switch (state) {
+        case 'READY': return { fill: '#0088FF', stroke: '#0066CC', ring: '#CCE8FF', hover: '#4499FF' };
+        case 'DETONATING': return { fill: '#FF8800', stroke: '#CC6600', ring: '#FFE4CC', hover: '#FF9944' };
+        case 'BLASTED': return { fill: '#8800FF', stroke: '#6600CC', ring: '#E4CCFF', hover: '#9944FF' };
+        default: return { fill: '#808080', stroke: '#606060', ring: '#F0F0F0', hover: '#A0A0A0' };
+      }
+    } else if (theme === 'dark') {
+      switch (state) {
+        case 'READY': return { fill: '#64B5F6', stroke: '#1976D2', ring: '#2196F3', hover: '#90CAF9' };
+        case 'DETONATING': return { fill: '#FF8A65', stroke: '#F57C00', ring: '#FF9800', hover: '#FFAB91' };
+        case 'BLASTED': return { fill: '#81C784', stroke: '#388E3C', ring: '#4CAF50', hover: '#A5D6A7' };
+        default: return { fill: '#BDBDBD', stroke: '#757575', ring: '#9E9E9E', hover: '#E0E0E0' };
+      }
+    } else {
+      // Default theme
+      switch (state) {
+        case 'READY':
+          return {
+            fill: '#e3f2fd',
+            stroke: '#1976d2',
+            ring: '#bbdefb',
+            hover: '#bbdefb'
+          };
+        case 'DETONATING':
+          return {
+            fill: '#fff3e0',
+            stroke: '#f57f17',
+            ring: '#ffcc02',
+            hover: '#ffe082'
+          };
+        case 'BLASTED':
+          return {
+            fill: '#ffebee',
+            stroke: '#d32f2f',
+            ring: '#ef5350',
+            hover: '#ffcdd2'
+          };
+        default:
+          return {
+            fill: '#f5f5f5',
+            stroke: '#9e9e9e',
+            ring: '#e0e0e0',
+            hover: '#eeeeee'
+          };
+      }
     }
   }
 
@@ -894,35 +1032,206 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
 
     this.simulationEvents = [];
     
-    // Create events for each connection
-    this.connections.forEach(connection => {
-      // Signal start event
-      this.simulationEvents.push({
-        time: connection.delay,
-        type: SimulationEventType.SIGNAL_START,
-        targetId: connection.id,
-        data: { fromHoleId: connection.fromHoleId, toHoleId: connection.toHoleId }
-      });
-
-      // Detonation event
-      this.simulationEvents.push({
-        time: connection.delay + 50, // Small delay for signal propagation
-        type: SimulationEventType.HOLE_DETONATE,
-        targetId: connection.toHoleId,
-        data: { delay: connection.delay, type: connection.connectorType }
-      });
-
-      // Effect events
-      this.simulationEvents.push({
-        time: connection.delay + 50,
-        type: SimulationEventType.EFFECT_START,
-        targetId: connection.toHoleId,
-        data: { effectType: BlastEffectType.EXPLOSION, duration: 1000 }
-      });
+    // Group connections by their starting holes (for simultaneous starts)
+    const connectionsByFromHole = new Map<string, BlastConnection[]>();
+    this.connections.forEach(conn => {
+      if (!connectionsByFromHole.has(conn.fromHoleId)) {
+        connectionsByFromHole.set(conn.fromHoleId, []);
+      }
+      connectionsByFromHole.get(conn.fromHoleId)!.push(conn);
     });
 
-    // Sort events by time
+    // Group connections by their ending holes (for finding what gets triggered)
+    const connectionsByToHole = new Map<string, BlastConnection[]>();
+    this.connections.forEach(conn => {
+      if (!connectionsByToHole.has(conn.toHoleId)) {
+        connectionsByToHole.set(conn.toHoleId, []);
+      }
+      connectionsByToHole.get(conn.toHoleId)!.push(conn);
+    });
+
+    // Track which connections have been processed
+    const processedConnections = new Set<string>();
+    const triggerTimes = new Map<string, number>(); // connectionId -> trigger time
+
+    // Find initial connections - these are connections that start from holes 
+    // that are NOT the target of any other connection's Point 2
+    const allToHoleIds = new Set(this.connections.map(conn => conn.toHoleId));
+    const initialFromHoles = new Set<string>();
+    
+    this.connections.forEach(conn => {
+      // If this connection starts from a hole that is not a target of any other connection,
+      // it's an initial connection
+      if (!allToHoleIds.has(conn.fromHoleId)) {
+        initialFromHoles.add(conn.fromHoleId);
+      }
+    });
+    
+    // Get ALL connections that start from initial holes (multiple Point 1s on same hole)
+    const initialConnections: BlastConnection[] = [];
+    initialFromHoles.forEach(holeId => {
+      const connectionsFromHole = connectionsByFromHole.get(holeId) || [];
+      initialConnections.push(...connectionsFromHole);
+    });
+    
+    console.log('Initial holes with Point 1s:', Array.from(initialFromHoles));
+    console.log('Initial connections found:', initialConnections.map(c => `${c.id} (${this.getConnectorTypeName(c.connectorType)})`));
+
+    // Process connections wave by wave
+    const processWave = (connectionsToProcess: BlastConnection[], waveStartTime: number) => {
+      if (connectionsToProcess.length === 0) return;
+
+      console.log(`Processing wave at time ${waveStartTime}ms with connections:`, 
+        connectionsToProcess.map(c => `${c.id} (${this.getConnectorTypeName(c.connectorType)} ${c.delay}ms from ${c.fromHoleId})`));
+
+      // All connections in this wave start simultaneously
+      connectionsToProcess.forEach(connection => {
+        if (processedConnections.has(connection.id)) {
+          console.log(`Skipping already processed connection: ${connection.id}`);
+          return;
+        }
+        
+        processedConnections.add(connection.id);
+        triggerTimes.set(connection.id, waveStartTime);
+
+        console.log(`Processing connection: ${connection.id} (${this.getConnectorTypeName(connection.connectorType)} ${connection.delay}ms) from hole ${connection.fromHoleId} to ${connection.toHoleId}`);
+
+        // Hidden point 1 (start point) activation
+        this.simulationEvents.push({
+          time: waveStartTime,
+          type: SimulationEventType.SIGNAL_START,
+          targetId: `${connection.id}_start`,
+          data: { 
+            connectionId: connection.id,
+            pointType: 'startPoint',
+            pointLabel: '1',
+            position: connection.startPoint
+          }
+        });
+        
+        // Signal propagation along the wire (from point 1 to point 2)
+        const propagationDelay = 25;
+        const signalPropagationTime = waveStartTime + propagationDelay;
+        
+        this.simulationEvents.push({
+          time: signalPropagationTime,
+          type: SimulationEventType.SIGNAL_ARRIVE,
+          targetId: connection.id,
+          data: { 
+            fromHoleId: connection.fromHoleId, 
+            toHoleId: connection.toHoleId,
+            wireSequence: connection.sequence
+          }
+        });
+        
+        // Hidden point 2 (end point) activation
+        const endPointActivationTime = signalPropagationTime + 10;
+        this.simulationEvents.push({
+          time: endPointActivationTime,
+          type: SimulationEventType.SIGNAL_ARRIVE,
+          targetId: `${connection.id}_end`,
+          data: { 
+            connectionId: connection.id,
+            pointType: 'endPoint',
+            pointLabel: '2',
+            position: connection.endPoint,
+            toHoleId: connection.toHoleId
+          }
+        });
+
+        // Hole detonation event
+        const detonationTime = endPointActivationTime + 15;
+        this.simulationEvents.push({
+          time: detonationTime,
+          type: SimulationEventType.HOLE_DETONATE,
+          targetId: connection.toHoleId,
+          data: { 
+            delay: connection.delay, 
+            type: connection.connectorType,
+            wireSequence: connection.sequence,
+            triggeredByWire: connection.id
+          }
+        });
+
+        // Blast effect
+        this.simulationEvents.push({
+          time: detonationTime,
+          type: SimulationEventType.EFFECT_START,
+          targetId: connection.toHoleId,
+          data: { 
+            effectType: BlastEffectType.EXPLOSION, 
+            duration: 1000,
+            triggeredByWire: connection.id
+          }
+        });
+
+        console.log(`${this.getConnectorTypeName(connection.connectorType)} ${connection.delay}ms: Start=${waveStartTime}ms, EndPoint=${endPointActivationTime}ms, Detonation=${detonationTime}ms`);
+      });
+
+      // Find next wave of connections to trigger
+      // Look for connections that start from holes where current wave ends
+      const nextWaveConnections: BlastConnection[] = [];
+      const nextWaveTime = Math.max(...connectionsToProcess.map(conn => {
+        const endTime = triggerTimes.get(conn.id)! + 25 + 10; // propagation + end point activation
+        return endTime;
+      })) + 500; // 500ms delay between waves
+
+      connectionsToProcess.forEach(connection => {
+        // Find connections that should be triggered by this connection's point 2
+        // Point 2 can only trigger Point 1 (not another Point 2)
+        const potentialNextConnections = connectionsByFromHole.get(connection.toHoleId) || [];
+        
+        potentialNextConnections.forEach(nextConn => {
+          if (!processedConnections.has(nextConn.id)) {
+            // Check if this connection's point 2 should trigger the next connection's point 1
+            // For now, we'll trigger all connections starting from the same hole
+            if (!nextWaveConnections.includes(nextConn)) {
+              nextWaveConnections.push(nextConn);
+            }
+          }
+        });
+      });
+
+      // Process next wave if there are connections to process
+      if (nextWaveConnections.length > 0) {
+        processWave(nextWaveConnections, nextWaveTime);
+      }
+    };
+
+    // Start with initial connections at the earliest delay time among them
+    const initialStartTime = initialConnections.length > 0 ? 
+      Math.min(...initialConnections.map(conn => conn.delay)) : 0;
+    
+    console.log(`Starting initial wave at time: ${initialStartTime}ms with ${initialConnections.length} connections`);
+    processWave(initialConnections, initialStartTime);
+
+    // Sort all events by time to ensure proper execution order
     this.simulationEvents.sort((a, b) => a.time - b.time);
+    
+    // Detect timing conflicts and overlaps
+    const timingConflicts = this.detectTimingConflicts();
+    
+    // Update validation with timing conflicts
+    this.updateValidationWithConflicts(timingConflicts);
+    
+    // Calculate total duration based on the last event + effect duration
+    const lastEventTime = this.simulationEvents.length > 0 ? 
+      Math.max(...this.simulationEvents.map(e => e.time)) : 0;
+    const totalDuration = lastEventTime + 1500; // Add buffer for effects to complete
+    
+    // Update simulation state with new duration and total steps
+    this.dataService.updateSimulationState({
+      totalDuration: totalDuration,
+      totalSteps: this.simulationEvents.length,
+      currentTime: 0,
+      currentStep: 0
+    });
+    
+    console.log('Generated wire sequence events:', this.simulationEvents);
+    console.log(`Total simulation duration: ${totalDuration}ms with ${this.simulationEvents.length} events`);
+    if (timingConflicts.length > 0) {
+      console.warn('Timing conflicts detected:', timingConflicts);
+    }
   }
 
   // Animation Controls
@@ -1085,18 +1394,73 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
   private processEvent(event: SimulationEvent, currentTime: number): void {
     switch (event.type) {
       case SimulationEventType.SIGNAL_START:
-        this.currentFrame.connectionStates.set(event.targetId, ConnectionAnimationState.SIGNAL_PROPAGATING);
+        // Handle both regular signals and hidden point signals
+        if (event.targetId.includes('_start')) {
+          // Hidden start point (1) activation
+          console.log(`Hidden point 1 activated for connection: ${event.data.connectionId}`);
+          this.currentFrame.connectionStates.set(event.data.connectionId, ConnectionAnimationState.SIGNAL_PROPAGATING);
+        } else {
+          // Regular connection signal start
+          this.currentFrame.connectionStates.set(event.targetId, ConnectionAnimationState.SIGNAL_PROPAGATING);
+        }
+        break;
+
+      case SimulationEventType.SIGNAL_ARRIVE:
+        // Handle signal arrival at different points
+        if (event.targetId.includes('_end')) {
+          // Hidden end point (2) reached - mark connection as transmitted
+          const connectionId = event.data.connectionId;
+          console.log(`Hidden point 2 reached for connection: ${connectionId}, toHole: ${event.data.toHoleId}`);
+          this.currentFrame.connectionStates.set(connectionId, ConnectionAnimationState.SIGNAL_TRANSMITTED);
+          
+          // Trigger visual effect for hidden point 2
+          this.createHiddenPointEffect(event.data.connectionId, 'endPoint', currentTime);
+          
+          // Note: The wave-based logic in generateSimulationEvents now handles triggering next connections
+          // No need to manually trigger here as all timing is pre-calculated
+        } else {
+          // Regular signal arrival at hole
+          console.log(`Signal arrived at hole: ${event.targetId} from wire ${event.data.wireSequence}`);
+          this.currentFrame.connectionStates.set(event.targetId, ConnectionAnimationState.SIGNAL_TRANSMITTED);
+        }
         break;
 
       case SimulationEventType.HOLE_DETONATE:
+        console.log(`Hole detonating: ${event.targetId} triggered by wire ${event.data.triggeredByWire}`);
         this.currentFrame.holeStates.set(event.targetId, HoleAnimationState.DETONATING);
         this.createBlastEffect(event.targetId, currentTime);
         break;
 
       case SimulationEventType.EFFECT_START:
         // Effects are created by detonation events
+        console.log(`Effect started for: ${event.targetId} by wire ${event.data.triggeredByWire}`);
         break;
     }
+  }
+
+  // New method to create visual effects for hidden points
+  private createHiddenPointEffect(connectionId: string, pointType: 'startPoint' | 'endPoint', startTime: number): void {
+    const connection = this.connections.find(c => c.id === connectionId);
+    if (!connection) return;
+
+    const point = pointType === 'startPoint' ? connection.startPoint : connection.endPoint;
+    const effectId = `hidden_effect_${connectionId}_${pointType}_${startTime}`;
+
+    const effect: BlastEffect = {
+      id: effectId,
+      type: BlastEffectType.SHOCKWAVE,
+      holeId: `${connectionId}_${pointType}`,
+      startTime: startTime,
+      duration: 300, // Shorter duration for hidden point effects
+      intensity: 50, // Lower intensity
+      radius: 10, // Smaller radius
+      position: { x: point.x, y: point.y }
+    };
+
+    this.activeEffects.push(effect);
+    this.currentFrame.activeEffects = [...this.activeEffects];
+    
+    console.log(`Created hidden point effect for ${pointType} of connection ${connectionId}`);
   }
 
   private createBlastEffect(holeId: string, startTime: number): void {
@@ -1365,6 +1729,245 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       return `${warningCount} warning${warningCount > 1 ? 's' : ''} found`;
     } else {
       return 'Validation passed';
+    }
+  }
+
+  private getConnectorTypeName(connectorType: string): string {
+    switch (connectorType) {
+      case 'Non-Electric-detonation-wire':
+        return 'Det Cord';
+      case 'Non-Electric-connectors-wire':
+        return 'Connector';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  private detectTimingConflicts(): Array<{type: string, details: string, affectedHoles: string[], time: number}> {
+    const conflicts: Array<{type: string, details: string, affectedHoles: string[], time: number}> = [];
+    const holeEvents = new Map<string, Array<{time: number, eventType: string, connectionId: string}>>();
+    
+    // Group events by target hole
+    this.simulationEvents.forEach(event => {
+      let targetHole = '';
+      let eventType = '';
+      let connectionId = '';
+      
+      if (event.type === SimulationEventType.HOLE_DETONATE) {
+        targetHole = event.targetId;
+        eventType = 'DETONATION';
+        connectionId = event.data?.triggeredByWire || 'unknown';
+      } else if (event.type === SimulationEventType.SIGNAL_ARRIVE && !event.targetId.includes('_')) {
+        targetHole = event.targetId;
+        eventType = 'SIGNAL_ARRIVAL';
+        connectionId = event.targetId;
+      }
+      
+      if (targetHole) {
+        if (!holeEvents.has(targetHole)) {
+          holeEvents.set(targetHole, []);
+        }
+        holeEvents.get(targetHole)!.push({
+          time: event.time,
+          eventType: eventType,
+          connectionId: connectionId
+        });
+      }
+    });
+    
+    // Check for conflicts within each hole
+    holeEvents.forEach((events, holeId) => {
+      // Check for simultaneous detonations (within 50ms)
+      const detonationEvents = events.filter(e => e.eventType === 'DETONATION');
+      for (let i = 0; i < detonationEvents.length; i++) {
+        for (let j = i + 1; j < detonationEvents.length; j++) {
+          const timeDiff = Math.abs(detonationEvents[i].time - detonationEvents[j].time);
+          if (timeDiff < 50) { // 50ms overlap threshold
+            conflicts.push({
+              type: 'SIMULTANEOUS_DETONATION',
+              details: `Hole ${holeId} has overlapping detonations at ${detonationEvents[i].time}ms and ${detonationEvents[j].time}ms (${timeDiff}ms apart)`,
+              affectedHoles: [holeId],
+              time: Math.min(detonationEvents[i].time, detonationEvents[j].time)
+            });
+          }
+        }
+      }
+      
+      // Check for rapid signal arrivals (within 25ms)
+      const signalEvents = events.filter(e => e.eventType === 'SIGNAL_ARRIVAL');
+      for (let i = 0; i < signalEvents.length; i++) {
+        for (let j = i + 1; j < signalEvents.length; j++) {
+          const timeDiff = Math.abs(signalEvents[i].time - signalEvents[j].time);
+          if (timeDiff < 25) { // 25ms overlap threshold for signals
+            conflicts.push({
+              type: 'SIGNAL_INTERFERENCE',
+              details: `Hole ${holeId} receives overlapping signals at ${signalEvents[i].time}ms and ${signalEvents[j].time}ms (${timeDiff}ms apart)`,
+              affectedHoles: [holeId],
+              time: Math.min(signalEvents[i].time, signalEvents[j].time)
+            });
+          }
+        }
+      }
+    });
+    
+    return conflicts;
+  }
+
+  private updateValidationWithConflicts(conflicts: Array<{type: string, details: string, affectedHoles: string[], time: number}>): void {
+    // Clear previous timing-related validation issues
+    this.validation.warnings = this.validation.warnings.filter(w => w.type !== 'timing_overlap');
+    this.validation.errors = this.validation.errors.filter(e => e.type !== 'timing_conflict');
+    
+    conflicts.forEach(conflict => {
+      if (conflict.type === 'SIMULTANEOUS_DETONATION') {
+        // Simultaneous detonations are critical errors
+        this.validation.errors.push({
+          type: 'timing_conflict',
+          message: conflict.details,
+          affectedElements: conflict.affectedHoles,
+          fixSuggestion: 'Adjust delay times to ensure minimum 50ms separation between detonations'
+        });
+        this.validation.isValid = false;
+      } else if (conflict.type === 'SIGNAL_INTERFERENCE') {
+        // Signal interference is a warning
+        this.validation.warnings.push({
+          type: 'timing_overlap',
+          message: conflict.details,
+          affectedHoles: conflict.affectedHoles,
+          severity: 'medium'
+        });
+      }
+    });
+    
+    // Update validation status
+    if (this.validation.errors.length === 0 && this.validation.warnings.length === 0) {
+      this.validation.isValid = true;
+    }
+    
+    // Note: Validation is updated locally and will be displayed in the UI
+    // The data service will be notified through the normal validation flow
+  }
+
+  // View Control Methods
+  onViewSettingsChange(settings: Partial<ViewSettings>): void {
+    this.viewSettings = { ...this.viewSettings, ...settings };
+    this.renderKonvaPattern();
+    
+    // Apply theme changes
+    if (settings.colorTheme) {
+      this.applyColorTheme(settings.colorTheme);
+    }
+  }
+
+  // Zoom Controls
+  zoomIn(): void {
+    this.canvasConfig.scale = Math.min(this.canvasConfig.scale * 1.2, 5);
+    this.stage.scale({ x: this.canvasConfig.scale, y: this.canvasConfig.scale });
+    this.stage.draw();
+  }
+
+  zoomOut(): void {
+    this.canvasConfig.scale = Math.max(this.canvasConfig.scale * 0.8, 0.1);
+    this.stage.scale({ x: this.canvasConfig.scale, y: this.canvasConfig.scale });
+    this.stage.draw();
+  }
+
+  // Camera/Pan Controls
+  panUp(): void {
+    this.canvasConfig.offsetY += 50;
+    this.stage.position({ x: this.canvasConfig.offsetX, y: this.canvasConfig.offsetY });
+    this.stage.draw();
+  }
+
+  panDown(): void {
+    this.canvasConfig.offsetY -= 50;
+    this.stage.position({ x: this.canvasConfig.offsetX, y: this.canvasConfig.offsetY });
+    this.stage.draw();
+  }
+
+  panLeft(): void {
+    this.canvasConfig.offsetX += 50;
+    this.stage.position({ x: this.canvasConfig.offsetX, y: this.canvasConfig.offsetY });
+    this.stage.draw();
+  }
+
+  panRight(): void {
+    this.canvasConfig.offsetX -= 50;
+    this.stage.position({ x: this.canvasConfig.offsetX, y: this.canvasConfig.offsetY });
+    this.stage.draw();
+  }
+
+  centerView(): void {
+    if (!this.patternData) return;
+    
+    // Calculate center of all holes
+    const holes = this.patternData.drillPoints;
+    if (holes.length === 0) return;
+    
+    const bounds = holes.reduce(
+      (acc, hole) => ({
+        minX: Math.min(acc.minX, hole.x),
+        maxX: Math.max(acc.maxX, hole.x),
+        minY: Math.min(acc.minY, hole.y),
+        maxY: Math.max(acc.maxY, hole.y)
+      }),
+      { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity }
+    );
+    
+    const centerX = (bounds.minX + bounds.maxX) / 2;
+    const centerY = (bounds.minY + bounds.maxY) / 2;
+    
+    // Center the view on the pattern
+    this.canvasConfig.offsetX = this.canvasConfig.width / 2 - centerX * this.canvasConfig.scale;
+    this.canvasConfig.offsetY = this.canvasConfig.height / 2 - centerY * this.canvasConfig.scale;
+    
+    this.stage.position({ x: this.canvasConfig.offsetX, y: this.canvasConfig.offsetY });
+    this.stage.draw();
+  }
+
+  cycleColorTheme(): void {
+    const themes: Array<'default' | 'dark' | 'high-contrast' | 'colorblind'> = ['default', 'dark', 'high-contrast', 'colorblind'];
+    const currentIndex = themes.indexOf(this.viewSettings.colorTheme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    const nextTheme = themes[nextIndex];
+    
+    this.onViewSettingsChange({ colorTheme: nextTheme });
+  }
+
+  private applyColorTheme(theme: string): void {
+    const themes = {
+      default: {
+        background: '#f5f5f5',
+        grid: '#e0e0e0',
+        hole: '#2196f3',
+        connection: '#4caf50'
+      },
+      dark: {
+        background: '#1a1a1a',
+        grid: '#333333',
+        hole: '#64b5f6',
+        connection: '#81c784'
+      },
+      'high-contrast': {
+        background: '#ffffff',
+        grid: '#000000',
+        hole: '#ff0000',
+        connection: '#0000ff'
+      },
+      colorblind: {
+        background: '#f5f5f5',
+        grid: '#cccccc',
+        hole: '#ff8800',
+        connection: '#0088ff'
+      }
+    };
+    
+    const selectedTheme = themes[theme as keyof typeof themes] || themes.default;
+    
+    // Apply theme to canvas background
+    if (this.stage) {
+      // This would update the stage background and re-render
+      this.renderKonvaPattern();
     }
   }
 } 

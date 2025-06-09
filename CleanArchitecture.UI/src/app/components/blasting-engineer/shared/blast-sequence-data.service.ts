@@ -139,11 +139,52 @@ export class BlastSequenceDataService {
 
   // Connections Methods
   setConnections(connections: BlastConnection[]): void {
-    this.connectionsSubject.next([...connections]);
-    this.updateWorkflowStep('sequence', connections.length > 0);
+    // Migrate connections to ensure they have hidden points
+    const migratedConnections = this.migrateConnectionsToNewFormat(connections);
+    this.connectionsSubject.next([...migratedConnections]);
+    this.updateWorkflowStep('sequence', migratedConnections.length > 0);
     this.enableWorkflowStep('simulate');
     this.validateSequence();
     this.calculateSimulationDuration();
+  }
+
+  private migrateConnectionsToNewFormat(connections: BlastConnection[]): BlastConnection[] {
+    return connections.map(connection => {
+      // Check if connection already has hidden points
+      if (connection.startPoint && connection.endPoint) {
+        return connection;
+      }
+      
+      // Create default hidden points if they don't exist
+      const fromHole = this.getPatternData()?.drillPoints.find(p => p.id === connection.fromHoleId);
+      const toHole = this.getPatternData()?.drillPoints.find(p => p.id === connection.toHoleId);
+      
+      if (!fromHole || !toHole) {
+        return connection;
+      }
+      
+      // Calculate offset positions for hidden points
+      const offsetDistance = 0.5; // world units
+      const angle = Math.atan2(toHole.y - fromHole.y, toHole.x - fromHole.x);
+      
+      return {
+        ...connection,
+        startPoint: {
+          id: `start_${connection.id}`,
+          label: "1",
+          x: fromHole.x - Math.cos(angle) * offsetDistance,
+          y: fromHole.y - Math.sin(angle) * offsetDistance,
+          isHidden: true
+        },
+        endPoint: {
+          id: `end_${connection.id}`,
+          label: "2",
+          x: toHole.x + Math.cos(angle) * offsetDistance,
+          y: toHole.y + Math.sin(angle) * offsetDistance,
+          isHidden: true
+        }
+      };
+    });
   }
 
   addConnection(connection: BlastConnection): void {
@@ -232,6 +273,10 @@ export class BlastSequenceDataService {
 
   getWorkflowSteps(): WorkflowStep[] {
     return this.workflowStepsSubject.value;
+  }
+
+  updateValidation(validation: SimulationValidation): void {
+    this.validationSubject.next(validation);
   }
 
   private resetWorkflow(): void {

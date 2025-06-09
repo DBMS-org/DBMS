@@ -47,9 +47,76 @@
     <div class="left-panel" [class.collapsed]="!showControlPanel">
       <div class="panel-header">
         <h3>View Controls</h3>
-        <button class="toggle-button" (click)="showControlPanel = !showControlPanel">
+        <button class="toggle-button" (click)="showControlPanel = !showControlPanel" 
+                [title]="showControlPanel ? 'Hide View Controls' : 'Show View Controls'">
           <span class="material-icons">{{ showControlPanel ? 'chevron_left' : 'chevron_right' }}</span>
         </button>
+      </div>
+
+      <!-- Collapsed Controls - shown when panel is hidden -->
+      <div class="collapsed-controls" *ngIf="!showControlPanel">
+        <!-- Quick Zoom Controls -->
+        <div class="collapsed-control-group">
+          <button class="collapsed-button" (click)="zoomIn()" title="Zoom In">
+            <span class="material-icons">zoom_in</span>
+          </button>
+          <button class="collapsed-button" (click)="zoomOut()" title="Zoom Out">
+            <span class="material-icons">zoom_out</span>
+          </button>
+          <button class="collapsed-button" (click)="resetZoom()" title="Reset Zoom">
+            <span class="material-icons">center_focus_strong</span>
+          </button>
+        </div>
+
+        <!-- Quick Toggles -->
+        <div class="collapsed-control-group">
+          <button class="collapsed-toggle" 
+                  [class.active]="simulationSettings.showConnections"
+                  (click)="onSettingsChange({ showConnections: !simulationSettings.showConnections })"
+                  title="Toggle Connections">
+            <span class="material-icons">timeline</span>
+          </button>
+          <button class="collapsed-toggle" 
+                  [class.active]="simulationSettings.showTiming"
+                  (click)="onSettingsChange({ showTiming: !simulationSettings.showTiming })"
+                  title="Toggle Timing Labels">
+            <span class="material-icons">schedule</span>
+          </button>
+          <button class="collapsed-toggle" 
+                  [class.active]="viewSettings.showGrid"
+                  (click)="onViewSettingsChange({ showGrid: !viewSettings.showGrid })"
+                  title="Toggle Grid">
+            <span class="material-icons">grid_on</span>
+          </button>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="collapsed-control-group">
+          <button class="collapsed-button" (click)="panUp()" title="Pan Up">
+            <span class="material-icons">keyboard_arrow_up</span>
+          </button>
+          <button class="collapsed-button" (click)="panLeft()" title="Pan Left">
+            <span class="material-icons">keyboard_arrow_left</span>
+          </button>
+          <button class="collapsed-button" (click)="centerView()" title="Center View">
+            <span class="material-icons">gps_fixed</span>
+          </button>
+          <button class="collapsed-button" (click)="panRight()" title="Pan Right">
+            <span class="material-icons">keyboard_arrow_right</span>
+          </button>
+          <button class="collapsed-button" (click)="panDown()" title="Pan Down">
+            <span class="material-icons">keyboard_arrow_down</span>
+          </button>
+        </div>
+
+        <!-- Theme Switcher -->
+        <div class="collapsed-control-group">
+          <button class="collapsed-button" 
+                  (click)="cycleColorTheme()" 
+                  title="Cycle Color Theme: {{ viewSettings.colorTheme }}">
+            <span class="material-icons">palette</span>
+          </button>
+        </div>
       </div>
 
       <div class="panel-content" *ngIf="showControlPanel">
@@ -90,14 +157,7 @@
               <span class="checkmark"></span>
               Show Connections
             </label>
-            <label class="checkbox-label">
-              <input 
-                type="checkbox" 
-                [(ngModel)]="simulationSettings.showEffects"
-                (change)="onSettingsChange({ showEffects: simulationSettings.showEffects })">
-              <span class="checkmark"></span>
-              Show Blast Effects
-            </label>
+
             <label class="checkbox-label">
               <input 
                 type="checkbox" 
@@ -109,32 +169,134 @@
           </div>
         </div>
 
-        <!-- Effect Intensity -->
+
+
+        <!-- Zoom Controls -->
         <div class="control-section">
-          <h4>Effect Intensity: {{ simulationSettings.effectIntensity }}%</h4>
-          <div class="slider-container">
-            <input 
-              type="range" 
-              class="intensity-slider"
-              min="0" 
-              max="100" 
-              step="5"
-              [(ngModel)]="simulationSettings.effectIntensity"
-              (input)="onSettingsChange({ effectIntensity: simulationSettings.effectIntensity })">
+          <h4>Zoom & Pan</h4>
+          <div class="zoom-controls">
+            <button class="zoom-button" (click)="zoomIn()" title="Zoom In">
+              <span class="material-icons">zoom_in</span>
+            </button>
+            <span class="zoom-display">{{ (canvasConfig.scale * 100) | number:'1.0-0' }}%</span>
+            <button class="zoom-button" (click)="zoomOut()" title="Zoom Out">
+              <span class="material-icons">zoom_out</span>
+            </button>
+            <button class="zoom-button" (click)="resetZoom()" title="Reset Zoom">
+              <span class="material-icons">center_focus_strong</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid Settings -->
+        <div class="control-section">
+          <h4>Grid & Background</h4>
+          <div class="settings-group">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="viewSettings.showGrid"
+                (change)="onViewSettingsChange({ showGrid: viewSettings.showGrid })">
+              <span class="checkmark"></span>
+              Show Grid
+            </label>
+          </div>
+        </div>
+
+        <!-- Color Theme -->
+        <div class="control-section">
+          <h4>Color Theme</h4>
+          <select 
+            class="theme-select"
+            [(ngModel)]="viewSettings.colorTheme"
+            (change)="onViewSettingsChange({ colorTheme: viewSettings.colorTheme })">
+            <option value="default">Default</option>
+            <option value="dark">Dark Mode</option>
+            <option value="high-contrast">High Contrast</option>
+            <option value="colorblind">Colorblind Friendly</option>
+          </select>
+        </div>
+
+        <!-- Advanced Display -->
+        <div class="control-section">
+          <h4>Advanced Display</h4>
+          <div class="settings-group">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="viewSettings.showHoleDetails"
+                (change)="onViewSettingsChange({ showHoleDetails: viewSettings.showHoleDetails })">
+              <span class="checkmark"></span>
+              Show Hole Details
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="viewSettings.showConnectionLabels"
+                (change)="onViewSettingsChange({ showConnectionLabels: viewSettings.showConnectionLabels })">
+              <span class="checkmark"></span>
+              Show Connection Labels
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="viewSettings.highlightActiveConnections"
+                (change)="onViewSettingsChange({ highlightActiveConnections: viewSettings.highlightActiveConnections })">
+              <span class="checkmark"></span>
+              Highlight Active Connections
+            </label>
+          </div>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="control-section">
+          <h4>Camera Controls</h4>
+          <div class="camera-controls">
+            <button class="camera-button" (click)="panUp()" title="Pan Up">
+              <span class="material-icons">keyboard_arrow_up</span>
+            </button>
+            <div class="camera-row">
+              <button class="camera-button" (click)="panLeft()" title="Pan Left">
+                <span class="material-icons">keyboard_arrow_left</span>
+              </button>
+              <button class="camera-button" (click)="centerView()" title="Center View">
+                <span class="material-icons">gps_fixed</span>
+              </button>
+              <button class="camera-button" (click)="panRight()" title="Pan Right">
+                <span class="material-icons">keyboard_arrow_right</span>
+              </button>
+            </div>
+            <button class="camera-button" (click)="panDown()" title="Pan Down">
+              <span class="material-icons">keyboard_arrow_down</span>
+            </button>
           </div>
         </div>
 
         <!-- Animation Quality -->
         <div class="control-section">
-          <h4>Animation Quality</h4>
-          <select 
-            class="quality-select"
-            [(ngModel)]="simulationSettings.animationQuality"
-            (change)="onSettingsChange({ animationQuality: simulationSettings.animationQuality })">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
+          <h4>Performance</h4>
+          <div class="performance-settings">
+            <label for="animationQuality">Animation Quality:</label>
+            <select 
+              id="animationQuality"
+              class="quality-select"
+              [(ngModel)]="simulationSettings.animationQuality"
+              (change)="onSettingsChange({ animationQuality: simulationSettings.animationQuality })">
+              <option value="low">Low (Better Performance)</option>
+              <option value="medium">Medium</option>
+              <option value="high">High (Better Quality)</option>
+            </select>
+            
+            <label for="frameRate">Frame Rate:</label>
+            <select 
+              id="frameRate"
+              class="framerate-select"
+              [(ngModel)]="viewSettings.frameRate"
+              (change)="onViewSettingsChange({ frameRate: viewSettings.frameRate })">
+              <option value="30">30 FPS</option>
+              <option value="60">60 FPS</option>
+            </select>
+          </div>
         </div>
 
       </div>
