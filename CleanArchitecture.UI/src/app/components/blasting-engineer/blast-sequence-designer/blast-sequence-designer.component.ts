@@ -50,7 +50,8 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   currentDelay: number | null = null;
   currentSequence = 1;
   showHelp = false;
-
+  showHiddenPoints = false;
+  
   // Predefined delay options for non-electric systems
   detonatingCordDelays = [17, 25, 42]; // milliseconds - no 67ms for detonating cord
   connectorsDelays = [17, 25, 42, 67]; // milliseconds - includes 67ms for connectors
@@ -109,8 +110,23 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       // this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
     }
     
-    // Load existing connections if any
-    this.connections = this.blastSequenceDataService.getConnections();
+    // Load existing connections if any and ensure they have hidden points
+    const existingConnections = this.blastSequenceDataService.getConnections();
+    if (existingConnections.length > 0) {
+      // Ensure all connections have proper hidden points structure
+      const migratedConnections = existingConnections.map(conn => 
+        this.ensureConnectionHasHiddenPoints(conn)
+      );
+      
+      // Update the service with migrated connections
+      this.blastSequenceDataService.setConnections(migratedConnections);
+      this.connections = migratedConnections;
+      
+      console.log('Loaded and migrated connections with hidden points:', this.connections);
+    } else {
+      this.connections = [];
+    }
+    
     this.updateFilteredConnections();
     
     this.cdr.detectChanges();
@@ -488,7 +504,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.panY = newPos.y;
 
     this.applyTransform();
-    this.cdr.detectChanges();
   }
 
   private centerView(): void {
@@ -655,13 +670,49 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       return;
     }
 
+    // Calculate positions for hidden starting and ending points
+    const fromPos = this.convertToCanvasCoords(this.selectedFromHole.x, this.selectedFromHole.y);
+    const toPos = this.convertToCanvasCoords(this.selectedToHole.x, this.selectedToHole.y);
+    
+    // Calculate offset positions for hidden points (slightly offset from the main holes)
+    const offsetDistance = 15; // pixels
+    const angle = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x);
+    
+    // Starting point (1) - offset from the from-hole
+    const startPointOffset = {
+      x: -Math.cos(angle) * offsetDistance,
+      y: -Math.sin(angle) * offsetDistance
+    };
+    
+    // Ending point (2) - offset from the to-hole  
+    const endPointOffset = {
+      x: Math.cos(angle) * offsetDistance,
+      y: Math.sin(angle) * offsetDistance
+    };
+
     const connection: BlastConnection = {
       id: `conn_${Date.now()}`,
       fromHoleId: this.selectedFromHole.id,
       toHoleId: this.selectedToHole.id,
       connectorType: this.selectedConnectorType,
       delay: this.currentDelay,
-      sequence: this.currentSequence
+      sequence: this.currentSequence,
+      // Hidden starting point with label "1"
+      startPoint: {
+        id: `start_${Date.now()}`,
+        label: "1",
+        x: this.selectedFromHole.x + (startPointOffset.x / this.scale),
+        y: this.selectedFromHole.y + (startPointOffset.y / this.scale),
+        isHidden: true
+      },
+      // Hidden ending point with label "2"
+      endPoint: {
+        id: `end_${Date.now()}`,
+        label: "2", 
+        x: this.selectedToHole.x + (endPointOffset.x / this.scale),
+        y: this.selectedToHole.y + (endPointOffset.y / this.scale),
+        isHidden: true
+      }
     };
 
     this.connections.push(connection);
@@ -673,7 +724,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.currentSequence++;
     this.updateFilteredConnections();
     
-    console.log('Connection created:', connection);
+    console.log('Connection created with hidden points:', connection);
     this.cdr.detectChanges();
   }
 
@@ -688,9 +739,13 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     const fromPos = this.convertToCanvasCoords(fromPoint.x, fromPoint.y);
     const toPos = this.convertToCanvasCoords(toPoint.x, toPoint.y);
     
+    // Convert hidden points to canvas coordinates
+    const startPointPos = this.convertToCanvasCoords(connection.startPoint.x, connection.startPoint.y);
+    const endPointPos = this.convertToCanvasCoords(connection.endPoint.x, connection.endPoint.y);
+    
     const connectionGroup = new Konva.Group();
     
-    // Connection line
+    // Main connection line (from drill hole to drill hole)
     const line = new Konva.Line({
       points: [fromPos.x, fromPos.y, toPos.x, toPos.y],
       stroke: this.getConnectorColor(connection.connectorType),
@@ -698,7 +753,51 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       lineCap: 'round'
     });
     
-    // Sequence label
+    // Hidden starting point (1) - smaller circle
+    const startPointCircle = new Konva.Circle({
+      x: startPointPos.x,
+      y: startPointPos.y,
+      radius: 8,
+      fill: connection.startPoint.isHidden ? 'rgba(255, 255, 255, 0.8)' : 'white',
+      stroke: this.getConnectorColor(connection.connectorType),
+      strokeWidth: 1.5,
+      opacity: connection.startPoint.isHidden ? 0.7 : 1,
+      visible: this.showHiddenPoints
+    });
+    
+    const startPointLabel = new Konva.Text({
+      x: startPointPos.x - 3,
+      y: startPointPos.y - 4,
+      text: connection.startPoint.label,
+      fontSize: 8,
+      fill: 'black',
+      fontStyle: 'bold',
+      visible: this.showHiddenPoints
+    });
+    
+    // Hidden ending point (2) - smaller circle
+    const endPointCircle = new Konva.Circle({
+      x: endPointPos.x,
+      y: endPointPos.y,
+      radius: 8,
+      fill: connection.endPoint.isHidden ? 'rgba(255, 255, 255, 0.8)' : 'white',
+      stroke: this.getConnectorColor(connection.connectorType),
+      strokeWidth: 1.5,
+      opacity: connection.endPoint.isHidden ? 0.7 : 1,
+      visible: this.showHiddenPoints
+    });
+    
+    const endPointLabel = new Konva.Text({
+      x: endPointPos.x - 3,
+      y: endPointPos.y - 4,
+      text: connection.endPoint.label,
+      fontSize: 8,
+      fill: 'black',
+      fontStyle: 'bold',
+      visible: this.showHiddenPoints
+    });
+    
+    // Sequence label (main connection identifier)
     const midX = (fromPos.x + toPos.x) / 2;
     const midY = (fromPos.y + toPos.y) / 2;
     
@@ -720,7 +819,17 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       fontStyle: 'bold'
     });
     
-    connectionGroup.add(line, sequenceCircle, sequenceLabel);
+    // Add all elements to the connection group
+    connectionGroup.add(
+      line, 
+      startPointCircle, 
+      startPointLabel, 
+      endPointCircle, 
+      endPointLabel,
+      sequenceCircle, 
+      sequenceLabel
+    );
+    
     this.connectionsLayer.add(connectionGroup);
     this.connectionObjects.set(connection.id, connectionGroup);
     this.connectionsLayer.draw();
@@ -1047,6 +1156,11 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.cdr.detectChanges();
   }
 
+  toggleHiddenPointsVisibility(): void {
+    this.showHiddenPoints = !this.showHiddenPoints;
+    this.redrawConnections();
+  }
+
   exportBlastSequence(): void {
     if (!this.patternData) return;
     
@@ -1182,10 +1296,49 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.connectionObjects.forEach(obj => obj.destroy());
     this.connectionObjects.clear();
     
-    // Redraw all connections
+    // Redraw all connections with current settings
     this.connections.forEach(connection => {
       this.drawConnection(connection);
     });
+    
+    this.connectionsLayer.draw();
+  }
+
+  // Method to ensure connection has proper hidden points structure
+  private ensureConnectionHasHiddenPoints(connection: BlastConnection): BlastConnection {
+    if (connection.startPoint && connection.endPoint) {
+      return connection;
+    }
+
+    // If missing hidden points, create them
+    const fromHole = this.patternData?.drillPoints.find(p => p.id === connection.fromHoleId);
+    const toHole = this.patternData?.drillPoints.find(p => p.id === connection.toHoleId);
+    
+    if (!fromHole || !toHole) {
+      return connection;
+    }
+    
+    // Calculate offset positions for hidden points
+    const offsetDistance = 0.5; // world units
+    const angle = Math.atan2(toHole.y - fromHole.y, toHole.x - fromHole.x);
+    
+    return {
+      ...connection,
+      startPoint: {
+        id: `start_${connection.id}`,
+        label: "1",
+        x: fromHole.x - Math.cos(angle) * offsetDistance,
+        y: fromHole.y - Math.sin(angle) * offsetDistance,
+        isHidden: true
+      },
+      endPoint: {
+        id: `end_${connection.id}`,
+        label: "2",
+        x: toHole.x + Math.cos(angle) * offsetDistance,
+        y: toHole.y + Math.sin(angle) * offsetDistance,
+        isHidden: true
+      }
+    };
   }
 
   // Enhanced Panel Methods
@@ -1294,8 +1447,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     // Add logic to highlight connections based on selection or hover
     return false;
   }
-
-
 
   exportConnections(): void {
     // Export filtered connections as CSV or JSON

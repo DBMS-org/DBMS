@@ -26,6 +26,21 @@ export interface BlastConnection {
   connectorType: ConnectorType;
   delay: number; // milliseconds
   sequence: number;
+  // Hidden starting and ending points for connectors
+  startPoint: {
+    id: string;
+    label: string; // "1" for starting point
+    x: number;
+    y: number;
+    isHidden: boolean;
+  };
+  endPoint: {
+    id: string;
+    label: string; // "2" for ending point
+    x: number;
+    y: number;
+    isHidden: boolean;
+  };
 }
 
 export interface DetonatorInfo {
