@@ -61,8 +61,23 @@ export class DrillPointService {
   }
 
   clearPoints(): DrillPoint[] {
-    this.currentId = 1;
+    // Don't reset currentId to preserve hole numbering sequence
+    // this.currentId = 1; // Commented out to maintain sequential numbering
     return [];
+  }
+
+  // Method to reset hole numbering (if explicitly needed)
+  resetHoleNumbering(): void {
+    this.currentId = 1;
+  }
+
+  // Methods to manage currentId for continuous numbering
+  setCurrentId(id: number): void {
+    this.currentId = id;
+  }
+
+  getCurrentId(): number {
+    return this.currentId;
   }
 
   exportPattern(drillPoints: DrillPoint[], settings: PatternSettings): void {

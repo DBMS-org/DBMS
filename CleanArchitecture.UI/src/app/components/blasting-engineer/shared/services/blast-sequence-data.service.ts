@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { 
   PatternData, 
@@ -102,6 +102,9 @@ export class BlastSequenceDataService {
   });
   public validation$ = this.validationSubject.asObservable();
 
+  // Site Context
+  private currentSiteContext: { projectId: number; siteId: number } | null = null;
+
   // Combined data observable for components that need everything
   public blastSequenceData$ = combineLatest([
     this.patternData$,
@@ -119,12 +122,353 @@ export class BlastSequenceDataService {
 
   constructor() {}
 
+  // Site Context Methods
+  setSiteContext(projectId: number, siteId: number): void {
+    console.log('Setting site context from', this.currentSiteContext, 'to', { projectId, siteId });
+    this.currentSiteContext = { projectId, siteId };
+    // Load site-specific data here
+    this.loadSiteData(projectId, siteId);
+  }
+
+  // Utility method to clean up inconsistent data
+  cleanupSiteData(projectId: number, siteId: number): void {
+    const siteKey = `site_${projectId}_${siteId}`;
+    
+    console.log('🧹 CLEANING UP ALL SITE DATA for:', siteKey);
+    
+    // Remove ALL site-specific localStorage data
+    const keysToRemove = [
+      `${siteKey}_pattern`,
+      `${siteKey}_connections`,
+      `${siteKey}_simulation_settings`,
+      `${siteKey}_simulation_state`
+    ];
+    
+    let itemsRemoved = 0;
+    keysToRemove.forEach(key => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        itemsRemoved++;
+        console.log('❌ Removed localStorage key:', key);
+      }
+    });
+    
+    console.log(`🗑️ Removed ${itemsRemoved} localStorage items`);
+    
+    // Clear current in-memory data if this is the active site
+    if (this.currentSiteContext && 
+        this.currentSiteContext.projectId === projectId && 
+        this.currentSiteContext.siteId === siteId) {
+      
+             // Reset all data to initial state
+       this.patternDataSubject.next(null);
+       this.connectionsSubject.next([]);
+       this.simulationStateSubject.next({
+         isPlaying: false,
+         isPaused: false,
+         currentTime: 0,
+         totalDuration: 0,
+         playbackSpeed: 1,
+         currentStep: 0,
+         totalSteps: 0
+       });
+       this.simulationSettingsSubject.next({
+         showTiming: true,
+         showConnections: true,
+         showEffects: true,
+         showSequenceNumbers: true,
+         effectIntensity: 75,
+         animationQuality: 'medium'
+       });
+      
+      // Reset workflow to initial state
+      this.resetWorkflow();
+      
+      console.log('🔄 Reset all in-memory data for active site');
+    }
+    
+    console.log('✅ Complete site data cleanup finished - ALL progress reset to 0%');
+  }
+
+  // Individual step cleanup methods
+  cleanupPatternData(projectId: number, siteId: number): void {
+    const siteKey = `site_${projectId}_${siteId}`;
+    console.log('🧹 Cleaning up PATTERN data for:', siteKey);
+    
+    // Remove pattern data from localStorage
+    if (localStorage.getItem(`${siteKey}_pattern`)) {
+      localStorage.removeItem(`${siteKey}_pattern`);
+      console.log('❌ Removed pattern data');
+    }
+    
+    // Clear in-memory pattern data if this is the active site
+    if (this.currentSiteContext && 
+        this.currentSiteContext.projectId === projectId && 
+        this.currentSiteContext.siteId === siteId) {
+      this.patternDataSubject.next(null);
+      this.updateWorkflowStep('pattern', false);
+      this.disableWorkflowStep('sequence');
+      this.disableWorkflowStep('simulate');
+      console.log('🔄 Reset pattern data in memory');
+    }
+    
+    console.log('✅ Pattern data cleanup completed');
+  }
+
+  cleanupSequenceData(projectId: number, siteId: number): void {
+    const siteKey = `site_${projectId}_${siteId}`;
+    console.log('🧹 Cleaning up SEQUENCE data for:', siteKey);
+    
+    // Remove connections data from localStorage
+    if (localStorage.getItem(`${siteKey}_connections`)) {
+      localStorage.removeItem(`${siteKey}_connections`);
+      console.log('❌ Removed connections data');
+    }
+    
+    // Clear in-memory connections data if this is the active site
+    if (this.currentSiteContext && 
+        this.currentSiteContext.projectId === projectId && 
+        this.currentSiteContext.siteId === siteId) {
+      this.connectionsSubject.next([]);
+      this.updateWorkflowStep('sequence', false);
+      this.disableWorkflowStep('simulate');
+      console.log('🔄 Reset connections data in memory');
+    }
+    
+    console.log('✅ Sequence data cleanup completed');
+  }
+
+  cleanupSimulationData(projectId: number, siteId: number): void {
+    const siteKey = `site_${projectId}_${siteId}`;
+    console.log('🧹 Cleaning up SIMULATION data for:', siteKey);
+    
+    // Remove simulation data from localStorage
+    const settingsKey = `${siteKey}_simulation_settings`;
+    const stateKey = `${siteKey}_simulation_state`;
+    
+    if (localStorage.getItem(settingsKey)) {
+      localStorage.removeItem(settingsKey);
+      console.log('❌ Removed simulation settings');
+    }
+    
+    if (localStorage.getItem(stateKey)) {
+      localStorage.removeItem(stateKey);
+      console.log('❌ Removed simulation state');
+    }
+    
+    // Reset in-memory simulation data if this is the active site
+    if (this.currentSiteContext && 
+        this.currentSiteContext.projectId === projectId && 
+        this.currentSiteContext.siteId === siteId) {
+      this.simulationStateSubject.next({
+        isPlaying: false,
+        isPaused: false,
+        currentTime: 0,
+        totalDuration: 0,
+        playbackSpeed: 1,
+        currentStep: 0,
+        totalSteps: 0
+      });
+      this.simulationSettingsSubject.next({
+        showTiming: true,
+        showConnections: true,
+        showEffects: true,
+        showSequenceNumbers: true,
+        effectIntensity: 75,
+        animationQuality: 'medium'
+      });
+      this.updateWorkflowStep('simulate', false);
+      console.log('🔄 Reset simulation data in memory');
+    }
+    
+    console.log('✅ Simulation data cleanup completed');
+  }
+
+  getSiteWorkflowProgress(siteId: number): Observable<any> {
+    if (!this.currentSiteContext) {
+      return of({
+        'pattern-creator': { completed: false, progress: 0 },
+        'sequence-designer': { completed: false, progress: 0 },
+        'simulator': { completed: false, progress: 0 }
+      });
+    }
+
+    const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+    
+    // Only check saved data from localStorage for completion status
+    const savedPattern = localStorage.getItem(`${siteKey}_pattern`);
+    const savedConnections = localStorage.getItem(`${siteKey}_connections`);
+    const savedSimulationSettings = localStorage.getItem(`${siteKey}_simulation_settings`);
+    
+    // Pattern is complete only if explicitly saved
+    const hasPattern = !!savedPattern;
+    const patternProgress = hasPattern ? 100 : 0;
+    
+    // Sequence is complete only if connections are saved (and pattern exists)
+    let hasConnections = false;
+    if (savedConnections && hasPattern) {
+      try {
+        const connections = JSON.parse(savedConnections);
+        hasConnections = connections.length > 0;
+      } catch (e) {
+        hasConnections = false;
+      }
+    }
+    const sequenceProgress = hasConnections ? 100 : 0;
+    
+    // Simulator is complete only if settings are saved (and sequence exists)
+    const hasSimulationData = !!savedSimulationSettings && hasConnections;
+    const simulatorProgress = hasSimulationData ? 100 : 0;
+
+    console.log('Site workflow progress (based on saved data only):', {
+      pattern: hasPattern,
+      sequence: hasConnections,  
+      simulator: hasSimulationData,
+      progressValues: { patternProgress, sequenceProgress, simulatorProgress }
+    });
+
+    const progressData = {
+      'pattern-creator': { 
+        completed: hasPattern, 
+        progress: patternProgress 
+      },
+      'sequence-designer': { 
+        completed: hasConnections, 
+        progress: sequenceProgress 
+      },
+      'simulator': { 
+        completed: hasSimulationData, 
+        progress: simulatorProgress 
+      }
+    };
+
+    // If no data exists, ensure everything is at 0%
+    if (!hasPattern && !hasConnections && !hasSimulationData) {
+      console.log('❌ No saved data found - all progress set to 0%');
+    }
+
+    return of(progressData);
+  }
+
+  private loadSiteData(projectId: number, siteId: number): void {
+    // Clear current data first to avoid mixing sites
+    this.clearAllData();
+    
+    // Load site-specific pattern data and connections
+    const siteKey = `site_${projectId}_${siteId}`;
+    
+    console.log('Loading site data for:', siteKey);
+    
+    // Try to load existing data for this site
+    const savedPatternData = localStorage.getItem(`${siteKey}_pattern`);
+    const savedConnections = localStorage.getItem(`${siteKey}_connections`);
+    const savedSimulationSettings = localStorage.getItem(`${siteKey}_simulation_settings`);
+    const savedSimulationState = localStorage.getItem(`${siteKey}_simulation_state`);
+    
+    if (savedPatternData) {
+      try {
+        const patternData = JSON.parse(savedPatternData);
+        this.patternDataSubject.next(patternData);
+        console.log('Loaded pattern data:', patternData.drillPoints?.length || 0, 'points');
+      } catch (error) {
+        console.warn('Failed to load pattern data for site:', error);
+        localStorage.removeItem(`${siteKey}_pattern`); // Clean up corrupt data
+      }
+    }
+    
+    if (savedConnections) {
+      try {
+        const connections = JSON.parse(savedConnections);
+        
+        // Validate connections match current pattern
+        if (this.patternDataSubject.value) {
+          const validConnections = this.validateConnections(connections, this.patternDataSubject.value.drillPoints);
+          this.connectionsSubject.next(validConnections);
+          console.log('Loaded connections:', validConnections.length, 'valid connections');
+          
+          // Save cleaned connections back if any were removed
+          if (validConnections.length !== connections.length) {
+            localStorage.setItem(`${siteKey}_connections`, JSON.stringify(validConnections));
+          }
+        } else {
+          this.connectionsSubject.next(connections);
+          console.log('Loaded connections:', connections.length, 'connections (no pattern validation)');
+        }
+      } catch (error) {
+        console.warn('Failed to load connections for site:', error);
+        localStorage.removeItem(`${siteKey}_connections`); // Clean up corrupt data
+      }
+    }
+    
+    if (savedSimulationSettings) {
+      try {
+        const settings = JSON.parse(savedSimulationSettings);
+        this.simulationSettingsSubject.next(settings);
+        console.log('Loaded simulation settings');
+      } catch (error) {
+        console.warn('Failed to load simulation settings for site:', error);
+        localStorage.removeItem(`${siteKey}_simulation_settings`);
+      }
+    }
+    
+    if (savedSimulationState) {
+      try {
+        const state = JSON.parse(savedSimulationState);
+        this.simulationStateSubject.next(state);
+        console.log('Loaded simulation state');
+      } catch (error) {
+        console.warn('Failed to load simulation state for site:', error);
+        localStorage.removeItem(`${siteKey}_simulation_state`);
+      }
+    }
+  }
+
+  private clearAllData(): void {
+    this.patternDataSubject.next(null);
+    this.connectionsSubject.next([]);
+    // Don't reset simulation settings/state as they are global preferences
+  }
+
+  private validateConnections(connections: BlastConnection[], drillPoints: DrillPoint[]): BlastConnection[] {
+    if (!drillPoints || drillPoints.length === 0) {
+      return [];
+    }
+    
+    const validHoleIds = new Set(drillPoints.map(point => point.id));
+    
+    return connections.filter(connection => {
+      const isValid = validHoleIds.has(connection.fromHoleId) && validHoleIds.has(connection.toHoleId);
+      if (!isValid) {
+        console.warn('Removing invalid connection:', connection.fromHoleId, '->', connection.toHoleId);
+      }
+      return isValid;
+    });
+  }
+
+
+
   // Pattern Data Methods
-  setPatternData(patternData: PatternData): void {
+  setPatternData(patternData: PatternData, autoSave: boolean = false): void {
     this.patternDataSubject.next(patternData);
     this.updateWorkflowStep('pattern', true);
     this.enableWorkflowStep('sequence');
     this.validateSequence();
+    
+    // Only save to storage if explicitly requested
+    if (autoSave && this.currentSiteContext) {
+      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+      localStorage.setItem(`${siteKey}_pattern`, JSON.stringify(patternData));
+    }
+  }
+
+  // Explicit save method for pattern data
+  savePatternData(): void {
+    const currentPattern = this.patternDataSubject.value;
+    if (currentPattern && this.currentSiteContext) {
+      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+      localStorage.setItem(`${siteKey}_pattern`, JSON.stringify(currentPattern));
+      console.log('Pattern data saved to localStorage');
+    }
   }
 
   getPatternData(): PatternData | null {
@@ -138,23 +482,39 @@ export class BlastSequenceDataService {
   }
 
   // Connections Methods
-  setConnections(connections: BlastConnection[]): void {
+  setConnections(connections: BlastConnection[], autoSave: boolean = false): void {
     this.connectionsSubject.next([...connections]);
     this.updateWorkflowStep('sequence', connections.length > 0);
     this.enableWorkflowStep('simulate');
     this.validateSequence();
     this.calculateSimulationDuration();
+    
+    // Only save to storage if explicitly requested
+    if (autoSave && this.currentSiteContext) {
+      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+      localStorage.setItem(`${siteKey}_connections`, JSON.stringify(connections));
+    }
+  }
+
+  // Explicit save method for connections
+  saveConnections(): void {
+    const currentConnections = this.connectionsSubject.value;
+    if (this.currentSiteContext) {
+      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+      localStorage.setItem(`${siteKey}_connections`, JSON.stringify(currentConnections));
+      console.log('Connections saved to localStorage');
+    }
   }
 
   addConnection(connection: BlastConnection): void {
     const current = this.connectionsSubject.value;
-    this.setConnections([...current, connection]);
+    this.setConnections([...current, connection], false); // Don't auto-save
   }
 
   removeConnection(connectionId: string): void {
     const current = this.connectionsSubject.value;
     const filtered = current.filter(c => c.id !== connectionId);
-    this.setConnections(filtered);
+    this.setConnections(filtered, false); // Don't auto-save
   }
 
   updateConnection(updatedConnection: BlastConnection): void {
@@ -163,7 +523,7 @@ export class BlastSequenceDataService {
     if (index !== -1) {
       const updated = [...current];
       updated[index] = updatedConnection;
-      this.setConnections(updated);
+      this.setConnections(updated, false); // Don't auto-save
     }
   }
 
@@ -178,9 +538,26 @@ export class BlastSequenceDataService {
   }
 
   // Simulation State Methods
-  updateSimulationState(updates: Partial<SimulationState>): void {
+  updateSimulationState(updates: Partial<SimulationState>, autoSave: boolean = false): void {
     const current = this.simulationStateSubject.value;
-    this.simulationStateSubject.next({ ...current, ...updates });
+    const newState = { ...current, ...updates };
+    this.simulationStateSubject.next(newState);
+    
+    // Only save to storage if explicitly requested
+    if (autoSave && this.currentSiteContext) {
+      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+      localStorage.setItem(`${siteKey}_simulation_state`, JSON.stringify(newState));
+    }
+  }
+
+  // Explicit save method for simulation state
+  saveSimulationState(): void {
+    const currentState = this.simulationStateSubject.value;
+    if (this.currentSiteContext) {
+      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+      localStorage.setItem(`${siteKey}_simulation_state`, JSON.stringify(currentState));
+      console.log('Simulation state saved to localStorage');
+    }
   }
 
   resetSimulation(): void {
@@ -195,9 +572,26 @@ export class BlastSequenceDataService {
   }
 
   // Simulation Settings Methods
-  updateSimulationSettings(updates: Partial<SimulationSettings>): void {
+  updateSimulationSettings(updates: Partial<SimulationSettings>, autoSave: boolean = false): void {
     const current = this.simulationSettingsSubject.value;
-    this.simulationSettingsSubject.next({ ...current, ...updates });
+    const newSettings = { ...current, ...updates };
+    this.simulationSettingsSubject.next(newSettings);
+    
+    // Only save to storage if explicitly requested
+    if (autoSave && this.currentSiteContext) {
+      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+      localStorage.setItem(`${siteKey}_simulation_settings`, JSON.stringify(newSettings));
+    }
+  }
+
+  // Explicit save method for simulation settings
+  saveSimulationSettings(): void {
+    const currentSettings = this.simulationSettingsSubject.value;
+    if (this.currentSiteContext) {
+      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
+      localStorage.setItem(`${siteKey}_simulation_settings`, JSON.stringify(currentSettings));
+      console.log('Simulation settings saved to localStorage');
+    }
   }
 
   // Workflow Methods
@@ -427,6 +821,17 @@ export class BlastSequenceDataService {
     const connections = this.connectionsSubject.value;
     const markers: TimelineMarker[] = [];
 
+    if (connections.length === 0) {
+      // Add start marker even with no connections
+      markers.push({
+        time: 0,
+        label: 'Blast Start',
+        type: 'sequence_start',
+        color: '#4CAF50'
+      });
+      return markers;
+    }
+
     // Add start marker
     markers.push({
       time: 0,
@@ -435,29 +840,153 @@ export class BlastSequenceDataService {
       color: '#4CAF50'
     });
 
-    // Add markers for each unique delay time
-    const uniqueDelays = [...new Set(connections.map(c => c.delay))].sort((a, b) => a - b);
+    // Group connections by their starting holes (for wave analysis)
+    const connectionsByFromHole = new Map<string, BlastConnection[]>();
+    connections.forEach(conn => {
+      if (!connectionsByFromHole.has(conn.fromHoleId)) {
+        connectionsByFromHole.set(conn.fromHoleId, []);
+      }
+      connectionsByFromHole.get(conn.fromHoleId)!.push(conn);
+    });
+
+    // Find initial connections (not targeted by other connections' point 2)
+    const allToHoleIds = new Set(connections.map(conn => conn.toHoleId));
+    const initialFromHoles = new Set<string>();
     
-    uniqueDelays.forEach((delay, index) => {
-      const connectionsAtTime = connections.filter(c => c.delay === delay);
+    connections.forEach(conn => {
+      if (!allToHoleIds.has(conn.fromHoleId)) {
+        initialFromHoles.add(conn.fromHoleId);
+      }
+    });
+    
+    const initialConnections: BlastConnection[] = [];
+    initialFromHoles.forEach(holeId => {
+      const connectionsFromHole = connectionsByFromHole.get(holeId) || [];
+      initialConnections.push(...connectionsFromHole);
+    });
+
+    // Track processed connections and wave timing
+    const processedConnections = new Set<string>();
+    const waveMarkers: Array<{time: number, connections: BlastConnection[], waveNumber: number}> = [];
+    
+    // Process waves to build timeline markers
+    const processWave = (connectionsToProcess: BlastConnection[], waveStartTime: number, waveNumber: number) => {
+      if (connectionsToProcess.length === 0) return;
+
+      waveMarkers.push({
+        time: waveStartTime,
+        connections: [...connectionsToProcess],
+        waveNumber
+      });
+
+      // Mark connections as processed
+      connectionsToProcess.forEach(conn => {
+        processedConnections.add(conn.id);
+      });
+
+      // Find next wave
+      const nextWaveConnections: BlastConnection[] = [];
+      
+      connectionsToProcess.forEach(connection => {
+        const potentialNextConnections = connectionsByFromHole.get(connection.toHoleId) || [];
+        potentialNextConnections.forEach(nextConn => {
+          if (!processedConnections.has(nextConn.id) && !nextWaveConnections.includes(nextConn)) {
+            nextWaveConnections.push(nextConn);
+          }
+        });
+      });
+
+      // Process next wave with 500ms delay
+      if (nextWaveConnections.length > 0) {
+        const nextWaveTime = waveStartTime + 500; // 500ms between waves
+        processWave(nextWaveConnections, nextWaveTime, waveNumber + 1);
+      }
+    };
+
+    // Start processing waves
+    const initialStartTime = initialConnections.length > 0 ? 
+      Math.min(...initialConnections.map(conn => conn.delay)) : 0;
+    
+    processWave(initialConnections, initialStartTime, 1);
+
+    // Create timeline markers from wave data
+    waveMarkers.forEach(wave => {
+      // Wave start marker
+      const waveConnections = wave.connections;
+      const wireNames = waveConnections.map(conn => {
+        const typeName = this.getConnectorTypeName(conn.connectorType);
+        return `${typeName} ${conn.delay}ms`;
+      }).join(', ');
+
       markers.push({
-        time: delay,
-        label: `Detonation ${index + 1} (${connectionsAtTime.length} holes)`,
+        time: wave.time,
+        label: `Wave ${wave.waveNumber}: ${wireNames}`,
         type: 'hole_blast',
-        color: '#FF5722'
+        color: wave.waveNumber === 1 ? '#FF5722' : '#FF8A65'
+      });
+
+      // Add individual wire events within the wave
+      waveConnections.forEach((conn, index) => {
+        const baseTime = wave.time;
+        
+        // Hidden Point 1 activation
+        markers.push({
+          time: baseTime,
+          label: `${this.getConnectorTypeName(conn.connectorType)} Point 1`,
+          type: 'milestone',
+          color: '#4CAF50'
+        });
+
+        // Signal propagation (25ms delay)
+        markers.push({
+          time: baseTime + 25,
+          label: `${this.getConnectorTypeName(conn.connectorType)} Signal`,
+          type: 'milestone',
+          color: '#2196F3'
+        });
+
+        // Hidden Point 2 activation (35ms total)
+        markers.push({
+          time: baseTime + 35,
+          label: `${this.getConnectorTypeName(conn.connectorType)} Point 2`,
+          type: 'milestone',
+          color: '#FF9800'
+        });
+
+        // Detonation (50ms total)
+        const detonationTime = baseTime + 50;
+        markers.push({
+          time: detonationTime,
+          label: `${conn.toHoleId} Detonation`,
+          type: 'hole_blast',
+          color: '#F44336'
+        });
       });
     });
 
     // Add end marker
-    const maxDelay = Math.max(...connections.map(c => c.delay), 0);
+    const lastWave = waveMarkers[waveMarkers.length - 1];
+    const endTime = lastWave ? lastWave.time + 50 + 1500 : 2000; // Detonation + effects duration
+    
     markers.push({
-      time: maxDelay + 2000,
+      time: endTime,
       label: 'Blast Complete',
       type: 'sequence_end',
       color: '#2196F3'
     });
 
-    return markers;
+    return markers.sort((a, b) => a.time - b.time);
+  }
+
+  private getConnectorTypeName(connectorType: string): string {
+    switch (connectorType?.toLowerCase()) {
+      case 'det_cord': return 'Det Cord';
+      case 'shock_tube': return 'Shock Tube';
+      case 'electronic': return 'Electronic';
+      case 'pyrotechnic': return 'Pyrotechnic';
+      case 'connector': return 'Connector';
+      default: return connectorType || 'Unknown';
+    }
   }
 
   // Metrics Calculation
@@ -476,36 +1005,190 @@ export class BlastSequenceDataService {
       };
     }
 
-    const delays = connections.map(c => c.delay).sort((a, b) => a - b);
-    const totalBlastTime = Math.max(...delays) + 1000; // Add 1s for final effects
-    const averageDelayBetweenHoles = delays.length > 1 ? 
-      (delays[delays.length - 1] - delays[0]) / (delays.length - 1) : 0;
-
-    // Calculate simultaneous detonations
-    const timeGroups = new Map<number, number>();
-    connections.forEach(conn => {
-      timeGroups.set(conn.delay, (timeGroups.get(conn.delay) || 0) + 1);
-    });
-    const maxSimultaneousDetonations = Math.max(...timeGroups.values());
-
-    // Calculate efficiency (lower total time = higher efficiency)
-    const efficiencyScore = Math.max(0, 100 - (totalBlastTime / 100)); // Simplified formula
-
-    // Calculate safety score (fewer simultaneous detonations = safer)
-    const safetyScore = Math.max(0, 100 - (maxSimultaneousDetonations * 10));
-
-    // Calculate connection utilization
+    // Calculate wave-based metrics
+    const waveMetrics = this.calculateWaveBasedMetrics(connections);
+    
+    // Calculate connection utilization (this remains the same)
     const totalHoles = patternData.drillPoints.length;
     const connectedHoles = new Set([...connections.map(c => c.fromHoleId), ...connections.map(c => c.toHoleId)]);
     const connectionUtilization = (connectedHoles.size / totalHoles) * 100;
 
+    // Calculate timing conflicts for safety score
+    const timingConflicts = this.detectTimingConflicts(connections);
+    const criticalConflicts = timingConflicts.filter(w => w.severity === 'high').length;
+    const mediumConflicts = timingConflicts.filter(w => w.severity === 'medium').length;
+
+    // Calculate efficiency score based on multiple factors
+    const efficiencyScore = this.calculateEfficiencyScore(waveMetrics, connections.length, patternData.drillPoints.length);
+
+    // Calculate safety score based on timing conflicts and simultaneous detonations
+    const safetyScore = this.calculateSafetyScore(waveMetrics.maxSimultaneousDetonations, criticalConflicts, mediumConflicts);
+
     return {
-      totalBlastTime,
-      averageDelayBetweenHoles,
-      maxSimultaneousDetonations,
+      totalBlastTime: waveMetrics.totalBlastTime,
+      averageDelayBetweenHoles: waveMetrics.averageDelayBetweenWaves,
+      maxSimultaneousDetonations: waveMetrics.maxSimultaneousDetonations,
       efficiencyScore: Math.round(efficiencyScore),
       safetyScore: Math.round(safetyScore),
       connectionUtilization: Math.round(connectionUtilization)
     };
+  }
+
+  private calculateWaveBasedMetrics(connections: BlastConnection[]) {
+    // Group connections by their starting holes (for wave analysis)
+    const connectionsByFromHole = new Map<string, BlastConnection[]>();
+    connections.forEach(conn => {
+      if (!connectionsByFromHole.has(conn.fromHoleId)) {
+        connectionsByFromHole.set(conn.fromHoleId, []);
+      }
+      connectionsByFromHole.get(conn.fromHoleId)!.push(conn);
+    });
+
+    // Find initial connections (not targeted by other connections' point 2)
+    const allToHoleIds = new Set(connections.map(conn => conn.toHoleId));
+    const initialFromHoles = new Set<string>();
+    
+    connections.forEach(conn => {
+      if (!allToHoleIds.has(conn.fromHoleId)) {
+        initialFromHoles.add(conn.fromHoleId);
+      }
+    });
+    
+    const initialConnections: BlastConnection[] = [];
+    initialFromHoles.forEach(holeId => {
+      const connectionsFromHole = connectionsByFromHole.get(holeId) || [];
+      initialConnections.push(...connectionsFromHole);
+    });
+
+    // Track wave timing and detonations
+    const processedConnections = new Set<string>();
+    const waveTimings: Array<{waveNumber: number, startTime: number, connections: BlastConnection[], detonationTimes: number[]}> = [];
+    
+    // Process waves to calculate actual timing
+    const processWave = (connectionsToProcess: BlastConnection[], waveStartTime: number, waveNumber: number) => {
+      if (connectionsToProcess.length === 0) return;
+
+      const detonationTimes: number[] = [];
+      
+      connectionsToProcess.forEach(conn => {
+        processedConnections.add(conn.id);
+        // Each connection detonates 50ms after wave start (25ms propagation + 35ms point 2 + detonation)
+        const detonationTime = waveStartTime + 50;
+        detonationTimes.push(detonationTime);
+      });
+
+      waveTimings.push({
+        waveNumber,
+        startTime: waveStartTime,
+        connections: [...connectionsToProcess],
+        detonationTimes
+      });
+
+      // Find next wave
+      const nextWaveConnections: BlastConnection[] = [];
+      
+      connectionsToProcess.forEach(connection => {
+        const potentialNextConnections = connectionsByFromHole.get(connection.toHoleId) || [];
+        potentialNextConnections.forEach(nextConn => {
+          if (!processedConnections.has(nextConn.id) && !nextWaveConnections.includes(nextConn)) {
+            nextWaveConnections.push(nextConn);
+          }
+        });
+      });
+
+      // Process next wave with 500ms delay
+      if (nextWaveConnections.length > 0) {
+        const nextWaveTime = waveStartTime + 500; // 500ms between waves
+        processWave(nextWaveConnections, nextWaveTime, waveNumber + 1);
+      }
+    };
+
+    // Start processing waves
+    const initialStartTime = initialConnections.length > 0 ? 
+      Math.min(...initialConnections.map(conn => conn.delay)) : 0;
+    
+    processWave(initialConnections, initialStartTime, 1);
+
+    // Calculate metrics from wave data
+    let totalBlastTime = 0;
+    let maxSimultaneousDetonations = 0;
+    const allDetonationTimes: number[] = [];
+
+    if (waveTimings.length > 0) {
+      // Total blast time is the last detonation + effect duration
+      const lastWave = waveTimings[waveTimings.length - 1];
+      const lastDetonationTime = Math.max(...lastWave.detonationTimes);
+      totalBlastTime = lastDetonationTime + 1500; // 1.5s for blast effects to complete
+
+      // Max simultaneous detonations in any wave
+      maxSimultaneousDetonations = Math.max(...waveTimings.map(wave => wave.connections.length));
+
+      // Collect all detonation times
+      waveTimings.forEach(wave => {
+        allDetonationTimes.push(...wave.detonationTimes);
+      });
+    }
+
+    // Calculate average delay between waves (not individual holes)
+    const averageDelayBetweenWaves = waveTimings.length > 1 ? 
+      (waveTimings[waveTimings.length - 1].startTime - waveTimings[0].startTime) / (waveTimings.length - 1) : 0;
+
+    return {
+      totalBlastTime,
+      averageDelayBetweenWaves,
+      maxSimultaneousDetonations,
+      waveCount: waveTimings.length,
+      allDetonationTimes
+    };
+  }
+
+  private calculateEfficiencyScore(waveMetrics: any, connectionCount: number, totalHoles: number): number {
+    let score = 100;
+
+    // Penalty for long total blast time (more than 5 seconds is inefficient)
+    if (waveMetrics.totalBlastTime > 5000) {
+      score -= Math.min(30, (waveMetrics.totalBlastTime - 5000) / 1000 * 5);
+    }
+
+    // Penalty for too many waves (indicates poor sequencing)
+    const idealWaves = Math.ceil(connectionCount / 4); // Ideal 4 connections per wave
+    if (waveMetrics.waveCount > idealWaves) {
+      score -= (waveMetrics.waveCount - idealWaves) * 10;
+    }
+
+    // Bonus for good connection utilization
+    const utilizationRate = connectionCount / totalHoles;
+    if (utilizationRate > 0.8) {
+      score += 10; // Bonus for high utilization
+    } else if (utilizationRate < 0.5) {
+      score -= 15; // Penalty for low utilization
+    }
+
+    // Penalty for poor wave distribution
+    if (waveMetrics.maxSimultaneousDetonations > 6) {
+      score -= (waveMetrics.maxSimultaneousDetonations - 6) * 5; // Penalty for too many simultaneous
+    }
+
+    return Math.max(0, Math.min(100, score));
+  }
+
+  private calculateSafetyScore(maxSimultaneous: number, criticalConflicts: number, mediumConflicts: number): number {
+    let score = 100;
+
+    // Major penalties for timing conflicts
+    score -= criticalConflicts * 25; // -25 points per critical conflict
+    score -= mediumConflicts * 10;   // -10 points per medium conflict
+
+    // Penalty for too many simultaneous detonations (safety risk)
+    if (maxSimultaneous > 4) {
+      score -= (maxSimultaneous - 4) * 8; // -8 points per extra simultaneous detonation
+    }
+
+    // Bonus for well-distributed timing
+    if (maxSimultaneous <= 2) {
+      score += 10; // Bonus for conservative simultaneous detonations
+    }
+
+    return Math.max(0, Math.min(100, score));
   }
 } 

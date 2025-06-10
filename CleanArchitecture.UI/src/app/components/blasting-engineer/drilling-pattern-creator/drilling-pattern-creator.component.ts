@@ -60,6 +60,10 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   public duplicateAttemptMessage: string | null = null;
   private duplicateMessageTimeout: any;
 
+  // Save functionality
+  public isSaved = false;
+  private saveTimeout: any;
+
   constructor(
     private cdr: ChangeDetectorRef,
     private canvasService: CanvasService,
@@ -84,11 +88,64 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   ngAfterViewInit(): void {
+    // Initialize site context from route parameters
+    this.initializeSiteContext();
+    
     // Add a small delay to ensure the container is fully rendered
     // This fixes the issue where grid doesn't show on initial navigation
     setTimeout(() => {
       this.initializeCanvas();
     }, 0);
+  }
+
+  private initializeSiteContext(): void {
+    // Get projectId and siteId from route
+    const projectId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[1];
+    const siteId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[2];
+    
+    if (projectId && siteId) {
+      console.log('Pattern Creator - Setting site context:', { projectId, siteId });
+      this.blastSequenceDataService.setSiteContext(projectId, siteId);
+      
+      // Load existing pattern data for this site
+      this.loadExistingPatternData();
+    } else {
+      console.warn('Pattern Creator - Could not extract site context from route:', this.router.url);
+    }
+  }
+
+  private loadExistingPatternData(): void {
+    const existingPatternData = this.blastSequenceDataService.getPatternData();
+    if (existingPatternData && existingPatternData.drillPoints) {
+      // Load existing drill points
+      this.drillPoints = [...existingPatternData.drillPoints];
+      
+      // Update the currentId to continue from the highest existing ID
+      if (this.drillPoints.length > 0) {
+        const highestId = Math.max(...this.drillPoints.map(point => {
+          const numericPart = parseInt(point.id.replace('DH', ''));
+          return isNaN(numericPart) ? 0 : numericPart;
+        }));
+        this.drillPointService.setCurrentId(highestId + 1);
+      }
+      
+      // Load existing settings
+      if (existingPatternData.settings) {
+        this.settings = { ...existingPatternData.settings };
+      }
+      
+      console.log('Loaded existing pattern data:', this.drillPoints.length, 'points, next ID will be:', this.drillPointService.getCurrentId());
+      
+      // Redraw points after loading (need to wait for canvas to be ready)
+      setTimeout(() => {
+        if (this.isInitialized) {
+          this.drawDrillPoints();
+        }
+      }, 100);
+      
+      // Trigger UI update
+      this.cdr.markForCheck();
+    }
   }
 
   ngOnDestroy(): void {
@@ -320,9 +377,36 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       }
     });
 
-    // Prevent right-click context menu on stage
+    // Handle right-click context menu on stage
     this.stage.container().addEventListener('contextmenu', (e: Event) => {
       e.preventDefault();
+    });
+
+    // Handle right-click on drill points for context menu
+    this.stage.on('contextmenu', (e: Konva.KonvaEventObject<MouseEvent>) => {
+      e.evt.preventDefault();
+      
+      if (e.target !== this.stage) {
+        // Check for pointId in target or parent group
+        let pointId = e.target.attrs.pointId || (e.target.parent && (e.target.parent as any).pointId);
+        
+        if (!pointId && e.target.hasName && e.target.hasName('drill-point-group')) {
+          pointId = (e.target as any).pointId;
+        }
+        
+        if (!pointId && e.target.parent) {
+          pointId = (e.target.parent as any).pointId;
+        }
+        
+        if (pointId) {
+          const point = this.drillPoints.find(p => p.id === pointId);
+          if (point) {
+            // Select the point and show context action
+            this.selectPoint(point);
+            console.log('Right-clicked on point:', point.id, '- Point selected for quick actions');
+          }
+        }
+      }
     });
 
     this.stage.on('dragstart', (e: Konva.KonvaEventObject<DragEvent>) => {
@@ -330,8 +414,20 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         this.isDragging = true;
         this.isPanning = false;
         
-        const pointId = e.target.attrs.pointId;
+        // Look for pointId in target or parent group (same logic as click)
+        let pointId = e.target.attrs.pointId || (e.target.parent && (e.target.parent as any).pointId);
+        
+        if (!pointId && e.target.hasName && e.target.hasName('drill-point-group')) {
+          pointId = (e.target as any).pointId;
+        }
+        
         this.draggedPoint = this.drillPoints.find(p => p.id === pointId) || null;
+        console.log('Drag started for point:', pointId, this.draggedPoint?.id);
+        
+        // Auto-select the dragged point
+        if (this.draggedPoint) {
+          this.selectPoint(this.draggedPoint);
+        }
       }
     });
 
@@ -363,17 +459,36 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     this.stage.on('click', (e: Konva.KonvaEventObject<MouseEvent>) => {
       // Handle click on drill points
       if (e.target !== this.stage) {
-        const pointId = e.target.attrs.pointId;
+        // Check for pointId in target or parent group
+        let pointId = e.target.attrs.pointId || (e.target.parent && (e.target.parent as any).pointId);
+        
+        // If target is a group, check its pointId
+        if (!pointId && e.target.hasName && e.target.hasName('drill-point-group')) {
+          pointId = (e.target as any).pointId;
+        }
+        
+        // If target is a child of a drill point group, look for parent's pointId
+        if (!pointId && e.target.parent) {
+          pointId = (e.target.parent as any).pointId;
+        }
+
+        console.log('Click detected on:', e.target.getClassName(), 'pointId:', pointId);
+        
         if (pointId) {
           const point = this.drillPoints.find(p => p.id === pointId);
           if (point) {
+            console.log('Selecting point:', point.id);
             this.selectPoint(point);
+            this.cdr.detectChanges();
+            return;
           }
         }
-      } else {
-        // Clicked on empty space
-        this.selectPoint(null);
       }
+      
+      // Clicked on empty space
+      console.log('Clicked on empty space, deselecting');
+      this.selectPoint(null);
+      this.cdr.detectChanges();
     });
   }
 
@@ -644,8 +759,14 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   private selectPoint(point: DrillPoint | null): void {
+    const previousSelection = this.selectedPoint;
     this.selectedPoint = this.drillPointService.selectPoint(point, this.drillPoints);
-    this.drawDrillPoints();
+    
+    // Only redraw if selection actually changed
+    if (previousSelection !== this.selectedPoint) {
+      this.drawDrillPoints();
+      this.cdr.markForCheck();
+    }
   }
 
   toggleHolePlacementMode(): void {
@@ -689,6 +810,38 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     this.drillPointService.exportPattern(this.drillPoints, this.settings);
   }
 
+  onSavePattern(): void {
+    if (this.drillPoints.length === 0) {
+      console.warn('No drill points to save');
+      return;
+    }
+
+    const patternData = this.drillPointService.getPatternData(this.drillPoints, this.settings);
+
+    // Update data service (in memory)
+    this.blastSequenceDataService.setPatternData(patternData, false);
+    
+    // Explicitly save to storage
+    this.blastSequenceDataService.savePatternData();
+
+    // Update save state
+    this.isSaved = true;
+    this.cdr.markForCheck();
+
+    // Clear save timeout if it exists
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+
+    // Reset save state after 3 seconds
+    this.saveTimeout = setTimeout(() => {
+      this.isSaved = false;
+      this.cdr.markForCheck();
+    }, 3000);
+
+    console.log('Pattern saved successfully');
+  }
+
   onExportToBlastDesigner(): void {
     if (this.drillPoints.length === 0) {
       console.warn('No drill points to export');
@@ -697,9 +850,15 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     
     const patternData = this.drillPointService.getPatternData(this.drillPoints, this.settings);
     
+    // Update data service (in memory)
+    this.blastSequenceDataService.setPatternData(patternData, false);
+    
+    // Save pattern data when navigating to next step
+    this.blastSequenceDataService.savePatternData();
+    
     // Export to both services for backward compatibility and new workflow
     this.patternDataService.setCurrentPattern(patternData);
-    this.blastSequenceDataService.setPatternData(patternData);
+    this.blastSequenceDataService.setPatternData(patternData, true); // Auto-save on navigation
     
     // Navigate to blast sequence designer
     this.router.navigate(['/blasting-engineer/blast-sequence-designer']);
@@ -762,7 +921,79 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     }, 250);
   }
 
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    // Only handle keyboard events when component is active
+    if (!this.containerRef?.nativeElement?.contains(document.activeElement) && 
+        document.activeElement !== document.body) {
+      return;
+    }
+
+    switch(event.key) {
+      case 'Delete':
+      case 'Backspace':
+        if (this.selectedPoint) {
+          event.preventDefault();
+          this.onDeletePoint();
+        }
+        break;
+      case 'Escape':
+        event.preventDefault();
+        this.selectPoint(null);
+        if (this.isHolePlacementMode) {
+          this.toggleHolePlacementMode();
+        }
+        break;
+      case ' ':
+        if (event.target === document.body) {
+          event.preventDefault();
+          this.toggleHolePlacementMode();
+        }
+        break;
+      case 'p':
+      case 'P':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          this.togglePreciseMode();
+        }
+        break;
+      case 'ArrowUp':
+        if (this.selectedPoint) {
+          event.preventDefault();
+          this.moveSelectedPoint(0, this.isPreciseMode ? -this.settings.burden : -0.1);
+        }
+        break;
+      case 'ArrowDown':
+        if (this.selectedPoint) {
+          event.preventDefault();
+          this.moveSelectedPoint(0, this.isPreciseMode ? this.settings.burden : 0.1);
+        }
+        break;
+      case 'ArrowLeft':
+        if (this.selectedPoint) {
+          event.preventDefault();
+          this.moveSelectedPoint(this.isPreciseMode ? -this.settings.spacing : -0.1, 0);
+        }
+        break;
+      case 'ArrowRight':
+        if (this.selectedPoint) {
+          event.preventDefault();
+          this.moveSelectedPoint(this.isPreciseMode ? this.settings.spacing : 0.1, 0);
+        }
+        break;
+    }
+  }
+
   private updateCursor(cursor: string): void {
     this.canvasService.setCanvasCursor(this.stage, cursor);
+  }
+
+  private moveSelectedPoint(deltaX: number, deltaY: number): void {
+    if (!this.selectedPoint) return;
+    
+    const newX = this.selectedPoint.x + deltaX;
+    const newY = this.selectedPoint.y + deltaY;
+    
+    this.updateDrillPointPosition(this.selectedPoint, newX, newY);
   }
 }

@@ -102,6 +102,10 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
   showValidationPanel = true;
   isFullscreen = false;
 
+  // Save functionality
+  public isSaved = false;
+  private saveTimeout: any;
+
   // Animation State
   private currentFrame: AnimationFrame = {
     time: 0,
@@ -136,10 +140,27 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
 
   ngOnInit(): void {
     console.log('Blast Simulator - ngOnInit called');
+    
+    // Initialize site context from route parameters
+    this.initializeSiteContext();
+    
     this.initializeSubscriptions();
     this.loadSimulationData();
     this.dataService.setCurrentWorkflowStep('simulate');
     console.log('Blast Simulator - ngOnInit completed');
+  }
+
+  private initializeSiteContext(): void {
+    // Get projectId and siteId from route
+    const projectId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[1];
+    const siteId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[2];
+    
+    if (projectId && siteId) {
+      console.log('Simulator - Setting site context:', { projectId, siteId });
+      this.dataService.setSiteContext(projectId, siteId);
+    } else {
+      console.warn('Simulator - Could not extract site context from route:', this.router.url);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -375,7 +396,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
 
     // First render a background grid for better visualization (only if enabled)
     if (this.viewSettings.showGrid) {
-      this.renderBackgroundGrid();
+    this.renderBackgroundGrid();
     }
 
     // Render drill holes with enhanced styling
@@ -385,9 +406,9 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
 
     // Render connections with enhanced styling (only if enabled)
     if (this.simulationSettings.showConnections) {
-      this.connections.forEach(conn => {
-        this.renderAdvancedConnection(conn);
-      });
+    this.connections.forEach(conn => {
+      this.renderAdvancedConnection(conn);
+    });
     }
 
     // Add scale reference
@@ -557,7 +578,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       mainCircle.fill(this.getHoleColor(state).hover);
       // Only show specs on hover if not permanently visible
       if (!this.viewSettings.showHoleDetails) {
-        specsText.visible(true);
+      specsText.visible(true);
       }
       document.body.style.cursor = 'pointer';
       this.mainLayer.batchDraw();
@@ -567,7 +588,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       mainCircle.fill(this.getHoleColor(state).fill);
       // Only hide specs on leave if not permanently visible
       if (!this.viewSettings.showHoleDetails) {
-        specsText.visible(false);
+      specsText.visible(false);
       }
       document.body.style.cursor = 'default';
       this.mainLayer.batchDraw();
@@ -893,35 +914,35 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
       }
     } else {
       // Default theme
-      switch (state) {
-        case 'READY':
-          return {
-            fill: '#e3f2fd',
-            stroke: '#1976d2',
-            ring: '#bbdefb',
-            hover: '#bbdefb'
-          };
-        case 'DETONATING':
-          return {
-            fill: '#fff3e0',
-            stroke: '#f57f17',
-            ring: '#ffcc02',
-            hover: '#ffe082'
-          };
-        case 'BLASTED':
-          return {
-            fill: '#ffebee',
-            stroke: '#d32f2f',
-            ring: '#ef5350',
-            hover: '#ffcdd2'
-          };
-        default:
-          return {
-            fill: '#f5f5f5',
-            stroke: '#9e9e9e',
-            ring: '#e0e0e0',
-            hover: '#eeeeee'
-          };
+    switch (state) {
+      case 'READY':
+        return {
+          fill: '#e3f2fd',
+          stroke: '#1976d2',
+          ring: '#bbdefb',
+          hover: '#bbdefb'
+        };
+      case 'DETONATING':
+        return {
+          fill: '#fff3e0',
+          stroke: '#f57f17',
+          ring: '#ffcc02',
+          hover: '#ffe082'
+        };
+      case 'BLASTED':
+        return {
+          fill: '#ffebee',
+          stroke: '#d32f2f',
+          ring: '#ef5350',
+          hover: '#ffcdd2'
+        };
+      default:
+        return {
+          fill: '#f5f5f5',
+          stroke: '#9e9e9e',
+          ring: '#e0e0e0',
+          hover: '#eeeeee'
+        };
       }
     }
   }
@@ -1097,9 +1118,9 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
         console.log(`Processing connection: ${connection.id} (${this.getConnectorTypeName(connection.connectorType)} ${connection.delay}ms) from hole ${connection.fromHoleId} to ${connection.toHoleId}`);
 
         // Hidden point 1 (start point) activation
-        this.simulationEvents.push({
+      this.simulationEvents.push({
           time: waveStartTime,
-          type: SimulationEventType.SIGNAL_START,
+        type: SimulationEventType.SIGNAL_START,
           targetId: `${connection.id}_start`,
           data: { 
             connectionId: connection.id,
@@ -1116,17 +1137,17 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
         this.simulationEvents.push({
           time: signalPropagationTime,
           type: SimulationEventType.SIGNAL_ARRIVE,
-          targetId: connection.id,
+        targetId: connection.id,
           data: { 
             fromHoleId: connection.fromHoleId, 
             toHoleId: connection.toHoleId,
             wireSequence: connection.sequence
           }
-        });
-        
+      });
+
         // Hidden point 2 (end point) activation
         const endPointActivationTime = signalPropagationTime + 10;
-        this.simulationEvents.push({
+      this.simulationEvents.push({
           time: endPointActivationTime,
           type: SimulationEventType.SIGNAL_ARRIVE,
           targetId: `${connection.id}_end`,
@@ -1143,21 +1164,21 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
         const detonationTime = endPointActivationTime + 15;
         this.simulationEvents.push({
           time: detonationTime,
-          type: SimulationEventType.HOLE_DETONATE,
-          targetId: connection.toHoleId,
+        type: SimulationEventType.HOLE_DETONATE,
+        targetId: connection.toHoleId,
           data: { 
             delay: connection.delay, 
             type: connection.connectorType,
             wireSequence: connection.sequence,
             triggeredByWire: connection.id
           }
-        });
+      });
 
         // Blast effect
-        this.simulationEvents.push({
+      this.simulationEvents.push({
           time: detonationTime,
-          type: SimulationEventType.EFFECT_START,
-          targetId: connection.toHoleId,
+        type: SimulationEventType.EFFECT_START,
+        targetId: connection.toHoleId,
           data: { 
             effectType: BlastEffectType.EXPLOSION, 
             duration: 1000,
@@ -1189,8 +1210,8 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
               nextWaveConnections.push(nextConn);
             }
           }
-        });
       });
+    });
 
       // Process next wave if there are connections to process
       if (nextWaveConnections.length > 0) {
@@ -1401,7 +1422,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
           this.currentFrame.connectionStates.set(event.data.connectionId, ConnectionAnimationState.SIGNAL_PROPAGATING);
         } else {
           // Regular connection signal start
-          this.currentFrame.connectionStates.set(event.targetId, ConnectionAnimationState.SIGNAL_PROPAGATING);
+        this.currentFrame.connectionStates.set(event.targetId, ConnectionAnimationState.SIGNAL_PROPAGATING);
         }
         break;
 
@@ -1588,41 +1609,153 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
     // Clear timeline
     this.timelineCtx.clearRect(0, 0, 800, 100);
     
-    // Background
+    // Background with grid lines
     this.timelineCtx.fillStyle = '#f8f9fa';
     this.timelineCtx.fillRect(0, 0, 800, 100);
 
-    // Render timeline markers
-    this.timelineMarkers.forEach(marker => {
-      this.renderTimelineMarker(marker);
-    });
+    // Add subtle grid lines for time intervals
+    this.drawTimeGrid();
+
+    // Group markers by type for better rendering
+    const waveMarkers = this.timelineMarkers.filter(m => m.type === 'hole_blast' && m.label.includes('Wave'));
+    const milestoneMarkers = this.timelineMarkers.filter(m => m.type === 'milestone');
+    const sequenceMarkers = this.timelineMarkers.filter(m => m.type === 'sequence_start' || m.type === 'sequence_end');
+    const detonationMarkers = this.timelineMarkers.filter(m => m.type === 'hole_blast' && m.label.includes('Detonation'));
+
+    // Render in order: grid -> milestones -> waves -> detonations -> sequence markers
+    milestoneMarkers.forEach(marker => this.renderTimelineMarker(marker, 'small'));
+    waveMarkers.forEach(marker => this.renderTimelineMarker(marker, 'medium'));
+    detonationMarkers.forEach(marker => this.renderTimelineMarker(marker, 'medium'));
+    sequenceMarkers.forEach(marker => this.renderTimelineMarker(marker, 'large'));
   }
 
-  private renderTimelineMarker(marker: TimelineMarker): void {
+  private drawTimeGrid(): void {
+    if (this.simulationState.totalDuration === 0) return;
+
+    this.timelineCtx.strokeStyle = '#e9ecef';
+    this.timelineCtx.lineWidth = 1;
+    
+    // Draw vertical grid lines every 500ms
+    const interval = 500; // 500ms intervals
+    for (let time = 0; time <= this.simulationState.totalDuration; time += interval) {
+      const x = (time / this.simulationState.totalDuration) * 780 + 10;
+      this.timelineCtx.beginPath();
+      this.timelineCtx.moveTo(x, 85);
+      this.timelineCtx.lineTo(x, 90);
+      this.timelineCtx.stroke();
+      
+      // Add time labels at major intervals
+      if (time % 1000 === 0) { // Every 1000ms (1s)
+        this.timelineCtx.fillStyle = '#6c757d';
+        this.timelineCtx.font = '9px Arial';
+        this.timelineCtx.textAlign = 'center';
+        this.timelineCtx.fillText(`${time/1000}s`, x, 98);
+      }
+    }
+  }
+
+  private renderTimelineMarker(marker: TimelineMarker, size: 'small' | 'medium' | 'large' = 'medium'): void {
     if (this.simulationState.totalDuration === 0) return;
 
     const x = (marker.time / this.simulationState.totalDuration) * 780 + 10;
-    const y = 50;
+    
+    // Different sizes and positions for different marker types
+    const config = this.getMarkerConfig(size, marker.type);
 
     // Marker line
     this.timelineCtx.beginPath();
-    this.timelineCtx.moveTo(x, 20);
-    this.timelineCtx.lineTo(x, 80);
+    this.timelineCtx.moveTo(x, config.lineStart);
+    this.timelineCtx.lineTo(x, config.lineEnd);
     this.timelineCtx.strokeStyle = marker.color;
-    this.timelineCtx.lineWidth = 2;
+    this.timelineCtx.lineWidth = config.lineWidth;
     this.timelineCtx.stroke();
 
-    // Marker dot
+    // Marker dot/shape
     this.timelineCtx.beginPath();
-    this.timelineCtx.arc(x, y, 4, 0, 2 * Math.PI);
+    if (marker.type === 'milestone') {
+      // Small diamond for milestones
+      const size = config.dotSize;
+      this.timelineCtx.moveTo(x, config.dotY - size);
+      this.timelineCtx.lineTo(x + size, config.dotY);
+      this.timelineCtx.lineTo(x, config.dotY + size);
+      this.timelineCtx.lineTo(x - size, config.dotY);
+      this.timelineCtx.closePath();
+    } else {
+      // Circle for other markers
+      this.timelineCtx.arc(x, config.dotY, config.dotSize, 0, 2 * Math.PI);
+    }
     this.timelineCtx.fillStyle = marker.color;
     this.timelineCtx.fill();
 
-    // Label
+    // Add border for larger markers
+    if (size === 'large') {
+      this.timelineCtx.strokeStyle = '#fff';
+      this.timelineCtx.lineWidth = 2;
+      this.timelineCtx.stroke();
+    }
+
+    // Label with smart positioning to avoid overlaps
+    this.renderMarkerLabel(x, marker.label, marker.type, config);
+  }
+
+  private getMarkerConfig(size: 'small' | 'medium' | 'large', type: string) {
+    const configs = {
+      small: {
+        dotSize: 3,
+        dotY: 70,
+        lineStart: 65,
+        lineEnd: 75,
+        lineWidth: 1,
+        labelY: 85
+      },
+      medium: {
+        dotSize: 4,
+        dotY: 50,
+        lineStart: 40,
+        lineEnd: 60,
+        lineWidth: 2,
+        labelY: 35
+      },
+      large: {
+        dotSize: 6,
+        dotY: 50,
+        lineStart: 20,
+        lineEnd: 80,
+        lineWidth: 3,
+        labelY: 15
+      }
+    };
+    
+    return configs[size];
+  }
+
+  private renderMarkerLabel(x: number, label: string, type: string, config: any): void {
     this.timelineCtx.fillStyle = '#495057';
-    this.timelineCtx.font = '10px Arial';
+    
+    // Different font sizes for different marker types
+    if (type === 'milestone') {
+      this.timelineCtx.font = '8px Arial';
+    } else if (type === 'sequence_start' || type === 'sequence_end') {
+      this.timelineCtx.font = 'bold 10px Arial';
+    } else {
+      this.timelineCtx.font = '9px Arial';
+    }
+    
     this.timelineCtx.textAlign = 'center';
-    this.timelineCtx.fillText(marker.label, x, y + 20);
+    
+    // Truncate long labels for better readability
+    const maxLength = type === 'milestone' ? 15 : 25;
+    const displayLabel = label.length > maxLength ? label.substring(0, maxLength) + '...' : label;
+    
+    // Add background for better readability on wave markers
+    if (type === 'hole_blast' && label.includes('Wave')) {
+      const textWidth = this.timelineCtx.measureText(displayLabel).width;
+      this.timelineCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      this.timelineCtx.fillRect(x - textWidth/2 - 2, config.labelY - 8, textWidth + 4, 10);
+      this.timelineCtx.fillStyle = '#495057';
+    }
+    
+    this.timelineCtx.fillText(displayLabel, x, config.labelY);
   }
 
   private renderCurrentTimeIndicator(): void {
@@ -1700,6 +1833,36 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
   }
 
   // Export functionality
+  onSaveSimulation(): void {
+    if (!this.patternData || this.connections.length === 0) {
+      console.warn('No simulation data to save');
+      return;
+    }
+
+    // Update data service (in memory)
+    this.dataService.updateSimulationState(this.simulationState, false);
+    this.dataService.updateSimulationSettings(this.simulationSettings, false);
+    
+    // Explicitly save to storage
+    this.dataService.saveSimulationState();
+    this.dataService.saveSimulationSettings();
+
+    // Update save state
+    this.isSaved = true;
+
+    // Clear save timeout if it exists
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+
+    // Reset save state after 3 seconds
+    this.saveTimeout = setTimeout(() => {
+      this.isSaved = false;
+    }, 3000);
+
+    console.log('Simulation saved successfully');
+  }
+
   exportVideo(): void {
     // Placeholder for video export functionality
     console.log('Video export functionality would be implemented here');

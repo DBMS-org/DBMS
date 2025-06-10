@@ -97,9 +97,9 @@ export class ProjectSitesComponent implements OnInit {
     });
   }
 
-  editSite(site: ProjectSite) {
-    // TODO: Navigate to edit site component when implemented
-    console.log('Edit site:', site);
+  createPattern(site: ProjectSite) {
+    // Navigate to site dashboard
+    this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites', site.id, 'dashboard']);
   }
 
   deleteSite(site: ProjectSite) {

@@ -121,7 +121,7 @@ export class NavigationController {
 
   // Navigation Guards
   canNavigateToStep(stepId: WorkflowStepId): boolean {
-    const steps = this.dataService.workflowSteps$.value;
+    const steps = (this.dataService.workflowSteps$ as BehaviorSubject<WorkflowStep[]>).value;
     const targetStep = steps.find(s => s.id === stepId);
     return targetStep ? targetStep.enabled : false;
   }
@@ -143,7 +143,7 @@ export class NavigationController {
   }
 
   getStepProgress(): { current: number; total: number; percentage: number } {
-    const steps = this.dataService.workflowSteps$.value;
+    const steps = (this.dataService.workflowSteps$ as BehaviorSubject<WorkflowStep[]>).value;
     const currentIndex = this.getStepIndex(this.getCurrentStep());
     const completedSteps = steps.filter(s => s.completed).length;
     
@@ -156,7 +156,7 @@ export class NavigationController {
 
   // Breadcrumb Navigation
   getBreadcrumbs(): Array<{ stepId: WorkflowStepId; title: string; active: boolean; enabled: boolean }> {
-    const steps = this.dataService.workflowSteps$.value;
+    const steps = (this.dataService.workflowSteps$ as BehaviorSubject<WorkflowStep[]>).value;
     const currentStep = this.getCurrentStep();
 
     return this.routes.map(route => {
@@ -315,7 +315,7 @@ export class NavigationController {
     currentSession: string;
     completionPercentage: number;
   } {
-    const steps = this.dataService.workflowSteps$.value;
+    const steps = (this.dataService.workflowSteps$ as BehaviorSubject<WorkflowStep[]>).value;
     const completedSteps = steps.filter(s => s.completed).length;
     const progress = this.getStepProgress();
 
