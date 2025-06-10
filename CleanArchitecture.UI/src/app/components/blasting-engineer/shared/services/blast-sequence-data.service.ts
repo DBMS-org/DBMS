@@ -20,6 +20,7 @@ import {
   ValidationError,
   OptimizationSuggestion
 } from '../models/simulation.model';
+import { SiteBlastingService } from '../../../../core/services/site-blasting.service';
 
 export interface WorkflowStep {
   id: string;
@@ -120,7 +121,7 @@ export class BlastSequenceDataService {
     }))
   );
 
-  constructor() {}
+  constructor(private siteBlastingService: SiteBlastingService) {}
 
   // Site Context Methods
   setSiteContext(projectId: number, siteId: number): void {
@@ -134,7 +135,42 @@ export class BlastSequenceDataService {
   cleanupSiteData(projectId: number, siteId: number): void {
     const siteKey = `site_${projectId}_${siteId}`;
     
-    console.log('🧹 CLEANING UP ALL SITE DATA for:', siteKey);
+    console.log('🧹 DELETING ALL SITE DATA from backend and frontend for:', siteKey);
+    
+    // Delete all data from backend first
+    this.siteBlastingService.deleteAllWorkflowData(projectId, siteId).subscribe({
+      next: () => {
+        console.log('✅ Successfully deleted all site data from backend');
+      },
+      error: (error) => {
+        console.warn('⚠️ Failed to delete backend data, continuing with frontend cleanup:', error.message);
+      }
+    });
+
+    // Also delete individual drill patterns and blast sequences
+    this.siteBlastingService.getDrillPatterns(projectId, siteId).subscribe({
+      next: (patterns) => {
+        patterns.forEach(pattern => {
+          this.siteBlastingService.deleteDrillPattern(projectId, siteId, pattern.id).subscribe({
+            next: () => console.log(`✅ Deleted drill pattern ${pattern.id} from backend`),
+            error: (error) => console.warn(`⚠️ Failed to delete drill pattern ${pattern.id}:`, error.message)
+          });
+        });
+      },
+      error: (error) => console.warn('⚠️ Failed to fetch drill patterns for deletion:', error.message)
+    });
+
+    this.siteBlastingService.getBlastSequences(projectId, siteId).subscribe({
+      next: (sequences) => {
+        sequences.forEach(sequence => {
+          this.siteBlastingService.deleteBlastSequence(projectId, siteId, sequence.id).subscribe({
+            next: () => console.log(`✅ Deleted blast sequence ${sequence.id} from backend`),
+            error: (error) => console.warn(`⚠️ Failed to delete blast sequence ${sequence.id}:`, error.message)
+          });
+        });
+      },
+      error: (error) => console.warn('⚠️ Failed to fetch blast sequences for deletion:', error.message)
+    });
     
     // Remove ALL site-specific localStorage data
     const keysToRemove = [
@@ -193,12 +229,31 @@ export class BlastSequenceDataService {
   // Individual step cleanup methods
   cleanupPatternData(projectId: number, siteId: number): void {
     const siteKey = `site_${projectId}_${siteId}`;
-    console.log('🧹 Cleaning up PATTERN data for:', siteKey);
+    console.log('🧹 DELETING PATTERN data from backend and frontend for:', siteKey);
+    
+    // Delete drill patterns from backend
+    this.siteBlastingService.getDrillPatterns(projectId, siteId).subscribe({
+      next: (patterns) => {
+        patterns.forEach(pattern => {
+          this.siteBlastingService.deleteDrillPattern(projectId, siteId, pattern.id).subscribe({
+            next: () => console.log(`✅ Deleted drill pattern ${pattern.id} from backend`),
+            error: (error) => console.warn(`⚠️ Failed to delete drill pattern ${pattern.id}:`, error.message)
+          });
+        });
+      },
+      error: (error) => console.warn('⚠️ Failed to fetch drill patterns for deletion:', error.message)
+    });
+
+    // Delete workflow data for pattern
+    this.siteBlastingService.deleteWorkflowData(projectId, siteId, 'pattern').subscribe({
+      next: () => console.log('✅ Deleted pattern workflow data from backend'),
+      error: (error) => console.warn('⚠️ Failed to delete pattern workflow data:', error.message)
+    });
     
     // Remove pattern data from localStorage
     if (localStorage.getItem(`${siteKey}_pattern`)) {
       localStorage.removeItem(`${siteKey}_pattern`);
-      console.log('❌ Removed pattern data');
+      console.log('❌ Removed pattern data from localStorage');
     }
     
     // Clear in-memory pattern data if this is the active site
@@ -212,17 +267,36 @@ export class BlastSequenceDataService {
       console.log('🔄 Reset pattern data in memory');
     }
     
-    console.log('✅ Pattern data cleanup completed');
+    console.log('✅ Pattern data deletion completed');
   }
 
   cleanupSequenceData(projectId: number, siteId: number): void {
     const siteKey = `site_${projectId}_${siteId}`;
-    console.log('🧹 Cleaning up SEQUENCE data for:', siteKey);
+    console.log('🧹 DELETING SEQUENCE data from backend and frontend for:', siteKey);
+    
+    // Delete blast sequences from backend
+    this.siteBlastingService.getBlastSequences(projectId, siteId).subscribe({
+      next: (sequences) => {
+        sequences.forEach(sequence => {
+          this.siteBlastingService.deleteBlastSequence(projectId, siteId, sequence.id).subscribe({
+            next: () => console.log(`✅ Deleted blast sequence ${sequence.id} from backend`),
+            error: (error) => console.warn(`⚠️ Failed to delete blast sequence ${sequence.id}:`, error.message)
+          });
+        });
+      },
+      error: (error) => console.warn('⚠️ Failed to fetch blast sequences for deletion:', error.message)
+    });
+
+    // Delete workflow data for connections
+    this.siteBlastingService.deleteWorkflowData(projectId, siteId, 'connections').subscribe({
+      next: () => console.log('✅ Deleted connections workflow data from backend'),
+      error: (error) => console.warn('⚠️ Failed to delete connections workflow data:', error.message)
+    });
     
     // Remove connections data from localStorage
     if (localStorage.getItem(`${siteKey}_connections`)) {
       localStorage.removeItem(`${siteKey}_connections`);
-      console.log('❌ Removed connections data');
+      console.log('❌ Removed connections data from localStorage');
     }
     
     // Clear in-memory connections data if this is the active site
@@ -235,12 +309,23 @@ export class BlastSequenceDataService {
       console.log('🔄 Reset connections data in memory');
     }
     
-    console.log('✅ Sequence data cleanup completed');
+    console.log('✅ Sequence data deletion completed');
   }
 
   cleanupSimulationData(projectId: number, siteId: number): void {
     const siteKey = `site_${projectId}_${siteId}`;
-    console.log('🧹 Cleaning up SIMULATION data for:', siteKey);
+    console.log('🧹 DELETING SIMULATION data from backend and frontend for:', siteKey);
+    
+    // Delete simulation workflow data from backend
+    this.siteBlastingService.deleteWorkflowData(projectId, siteId, 'simulation_settings').subscribe({
+      next: () => console.log('✅ Deleted simulation settings from backend'),
+      error: (error) => console.warn('⚠️ Failed to delete simulation settings:', error.message)
+    });
+
+    this.siteBlastingService.deleteWorkflowData(projectId, siteId, 'simulation_state').subscribe({
+      next: () => console.log('✅ Deleted simulation state from backend'),
+      error: (error) => console.warn('⚠️ Failed to delete simulation state:', error.message)
+    });
     
     // Remove simulation data from localStorage
     const settingsKey = `${siteKey}_simulation_settings`;
@@ -248,12 +333,12 @@ export class BlastSequenceDataService {
     
     if (localStorage.getItem(settingsKey)) {
       localStorage.removeItem(settingsKey);
-      console.log('❌ Removed simulation settings');
+      console.log('❌ Removed simulation settings from localStorage');
     }
     
     if (localStorage.getItem(stateKey)) {
       localStorage.removeItem(stateKey);
-      console.log('❌ Removed simulation state');
+      console.log('❌ Removed simulation state from localStorage');
     }
     
     // Reset in-memory simulation data if this is the active site
@@ -281,7 +366,7 @@ export class BlastSequenceDataService {
       console.log('🔄 Reset simulation data in memory');
     }
     
-    console.log('✅ Simulation data cleanup completed');
+    console.log('✅ Simulation data deletion completed');
   }
 
   getSiteWorkflowProgress(siteId: number): Observable<any> {
@@ -293,73 +378,190 @@ export class BlastSequenceDataService {
       });
     }
 
-    const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
-    
-    // Only check saved data from localStorage for completion status
-    const savedPattern = localStorage.getItem(`${siteKey}_pattern`);
-    const savedConnections = localStorage.getItem(`${siteKey}_connections`);
-    const savedSimulationSettings = localStorage.getItem(`${siteKey}_simulation_settings`);
-    
-    // Pattern is complete only if explicitly saved
-    const hasPattern = !!savedPattern;
-    const patternProgress = hasPattern ? 100 : 0;
-    
-    // Sequence is complete only if connections are saved (and pattern exists)
-    let hasConnections = false;
-    if (savedConnections && hasPattern) {
-      try {
-        const connections = JSON.parse(savedConnections);
-        hasConnections = connections.length > 0;
-      } catch (e) {
-        hasConnections = false;
-      }
-    }
-    const sequenceProgress = hasConnections ? 100 : 0;
-    
-    // Simulator is complete only if settings are saved (and sequence exists)
-    const hasSimulationData = !!savedSimulationSettings && hasConnections;
-    const simulatorProgress = hasSimulationData ? 100 : 0;
+    // Return an observable that checks both current data and backend data
+    return new Observable(observer => {
+      // Check current loaded data first
+      const currentPattern = this.patternDataSubject.value;
+      const currentConnections = this.connectionsSubject.value;
+      const currentSimulationSettings = this.simulationSettingsSubject.value;
+      
+      // Pattern is complete if there are drill points
+      const hasPattern = !!(currentPattern && currentPattern.drillPoints && currentPattern.drillPoints.length > 0);
+      const patternProgress = hasPattern ? 100 : 0;
+      
+      // Sequence is complete if there are connections and pattern exists
+      const hasConnections = hasPattern && currentConnections && currentConnections.length > 0;
+      const sequenceProgress = hasConnections ? 100 : 0;
+      
+      // Simulator is complete if settings exist and sequence exists
+      const hasSimulationData = hasConnections && !!currentSimulationSettings;
+      const simulatorProgress = hasSimulationData ? 100 : 0;
 
-    console.log('Site workflow progress (based on saved data only):', {
-      pattern: hasPattern,
-      sequence: hasConnections,  
-      simulator: hasSimulationData,
-      progressValues: { patternProgress, sequenceProgress, simulatorProgress }
+      console.log('Site workflow progress (from loaded data):', {
+        pattern: hasPattern,
+        sequence: hasConnections,  
+        simulator: hasSimulationData,
+        progressValues: { patternProgress, sequenceProgress, simulatorProgress }
+      });
+
+      const progressData = {
+        'pattern-creator': { 
+          completed: hasPattern, 
+          progress: patternProgress 
+        },
+        'sequence-designer': { 
+          completed: hasConnections, 
+          progress: sequenceProgress 
+        },
+        'simulator': { 
+          completed: hasSimulationData, 
+          progress: simulatorProgress 
+        }
+      };
+
+      observer.next(progressData);
+      observer.complete();
     });
-
-    const progressData = {
-      'pattern-creator': { 
-        completed: hasPattern, 
-        progress: patternProgress 
-      },
-      'sequence-designer': { 
-        completed: hasConnections, 
-        progress: sequenceProgress 
-      },
-      'simulator': { 
-        completed: hasSimulationData, 
-        progress: simulatorProgress 
-      }
-    };
-
-    // If no data exists, ensure everything is at 0%
-    if (!hasPattern && !hasConnections && !hasSimulationData) {
-      console.log('❌ No saved data found - all progress set to 0%');
-    }
-
-    return of(progressData);
   }
 
   private loadSiteData(projectId: number, siteId: number): void {
     // Clear current data first to avoid mixing sites
     this.clearAllData();
     
-    // Load site-specific pattern data and connections
+    console.log('Loading site data for:', { projectId, siteId });
+    
+    // Load from backend first, then fallback to localStorage
+    this.loadFromBackend(projectId, siteId);
+  }
+
+  private loadFromBackend(projectId: number, siteId: number): void {
+    console.log('Loading data from backend for site:', { projectId, siteId });
+    
+    // Load drill patterns
+    this.siteBlastingService.getDrillPatterns(projectId, siteId).subscribe({
+      next: (patterns) => {
+        if (patterns && patterns.length > 0) {
+          const latestPattern = patterns[0]; // Get most recent pattern
+          
+          // Handle drillPointsJson which can be either string (from backend) or array (already parsed)
+          let drillPoints: DrillPoint[] = [];
+          if (latestPattern.drillPointsJson) {
+            if (typeof latestPattern.drillPointsJson === 'string') {
+              try {
+                drillPoints = JSON.parse(latestPattern.drillPointsJson);
+              } catch (error) {
+                console.warn('Failed to parse drill points JSON:', error);
+                drillPoints = [];
+              }
+            } else {
+              drillPoints = latestPattern.drillPointsJson;
+            }
+          }
+          
+          const patternData: PatternData = {
+            drillPoints: drillPoints,
+            settings: {
+              spacing: latestPattern.spacing,
+              burden: latestPattern.burden,
+              depth: latestPattern.depth
+            }
+          };
+          
+          this.patternDataSubject.next(patternData);
+          console.log('Loaded pattern from backend:', latestPattern.name, 'with', patternData.drillPoints.length, 'points');
+          
+          // After loading pattern, load blast sequences
+          this.loadBlastSequencesFromBackend(projectId, siteId);
+        } else {
+          console.log('No patterns found in backend, trying localStorage');
+          this.loadFromLocalStorage(projectId, siteId);
+        }
+      },
+      error: (error) => {
+        console.log('Error loading patterns from backend, trying localStorage:', error.message);
+        this.loadFromLocalStorage(projectId, siteId);
+      }
+    });
+  }
+
+  private loadBlastSequencesFromBackend(projectId: number, siteId: number): void {
+    this.siteBlastingService.getBlastSequences(projectId, siteId).subscribe({
+      next: (sequences) => {
+        if (sequences && sequences.length > 0) {
+          const latestSequence = sequences[0]; // Get most recent sequence
+          
+          // Handle connectionsJson which can be either string (from backend) or array (already parsed)
+          let connections: BlastConnection[] = [];
+          if (latestSequence.connectionsJson) {
+            if (typeof latestSequence.connectionsJson === 'string') {
+              try {
+                connections = JSON.parse(latestSequence.connectionsJson);
+              } catch (error) {
+                console.warn('Failed to parse connections JSON:', error);
+                connections = [];
+              }
+            } else {
+              connections = latestSequence.connectionsJson;
+            }
+          }
+          
+          // Validate connections against current pattern
+          if (this.patternDataSubject.value) {
+            const validConnections = this.validateConnections(connections, this.patternDataSubject.value.drillPoints);
+            this.connectionsSubject.next(validConnections);
+            console.log('Loaded blast sequence from backend:', latestSequence.name, 'with', validConnections.length, 'connections');
+          } else {
+            this.connectionsSubject.next(connections);
+            console.log('Loaded blast sequence from backend:', latestSequence.name, 'with', connections.length, 'connections');
+          }
+        } else {
+          console.log('No blast sequences found in backend');
+        }
+        
+        // After loading backend data, load workflow state
+        this.loadWorkflowStateFromBackend(projectId, siteId);
+      },
+      error: (error) => {
+        console.log('Error loading blast sequences from backend:', error.message);
+        this.loadWorkflowStateFromBackend(projectId, siteId);
+      }
+    });
+  }
+
+  private loadWorkflowStateFromBackend(projectId: number, siteId: number): void {
+    // Load simulation settings and state
+    this.siteBlastingService.getWorkflowState(projectId, siteId, 'simulation_settings').subscribe({
+      next: (data) => {
+        if (data && data.jsonData) {
+          const settings = data.jsonData;
+          this.simulationSettingsSubject.next(settings);
+          console.log('Loaded simulation settings from backend');
+        }
+      },
+      error: (error) => {
+        console.log('No simulation settings found in backend:', error.message);
+      }
+    });
+
+    this.siteBlastingService.getWorkflowState(projectId, siteId, 'simulation_state').subscribe({
+      next: (data) => {
+        if (data && data.jsonData) {
+          const state = data.jsonData;
+          this.simulationStateSubject.next(state);
+          console.log('Loaded simulation state from backend');
+        }
+      },
+      error: (error) => {
+        console.log('No simulation state found in backend:', error.message);
+      }
+    });
+  }
+
+  private loadFromLocalStorage(projectId: number, siteId: number): void {
     const siteKey = `site_${projectId}_${siteId}`;
+    console.log('Loading from localStorage for:', siteKey);
     
-    console.log('Loading site data for:', siteKey);
-    
-    // Try to load existing data for this site
+    // Try to load existing data for this site from localStorage
     const savedPatternData = localStorage.getItem(`${siteKey}_pattern`);
     const savedConnections = localStorage.getItem(`${siteKey}_connections`);
     const savedSimulationSettings = localStorage.getItem(`${siteKey}_simulation_settings`);
@@ -369,10 +571,10 @@ export class BlastSequenceDataService {
       try {
         const patternData = JSON.parse(savedPatternData);
         this.patternDataSubject.next(patternData);
-        console.log('Loaded pattern data:', patternData.drillPoints?.length || 0, 'points');
+        console.log('Loaded pattern data from localStorage:', patternData.drillPoints?.length || 0, 'points');
       } catch (error) {
-        console.warn('Failed to load pattern data for site:', error);
-        localStorage.removeItem(`${siteKey}_pattern`); // Clean up corrupt data
+        console.warn('Failed to load pattern data from localStorage:', error);
+        localStorage.removeItem(`${siteKey}_pattern`);
       }
     }
     
@@ -384,7 +586,7 @@ export class BlastSequenceDataService {
         if (this.patternDataSubject.value) {
           const validConnections = this.validateConnections(connections, this.patternDataSubject.value.drillPoints);
           this.connectionsSubject.next(validConnections);
-          console.log('Loaded connections:', validConnections.length, 'valid connections');
+          console.log('Loaded connections from localStorage:', validConnections.length, 'valid connections');
           
           // Save cleaned connections back if any were removed
           if (validConnections.length !== connections.length) {
@@ -392,11 +594,11 @@ export class BlastSequenceDataService {
           }
         } else {
           this.connectionsSubject.next(connections);
-          console.log('Loaded connections:', connections.length, 'connections (no pattern validation)');
+          console.log('Loaded connections from localStorage:', connections.length, 'connections');
         }
       } catch (error) {
-        console.warn('Failed to load connections for site:', error);
-        localStorage.removeItem(`${siteKey}_connections`); // Clean up corrupt data
+        console.warn('Failed to load connections from localStorage:', error);
+        localStorage.removeItem(`${siteKey}_connections`);
       }
     }
     
@@ -404,9 +606,9 @@ export class BlastSequenceDataService {
       try {
         const settings = JSON.parse(savedSimulationSettings);
         this.simulationSettingsSubject.next(settings);
-        console.log('Loaded simulation settings');
+        console.log('Loaded simulation settings from localStorage');
       } catch (error) {
-        console.warn('Failed to load simulation settings for site:', error);
+        console.warn('Failed to load simulation settings from localStorage:', error);
         localStorage.removeItem(`${siteKey}_simulation_settings`);
       }
     }
@@ -415,9 +617,9 @@ export class BlastSequenceDataService {
       try {
         const state = JSON.parse(savedSimulationState);
         this.simulationStateSubject.next(state);
-        console.log('Loaded simulation state');
+        console.log('Loaded simulation state from localStorage');
       } catch (error) {
-        console.warn('Failed to load simulation state for site:', error);
+        console.warn('Failed to load simulation state from localStorage:', error);
         localStorage.removeItem(`${siteKey}_simulation_state`);
       }
     }

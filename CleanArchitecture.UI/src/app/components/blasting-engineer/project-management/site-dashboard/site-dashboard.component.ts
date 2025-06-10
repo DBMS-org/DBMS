@@ -80,7 +80,7 @@ export class SiteDashboardComponent implements OnInit {
     if (this.projectId && this.siteId) {
       this.loadProject();
       this.loadSite();
-      this.loadWorkflowProgress();
+      // loadWorkflowProgress() is now called from loadSite() after data is loaded
     }
   }
 
@@ -105,6 +105,11 @@ export class SiteDashboardComponent implements OnInit {
         this.site = site;
         // Initialize site-specific data service
         this.blastSequenceDataService.setSiteContext(this.projectId, this.siteId);
+        
+        // Wait a moment for backend data to load before checking progress
+        setTimeout(() => {
+          this.loadWorkflowProgress();
+        }, 500);
       },
       error: (error) => {
         console.error('Error loading site:', error);

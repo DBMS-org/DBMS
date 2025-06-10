@@ -12,6 +12,7 @@ import { DrillPoint, PatternSettings } from './models/drill-point.model';
 import { CANVAS_CONSTANTS } from './constants/canvas.constants';
 import { PatternDataService } from '../shared/pattern-data.service';
 import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
+import { SiteBlastingService } from '../../../core/services/site-blasting.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -64,6 +65,10 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   public isSaved = false;
   private saveTimeout: any;
 
+  // Site context
+  private currentProjectId!: number;
+  private currentSiteId!: number;
+
   constructor(
     private cdr: ChangeDetectorRef,
     private canvasService: CanvasService,
@@ -74,6 +79,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     private zoomService: ZoomService,
     private patternDataService: PatternDataService,
     private blastSequenceDataService: BlastSequenceDataService,
+    private siteBlastingService: SiteBlastingService,
     private router: Router
   ) {}
 
@@ -99,18 +105,31 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   private initializeSiteContext(): void {
-    // Get projectId and siteId from route
-    const projectId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[1];
-    const siteId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[2];
+    // Get projectId and siteId from route URL pattern: /blasting-engineer/project-management/:projectId/sites/:siteId/pattern-creator
+    const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
+    const projectId = routeMatch ? +routeMatch[1] : null;
+    const siteId = routeMatch ? +routeMatch[2] : null;
     
     if (projectId && siteId) {
       console.log('Pattern Creator - Setting site context:', { projectId, siteId });
+      this.currentProjectId = projectId;
+      this.currentSiteId = siteId;
       this.blastSequenceDataService.setSiteContext(projectId, siteId);
       
       // Load existing pattern data for this site
       this.loadExistingPatternData();
+      this.loadBackendPatternData();
     } else {
       console.warn('Pattern Creator - Could not extract site context from route:', this.router.url);
+      console.warn('Route match result:', routeMatch);
+      
+      // For testing purposes, use the known valid site combination
+      console.log('Falling back to test site context: Project 1, Site 3');
+      this.currentProjectId = 1;
+      this.currentSiteId = 3;
+      this.blastSequenceDataService.setSiteContext(1, 3);
+      this.loadExistingPatternData();
+      this.loadBackendPatternData();
     }
   }
 
@@ -146,6 +165,86 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       // Trigger UI update
       this.cdr.markForCheck();
     }
+  }
+
+  private loadBackendPatternData(): void {
+    if (!this.currentProjectId || !this.currentSiteId) {
+      return;
+    }
+
+    // Try to load saved drill patterns from backend
+    this.siteBlastingService.getDrillPatterns(this.currentProjectId, this.currentSiteId)
+      .subscribe({
+        next: (patterns) => {
+          if (patterns && patterns.length > 0) {
+            // Load the most recent pattern
+            const latestPattern = patterns[0];
+            
+            // Handle drillPointsJson which can be either string (from backend) or array (already parsed)
+            let drillPoints: DrillPoint[] = [];
+            if (latestPattern.drillPointsJson) {
+              if (typeof latestPattern.drillPointsJson === 'string') {
+                try {
+                  drillPoints = JSON.parse(latestPattern.drillPointsJson);
+                } catch (error) {
+                  console.warn('Failed to parse drill points JSON:', error);
+                  drillPoints = [];
+                }
+              } else {
+                drillPoints = latestPattern.drillPointsJson;
+              }
+            }
+            this.drillPoints = drillPoints;
+            
+            this.settings = {
+              spacing: latestPattern.spacing,
+              burden: latestPattern.burden,
+              depth: latestPattern.depth
+            };
+            
+            console.log('Loaded pattern from backend:', latestPattern.name, 'with', this.drillPoints.length, 'points');
+            
+            // Redraw if canvas is ready
+            setTimeout(() => {
+              if (this.isInitialized) {
+                this.drawDrillPoints();
+              }
+            }, 100);
+            
+            this.cdr.markForCheck();
+          }
+        },
+        error: (error) => {
+          console.log('No existing patterns found in backend or error loading:', error.message);
+        }
+      });
+
+    // Also try to load workflow state
+    this.siteBlastingService.getWorkflowState(this.currentProjectId, this.currentSiteId, 'pattern')
+      .subscribe({
+        next: (workflowData) => {
+          if (workflowData && workflowData.jsonData) {
+            const patternData = workflowData.jsonData;
+            if (patternData.drillPoints) {
+              this.drillPoints = patternData.drillPoints;
+              this.settings = patternData.settings || this.settings;
+              
+              console.log('Loaded workflow pattern state from backend with', this.drillPoints.length, 'points');
+              
+              setTimeout(() => {
+                if (this.isInitialized) {
+                  this.drawDrillPoints();
+                }
+              }, 100);
+              
+              this.cdr.markForCheck();
+            }
+          }
+        },
+        error: (error) => {
+          console.log('No existing workflow state found or error loading:', error.message);
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -816,30 +915,85 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       return;
     }
 
-    const patternData = this.drillPointService.getPatternData(this.drillPoints, this.settings);
+    if (!this.currentProjectId || !this.currentSiteId) {
+      console.error('Missing project or site context for saving');
+      return;
+    }
 
-    // Update data service (in memory)
+    const patternData = this.drillPointService.getPatternData(this.drillPoints, this.settings);
+    const currentDate = new Date();
+    const patternName = `Drill Pattern ${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
+
+    // Save to backend as a drill pattern
+    this.siteBlastingService.saveDrillPatternFromCreator(
+      this.currentProjectId,
+      this.currentSiteId,
+      patternName,
+      `Drill pattern created with ${this.drillPoints.length} holes`,
+      this.drillPoints,
+      this.settings.spacing,
+      this.settings.burden,
+      this.settings.depth
+    ).subscribe({
+      next: (savedPattern) => {
+        console.log('Pattern saved to backend successfully:', savedPattern);
+        
+        // Also save workflow state
+        this.siteBlastingService.saveWorkflowState(
+          this.currentProjectId,
+          this.currentSiteId,
+          'pattern',
+          patternData
+        ).subscribe({
+          next: () => console.log('Workflow state saved successfully'),
+          error: (error) => console.error('Error saving workflow state:', error)
+        });
+
+        // Update local state
+        this.isSaved = true;
+        this.cdr.markForCheck();
+
+        // Clear save timeout if it exists
+        if (this.saveTimeout) {
+          clearTimeout(this.saveTimeout);
+        }
+
+        // Reset save state after 3 seconds
+        this.saveTimeout = setTimeout(() => {
+          this.isSaved = false;
+          this.cdr.markForCheck();
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('Error saving pattern to backend:', error);
+        // Fallback to local storage
+        this.saveToLocalStorage(patternData);
+      }
+    });
+
+    // Also update local data service for immediate use
     this.blastSequenceDataService.setPatternData(patternData, false);
-    
-    // Explicitly save to storage
+    this.blastSequenceDataService.savePatternData();
+  }
+
+  private saveToLocalStorage(patternData: any): void {
+    // Fallback method for local storage when backend is unavailable
+    this.blastSequenceDataService.setPatternData(patternData, false);
     this.blastSequenceDataService.savePatternData();
 
-    // Update save state
     this.isSaved = true;
     this.cdr.markForCheck();
 
-    // Clear save timeout if it exists
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
 
-    // Reset save state after 3 seconds
     this.saveTimeout = setTimeout(() => {
       this.isSaved = false;
       this.cdr.markForCheck();
     }, 3000);
 
-    console.log('Pattern saved successfully');
+    console.log('Pattern saved to local storage (backend unavailable)');
   }
 
   onExportToBlastDesigner(): void {

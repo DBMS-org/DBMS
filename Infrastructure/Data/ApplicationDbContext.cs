@@ -18,6 +18,9 @@ namespace Infrastructure.Data
         public DbSet<DrillHole> DrillHoles { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectSite> ProjectSites { get; set; }
+        public DbSet<SiteBlastingData> SiteBlastingData { get; set; }
+        public DbSet<DrillPattern> DrillPatterns { get; set; }
+        public DbSet<BlastSequence> BlastSequences { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -134,6 +137,104 @@ namespace Infrastructure.Data
                       .OnDelete(DeleteBehavior.Cascade);
                       
                 entity.HasIndex(e => e.ProjectId);
+            });
+
+            // Configure SiteBlastingData entity
+            modelBuilder.Entity<SiteBlastingData>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DataType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.JsonData).IsRequired();
+                
+                // Foreign key relationships
+                entity.HasOne(e => e.Project)
+                      .WithMany()
+                      .HasForeignKey(e => e.ProjectId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(e => e.Site)
+                      .WithMany()
+                      .HasForeignKey(e => e.SiteId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasOne(e => e.CreatedBy)
+                      .WithMany()
+                      .HasForeignKey(e => e.CreatedByUserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                // Indexes for performance
+                entity.HasIndex(e => new { e.ProjectId, e.SiteId, e.DataType }).IsUnique();
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.SiteId);
+            });
+
+            // Configure DrillPattern entity
+            modelBuilder.Entity<DrillPattern>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.DrillPointsJson).IsRequired();
+                
+                // Foreign key relationships
+                entity.HasOne(e => e.Project)
+                      .WithMany()
+                      .HasForeignKey(e => e.ProjectId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(e => e.Site)
+                      .WithMany()
+                      .HasForeignKey(e => e.SiteId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasOne(e => e.CreatedBy)
+                      .WithMany()
+                      .HasForeignKey(e => e.CreatedByUserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                // Indexes for performance
+                entity.HasIndex(e => new { e.ProjectId, e.SiteId });
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.SiteId);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            // Configure BlastSequence entity
+            modelBuilder.Entity<BlastSequence>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.ConnectionsJson).IsRequired();
+                entity.Property(e => e.SimulationSettingsJson).HasDefaultValue("{}");
+                
+                // Foreign key relationships
+                entity.HasOne(e => e.Project)
+                      .WithMany()
+                      .HasForeignKey(e => e.ProjectId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(e => e.Site)
+                      .WithMany()
+                      .HasForeignKey(e => e.SiteId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                entity.HasOne(e => e.DrillPattern)
+                      .WithMany(e => e.BlastSequences)
+                      .HasForeignKey(e => e.DrillPatternId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+                entity.HasOne(e => e.CreatedBy)
+                      .WithMany()
+                      .HasForeignKey(e => e.CreatedByUserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                // Indexes for performance
+                entity.HasIndex(e => new { e.ProjectId, e.SiteId });
+                entity.HasIndex(e => e.DrillPatternId);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.SiteId);
+                entity.HasIndex(e => e.IsActive);
             });
 
             // Seed initial data

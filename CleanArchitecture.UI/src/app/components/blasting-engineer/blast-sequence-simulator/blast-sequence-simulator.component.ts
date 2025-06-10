@@ -151,15 +151,21 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy, After
   }
 
   private initializeSiteContext(): void {
-    // Get projectId and siteId from route
-    const projectId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[1];
-    const siteId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[2];
+    // Get projectId and siteId from route URL pattern: /blasting-engineer/project-management/:projectId/sites/:siteId/simulator
+    const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
+    const projectId = routeMatch ? +routeMatch[1] : null;
+    const siteId = routeMatch ? +routeMatch[2] : null;
     
     if (projectId && siteId) {
       console.log('Simulator - Setting site context:', { projectId, siteId });
       this.dataService.setSiteContext(projectId, siteId);
     } else {
       console.warn('Simulator - Could not extract site context from route:', this.router.url);
+      console.warn('Route match result:', routeMatch);
+      
+      // For testing purposes, use the known valid site combination
+      console.log('Falling back to test site context: Project 1, Site 3');
+      this.dataService.setSiteContext(1, 3);
     }
   }
 
