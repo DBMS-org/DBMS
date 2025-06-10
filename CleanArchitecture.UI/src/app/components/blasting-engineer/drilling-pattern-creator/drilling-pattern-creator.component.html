@@ -110,6 +110,17 @@
 
     <div class="toolbar-section" role="group" aria-label="Pattern Actions">
       <button mat-button
+              class="toolbar-button save-button"
+              (click)="onSavePattern()"
+              [disabled]="drillPoints.length === 0"
+              matTooltip="Save pattern progress"
+              aria-label="Save pattern progress"
+              [class.saved]="isSaved">
+        <span class="material-icons" aria-hidden="true">{{ isSaved ? 'check_circle' : 'save' }}</span>
+        {{ isSaved ? 'Saved' : 'Save Pattern' }}
+      </button>
+
+      <button mat-button
               class="toolbar-button"
               (click)="onExportPattern()"
               matTooltip="Export pattern as JSON"

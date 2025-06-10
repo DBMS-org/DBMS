@@ -51,7 +51,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   currentSequence = 1;
   showHelp = false;
   showHiddenPoints = false;
-  
+
   // Predefined delay options for non-electric systems
   detonatingCordDelays = [17, 25, 42]; // milliseconds - no 67ms for detonating cord
   connectorsDelays = [17, 25, 42, 67]; // milliseconds - includes 67ms for connectors
@@ -77,6 +77,10 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   private resizeTimeout: any;
   private isInitialized = false;
 
+  // Save functionality
+  public isSaved = false;
+  private saveTimeout: any;
+
   constructor(
     private cdr: ChangeDetectorRef,
     private patternDataService: PatternDataService,
@@ -85,11 +89,27 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   ) {}
 
   ngAfterViewInit(): void {
+    // Initialize site context from route parameters
+    this.initializeSiteContext();
+    
     this.loadPatternData();
     this.initializeCanvas();
     
     // Set current workflow step to sequence
     this.blastSequenceDataService.setCurrentWorkflowStep('sequence');
+  }
+
+  private initializeSiteContext(): void {
+    // Get projectId and siteId from route
+    const projectId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[1];
+    const siteId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[2];
+    
+    if (projectId && siteId) {
+      console.log('Setting site context:', { projectId, siteId });
+      this.blastSequenceDataService.setSiteContext(projectId, siteId);
+    } else {
+      console.warn('Could not extract site context from route:', this.router.url);
+    }
   }
 
   ngOnDestroy(): void {
@@ -168,6 +188,11 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.ensureCanvasVisibility();
     this.drawGrid();
     this.drawDrillPoints();
+    
+    // Draw existing connections if any
+    if (this.connections.length > 0) {
+      this.redrawConnections();
+    }
     
     // Initialize zoom and center view
     this.applyTransform();
@@ -1182,8 +1207,44 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.router.navigate(['/blasting-engineer/drilling-pattern']);
   }
 
+  onSaveSequence(): void {
+    if (this.connections.length === 0) {
+      console.warn('No connections to save');
+      return;
+    }
+
+    // Update data service (in memory)
+    this.blastSequenceDataService.setConnections(this.connections, false);
+    
+    // Explicitly save to storage
+    this.blastSequenceDataService.saveConnections();
+
+    // Update save state
+    this.isSaved = true;
+    this.cdr.markForCheck();
+
+    // Clear save timeout if it exists
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+
+    // Reset save state after 3 seconds
+    this.saveTimeout = setTimeout(() => {
+      this.isSaved = false;
+      this.cdr.markForCheck();
+    }, 3000);
+
+    console.log('Blast sequence saved successfully');
+  }
+
   goToSimulator(): void {
     if (this.connections.length > 0) {
+      // Update data service (in memory)
+      this.blastSequenceDataService.setConnections(this.connections, false);
+      
+      // Save connections when navigating to next step
+      this.blastSequenceDataService.saveConnections();
+      
       this.router.navigate(['/blasting-engineer/blast-sequence-simulator']);
     }
   }

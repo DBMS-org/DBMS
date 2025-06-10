@@ -133,6 +133,35 @@
           transform: translateY(-1px);
         }
       }
+
+      &.save-button {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(72, 187, 120, 0.3);
+        }
+        
+        &.saved {
+          background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+          animation: saveSuccess 0.5s ease-out;
+        }
+        
+        &:disabled {
+          background: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.5);
+          cursor: not-allowed;
+          
+          &:hover {
+            transform: none;
+            box-shadow: none;
+          }
+        }
+      }
     }
   }
 }
@@ -1427,6 +1456,12 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes saveSuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 @keyframes slideInFromBottom {

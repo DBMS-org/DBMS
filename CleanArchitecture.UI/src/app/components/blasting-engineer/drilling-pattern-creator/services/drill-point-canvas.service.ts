@@ -47,15 +47,17 @@ export class DrillPointCanvasService {
       x,
       y,
       draggable: !isHolePlacementMode,
-      listening: true
+      listening: true,
+      name: 'drill-point-group' // Add name for click detection
     });
 
     const circle = new Konva.Circle({
       radius: CANVAS_CONSTANTS.POINT_RADIUS,
-      fill: isSelected ? '#ff0000' : '#2196f3',
-      stroke: '#ffffff',
-      strokeWidth: 2,
-      listening: true
+      fill: isSelected ? '#ff4444' : '#2196f3',
+      stroke: isSelected ? '#ffff00' : '#ffffff',
+      strokeWidth: isSelected ? 3 : 2,
+      listening: true,
+      pointId: point.id // Add pointId for click detection
     });
 
     const text = new Konva.Text({
@@ -66,6 +68,10 @@ export class DrillPointCanvasService {
       offsetY: CANVAS_CONSTANTS.POINT_RADIUS,
       listening: false
     });
+
+    // Add pointId to group for click detection
+    (group as any).pointId = point.id;
+    (circle as any).pointId = point.id;
 
     group.add(circle);
     group.add(text);

@@ -26,6 +26,14 @@
     </div>
 
     <div class="header-actions">
+      <button class="action-button save-button" 
+              (click)="onSaveSimulation()"
+              [disabled]="!patternData || connections.length === 0"
+              [class.saved]="isSaved"
+              [title]="!patternData || connections.length === 0 ? 'No simulation data to save' : 'Save simulation progress'">
+        <span class="material-icons">{{ isSaved ? 'check_circle' : 'save' }}</span>
+        <span class="button-text">{{ isSaved ? 'Saved' : 'Save Simulation' }}</span>
+      </button>
       <button class="action-button secondary" (click)="exportVideo()" [disabled]="!patternData">
         <span class="material-icons">videocam</span>
         <span class="button-text">Export Video</span>
@@ -238,7 +246,7 @@
               Show Connection Labels
             </label>
             <label class="checkbox-label">
-              <input 
+            <input 
                 type="checkbox" 
                 [(ngModel)]="viewSettings.highlightActiveConnections"
                 (change)="onViewSettingsChange({ highlightActiveConnections: viewSettings.highlightActiveConnections })">
@@ -277,13 +285,13 @@
           <h4>Performance</h4>
           <div class="performance-settings">
             <label for="animationQuality">Animation Quality:</label>
-            <select 
+          <select 
               id="animationQuality"
-              class="quality-select"
-              [(ngModel)]="simulationSettings.animationQuality"
-              (change)="onSettingsChange({ animationQuality: simulationSettings.animationQuality })">
+            class="quality-select"
+            [(ngModel)]="simulationSettings.animationQuality"
+            (change)="onSettingsChange({ animationQuality: simulationSettings.animationQuality })">
               <option value="low">Low (Better Performance)</option>
-              <option value="medium">Medium</option>
+            <option value="medium">Medium</option>
               <option value="high">High (Better Quality)</option>
             </select>
             
@@ -295,7 +303,7 @@
               (change)="onViewSettingsChange({ frameRate: viewSettings.frameRate })">
               <option value="30">30 FPS</option>
               <option value="60">60 FPS</option>
-            </select>
+          </select>
           </div>
         </div>
 
@@ -397,7 +405,7 @@
     </div>
 
     <!-- Right Panels -->
-    <div class="right-panels">
+    <div class="right-panels" [class.all-collapsed]="!showMetricsPanel && !showValidationPanel">
       
       <!-- Metrics Panel -->
       <div class="metrics-panel" [class.collapsed]="!showMetricsPanel">
@@ -408,7 +416,7 @@
           </button>
         </div>
 
-        <div class="panel-content" *ngIf="showMetricsPanel">
+        <div class="panel-content">
           <div class="metrics-grid">
             <div class="metric-card efficiency">
               <div class="metric-icon">
@@ -462,7 +470,7 @@
           </button>
         </div>
 
-        <div class="panel-content" *ngIf="showValidationPanel">
+        <div class="panel-content">
           <div class="validation-summary">
             <div class="summary-item" [class.success]="validation.isValid" [class.warning]="!validation.isValid">
               <span class="material-icons">{{ validation.isValid ? 'check_circle' : 'warning' }}</span>

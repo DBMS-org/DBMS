@@ -107,6 +107,37 @@
         }
       }
 
+      &.save-button {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        border-color: #38a169;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+          border-color: #2f855a;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(72, 187, 120, 0.3);
+        }
+        
+        &.saved {
+          background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+          animation: saveSuccess 0.5s ease-out;
+        }
+        
+        &:disabled {
+          background: #6c757d;
+          color: rgba(255, 255, 255, 0.5);
+          border-color: #6c757d;
+          cursor: not-allowed;
+          
+          &:hover {
+            transform: none;
+            box-shadow: none;
+          }
+        }
+      }
+
       &.icon-only {
         padding: 0.5rem;
         
@@ -416,6 +447,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  transition: all 0.3s ease;
 }
 
 .canvas-container {
@@ -484,6 +516,12 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes saveSuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 // Timeline
@@ -599,8 +637,9 @@
   }
 }
 
-// Right Panels
+// Right Panels Container
 .right-panels {
+  // Base layout
   width: 350px;
   display: flex;
   flex-direction: column;
@@ -608,21 +647,139 @@
   padding: 1rem;
   background: rgba(255, 255, 255, 0.5);
   overflow-y: auto;
+  
+  // Smooth transitions for all state changes
+  transition: 
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    gap 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  // Fully collapsed state (both panels closed)
+  &.all-collapsed {
+    width: 80px;
+    padding: 0.5rem;
+    gap: 0.5rem;
+    
+    // Override all panel styles when fully collapsed
+    .metrics-panel,
+    .validation-panel {
+      min-height: 64px;
+      max-height: 64px;
+      overflow: hidden;
+      
+      .panel-header {
+        padding: 1rem 0.5rem;
+        justify-content: center;
+        border-radius: 8px;
+        border-bottom: none;
+        background: #f8f9fa;
+        
+        h3 {
+          display: none;
+        }
+        
+        .toggle-button {
+          background: #667eea;
+          color: white;
+          transform: rotate(180deg);
+          box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+          
+          &:hover {
+            background: #5a67d8;
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+          }
+        }
+      }
+      
+      .panel-content {
+        display: none;
+        visibility: hidden;
+        opacity: 0;
+        height: 0;
+      }
+      
+      &:hover {
+        .panel-header {
+          background: #e9ecef;
+          transform: scale(1.02);
+        }
+      }
+    }
+  }
 }
 
-// Metrics Panel
+// Performance Metrics Panel
 .metrics-panel {
+  // Base panel styling
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  overflow: hidden;
+  
+  // Smooth transitions for state changes
+  transition: 
+    height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    min-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s ease;
 
-  &.collapsed {
+  // Individual collapsed state (when only this panel is collapsed)
+  &.collapsed:not(.right-panels.all-collapsed &) {
+    min-height: 64px;
+    max-height: 64px;
+    
+    .panel-header {
+      padding: 1rem;
+      border-radius: 8px;
+      border-bottom: none;
+      background: #f8f9fa;
+      
+      h3 {
+        font-size: 0.875rem;
+        color: #6c757d;
+        opacity: 0.9;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+      
+      .toggle-button {
+        background: #e9ecef;
+        
+        .material-icons {
+          transform: rotate(180deg);
+          transition: transform 0.2s ease;
+        }
+        
+        &:hover {
+          background: #dee2e6;
+          transform: scale(1.05);
+        }
+      }
+    }
+    
     .panel-content {
       display: none;
+      visibility: hidden;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+    }
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      
+      .panel-header {
+        background: #e9ecef;
+        
+        h3 {
+          color: #495057;
+          opacity: 1;
+        }
+      }
     }
   }
 
+  // Panel header (expanded state)
   .panel-header {
     padding: 1rem;
     border-bottom: 1px solid #e9ecef;
@@ -631,11 +788,14 @@
     align-items: center;
     background: #f8f9fa;
     border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease;
 
     h3 {
       margin: 0;
       font-size: 1rem;
       color: #495057;
+      font-weight: 600;
+      transition: all 0.2s ease;
     }
 
     .toggle-button {
@@ -649,96 +809,225 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+      .material-icons {
+        font-size: 1.2rem;
+        transition: transform 0.2s ease;
+      }
 
       &:hover {
         background: #dee2e6;
         color: #495057;
+        transform: scale(1.05);
       }
     }
   }
 
+  // Panel content (expanded state)
   .panel-content {
     padding: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+// Performance Metrics Grid
 .metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 
   .metric-card {
-    padding: 1rem;
+    // Flexible sizing to fit container
+    padding: 0.75rem;
     border-radius: 6px;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     border: 1px solid #e9ecef;
     background: #f8f9fa;
+    min-height: 60px;
+    max-height: 80px;
+    overflow: hidden;
+    transition: all 0.2s ease;
 
+    // Color-coded left borders
     &.efficiency {
-      border-left: 4px solid #28a745;
+      border-left: 3px solid #28a745;
     }
 
     &.safety {
-      border-left: 4px solid #dc3545;
+      border-left: 3px solid #dc3545;
     }
 
     &.utilization {
-      border-left: 4px solid #007bff;
+      border-left: 3px solid #007bff;
     }
 
     &.timing {
-      border-left: 4px solid #ffc107;
+      border-left: 3px solid #ffc107;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .metric-icon {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
       background: rgba(102, 126, 234, 0.1);
       border-radius: 50%;
       color: #667eea;
 
       .material-icons {
-        font-size: 1.2rem;
+        font-size: 1rem;
       }
     }
 
     .metric-info {
       flex: 1;
+      min-width: 0; // Allow text to wrap/truncate
+      overflow: hidden;
 
       .metric-value {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: #495057;
         margin: 0;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .metric-label {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: #6c757d;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
         margin: 0;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  // Responsive adjustments for smaller panel widths
+  @container (max-width: 300px) {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    
+    .metric-card {
+      padding: 0.5rem;
+      min-height: 50px;
+      
+      .metric-icon {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        
+        .material-icons {
+          font-size: 0.9rem;
+        }
+      }
+      
+      .metric-info {
+        .metric-value {
+          font-size: 1rem;
+        }
+        
+        .metric-label {
+          font-size: 0.65rem;
+        }
       }
     }
   }
 }
 
-// Validation Panel
+// Ensure metrics panel content doesn't overflow
+.metrics-panel .panel-content {
+  padding: 0.75rem;
+  overflow: hidden;
+  container-type: inline-size; // Enable container queries
+}
+
+// Validation Results Panel
 .validation-panel {
+  // Base panel styling
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  overflow: hidden;
+  
+  // Smooth transitions for state changes
+  transition: 
+    height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    min-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s ease;
 
-  &.collapsed {
+  // Individual collapsed state (when only this panel is collapsed)
+  &.collapsed:not(.right-panels.all-collapsed &) {
+    min-height: 64px;
+    max-height: 64px;
+    
+    .panel-header {
+      padding: 1rem;
+      border-radius: 8px;
+      border-bottom: none;
+      background: #f8f9fa;
+      
+      h3 {
+        font-size: 0.875rem;
+        color: #6c757d;
+        opacity: 0.9;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+      
+      .toggle-button {
+        background: #e9ecef;
+        
+        .material-icons {
+          transform: rotate(180deg);
+          transition: transform 0.2s ease;
+        }
+        
+        &:hover {
+          background: #dee2e6;
+          transform: scale(1.05);
+        }
+      }
+    }
+    
     .panel-content {
       display: none;
+      visibility: hidden;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+    }
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      
+      .panel-header {
+        background: #e9ecef;
+        
+        h3 {
+          color: #495057;
+          opacity: 1;
+        }
+      }
     }
   }
 
@@ -1067,6 +1356,34 @@
 
   .metrics-grid {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+    
+    .metric-card {
+      padding: 0.5rem;
+      gap: 0.4rem;
+      min-height: 50px;
+      
+      .metric-icon {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        
+        .material-icons {
+          font-size: 0.9rem;
+        }
+      }
+      
+      .metric-info {
+        .metric-value {
+          font-size: 1rem;
+        }
+        
+        .metric-label {
+          font-size: 0.65rem;
+          letter-spacing: 0.2px;
+        }
+      }
+    }
   }
 
   .playback-controls {

@@ -16,6 +16,14 @@
           <span class="material-icons">help_outline</span>
           <span class="button-text">Help</span>
         </button>
+        <button class="action-button save-button" 
+                (click)="onSaveSequence()"
+                [disabled]="connections.length === 0"
+                [class.saved]="isSaved"
+                [title]="connections.length === 0 ? 'Create connections first' : 'Save sequence progress'">
+          <span class="material-icons">{{ isSaved ? 'check_circle' : 'save' }}</span>
+          <span class="button-text">{{ isSaved ? 'Saved' : 'Save Sequence' }}</span>
+        </button>
         <button class="action-button simulator" 
                 (click)="goToSimulator()" 
                 [disabled]="connections.length === 0"
