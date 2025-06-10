@@ -70,6 +70,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddSingleton<IDrillHoleRepository, DrillHoleRepository>();
 builder.Services.AddSingleton<IDrillHoleService, DrillHoleService>();
 
+// Register Site Blasting services
+builder.Services.AddScoped<ISiteBlastingService, SiteBlastingService>();
+
 var app = builder.Build();
 
 // Create database if it doesn't exist and apply migrations

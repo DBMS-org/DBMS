@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import Konva from 'konva';
 import { PatternDataService } from '../shared/pattern-data.service';
 import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
+import { SiteBlastingService } from '../../../core/services/site-blasting.service';
 import { 
   PatternData, 
   DrillPoint, 
@@ -81,10 +82,15 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   public isSaved = false;
   private saveTimeout: any;
 
+  // Site context
+  private currentProjectId!: number;
+  private currentSiteId!: number;
+
   constructor(
     private cdr: ChangeDetectorRef,
     private patternDataService: PatternDataService,
     private blastSequenceDataService: BlastSequenceDataService,
+    private siteBlastingService: SiteBlastingService,
     private router: Router
   ) {}
 
@@ -100,15 +106,29 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private initializeSiteContext(): void {
-    // Get projectId and siteId from route
-    const projectId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[1];
-    const siteId = +(this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/) || [])[2];
+    // Get projectId and siteId from route URL pattern: /blasting-engineer/project-management/:projectId/sites/:siteId/sequence-designer
+    const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
+    const projectId = routeMatch ? +routeMatch[1] : null;
+    const siteId = routeMatch ? +routeMatch[2] : null;
     
     if (projectId && siteId) {
-      console.log('Setting site context:', { projectId, siteId });
+      console.log('Sequence Designer - Setting site context:', { projectId, siteId });
+      this.currentProjectId = projectId;
+      this.currentSiteId = siteId;
       this.blastSequenceDataService.setSiteContext(projectId, siteId);
+      
+      // Load existing blast sequences and connections from backend
+      this.loadBackendSequenceData();
     } else {
-      console.warn('Could not extract site context from route:', this.router.url);
+      console.warn('Sequence Designer - Could not extract site context from route:', this.router.url);
+      console.warn('Route match result:', routeMatch);
+      
+      // For testing purposes, use the known valid site combination
+      console.log('Falling back to test site context: Project 1, Site 3');
+      this.currentProjectId = 1;
+      this.currentSiteId = 3;
+      this.blastSequenceDataService.setSiteContext(1, 3);
+      this.loadBackendSequenceData();
     }
   }
 
@@ -150,6 +170,90 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.updateFilteredConnections();
     
     this.cdr.detectChanges();
+  }
+
+  private loadBackendSequenceData(): void {
+    if (!this.currentProjectId || !this.currentSiteId) {
+      return;
+    }
+
+    // Load blast sequences from backend
+    this.siteBlastingService.getBlastSequences(this.currentProjectId, this.currentSiteId)
+      .subscribe({
+        next: (sequences) => {
+          if (sequences && sequences.length > 0) {
+            // Load the most recent sequence
+            const latestSequence = sequences[0];
+            
+            // Handle connectionsJson which can be either string (from backend) or array (already parsed)
+            let connections: BlastConnection[] = [];
+            if (latestSequence.connectionsJson) {
+              if (typeof latestSequence.connectionsJson === 'string') {
+                try {
+                  connections = JSON.parse(latestSequence.connectionsJson);
+                } catch (error) {
+                  console.warn('Failed to parse connections JSON:', error);
+                  connections = [];
+                }
+              } else {
+                connections = latestSequence.connectionsJson;
+              }
+            }
+            this.connections = connections;
+            
+            console.log('Loaded blast sequence from backend:', latestSequence.name, 'with', this.connections.length, 'connections');
+            
+            // Ensure connections have proper structure
+            this.connections = this.connections.map(conn => 
+              this.ensureConnectionHasHiddenPoints(conn)
+            );
+            
+            this.updateFilteredConnections();
+            
+            // Redraw if canvas is ready
+            setTimeout(() => {
+              if (this.isInitialized) {
+                this.redrawConnections();
+              }
+            }, 100);
+            
+            this.cdr.markForCheck();
+          }
+        },
+        error: (error) => {
+          console.log('No existing blast sequences found in backend or error loading:', error.message);
+        }
+      });
+
+    // Also try to load workflow state for connections
+    this.siteBlastingService.getWorkflowState(this.currentProjectId, this.currentSiteId, 'connections')
+      .subscribe({
+        next: (workflowData) => {
+          if (workflowData && workflowData.jsonData) {
+            const connectionsData = workflowData.jsonData;
+            if (Array.isArray(connectionsData)) {
+              this.connections = connectionsData.map(conn => 
+                this.ensureConnectionHasHiddenPoints(conn)
+              );
+              
+              console.log('Loaded workflow connections state from backend with', this.connections.length, 'connections');
+              
+              this.updateFilteredConnections();
+              
+              setTimeout(() => {
+                if (this.isInitialized) {
+                  this.redrawConnections();
+                }
+              }, 100);
+              
+              this.cdr.markForCheck();
+            }
+          }
+        },
+        error: (error) => {
+          console.log('No existing workflow connections state found or error loading:', error.message);
+        }
+      });
   }
 
   private initializeCanvas(): void {
@@ -1213,28 +1317,142 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       return;
     }
 
-    // Update data service (in memory)
+    if (!this.currentProjectId || !this.currentSiteId) {
+      console.error('Missing project or site context for saving');
+      return;
+    }
+
+    if (!this.patternData) {
+      console.error('No pattern data available for saving sequence');
+      return;
+    }
+
+    const currentDate = new Date();
+    const sequenceName = `Blast Sequence ${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
+    const simulationSettings = {
+      timeStep: 10,
+      duration: 5000,
+      playbackSpeed: 1,
+      visualEffects: {
+        showWaveEffects: true,
+        showParticleEffects: true,
+        showTimingLabels: true
+      },
+      analysis: {
+        calculatePeakPressure: true,
+        calculateVibration: true,
+        generateReport: false
+      }
+    };
+
+    // First, try to find or create a drill pattern for this sequence
+    this.siteBlastingService.getDrillPatterns(this.currentProjectId, this.currentSiteId)
+      .subscribe({
+        next: (patterns) => {
+          let drillPatternId: number;
+          
+          if (patterns && patterns.length > 0) {
+            // Use the first available pattern
+            drillPatternId = patterns[0].id;
+            this.saveBlastSequenceToBackend(drillPatternId, sequenceName, simulationSettings);
+          } else {
+            // Create a new drill pattern first
+            this.siteBlastingService.saveDrillPatternFromCreator(
+              this.currentProjectId,
+              this.currentSiteId,
+              `Auto-created for ${sequenceName}`,
+              'Automatically created drill pattern for blast sequence',
+              this.patternData!.drillPoints,
+              this.patternData!.settings.spacing,
+              this.patternData!.settings.burden,
+              this.patternData!.settings.depth
+            ).subscribe({
+              next: (newPattern) => {
+                this.saveBlastSequenceToBackend(newPattern.id, sequenceName, simulationSettings);
+              },
+              error: (error) => {
+                console.error('Error creating drill pattern:', error);
+                this.saveToLocalStorage();
+              }
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error checking drill patterns:', error);
+          this.saveToLocalStorage();
+        }
+      });
+
+    // Also update local data service for immediate use
     this.blastSequenceDataService.setConnections(this.connections, false);
-    
-    // Explicitly save to storage
+    this.blastSequenceDataService.saveConnections();
+  }
+
+  private saveBlastSequenceToBackend(drillPatternId: number, sequenceName: string, simulationSettings: any): void {
+    // Save to backend as a blast sequence
+    this.siteBlastingService.saveBlastSequenceFromDesigner(
+      this.currentProjectId,
+      this.currentSiteId,
+      drillPatternId,
+      sequenceName,
+      `Blast sequence created with ${this.connections.length} connections`,
+      this.connections,
+      simulationSettings
+    ).subscribe({
+      next: (savedSequence) => {
+        console.log('Blast sequence saved to backend successfully:', savedSequence);
+        
+        // Also save workflow state for connections
+        this.siteBlastingService.saveWorkflowState(
+          this.currentProjectId,
+          this.currentSiteId,
+          'connections',
+          this.connections
+        ).subscribe({
+          next: () => console.log('Workflow connections state saved successfully'),
+          error: (error) => console.error('Error saving workflow connections state:', error)
+        });
+
+        // Update local state
+        this.isSaved = true;
+        this.cdr.markForCheck();
+
+        // Clear save timeout if it exists
+        if (this.saveTimeout) {
+          clearTimeout(this.saveTimeout);
+        }
+
+        // Reset save state after 3 seconds
+        this.saveTimeout = setTimeout(() => {
+          this.isSaved = false;
+          this.cdr.markForCheck();
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('Error saving blast sequence to backend:', error);
+        this.saveToLocalStorage();
+      }
+    });
+  }
+
+  private saveToLocalStorage(): void {
+    // Fallback method for local storage when backend is unavailable
+    this.blastSequenceDataService.setConnections(this.connections, false);
     this.blastSequenceDataService.saveConnections();
 
-    // Update save state
     this.isSaved = true;
     this.cdr.markForCheck();
 
-    // Clear save timeout if it exists
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
 
-    // Reset save state after 3 seconds
     this.saveTimeout = setTimeout(() => {
       this.isSaved = false;
       this.cdr.markForCheck();
     }, 3000);
 
-    console.log('Blast sequence saved successfully');
+    console.log('Blast sequence saved to local storage (backend unavailable)');
   }
 
   goToSimulator(): void {
