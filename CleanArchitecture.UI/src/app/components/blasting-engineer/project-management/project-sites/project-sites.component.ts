@@ -102,6 +102,11 @@ export class ProjectSitesComponent implements OnInit {
     this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites', site.id, 'dashboard']);
   }
 
+  viewDrillVisualization(site: ProjectSite) {
+    // Navigate to drill visualization with proper route parameters
+    this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites', site.id, 'drill-visualization']);
+  }
+
   deleteSite(site: ProjectSite) {
     if (confirm(`Are you sure you want to delete the site "${site.name}"?`)) {
       this.siteService.deleteSite(site.id).subscribe({

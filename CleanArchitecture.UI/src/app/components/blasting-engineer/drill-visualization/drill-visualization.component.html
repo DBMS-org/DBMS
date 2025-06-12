@@ -14,9 +14,37 @@
       <button (click)="refreshData()" class="btn btn-primary">
         🔄 Refresh Data
       </button>
+      <button (click)="loadFromDatabase()" class="btn btn-info">
+        📥 Load from DB
+      </button>
+      <button (click)="showDatabaseStatus()" class="btn btn-secondary">
+        🔍 Check DB Status
+      </button>
+      <button (click)="saveDrillData()" class="btn btn-success" *ngIf="isDataLoaded" [disabled]="isSaving">
+        {{ isSaving ? '💾 Saving...' : '💾 Save to DB' }}
+      </button>
+      <button (click)="deleteAllDrillData()" class="btn btn-danger" [disabled]="isDeleting">
+        {{ isDeleting ? '🗑️ Deleting...' : '🗑️ Delete All' }}
+      </button>
+      <button (click)="navigateToSites()" class="btn btn-outline">
+        ← Back to Sites
+      </button>
       <span class="data-count" *ngIf="isDataLoaded">
         📊 {{drillData.length}} drill holes loaded
       </span>
+    </div>
+  </div>
+
+  <!-- Messages Section -->
+  <div class="messages" *ngIf="saveMessage || deleteMessage || errorMessage">
+    <div class="alert alert-success" *ngIf="saveMessage">
+      ✅ {{ saveMessage }}
+    </div>
+    <div class="alert alert-success" *ngIf="deleteMessage">
+      ✅ {{ deleteMessage }}
+    </div>
+    <div class="alert alert-error" *ngIf="errorMessage">
+      ❌ {{ errorMessage }}
     </div>
   </div>
 

@@ -55,6 +55,7 @@ export const routes: Routes = [
       { path: 'project-management/:id/sites', component: BlastingEngineerProjectSitesComponent },
       { path: 'project-management/:id/sites/new', component: AddSiteComponent },
       { path: 'project-management/:projectId/sites/:siteId/dashboard', component: SiteDashboardComponent },
+      { path: 'project-management/:projectId/sites/:siteId/drill-visualization', component: DrillVisualizationComponent },
       { path: 'project-management/:projectId/sites/:siteId/pattern-creator', component: DrillingPatternCreatorComponent },
       { path: 'project-management/:projectId/sites/:siteId/sequence-designer', component: BlastSequenceDesignerComponent },
       { path: 'project-management/:projectId/sites/:siteId/simulator', component: BlastSequenceSimulatorComponent }
