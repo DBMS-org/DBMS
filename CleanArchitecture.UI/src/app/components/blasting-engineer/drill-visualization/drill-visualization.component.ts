@@ -1,26 +1,10 @@
 import { Component, OnInit, ElementRef, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, ActivatedRoute } from '@angular/router';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
+import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-
-// Import the DrillHole interface
-interface DrillHole {
-  serialNumber: number;
-  id: string;
-  name?: string;
-  easting: number;
-  northing: number;
-  elevation: number;
-  length: number;
-  depth: number;
-  azimuth: number;
-  dip: number;
-  actualDepth: number;
-  stemming: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 @Component({
   selector: 'app-drill-visualization',
@@ -46,11 +30,54 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   showDetailedLabels = false;
   show3DView = true;
 
-  constructor(private el: ElementRef, private drillDataService: DrillDataService) {}
+  // Route context
+  projectId: number = 0;
+  siteId: number = 0;
+
+  // UI state
+  isSaving = false;
+  isDeleting = false;
+  saveMessage: string | null = null;
+  deleteMessage: string | null = null;
+  errorMessage: string | null = null;
+
+  constructor(
+    private el: ElementRef, 
+    private drillDataService: DrillDataService,
+    private drillHoleService: DrillHoleService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     console.log('DrillVisualizationComponent initialized successfully!');
+    console.log('Current URL:', this.router.url);
+    this.extractRouteContext();
     this.loadDrillData();
+  }
+
+  private extractRouteContext(): void {
+    console.log('=== EXTRACTING ROUTE CONTEXT ===');
+    
+    // Get project and site IDs from route parameters
+    this.route.paramMap.subscribe(params => {
+      console.log('Raw route params:', params.keys, params);
+      this.projectId = +(params.get('projectId') || '0');
+      this.siteId = +(params.get('siteId') || '0');
+      console.log('Extracted route context from params:', { projectId: this.projectId, siteId: this.siteId });
+    });
+
+    // Fallback: try to get from query parameters (for backward compatibility)
+    this.route.queryParams.subscribe(params => {
+      console.log('Query params:', params);
+      if (!this.projectId || !this.siteId) {
+        this.projectId = this.projectId || +(params['projectId'] || '0');
+        this.siteId = this.siteId || +(params['siteId'] || '0');
+        console.log('Updated context from query params:', { projectId: this.projectId, siteId: this.siteId });
+      }
+    });
+    
+    console.log('Final context after extraction:', { projectId: this.projectId, siteId: this.siteId });
   }
 
   ngAfterViewInit(): void {
@@ -120,6 +147,199 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
         this.create3DDrillHoles();
       }
     }
+  }
+
+  saveDrillData(): void {
+    if (!this.isDataLoaded || this.drillData.length === 0) {
+      this.errorMessage = 'No drill data to save. Please upload a CSV file first.';
+      this.clearMessagesAfterDelay();
+      return;
+    }
+
+    if (!this.projectId || !this.siteId) {
+      this.errorMessage = 'No project/site context available. Please navigate from the sites page.';
+      this.clearMessagesAfterDelay();
+      return;
+    }
+
+    this.isSaving = true;
+    this.errorMessage = null;
+    this.saveMessage = null;
+
+    console.log('Saving drill data to database...', {
+      holes: this.drillData.length,
+      projectId: this.projectId,
+      siteId: this.siteId
+    });
+
+    this.drillHoleService.saveMultipleDrillHoles(this.drillData, this.projectId, this.siteId).subscribe({
+      next: (savedHoles) => {
+        this.isSaving = false;
+        this.saveMessage = `Successfully saved ${savedHoles.length} drill holes for Site ${this.siteId} in Project ${this.projectId}!`;
+        console.log('Drill holes saved successfully:', savedHoles);
+        this.clearMessagesAfterDelay();
+      },
+      error: (error) => {
+        this.isSaving = false;
+        this.errorMessage = `Failed to save drill holes: ${error.message}`;
+        console.error('Error saving drill holes:', error);
+        this.clearMessagesAfterDelay();
+      }
+    });
+  }
+
+  deleteAllDrillData(): void {
+    if (!this.projectId || !this.siteId) {
+      this.errorMessage = 'No project/site context available. Please navigate from the sites page.';
+      this.clearMessagesAfterDelay();
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ALL drill holes for Site ${this.siteId} in Project ${this.projectId}? This action cannot be undone.`)) {
+      return;
+    }
+
+    this.isDeleting = true;
+    this.errorMessage = null;
+    this.deleteMessage = null;
+
+    console.log('Deleting all drill data for site from database...', {
+      projectId: this.projectId,
+      siteId: this.siteId
+    });
+
+    this.drillHoleService.deleteDrillHolesBySite(this.projectId, this.siteId).subscribe({
+      next: () => {
+        console.log('Delete operation completed, verifying site is empty...');
+        
+        // Verify the deletion worked by checking if site has no drill holes
+        this.drillHoleService.getDrillHolesBySite(this.projectId, this.siteId).subscribe({
+          next: (remainingHoles) => {
+            this.isDeleting = false;
+            
+            if (remainingHoles.length === 0) {
+              this.deleteMessage = `Successfully deleted all drill holes for Site ${this.siteId} in Project ${this.projectId}!`;
+              console.log('Site verified empty - deletion successful');
+            } else {
+              this.deleteMessage = `Delete operation completed, but ${remainingHoles.length} holes might remain. Please check manually.`;
+              console.warn('Site still contains holes after deletion:', remainingHoles.length);
+            }
+            
+            // Clear local data
+            this.drillDataService.clearDrillData();
+            this.drillData = [];
+            this.isDataLoaded = false;
+            
+            // Clear 3D visualization
+            if (this.show3DView && this.scene) {
+              this.clear3DDrillHoles();
+            }
+            
+            this.clearMessagesAfterDelay();
+          },
+          error: (verifyError) => {
+            this.isDeleting = false;
+            this.deleteMessage = 'Delete operation completed but verification failed. Please reload to check.';
+            console.error('Error verifying deletion:', verifyError);
+            this.clearMessagesAfterDelay();
+          }
+        });
+      },
+      error: (error) => {
+        this.isDeleting = false;
+        this.errorMessage = `Failed to delete drill holes: ${error.message}`;
+        console.error('Error deleting drill holes:', error);
+        this.clearMessagesAfterDelay();
+      }
+    });
+  }
+
+  loadFromDatabase(): void {
+    console.log('Loading drill data from database...');
+    
+    const loadMethod = this.projectId && this.siteId 
+      ? this.drillHoleService.getDrillHolesBySite(this.projectId, this.siteId)
+      : this.drillHoleService.getAllDrillHoles();
+    
+    loadMethod.subscribe({
+      next: (holes) => {
+        this.drillData = holes;
+        this.isDataLoaded = holes.length > 0;
+        
+        // Update the shared service
+        this.drillDataService.setDrillData(holes);
+        
+        const context = this.projectId && this.siteId 
+          ? `for Site ${this.siteId} in Project ${this.projectId}`
+          : 'from entire database';
+        
+        console.log(`Loaded drill data ${context}:`, holes.length, 'holes');
+        
+        // Refresh 3D view if enabled
+        if (this.show3DView && this.scene) {
+          this.clear3DDrillHoles();
+          if (this.isDataLoaded) {
+            this.create3DDrillHoles();
+          }
+        }
+        
+        if (holes.length > 0) {
+          this.saveMessage = `Loaded ${holes.length} drill holes ${context}!`;
+          this.clearMessagesAfterDelay();
+        } else {
+          this.saveMessage = `No drill holes found ${context}.`;
+          this.clearMessagesAfterDelay();
+        }
+      },
+      error: (error) => {
+        this.errorMessage = `Failed to load drill holes from database: ${error.message}`;
+        console.error('Error loading drill holes:', error);
+        this.clearMessagesAfterDelay();
+      }
+    });
+  }
+
+  showDatabaseStatus(): void {
+    console.log('Checking database status...');
+    
+    this.drillHoleService.getAllDrillHoles().subscribe({
+      next: (holes) => {
+        const count = holes.length;
+        const ids = holes.map(h => h.id).slice(0, 10); // Show first 10 IDs
+        
+        console.log(`Database contains ${count} drill holes`);
+        if (count > 0) {
+          console.log('Drill hole IDs in database:', ids);
+          if (count > 10) {
+            console.log(`... and ${count - 10} more`);
+          }
+        }
+        
+        this.saveMessage = `Database status: ${count} drill holes found. ${count > 0 ? `IDs: ${ids.join(', ')}${count > 10 ? '...' : ''}` : 'Database is empty.'}`;
+        this.clearMessagesAfterDelay();
+      },
+      error: (error) => {
+        this.errorMessage = `Failed to check database status: ${error.message}`;
+        console.error('Error checking database status:', error);
+        this.clearMessagesAfterDelay();
+      }
+    });
+  }
+
+  navigateToSites(): void {
+    if (this.projectId) {
+      this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites']);
+    } else {
+      this.router.navigate(['/blasting-engineer/project-management']);
+    }
+  }
+
+  private clearMessagesAfterDelay(): void {
+    setTimeout(() => {
+      this.saveMessage = null;
+      this.deleteMessage = null;
+      this.errorMessage = null;
+    }, 5000);
   }
 
 

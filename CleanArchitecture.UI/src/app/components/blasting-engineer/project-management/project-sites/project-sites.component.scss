@@ -340,6 +340,19 @@
             }
           }
 
+          &.btn-outline-info {
+            color: #17a2b8;
+            border-color: #17a2b8;
+
+            &:hover {
+              background: #17a2b8;
+              border-color: #17a2b8;
+              color: white;
+              transform: translateY(-1px);
+              box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+            }
+          }
+
           i {
             font-size: 0.9rem;
           }

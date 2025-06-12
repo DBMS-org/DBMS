@@ -14,6 +14,11 @@ namespace Core.Entities
         public double Dip { get; set; }
         public double ActualDepth { get; set; }
         public double Stemming { get; set; }
+        
+        // Project and Site context
+        public int ProjectId { get; set; }
+        public int SiteId { get; set; }
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }

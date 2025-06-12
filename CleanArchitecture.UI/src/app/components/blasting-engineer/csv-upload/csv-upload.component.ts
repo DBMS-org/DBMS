@@ -133,8 +133,13 @@ export class CsvUploadComponent implements OnInit {
 
             // Add a small delay to ensure data is properly stored before navigation
             setTimeout(() => {
-            // Navigate to the drill visualization page
-            this.router.navigate(['/blasting-engineer/drill-visualization']);
+              // Navigate to the drill visualization page with proper context
+              if (this.projectId && this.siteId) {
+                this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites', this.siteId, 'drill-visualization']);
+              } else {
+                // Fallback to old route if no context available
+                this.router.navigate(['/blasting-engineer/drill-visualization']);
+              }
             }, 100);
           }
         }
