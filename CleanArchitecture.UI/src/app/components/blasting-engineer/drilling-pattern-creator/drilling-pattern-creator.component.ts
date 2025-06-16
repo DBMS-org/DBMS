@@ -14,6 +14,8 @@ import { PatternDataService } from '../shared/pattern-data.service';
 import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
 import { SiteBlastingService } from '../../../core/services/site-blasting.service';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { SiteService } from '../../../core/services/site.service';
 
 @Component({
   selector: 'app-drilling-pattern-creator',
@@ -69,6 +71,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private currentProjectId!: number;
   private currentSiteId!: number;
 
+  private isReadOnly = false;
+
   constructor(
     private cdr: ChangeDetectorRef,
     private canvasService: CanvasService,
@@ -80,7 +84,9 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     private patternDataService: PatternDataService,
     private blastSequenceDataService: BlastSequenceDataService,
     private siteBlastingService: SiteBlastingService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService,
+    private siteService: SiteService
   ) {}
 
   formatValue(value: number): string {
@@ -93,9 +99,31 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     return this.zoomService.getCurrentScale();
   }
 
+  private getApprovalKey(): string {
+    return `patternApproved_${this.currentProjectId}_${this.currentSiteId}`;
+  }
+
   ngAfterViewInit(): void {
     // Initialize site context from route parameters
     this.initializeSiteContext();
+    
+    // Determine read-only mode for operator
+    if (this.authService.isOperator()) {
+      this.siteService.getSite(this.currentSiteId).subscribe({
+        next: site => {
+          if (!site.isPatternApproved) {
+            alert('Pattern not yet approved by engineer.');
+            this.router.navigate(['/operator/dashboard']);
+            return;
+          }
+          this.isReadOnly = true;
+        },
+        error: () => {
+          alert('Unable to verify pattern approval.');
+          this.router.navigate(['/operator/dashboard']);
+        }
+      });
+    }
     
     // Add a small delay to ensure the container is fully rendered
     // This fixes the issue where grid doesn't show on initial navigation
@@ -268,6 +296,16 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   private initializeCanvas(): void {
+    if (this.isReadOnly) {
+      // Initialize minimal canvas just for view
+      this.initializeStage();
+      // Disable pointer events to make read-only
+      if (this.stage) {
+        this.stage.listening(false);
+      }
+      return;
+    }
+
     if (this.isInitialized) {
       console.log('Canvas already initialized, skipping');
       return;
@@ -869,10 +907,12 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   toggleHolePlacementMode(): void {
+    if (this.isReadOnly) return;
     this.toggleMode('holePlacement');
   }
 
   togglePreciseMode(): void {
+    if (this.isReadOnly) return;
     this.toggleMode('precise');
   }
 
@@ -900,16 +940,14 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   onClearAll(): void {
+    if (this.isReadOnly) return;
     this.drillPoints = this.drillPointService.clearPoints();
     this.selectPoint(null);
     this.drawDrillPoints();
   }
 
-  onExportPattern(): void {
-    this.drillPointService.exportPattern(this.drillPoints, this.settings);
-  }
-
   onSavePattern(): void {
+    if (this.isReadOnly) return;
     if (this.drillPoints.length === 0) {
       console.warn('No drill points to save');
       return;
@@ -996,6 +1034,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     console.log('Pattern saved to local storage (backend unavailable)');
   }
 
+
   onExportToBlastDesigner(): void {
     if (this.drillPoints.length === 0) {
       console.warn('No drill points to export');
@@ -1019,6 +1058,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   onDeletePoint(): void {
+    if (this.isReadOnly) return;
     if (this.selectedPoint) {
       this.drillPoints = this.drillPointService.removePoint(this.selectedPoint, this.drillPoints);
       this.selectPoint(null);
@@ -1026,16 +1066,19 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   onSpacingChange(value: number): void {
+    if (this.isReadOnly) return;
     this.settings.spacing = value;
     this.updatePattern();
   }
 
   onBurdenChange(value: number): void {
+    if (this.isReadOnly) return;
     this.settings.burden = value;
     this.updatePattern();
   }
 
   onDepthChange(value: number): void {
+    if (this.isReadOnly) return;
     this.settings.depth = value;
     // Depth doesn't affect visual display, just update existing points
     this.drillPoints.forEach(point => {

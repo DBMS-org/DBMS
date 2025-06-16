@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../../../core/services/user.service';
 import { User, UpdateUserRequest } from '../../../../core/models/user.model';
+import { REGIONS } from '../../../../core/constants/regions';
 
 @Component({
   selector: 'app-edit-user',
@@ -18,8 +19,8 @@ export class EditUserComponent implements OnInit {
   saving = false;
   error: string | null = null;
 
-  roles = ['Admin', 'BlastingEngineer', 'User'];
-  regions = ['Muscat', 'Salalah', 'Sohar', 'Nizwa', 'Sur', 'Ibri', 'Rustaq'];
+  roles = ['Admin', 'BlastingEngineer', 'Operator', 'User'];
+  regions = REGIONS;
   countries = ['Oman', 'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain'];
   statuses = ['Active', 'Inactive'];
 

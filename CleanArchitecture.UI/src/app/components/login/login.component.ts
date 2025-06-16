@@ -71,6 +71,9 @@ export class LoginComponent {
       case 'blastingengineer':
         this.router.navigate(['/blasting-engineer/dashboard']);
         break;
+      case 'operator':
+        this.router.navigate(['/operator/dashboard']);
+        break;
       
       default:
         this.errorMessage = `Invalid user role: ${role}. Please contact your administrator.`;

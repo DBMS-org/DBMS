@@ -1,0 +1,37 @@
+<div class="project-sites-container" *ngIf="!loading">
+  <h1>{{ project?.name }} - Sites</h1>
+  <button class="btn btn-outline-secondary mb-3" (click)="goBack()">
+    <i class="material-icons">arrow_back</i> Back
+  </button>
+
+  <table *ngIf="sites.length > 0" class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (site of sites; track site.id) {
+        <tr>
+          <td>{{ site.name }}</td>
+          <td>{{ site.status }}</td>
+          <td>{{ formatDate(site.createdAt) }}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" [disabled]="!site.isPatternApproved" (click)="viewPattern(site)" title="{{ site.isPatternApproved ? 'Open pattern' : 'Waiting for engineer approval' }}">View Pattern</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div *ngIf="sites.length === 0" class="alert alert-info">No sites found for this project.</div>
+  <div *ngIf="error" class="alert alert-danger mt-3">{{ error }}</div>
+</div>
+<div *ngIf="loading" class="loading-state">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div> 

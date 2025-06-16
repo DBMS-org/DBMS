@@ -98,4 +98,8 @@ export class AuthService {
   isBlastingEngineer(): boolean {
     return this.hasRole('blastingengineer');
   }
+
+  isOperator(): boolean {
+    return this.hasRole('operator');
+  }
 } 

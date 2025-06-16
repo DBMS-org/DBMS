@@ -118,6 +118,11 @@ namespace Infrastructure.Data
                       .OnDelete(DeleteBehavior.SetNull);
                       
                 entity.HasIndex(e => e.Name);
+
+                // Ensure an operator (AssignedUserId) can only be linked to a single project
+                entity.HasIndex(e => e.AssignedUserId)
+                      .IsUnique()
+                      .HasFilter("[AssignedUserId] IS NOT NULL"); // Unique when not null
             });
 
             // Configure ProjectSite entity
@@ -247,7 +252,8 @@ namespace Infrastructure.Data
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin", Description = "Administrator with full access", NormalizedName = "ADMIN", IsActive = true },
                 new Role { Id = 2, Name = "BlastingEngineer", Description = "Blasting Engineer with technical access", NormalizedName = "BLASTINGENGINEER", IsActive = true },
-                new Role { Id = 3, Name = "User", Description = "Regular user with limited access", NormalizedName = "USER", IsActive = true }
+                new Role { Id = 3, Name = "User", Description = "Regular user with limited access", NormalizedName = "USER", IsActive = true },
+                new Role { Id = 4, Name = "Operator", Description = "Operator with operational access", NormalizedName = "OPERATOR", IsActive = true }
             );
 
             // Seed Permissions

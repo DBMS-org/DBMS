@@ -9,6 +9,8 @@ export interface Project {
   assignedUserId?: number;
   createdAt: Date;
   updatedAt: Date;
+  isPatternApproved?: boolean;
+  isSimulationConfirmed?: boolean;
 }
 
 export interface CreateProjectRequest {
@@ -44,4 +46,6 @@ export interface ProjectSite {
   description?: string;
   createdAt: Date;
   updatedAt: Date;
+  isPatternApproved?: boolean;
+  isSimulationConfirmed?: boolean;
 } 

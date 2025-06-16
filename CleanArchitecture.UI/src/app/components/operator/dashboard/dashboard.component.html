@@ -1,0 +1,27 @@
+<div class="operator-dashboard" *ngIf="!isLoading">
+  <h1 class="mb-3">Welcome, {{ currentUserName }}!</h1>
+
+  <section class="project-summary" *ngIf="assignedProject; else noProject">
+    <h2>Your Assigned Project</h2>
+    <div class="summary-card">
+      <h3>{{ assignedProject.name }}</h3>
+      <p><strong>Region:</strong> {{ assignedProject.region }}</p>
+      <p><strong>Status:</strong> {{ assignedProject.status }}</p>
+      <p><strong>Start Date:</strong> {{ formatDate(assignedProject.startDate) }}</p>
+      <p><strong>End Date:</strong> {{ formatDate(assignedProject.endDate) }}</p>
+      <a class="view-link" routerLink="/operator/my-project">View Details</a>
+    </div>
+  </section>
+
+  <ng-template #noProject>
+    <div class="no-project">
+      <p>You have not been assigned to a project yet.</p>
+    </div>
+  </ng-template>
+</div>
+
+<div *ngIf="isLoading" class="loading-state">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div> 

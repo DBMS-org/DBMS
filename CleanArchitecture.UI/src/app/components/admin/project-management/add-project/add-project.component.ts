@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProjectService } from '../../../../core/services/project.service';
 import { CreateProjectRequest } from '../../../../core/models/project.model';
+import { UserService } from '../../../../core/services/user.service';
+import { User } from '../../../../core/models/user.model';
+import { REGIONS } from '../../../../core/constants/regions';
 
 @Component({
   selector: 'app-add-project',
@@ -23,20 +26,40 @@ export class AddProjectComponent implements OnInit {
     status: 'Active',
     description: '',
     startDate: undefined,
-    endDate: undefined
+    endDate: undefined,
+    assignedUserId: undefined
   };
 
   statusOptions = ['Active', 'Inactive', 'On Hold'];
-  regionOptions = ['Muscat', 'Dhofar', 'Musandam', 'Al Buraimi', 'Al Dakhiliyah', 'Al Dhahirah', 'Al Wusta', 'Al Batinah North', 'Al Batinah South', 'Ash Sharqiyah North', 'Ash Sharqiyah South'];
+  regionOptions = REGIONS;
+
+  operators: User[] = [];
+
+  // Modal state for operator conflict
+  showOperatorConflictModal = false;
+  conflictProjectName: string | null = null;
+  pendingOperatorId: number | undefined;
+
+  get availableOperators(): User[] {
+    if (!this.projectForm.region) return this.operators;
+    return this.operators.filter(op => op.region?.toLowerCase() === this.projectForm.region.toLowerCase());
+  }
 
   constructor(
     private router: Router,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
     // Set default start date to today
     this.projectForm.startDate = new Date();
+
+    // Load operators list
+    this.userService.getUsers().subscribe({
+      next: users => this.operators = users.filter(u => u.role.toLowerCase() === 'operator'),
+      error: err => console.error('Failed to load operators', err)
+    });
   }
 
   onSubmit() {
@@ -112,7 +135,8 @@ export class AddProjectComponent implements OnInit {
       status: 'Active',
       description: '',
       startDate: new Date(),
-      endDate: undefined
+      endDate: undefined,
+      assignedUserId: undefined
     };
     this.error = null;
     this.successMessage = null;
@@ -131,5 +155,43 @@ export class AddProjectComponent implements OnInit {
   onEndDateChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.projectForm.endDate = target.value ? new Date(target.value) : undefined;
+  }
+
+  onOperatorSelected(operatorId: number | undefined): void {
+    if (!operatorId) {
+      return;
+    }
+
+    this.pendingOperatorId = operatorId;
+    this.projectService.getProjectByOperator(operatorId).subscribe({
+      next: project => {
+        if (project) {
+          this.conflictProjectName = project.name;
+          this.showOperatorConflictModal = true;
+        } else {
+          // no conflict, keep the selection
+          this.conflictProjectName = null;
+        }
+      },
+      error: err => console.error('Error checking operator assignment', err)
+    });
+  }
+
+  /**
+   * Called when user confirms moving operator from old project to this one
+   */
+  confirmOperatorAssignment(): void {
+    this.showOperatorConflictModal = false;
+    // selection already applied via ngModel, nothing more to do
+  }
+
+  /**
+   * Called when user cancels the operator reassignment
+   */
+  cancelOperatorAssignment(): void {
+    this.showOperatorConflictModal = false;
+    // revert the dropdown selection
+    this.projectForm.assignedUserId = undefined;
+    this.pendingOperatorId = undefined;
   }
 }

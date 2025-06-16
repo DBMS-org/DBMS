@@ -21,6 +21,12 @@ import { ProjectManagementComponent as BlastingEngineerProjectManagementComponen
 import { ProjectSitesComponent as BlastingEngineerProjectSitesComponent } from './components/blasting-engineer/project-management/project-sites/project-sites.component';
 import { AddSiteComponent } from './components/blasting-engineer/project-management/add-site/add-site.component';
 import { SiteDashboardComponent } from './components/blasting-engineer/project-management/site-dashboard/site-dashboard.component';
+import { OperatorLayoutComponent } from './components/operator/shared/operator-layout/operator-layout.component';
+import { OperatorDashboardComponent } from './components/operator/dashboard/dashboard.component';
+import { MyProjectComponent } from './components/operator/my-project/my-project.component';
+import { OperatorProjectSitesComponent } from './components/operator/project-sites/project-sites.component';
+import { OperatorPatternViewComponent } from './components/operator/pattern-view/pattern-view.component';
+import { ViewSequenceSimulatorComponent } from './components/admin/project-management/view-sequence-simulator/view-sequence-simulator.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -37,7 +43,8 @@ export const routes: Routes = [
       { path: 'project-management/new', component: AddProjectComponent },
       { path: 'project-management/:id', component: ProjectDetailsComponent },
       { path: 'project-management/:id/edit', component: EditProjectComponent },
-      { path: 'project-management/:id/sites', component: ProjectSitesComponent }
+      { path: 'project-management/:id/sites', component: ProjectSitesComponent },
+      { path: 'project-management/:projectId/sites/:siteId/sequence-simulator', component: ViewSequenceSimulatorComponent }
     ]
   },
   {
@@ -58,7 +65,19 @@ export const routes: Routes = [
       { path: 'project-management/:projectId/sites/:siteId/drill-visualization', component: DrillVisualizationComponent },
       { path: 'project-management/:projectId/sites/:siteId/pattern-creator', component: DrillingPatternCreatorComponent },
       { path: 'project-management/:projectId/sites/:siteId/sequence-designer', component: BlastSequenceDesignerComponent },
-      { path: 'project-management/:projectId/sites/:siteId/simulator', component: BlastSequenceSimulatorComponent }
+      { path: 'project-management/:projectId/sites/:siteId/simulator', component: BlastSequenceSimulatorComponent },
+      { path: 'project-management/:projectId/sites/:siteId/sequence-simulator', component: ViewSequenceSimulatorComponent }
+    ]
+  },
+  {
+    path: 'operator',
+    component: OperatorLayoutComponent,
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: OperatorDashboardComponent },
+      { path: 'my-project', component: MyProjectComponent },
+      { path: 'my-project/sites', component: OperatorProjectSitesComponent },
+      { path: 'my-project/sites/:siteId/pattern-view', component: OperatorPatternViewComponent }
     ]
   },
   { path: '', redirectTo: '/admin/dashboard', pathMatch: 'full' }

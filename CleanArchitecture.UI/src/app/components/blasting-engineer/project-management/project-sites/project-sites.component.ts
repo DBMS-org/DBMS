@@ -18,6 +18,8 @@ export class ProjectSitesComponent implements OnInit {
   sites: ProjectSite[] = [];
   loading = false;
   error: string | null = null;
+  showDeleteModal = false;
+  siteToDelete: ProjectSite | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -107,19 +109,34 @@ export class ProjectSitesComponent implements OnInit {
     this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites', site.id, 'drill-visualization']);
   }
 
-  deleteSite(site: ProjectSite) {
-    if (confirm(`Are you sure you want to delete the site "${site.name}"?`)) {
-      this.siteService.deleteSite(site.id).subscribe({
+  openDeleteModal(site: ProjectSite) {
+    this.siteToDelete = site;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.siteToDelete = null;
+  }
+
+  confirmDelete() {
+    if (this.siteToDelete) {
+      this.siteService.deleteSite(this.siteToDelete.id).subscribe({
         next: () => {
-          // Remove the deleted site from the local array
-          this.sites = this.sites.filter(s => s.id !== site.id);
+          this.sites = this.sites.filter(s => s.id !== this.siteToDelete!.id);
+          this.closeDeleteModal();
         },
         error: (error) => {
           console.error('Error deleting site:', error);
           this.error = 'Failed to delete site. Please try again.';
+          this.closeDeleteModal();
         }
       });
     }
+  }
+
+  deleteSite(site: ProjectSite) {
+    this.openDeleteModal(site);
   }
 
   formatDate(date: Date): string {

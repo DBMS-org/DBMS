@@ -39,7 +39,9 @@ namespace API.Controllers
                         Status = ps.Status,
                         Description = ps.Description,
                         CreatedAt = ps.CreatedAt,
-                        UpdatedAt = ps.UpdatedAt
+                        UpdatedAt = ps.UpdatedAt,
+                        IsPatternApproved = ps.IsPatternApproved,
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed
                     })
                     .ToListAsync();
 
@@ -75,7 +77,9 @@ namespace API.Controllers
                     Status = projectSite.Status,
                     Description = projectSite.Description,
                     CreatedAt = projectSite.CreatedAt,
-                    UpdatedAt = projectSite.UpdatedAt
+                    UpdatedAt = projectSite.UpdatedAt,
+                    IsPatternApproved = projectSite.IsPatternApproved,
+                    IsSimulationConfirmed = projectSite.IsSimulationConfirmed
                 };
 
                 return Ok(projectSiteDto);
@@ -111,7 +115,9 @@ namespace API.Controllers
                         Status = ps.Status,
                         Description = ps.Description,
                         CreatedAt = ps.CreatedAt,
-                        UpdatedAt = ps.UpdatedAt
+                        UpdatedAt = ps.UpdatedAt,
+                        IsPatternApproved = ps.IsPatternApproved,
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed
                     })
                     .ToListAsync();
 
@@ -165,7 +171,9 @@ namespace API.Controllers
                     Status = projectSite.Status,
                     Description = projectSite.Description,
                     CreatedAt = projectSite.CreatedAt,
-                    UpdatedAt = projectSite.UpdatedAt
+                    UpdatedAt = projectSite.UpdatedAt,
+                    IsPatternApproved = projectSite.IsPatternApproved,
+                    IsSimulationConfirmed = projectSite.IsSimulationConfirmed
                 };
 
                 return CreatedAtAction(nameof(GetProjectSite), new { id = projectSite.Id }, projectSiteDto);
@@ -269,6 +277,54 @@ namespace API.Controllers
                 _logger.LogError(ex, "Error occurred while deleting project site {ProjectSiteId}", id);
                 return StatusCode(500, "Internal server error occurred while deleting project site");
             }
+        }
+
+        // POST: api/projectsites/{id}/approve
+        [HttpPost("{id}/approve")]
+        public async Task<IActionResult> ApprovePattern(int id)
+        {
+            var site = await _context.ProjectSites.FindAsync(id);
+            if (site == null) return NotFound();
+            site.IsPatternApproved = true;
+            site.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // POST: api/projectsites/{id}/revoke
+        [HttpPost("{id}/revoke")]
+        public async Task<IActionResult> RevokePattern(int id)
+        {
+            var site = await _context.ProjectSites.FindAsync(id);
+            if (site == null) return NotFound();
+            site.IsPatternApproved = false;
+            site.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // POST: api/projectsites/{id}/confirm-simulation
+        [HttpPost("{id}/confirm-simulation")]
+        public async Task<IActionResult> ConfirmSimulation(int id)
+        {
+            var site = await _context.ProjectSites.FindAsync(id);
+            if (site == null) return NotFound();
+            site.IsSimulationConfirmed = true;
+            site.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // POST: api/projectsites/{id}/revoke-simulation
+        [HttpPost("{id}/revoke-simulation")]
+        public async Task<IActionResult> RevokeSimulation(int id)
+        {
+            var site = await _context.ProjectSites.FindAsync(id);
+            if (site == null) return NotFound();
+            site.IsSimulationConfirmed = false;
+            site.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         private bool ProjectSiteExists(int id)

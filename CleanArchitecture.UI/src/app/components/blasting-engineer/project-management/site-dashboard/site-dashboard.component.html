@@ -182,6 +182,46 @@
           </div>
         </div>
       </div>
+
+      <!-- Admin Simulation Confirmation -->
+      <div class="admin-confirm-section" *ngIf="isBlastingEngineer && workflowSteps[2].completed">
+        <ng-container *ngIf="!isSimulationConfirmed; else simConfirmed">
+          <button class="btn btn-gradient" (click)="confirmSimulationForAdmin()">
+            <i class="material-icons">check_circle</i>
+            Confirm Simulation for Admin
+          </button>
+        </ng-container>
+        <ng-template #simConfirmed>
+          <span class="badge approved">Simulation Confirmed for Admin</span>
+          <button class="btn btn-outline-danger ms-2" (click)="revokeSimulationConfirmation()">Revoke</button>
+        </ng-template>
+      </div>
+
+      <div class="approval-section" *ngIf="isBlastingEngineer">
+        <ng-container *ngIf="!isPatternApproved; else approvedState">
+          <button class="btn btn-gradient" (click)="approvePatternForOperator()">
+            <i class="material-icons">check_circle</i>
+            Confirm Pattern for Operator
+          </button>
+        </ng-container>
+        <ng-template #approvedState>
+          <span class="badge approved">Approved for Operator</span>
+          <button class="btn btn-outline-danger ms-2" (click)="revokeApproval()">Revoke Approval</button>
+        </ng-template>
+      </div>
     </div>
   </div>
+
+  <!-- Approval modal -->
+  @if (showApproveModal) {
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <p>Confirm that the pattern is finalized and can be viewed by the operator?</p>
+        <div class="modal-actions">
+          <button class="btn btn-danger" (click)="confirmApprove()">OK</button>
+          <button class="btn btn-secondary" (click)="cancelApprove()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  }
 </div> 

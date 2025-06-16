@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProjectService } from '../../../../core/services/project.service';
 import { Project, UpdateProjectRequest } from '../../../../core/models/project.model';
+import { UserService } from '../../../../core/services/user.service';
+import { User } from '../../../../core/models/user.model';
+import { REGIONS } from '../../../../core/constants/regions';
 
 @Component({
   selector: 'app-edit-project',
@@ -25,16 +28,30 @@ export class EditProjectComponent implements OnInit {
     status: 'Active',
     description: '',
     startDate: undefined,
-    endDate: undefined
+    endDate: undefined,
+    assignedUserId: undefined
   };
 
   statusOptions = ['Active', 'Inactive', 'Completed', 'On Hold', 'Cancelled'];
-  regionOptions = ['Muscat', 'Dhofar', 'Musandam', 'Al Buraimi', 'Al Dakhiliyah', 'Al Dhahirah', 'Al Wusta', 'Al Batinah North', 'Al Batinah South', 'Ash Sharqiyah North', 'Ash Sharqiyah South'];
+  regionOptions = REGIONS;
+
+  operators: User[] = [];
+
+  // Modal state for operator conflict
+  showOperatorConflictModal = false;
+  conflictProjectName: string | null = null;
+  pendingOperatorId: number | undefined;
+
+  get availableOperators(): User[] {
+    if (!this.projectForm.region) return this.operators;
+    return this.operators.filter(op => op.region?.toLowerCase() === this.projectForm.region.toLowerCase());
+  }
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
@@ -43,6 +60,12 @@ export class EditProjectComponent implements OnInit {
       if (this.projectId) {
         this.loadProject();
       }
+    });
+
+    // Fetch operators for dropdown
+    this.userService.getUsers().subscribe({
+      next: users => this.operators = users.filter(u => u.role.toLowerCase() === 'operator'),
+      error: err => console.error('Error loading operators list', err)
     });
   }
 
@@ -92,7 +115,8 @@ export class EditProjectComponent implements OnInit {
       status: project.status,
       description: project.description || '',
       startDate: project.startDate,
-      endDate: project.endDate
+      endDate: project.endDate,
+      assignedUserId: project.assignedUserId
     };
   }
 
@@ -179,5 +203,35 @@ export class EditProjectComponent implements OnInit {
   onEndDateChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.projectForm.endDate = target.value ? new Date(target.value) : undefined;
+  }
+
+  onOperatorSelected(operatorId: number | undefined): void {
+    if (!operatorId) {
+      return;
+    }
+    this.pendingOperatorId = operatorId;
+    this.projectService.getProjectByOperator(operatorId).subscribe({
+      next: project => {
+        if (project && project.id !== this.projectId) {
+          this.conflictProjectName = project.name;
+          this.showOperatorConflictModal = true;
+        } else {
+          // no conflict or same project
+          this.conflictProjectName = null;
+        }
+      },
+      error: err => console.error('Error checking operator assignment', err)
+    });
+  }
+
+  confirmOperatorAssignment(): void {
+    this.showOperatorConflictModal = false;
+    // Assignment kept as selected
+  }
+
+  cancelOperatorAssignment(): void {
+    this.showOperatorConflictModal = false;
+    this.projectForm.assignedUserId = undefined;
+    this.pendingOperatorId = undefined;
   }
 } 

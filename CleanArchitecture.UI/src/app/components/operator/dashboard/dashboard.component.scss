@@ -1,0 +1,50 @@
+.operator-dashboard {
+  h1 {
+    color: #2c3e50;
+  }
+
+  .project-summary {
+    margin-top: 1.5rem;
+    h2 {
+      margin-bottom: 1rem;
+    }
+
+    .summary-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      h3 {
+        margin-top: 0;
+      }
+      p {
+        margin: 0.25rem 0;
+      }
+      .view-link {
+        display: inline-block;
+        margin-top: 0.75rem;
+        color: #1976d2;
+        text-decoration: none;
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .no-project {
+    margin-top: 2rem;
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    padding: 1rem;
+    border-radius: 8px;
+    color: #856404;
+  }
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+} 

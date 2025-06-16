@@ -9,9 +9,9 @@ export class DrillPointService {
 
   constructor() {}
 
-  validateDrillPointCount(currentCount: number, maxCount: number): boolean {
-    if (currentCount >= maxCount) {
-      console.warn('Maximum number of drill points reached');
+  validateDrillPointCount(currentCount: number, maxPoints: number): boolean {
+    if (currentCount >= maxPoints) {
+      console.warn(`Maximum number of drill points (${maxPoints}) reached`);
       return false;
     }
     return true;
@@ -61,8 +61,6 @@ export class DrillPointService {
   }
 
   clearPoints(): DrillPoint[] {
-    // Don't reset currentId to preserve hole numbering sequence
-    // this.currentId = 1; // Commented out to maintain sequential numbering
     return [];
   }
 
@@ -80,25 +78,9 @@ export class DrillPointService {
     return this.currentId;
   }
 
-  exportPattern(drillPoints: DrillPoint[], settings: PatternSettings): void {
-    const pattern = {
-      drillPoints,
-      settings: { ...settings }
-    };
-    
-    const blob = new Blob([JSON.stringify(pattern, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'drilling-pattern.json';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  // New method for exporting to blast sequence designer
   exportPatternForBlastDesign(drillPoints: DrillPoint[], settings: PatternSettings): PatternData {
     return {
-      drillPoints: [...drillPoints], // Create a copy
+      drillPoints: drillPoints.map(p => ({ ...p })),
       settings: { ...settings }
     };
   }

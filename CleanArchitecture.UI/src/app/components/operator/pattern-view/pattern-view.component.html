@@ -1,0 +1,97 @@
+<div class="pattern-view-container" role="main" aria-label="Drill Pattern View">
+  <!-- Toolbar -->
+  <div class="toolbar" role="toolbar" aria-label="Pattern View Tools">
+    <div class="toolbar-section" role="group" aria-label="Pattern Information">
+      <div class="pattern-info">
+        <h2>Drill Pattern Overview</h2>
+        <div class="pattern-stats">
+          <div class="stat-item">
+            <span class="material-icons">straighten</span>
+            <span>Spacing: {{ settings.spacing }}m</span>
+          </div>
+          <div class="stat-item">
+            <span class="material-icons">height</span>
+            <span>Burden: {{ settings.burden }}m</span>
+          </div>
+          <div class="stat-item">
+            <span class="material-icons">vertical_align_bottom</span>
+            <span>Depth: {{ settings.depth }}m</span>
+          </div>
+          <div class="stat-item">
+            <span class="material-icons">grid_on</span>
+            <span>Points: {{ drillPoints.length }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-section" role="group" aria-label="View Actions">
+      <button mat-button
+              class="toolbar-button"
+              (click)="openPointsTable()"
+              matTooltip="View points list"
+              [disabled]="drillPoints.length === 0">
+        <span class="material-icons" aria-hidden="true">list</span>
+        Points List
+      </button>
+
+      <button mat-button
+              class="toolbar-button help-button"
+              (mouseenter)="showInstructions = true"
+              (mouseleave)="showInstructions = false"
+              matTooltip="Show help"
+              [attr.aria-expanded]="showInstructions">
+        <span class="material-icons" aria-hidden="true">help_outline</span>
+        Help
+      </button>
+    </div>
+  </div>
+
+  <!-- Instructions Panel -->
+  <div class="instructions-panel" *ngIf="showInstructions">
+    <div class="instructions-content">
+      <h3>How to Use</h3>
+      <ul>
+        <li>
+          <span class="material-icons">pan_tool</span>
+          <span>Click and drag to pan the grid and rulers</span>
+        </li>
+        <li>
+          <span class="material-icons">zoom_in</span>
+          <span>Use mouse wheel to zoom in/out</span>
+        </li>
+        <li>
+          <span class="material-icons">grid_on</span>
+          <span>Grid lines show spacing and burden measurements</span>
+        </li>
+        <li>
+          <span class="material-icons">straighten</span>
+          <span>Rulers display measurements in meters</span>
+        </li>
+        <li>
+          <span class="material-icons">list</span>
+          <span>Click "Points List" to view all drill points</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="content-area">
+    <!-- Canvas -->
+    <div class="canvas-container" #canvasContainer></div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="loading-state">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error" class="alert alert-danger error-state">
+  <span class="material-icons">error_outline</span>
+  {{ error }}
+</div> 

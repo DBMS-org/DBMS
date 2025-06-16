@@ -21,6 +21,9 @@ import {
   OptimizationSuggestion
 } from '../models/simulation.model';
 import { SiteBlastingService } from '../../../../core/services/site-blasting.service';
+import { BlastTimeCalculatorService } from '../../blast-sequence-simulator/services/blast-time-calculator.service';
+import { ProjectService } from '../../../../core/services/project.service';
+import { Project } from '../../../../core/models/project.model';
 
 export interface WorkflowStep {
   id: string;
@@ -121,12 +124,36 @@ export class BlastSequenceDataService {
     }))
   );
 
-  constructor(private siteBlastingService: SiteBlastingService) {}
+  constructor(
+    private siteBlastingService: SiteBlastingService,
+    private blastTimeCalculator: BlastTimeCalculatorService,
+    private projectService: ProjectService
+  ) {}
 
   // Site Context Methods
   setSiteContext(projectId: number, siteId: number): void {
     console.log('Setting site context from', this.currentSiteContext, 'to', { projectId, siteId });
     this.currentSiteContext = { projectId, siteId };
+    // Fetch and emit project data
+    this.projectService.getProject(projectId).subscribe({
+      next: (project: Project) => {
+        this.currentProjectSubject.next({
+          id: project.id.toString(),
+          name: project.name ?? '',
+          description: project.description ?? '',
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          patternData: null,
+          connections: [],
+          simulationSettings: this.simulationSettingsSubject.value,
+          metadata: { version: '', author: '', notes: '' }
+        });
+      },
+      error: (err) => {
+        console.warn('Failed to load project data:', err);
+        this.currentProjectSubject.next(null);
+      }
+    });
     // Load site-specific data here
     this.loadSiteData(projectId, siteId);
   }
@@ -655,6 +682,7 @@ export class BlastSequenceDataService {
     this.updateWorkflowStep('pattern', true);
     this.enableWorkflowStep('sequence');
     this.validateSequence();
+    this.calculateSimulationDuration();
     
     // Only save to storage if explicitly requested
     if (autoSave && this.currentSiteContext) {
@@ -931,8 +959,9 @@ export class BlastSequenceDataService {
         suggestions.push({
           type: 'reduce_total_time',
           message: 'Consider reducing delay times to improve blast efficiency',
-          potentialImprovement: `Could reduce total blast time by ${Math.round((totalTime - 3000) / 1000 * 10) / 10}s`,
-          implementationHint: 'Review delay values and optimize sequence timing'
+          potentialImprovement: Math.round((totalTime - 3000) / totalTime * 100),
+          priority: 'high',
+          affectedElements: connections.map(c => c.id)
         });
       }
     }
@@ -942,13 +971,69 @@ export class BlastSequenceDataService {
 
   private calculateSimulationDuration(): void {
     const connections = this.connectionsSubject.value;
-    if (connections.length === 0) {
+    const pattern = this.patternDataSubject.value;
+
+    // If there is no pattern or no holes, nothing to simulate
+    if (!pattern || pattern.drillPoints.length === 0) {
       this.updateSimulationState({ totalDuration: 0, totalSteps: 0 });
       return;
     }
 
-    const maxDelay = Math.max(...connections.map(c => c.delay));
-    const totalDuration = maxDelay + 2000; // Add 2 seconds for final effects
+    // Fast-path for patterns without any wired connections
+    if (connections.length === 0) {
+      const totalDuration = pattern.drillPoints.length * 500; // 500 ms per hole for the single-wave blast
+      this.updateSimulationState({ totalDuration, totalSteps: 0 });
+      return;
+    }
+
+    /*
+     * Calculate the moment of the last detonation using the same rules that the
+     * AnimationService uses to drive the visualisation:
+     *   • Signal travels along a connection for <delay> ms.
+     *   • The destination hole then detonates 500 ms after the signal arrives.
+     * We perform a breadth-first propagation starting with every "root" hole – a
+     * hole that has no incoming connection – and keep track of the earliest
+     * known blast time for every hole.  The longest of those blast times is the
+     * overall duration of the sequence.
+     */
+    const holeStartTimes = new Map<string, number>();
+    const toHoleIds = new Set(connections.map(c => c.toHoleId));
+
+    // Identify root holes (no incoming signal)
+    const queue: Array<{ holeId: string; start: number }> = [];
+    pattern.drillPoints.forEach(point => {
+      if (!toHoleIds.has(point.id)) {
+        holeStartTimes.set(point.id, 0);
+        queue.push({ holeId: point.id, start: 0 });
+      }
+    });
+
+    // Edge case: every hole has an incoming connection – fall back to the first connection's origin
+    if (queue.length === 0 && connections.length > 0) {
+      const rootId = connections[0].fromHoleId;
+      holeStartTimes.set(rootId, 0);
+      queue.push({ holeId: rootId, start: 0 });
+    }
+
+    // Propagate signals through the network
+    while (queue.length > 0) {
+      const { holeId, start } = queue.shift()!;
+      const outgoing = connections.filter(c => c.fromHoleId === holeId);
+
+      outgoing.forEach(conn => {
+        const connStart = start;
+        const connEnd = connStart + (conn.delay || 0);
+        const nextHoleBlast = connEnd + 500; // 500 ms after signal arrival
+
+        const existingTime = holeStartTimes.get(conn.toHoleId);
+        if (existingTime === undefined || nextHoleBlast > existingTime) {
+          holeStartTimes.set(conn.toHoleId, nextHoleBlast);
+          queue.push({ holeId: conn.toHoleId, start: nextHoleBlast });
+        }
+      });
+    }
+
+    const totalDuration = Math.max(...holeStartTimes.values());
     const totalSteps = connections.length;
 
     this.updateSimulationState({ totalDuration, totalSteps });
@@ -1207,28 +1292,24 @@ export class BlastSequenceDataService {
       };
     }
 
-    // Calculate wave-based metrics
+    // Use the new path-based calculation for totalBlastTime
+    const totalBlastTime = this.blastTimeCalculator.calculateTotalBlastTime(connections);
+    // Use the new path-based calculation for average delay between detonations
+    const averageDelayBetweenHoles = this.blastTimeCalculator.getAverageDelayBetweenDetonations(connections);
+    // Use wave-based metrics for the rest
     const waveMetrics = this.calculateWaveBasedMetrics(connections);
-    
-    // Calculate connection utilization (this remains the same)
     const totalHoles = patternData.drillPoints.length;
     const connectedHoles = new Set([...connections.map(c => c.fromHoleId), ...connections.map(c => c.toHoleId)]);
     const connectionUtilization = (connectedHoles.size / totalHoles) * 100;
-
-    // Calculate timing conflicts for safety score
     const timingConflicts = this.detectTimingConflicts(connections);
     const criticalConflicts = timingConflicts.filter(w => w.severity === 'high').length;
     const mediumConflicts = timingConflicts.filter(w => w.severity === 'medium').length;
-
-    // Calculate efficiency score based on multiple factors
     const efficiencyScore = this.calculateEfficiencyScore(waveMetrics, connections.length, patternData.drillPoints.length);
-
-    // Calculate safety score based on timing conflicts and simultaneous detonations
     const safetyScore = this.calculateSafetyScore(waveMetrics.maxSimultaneousDetonations, criticalConflicts, mediumConflicts);
 
     return {
-      totalBlastTime: waveMetrics.totalBlastTime,
-      averageDelayBetweenHoles: waveMetrics.averageDelayBetweenWaves,
+      totalBlastTime,
+      averageDelayBetweenHoles,
       maxSimultaneousDetonations: waveMetrics.maxSimultaneousDetonations,
       efficiencyScore: Math.round(efficiencyScore),
       safetyScore: Math.round(safetyScore),
@@ -1392,5 +1473,9 @@ export class BlastSequenceDataService {
     }
 
     return Math.max(0, Math.min(100, score));
+  }
+
+  updateValidation(validation: SimulationValidation): void {
+    this.validationSubject.next(validation);
   }
 } 

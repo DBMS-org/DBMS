@@ -15,6 +15,8 @@ export interface ProjectSite {
   };
   status: string;
   description: string;
+  isPatternApproved: boolean;
+  isSimulationConfirmed: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -99,6 +101,29 @@ export class SiteService {
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  // Approve pattern for operator
+  approvePattern(siteId: number) {
+    const url = `${this.apiUrl}/${siteId}/approve`;
+    return this.http.post(url, {}, this.getHttpOptions());
+  }
+
+  // Revoke pattern
+  revokePattern(siteId: number) {
+    const url = `${this.apiUrl}/${siteId}/revoke`;
+    return this.http.post(url, {}, this.getHttpOptions());
+  }
+
+  // Confirm simulation for admin
+  confirmSimulation(siteId: number) {
+    const url = `${this.apiUrl}/${siteId}/confirm-simulation`;
+    return this.http.post(url, {}, this.getHttpOptions());
+  }
+
+  revokeSimulation(siteId: number) {
+    const url = `${this.apiUrl}/${siteId}/revoke-simulation`;
+    return this.http.post(url, {}, this.getHttpOptions());
   }
 
   private handleError(error: any) {

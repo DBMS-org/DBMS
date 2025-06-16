@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { REGIONS } from '../../../../core/constants/regions';
 
 @Component({
   selector: 'app-add-user',
@@ -26,8 +27,8 @@ export class AddUserComponent {
     countryPhone: ''
   };
 
-  roles = ['Admin', 'blastingengineer'];
-  regions = ['Muscat', 'Salalah', 'Sohar', 'Nizwa', 'Sur'];
+  roles = ['Admin', 'BlastingEngineer', 'Operator'];
+  regions = REGIONS;
   countries = ['Oman', 'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain'];
 
   onSubmit() {

@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Project, ProjectSite } from '../../../../core/models/project.model';
 import { ProjectService } from '../../../../core/services/project.service';
 
 @Component({
   selector: 'app-project-sites',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './project-sites.component.html',
   styleUrl: './project-sites.component.scss'
 })
@@ -72,47 +72,21 @@ export class ProjectSitesComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // For now, using mock data since the service might not have sites endpoint
-    this.loadMockSites();
-  }
-
-  private loadMockSites() {
-    if (!this.project && !this.projectId) return;
-
-    // Generate mock sites based on project region
-    const projectRegion = this.project?.region || 'Muscat';
-    const projectName = this.project?.name || 'Default Project';
-
-    this.sites = [
-      {
-        id: 1,
-        projectId: this.projectId,
-        name: `${projectName} - Main Site`,
-        location: `${projectRegion} Central Area`,
-        coordinates: {
-          latitude: this.getRegionCoordinates(projectRegion).lat,
-          longitude: this.getRegionCoordinates(projectRegion).lng
-        },
-        description: 'Primary construction site for the project',
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date()
+    this.projectService.getProjectSites(this.projectId).subscribe({
+      next: (sites) => {
+        this.sites = sites.map(site => ({
+          ...site,
+          createdAt: new Date(site.createdAt),
+          updatedAt: new Date(site.updatedAt)
+        }));
+        this.loading = false;
       },
-      {
-        id: 2,
-        projectId: this.projectId,
-        name: `${projectName} - Secondary Site`,
-        location: `${projectRegion} Industrial Zone`,
-        coordinates: {
-          latitude: this.getRegionCoordinates(projectRegion).lat + 0.01,
-          longitude: this.getRegionCoordinates(projectRegion).lng + 0.01
-        },
-        description: 'Secondary support site for logistics and storage',
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date()
+      error: (error) => {
+        console.error('Error loading project sites:', error);
+        this.error = 'Failed to load project sites.';
+        this.loading = false;
       }
-    ];
-    
-    this.loading = false;
+    });
   }
 
   private getRegionCoordinates(region: string): { lat: number; lng: number } {

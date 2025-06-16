@@ -72,6 +72,20 @@
               </select>
             </div>
 
+            <!-- Operator Assignment -->
+            <div class="form-group">
+              <label for="assignedUserId">Assign Operator</label>
+              <select
+                id="assignedUserId"
+                class="form-select"
+                [(ngModel)]="projectForm.assignedUserId"
+                name="assignedUserId"
+                (ngModelChange)="onOperatorSelected($event)">
+                <option [ngValue]="undefined">-- None --</option>
+                <option *ngFor="let op of availableOperators" [ngValue]="op.id">{{ op.name }} ({{ op.email }})</option>
+              </select>
+            </div>
+
             <div class="form-group full-width">
               <label for="description">Description</label>
               <textarea 
@@ -142,3 +156,16 @@
     </form>
   </div>
 </div>
+
+<!-- Operator Conflict Confirmation Modal -->
+@if (showOperatorConflictModal) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <p>Operator is already assigned to project "{{ conflictProjectName }}".<br/>Continuing will move them to this project.</p>
+      <div class="modal-actions">
+        <button class="btn btn-danger" (click)="confirmOperatorAssignment()">OK</button>
+        <button class="btn btn-secondary" (click)="cancelOperatorAssignment()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
