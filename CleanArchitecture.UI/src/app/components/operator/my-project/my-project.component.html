@@ -1,0 +1,27 @@
+<div class="my-project" *ngIf="!isLoading">
+  <ng-container *ngIf="project; else noProject">
+    <h2>{{ project.name }}</h2>
+    <div class="project-details-card">
+      <p><strong>Region:</strong> {{ project.region }}</p>
+      <p><strong>Status:</strong> {{ project.status }}</p>
+      <p><strong>Description:</strong> {{ project.description || '-' }}</p>
+      <p><strong>Start Date:</strong> {{ formatDate(project.startDate) }}</p>
+      <p><strong>End Date:</strong> {{ formatDate(project.endDate) }}</p>
+    </div>
+    <a class="btn btn-outline-primary mt-3" routerLink="/operator/my-project/sites">View Sites</a>
+  </ng-container>
+
+  <ng-template #noProject>
+    <div class="no-project">
+      <p>You are not currently assigned to any project.</p>
+    </div>
+  </ng-template>
+
+  <div *ngIf="error" class="alert alert-danger mt-3">{{ error }}</div>
+</div>
+
+<div *ngIf="isLoading" class="loading-state">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div> 

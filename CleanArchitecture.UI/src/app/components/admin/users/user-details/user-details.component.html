@@ -187,42 +187,7 @@
         </div>
       </div>
 
-      <!-- Dynamic Activity Section -->
-      <div class="activity-section">
-        <div class="section-header">
-          <h2>
-            <i class="material-icons">history</i>
-            Recent Activity
-          </h2>
-        </div>
-        
-        @if (loadingActivities) {
-          <div class="activity-loading">
-            <div class="loading-spinner"></div>
-            <p>Loading activities...</p>
-          </div>
-        } @else if (activities.length === 0) {
-          <div class="no-activities">
-            <i class="material-icons">event_busy</i>
-            <p>No recent activity found</p>
-          </div>
-        } @else {
-          <div class="activity-timeline">
-            @for (activity of activities; track activity.id) {
-              <div class="activity-item" [ngClass]="getActivityTypeClass(activity.type)">
-                <div class="activity-icon">
-                  <i class="material-icons">{{activity.icon}}</i>
-                </div>
-                <div class="activity-content">
-                  <span class="activity-action">{{activity.action}}</span>
-                  <span class="activity-description">{{activity.description}}</span>
-                  <span class="activity-time">{{getFormattedTime(activity.timestamp)}}</span>
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
+      <!-- Recent Activity section removed as per requirement -->
     </div>
   }
 </div>

@@ -125,3 +125,14 @@
   [isVisible]="isViewModalVisible"
   (close)="closeViewModal()">
 </app-view-project>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal">
+  <div class="modal-content">
+    <p>Are you sure you want to delete this project?</p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" (click)="confirmDelete()">Yes</button>
+      <button class="btn btn-secondary" (click)="closeDeleteModal()">No</button>
+    </div>
+  </div>
+</div>

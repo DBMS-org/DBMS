@@ -121,15 +121,6 @@
       </button>
 
       <button mat-button
-              class="toolbar-button"
-              (click)="onExportPattern()"
-              matTooltip="Export pattern as JSON"
-              aria-label="Export pattern as JSON">
-        <span class="material-icons" aria-hidden="true">download</span>
-        Export
-      </button>
-
-      <button mat-button
               class="toolbar-button blast-designer-button"
               (click)="onExportToBlastDesigner()"
               [disabled]="drillPoints.length === 0"

@@ -11,6 +11,8 @@ namespace Core.DTOs
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public bool IsPatternApproved { get; set; }
+        public bool IsSimulationConfirmed { get; set; }
     }
     
     public class CoordinatesDto

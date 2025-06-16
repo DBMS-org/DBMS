@@ -25,6 +25,8 @@ export class ProjectManagementComponent implements OnInit {
   // Modal properties
   selectedProject: Project | null = null;
   isViewModalVisible = false;
+  showDeleteModal = false;
+  projectToDelete: Project | null = null;
 
   statusOptions = ['', 'Active', 'Inactive', 'Completed', 'On Hold', 'Cancelled'];
   regionOptions = ['', 'Muscat', 'Dhofar', 'Musandam', 'Al Buraimi', 'Al Dakhiliyah', 'Al Dhahirah', 'Al Wusta', 'Al Batinah North', 'Al Batinah South', 'Ash Sharqiyah North', 'Ash Sharqiyah South'];
@@ -169,19 +171,38 @@ export class ProjectManagementComponent implements OnInit {
     this.router.navigate(['/admin/project-management', project.id, 'sites']);
   }
 
-  deleteProject(projectId: number) {
-    if (confirm('Are you sure you want to delete this project?')) {
-      this.projectService.deleteProject(projectId).subscribe({
+  openDeleteModal(project: Project) {
+    this.projectToDelete = project;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.projectToDelete = null;
+  }
+
+  confirmDelete() {
+    if (this.projectToDelete) {
+      this.projectService.deleteProject(this.projectToDelete.id).subscribe({
         next: () => {
-          this.projects = this.projects.filter(project => project.id !== projectId);
-          this.filteredProjects = this.filteredProjects.filter(project => project.id !== projectId);
+          this.projects = this.projects.filter(project => project.id !== this.projectToDelete!.id);
+          this.filteredProjects = this.filteredProjects.filter(project => project.id !== this.projectToDelete!.id);
+          this.closeDeleteModal();
           console.log('Project deleted successfully');
         },
         error: (error) => {
           this.error = error.message;
+          this.closeDeleteModal();
           console.error('Error deleting project:', error);
         }
       });
+    }
+  }
+
+  deleteProject(projectId: number) {
+    const project = this.projects.find(p => p.id === projectId);
+    if (project) {
+      this.openDeleteModal(project);
     }
   }
 

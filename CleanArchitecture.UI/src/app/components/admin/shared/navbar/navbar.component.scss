@@ -17,6 +17,18 @@
   display: flex;
   align-items: center;
 
+  .menu-btn {
+    background: none;
+    border: none;
+    margin-right: 1rem;
+    cursor: pointer;
+
+    i {
+      font-size: 28px;
+      color: #555;
+    }
+  }
+
   .brand {
     margin: 0;
     font-size: 1.25rem;

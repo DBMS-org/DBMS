@@ -110,6 +110,25 @@ export class ProjectService {
     );
   }
 
+  // Check if operator is already assigned to a project
+  getProjectByOperator(operatorId: number): Observable<Project | null> {
+    return this.http.get<Project | null>(`${this.apiUrl}/by-operator/${operatorId}`).pipe(
+      map(project => {
+        if (project) {
+          return {
+            ...project,
+            startDate: project.startDate ? new Date(project.startDate) : undefined,
+            endDate: project.endDate ? new Date(project.endDate) : undefined,
+            createdAt: new Date(project.createdAt),
+            updatedAt: new Date(project.updatedAt)
+          } as Project;
+        }
+        return null;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
   // Error handling
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An unknown error occurred!';

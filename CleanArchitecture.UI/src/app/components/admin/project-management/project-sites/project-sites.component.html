@@ -59,6 +59,10 @@
             <small class="text-muted">
               Created: {{ site.createdAt | date:'short' }}
             </small>
+            <a *ngIf="site.isSimulationConfirmed" [routerLink]="['/admin/project-management', projectId, 'sites', site.id, 'sequence-simulator']" class="btn btn-sm btn-primary sequence-btn">
+              <i class="material-icons">movie</i>
+              Sequence Simulator
+            </a>
           </div>
         </div>
       </div>

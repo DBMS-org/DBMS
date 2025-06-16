@@ -34,10 +34,6 @@
         <span class="material-icons">{{ isSaved ? 'check_circle' : 'save' }}</span>
         <span class="button-text">{{ isSaved ? 'Saved' : 'Save Simulation' }}</span>
       </button>
-      <button class="action-button secondary" (click)="exportVideo()" [disabled]="!patternData">
-        <span class="material-icons">videocam</span>
-        <span class="button-text">Export Video</span>
-      </button>
       <button class="action-button secondary" (click)="exportReport()" [disabled]="!patternData">
         <span class="material-icons">picture_as_pdf</span>
         <span class="button-text">Export Report</span>
@@ -129,22 +125,6 @@
 
       <div class="panel-content" *ngIf="showControlPanel">
         
-        <!-- View Mode Selection -->
-        <div class="control-section">
-          <h4>View Mode</h4>
-          <div class="view-mode-selector">
-            <button 
-              *ngFor="let mode of viewModes" 
-              class="view-mode-button"
-              [class.active]="selectedViewMode.id === mode.id"
-              (click)="onViewModeChange(mode)"
-              [title]="mode.description">
-              <span class="material-icons">{{ mode.icon }}</span>
-              <span class="mode-label">{{ mode.name }}</span>
-            </button>
-          </div>
-        </div>
-
         <!-- Display Settings -->
         <div class="control-section">
           <h4>Display Settings</h4>
@@ -176,8 +156,6 @@
             </label>
           </div>
         </div>
-
-
 
         <!-- Zoom Controls -->
         <div class="control-section">
@@ -418,33 +396,23 @@
 
         <div class="panel-content">
           <div class="metrics-grid">
-            <div class="metric-card efficiency">
+            <div class="metric-card holes">
               <div class="metric-icon">
-                <span class="material-icons">speed</span>
+                <span class="material-icons">adjust</span>
               </div>
               <div class="metric-info">
-                <div class="metric-value">{{ metrics.efficiencyScore }}%</div>
-                <div class="metric-label">Efficiency</div>
+                <div class="metric-value">{{ patternData?.drillPoints?.length || 0 }}</div>
+                <div class="metric-label">Holes</div>
               </div>
             </div>
 
-            <div class="metric-card safety">
+            <div class="metric-card connections">
               <div class="metric-icon">
-                <span class="material-icons">security</span>
+                <span class="material-icons">device_hub</span>
               </div>
               <div class="metric-info">
-                <div class="metric-value">{{ metrics.safetyScore }}%</div>
-                <div class="metric-label">Safety</div>
-              </div>
-            </div>
-
-            <div class="metric-card utilization">
-              <div class="metric-icon">
-                <span class="material-icons">timeline</span>
-              </div>
-              <div class="metric-info">
-                <div class="metric-value">{{ metrics.connectionUtilization }}%</div>
-                <div class="metric-label">Utilization</div>
+                <div class="metric-value">{{ connections?.length || 0 }}</div>
+                <div class="metric-label">Connections</div>
               </div>
             </div>
 

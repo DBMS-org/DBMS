@@ -5,6 +5,7 @@ import { Project } from '../../../../core/models/project.model';
 import { ProjectService } from '../../../../core/services/project.service';
 import { SiteService, ProjectSite } from '../../../../core/services/site.service';
 import { BlastSequenceDataService } from '../../shared/services/blast-sequence-data.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface WorkflowStep {
   id: string;
@@ -31,6 +32,7 @@ export class SiteDashboardComponent implements OnInit {
   siteId: number = 0;
   loading = false;
   error: string | null = null;
+  showApproveModal = false;
 
   workflowSteps: WorkflowStep[] = [
     {
@@ -70,7 +72,8 @@ export class SiteDashboardComponent implements OnInit {
     private router: Router,
     private projectService: ProjectService,
     private siteService: SiteService,
-    private blastSequenceDataService: BlastSequenceDataService
+    private blastSequenceDataService: BlastSequenceDataService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -275,5 +278,64 @@ export class SiteDashboardComponent implements OnInit {
   canCleanupStep(stepId: string): boolean {
     const step = this.workflowSteps.find(s => s.id === stepId);
     return step ? step.completed || (step.progress !== undefined && step.progress > 0) : false;
+  }
+
+  get isBlastingEngineer(): boolean {
+    return this.authService.isBlastingEngineer();
+  }
+
+  private getApprovalKey(): string {
+    return `patternApproved_${this.projectId}_${this.siteId}`;
+  }
+
+  get isPatternApproved(): boolean {
+    return this.site?.isPatternApproved || false;
+  }
+
+  approvePatternForOperator(): void {
+    this.showApproveModal = true;
+  }
+
+  confirmApprove(): void {
+    this.siteService.approvePattern(this.siteId).subscribe({
+      next: () => {
+        if (this.site) this.site.isPatternApproved = true;
+        this.showApproveModal = false;
+      }
+    });
+  }
+
+  cancelApprove(): void {
+    this.showApproveModal = false;
+  }
+
+  revokeApproval(): void {
+    const confirmRevoke = window.confirm('Revoke pattern approval for the operator? They will lose access until you approve again.');
+    if (!confirmRevoke) return;
+    this.siteService.revokePattern(this.siteId).subscribe(() => {
+      if (this.site) this.site.isPatternApproved = false;
+      alert('Pattern approval revoked.');
+    });
+  }
+
+  // Simulation confirmation for admin
+  private simulationConfirmKey(): string {
+    return `simulation_confirmed_${this.siteId}`;
+  }
+
+  get isSimulationConfirmed(): boolean {
+    return this.site?.isSimulationConfirmed ?? false;
+  }
+
+  confirmSimulationForAdmin() {
+    this.siteService.confirmSimulation(this.siteId).subscribe(() => {
+      if(this.site) this.site.isSimulationConfirmed = true;
+    });
+  }
+
+  revokeSimulationConfirmation() {
+    this.siteService.revokeSimulation(this.siteId).subscribe(() => {
+      if(this.site) this.site.isSimulationConfirmed = false;
+    });
   }
 } 

@@ -21,6 +21,8 @@ export class UsersComponent implements OnInit {
   showAddUserModal = false;
   loading = false;
   error: string | null = null;
+  showDeleteModal = false;
+  userToDelete: User | null = null;
 
   constructor(
     private router: Router,
@@ -154,19 +156,38 @@ export class UsersComponent implements OnInit {
     this.router.navigate(['/admin/users', userId, 'edit']);
   }
 
-  deleteUser(userId: number) {
-    if (confirm('Are you sure you want to delete this user?')) {
-      this.userService.deleteUser(userId).subscribe({
+  openDeleteModal(user: User) {
+    this.userToDelete = user;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.userToDelete = null;
+  }
+
+  confirmDelete() {
+    if (this.userToDelete) {
+      this.userService.deleteUser(this.userToDelete.id).subscribe({
         next: () => {
-          this.users = this.users.filter(user => user.id !== userId);
-          this.filteredUsers = this.filteredUsers.filter(user => user.id !== userId);
+          this.users = this.users.filter(user => user.id !== this.userToDelete!.id);
+          this.filteredUsers = this.filteredUsers.filter(user => user.id !== this.userToDelete!.id);
+          this.closeDeleteModal();
           console.log('User deleted successfully');
         },
         error: (error) => {
           this.error = error.message;
+          this.closeDeleteModal();
           console.error('Error deleting user:', error);
         }
       });
+    }
+  }
+
+  deleteUser(userId: number) {
+    const user = this.users.find(u => u.id === userId);
+    if (user) {
+      this.openDeleteModal(user);
     }
   }
 

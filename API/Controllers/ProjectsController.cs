@@ -54,7 +54,9 @@ namespace API.Controllers
                             Status = ps.Status,
                             Description = ps.Description,
                             CreatedAt = ps.CreatedAt,
-                            UpdatedAt = ps.UpdatedAt
+                            UpdatedAt = ps.UpdatedAt,
+                            IsPatternApproved = ps.IsPatternApproved,
+                            IsSimulationConfirmed = ps.IsSimulationConfirmed
                         }).ToList()
                     })
                     .ToListAsync();
@@ -107,7 +109,9 @@ namespace API.Controllers
                         Status = ps.Status,
                         Description = ps.Description,
                         CreatedAt = ps.CreatedAt,
-                        UpdatedAt = ps.UpdatedAt
+                        UpdatedAt = ps.UpdatedAt,
+                        IsPatternApproved = ps.IsPatternApproved,
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed
                     }).ToList()
                 };
 
@@ -138,6 +142,16 @@ namespace API.Controllers
                     if (!userExists)
                     {
                         return BadRequest($"User with ID {request.AssignedUserId.Value} not found");
+                    }
+                }
+
+                // If the operator is already assigned to a different project, unassign first
+                if (request.AssignedUserId.HasValue)
+                {
+                    var existing = await _context.Projects.FirstOrDefaultAsync(p => p.AssignedUserId == request.AssignedUserId);
+                    if (existing != null)
+                    {
+                        existing.AssignedUserId = null;
                     }
                 }
 
@@ -220,6 +234,16 @@ namespace API.Controllers
                     if (!userExists)
                     {
                         return BadRequest($"User with ID {request.AssignedUserId.Value} not found");
+                    }
+                }
+
+                // If operator reassigned, unassign from previous project
+                if (request.AssignedUserId.HasValue)
+                {
+                    var previous = await _context.Projects.FirstOrDefaultAsync(p => p.AssignedUserId == request.AssignedUserId && p.Id != id);
+                    if (previous != null)
+                    {
+                        previous.AssignedUserId = null;
                     }
                 }
 
@@ -308,7 +332,9 @@ namespace API.Controllers
                         Status = ps.Status,
                         Description = ps.Description,
                         CreatedAt = ps.CreatedAt,
-                        UpdatedAt = ps.UpdatedAt
+                        UpdatedAt = ps.UpdatedAt,
+                        IsPatternApproved = ps.IsPatternApproved,
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed
                     })
                     .ToListAsync();
 
@@ -374,7 +400,9 @@ namespace API.Controllers
                             Status = ps.Status,
                             Description = ps.Description,
                             CreatedAt = ps.CreatedAt,
-                            UpdatedAt = ps.UpdatedAt
+                            UpdatedAt = ps.UpdatedAt,
+                            IsPatternApproved = ps.IsPatternApproved,
+                            IsSimulationConfirmed = ps.IsSimulationConfirmed
                         }).ToList()
                     })
                     .ToListAsync();
@@ -402,6 +430,38 @@ namespace API.Controllers
                 _logger.LogError(ex, "Database connection test failed");
                 return StatusCode(500, "Database connection failed");
             }
+        }
+
+        // GET: api/projects/by-operator/5
+        [HttpGet("by-operator/{operatorId}")]
+        public async Task<ActionResult<ProjectDto?>> GetProjectByOperator(int operatorId)
+        {
+            var project = await _context.Projects
+                .Include(p => p.AssignedUser)
+                .FirstOrDefaultAsync(p => p.AssignedUserId == operatorId);
+
+            if (project == null)
+            {
+                return Ok(null); // No project assigned
+            }
+
+            var dto = new ProjectDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Region = project.Region,
+                Status = project.Status,
+                Description = project.Description,
+                StartDate = project.StartDate,
+                EndDate = project.EndDate,
+                AssignedUserId = project.AssignedUserId,
+                AssignedUserName = project.AssignedUser?.Name,
+                CreatedAt = project.CreatedAt,
+                UpdatedAt = project.UpdatedAt,
+                ProjectSites = new List<ProjectSiteDto>()
+            };
+
+            return Ok(dto);
         }
 
         private bool ProjectExists(int id)

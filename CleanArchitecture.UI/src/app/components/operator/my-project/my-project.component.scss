@@ -1,0 +1,35 @@
+.my-project {
+  h2 {
+    margin-bottom: 1rem;
+    color: #2c3e50;
+  }
+
+  .project-details-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    p {
+      margin: 0.5rem 0;
+      strong {
+        width: 120px;
+        display: inline-block;
+      }
+    }
+  }
+
+  .no-project {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    padding: 1rem;
+    border-radius: 8px;
+    color: #856404;
+  }
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+} 

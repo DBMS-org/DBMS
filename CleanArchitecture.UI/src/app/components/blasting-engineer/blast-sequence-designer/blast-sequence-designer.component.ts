@@ -144,10 +144,55 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.patternData = this.blastSequenceDataService.getPatternData() || 
                      this.patternDataService.getCurrentPatternValue();
     
-    if (!this.patternData) {
+    if (!this.patternData && this.currentProjectId && this.currentSiteId) {
+      // If no pattern data in memory, try to load from backend
+      this.siteBlastingService.getDrillPatterns(this.currentProjectId, this.currentSiteId)
+        .subscribe({
+          next: (patterns) => {
+            if (patterns && patterns.length > 0) {
+              const latestPattern = patterns[0];
+              let drillPoints: DrillPoint[] = [];
+              
+              if (latestPattern.drillPointsJson) {
+                if (typeof latestPattern.drillPointsJson === 'string') {
+                  try {
+                    drillPoints = JSON.parse(latestPattern.drillPointsJson);
+                  } catch (error) {
+                    console.warn('Failed to parse drill points JSON:', error);
+                  }
+                } else {
+                  drillPoints = latestPattern.drillPointsJson;
+                }
+              }
+              
+              this.patternData = {
+                drillPoints: drillPoints,
+                settings: {
+                  spacing: latestPattern.spacing,
+                  burden: latestPattern.burden,
+                  depth: latestPattern.depth
+                }
+              };
+              
+              // Update the services with the loaded pattern
+              this.blastSequenceDataService.setPatternData(this.patternData, true);
+              this.patternDataService.setCurrentPattern(this.patternData);
+              
+              console.log('Loaded pattern from backend:', latestPattern.name, 'with', drillPoints.length, 'points');
+              this.cdr.detectChanges();
+            } else {
+              console.warn('No pattern data available in backend. Redirecting to pattern creator.');
+              this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
+            }
+          },
+          error: (error) => {
+            console.error('Error loading pattern from backend:', error);
+            this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
+          }
+        });
+    } else if (!this.patternData) {
       console.warn('No pattern data available. Redirecting to pattern creator.');
-      // Optionally redirect back to pattern creator
-      // this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
+      this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
     }
     
     // Load existing connections if any and ensure they have hidden points

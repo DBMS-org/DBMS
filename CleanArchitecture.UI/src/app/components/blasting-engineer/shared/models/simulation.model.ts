@@ -49,15 +49,20 @@ export interface SimulationEvent {
   time: number;
   type: SimulationEventType;
   targetId: string;
-  data?: any;
+  data: {
+    connectionId?: string;
+    toHoleId?: string;
+    wireSequence?: string;
+    triggeredByWire?: string;
+    [key: string]: any;
+  };
 }
 
 export enum SimulationEventType {
-  HOLE_DETONATE = 'hole_detonate',
   SIGNAL_START = 'signal_start',
   SIGNAL_ARRIVE = 'signal_arrive',
-  EFFECT_START = 'effect_start',
-  EFFECT_END = 'effect_end'
+  HOLE_DETONATE = 'hole_detonate',
+  EFFECT_START = 'effect_start'
 }
 
 export interface SimulationSettings {
@@ -75,35 +80,42 @@ export interface ViewSettings {
   showHoleDetails: boolean;
   showConnectionLabels: boolean;
   highlightActiveConnections: boolean;
-  frameRate: 30 | 60;
+  frameRate: number;
 }
 
 export interface SimulationValidation {
   isValid: boolean;
   warnings: ValidationWarning[];
   errors: ValidationError[];
-  suggestions: OptimizationSuggestion[];
+  suggestions: ValidationSuggestion[];
 }
 
 export interface ValidationWarning {
-  type: 'timing_overlap' | 'delay_too_short' | 'connection_missing';
+  type: string;
   message: string;
   affectedHoles: string[];
   severity: 'low' | 'medium' | 'high';
 }
 
 export interface ValidationError {
-  type: 'invalid_delay' | 'circular_connection' | 'orphaned_hole' | 'timing_conflict';
+  type: string;
   message: string;
   affectedElements: string[];
-  fixSuggestion?: string;
+  fixSuggestion: string;
+}
+
+export interface ValidationSuggestion {
+  type: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high';
 }
 
 export interface OptimizationSuggestion {
-  type: 'reduce_total_time' | 'improve_sequence' | 'optimize_delays';
+  type: string;
   message: string;
-  potentialImprovement: string;
-  implementationHint: string;
+  priority: 'low' | 'medium' | 'high';
+  potentialImprovement: number; // 0-100%
+  affectedElements: string[];
 }
 
 export interface SimulationMetrics {
@@ -117,7 +129,7 @@ export interface SimulationMetrics {
 
 export interface TimelineMarker {
   time: number;
+  type: 'hole_blast' | 'milestone' | 'sequence_start' | 'sequence_end';
   label: string;
-  type: 'hole_blast' | 'sequence_start' | 'sequence_end' | 'milestone';
   color: string;
 } 

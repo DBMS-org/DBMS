@@ -1,26 +1,27 @@
 export const CANVAS_CONSTANTS = {
-  RULER_WIDTH: 30,
-  RULER_HEIGHT: 30,
+  GRID_SIZE: 50, // Base grid size in pixels
+  RULER_WIDTH: 50,
+  RULER_HEIGHT: 50,
   POINT_RADIUS: 5,
-  GRID_SIZE: 50,
-  DEBOUNCE_TIME: 100,
-  MAX_DRILL_POINTS: 1000,
+  MAX_GRID_LINES: 1000,
+  MAX_DRILL_POINTS: 500,
   MAX_CACHE_SIZE: 10,
-  MAX_GRID_LINES: 200,
-  POINT_SELECTION_THRESHOLD: 2,
   DEFAULT_SETTINGS: {
     spacing: 3,
     burden: 2.5,
     depth: 10
   },
   ARIA_LABELS: {
-    canvas: 'Drilling pattern canvas',
-    holePlacement: 'Toggle hole placement mode',
-    preciseMode: 'Toggle precise mode',
-    zoomIn: 'Zoom in',
-    zoomOut: 'Zoom out',
-    resetZoom: 'Reset zoom',
-    clearAll: 'Clear all drill points',
-    exportPattern: 'Export drilling pattern'
+    patternCreator: 'Drilling pattern creator canvas',
+    gridContainer: 'Grid container for drill pattern',
+    pointsContainer: 'Container for drill points',
+    placeHole: 'Place drill hole',
+    selectPoint: 'Select drill point',
+    movePoint: 'Move drill point',
+    deletePoint: 'Delete drill point',
+    clearPoints: 'Clear all drill points',
+    savePattern: 'Save drilling pattern',
+    toBlastDesigner: 'Send pattern to blast sequence designer',
+    showHelp: 'Show help instructions'
   }
 } as const; 

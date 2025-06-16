@@ -158,29 +158,7 @@
               </div>
 
               <!-- Sequence Template -->
-              <div class="template-option" 
-                   [class.selected]="siteData.templateType === 'sequence'"
-                   (click)="selectTemplate('sequence')">
-                <div class="template-preview">
-                  <div class="diagram-representation sequence">
-                    <div class="sequence-actor"></div>
-                    <div class="sequence-actor"></div>
-                    <div class="sequence-message"></div>
-                    <div class="sequence-return"></div>
-                  </div>
-                </div>
-                <div class="template-info">
-                  <h4>Staggered Pattern</h4>
-                  <p>Time-sequenced drilling with controlled detonation order</p>
-                </div>
-                <div class="template-radio">
-                  <input type="radio" 
-                         name="templateType" 
-                         value="sequence"
-                         [(ngModel)]="siteData.templateType"
-                         id="sequence-template">
-                </div>
-              </div>
+              <!-- Staggered Pattern removed for consistency -->
 
             </div>
           </div>
