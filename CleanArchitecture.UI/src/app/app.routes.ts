@@ -1,5 +1,10 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './components/login/login.component';
+import { 
+  LoginComponent, 
+  ForgotPasswordComponent, 
+  VerifyResetCodeComponent, 
+  ResetPasswordComponent 
+} from './components/auth';
 import { AdminLayoutComponent } from './components/admin/shared/admin-layout/admin-layout.component';
 import { DashboardComponent } from './components/admin/dashboard/dashboard.component';
 import { UsersComponent } from './components/admin/users/users.component';
@@ -30,6 +35,9 @@ import { ViewSequenceSimulatorComponent } from './components/admin/project-manag
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'verify-reset-code', component: VerifyResetCodeComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
   { 
     path: 'admin',
     component: AdminLayoutComponent,

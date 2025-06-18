@@ -102,4 +102,22 @@ export class AuthService {
   isOperator(): boolean {
     return this.hasRole('operator');
   }
+
+  // Forgot Password Methods
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/api/auth/forgot-password`, { email });
+  }
+
+  verifyResetCode(email: string, code: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/api/auth/verify-reset-code`, { email, code });
+  }
+
+  resetPassword(email: string, code: string, newPassword: string, confirmPassword: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/api/auth/reset-password`, { 
+      email, 
+      code, 
+      newPassword, 
+      confirmPassword 
+    });
+  }
 } 
