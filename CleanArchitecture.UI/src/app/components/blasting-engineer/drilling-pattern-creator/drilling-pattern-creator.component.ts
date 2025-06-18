@@ -16,6 +16,7 @@ import { SiteBlastingService } from '../../../core/services/site-blasting.servic
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SiteService } from '../../../core/services/site.service';
+import { NavigationController, WorkflowStepId } from '../shared/services/navigation-controller.service';
 
 @Component({
   selector: 'app-drilling-pattern-creator',
@@ -86,7 +87,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     private siteBlastingService: SiteBlastingService,
     private router: Router,
     private authService: AuthService,
-    private siteService: SiteService
+    private siteService: SiteService,
+    private navigationController: NavigationController
   ) {}
 
   formatValue(value: number): string {
@@ -1036,6 +1038,11 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
 
 
   onExportToBlastDesigner(): void {
+    console.log('Export to Blast Designer button clicked');
+    console.log('Current project ID:', this.currentProjectId);
+    console.log('Current site ID:', this.currentSiteId);
+    console.log('Drill points count:', this.drillPoints.length);
+    
     if (this.drillPoints.length === 0) {
       console.warn('No drill points to export');
       return;
@@ -1053,8 +1060,18 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     this.patternDataService.setCurrentPattern(patternData);
     this.blastSequenceDataService.setPatternData(patternData, true); // Auto-save on navigation
     
-    // Navigate to blast sequence designer
-    this.router.navigate(['/blasting-engineer/blast-sequence-designer']);
+    // Navigate to blast sequence designer with context (force navigation to bypass workflow checks)
+    const targetRoute = `/blasting-engineer/project-management/${this.currentProjectId}/sites/${this.currentSiteId}/sequence-designer`;
+    console.log('Attempting navigation to:', targetRoute);
+    
+    // Try direct router navigation first
+    this.router.navigate([targetRoute]).then(success => {
+      console.log('Direct navigation success:', success);
+    }).catch(error => {
+      console.error('Direct navigation error:', error);
+      // Fallback to navigation controller
+      this.navigationController.navigateToStepWithContext(WorkflowStepId.SEQUENCE, this.currentProjectId, this.currentSiteId, true);
+    });
   }
 
   onDeletePoint(): void {

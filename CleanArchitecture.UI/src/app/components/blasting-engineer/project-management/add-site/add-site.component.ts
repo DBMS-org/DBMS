@@ -105,9 +105,9 @@ export class AddSiteComponent implements OnInit {
         this.resetFormData();
         form.resetForm();
         
-        // Navigate to drilling pattern creator after a brief delay
+        // Navigate to site-specific drilling pattern creator after a brief delay
         setTimeout(() => {
-          this.router.navigate(['/blasting-engineer/drilling-pattern']);
+          this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites', createdSite.id, 'pattern-creator']);
         }, 2000);
       },
       error: (error) => {

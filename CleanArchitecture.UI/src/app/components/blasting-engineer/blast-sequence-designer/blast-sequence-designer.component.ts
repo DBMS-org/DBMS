@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Konva from 'konva';
+import { NavigationController } from '../shared/services/navigation-controller.service';
 import { PatternDataService } from '../shared/pattern-data.service';
 import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
 import { SiteBlastingService } from '../../../core/services/site-blasting.service';
@@ -91,7 +92,8 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     private patternDataService: PatternDataService,
     private blastSequenceDataService: BlastSequenceDataService,
     private siteBlastingService: SiteBlastingService,
-    private router: Router
+    private router: Router,
+    private navigationController: NavigationController
   ) {}
 
   ngAfterViewInit(): void {
@@ -182,17 +184,17 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
               this.cdr.detectChanges();
             } else {
               console.warn('No pattern data available in backend. Redirecting to pattern creator.');
-              this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
+              this.navigationController.navigateToPatternCreator();
             }
           },
           error: (error) => {
             console.error('Error loading pattern from backend:', error);
-            this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
+            this.navigationController.navigateToPatternCreator();
           }
         });
     } else if (!this.patternData) {
       console.warn('No pattern data available. Redirecting to pattern creator.');
-      this.router.navigate(['/blasting-engineer/drilling-pattern-creator']);
+      this.navigationController.navigateToPatternCreator();
     }
     
     // Load existing connections if any and ensure they have hidden points
@@ -1353,7 +1355,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   backToPatternCreator(): void {
-    this.router.navigate(['/blasting-engineer/drilling-pattern']);
+    this.navigationController.navigateToPatternCreator(this.currentProjectId, this.currentSiteId);
   }
 
   onSaveSequence(): void {
@@ -1501,6 +1503,11 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   goToSimulator(): void {
+    console.log('Go to Simulator button clicked');
+    console.log('Connections length:', this.connections.length);
+    console.log('Current project ID:', this.currentProjectId);
+    console.log('Current site ID:', this.currentSiteId);
+    
     if (this.connections.length > 0) {
       // Update data service (in memory)
       this.blastSequenceDataService.setConnections(this.connections, false);
@@ -1508,7 +1515,19 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       // Save connections when navigating to next step
       this.blastSequenceDataService.saveConnections();
       
-      this.router.navigate(['/blasting-engineer/blast-sequence-simulator']);
+      // Try direct navigation first as fallback
+      const targetRoute = `/blasting-engineer/project-management/${this.currentProjectId}/sites/${this.currentSiteId}/simulator`;
+      console.log('Attempting navigation to:', targetRoute);
+      
+      this.router.navigate([targetRoute]).then(success => {
+        console.log('Direct navigation to simulator success:', success);
+      }).catch(error => {
+        console.error('Direct navigation to simulator error:', error);
+        // Fallback to navigation controller
+        this.navigationController.navigateToSimulator(this.currentProjectId, this.currentSiteId);
+      });
+    } else {
+      console.warn('Cannot navigate to simulator: No connections created');
     }
   }
 
