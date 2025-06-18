@@ -51,6 +51,28 @@ export class NavigationController {
     }
   ];
 
+  // Site-aware routes for context-specific navigation
+  private readonly contextRoutes: RouteConfig[] = [
+    {
+      stepId: WorkflowStepId.PATTERN,
+      route: '/blasting-engineer/project-management/:projectId/sites/:siteId/pattern-creator',
+      component: 'DrillingPatternCreatorComponent',
+      title: 'Create Drilling Pattern'
+    },
+    {
+      stepId: WorkflowStepId.SEQUENCE,
+      route: '/blasting-engineer/project-management/:projectId/sites/:siteId/sequence-designer',
+      component: 'BlastSequenceDesignerComponent',
+      title: 'Design Blast Sequence'
+    },
+    {
+      stepId: WorkflowStepId.SIMULATE,
+      route: '/blasting-engineer/project-management/:projectId/sites/:siteId/simulator',
+      component: 'BlastSequenceSimulatorComponent',
+      title: 'Simulate & Validate'
+    }
+  ];
+
   private navigationStateSubject = new BehaviorSubject<NavigationState>({
     currentStep: WorkflowStepId.PATTERN,
     canNavigateBack: false,
@@ -68,6 +90,47 @@ export class NavigationController {
     this.dataService.workflowSteps$.subscribe(steps => {
       this.updateNavigationState(steps);
     });
+  }
+
+  // Workaround to get site context
+  private getSiteContext(): { projectId: number; siteId: number } | null {
+    // Access the private property directly as a workaround
+    return (this.dataService as any).currentSiteContext || null;
+  }
+
+  // Site-context-aware navigation methods
+  navigateToStepWithContext(stepId: WorkflowStepId, projectId?: number, siteId?: number, force: boolean = false): Promise<boolean> {
+    // Get context from parameters or current site context
+    const context = projectId && siteId ? { projectId, siteId } : this.getSiteContext();
+    
+    if (!context) {
+      console.warn('No site context available for navigation. Falling back to basic navigation.');
+      return this.navigateToStep(stepId, force);
+    }
+
+    const routeConfig = this.contextRoutes.find(r => r.stepId === stepId);
+    if (!routeConfig) {
+      console.error(`No context route found for step: ${stepId}`);
+      return Promise.resolve(false);
+    }
+
+    // Check if navigation is allowed
+    if (!force && !this.canNavigateToStep(stepId)) {
+      console.warn(`Navigation to step ${stepId} is not allowed`);
+      return Promise.resolve(false);
+    }
+
+    // Build the route with actual IDs
+    const route = routeConfig.route
+      .replace(':projectId', context.projectId.toString())
+      .replace(':siteId', context.siteId.toString());
+
+    // Update current workflow step
+    this.dataService.setCurrentWorkflowStep(stepId);
+
+    console.log(`Navigating with context: ${route}`);
+    // Navigate to the context-aware route
+    return this.router.navigate([route]);
   }
 
   // Navigation Methods
@@ -91,6 +154,19 @@ export class NavigationController {
     return this.router.navigate([route.route]);
   }
 
+  // Context-aware convenience methods
+  navigateToPatternCreator(projectId?: number, siteId?: number): Promise<boolean> {
+    return this.navigateToStepWithContext(WorkflowStepId.PATTERN, projectId, siteId);
+  }
+
+  navigateToSequenceDesigner(projectId?: number, siteId?: number): Promise<boolean> {
+    return this.navigateToStepWithContext(WorkflowStepId.SEQUENCE, projectId, siteId);
+  }
+
+  navigateToSimulator(projectId?: number, siteId?: number): Promise<boolean> {
+    return this.navigateToStepWithContext(WorkflowStepId.SIMULATE, projectId, siteId);
+  }
+
   navigateNext(): Promise<boolean> {
     const currentState = this.navigationStateSubject.value;
     if (!currentState.canNavigateForward) {
@@ -99,7 +175,13 @@ export class NavigationController {
 
     const nextStep = this.getNextStep(currentState.currentStep);
     if (nextStep) {
-      return this.navigateToStep(nextStep);
+      // Try context-aware navigation first
+      const context = this.getSiteContext();
+      if (context) {
+        return this.navigateToStepWithContext(nextStep, context.projectId, context.siteId);
+      } else {
+        return this.navigateToStep(nextStep);
+      }
     }
 
     return Promise.resolve(false);
@@ -113,7 +195,13 @@ export class NavigationController {
 
     const previousStep = this.getPreviousStep(currentState.currentStep);
     if (previousStep) {
-      return this.navigateToStep(previousStep);
+      // Try context-aware navigation first
+      const context = this.getSiteContext();
+      if (context) {
+        return this.navigateToStepWithContext(previousStep, context.projectId, context.siteId);
+      } else {
+        return this.navigateToStep(previousStep);
+      }
     }
 
     return Promise.resolve(false);

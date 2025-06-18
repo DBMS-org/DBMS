@@ -381,11 +381,15 @@ export class BlastSequenceDataService {
       const totalTime = maxDelay + 100; // Add some buffer
       
       if (totalTime > 5000) { // More than 5 seconds
+        const timeSavings = Math.round((totalTime - 3000) / 1000 * 10) / 10;
+        const improvementPercentage = Math.min(50, Math.round((timeSavings / (totalTime / 1000)) * 100));
+        
         suggestions.push({
           type: 'reduce_total_time',
-          message: 'Consider reducing delay times to improve blast efficiency',
-          potentialImprovement: `Could reduce total blast time by ${Math.round((totalTime - 3000) / 1000 * 10) / 10}s`,
-          implementationHint: 'Review delay values and optimize sequence timing'
+          message: `Consider reducing delay times to improve blast efficiency. Could reduce total blast time by ${timeSavings}s`,
+          priority: 'medium',
+          potentialImprovement: improvementPercentage,
+          affectedElements: connections.map(c => c.id)
         });
       }
     }

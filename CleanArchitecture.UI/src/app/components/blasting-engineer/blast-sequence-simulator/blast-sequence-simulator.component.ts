@@ -15,11 +15,12 @@ import {
   BlastEffect
 } from '../shared/models/simulation.model';
 import { PatternData, BlastConnection } from '../drilling-pattern-creator/models/drill-point.model';
-import { TimelineComponent } from './components/timeline/timeline.component';
+  import { TimelineComponent } from './components/timeline/timeline.component';
 import { PatternRendererComponent } from './components/pattern-renderer/pattern-renderer.component';
 import { ViewControlsComponent } from './components/view-controls/view-controls.component';
 import { AnimationService } from './services/animation.service';
 import { ReportExportService } from './services/report-export.service';
+import { NavigationController } from '../shared/services/navigation-controller.service';
 
 @Component({
   selector: 'app-blast-sequence-simulator',
@@ -276,12 +277,17 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     activeEffects: []
   };
 
+  // Site context
+  private currentProjectId!: number;
+  private currentSiteId!: number;
+
   constructor(
     private dataService: BlastSequenceDataService,
     private router: Router,
     private animationService: AnimationService,
     private reportExportService: ReportExportService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private navigationController: NavigationController
   ) {}
 
   ngOnInit(): void {
@@ -289,6 +295,8 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
     const projectId = routeMatch ? +routeMatch[1] : 1;
     const siteId = routeMatch ? +routeMatch[2] : 3;
+    this.currentProjectId = projectId;
+    this.currentSiteId = siteId;
     this.dataService.setSiteContext(projectId, siteId);
 
     // Wait for data to load before enabling simulation
@@ -436,6 +444,10 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     stage.getLayers().forEach(layer => layer.batchDraw());
   }
 
+  resetZoom(): void {
+    this.centerView();
+  }
+
   private pan(offsetX: number, offsetY: number): void {
     const stage = this.patternRendererComp?.stage;
     if (!stage) { return; }
@@ -530,6 +542,15 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     const clickX = event.clientX - rect.left;
     const newTime = (clickX / rect.width) * this.simulationState.totalDuration;
     this.seekToTime(newTime);
+  }
+
+  // Navigation methods for breadcrumb navigation
+  goToPatternCreator(): void {
+    this.navigationController.navigateToPatternCreator(this.currentProjectId, this.currentSiteId);
+  }
+
+  goToSequenceDesigner(): void {
+    this.navigationController.navigateToSequenceDesigner(this.currentProjectId, this.currentSiteId);
   }
 
   /**

@@ -158,6 +158,10 @@ export class BlastSequenceDataService {
     this.loadSiteData(projectId, siteId);
   }
 
+  public getCurrentSiteContext(): { projectId: number; siteId: number } | null {
+    return this.currentSiteContext;
+  }
+
   // Utility method to clean up inconsistent data
   cleanupSiteData(projectId: number, siteId: number): void {
     const siteKey = `site_${projectId}_${siteId}`;
