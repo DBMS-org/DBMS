@@ -94,37 +94,6 @@
   </div>
 
   <div class="content-grid">
-    <!-- Recent Activities -->
-    <section class="recent-activities">
-      <div class="section-header">
-        <h2>Recent Activities</h2>
-        <span class="filter-info" *ngIf="currentUser?.region">
-          (Your region: {{ currentUser?.region }})
-        </span>
-      </div>
-      <div class="activity-list">
-        <div *ngIf="recentActivities.length === 0" class="no-activities">
-          No recent activities found.
-        </div>
-        <div *ngFor="let activity of recentActivities; trackBy: trackActivity" class="activity-item">
-          <div class="activity-icon">
-            <i class="material-icons">{{ getActivityIcon(activity.action) }}</i>
-          </div>
-          <div class="activity-content">
-            <div class="activity-main">
-              <span class="activity-user">{{ activity.userName }}</span>
-              <span class="activity-action">{{ activity.action }}</span>
-            </div>
-            <div class="activity-meta">
-              <span class="activity-time">{{ getTimeFromNow(activity.timestamp) }}</span>
-              <span class="activity-region" *ngIf="activity.region">{{ activity.region }}</span>
-              <span class="activity-category">{{ activity.category }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Quick Actions with Engineering Focus -->
     <section class="quick-actions">
       <h2>Engineering Tools</h2>

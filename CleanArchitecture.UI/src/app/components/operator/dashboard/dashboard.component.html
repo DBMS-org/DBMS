@@ -1,27 +1,45 @@
-<div class="operator-dashboard" *ngIf="!isLoading">
-  <h1 class="mb-3">Welcome, {{ currentUserName }}!</h1>
+<header class="dashboard-header">
+  <div class="header-content">
+    <h1>Operator Dashboard</h1>
+    <div class="user-info">
+      <div class="user-details" *ngIf="currentUserName">
+        <span class="welcome-message">Welcome, {{ currentUserName }}!</span>
+        <div class="user-metadata">
+          <span class="user-role">Role: Operator</span>
+          <span class="last-login">Active Session</span>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  </div>
+</header>
 
+<div class="loading-container" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading dashboard...</p>
+</div>
+
+<div class="dashboard-content" *ngIf="!isLoading">
   <section class="project-summary" *ngIf="assignedProject; else noProject">
     <h2>Your Assigned Project</h2>
-    <div class="summary-card">
+    <div class="card">
       <h3>{{ assignedProject.name }}</h3>
       <p><strong>Region:</strong> {{ assignedProject.region }}</p>
-      <p><strong>Status:</strong> {{ assignedProject.status }}</p>
+      <p><strong>Status:</strong> 
+        <span class="status-badge" [class]="'status-' + assignedProject.status.toLowerCase()">
+          {{ assignedProject.status }}
+        </span>
+      </p>
       <p><strong>Start Date:</strong> {{ formatDate(assignedProject.startDate) }}</p>
       <p><strong>End Date:</strong> {{ formatDate(assignedProject.endDate) }}</p>
-      <a class="view-link" routerLink="/operator/my-project">View Details</a>
+      <a class="btn btn-primary" routerLink="/operator/my-project">View Project Details</a>
     </div>
   </section>
 
   <ng-template #noProject>
-    <div class="no-project">
-      <p>You have not been assigned to a project yet.</p>
+    <div class="card">
+      <h3>No Project Assigned</h3>
+      <p>You have not been assigned to a project yet. Please contact your administrator for project assignment.</p>
     </div>
   </ng-template>
-</div>
-
-<div *ngIf="isLoading" class="loading-state">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Loading...</span>
-  </div>
 </div> 

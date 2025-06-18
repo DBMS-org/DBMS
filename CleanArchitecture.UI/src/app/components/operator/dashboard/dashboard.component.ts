@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { Project } from '../../../core/models/project.model';
@@ -17,7 +17,11 @@ export class OperatorDashboardComponent implements OnInit {
   assignedProject: Project | null = null;
   isLoading = true;
 
-  constructor(private authService: AuthService, private projectService: ProjectService) {}
+  constructor(
+    private authService: AuthService, 
+    private projectService: ProjectService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
@@ -41,5 +45,10 @@ export class OperatorDashboardComponent implements OnInit {
 
   formatDate(date?: Date): string {
     return date ? new Date(date).toLocaleDateString() : '-';
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 } 

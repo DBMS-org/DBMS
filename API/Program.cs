@@ -46,6 +46,7 @@ builder.Services.AddCors(options =>
 // Register Authentication services
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

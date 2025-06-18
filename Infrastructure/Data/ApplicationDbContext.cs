@@ -21,6 +21,7 @@ namespace Infrastructure.Data
         public DbSet<SiteBlastingData> SiteBlastingData { get; set; }
         public DbSet<DrillPattern> DrillPatterns { get; set; }
         public DbSet<BlastSequence> BlastSequences { get; set; }
+        public DbSet<PasswordResetCode> PasswordResetCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -240,6 +241,26 @@ namespace Infrastructure.Data
                 entity.HasIndex(e => e.ProjectId);
                 entity.HasIndex(e => e.SiteId);
                 entity.HasIndex(e => e.IsActive);
+            });
+
+            // Configure PasswordResetCode entity
+            modelBuilder.Entity<PasswordResetCode>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(6);
+                entity.Property(e => e.ExpiresAt).IsRequired();
+                entity.Property(e => e.IsUsed).HasDefaultValue(false);
+                entity.Property(e => e.AttemptCount).HasDefaultValue(0);
+                
+                // Foreign key relationship with User
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Indexes for performance
+                entity.HasIndex(e => new { e.UserId, e.Code });
+                entity.HasIndex(e => e.ExpiresAt);
             });
 
             // Seed initial data
