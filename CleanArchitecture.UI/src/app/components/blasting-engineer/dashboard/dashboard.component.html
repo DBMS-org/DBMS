@@ -10,6 +10,10 @@
           <span class="last-login">{{ getLastLoginInfo() }}</span>
         </div>
       </div>
+      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
       <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>
@@ -59,92 +63,132 @@
         <p class="stat-number">{{ stats.activeSites }}</p>
       </div>
     </div>
+    <div class="stat-card drill-holes">
+      <div class="stat-icon">
+        <i class="material-icons">scatter_plot</i>
+      </div>
+      <div class="stat-content">
+        <h3>Total Drill Holes</h3>
+        <p class="stat-number">{{ stats.totalDrillHoles }}</p>
+      </div>
+    </div>
     <div class="stat-card patterns">
       <div class="stat-icon">
         <i class="material-icons">grid_on</i>
       </div>
       <div class="stat-content">
-        <h3>Patterns Created</h3>
-        <p class="stat-number">{{ stats.completedPatterns }}</p>
+        <h3>Active Drill Sites</h3>
+        <p class="stat-number">{{ stats.activeDrillSites }}</p>
       </div>
     </div>
   </div>
 
-  <!-- Drill Data Quality Panel -->
+  <!-- Real Database Drill Analytics Panel -->
   <div class="data-quality-panel" *ngIf="drillData.length > 0">
-    <h3>Current Data Set Analysis</h3>
+    <h3>
+      <i class="material-icons">analytics</i>
+      Database Drill Analytics ({{ drillData.length }} holes)
+    </h3>
     <div class="quality-grid">
       <div class="quality-item">
-        <span class="quality-label">Data Quality:</span>
+        <span class="quality-label">
+          <i class="material-icons">check_circle</i>
+          Data Quality:
+        </span>
         <span class="quality-value" [class]="getDataQualityClass()">{{ getDataQualityStatus() }}</span>
       </div>
       <div class="quality-item">
-        <span class="quality-label">Average Depth:</span>
+        <span class="quality-label">
+          <i class="material-icons">straighten</i>
+          Average Depth:
+        </span>
         <span class="quality-value">{{ quickStats.averageDepth }}m</span>
       </div>
       <div class="quality-item">
-        <span class="quality-label">Elevation Range:</span>
+        <span class="quality-label">
+          <i class="material-icons">terrain</i>
+          Elevation Range:
+        </span>
         <span class="quality-value">{{ quickStats.minElevation }}m - {{ quickStats.maxElevation }}m</span>
       </div>
       <div class="quality-item">
-        <span class="quality-label">Total Drill Length:</span>
+        <span class="quality-label">
+          <i class="material-icons">linear_scale</i>
+          Total Drill Length:
+        </span>
         <span class="quality-value">{{ quickStats.totalDrillLength }}m</span>
+      </div>
+      <div class="quality-item">
+        <span class="quality-label">
+          <i class="material-icons">place</i>
+          Sites with Data:
+        </span>
+        <span class="quality-value">{{ stats.activeDrillSites }} / {{ stats.totalSites }}</span>
+      </div>
+      <div class="quality-item">
+        <span class="quality-label">
+          <i class="material-icons">update</i>
+          Data Source:
+        </span>
+        <span class="quality-value database-source">Live Database</span>
       </div>
     </div>
   </div>
 
-  <div class="content-grid">
-    <!-- Quick Actions with Engineering Focus -->
-    <section class="quick-actions">
-      <h2>Engineering Tools</h2>
-      <div class="action-cards">
-        <div class="action-card upload" (click)="navigateToUpload()">
-          <div class="action-icon">
-            <i class="material-icons">cloud_upload</i>
-          </div>
-          <h3>Upload Drill Data</h3>
-          <p>Import CSV files with hole coordinates, depths, and parameters</p>
-          <div class="action-status">
-            <span *ngIf="drillData.length > 0">{{ drillData.length }} holes loaded</span>
-            <span *ngIf="drillData.length === 0">No data loaded</span>
-          </div>
-        </div>
-        
-        <div class="action-card projects" (click)="navigateToProjects()">
-          <div class="action-icon">
-            <i class="material-icons">folder</i>
-          </div>
-          <h3>Project Management</h3>
-          <p>Organize sites, manage drill plans, and track progress</p>
-          <div class="action-status">{{ stats.activeProjects }} active</div>
-        </div>
-        
-        <div class="action-card sites" (click)="navigateToSites()">
-          <div class="action-icon">
-            <i class="material-icons">location_city</i>
-          </div>
-          <h3>Site Management</h3>
-          <p>Manage drilling sites, locations, and site-specific operations</p>
-          <div class="action-status">{{ stats.activeSites }} active sites</div>
-        </div>
-      </div>
-    </section>
+  <!-- No Data Warning -->
+  <div class="data-warning-panel" *ngIf="drillData.length === 0">
+    <div class="warning-icon">
+      <i class="material-icons">warning</i>
+    </div>
+    <h3>No Drill Data Available</h3>
+    <p>No drill holes found in the database for your assigned projects and sites.</p>
+    <div class="warning-actions">
+      <button class="btn btn-primary" (click)="navigateToUpload()">
+        <i class="material-icons">cloud_upload</i>
+        Upload Drill Data
+      </button>
+      <button class="btn btn-secondary" (click)="navigateToProjects()">
+        <i class="material-icons">folder</i>
+        Manage Projects
+      </button>
+    </div>
   </div>
 
-  <!-- Recent Uploads Section -->
+
+
+  <!-- Recent Database Uploads Section -->
   <section class="recent-uploads" *ngIf="recentUploads.length > 0">
-    <h2>Recent Data Uploads</h2>
+    <h2>
+      <i class="material-icons">database</i>
+      Recent Drill Data (Live Database)
+    </h2>
     <div class="uploads-list">
-      <div *ngFor="let upload of recentUploads" class="upload-item">
+      <div *ngFor="let upload of recentUploads" 
+           class="upload-item clickable"
+           (click)="navigateToDrillVisualization(upload.projectId, upload.siteId)"
+           title="Click to view drill visualization">
         <div class="upload-icon">
-          <i class="material-icons">insert_drive_file</i>
+          <i class="material-icons">scatter_plot</i>
         </div>
         <div class="upload-content">
           <div class="upload-name">{{ upload.filename }}</div>
           <div class="upload-meta">
-            <span class="upload-time">{{ formatDate(upload.uploadDate) }}</span>
-            <span class="upload-count">{{ upload.recordCount }} records</span>
-            <span class="upload-status status-{{ upload.status }}">{{ upload.status }}</span>
+            <span class="upload-time">
+              <i class="material-icons">schedule</i>
+              {{ formatDate(upload.uploadDate) }}
+            </span>
+            <span class="upload-count">
+              <i class="material-icons">format_list_numbered</i>
+              {{ upload.recordCount }} drill holes
+            </span>
+            <span class="upload-status status-{{ upload.status }}">
+              <i class="material-icons">check_circle</i>
+              {{ upload.status }}
+            </span>
+            <span class="upload-action" *ngIf="upload.projectId && upload.siteId">
+              <i class="material-icons">visibility</i>
+              View 3D
+            </span>
           </div>
         </div>
       </div>

@@ -25,20 +25,20 @@
   <!-- Main Content -->
   <div class="main-content">
   <!-- Messages Section -->
-  <div class="messages" *ngIf="saveMessage || deleteMessage || errorMessage">
-    <div class="alert alert-success" *ngIf="saveMessage">
-        <i class="fas fa-check-circle"></i>
-        {{ saveMessage }}
+  <div class="messages enhanced-messages" *ngIf="saveMessage || deleteMessage || errorMessage">
+    <div class="alert alert-success" *ngIf="saveMessage && !errorMessage">
+      <i class="fas fa-check-circle"></i>
+      <span [innerHTML]="saveMessage"></span>
     </div>
     <div class="alert alert-success" *ngIf="deleteMessage">
-        <i class="fas fa-check-circle"></i>
-        {{ deleteMessage }}
+      <i class="fas fa-check-circle"></i>
+      <span [innerHTML]="deleteMessage"></span>
     </div>
     <div class="alert alert-error" *ngIf="errorMessage">
-        <i class="fas fa-exclamation-triangle"></i>
-        {{ errorMessage }}
-      </div>
+      <i class="fas fa-exclamation-triangle"></i>
+      <span [innerHTML]="errorMessage"></span>
     </div>
+  </div>
 
     <!-- Control Panel -->
     <div class="control-panel">
@@ -83,24 +83,9 @@
               <i class="fas fa-video"></i>
               Reset Camera
             </button>
-          </div>
-        </div>
-
-        <!-- Data Controls -->
-        <div class="control-group">
-          <label class="control-label">Data Operations</label>
-          <div class="button-group">
-            <button (click)="refreshData()" class="btn btn-info">
-              <i class="fas fa-sync-alt"></i>
-              Refresh
-            </button>
-            <button (click)="loadFromDatabase()" class="btn btn-info">
-              <i class="fas fa-download"></i>
-              Load from DB
-            </button>
-            <button (click)="showDatabaseStatus()" class="btn btn-outline">
-              <i class="fas fa-search"></i>
-              DB Status
+            <button (click)="refresh3DVisualization()" class="btn btn-outline" title="Force refresh 3D visualization">
+              <i class="fas fa-sync"></i>
+              Refresh 3D
             </button>
           </div>
         </div>
@@ -110,11 +95,21 @@
           <label class="control-label">Actions</label>
           <div class="button-group">
             <button (click)="saveDrillData()" class="btn btn-success" [disabled]="isSaving">
-              <i class="fas fa-save"></i>
-              {{ isSaving ? 'Saving...' : 'Save to DB' }}
+              <i class="fas fa-save" *ngIf="!isSaving"></i>
+              <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+              {{ isSaving ? 'Saving & Verifying...' : 'Save to DB' }}
+            </button>
+            <button (click)="verifyDatabaseSave()" class="btn btn-info">
+              <i class="fas fa-check-circle"></i>
+              Verify Save
+            </button>
+            <button (click)="reloadDataFromDatabase()" class="btn btn-secondary" title="Reload data from database">
+              <i class="fas fa-sync-alt"></i>
+              Reload Data
             </button>
             <button (click)="deleteAllDrillData()" class="btn btn-danger" [disabled]="isDeleting">
-              <i class="fas fa-trash"></i>
+              <i class="fas fa-trash" *ngIf="!isDeleting"></i>
+              <i class="fas fa-spinner fa-spin" *ngIf="isDeleting"></i>
               {{ isDeleting ? 'Deleting...' : 'Delete All' }}
             </button>
           </div>
@@ -323,14 +318,14 @@
       <p>Please upload a CSV file with drill data to visualize the holes.</p>
       
         <div class="empty-actions">
+          <button (click)="reloadDataFromDatabase()" class="btn btn-secondary" *ngIf="projectId && siteId" title="Try to reload data from database">
+            <i class="fas fa-sync-alt"></i>
+            Reload from Database
+          </button>
           <button (click)="navigateToCSVUpload()" class="btn btn-primary btn-upload">
             <i class="fas fa-upload"></i>
             Upload CSV Data
           </button>
-        <button (click)="refreshData()" class="btn btn-secondary">
-            <i class="fas fa-sync-alt"></i>
-            Check for Data
-        </button>
         </div>
       </div>
     </div>
