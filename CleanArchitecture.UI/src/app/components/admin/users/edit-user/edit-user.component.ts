@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../../../core/services/user.service';
 import { User, UpdateUserRequest } from '../../../../core/models/user.model';
 import { REGIONS } from '../../../../core/constants/regions';
+import { USER_ROLES_ARRAY } from '../../../../core/constants/roles';
 
 @Component({
   selector: 'app-edit-user',
@@ -19,7 +20,7 @@ export class EditUserComponent implements OnInit {
   saving = false;
   error: string | null = null;
 
-  roles = ['Admin', 'BlastingEngineer', 'Operator', 'User'];
+  roles = USER_ROLES_ARRAY;
   regions = REGIONS;
   countries = ['Oman', 'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain'];
   statuses = ['Active', 'Inactive'];
@@ -53,21 +54,6 @@ export class EditUserComponent implements OnInit {
         this.error = error.message;
         this.loading = false;
         console.error('Error loading user for edit:', error);
-        
-        // Fallback to mock data if API fails
-      this.user = {
-        id: userId,
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'Admin',
-        region: 'Muscat',
-        country: 'Oman',
-        omanPhone: '+968 9876 5432',
-        countryPhone: '+1 234 567 8900',
-        status: 'Active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
       }
     });
   }
