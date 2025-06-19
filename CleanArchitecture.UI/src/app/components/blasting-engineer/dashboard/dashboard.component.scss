@@ -217,9 +217,24 @@
     background: linear-gradient(135deg, #48bb78, #38a169);
   }
 
+  &.sites .stat-icon {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+  }
+
+  &.active-sites .stat-icon {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: 2px solid red !important; /* Debug border to see if the selector works */
+  }
+
   &.patterns .stat-icon {
     background: linear-gradient(135deg, #9f7aea, #805ad5);
   }
+}
+
+// Additional specificity for active-sites (debugging)
+.stat-card.active-sites .stat-icon {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border: 2px solid blue !important;
 }
 
 // Data Quality Panel
