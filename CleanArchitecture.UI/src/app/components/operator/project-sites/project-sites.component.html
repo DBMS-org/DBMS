@@ -1,37 +1,139 @@
-<div class="project-sites-container" *ngIf="!loading">
-  <h1>{{ project?.name }} - Sites</h1>
-  <button class="btn btn-outline-secondary mb-3" (click)="goBack()">
-    <i class="material-icons">arrow_back</i> Back
-  </button>
+<!-- Consistent Dashboard Header -->
+<header class="dashboard-header">
+  <div class="header-content">
+    <div class="header-left">
+      <button class="back-btn" (click)="goBack()">
+        <i class="material-icons">arrow_back</i>
+      </button>
+      <h1>{{ project?.name || 'Project' }} Sites</h1>
+    </div>
+    <div class="user-info">
+      <div class="user-details">
+        <span class="welcome-message">Site Management</span>
+        <div class="user-metadata">
+          <span class="user-role">Role: Operator</span>
+          <span class="last-login">View & Access Sites</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
 
-  <table *ngIf="sites.length > 0" class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Status</th>
-        <th>Created</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (site of sites; track site.id) {
-        <tr>
-          <td>{{ site.name }}</td>
-          <td>{{ site.status }}</td>
-          <td>{{ formatDate(site.createdAt) }}</td>
-          <td>
-            <button class="btn btn-primary btn-sm" [disabled]="!site.isPatternApproved" (click)="viewPattern(site)" title="{{ site.isPatternApproved ? 'Open pattern' : 'Waiting for engineer approval' }}">View Pattern</button>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </table>
-
-  <div *ngIf="sites.length === 0" class="alert alert-info">No sites found for this project.</div>
-  <div *ngIf="error" class="alert alert-danger mt-3">{{ error }}</div>
+<!-- Loading State -->
+<div *ngIf="loading" class="loading-container">
+  <div class="spinner"></div>
+  <p>Loading project sites...</p>
 </div>
-<div *ngIf="loading" class="loading-state">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Loading...</span>
+
+<!-- Main Content -->
+<div class="project-sites-content" *ngIf="!loading">
+  <!-- Project Overview Card -->
+  <section class="project-overview" *ngIf="project">
+    <div class="project-card">
+      <div class="project-header">
+        <div class="project-icon">
+          <i class="material-icons">location_city</i>
+        </div>
+        <div class="project-info">
+          <h2>{{ project.name }}</h2>
+          <p class="project-subtitle">{{ sites.length }} Sites Available</p>
+        </div>
+        <div class="project-status">
+          <span class="status-badge" [class]="'status-' + project.status.toLowerCase()">
+            {{ project.status }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sites Section -->
+  <section class="sites-section" *ngIf="sites.length > 0">
+    <div class="section-header">
+      <h2>Available Sites</h2>
+      <p class="section-subtitle">View and access approved drilling patterns for each site</p>
+    </div>
+
+    <div class="sites-grid">
+      <div class="site-card" *ngFor="let site of sites" [class.disabled]="!site.isPatternApproved">
+        <div class="site-header">
+          <div class="site-icon" [class]="site.isPatternApproved ? 'approved' : 'pending'">
+            <i class="material-icons">{{ site.isPatternApproved ? 'check_circle' : 'pending' }}</i>
+          </div>
+          <div class="site-info">
+            <h3>{{ site.name }}</h3>
+            <p class="site-status">{{ site.status }}</p>
+          </div>
+        </div>
+
+        <div class="site-details">
+          <div class="detail-item">
+            <div class="detail-icon">
+              <i class="material-icons">date_range</i>
+            </div>
+            <div class="detail-content">
+              <span class="detail-label">Created</span>
+              <span class="detail-value">{{ formatDate(site.createdAt) }}</span>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-icon approval">
+              <i class="material-icons">{{ site.isPatternApproved ? 'verified' : 'hourglass_empty' }}</i>
+            </div>
+            <div class="detail-content">
+              <span class="detail-label">Pattern Status</span>
+              <span class="detail-value" [class]="site.isPatternApproved ? 'approved' : 'pending'">
+                {{ site.isPatternApproved ? 'Approved' : 'Pending Approval' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="site-actions">
+          <button 
+            class="btn btn-primary" 
+            [disabled]="!site.isPatternApproved" 
+            (click)="viewPattern(site)"
+            [title]="site.isPatternApproved ? 'View drilling pattern' : 'Waiting for engineer approval'">
+            <i class="material-icons">{{ site.isPatternApproved ? 'visibility' : 'lock' }}</i>
+            <span>{{ site.isPatternApproved ? 'View Pattern' : 'Pattern Locked' }}</span>
+          </button>
+        </div>
+
+        <!-- Overlay for disabled state -->
+        <div class="disabled-overlay" *ngIf="!site.isPatternApproved">
+          <div class="disabled-content">
+            <i class="material-icons">hourglass_empty</i>
+            <p>Awaiting Engineer Approval</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Empty State -->
+  <section class="empty-state-section" *ngIf="sites.length === 0 && !loading">
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="material-icons">location_off</i>
+      </div>
+      <h2>No Sites Available</h2>
+      <p>This project doesn't have any sites configured yet. Please contact your administrator to add sites to this project.</p>
+      <div class="empty-actions">
+        <button class="btn btn-outline-primary" (click)="goBack()">
+          <i class="material-icons">arrow_back</i>
+          Back to My Project
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    <div class="alert alert-danger">
+      <i class="material-icons">error</i>
+      <span>{{ error }}</span>
+    </div>
   </div>
 </div> 

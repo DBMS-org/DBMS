@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
 import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
+import { SiteService } from '../../../core/services/site.service';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -45,6 +46,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     private el: ElementRef, 
     private drillDataService: DrillDataService,
     private drillHoleService: DrillHoleService,
+    private siteService: SiteService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -332,6 +334,42 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     } else {
       this.router.navigate(['/blasting-engineer/project-management']);
     }
+  }
+
+  navigateToCSVUpload(): void {
+    console.log('Navigating to CSV upload with context...');
+    console.log('Project ID:', this.projectId);
+    console.log('Site ID:', this.siteId);
+    
+    if (!this.projectId || !this.siteId) {
+      console.warn('Missing context - navigating to basic CSV upload');
+      this.router.navigate(['/blasting-engineer/csv-upload']);
+      return;
+    }
+
+    // Get site name and navigate with full context
+    this.siteService.getSite(this.siteId).subscribe({
+      next: (site) => {
+        const queryParams = {
+          projectId: this.projectId,
+          siteId: this.siteId,
+          siteName: site.name || 'Unknown Site'
+        };
+        
+        console.log('Navigating with query params:', queryParams);
+        this.router.navigate(['/blasting-engineer/csv-upload'], { queryParams });
+      },
+      error: (error) => {
+        console.error('Error getting site info, using fallback:', error);
+        // Fallback navigation without site name
+        const queryParams = {
+          projectId: this.projectId,
+          siteId: this.siteId,
+          siteName: 'Unknown Site'
+        };
+        this.router.navigate(['/blasting-engineer/csv-upload'], { queryParams });
+      }
+    });
   }
 
   private clearMessagesAfterDelay(): void {
