@@ -706,3 +706,170 @@
     transform: scale(1.1);
   }
 }
+
+// User Profile Section
+.user-profile-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  margin-bottom: 2rem;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 1.5rem 0;
+    color: #2c3e50;
+    font-size: 1.25rem;
+    font-weight: 600;
+
+    i {
+      color: #667eea;
+      font-size: 1.5rem;
+    }
+  }
+
+  .profile-card {
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #e9ecef;
+
+      .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+
+        .avatar-initials {
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+      }
+
+      .profile-main-info {
+        flex: 1;
+
+        h4 {
+          margin: 0 0 0.5rem 0;
+          color: #2c3e50;
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+
+        .profile-email {
+          margin: 0 0 1rem 0;
+          color: #6c757d;
+          font-size: 1rem;
+        }
+
+        .profile-role-badge {
+          .role-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+          }
+        }
+      }
+    }
+
+    .profile-details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+
+      .profile-detail-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02));
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        border-radius: 10px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+          border-color: rgba(102, 126, 234, 0.2);
+          transform: translateY(-1px);
+        }
+
+        .detail-label {
+          color: #6c757d;
+          font-weight: 500;
+          font-size: 0.9rem;
+        }
+
+        .detail-value {
+          color: #2c3e50;
+          font-weight: 600;
+          text-align: right;
+
+          .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+
+            &.status-active {
+              background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+              color: #48bb78;
+              border: 1px solid rgba(72, 187, 120, 0.2);
+            }
+
+            &.status-inactive {
+              background: linear-gradient(135deg, rgba(229, 62, 62, 0.1), rgba(197, 48, 48, 0.1));
+              color: #e53e3e;
+              border: 1px solid rgba(229, 62, 62, 0.2);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .user-info {
+    justify-content: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

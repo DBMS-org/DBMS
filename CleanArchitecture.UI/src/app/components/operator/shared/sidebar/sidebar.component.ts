@@ -20,6 +20,7 @@ export class OperatorSidebarComponent {
 
   navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/operator/dashboard' },
-    { icon: 'assignment', label: 'My Project', route: '/operator/my-project' }
+    { icon: 'assignment', label: 'My Project', route: '/operator/my-project' },
+    { icon: 'location_city', label: 'Project Sites', route: '/operator/my-project/sites' }
   ];
 } 
