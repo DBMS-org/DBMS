@@ -172,34 +172,17 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
   }
 
   ngAfterViewInit() {
-    // Delay canvas initialization to ensure container is fully rendered
-    setTimeout(() => {
-      this.initializeCanvas();
-    }, 100);
+    // canvas initialized after data load
+    this.initializeCanvas();
   }
 
   private initializeCanvas() {
-    if (!this.containerRef?.nativeElement) {
-      console.warn('Canvas container not available');
-      return;
-    }
-
-    const containerElement = this.containerRef.nativeElement;
-    const containerWidth = containerElement.clientWidth;
-    const containerHeight = containerElement.clientHeight;
-
-    console.log('Initializing canvas:', { containerWidth, containerHeight });
-
-    if (containerWidth === 0 || containerHeight === 0) {
-      console.warn('Container has invalid dimensions, retrying...', { containerWidth, containerHeight });
-      setTimeout(() => this.initializeCanvas(), 200);
-      return;
-    }
+    if (!this.containerRef) return;
 
     this.stage = new Konva.Stage({
-      container: containerElement,
-      width: containerWidth,
-      height: containerHeight
+      container: this.containerRef.nativeElement,
+      width: this.containerRef.nativeElement.clientWidth,
+      height: 600
     });
 
     // Create layers with proper interaction settings
@@ -426,17 +409,8 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
 
   private renderCanvas() {
     if (!this.stage) {
-      console.log('Stage not initialized, initializing canvas...');
       this.initializeCanvas();
-      // Delay redraw to ensure stage is ready
-      setTimeout(() => {
-        if (this.stage) {
-          console.log('Canvas ready, drawing content...');
-          this.redrawCanvas();
-        }
-      }, 100);
     } else {
-      console.log('Stage available, redrawing canvas...');
       this.redrawCanvas();
     }
   }
@@ -448,24 +422,6 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
       maxWidth: '90vw',
       maxHeight: '90vh'
     });
-  }
-
-  goBack(): void {
-    history.back();
-  }
-
-  resetView(): void {
-    this.offsetX = 0;
-    this.offsetY = 0;
-    this.panOffsetX = 0;
-    this.panOffsetY = 0;
-    this.redrawCanvas();
-  }
-
-  retryLoad(): void {
-    this.error = null;
-    this.loading = true;
-    this.loadPattern();
   }
 
   ngOnDestroy(): void {

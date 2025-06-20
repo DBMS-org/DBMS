@@ -2,7 +2,6 @@ import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { REGIONS } from '../../../../core/constants/regions';
-import { USER_ROLES_ARRAY } from '../../../../core/constants/roles';
 
 @Component({
   selector: 'app-add-user',
@@ -21,14 +20,14 @@ export class AddUserComponent {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'Operator',
+    role: 'User',
     region: '',
     country: '',
     omanPhone: '',
     countryPhone: ''
   };
 
-  roles = USER_ROLES_ARRAY;
+  roles = ['Admin', 'BlastingEngineer', 'Operator'];
   regions = REGIONS;
   countries = ['Oman', 'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain'];
 

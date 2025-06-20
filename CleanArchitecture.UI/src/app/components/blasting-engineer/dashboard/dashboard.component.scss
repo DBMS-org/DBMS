@@ -77,33 +77,6 @@
   }
 }
 
-.refresh-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 500;
-  backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
-  }
-
-  i {
-    font-size: 1.1rem;
-  }
-}
-
 .logout-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -244,24 +217,9 @@
     background: linear-gradient(135deg, #48bb78, #38a169);
   }
 
-  &.sites .stat-icon {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-  }
-
-  &.active-sites .stat-icon {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    border: 2px solid red !important; /* Debug border to see if the selector works */
-  }
-
   &.patterns .stat-icon {
     background: linear-gradient(135deg, #9f7aea, #805ad5);
   }
-}
-
-// Additional specificity for active-sites (debugging)
-.stat-card.active-sites .stat-icon {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  border: 2px solid blue !important;
 }
 
 // Data Quality Panel
@@ -886,125 +844,4 @@
     padding: 1rem;
     border-radius: 8px;
   }
-}
-
-// New styles for database features
-.data-warning-panel {
-  background: linear-gradient(135deg, rgba(245, 166, 35, 0.1), rgba(245, 101, 101, 0.1));
-  border: 2px solid rgba(245, 166, 35, 0.3);
-  border-radius: 12px;
-  padding: 2rem;
-  text-align: center;
-  margin: 1rem 0;
-
-  .warning-icon {
-    font-size: 4rem;
-    color: #f5a623;
-    margin-bottom: 1rem;
-
-    i {
-      font-size: 4rem;
-    }
-  }
-
-  h3 {
-    color: #d69e2e;
-    margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-
-  p {
-    color: #744210;
-    margin: 0 0 1.5rem 0;
-    font-size: 1rem;
-  }
-
-  .warning-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.3s ease;
-
-      &.btn-primary {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-      }
-
-      &.btn-secondary {
-        background: rgba(108, 117, 125, 0.1);
-        color: #6c757d;
-        border: 1px solid rgba(108, 117, 125, 0.3);
-
-        &:hover {
-          background: rgba(108, 117, 125, 0.2);
-          transform: translateY(-2px);
-        }
-      }
-    }
-  }
-}
-
-.quality-value.database-source {
-  background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
-  color: #48bb78;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-weight: 600;
-  border: 1px solid rgba(72, 187, 120, 0.2);
-}
-
-.stat-card.drill-holes .stat-icon {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-}
-
-.upload-item.clickable {
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-  }
-}
-
-.upload-action {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white !important;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.quality-grid .quality-item .quality-label i {
-  font-size: 1rem;
-  margin-right: 0.25rem;
-  opacity: 0.7;
-}
-
-.upload-meta span i {
-  font-size: 0.9rem;
-  margin-right: 0.25rem;
-  opacity: 0.7;
 }

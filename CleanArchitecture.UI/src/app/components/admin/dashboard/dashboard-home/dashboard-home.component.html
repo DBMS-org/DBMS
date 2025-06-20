@@ -10,10 +10,6 @@
           <span class="last-login">{{ getLastLoginInfo() }}</span>
         </div>
       </div>
-      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
-        <i class="material-icons">refresh</i>
-        Refresh
-      </button>
       <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>
@@ -44,24 +40,6 @@
         <p class="stat-number">{{ stats.activeUsers }}</p>
       </div>
     </div>
-    <div class="stat-card engineers">
-      <div class="stat-icon">
-        <i class="material-icons">engineering</i>
-      </div>
-      <div class="stat-content">
-        <h3>Blasting Engineers</h3>
-        <p class="stat-number">{{ stats.totalEngineers }}</p>
-      </div>
-    </div>
-    <div class="stat-card operators">
-      <div class="stat-icon">
-        <i class="material-icons">build</i>
-      </div>
-      <div class="stat-content">
-        <h3>Operators</h3>
-        <p class="stat-number">{{ stats.totalOperators }}</p>
-      </div>
-    </div>
     <div class="stat-card projects">
       <div class="stat-icon">
         <i class="material-icons">work</i>
@@ -78,103 +56,6 @@
       <div class="stat-content">
         <h3>Active Projects</h3>
         <p class="stat-number">{{ stats.activeProjects }}</p>
-      </div>
-    </div>
-    <div class="stat-card sites">
-      <div class="stat-icon">
-        <i class="material-icons">place</i>
-      </div>
-      <div class="stat-content">
-        <h3>Total Sites</h3>
-        <p class="stat-number">{{ stats.totalSites }}</p>
-      </div>
-    </div>
-    <div class="stat-card drill-holes">
-      <div class="stat-icon">
-        <i class="material-icons">scatter_plot</i>
-      </div>
-      <div class="stat-content">
-        <h3>Total Drill Holes</h3>
-        <p class="stat-number">{{ stats.totalDrillHoles }}</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- System Metrics Panel -->
-  <div class="system-metrics-panel">
-    <h3>
-      <i class="material-icons">analytics</i>
-      System Analytics (Live Database)
-    </h3>
-    <div class="metrics-grid">
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">storage</i>
-          Database Status:
-        </span>
-        <span class="metric-value database-connected">{{ systemMetrics.databaseStatus }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">cloud_upload</i>
-          Data Uploads:
-        </span>
-        <span class="metric-value">{{ systemMetrics.totalDataUploads }} sites</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">straighten</i>
-          Avg. Drill Depth:
-        </span>
-        <span class="metric-value">{{ systemMetrics.averageDrillDepth }}m</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">assignment_turned_in</i>
-          Data Quality:
-        </span>
-        <span class="metric-value" [class]="'quality-' + systemMetrics.dataQuality.toLowerCase()">{{ systemMetrics.dataQuality }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">place</i>
-          Active Drill Sites:
-        </span>
-        <span class="metric-value">{{ stats.activeDrillSites }} / {{ stats.totalSites }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">linear_scale</i>
-          Total Drill Length:
-        </span>
-        <span class="metric-value">{{ quickStats.totalDrillLength }}m</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Admin Quick Actions Panel -->
-  <div class="admin-actions-panel">
-    <h3>
-      <i class="material-icons">admin_panel_settings</i>
-      Admin Actions
-    </h3>
-    <div class="action-cards">
-      <div class="action-card users-action" (click)="navigateToUsers()">
-        <div class="action-icon">
-          <i class="material-icons">people</i>
-        </div>
-        <h4>Manage Users</h4>
-        <p>Add, edit, or deactivate user accounts</p>
-        <div class="action-status">{{ stats.totalUsers }} total users</div>
-      </div>
-      
-      <div class="action-card projects-action" (click)="navigateToProjects()">
-        <div class="action-icon">
-          <i class="material-icons">work</i>
-        </div>
-        <h4>Manage Projects</h4>
-        <p>Oversee all drilling projects and sites</p>
-        <div class="action-status">{{ stats.totalProjects }} projects</div>
       </div>
     </div>
   </div>

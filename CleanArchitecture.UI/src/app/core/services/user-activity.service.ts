@@ -107,9 +107,52 @@ export class UserActivityService {
   }
 
   /**
-   * Initialize with empty activities (will be populated by real API data)
+   * Initialize with some sample activities (for demo purposes)
    */
   initializeSampleActivities(): void {
-    this.activitiesSubject.next([]);
+    const sampleActivities: UserActivity[] = [
+      {
+        id: '1',
+        userId: 1,
+        userName: 'John Doe',
+        action: 'uploaded drill hole data',
+        details: 'Uploaded CSV file with 500 drill holes',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        region: 'Muscat',
+        category: 'upload'
+      },
+      {
+        id: '2',
+        userId: 2,
+        userName: 'Jane Smith',
+        action: 'created new project',
+        details: 'Project: Mining Site Alpha',
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+        region: 'Salalah',
+        category: 'project'
+      },
+      {
+        id: '3',
+        userId: 1,
+        userName: 'John Doe',
+        action: 'generated 3D visualization',
+        details: 'Exported 3D model for Quarry Beta',
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+        region: 'Muscat',
+        category: 'visualization'
+      },
+      {
+        id: '4',
+        userId: 3,
+        userName: 'Mike Wilson',
+        action: 'completed drilling pattern',
+        details: 'Pattern for Site Gamma',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        region: 'Sohar',
+        category: 'project'
+      }
+    ];
+
+    this.activitiesSubject.next(sampleActivities);
   }
 } 

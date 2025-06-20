@@ -6,7 +6,7 @@ import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 
 interface DrillHole {
-  serialNumber?: number;
+  serialNumber: number;
   id: string;
   name?: string;
   easting: number;

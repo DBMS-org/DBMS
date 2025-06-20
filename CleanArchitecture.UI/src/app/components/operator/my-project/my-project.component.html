@@ -1,129 +1,27 @@
-<!-- Consistent Dashboard Header -->
-<header class="dashboard-header">
-  <div class="header-content">
-    <h1>My Project</h1>
-    <div class="user-info">
-      <div class="user-details">
-        <span class="welcome-message">Project Assignment</span>
-        <div class="user-metadata">
-          <span class="user-role">Role: Operator</span>
-          <span class="last-login">Current Assignment Status</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
-
-<!-- Loading State -->
-<div *ngIf="isLoading" class="loading-container">
-  <div class="spinner"></div>
-  <p>Loading project information...</p>
-</div>
-
-<!-- Main Content -->
-<div class="my-project-content" *ngIf="!isLoading">
+<div class="my-project" *ngIf="!isLoading">
   <ng-container *ngIf="project; else noProject">
-    <!-- Project Overview Card -->
-    <section class="project-overview">
-      <div class="project-card">
-        <div class="project-header">
-          <div class="project-icon">
-            <i class="material-icons">work</i>
-          </div>
-          <div class="project-info">
-            <h2>{{ project.name }}</h2>
-            <p class="project-subtitle">Project Overview & Details</p>
-          </div>
-          <div class="project-status">
-            <span class="status-badge" [class]="'status-' + project.status.toLowerCase()">
-              {{ project.status }}
-            </span>
-          </div>
-        </div>
-        
-        <!-- Project Stats Grid -->
-        <div class="project-stats">
-          <div class="stat-item">
-            <div class="stat-icon region">
-              <i class="material-icons">place</i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">Region</span>
-              <span class="stat-value">{{ project.region }}</span>
-            </div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-icon dates">
-              <i class="material-icons">date_range</i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">Start Date</span>
-              <span class="stat-value">{{ formatDate(project.startDate) }}</span>
-            </div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-icon dates">
-              <i class="material-icons">event</i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">End Date</span>
-              <span class="stat-value">{{ formatDate(project.endDate) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Project Description -->
-        <div class="project-description" *ngIf="project.description">
-          <h3>Project Description</h3>
-          <p>{{ project.description }}</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Quick Actions Section -->
-    <section class="quick-actions">
-      <h2>Project Actions</h2>
-      <div class="action-cards">
-        <div class="action-card sites" (click)="navigateToSites()">
-          <div class="action-icon sites">
-            <i class="material-icons">location_city</i>
-          </div>
-          <div class="action-content">
-            <h3>View Sites</h3>
-            <p>Access all project sites and their drilling patterns</p>
-            <div class="action-meta">
-              <span class="action-status">Available</span>
-            </div>
-          </div>
-          <div class="action-arrow">
-            <i class="material-icons">arrow_forward</i>
-          </div>
-        </div>
-      </div>
-    </section>
+    <h2>{{ project.name }}</h2>
+    <div class="project-details-card">
+      <p><strong>Region:</strong> {{ project.region }}</p>
+      <p><strong>Status:</strong> {{ project.status }}</p>
+      <p><strong>Description:</strong> {{ project.description || '-' }}</p>
+      <p><strong>Start Date:</strong> {{ formatDate(project.startDate) }}</p>
+      <p><strong>End Date:</strong> {{ formatDate(project.endDate) }}</p>
+    </div>
+    <a class="btn btn-outline-primary mt-3" routerLink="/operator/my-project/sites">View Sites</a>
   </ng-container>
 
-  <!-- No Project Template -->
   <ng-template #noProject>
-    <section class="no-project-section">
-      <div class="empty-state">
-        <div class="empty-icon">
-          <i class="material-icons">work_off</i>
-        </div>
-        <h2>No Project Assigned</h2>
-        <p>You are not currently assigned to any project. Please contact your administrator for project assignment.</p>
-        <div class="empty-actions">
-          <button class="btn btn-outline-primary">Contact Administrator</button>
-        </div>
-      </div>
-    </section>
+    <div class="no-project">
+      <p>You are not currently assigned to any project.</p>
+    </div>
   </ng-template>
 
-  <!-- Error Message -->
-  <div *ngIf="error" class="error-message">
-    <div class="alert alert-danger">
-      <i class="material-icons">error</i>
-      <span>{{ error }}</span>
-    </div>
+  <div *ngIf="error" class="alert alert-danger mt-3">{{ error }}</div>
+</div>
+
+<div *ngIf="isLoading" class="loading-state">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
   </div>
 </div> 

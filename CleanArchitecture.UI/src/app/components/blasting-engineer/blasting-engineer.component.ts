@@ -6,7 +6,6 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 interface DrillHole {
-  serialNumber?: number;
   id: string;
   name: string;
   easting: number;

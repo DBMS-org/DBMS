@@ -16,9 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Configure JSON serialization to handle camelCase from frontend
+        // Configure JSON serialization for proper DateTime handling
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.WriteIndented = true;
         
         // Ensure DateTime is serialized as UTC with proper timezone information
@@ -69,8 +68,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // Register DrillHole services
-builder.Services.AddScoped<IDrillHoleRepository, DrillHoleRepository>();
-builder.Services.AddScoped<IDrillHoleService, DrillHoleService>();
+builder.Services.AddSingleton<IDrillHoleRepository, DrillHoleRepository>();
+builder.Services.AddSingleton<IDrillHoleService, DrillHoleService>();
 
 // Register Site Blasting services
 builder.Services.AddScoped<ISiteBlastingService, SiteBlastingService>();

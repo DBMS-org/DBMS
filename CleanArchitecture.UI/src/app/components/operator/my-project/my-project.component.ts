@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Project } from '../../../core/models/project.model';
@@ -17,11 +17,7 @@ export class MyProjectComponent implements OnInit {
   error: string | null = null;
   project: Project | null = null;
 
-  constructor(
-    private projectService: ProjectService, 
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  constructor(private projectService: ProjectService, private authService: AuthService) {}
 
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
@@ -45,9 +41,5 @@ export class MyProjectComponent implements OnInit {
 
   formatDate(date?: Date): string {
     return date ? new Date(date).toLocaleDateString() : '-';
-  }
-
-  navigateToSites(): void {
-    this.router.navigate(['/operator/my-project/sites']);
   }
 } 

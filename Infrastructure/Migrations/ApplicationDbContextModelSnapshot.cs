@@ -305,122 +305,122 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             Action = "View",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9729),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4663),
                             Description = "Can view user list",
                             IsActive = true,
                             Module = "Users",
                             Name = "View Users",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9730)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4663)
                         },
                         new
                         {
                             Id = 2,
                             Action = "Create",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9735),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4669),
                             Description = "Can create new users",
                             IsActive = true,
                             Module = "Users",
                             Name = "Create User",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9736)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4669)
                         },
                         new
                         {
                             Id = 3,
                             Action = "Edit",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9739),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4672),
                             Description = "Can edit user details",
                             IsActive = true,
                             Module = "Users",
                             Name = "Edit User",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9739)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4673)
                         },
                         new
                         {
                             Id = 4,
                             Action = "Delete",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9742),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4675),
                             Description = "Can delete users",
                             IsActive = true,
                             Module = "Users",
                             Name = "Delete User",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9742)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4675)
                         },
                         new
                         {
                             Id = 5,
                             Action = "View",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9745),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4678),
                             Description = "Can view dashboard",
                             IsActive = true,
                             Module = "Dashboard",
                             Name = "View Dashboard",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9745)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4678)
                         },
                         new
                         {
                             Id = 6,
                             Action = "Upload",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9748),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4681),
                             Description = "Can upload CSV files",
                             IsActive = true,
                             Module = "DrillHole",
                             Name = "Upload CSV",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9748)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4681)
                         },
                         new
                         {
                             Id = 7,
                             Action = "View",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9751),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4684),
                             Description = "Can view drill holes",
                             IsActive = true,
                             Module = "DrillHole",
                             Name = "View DrillHoles",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9751)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4684)
                         },
                         new
                         {
                             Id = 8,
                             Action = "View",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9753),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4687),
                             Description = "Can view project list",
                             IsActive = true,
                             Module = "Projects",
                             Name = "View Projects",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9754)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4687)
                         },
                         new
                         {
                             Id = 9,
                             Action = "Create",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9756),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4689),
                             Description = "Can create new projects",
                             IsActive = true,
                             Module = "Projects",
                             Name = "Create Project",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9757)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4690)
                         },
                         new
                         {
                             Id = 10,
                             Action = "Edit",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9759),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4692),
                             Description = "Can edit project details",
                             IsActive = true,
                             Module = "Projects",
                             Name = "Edit Project",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9760)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4692)
                         },
                         new
                         {
                             Id = 11,
                             Action = "Delete",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9762),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4695),
                             Description = "Can delete projects",
                             IsActive = true,
                             Module = "Projects",
                             Name = "Delete Project",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9762)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4695)
                         });
                 });
 
@@ -482,40 +482,40 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             AssignedUserId = 1,
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9877),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4809),
                             Description = "Major highway development project in Muscat region",
                             EndDate = new DateTime(2024, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Muscat Infrastructure Development - Highway Construction",
                             Region = "Muscat",
                             StartDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Status = "Active",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9878)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4810)
                         },
                         new
                         {
                             Id = 2,
                             AssignedUserId = 1,
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9885),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4816),
                             Description = "Mining site expansion project in Dhofar region",
                             EndDate = new DateTime(2024, 11, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Dhofar Mining Operations - Site Development",
                             Region = "Dhofar",
                             StartDate = new DateTime(2024, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Status = "Active",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9886)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4817)
                         },
                         new
                         {
                             Id = 3,
                             AssignedUserId = 1,
-                            CreatedAt = new DateTime(2024, 12, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9892),
+                            CreatedAt = new DateTime(2024, 12, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4823),
                             Description = "Industrial zone construction project in Sohar",
                             EndDate = new DateTime(2023, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Sohar Industrial Zone - Development",
                             Region = "Al Batinah North",
                             StartDate = new DateTime(2023, 6, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Status = "Completed",
-                            UpdatedAt = new DateTime(2025, 5, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9904)
+                            UpdatedAt = new DateTime(2025, 5, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4835)
                         });
                 });
 
@@ -578,7 +578,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             Coordinates = "{\"Latitude\":23.5880,\"Longitude\":58.3829}",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9948),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4934),
                             Description = "Primary construction site for highway project",
                             IsPatternApproved = false,
                             IsSimulationConfirmed = false,
@@ -586,13 +586,13 @@ namespace Infrastructure.Migrations
                             Name = "Muscat Main Site",
                             ProjectId = 1,
                             Status = "Active",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9949)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4935)
                         },
                         new
                         {
                             Id = 2,
                             Coordinates = "{\"Latitude\":17.0194,\"Longitude\":54.1085}",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9954),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4940),
                             Description = "Main mining pit for ore extraction",
                             IsPatternApproved = false,
                             IsSimulationConfirmed = false,
@@ -600,7 +600,7 @@ namespace Infrastructure.Migrations
                             Name = "Dhofar Mining Pit A",
                             ProjectId = 2,
                             Status = "Active",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9955)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4940)
                         });
                 });
 
@@ -647,42 +647,42 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9445),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4409),
                             Description = "Administrator with full access",
                             IsActive = true,
                             Name = "Admin",
                             NormalizedName = "ADMIN",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9451)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4412)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9461),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4419),
                             Description = "Blasting Engineer with technical access",
                             IsActive = true,
                             Name = "BlastingEngineer",
                             NormalizedName = "BLASTINGENGINEER",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9462)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4419)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4422),
+                            Description = "Regular user with limited access",
+                            IsActive = true,
+                            Name = "User",
+                            NormalizedName = "USER",
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4423)
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9466),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4425),
                             Description = "Operator with operational access",
                             IsActive = true,
                             Name = "Operator",
                             NormalizedName = "OPERATOR",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9466)
-                        },
-                        new
-                        {
-                            Id = 5,
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9469),
-                            Description = "Machine Manager with machinery operational access",
-                            IsActive = true,
-                            Name = "MachineManager",
-                            NormalizedName = "MACHINEMANAGER",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9469)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4426)
                         });
                 });
 
@@ -841,7 +841,7 @@ namespace Infrastructure.Migrations
                             Id = 1,
                             Country = "Oman",
                             CountryPhone = "+968 9999 9999",
-                            CreatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9818),
+                            CreatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4745),
                             Email = "admin@dbms.com",
                             Name = "System Administrator",
                             OmanPhone = "+968 9999 9999",
@@ -849,7 +849,7 @@ namespace Infrastructure.Migrations
                             Region = "Muscat",
                             Role = "Admin",
                             Status = "Active",
-                            UpdatedAt = new DateTime(2025, 6, 19, 16, 35, 27, 136, DateTimeKind.Utc).AddTicks(9818)
+                            UpdatedAt = new DateTime(2025, 6, 18, 4, 38, 40, 460, DateTimeKind.Utc).AddTicks(4745)
                         });
                 });
 

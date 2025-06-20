@@ -5,7 +5,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface DrillHole {
-  serialNumber?: number;
+  serialNumber: number;
   id: string;
   name?: string;
   easting: number;
@@ -221,6 +221,7 @@ export class DrillHoleService {
     };
     
     const cleaned: DrillHole = {
+      serialNumber: Math.max(0, safeInt(hole.serialNumber, 0)),
       id: cleanId,
       name: hole.name && hole.name.trim() ? hole.name.trim() : cleanId,
       easting: safeNumber(hole.easting, 0),

@@ -99,7 +99,6 @@ namespace Infrastructure.Data
             modelBuilder.Entity<DrillHole>(entity =>
             {
                 entity.HasKey(e => e.SerialNumber);
-                entity.Property(e => e.SerialNumber).ValueGeneratedOnAdd();
                 entity.Property(e => e.Id).IsRequired();
                 entity.Property(e => e.Name).IsRequired();
             });
@@ -274,8 +273,8 @@ namespace Infrastructure.Data
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin", Description = "Administrator with full access", NormalizedName = "ADMIN", IsActive = true },
                 new Role { Id = 2, Name = "BlastingEngineer", Description = "Blasting Engineer with technical access", NormalizedName = "BLASTINGENGINEER", IsActive = true },
-                new Role { Id = 4, Name = "Operator", Description = "Operator with operational access", NormalizedName = "OPERATOR", IsActive = true },
-                new Role { Id = 5, Name = "MachineManager", Description = "Machine Manager with machinery operational access", NormalizedName = "MACHINEMANAGER", IsActive = true }
+                new Role { Id = 3, Name = "User", Description = "Regular user with limited access", NormalizedName = "USER", IsActive = true },
+                new Role { Id = 4, Name = "Operator", Description = "Operator with operational access", NormalizedName = "OPERATOR", IsActive = true }
             );
 
             // Seed Permissions
