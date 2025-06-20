@@ -276,7 +276,9 @@ namespace Infrastructure.Data
                 new Role { Id = 2, Name = "BlastingEngineer", Description = "Blasting Engineer with technical access", NormalizedName = "BLASTINGENGINEER", IsActive = true },
                 new Role { Id = 3, Name = "MechanicalEngineer", Description = "Mechanical Engineer with analysis and design access", NormalizedName = "MECHANICALENGINEER", IsActive = true },
                 new Role { Id = 4, Name = "Operator", Description = "Operator with operational access", NormalizedName = "OPERATOR", IsActive = true },
-                new Role { Id = 5, Name = "MachineManager", Description = "Machine Manager with machinery operational access", NormalizedName = "MACHINEMANAGER", IsActive = true }
+                new Role { Id = 5, Name = "MachineManager", Description = "Machine Manager with machinery operational access", NormalizedName = "MACHINEMANAGER", IsActive = true },
+                new Role { Id = 6, Name = "ExplosiveManager", Description = "Explosive Manager with explosives handling and safety access", NormalizedName = "EXPLOSIVEMANAGER", IsActive = true },
+                new Role { Id = 7, Name = "StoreManager", Description = "Store Manager with inventory and supply chain access", NormalizedName = "STOREMANAGER", IsActive = true }
             );
 
             // Seed Permissions

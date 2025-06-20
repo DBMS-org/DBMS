@@ -111,6 +111,14 @@ export class AuthService {
     return this.hasRole('operator');
   }
 
+  isExplosiveManager(): boolean {
+    return this.hasRole('explosivemanager');
+  }
+
+  isStoreManager(): boolean {
+    return this.hasRole('storemanager');
+  }
+
   // Forgot Password Methods
   forgotPassword(email: string): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/api/auth/forgot-password`, { email });

@@ -20,8 +20,9 @@ export class SidebarComponent {
 
   navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/admin/dashboard' },
-    { icon: 'people', label: 'Users', route: '/admin/users' },
+    { icon: 'people', label: 'User Management', route: '/admin/users' },
     { icon: 'work', label: 'Project Management', route: '/admin/project-management' },
-    { icon: 'settings', label: 'Settings', route: '/admin/settings' }
+    { icon: 'precision_manufacturing', label: 'Machine Inventory', route: '/admin/machine-inventory' },
+    { icon: 'assignment', label: 'Machine Assignments', route: '/admin/machine-assignments' }
   ];
 }

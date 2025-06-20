@@ -80,6 +80,12 @@ export class LoginComponent {
       case 'operator':
         this.router.navigate(['/operator/dashboard']);
         break;
+      case 'explosivemanager':
+        this.router.navigate(['/explosive-manager/dashboard']);
+        break;
+      case 'storemanager':
+        this.router.navigate(['/store-manager/dashboard']);
+        break;
       
       default:
         this.errorMessage = `Invalid user role: ${role}. Please contact your administrator.`;
