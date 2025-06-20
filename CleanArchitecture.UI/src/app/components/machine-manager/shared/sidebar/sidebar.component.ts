@@ -20,11 +20,9 @@ export class SidebarComponent {
 
   navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/machine-manager/dashboard' },
-    { icon: 'precision_manufacturing', label: 'Machine Operations', route: '/machine-manager/operations' },
-    { icon: 'build_circle', label: 'Maintenance', route: '/machine-manager/maintenance' },
-    { icon: 'inventory', label: 'Equipment', route: '/machine-manager/equipment' },
-    { icon: 'schedule', label: 'Scheduling', route: '/machine-manager/scheduling' },
-    { icon: 'assessment', label: 'Reports', route: '/machine-manager/reports' },
-    { icon: 'settings', label: 'Settings', route: '/machine-manager/settings' }
+    { icon: 'inventory_2', label: 'Machine Inventory', route: '/machine-manager/machine-inventory' },
+    { icon: 'assignment', label: 'Assignment Requests', route: '/machine-manager/assignment-requests' },
+    { icon: 'build', label: 'Accessories Inventory', route: '/machine-manager/accessories-inventory' },
+    { icon: 'engineering', label: 'Maintenance Management', route: '/machine-manager/maintenance-management' }
   ];
 }

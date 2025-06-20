@@ -23,17 +23,22 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   stats = {
     totalUsers: 0,
     activeUsers: 0,
+    deactivatedUsers: 0,
     totalProjects: 0,
     activeProjects: 0,
+    pendingProjects: 0,
+    completedProjects: 0,
+    archivedProjects: 0,
+    totalMachines: 0,
+    assignedMachines: 0,
+    pendingAssignments: 0,
+    machineRequests: 0,
     totalSites: 0,
     activeSites: 0,
     totalDrillHoles: 0,
-    activeDrillSites: 0,
-    totalEngineers: 0,
-    totalOperators: 0
+    activeDrillSites: 0
   };
 
-  recentActivities: any[] = [];
   systemMetrics = {
     databaseStatus: 'Connected',
     totalDataUploads: 0,
@@ -79,14 +84,13 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   private loadDashboardData() {
     // Load general dashboard statistics
     this.loadStats();
-    this.loadRecentActivities();
   }
 
   private loadUserSpecificData() {
     if (!this.currentUser) return;
 
-    // Customize activities based on user region/country
-    this.recentActivities = this.filterActivitiesByUserRegion();
+    // User-specific customizations can be added here if needed
+    console.log('Loading user-specific data for:', this.currentUser.name);
   }
 
   private loadStats() {
@@ -98,95 +102,86 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       drillHoles: this.drillHoleService.getAllDrillHoles()
     }).subscribe({
       next: ({ users, projects, sites, drillHoles }) => {
-        // User statistics
+        // User statistics from database
         this.stats.totalUsers = users.length;
         this.stats.activeUsers = users.filter((u: any) => u.status === 'Active').length;
-        this.stats.totalEngineers = users.filter((u: any) => u.role === 'BlastingEngineer').length;
-        this.stats.totalOperators = users.filter((u: any) => u.role === 'Operator').length;
+        this.stats.deactivatedUsers = users.filter((u: any) => u.status === 'Inactive' || u.status === 'Deactivated').length;
         
-        // Project statistics
+        // Project statistics from database
         this.stats.totalProjects = projects.length;
         this.stats.activeProjects = projects.filter((p: any) => p.status === 'Active').length;
+        this.stats.pendingProjects = projects.filter((p: any) => p.status === 'Pending').length;
+        this.stats.completedProjects = projects.filter((p: any) => p.status === 'Completed').length;
+        this.stats.archivedProjects = projects.filter((p: any) => p.status === 'Archived').length;
         
-        // Site statistics
+        // Site statistics from database
         this.stats.totalSites = sites.length;
         this.stats.activeSites = sites.filter((s: any) => s.status === 'Active').length;
         
-        // Drill hole statistics
+        // Drill hole statistics from database
         this.stats.totalDrillHoles = drillHoles.length;
         const sitesWithDrillHoles = new Set(drillHoles.map((h: any) => h.siteId).filter((id: any) => id));
         this.stats.activeDrillSites = sitesWithDrillHoles.size;
         
-        // Calculate drill analytics
+        // Machine statistics (placeholder - no machine service available yet)
+        this.stats.totalMachines = 45; // Placeholder until machine service is implemented
+        this.stats.assignedMachines = 32; // Placeholder until machine service is implemented
+        this.stats.pendingAssignments = 8; // Placeholder until machine service is implemented
+        this.stats.machineRequests = 5; // Placeholder until machine service is implemented
+        
+        // Calculate drill analytics from database
         this.calculateDrillAnalytics(drillHoles);
         
-        // Update system metrics
+        // Update system metrics with real data
         this.systemMetrics.totalDataUploads = sitesWithDrillHoles.size;
         this.systemMetrics.averageDrillDepth = this.quickStats.averageDepth;
         this.systemMetrics.dataQuality = drillHoles.length > 100 ? 'Excellent' : drillHoles.length > 50 ? 'Good' : 'Limited';
         
         this.isLoading = false;
         
-        console.log('📊 Admin Dashboard Statistics:', {
+        console.log('📊 Admin Dashboard Statistics (Database):', {
           totalUsers: this.stats.totalUsers,
           activeUsers: this.stats.activeUsers,
-          totalEngineers: this.stats.totalEngineers,
-          totalOperators: this.stats.totalOperators,
+          deactivatedUsers: this.stats.deactivatedUsers,
           totalProjects: this.stats.totalProjects,
           activeProjects: this.stats.activeProjects,
+          pendingProjects: this.stats.pendingProjects,
+          completedProjects: this.stats.completedProjects,
+          archivedProjects: this.stats.archivedProjects,
           totalSites: this.stats.totalSites,
           activeSites: this.stats.activeSites,
           totalDrillHoles: this.stats.totalDrillHoles,
-          activeDrillSites: this.stats.activeDrillSites
+          activeDrillSites: this.stats.activeDrillSites,
+          totalMachines: this.stats.totalMachines,
+          assignedMachines: this.stats.assignedMachines,
+          pendingAssignments: this.stats.pendingAssignments,
+          machineRequests: this.stats.machineRequests
         });
       },
       error: (error) => {
         console.error('Error loading admin dashboard data:', error);
-        // Set default values on error
+        // Set fallback values on error
         this.stats = {
-          totalUsers: 150,
-          activeUsers: 120,
-          totalProjects: 25,
-          activeProjects: 18,
+          totalUsers: 0,
+          activeUsers: 0,
+          deactivatedUsers: 0,
+          totalProjects: 0,
+          activeProjects: 0,
+          pendingProjects: 0,
+          completedProjects: 0,
+          archivedProjects: 0,
+          totalMachines: 45, // Placeholder
+          assignedMachines: 32, // Placeholder
+          pendingAssignments: 8, // Placeholder
+          machineRequests: 5, // Placeholder
           totalSites: 0,
           activeSites: 0,
           totalDrillHoles: 0,
-          activeDrillSites: 0,
-          totalEngineers: 0,
-          totalOperators: 0
+          activeDrillSites: 0
         };
         this.isLoading = false;
       }
     });
-  }
-
-  private loadRecentActivities() {
-    // Sample activities - in a real app, you'd fetch from API
-    const allActivities = [
-      { id: 1, user: 'John Doe', action: 'created a new project', time: '5 minutes ago', region: 'Muscat' },
-      { id: 2, user: 'Jane Smith', action: 'updated user profile', time: '1 hour ago', region: 'Salalah' },
-      { id: 3, user: 'Bob Johnson', action: 'completed drill plan review', time: '2 hours ago', region: 'Muscat' },
-      { id: 4, user: 'Alice Brown', action: 'uploaded CSV data', time: '3 hours ago', region: 'Sohar' },
-      { id: 5, user: 'Mike Wilson', action: 'generated blast report', time: '4 hours ago', region: 'Muscat' }
-    ];
-
-    this.recentActivities = allActivities;
-  }
-
-  private filterActivitiesByUserRegion(): any[] {
-    if (!this.currentUser?.region) {
-      return this.recentActivities;
-    }
-
-    // Show activities from user's region first, then others
-    const userRegionActivities = this.recentActivities.filter(activity => 
-      activity.region === this.currentUser?.region
-    );
-    const otherActivities = this.recentActivities.filter(activity => 
-      activity.region !== this.currentUser?.region
-    );
-
-    return [...userRegionActivities, ...otherActivities];
   }
 
   logout() {
@@ -224,17 +219,14 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     return 'Last login: Today at 9:30 AM';
   }
 
-  trackActivity(index: number, activity: any): number {
-    return activity.id;
-  }
-
-  getActivityIcon(action: string): string {
-    if (action.includes('project')) return 'work';
-    if (action.includes('profile') || action.includes('user')) return 'person';
-    if (action.includes('upload')) return 'cloud_upload';
-    if (action.includes('review') || action.includes('report')) return 'assessment';
-    if (action.includes('completed')) return 'check_circle';
-    return 'notification_important';
+  getInitials(): string {
+    if (!this.currentUser?.name) return 'GM';
+    
+    const names = this.currentUser.name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0].substring(0, 2).toUpperCase();
   }
 
   private calculateDrillAnalytics(drillHoles: DrillHole[]): void {
@@ -273,5 +265,27 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
 
   navigateToProjects(): void {
     this.router.navigate(['/admin/project-management']);
+  }
+
+  navigateToMachineInventory(): void {
+    this.router.navigate(['/admin/machine-inventory']);
+  }
+
+  navigateToMachineAssignments(): void {
+    this.router.navigate(['/admin/machine-assignments']);
+  }
+
+  navigateToCreateUser(): void {
+    this.router.navigate(['/admin/users/add-user']);
+  }
+
+  navigateToCreateProject(): void {
+    this.router.navigate(['/admin/project-management/add-project']);
+  }
+
+  submitMachineAssignmentRequest(): void {
+    // This would open a dialog or navigate to machine assignment request form
+    console.log('Opening machine assignment request form...');
+    this.router.navigate(['/admin/machine-assignments'], { queryParams: { action: 'request' } });
   }
 }

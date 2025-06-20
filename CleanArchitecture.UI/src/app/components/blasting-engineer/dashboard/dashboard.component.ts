@@ -290,6 +290,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return `${timeOfDay}, ${this.currentUser.name}`;
   }
 
+  getInitials(): string {
+    if (!this.currentUser?.name) return 'BE';
+    
+    const names = this.currentUser.name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0].substring(0, 2).toUpperCase();
+  }
+
   private getTimeOfDayGreeting(): string {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';

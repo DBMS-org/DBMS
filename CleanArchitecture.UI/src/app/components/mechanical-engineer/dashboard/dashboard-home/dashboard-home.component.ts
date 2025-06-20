@@ -148,15 +148,28 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   getUserWelcomeMessage(): string {
-    if (this.currentUser) {
-      const hour = new Date().getHours();
-      let greeting = 'Good morning';
-      if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
-      else if (hour >= 17) greeting = 'Good evening';
-      
-      return `${greeting}, ${this.currentUser.name}!`;
+    if (!this.currentUser) return 'Welcome, Mechanical Engineer';
+    
+    const hour = new Date().getHours();
+    let greeting = 'Good morning';
+    
+    if (hour >= 12 && hour < 17) {
+      greeting = 'Good afternoon';
+    } else if (hour >= 17) {
+      greeting = 'Good evening';
     }
-    return 'Welcome!';
+    
+    return `${greeting}, ${this.currentUser.name}!`;
+  }
+
+  getInitials(): string {
+    if (!this.currentUser?.name) return 'ME';
+    
+    const names = this.currentUser.name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0].substring(0, 2).toUpperCase();
   }
 
   getUserLocationInfo(): string {
