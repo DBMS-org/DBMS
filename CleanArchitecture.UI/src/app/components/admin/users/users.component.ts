@@ -47,57 +47,8 @@ export class UsersComponent implements OnInit {
         this.error = error.message;
         this.loading = false;
         console.error('Error loading users:', error);
-        
-        // Fallback to mock data if API fails
-        this.loadMockData();
       }
     });
-  }
-
-  private loadMockData() {
-    // Keep mock data as fallback
-    this.users = [
-      {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'Admin',
-        region: 'Muscat',
-        country: 'Oman',
-        omanPhone: '+968 9876 5432',
-        countryPhone: '+1 234 567 8900',
-        status: 'Active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 2,
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        role: 'User',
-        region: 'Salalah',
-        country: 'UAE',
-        omanPhone: '+968 1234 5678',
-        countryPhone: '+971 50 123 4567',
-        status: 'Active',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 3,
-        name: 'Bob Wilson',
-        email: 'bob@example.com',
-        role: 'User',
-        region: 'Sohar',
-        country: 'Oman',
-        omanPhone: '+968 5555 6666',
-        countryPhone: '+968 7777 8888',
-        status: 'Inactive',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
-    this.filteredUsers = [...this.users];
   }
 
   onSearch() {

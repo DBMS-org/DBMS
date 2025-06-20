@@ -27,6 +27,16 @@ namespace Core.Services
             return await _repository.GetByIdAsync(id);
         }
 
+        public async Task<IEnumerable<DrillHole>> GetDrillHolesByProjectIdAsync(int projectId)
+        {
+            return await _repository.GetByProjectIdAsync(projectId);
+        }
+
+        public async Task<IEnumerable<DrillHole>> GetDrillHolesBySiteIdAsync(int projectId, int siteId)
+        {
+            return await _repository.GetBySiteIdAsync(projectId, siteId);
+        }
+
         public async Task<DrillHole> CreateDrillHoleAsync(DrillHole drillHole)
         {
             if (drillHole == null)
@@ -109,7 +119,18 @@ namespace Core.Services
                     dataStarted = true;
                     
                     // Validate that we have the required columns for blast data
-                    var requiredHeaders = new[] { "sr no.", "id", "east", "north", "elev", "length", "azi", "dip", "actual dep", "stemming" };
+                    var requiredHeaders = new List<string> 
+                    { 
+                        "id", 
+                        "east", 
+                        "north", 
+                        "elev", 
+                        "length", 
+                        "azi", 
+                        "dip", 
+                        "actual dep", 
+                        "stemming" 
+                    };
                     var missingHeaders = new List<string>();
                     
                     foreach (var required in requiredHeaders)
@@ -212,7 +233,6 @@ namespace Core.Services
                     case "sr no":
                     case "serial no.":
                     case "serial number":
-                        drillHole.SerialNumber = ParseInt(value, "Serial Number", lineNumber);
                         break;
                     case "id":
                     case "hole id":
@@ -372,6 +392,31 @@ namespace Core.Services
 
             if (drillHole.Dip < -90 || drillHole.Dip > 90)
                 drillHole.Dip = Math.Max(-90, Math.Min(90, drillHole.Dip)); // Clamp to valid range
+        }
+
+        public async Task DeleteDrillHolesByProjectIdAsync(int projectId)
+        {
+            await _repository.DeleteByProjectIdAsync(projectId);
+        }
+
+        public async Task DeleteDrillHolesBySiteIdAsync(int projectId, int siteId)
+        {
+            await _repository.DeleteBySiteIdAsync(projectId, siteId);
+        }
+
+        public async Task<int> GetDrillHoleCountAsync()
+        {
+            return await _repository.GetCountAsync();
+        }
+
+        public async Task<int> GetDrillHoleCountByProjectIdAsync(int projectId)
+        {
+            return await _repository.GetCountByProjectIdAsync(projectId);
+        }
+
+        public async Task<int> GetDrillHoleCountBySiteIdAsync(int projectId, int siteId)
+        {
+            return await _repository.GetCountBySiteIdAsync(projectId, siteId);
         }
     }
 }

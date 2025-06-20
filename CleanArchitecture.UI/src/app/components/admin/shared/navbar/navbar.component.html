@@ -7,10 +7,13 @@
   </div>
   <div class="navbar-right">
     <div class="user-menu">
-      <button class="user-menu-button">
+      <div class="user-info">
         <i class="material-icons">account_circle</i>
-        <span>Admin User</span>
-        <i class="material-icons">arrow_drop_down</i>
+        <span class="user-name">{{ getUserDisplayName() }}</span>
+        <span class="user-role" *ngIf="currentUser">{{ currentUser.role }}</span>
+      </div>
+      <button class="logout-btn" (click)="logout()" title="Logout">
+        <i class="material-icons">logout</i>
       </button>
     </div>
   </div>

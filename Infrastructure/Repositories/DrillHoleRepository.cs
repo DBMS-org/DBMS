@@ -1,90 +1,155 @@
 using Core.Entities;
 using Core.Interfaces;
+using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
     public class DrillHoleRepository : IDrillHoleRepository
     {
-        private readonly List<DrillHole> _drillHoles = new();
-        private readonly object _lock = new();
+        private readonly ApplicationDbContext _context;
 
-        public Task<IEnumerable<DrillHole>> GetAllAsync()
+        public DrillHoleRepository(ApplicationDbContext context)
         {
-            lock (_lock)
+            _context = context;
+        }
+
+        public async Task<IEnumerable<DrillHole>> GetAllAsync()
+        {
+            return await _context.DrillHoles
+                .OrderBy(d => d.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<DrillHole?> GetByIdAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return null;
+
+            return await _context.DrillHoles
+                .FirstOrDefaultAsync(d => d.Id == id);
+        }
+
+        public async Task<DrillHole> AddAsync(DrillHole drillHole)
+        {
+            if (drillHole == null)
+                throw new ArgumentNullException(nameof(drillHole));
+
+            _context.DrillHoles.Add(drillHole);
+            await _context.SaveChangesAsync();
+            return drillHole;
+        }
+
+        public async Task UpdateAsync(DrillHole drillHole)
+        {
+            if (drillHole == null)
+                throw new ArgumentNullException(nameof(drillHole));
+
+            _context.DrillHoles.Update(drillHole);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return;
+
+            var drillHole = await _context.DrillHoles
+                .FirstOrDefaultAsync(d => d.Id == id);
+            
+            if (drillHole != null)
             {
-                return Task.FromResult(_drillHoles.AsEnumerable());
+                _context.DrillHoles.Remove(drillHole);
+                await _context.SaveChangesAsync();
             }
         }
 
-        public Task<DrillHole?> GetByIdAsync(string id)
+        public async Task<bool> ExistsAsync(string id)
         {
-            lock (_lock)
+            if (string.IsNullOrWhiteSpace(id))
+                return false;
+
+            return await _context.DrillHoles
+                .AnyAsync(d => d.Id == id);
+        }
+
+        public async Task AddRangeAsync(IEnumerable<DrillHole> drillHoles)
+        {
+            if (drillHoles == null || !drillHoles.Any())
+                return;
+
+            await _context.DrillHoles.AddRangeAsync(drillHoles);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task ClearAllAsync()
+        {
+            var drillHoles = await _context.DrillHoles.ToListAsync();
+            if (drillHoles.Any())
             {
-                var drillHole = _drillHoles.FirstOrDefault(d => d.Id == id);
-                return Task.FromResult(drillHole);
+                _context.DrillHoles.RemoveRange(drillHoles);
+                await _context.SaveChangesAsync();
             }
         }
 
-        public Task<DrillHole> AddAsync(DrillHole drillHole)
+        // Additional helper methods for better performance and functionality
+        public async Task<IEnumerable<DrillHole>> GetByProjectIdAsync(int projectId)
         {
-            lock (_lock)
+            return await _context.DrillHoles
+                .Where(d => d.ProjectId == projectId)
+                .OrderBy(d => d.Id)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<DrillHole>> GetBySiteIdAsync(int projectId, int siteId)
+        {
+            return await _context.DrillHoles
+                .Where(d => d.ProjectId == projectId && d.SiteId == siteId)
+                .OrderBy(d => d.Id)
+                .ToListAsync();
+        }
+
+        public async Task DeleteByProjectIdAsync(int projectId)
+        {
+            var drillHoles = await _context.DrillHoles
+                .Where(d => d.ProjectId == projectId)
+                .ToListAsync();
+            
+            if (drillHoles.Any())
             {
-                _drillHoles.Add(drillHole);
-                return Task.FromResult(drillHole);
+                _context.DrillHoles.RemoveRange(drillHoles);
+                await _context.SaveChangesAsync();
             }
         }
 
-        public Task UpdateAsync(DrillHole drillHole)
+        public async Task DeleteBySiteIdAsync(int projectId, int siteId)
         {
-            lock (_lock)
+            var drillHoles = await _context.DrillHoles
+                .Where(d => d.ProjectId == projectId && d.SiteId == siteId)
+                .ToListAsync();
+            
+            if (drillHoles.Any())
             {
-                var existingIndex = _drillHoles.FindIndex(d => d.Id == drillHole.Id);
-                if (existingIndex >= 0)
-                {
-                    _drillHoles[existingIndex] = drillHole;
-                }
-            }
-            return Task.CompletedTask;
-        }
-
-        public Task DeleteAsync(string id)
-        {
-            lock (_lock)
-            {
-                var drillHole = _drillHoles.FirstOrDefault(d => d.Id == id);
-                if (drillHole != null)
-                {
-                    _drillHoles.Remove(drillHole);
-                }
-            }
-            return Task.CompletedTask;
-        }
-
-        public Task<bool> ExistsAsync(string id)
-        {
-            lock (_lock)
-            {
-                var exists = _drillHoles.Any(d => d.Id == id);
-                return Task.FromResult(exists);
+                _context.DrillHoles.RemoveRange(drillHoles);
+                await _context.SaveChangesAsync();
             }
         }
 
-        public Task AddRangeAsync(IEnumerable<DrillHole> drillHoles)
+        public async Task<int> GetCountAsync()
         {
-            lock (_lock)
-            {
-                _drillHoles.AddRange(drillHoles);
-            }
-            return Task.CompletedTask;
+            return await _context.DrillHoles.CountAsync();
         }
 
-        public Task ClearAllAsync()
+        public async Task<int> GetCountByProjectIdAsync(int projectId)
         {
-            lock (_lock)
-            {
-                _drillHoles.Clear();
-            }
-            return Task.CompletedTask;
+            return await _context.DrillHoles
+                .CountAsync(d => d.ProjectId == projectId);
+        }
+
+        public async Task<int> GetCountBySiteIdAsync(int projectId, int siteId)
+        {
+            return await _context.DrillHoles
+                .CountAsync(d => d.ProjectId == projectId && d.SiteId == siteId);
         }
     }
 } 
