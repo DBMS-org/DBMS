@@ -154,8 +154,6 @@
     </div>
   </div>
 
-
-
   <!-- Recent Database Uploads Section -->
   <section class="recent-uploads" *ngIf="recentUploads.length > 0">
     <h2>
@@ -196,44 +194,55 @@
   </section>
 
   <!-- User Profile with Engineering Context -->
-  <section class="user-profile-summary" *ngIf="currentUser">
-    <h2>Engineer Profile</h2>
-    <div class="profile-card">
+  <div class="user-profile-section">
+    <h3>
+      <i class="material-icons">account_circle</i>
+      Blasting Engineer Profile
+    </h3>
+    <div class="profile-card" *ngIf="currentUser">
       <div class="profile-header">
         <div class="profile-avatar">
-          <i class="material-icons">engineering</i>
+          <span class="avatar-initials">{{ getInitials() }}</span>
         </div>
-        <div class="profile-info">
-          <h3>{{ currentUser.name }}</h3>
-          <p>{{ currentUser.email }}</p>
-          <div class="engineer-specialization">
-            <span class="specialization-badge">Blasting & Drilling Engineer</span>
+        <div class="profile-main-info">
+          <h4>{{ currentUser.name }}</h4>
+          <p class="profile-email">{{ currentUser.email }}</p>
+          <div class="profile-role-badge">
+            <span class="role-badge">Blasting Engineer</span>
           </div>
         </div>
       </div>
-      <div class="profile-details">
-        <div class="detail-item">
-          <strong>Specialization:</strong> {{ currentUser.role }}
+      
+      <div class="profile-details-grid">
+        <div class="profile-detail-item">
+          <div class="detail-label">Specialization:</div>
+          <div class="detail-value">Blasting Engineering</div>
         </div>
-        <div class="detail-item" *ngIf="currentUser.region">
-          <strong>Operating Region:</strong> {{ currentUser.region }}
+        <div class="profile-detail-item">
+          <div class="detail-label">Operating Region:</div>
+          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
         </div>
-        <div class="detail-item" *ngIf="currentUser.country">
-          <strong>Country:</strong> {{ currentUser.country }}
+        <div class="profile-detail-item">
+          <div class="detail-label">Country:</div>
+          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
         </div>
-        <div class="detail-item" *ngIf="currentUser.omanPhone">
-          <strong>Contact:</strong> {{ currentUser.omanPhone }}
+        <div class="profile-detail-item">
+          <div class="detail-label">Contact:</div>
+          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
         </div>
-        <div class="detail-item">
-          <strong>Status:</strong> 
-          <span class="status-badge" [class]="'status-' + currentUser.status.toLowerCase()">
-            {{ currentUser.status }}
-          </span>
+        <div class="profile-detail-item">
+          <div class="detail-label">Status:</div>
+          <div class="detail-value">
+            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
+              {{ currentUser.status || 'ACTIVE' }}
+            </span>
+          </div>
         </div>
-        <div class="detail-item">
-          <strong>Data Sets:</strong> {{ stats.uploadedDataSets }} uploaded
+        <div class="profile-detail-item">
+          <div class="detail-label">Data Sets:</div>
+          <div class="detail-value">{{ stats.totalProjects }} projects managed</div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </div>

@@ -6,20 +6,20 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { User } from '../../../../core/models/user.model';
 
 interface MachineStats {
+  totalMachines: number;
   activeMachines: number;
-  maintenanceTasks: number;
-  efficiencyRate: number;
-  downtimeHours: number;
-  equipmentHealth: number;
-  totalEquipment: number;
-  reportsGenerated: number;
+  availableMachines: number;
+  maintenanceMachines: number;
+  pendingAssignments: number;
+  lowStockAccessories: number;
+  scheduledMaintenance: number;
+  accessoriesTotal: number;
 }
 
 interface SystemMetrics {
   systemStatus: string;
-  productionRate: string;
-  nextMaintenance: string;
-  maintenanceStatus: string;
+  pendingRequests: number;
+  criticalAlerts: number;
 }
 
 interface Activity {
@@ -27,6 +27,7 @@ interface Activity {
   title: string;
   description: string;
   timestamp: string;
+  type: 'inventory' | 'assignment' | 'accessories' | 'maintenance' | 'alert';
 }
 
 @Component({
@@ -41,46 +42,57 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   isLoading = true;
   
   stats: MachineStats = {
+    totalMachines: 42,
     activeMachines: 24,
-    maintenanceTasks: 8,
-    efficiencyRate: 92,
-    downtimeHours: 3.5,
-    equipmentHealth: 89,
-    totalEquipment: 156,
-    reportsGenerated: 47
+    availableMachines: 15,
+    maintenanceMachines: 3,
+    pendingAssignments: 6,
+    lowStockAccessories: 4,
+    scheduledMaintenance: 8,
+    accessoriesTotal: 156
   };
 
   systemMetrics: SystemMetrics = {
     systemStatus: 'Operational',
-    productionRate: '95% Capacity',
-    nextMaintenance: '3 days',
-    maintenanceStatus: 'scheduled'
+    pendingRequests: 6,
+    criticalAlerts: 2
   };
 
   recentActivities: Activity[] = [
     {
-      icon: 'precision_manufacturing',
-      title: 'Machine Status Updated',
-      description: 'Updated status for Excavator Unit #5',
-      timestamp: '1 hour ago'
+      icon: 'inventory_2',
+      title: 'New Machine Added',
+      description: 'Excavator CAT 320D added to inventory',
+      timestamp: '30 minutes ago',
+      type: 'inventory'
     },
     {
-      icon: 'build_circle',
-      title: 'Maintenance Completed',
-      description: 'Routine maintenance completed for Drill Unit #3',
-      timestamp: '3 hours ago'
+      icon: 'assignment',
+      title: 'Assignment Request',
+      description: 'Machine assignment request for Project #2024-05',
+      timestamp: '1 hour ago',
+      type: 'assignment'
     },
     {
       icon: 'warning',
-      title: 'Equipment Alert',
-      description: 'Performance alert for Crusher Unit #2',
-      timestamp: '5 hours ago'
+      title: 'Low Stock Alert',
+      description: 'Hydraulic filters below threshold (5 remaining)',
+      timestamp: '2 hours ago',
+      type: 'accessories'
     },
     {
-      icon: 'assessment',
-      title: 'Weekly Report Generated',
-      description: 'Machine efficiency report for Week 25',
-      timestamp: '1 day ago'
+      icon: 'engineering',
+      title: 'Maintenance Scheduled',
+      description: 'Preventive maintenance scheduled for Drill Rig #DR-003',
+      timestamp: '3 hours ago',
+      type: 'maintenance'
+    },
+    {
+      icon: 'check_circle',
+      title: 'Assignment Completed',
+      description: 'Machine assignment approved for Project #2024-04',
+      timestamp: '4 hours ago',
+      type: 'assignment'
     }
   ];
 
@@ -107,17 +119,27 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   getUserWelcomeMessage(): string {
-    const name = this.currentUser?.name || 'Machine Manager';
-    const hour = new Date().getHours();
-    let greeting = 'Good morning';
+    if (!this.currentUser) return 'Welcome, Machine Manager';
     
-    if (hour >= 12 && hour < 17) {
-      greeting = 'Good afternoon';
-    } else if (hour >= 17) {
-      greeting = 'Good evening';
+    const timeOfDay = this.getTimeOfDayGreeting();
+    return `${timeOfDay}, ${this.currentUser.name}`;
+  }
+
+  getInitials(): string {
+    if (!this.currentUser?.name) return 'MM';
+    
+    const names = this.currentUser.name.split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase();
     }
-    
-    return `${greeting}, ${name}!`;
+    return names[0].substring(0, 2).toUpperCase();
+  }
+
+  private getTimeOfDayGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 
   getUserLocationInfo(): string {
@@ -140,19 +162,24 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     this.authService.logout();
   }
 
-  navigateToOperations() {
-    this.router.navigate(['/machine-manager/operations']);
+  // Navigation methods for new features
+  navigateToMachineInventory() {
+    this.router.navigate(['/machine-manager/machine-inventory']);
   }
 
-  navigateToMaintenance() {
-    this.router.navigate(['/machine-manager/maintenance']);
+  navigateToAssignmentRequests() {
+    this.router.navigate(['/machine-manager/assignment-requests']);
   }
 
-  navigateToEquipment() {
-    this.router.navigate(['/machine-manager/equipment']);
+  navigateToAccessoriesInventory() {
+    this.router.navigate(['/machine-manager/accessories-inventory']);
   }
 
-  navigateToReports() {
-    this.router.navigate(['/machine-manager/reports']);
+  navigateToMaintenanceManagement() {
+    this.router.navigate(['/machine-manager/maintenance-management']);
+  }
+
+  getActivityTypeClass(type: string): string {
+    return `activity-${type}`;
   }
 }

@@ -36,6 +36,10 @@ import { OperatorProjectSitesComponent } from './components/operator/project-sit
 import { OperatorPatternViewComponent } from './components/operator/pattern-view/pattern-view.component';
 import { ViewSequenceSimulatorComponent } from './components/admin/project-management/view-sequence-simulator/view-sequence-simulator.component';
 import { MachineManagerComponent } from './components/machine-manager/machine-manager.component';
+import { ExplosiveManagerLayoutComponent } from './components/explosive-manager/shared/explosive-manager-layout/explosive-manager-layout.component';
+import { DashboardComponent as ExplosiveManagerDashboardComponent } from './components/explosive-manager/dashboard/dashboard.component';
+import { StoreManagerLayoutComponent } from './components/store-manager/shared/store-manager-layout/store-manager-layout.component';
+import { DashboardComponent as StoreManagerDashboardComponent } from './components/store-manager/dashboard/dashboard.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -118,6 +122,29 @@ export const routes: Routes = [
       { path: 'my-project', component: MyProjectComponent },
       { path: 'my-project/sites', component: OperatorProjectSitesComponent },
       { path: 'my-project/sites/:siteId/pattern-view', component: OperatorPatternViewComponent }
+    ]
+  },
+  {
+    path: 'explosive-manager',
+    component: ExplosiveManagerLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: ExplosiveManagerDashboardComponent }
+    ]
+  },
+  {
+    path: 'store-manager',
+    component: StoreManagerLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: StoreManagerDashboardComponent },
+      { path: 'add-stock', component: StoreManagerDashboardComponent }, // Placeholder for Add Stock Request
+      { path: 'edit-stock', component: StoreManagerDashboardComponent }, // Placeholder for Edit Stock Request
+      { path: 'delete-stock', component: StoreManagerDashboardComponent }, // Placeholder for Delete Stock Request
+      { path: 'notifications', component: StoreManagerDashboardComponent }, // Placeholder for Notifications
+      { path: 'dispatch', component: StoreManagerDashboardComponent } // Placeholder for Dispatch Preparation
     ]
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' }

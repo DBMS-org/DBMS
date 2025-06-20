@@ -25,50 +25,59 @@
 </div>
 
 <div class="dashboard-content" *ngIf="!isLoading">
+  <!-- Key Statistics Grid -->
   <div class="stats-grid">
     <div class="stat-card machines">
       <div class="stat-icon">
-        <i class="material-icons">precision_manufacturing</i>
+        <i class="material-icons">inventory_2</i>
       </div>
       <div class="stat-content">
-        <h3>Active Machines</h3>
-        <p class="stat-number">{{ stats.activeMachines }}</p>
+        <h3>Total Machines</h3>
+        <p class="stat-number">{{ stats.totalMachines }}</p>
+        <span class="stat-detail">{{ stats.activeMachines }} active • {{ stats.availableMachines }} available</span>
       </div>
     </div>
+    
+    <div class="stat-card assignments">
+      <div class="stat-icon">
+        <i class="material-icons">assignment</i>
+      </div>
+      <div class="stat-content">
+        <h3>Assignment Requests</h3>
+        <p class="stat-number">{{ stats.pendingAssignments }}</p>
+        <span class="stat-detail">Pending review</span>
+      </div>
+    </div>
+    
+    <div class="stat-card accessories">
+      <div class="stat-icon">
+        <i class="material-icons">build</i>
+      </div>
+      <div class="stat-content">
+        <h3>Accessories</h3>
+        <p class="stat-number">{{ stats.accessoriesTotal }}</p>
+        <span class="stat-detail alert" *ngIf="stats.lowStockAccessories > 0">{{ stats.lowStockAccessories }} low stock</span>
+        <span class="stat-detail" *ngIf="stats.lowStockAccessories === 0">All items stocked</span>
+      </div>
+    </div>
+    
     <div class="stat-card maintenance">
       <div class="stat-icon">
-        <i class="material-icons">build_circle</i>
+        <i class="material-icons">engineering</i>
       </div>
       <div class="stat-content">
-        <h3>Maintenance Tasks</h3>
-        <p class="stat-number">{{ stats.maintenanceTasks }}</p>
-      </div>
-    </div>
-    <div class="stat-card efficiency">
-      <div class="stat-icon">
-        <i class="material-icons">trending_up</i>
-      </div>
-      <div class="stat-content">
-        <h3>Efficiency Rate</h3>
-        <p class="stat-number">{{ stats.efficiencyRate }}%</p>
-      </div>
-    </div>
-    <div class="stat-card downtime">
-      <div class="stat-icon">
-        <i class="material-icons">warning</i>
-      </div>
-      <div class="stat-content">
-        <h3>Downtime Hours</h3>
-        <p class="stat-number">{{ stats.downtimeHours }}</p>
+        <h3>Maintenance</h3>
+        <p class="stat-number">{{ stats.scheduledMaintenance }}</p>
+        <span class="stat-detail">{{ stats.maintenanceMachines }} in maintenance</span>
       </div>
     </div>
   </div>
 
-  <!-- Machine Operations Panel -->
+  <!-- System Status Panel -->
   <div class="operations-panel">
     <h3>
-      <i class="material-icons">precision_manufacturing</i>
-      Machine Operations Overview
+      <i class="material-icons">monitor_heart</i>
+      System Status Overview
     </h3>
     <div class="metrics-grid">
       <div class="metric-item">
@@ -80,24 +89,17 @@
       </div>
       <div class="metric-item">
         <span class="metric-label">
-          <i class="material-icons">speed</i>
-          Production Rate:
+          <i class="material-icons">assignment_turned_in</i>
+          Pending Requests:
         </span>
-        <span class="metric-value">{{ systemMetrics.productionRate }}</span>
+        <span class="metric-value" [class]="systemMetrics.pendingRequests > 0 ? 'pending-requests' : ''">{{ systemMetrics.pendingRequests }}</span>
       </div>
       <div class="metric-item">
         <span class="metric-label">
-          <i class="material-icons">schedule</i>
-          Next Maintenance:
+          <i class="material-icons">warning</i>
+          Critical Alerts:
         </span>
-        <span class="metric-value" [class]="'maintenance-' + systemMetrics.maintenanceStatus.toLowerCase()">{{ systemMetrics.nextMaintenance }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">inventory</i>
-          Equipment Health:
-        </span>
-        <span class="metric-value">{{ stats.equipmentHealth }}%</span>
+        <span class="metric-value" [class]="systemMetrics.criticalAlerts > 0 ? 'critical-alerts' : ''">{{ systemMetrics.criticalAlerts }}</span>
       </div>
     </div>
   </div>
@@ -105,79 +107,110 @@
   <!-- Quick Actions Panel -->
   <div class="actions-panel">
     <h3>
-      <i class="material-icons">build</i>
+      <i class="material-icons">flash_on</i>
       Quick Actions
     </h3>
     <div class="action-cards">
-      <div class="action-card operations-action" (click)="navigateToOperations()">
+      <div class="action-card inventory-action" (click)="navigateToMachineInventory()">
         <div class="action-icon">
-          <i class="material-icons">precision_manufacturing</i>
+          <i class="material-icons">inventory_2</i>
         </div>
-        <h4>Machine Operations</h4>
-        <p>Monitor and control machine operations</p>
-        <div class="action-status">{{ stats.activeMachines }} active</div>
+        <h4>Machine Inventory</h4>
+        <p>Manage machine details, add new machines, edit or delete existing ones</p>
+        <div class="action-status">{{ stats.totalMachines }} machines</div>
       </div>
       
-      <div class="action-card maintenance-action" (click)="navigateToMaintenance()">
+      <div class="action-card assignment-action" (click)="navigateToAssignmentRequests()">
         <div class="action-icon">
-          <i class="material-icons">build_circle</i>
+          <i class="material-icons">assignment</i>
         </div>
-        <h4>Maintenance</h4>
-        <p>Schedule and track maintenance tasks</p>
-        <div class="action-status">{{ stats.maintenanceTasks }} pending</div>
+        <h4>Assignment Requests</h4>
+        <p>Review and approve machine assignment requests from General Managers</p>
+        <div class="action-status">{{ stats.pendingAssignments }} pending</div>
       </div>
 
-      <div class="action-card equipment-action" (click)="navigateToEquipment()">
+      <div class="action-card accessories-action" (click)="navigateToAccessoriesInventory()">
         <div class="action-icon">
-          <i class="material-icons">inventory</i>
+          <i class="material-icons">build</i>
         </div>
-        <h4>Equipment</h4>
-        <p>Manage equipment inventory and status</p>
-        <div class="action-status">{{ stats.totalEquipment }} items</div>
+        <h4>Accessories Inventory</h4>
+        <p>Track accessory items, manage stock levels, and handle low-stock alerts</p>
+        <div class="action-status" [class]="stats.lowStockAccessories > 0 ? 'alert' : ''">
+          {{ stats.accessoriesTotal }} items
+          <span *ngIf="stats.lowStockAccessories > 0"> • {{ stats.lowStockAccessories }} low</span>
+        </div>
       </div>
 
-      <div class="action-card reports-action" (click)="navigateToReports()">
+      <div class="action-card maintenance-action" (click)="navigateToMaintenanceManagement()">
         <div class="action-icon">
-          <i class="material-icons">assessment</i>
+          <i class="material-icons">engineering</i>
         </div>
-        <h4>Reports</h4>
-        <p>Generate operational and maintenance reports</p>
-        <div class="action-status">{{ stats.reportsGenerated }} reports</div>
+        <h4>Maintenance Management</h4>
+        <p>Schedule machine maintenance and track maintenance tasks</p>
+        <div class="action-status">{{ stats.scheduledMaintenance }} scheduled</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Section -->
+  <div class="user-profile-section">
+    <h3>
+      <i class="material-icons">account_circle</i>
+      Machine Manager Profile
+    </h3>
+    <div class="profile-card" *ngIf="currentUser">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <span class="avatar-initials">{{ getInitials() }}</span>
+        </div>
+        <div class="profile-main-info">
+          <h4>{{ currentUser.name }}</h4>
+          <p class="profile-email">{{ currentUser.email }}</p>
+          <div class="profile-role-badge">
+            <span class="role-badge">Machine Manager</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="profile-details-grid">
+        <div class="profile-detail-item">
+          <div class="detail-label">Specialization:</div>
+          <div class="detail-value">Machine Management</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Operating Region:</div>
+          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Country:</div>
+          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Contact:</div>
+          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Status:</div>
+          <div class="detail-value">
+            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
+              {{ currentUser.status || 'ACTIVE' }}
+            </span>
+          </div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Data Sets:</div>
+          <div class="detail-value">{{ stats.totalMachines }} machines managed</div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="content-grid">
-    <section class="user-profile-summary" *ngIf="currentUser">
-      <h2>Your Profile Summary</h2>
-      <div class="profile-card">
-        <div class="profile-header">
-          <div class="profile-avatar">
-            <i class="material-icons">account_circle</i>
-          </div>
-          <div class="profile-info">
-            <h3>{{ currentUser.name }}</h3>
-            <p>{{ currentUser.email }}</p>
-          </div>
-        </div>
-        <div class="profile-details">
-          <div class="detail-item">
-            <strong>Role:</strong> {{ currentUser.role }}
-          </div>
-          <div class="detail-item" *ngIf="currentUser.region">
-            <strong>Region:</strong> {{ currentUser.region }}
-          </div>
-          <div class="detail-item">
-            <strong>Specialization:</strong> Machine Management
-          </div>
-        </div>
-      </div>
-    </section>
 
     <section class="recent-activities">
       <h2>Recent Activities</h2>
       <div class="activity-list">
-        <div class="activity-item" *ngFor="let activity of recentActivities">
+        <div class="activity-item" [class]="getActivityTypeClass(activity.type)" *ngFor="let activity of recentActivities">
           <div class="activity-icon">
             <i class="material-icons">{{ activity.icon }}</i>
           </div>

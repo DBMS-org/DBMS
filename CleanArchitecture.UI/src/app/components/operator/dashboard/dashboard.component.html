@@ -2,14 +2,17 @@
   <div class="header-content">
     <h1>Operator Dashboard</h1>
     <div class="user-info">
-      <div class="user-details" *ngIf="currentUserName">
-        <span class="welcome-message">Welcome, {{ currentUserName }}!</span>
+      <div class="user-details" *ngIf="currentUser">
+        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
         <div class="user-metadata">
-          <span class="user-role">Role: Operator</span>
-          <span class="last-login">Active Session</span>
+          <span class="user-role">Role: {{ currentUser.role }}</span>
+          <span class="user-location" *ngIf="currentUser.region">Region: {{ currentUser.region }}</span>
         </div>
       </div>
-      <button class="logout-btn" (click)="logout()">Logout</button>
+      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
     </div>
   </div>
 </header>
@@ -19,27 +22,310 @@
   <p>Loading dashboard...</p>
 </div>
 
-<div class="dashboard-content" *ngIf="!isLoading">
-  <section class="project-summary" *ngIf="assignedProject; else noProject">
-    <h2>Your Assigned Project</h2>
-    <div class="card">
-      <h3>{{ assignedProject.name }}</h3>
-      <p><strong>Region:</strong> {{ assignedProject.region }}</p>
-      <p><strong>Status:</strong> 
-        <span class="status-badge" [class]="'status-' + assignedProject.status.toLowerCase()">
-          {{ assignedProject.status }}
-        </span>
-      </p>
-      <p><strong>Start Date:</strong> {{ formatDate(assignedProject.startDate) }}</p>
-      <p><strong>End Date:</strong> {{ formatDate(assignedProject.endDate) }}</p>
-      <a class="btn btn-primary" routerLink="/operator/my-project">View Project Details</a>
+<div class="error-container" *ngIf="error && !isLoading">
+  <div class="error-message">
+    <i class="material-icons">error</i>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="refreshDashboard()">Retry</button>
+  </div>
+</div>
+
+<div class="dashboard-content" *ngIf="!isLoading && !error">
+  <!-- Project Overview Section -->
+  <section class="project-overview" *ngIf="assignedProject; else noProject">
+    <div class="project-header">
+      <h2>Your Assigned Project</h2>
+      <button class="view-project-btn" (click)="navigateToProject()">
+        <i class="material-icons">visibility</i>
+        View Details
+      </button>
+    </div>
+    
+    <div class="project-card">
+      <div class="project-info">
+        <h3>{{ assignedProject.name }}</h3>
+        <div class="project-details">
+          <div class="detail-item">
+            <i class="material-icons">location_on</i>
+            <span><strong>Region:</strong> {{ assignedProject.region }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="material-icons">flag</i>
+            <span><strong>Status:</strong> 
+              <span class="status-badge" [class]="'status-' + assignedProject.status.toLowerCase()">
+                {{ assignedProject.status }}
+              </span>
+            </span>
+          </div>
+          <div class="detail-item">
+            <i class="material-icons">event</i>
+            <span><strong>Duration:</strong> {{ formatDate(assignedProject.startDate) }} - {{ formatDate(assignedProject.endDate) }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="material-icons">description</i>
+            <span><strong>Description:</strong> {{ assignedProject.description || 'No description available' }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="project-progress">
+        <div class="progress-circle">
+          <div class="progress-value">{{ stats.projectProgress }}%</div>
+          <div class="progress-label">Complete</div>
+        </div>
+      </div>
     </div>
   </section>
 
+  <!-- Dashboard Statistics -->
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="material-icons">location_city</i>
+      </div>
+      <div class="stat-content">
+        <h3>Project Sites</h3>
+        <p class="stat-value">{{ stats.totalSites }}</p>
+        <p class="stat-change">Total assigned sites</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="material-icons">construction</i>
+      </div>
+      <div class="stat-content">
+        <h3>Drill Holes</h3>
+        <p class="stat-value">{{ stats.totalDrillHoles }}</p>
+        <p class="stat-change">Across all sites</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="material-icons">check_circle</i>
+      </div>
+      <div class="stat-content">
+        <h3>Approved Patterns</h3>
+        <p class="stat-value">{{ stats.approvedPatterns }}</p>
+        <p class="stat-change positive">Ready for execution</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="material-icons">timeline</i>
+      </div>
+      <div class="stat-content">
+        <h3>Active Workflows</h3>
+        <p class="stat-value">{{ stats.activeWorkflows }}</p>
+        <p class="stat-change">Pending completion</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Metrics Panel -->
+  <div class="system-metrics-panel">
+    <h3>
+      <i class="material-icons">analytics</i>
+      Project Metrics
+    </h3>
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">flag</i>
+          Project Status:
+        </span>
+        <span class="metric-value status-badge" [class]="'status-' + systemMetrics.projectStatus.toLowerCase()">
+          {{ systemMetrics.projectStatus }}
+        </span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">update</i>
+          Last Pattern Update:
+        </span>
+        <span class="metric-value">{{ systemMetrics.lastPatternUpdate }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">task_alt</i>
+          Workflow Completion:
+        </span>
+        <span class="metric-value">{{ systemMetrics.workflowCompletion }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">trending_up</i>
+          Overall Progress:
+        </span>
+        <span class="metric-value">{{ systemMetrics.totalProgress }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Panel -->
+  <div class="quick-actions-panel">
+    <h3>
+      <i class="material-icons">dashboard</i>
+      Quick Actions
+    </h3>
+    <div class="action-cards">
+      <div class="action-card project-action" (click)="navigateToProject()">
+        <div class="action-icon">
+          <i class="material-icons">assignment</i>
+        </div>
+        <h4>View Project</h4>
+        <p>Access detailed project information and timeline</p>
+        <div class="action-status">{{ assignedProject?.name || 'No project' }}</div>
+      </div>
+      
+      <div class="action-card sites-action" (click)="navigateToSites()">
+        <div class="action-icon">
+          <i class="material-icons">location_city</i>
+        </div>
+        <h4>Project Sites</h4>
+        <p>View and manage all assigned project sites</p>
+        <div class="action-status">{{ stats.totalSites }} sites</div>
+      </div>
+
+      <div class="action-card patterns-action" *ngIf="stats.approvedPatterns > 0">
+        <div class="action-icon">
+          <i class="material-icons">grid_on</i>
+        </div>
+        <h4>Approved Patterns</h4>
+        <p>Review approved drilling patterns for execution</p>
+        <div class="action-status">{{ stats.approvedPatterns }} approved</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Sites Overview -->
+  <div class="sites-overview" *ngIf="projectSites.length > 0">
+    <h3>
+      <i class="material-icons">location_city</i>
+      Project Sites Overview
+    </h3>
+    <div class="sites-grid">
+      <div class="site-card" *ngFor="let site of projectSites; let i = index" (click)="navigateToSite(site.id)">
+        <div class="site-header">
+          <h4>{{ site.name }}</h4>
+          <div class="site-status">
+            <span class="status-indicator" [class.approved]="site.isPatternApproved" [class.pending]="!site.isPatternApproved"></span>
+            <span class="status-text">{{ site.isPatternApproved ? 'Approved' : 'Pending' }}</span>
+          </div>
+        </div>
+        <div class="site-details">
+          <div class="site-info">
+            <i class="material-icons">location_on</i>
+            <span>{{ site.location }}</span>
+          </div>
+          <div class="site-info">
+            <i class="material-icons">description</i>
+            <span>{{ site.description || 'No description' }}</span>
+          </div>
+          <div class="site-info">
+            <i class="material-icons">update</i>
+            <span>Updated {{ formatDate(site.updatedAt) }}</span>
+          </div>
+        </div>
+        <div class="site-actions">
+          <span class="view-pattern-btn">
+            <i class="material-icons">visibility</i>
+            View Pattern
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Section -->
+  <div class="user-profile-section">
+    <h3>
+      <i class="material-icons">account_circle</i>
+      Operator Profile
+    </h3>
+    <div class="profile-card" *ngIf="currentUser">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <span class="avatar-initials">{{ getInitials() }}</span>
+        </div>
+        <div class="profile-main-info">
+          <h4>{{ currentUser.name }}</h4>
+          <p class="profile-email">{{ currentUser.email }}</p>
+          <div class="profile-role-badge">
+            <span class="role-badge">Operator</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="profile-details-grid">
+        <div class="profile-detail-item">
+          <div class="detail-label">Specialization:</div>
+          <div class="detail-value">Site Operations</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Operating Region:</div>
+          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Country:</div>
+          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Contact:</div>
+          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Status:</div>
+          <div class="detail-value">
+            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
+              {{ currentUser.status || 'ACTIVE' }}
+            </span>
+          </div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Data Sets:</div>
+          <div class="detail-value">{{ stats.totalSites }} sites managed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activities -->
+  <div class="recent-activities" *ngIf="recentActivities.length > 0">
+    <h3>
+      <i class="material-icons">history</i>
+      Recent Activities
+    </h3>
+    <div class="activity-list">
+      <div class="activity-item" *ngFor="let activity of recentActivities; trackBy: trackActivity">
+        <div class="activity-icon">
+          <i class="material-icons">{{ getActivityIcon(activity.type) }}</i>
+        </div>
+        <div class="activity-content">
+          <h4>{{ activity.action }}</h4>
+          <p>{{ activity.item }}</p>
+          <div class="activity-meta">
+            <span class="activity-time">{{ activity.time }}</span>
+            <span class="activity-status" [class]="getActivityStatusColor(activity.status)">{{ activity.status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <ng-template #noProject>
-    <div class="card">
+    <div class="no-project-card">
+      <div class="no-project-icon">
+        <i class="material-icons">assignment_late</i>
+      </div>
       <h3>No Project Assigned</h3>
       <p>You have not been assigned to a project yet. Please contact your administrator for project assignment.</p>
+      <button class="contact-admin-btn" (click)="refreshDashboard()">
+        <i class="material-icons">refresh</i>
+        Check for Updates
+      </button>
     </div>
   </ng-template>
 </div> 
