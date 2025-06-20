@@ -29,7 +29,7 @@ namespace API.Controllers
             _emailService = emailService;
         }
 
-        [HttpPost("login")]
+        [HttpPost("login")] //login post controller api
         public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
         {
             try
@@ -55,7 +55,7 @@ namespace API.Controllers
                     });
                 }
 
-                // Verify password
+                // Verify password for all the roles
                 if (!_passwordService.VerifyPassword(request.Password, user.PasswordHash))
                 {
                     return Unauthorized(new LoginResponse 

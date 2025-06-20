@@ -1,3 +1,1 @@
-Merge pull request #1 from SaadDev-01/master
-
-Add clarification comment for password verification
+Implement new routes and role-based access for Mechanical Engineer and Machine Manager. Update login navigation to include new roles, enhance admin and blasting engineer components, and refactor the Blasting Engineer component to remove unused code. Add new role definitions and update database context for role management.
