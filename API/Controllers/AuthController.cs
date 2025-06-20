@@ -55,7 +55,7 @@ namespace API.Controllers
                     });
                 }
 
-                // Verify password
+                // Verify password for all the roles
                 if (!_passwordService.VerifyPassword(request.Password, user.PasswordHash))
                 {
                     return Unauthorized(new LoginResponse 
