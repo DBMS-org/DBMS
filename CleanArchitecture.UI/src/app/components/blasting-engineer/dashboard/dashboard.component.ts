@@ -7,25 +7,11 @@ import { ProjectService } from '../../../core/services/project.service';
 import { SiteService, ProjectSite } from '../../../core/services/site.service';
 import { UserActivityService } from '../../../core/services/user-activity.service';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
+import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
 import { User } from '../../../core/models/user.model';
 import { Project } from '../../../core/models/project.model';
 
-interface DrillHole {
-  serialNumber: number;
-  id: string;
-  name?: string;
-  easting: number;
-  northing: number;
-  elevation: number;
-  length: number;
-  depth: number;
-  azimuth: number;
-  dip: number;
-  actualDepth: number;
-  stemming: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
+
 
 @Component({
   selector: 'app-dashboard',
@@ -43,6 +29,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     activeProjects: 0,
     totalSites: 0,
     activeSites: 0,
+    totalDrillHoles: 0,
+    activeDrillSites: 0,
     uploadedDataSets: 0,
     completedPatterns: 0,
     pendingReviews: 0
@@ -66,6 +54,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private siteService: SiteService,
     private userActivityService: UserActivityService,
     private drillDataService: DrillDataService,
+    private drillHoleService: DrillHoleService,
     private router: Router
   ) {}
 
@@ -93,31 +82,60 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDashboardData() {
-    // Load real project and site statistics based on user role and region
+    // Load real project, site, and drill hole statistics from database
     forkJoin({
       projects: this.projectService.getProjectsForCurrentUser(),
-      allSites: this.siteService.getAllSites()
+      allSites: this.siteService.getAllSites(),
+      allDrillHoles: this.drillHoleService.getAllDrillHoles()
     }).subscribe({
-      next: ({ projects, allSites }) => {
+      next: ({ projects, allSites, allDrillHoles }) => {
         this.userProjects = projects;
         
         // Filter sites that belong to user's projects
         const userProjectIds = projects.map(p => p.id);
         const userSites = allSites.filter(site => userProjectIds.includes(site.projectId));
         
-        // Calculate statistics
+        // Filter drill holes that belong to user's sites
+        const userSiteIds = userSites.map(s => s.id);
+        const userDrillHoles = allDrillHoles.filter(hole => 
+          hole.projectId && hole.siteId && 
+          userProjectIds.includes(hole.projectId) && 
+          userSiteIds.includes(hole.siteId)
+        );
+        
+        // Calculate sites with drill holes
+        const sitesWithDrillHoles = new Set(userDrillHoles.map(h => h.siteId));
+        
+        // Calculate statistics with real data
         this.stats.totalProjects = projects.length;
         this.stats.activeProjects = projects.filter(p => p.status === 'Active').length;
         this.stats.totalSites = userSites.length;
         this.stats.activeSites = userSites.filter(s => s.status === 'Active').length;
-        this.stats.uploadedDataSets = this.drillData.length > 0 ? 5 : 0;
-        this.stats.completedPatterns = 15;
-        this.stats.pendingReviews = 3;
+        this.stats.totalDrillHoles = userDrillHoles.length;
+        this.stats.activeDrillSites = sitesWithDrillHoles.size;
+        this.stats.uploadedDataSets = sitesWithDrillHoles.size;
+        this.stats.completedPatterns = sitesWithDrillHoles.size;
+        this.stats.pendingReviews = Math.max(0, this.stats.activeSites - sitesWithDrillHoles.size);
+        
+        // Update drill data with real database data
+        this.drillData = userDrillHoles;
+        this.calculateQuickStats();
+        this.loadRecentUploadsFromDatabase(userDrillHoles);
         
         // Generate site-related activities and incorporate into recent activities
         this.generateSiteActivities(userSites);
         this.loadRecentActivities();
         this.isLoading = false;
+        
+        console.log('📊 Dashboard Statistics:', {
+          totalProjects: this.stats.totalProjects,
+          activeProjects: this.stats.activeProjects,
+          totalSites: this.stats.totalSites,
+          activeSites: this.stats.activeSites,
+          totalDrillHoles: this.stats.totalDrillHoles,
+          activeDrillSites: this.stats.activeDrillSites,
+          userDrillHoles: userDrillHoles.length
+        });
       },
       error: (error) => {
         console.error('Error loading dashboard data:', error);
@@ -127,6 +145,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           activeProjects: 8,
           totalSites: 8,
           activeSites: 6,
+          totalDrillHoles: 0,
+          activeDrillSites: 0,
           uploadedDataSets: this.drillData.length > 0 ? 5 : 0,
           completedPatterns: 15,
           pendingReviews: 3
@@ -138,9 +158,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDrillData() {
+    // Try to get data from local service first (for immediate display)
     this.drillData = this.drillDataService.getDrillData();
     this.calculateQuickStats();
     this.loadRecentUploads();
+    
+    // The real database data will be loaded in loadDashboardData()
   }
 
   private calculateQuickStats() {
@@ -188,6 +211,43 @@ export class DashboardComponent implements OnInit, OnDestroy {
         status: 'processed'
       }
     ];
+  }
+
+  private loadRecentUploadsFromDatabase(drillHoles: DrillHole[]) {
+    // Group drill holes by site for recent uploads
+    const siteGroups = drillHoles.reduce((groups: any, hole) => {
+      const siteKey = `${hole.projectId}-${hole.siteId}`;
+      if (!groups[siteKey]) {
+        groups[siteKey] = {
+          siteId: hole.siteId,
+          projectId: hole.projectId,
+          holes: [],
+          latestUpdate: hole.createdAt || hole.updatedAt
+        };
+      }
+      groups[siteKey].holes.push(hole);
+      
+      // Track latest update
+      const holeDate = hole.createdAt || hole.updatedAt;
+      if (holeDate && (!groups[siteKey].latestUpdate || holeDate > groups[siteKey].latestUpdate)) {
+        groups[siteKey].latestUpdate = holeDate;
+      }
+      
+      return groups;
+    }, {});
+
+    // Convert to recent uploads format
+    this.recentUploads = Object.values(siteGroups)
+      .map((group: any) => ({
+        filename: `Project_${group.projectId}_Site_${group.siteId}_drill_data.csv`,
+        uploadDate: new Date(group.latestUpdate || Date.now()),
+        recordCount: group.holes.length,
+        status: 'processed',
+        projectId: group.projectId,
+        siteId: group.siteId
+      }))
+      .sort((a: any, b: any) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
+      .slice(0, 5); // Show only latest 5 uploads
   }
 
   private loadRecentActivities() {
@@ -334,5 +394,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
         'project'
       );
     });
+  }
+
+  navigateToDrillVisualization(projectId?: number, siteId?: number): void {
+    if (projectId && siteId) {
+      this.router.navigate(['/blasting-engineer/project-management', projectId, 'sites', siteId, 'drill-visualization']);
+    } else {
+      this.router.navigate(['/blasting-engineer/drill-visualization']);
+    }
+  }
+
+  // Method to refresh dashboard data manually
+  refreshDashboard(): void {
+    this.isLoading = true;
+    this.loadUserSpecificData();
   }
 }

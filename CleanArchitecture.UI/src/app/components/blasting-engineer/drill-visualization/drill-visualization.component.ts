@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
 import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
+import { SiteService } from '../../../core/services/site.service';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -45,6 +46,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     private el: ElementRef, 
     private drillDataService: DrillDataService,
     private drillHoleService: DrillHoleService,
+    private siteService: SiteService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -53,7 +55,6 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     console.log('DrillVisualizationComponent initialized successfully!');
     console.log('Current URL:', this.router.url);
     this.extractRouteContext();
-    this.loadDrillData();
   }
 
   private extractRouteContext(): void {
@@ -62,34 +63,60 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     // Get project and site IDs from route parameters
     this.route.paramMap.subscribe(params => {
       console.log('Raw route params:', params.keys, params);
-      this.projectId = +(params.get('projectId') || '0');
-      this.siteId = +(params.get('siteId') || '0');
-      console.log('Extracted route context from params:', { projectId: this.projectId, siteId: this.siteId });
+      const newProjectId = +(params.get('projectId') || '0');
+      const newSiteId = +(params.get('siteId') || '0');
+      
+      // Update context and load data if we have valid IDs
+      if (newProjectId !== this.projectId || newSiteId !== this.siteId) {
+        this.projectId = newProjectId;
+        this.siteId = newSiteId;
+        console.log('Extracted route context from params:', { projectId: this.projectId, siteId: this.siteId });
+        
+        // Load data now that we have the route context
+        this.loadDrillData();
+      }
     });
 
     // Fallback: try to get from query parameters (for backward compatibility)
     this.route.queryParams.subscribe(params => {
       console.log('Query params:', params);
       if (!this.projectId || !this.siteId) {
-        this.projectId = this.projectId || +(params['projectId'] || '0');
-        this.siteId = this.siteId || +(params['siteId'] || '0');
-        console.log('Updated context from query params:', { projectId: this.projectId, siteId: this.siteId });
+        const queryProjectId = +(params['projectId'] || '0');
+        const querySiteId = +(params['siteId'] || '0');
+        
+        if (queryProjectId && querySiteId) {
+          this.projectId = queryProjectId;
+          this.siteId = querySiteId;
+          console.log('Updated context from query params:', { projectId: this.projectId, siteId: this.siteId });
+          
+          // Load data now that we have the query context
+          this.loadDrillData();
+        }
       }
     });
     
-    console.log('Final context after extraction:', { projectId: this.projectId, siteId: this.siteId });
+    // If no route context is available, still try to load local data
+    setTimeout(() => {
+      if (!this.projectId && !this.siteId) {
+        console.log('No route context found, loading local data only');
+        this.loadDrillData();
+      }
+    }, 100);
   }
 
   ngAfterViewInit(): void {
     if (this.show3DView) {
-      this.initThreeJS();
-    this.createScene();
-    this.animate();
-    
-      // Load drill holes in 3D if data is available
-      if (this.isDataLoaded) {
-        this.create3DDrillHoles();
-      }
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        this.initThreeJS();
+        this.createScene();
+        this.animate();
+        
+        // Load drill holes in 3D if data is available
+        if (this.isDataLoaded) {
+          this.create3DDrillHoles();
+        }
+      }, 100);
     }
   }
 
@@ -103,16 +130,70 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   }
 
   private loadDrillData(): void {
+    console.log('Loading drill data...', { projectId: this.projectId, siteId: this.siteId });
+    
+    // If we have project and site context, try to load from database first
+    if (this.projectId && this.siteId) {
+      console.log('Loading drill data from database for project', this.projectId, 'site', this.siteId);
+      
+      this.drillHoleService.getDrillHolesBySite(this.projectId, this.siteId).subscribe({
+        next: (databaseHoles) => {
+          console.log('Database query result:', databaseHoles);
+          
+          if (databaseHoles && databaseHoles.length > 0) {
+            // Found data in database - use it
+            this.drillData = databaseHoles;
+            this.isDataLoaded = true;
+            console.log('✅ Loaded', databaseHoles.length, 'drill holes from database');
+            this.logDrillDataSummary();
+            
+            // Update 3D visualization if it's already initialized
+            if (this.show3DView && this.scene) {
+              console.log('🎯 Creating 3D drill holes from database data...');
+              this.clear3DDrillHoles(); // Clear any existing holes first
+              this.create3DDrillHoles();
+            } else if (this.show3DView) {
+              console.log('🎯 3D scene not ready yet, will create holes when scene initializes');
+            }
+          } else {
+            // No data in database - try local service (CSV upload data)
+            console.log('No data found in database, checking local CSV data...');
+            this.loadFromLocalService();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading data from database:', error);
+          console.log('Falling back to local CSV data...');
+          this.loadFromLocalService();
+        }
+      });
+    } else {
+      // No project/site context - can only use local service
+      console.log('No project/site context available, using local CSV data only');
+      this.loadFromLocalService();
+    }
+  }
+  
+  private loadFromLocalService(): void {
     this.drillData = this.drillDataService.getDrillData();
     this.isDataLoaded = this.drillData.length > 0;
     
-    console.log('Loaded drill data:', this.drillData);
+    console.log('Loaded drill data from local service:', this.drillData);
     console.log('Data count:', this.drillData.length);
     
     if (this.isDataLoaded) {
       console.log('Sample drill hole:', this.drillData[0]);
       this.logDrillDataSummary();
-        } else {
+      
+      // Update 3D visualization if it's already initialized
+      if (this.show3DView && this.scene) {
+        console.log('🎯 Creating 3D drill holes from local data...');
+        this.clear3DDrillHoles(); // Clear any existing holes first
+        this.create3DDrillHoles();
+      } else if (this.show3DView) {
+        console.log('🎯 3D scene not ready yet, will create holes when scene initializes');
+      }
+    } else {
       console.log('No drill data available. Please upload a CSV file first.');
     }
   }
@@ -136,19 +217,6 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     }
   }
 
-  refreshData(): void {
-    console.log('Refreshing drill data...');
-    this.loadDrillData();
-    
-    // Refresh 3D view if enabled
-    if (this.show3DView && this.scene) {
-      this.clear3DDrillHoles();
-      if (this.isDataLoaded) {
-        this.create3DDrillHoles();
-      }
-    }
-  }
-
   saveDrillData(): void {
     if (!this.isDataLoaded || this.drillData.length === 0) {
       this.errorMessage = 'No drill data to save. Please upload a CSV file first.';
@@ -165,23 +233,66 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     this.isSaving = true;
     this.errorMessage = null;
     this.saveMessage = null;
+    
+    const originalDataCount = this.drillData.length;
 
     console.log('Saving drill data to database...', {
-      holes: this.drillData.length,
+      holes: originalDataCount,
       projectId: this.projectId,
       siteId: this.siteId
     });
 
     this.drillHoleService.saveMultipleDrillHoles(this.drillData, this.projectId, this.siteId).subscribe({
       next: (savedHoles) => {
-        this.isSaving = false;
-        this.saveMessage = `Successfully saved ${savedHoles.length} drill holes for Site ${this.siteId} in Project ${this.projectId}!`;
-        console.log('Drill holes saved successfully:', savedHoles);
-        this.clearMessagesAfterDelay();
+        console.log('Save operation completed, verifying actual database save...', savedHoles);
+        
+        // Verify data was actually saved by loading from database
+        this.drillHoleService.getDrillHolesBySite(this.projectId, this.siteId).subscribe({
+          next: (verifiedHoles) => {
+            this.isSaving = false;
+            
+            // Check if the data was actually saved correctly
+            const actualSavedCount = verifiedHoles.length;
+            const hasValidData = verifiedHoles.some(hole => 
+              hole.id && hole.id.trim() !== '' && 
+              (hole.easting !== 0 || hole.northing !== 0 || hole.elevation !== 0)
+            );
+            
+            if (actualSavedCount === 0) {
+              // No data in database
+              this.errorMessage = `❌ SAVE FAILED: No drill holes found in database after save operation. Data was NOT saved!`;
+              console.error('Save verification failed: No holes found in database');
+            } else if (!hasValidData) {
+              // Data exists but all values are NULL/empty
+              this.errorMessage = `❌ SAVE FAILED: ${actualSavedCount} drill holes were created but all data is NULL/empty. Check server configuration!`;
+              console.error('Save verification failed: All data is NULL/empty', verifiedHoles[0]);
+            } else if (actualSavedCount !== originalDataCount) {
+              // Partial save
+              this.errorMessage = `⚠️ PARTIAL SAVE: Only ${actualSavedCount} of ${originalDataCount} drill holes were saved successfully.`;
+              console.warn('Partial save detected', { expected: originalDataCount, actual: actualSavedCount });
+            } else {
+              // Success
+              this.saveMessage = `✅ SUCCESS: All ${actualSavedCount} drill holes saved successfully to database for Site ${this.siteId} in Project ${this.projectId}!`;
+              console.log('Save verification successful:', {
+                expectedCount: originalDataCount,
+                actualCount: actualSavedCount,
+                sampleData: verifiedHoles[0]
+              });
+            }
+            
+            this.clearMessagesAfterDelay();
+          },
+          error: (verifyError) => {
+            this.isSaving = false;
+            this.errorMessage = `❌ SAVE STATUS UNKNOWN: Save operation completed but verification failed. Please check database manually.`;
+            console.error('Error verifying save operation:', verifyError);
+            this.clearMessagesAfterDelay();
+          }
+        });
       },
       error: (error) => {
         this.isSaving = false;
-        this.errorMessage = `Failed to save drill holes: ${error.message}`;
+        this.errorMessage = `❌ SAVE FAILED: ${error.message}`;
         console.error('Error saving drill holes:', error);
         this.clearMessagesAfterDelay();
       }
@@ -254,84 +365,48 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     });
   }
 
-  loadFromDatabase(): void {
-    console.log('Loading drill data from database...');
-    
-    const loadMethod = this.projectId && this.siteId 
-      ? this.drillHoleService.getDrillHolesBySite(this.projectId, this.siteId)
-      : this.drillHoleService.getAllDrillHoles();
-    
-    loadMethod.subscribe({
-      next: (holes) => {
-        this.drillData = holes;
-        this.isDataLoaded = holes.length > 0;
-        
-        // Update the shared service
-        this.drillDataService.setDrillData(holes);
-        
-        const context = this.projectId && this.siteId 
-          ? `for Site ${this.siteId} in Project ${this.projectId}`
-          : 'from entire database';
-        
-        console.log(`Loaded drill data ${context}:`, holes.length, 'holes');
-        
-        // Refresh 3D view if enabled
-        if (this.show3DView && this.scene) {
-          this.clear3DDrillHoles();
-          if (this.isDataLoaded) {
-            this.create3DDrillHoles();
-          }
-        }
-        
-        if (holes.length > 0) {
-          this.saveMessage = `Loaded ${holes.length} drill holes ${context}!`;
-          this.clearMessagesAfterDelay();
-        } else {
-          this.saveMessage = `No drill holes found ${context}.`;
-          this.clearMessagesAfterDelay();
-        }
-      },
-      error: (error) => {
-        this.errorMessage = `Failed to load drill holes from database: ${error.message}`;
-        console.error('Error loading drill holes:', error);
-        this.clearMessagesAfterDelay();
-      }
-    });
-  }
-
-  showDatabaseStatus(): void {
-    console.log('Checking database status...');
-    
-    this.drillHoleService.getAllDrillHoles().subscribe({
-      next: (holes) => {
-        const count = holes.length;
-        const ids = holes.map(h => h.id).slice(0, 10); // Show first 10 IDs
-        
-        console.log(`Database contains ${count} drill holes`);
-        if (count > 0) {
-          console.log('Drill hole IDs in database:', ids);
-          if (count > 10) {
-            console.log(`... and ${count - 10} more`);
-          }
-        }
-        
-        this.saveMessage = `Database status: ${count} drill holes found. ${count > 0 ? `IDs: ${ids.join(', ')}${count > 10 ? '...' : ''}` : 'Database is empty.'}`;
-        this.clearMessagesAfterDelay();
-      },
-      error: (error) => {
-        this.errorMessage = `Failed to check database status: ${error.message}`;
-        console.error('Error checking database status:', error);
-        this.clearMessagesAfterDelay();
-      }
-    });
-  }
-
   navigateToSites(): void {
     if (this.projectId) {
       this.router.navigate(['/blasting-engineer/project-management', this.projectId, 'sites']);
     } else {
       this.router.navigate(['/blasting-engineer/project-management']);
     }
+  }
+
+  navigateToCSVUpload(): void {
+    console.log('Navigating to CSV upload with context...');
+    console.log('Project ID:', this.projectId);
+    console.log('Site ID:', this.siteId);
+    
+    if (!this.projectId || !this.siteId) {
+      console.warn('Missing context - navigating to basic CSV upload');
+      this.router.navigate(['/blasting-engineer/csv-upload']);
+      return;
+    }
+
+    // Get site name and navigate with full context
+    this.siteService.getSite(this.siteId).subscribe({
+      next: (site) => {
+        const queryParams = {
+          projectId: this.projectId,
+          siteId: this.siteId,
+          siteName: site.name || 'Unknown Site'
+        };
+        
+        console.log('Navigating with query params:', queryParams);
+        this.router.navigate(['/blasting-engineer/csv-upload'], { queryParams });
+      },
+      error: (error) => {
+        console.error('Error getting site info, using fallback:', error);
+        // Fallback navigation without site name
+        const queryParams = {
+          projectId: this.projectId,
+          siteId: this.siteId,
+          siteName: 'Unknown Site'
+        };
+        this.router.navigate(['/blasting-engineer/csv-upload'], { queryParams });
+      }
+    });
   }
 
   private clearMessagesAfterDelay(): void {
@@ -341,8 +416,6 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       this.errorMessage = null;
     }, 5000);
   }
-
-
 
   toggle3DView(): void {
     this.show3DView = !this.show3DView;
@@ -753,7 +826,21 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   }
 
   private create3DDrillHoles(): void {
-    if (!this.drillData || this.drillData.length === 0) return;
+    console.log('🔧 create3DDrillHoles called', { 
+      dataLength: this.drillData?.length, 
+      sceneExists: !!this.scene,
+      show3DView: this.show3DView 
+    });
+    
+    if (!this.drillData || this.drillData.length === 0) {
+      console.log('❌ No drill data available for 3D rendering');
+      return;
+    }
+    
+    if (!this.scene) {
+      console.log('❌ Scene not initialized yet');
+      return;
+    }
 
         // PRECISE METHOD: Convert UTM coordinates to local meter-based grid system
     
@@ -897,7 +984,10 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
         🏗️ Stemming: ${hole.stemming}m`);
     });
 
-    console.log(`Created ${this.drillObjects.length} 3D drill holes with proper positioning`);
+    console.log(`✅ Created ${this.drillObjects.length} 3D drill holes with proper positioning`);
+    console.log(`🎬 Scene children count: ${this.scene.children.length}`);
+    console.log(`🎯 Drill objects in array: ${this.drillObjects.length}`);
+    console.log(`🏷️ Label objects in array: ${this.labelObjects.length}`);
     
     // Auto-frame the pattern for optimal viewing
     this.autoFramePattern();
@@ -1209,5 +1299,84 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   getMaxElevation(): number {
     if (this.drillData.length === 0) return 0;
     return Math.max(...this.drillData.map(hole => hole.elevation));
+  }
+
+  // Add this new method for additional database verification
+  verifyDatabaseSave(): void {
+    if (!this.projectId || !this.siteId) {
+      this.errorMessage = 'No project/site context available.';
+      this.clearMessagesAfterDelay();
+      return;
+    }
+
+    console.log('Manually verifying database save...');
+    
+    this.drillHoleService.getDrillHolesBySite(this.projectId, this.siteId).subscribe({
+      next: (holes) => {
+        const count = holes.length;
+        
+        if (count === 0) {
+          this.saveMessage = `❌ Database is empty for Site ${this.siteId} in Project ${this.projectId}`;
+        } else {
+          // Check if data is valid (not all NULL)
+          const validHoles = holes.filter(hole => 
+            hole.id && hole.id.trim() !== '' && 
+            (hole.easting !== 0 || hole.northing !== 0 || hole.elevation !== 0)
+          );
+          
+          if (validHoles.length === 0) {
+            this.saveMessage = `⚠️ Database contains ${count} drill holes but all data appears to be NULL/empty`;
+          } else if (validHoles.length < count) {
+            this.saveMessage = `⚠️ Database contains ${count} drill holes, but only ${validHoles.length} have valid data`;
+          } else {
+            this.saveMessage = `✅ Database contains ${count} valid drill holes with proper data`;
+          }
+          
+          // Log sample data for debugging
+          console.log('Database verification result:', {
+            totalHoles: count,
+            validHoles: validHoles.length,
+            sampleHole: holes[0]
+          });
+        }
+        
+        this.clearMessagesAfterDelay();
+      },
+      error: (error) => {
+        this.errorMessage = `Failed to verify database: ${error.message}`;
+        console.error('Error verifying database:', error);
+        this.clearMessagesAfterDelay();
+      }
+    });
+  }
+
+  // Method to reload data from database (useful for refresh functionality)
+  reloadDataFromDatabase(): void {
+    if (!this.projectId || !this.siteId) {
+      this.errorMessage = 'No project/site context available for reload.';
+      this.clearMessagesAfterDelay();
+      return;
+    }
+
+    console.log('🔄 Manually reloading data from database...');
+    this.loadDrillData();
+  }
+
+  // Method to force refresh the 3D visualization
+  refresh3DVisualization(): void {
+    if (!this.show3DView) return;
+    
+    console.log('🔄 Force refreshing 3D visualization...');
+    
+    // Clear existing 3D objects
+    this.clear3DDrillHoles();
+    
+    // Recreate 3D objects if data is available
+    if (this.isDataLoaded && this.drillData.length > 0) {
+      this.create3DDrillHoles();
+    }
+    
+    // Reset camera view
+    this.autoFramePattern();
   }
 }

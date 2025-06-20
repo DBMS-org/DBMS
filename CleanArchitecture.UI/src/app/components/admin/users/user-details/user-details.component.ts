@@ -72,20 +72,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
         this.loading = false;
         console.error('Error loading user:', error);
         
-        // Fallback to mock data if API fails
-        this.user = {
-          id: userId,
-          name: 'John Doe',
-          email: 'john@example.com',
-          role: 'Admin',
-          region: 'Muscat',
-          country: 'Oman',
-          omanPhone: '+968 9876 5432',
-          countryPhone: '+1 234 567 8900',
-          status: 'Active',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
+
         this.loadUserActivitiesFromRealData(userId);
       }
     });

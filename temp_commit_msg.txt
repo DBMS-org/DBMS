@@ -1,1 +1,1 @@
-Enhance Admin Dashboard with New Metrics and Refresh Functionality. Update JSON serialization settings for camelCase handling and add case insensitivity. Refactor DrillHole services to use scoped lifetime. Introduce new statistics for engineers, operators, and drill holes in the dashboard, along with a refresh button for manual data updates. Improve UI with new styles for admin actions and system metrics panels, ensuring a better user experience.
+Add comment to login endpoint in AuthController for clarity
