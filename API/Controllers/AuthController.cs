@@ -29,7 +29,7 @@ namespace API.Controllers
             _emailService = emailService;
         }
 
-        [HttpPost("login")]
+        [HttpPost("login")] //login post controller api
         public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
         {
             try
