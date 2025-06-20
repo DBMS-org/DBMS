@@ -71,6 +71,9 @@ export class LoginComponent {
       case 'blastingengineer':
         this.router.navigate(['/blasting-engineer/dashboard']);
         break;
+      case 'mechanicalengineer':
+        this.router.navigate(['/mechanical-engineer/dashboard']);
+        break;
       case 'machinemanager':
         this.router.navigate(['/machine-manager/dashboard']);
         break;

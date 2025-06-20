@@ -1,0 +1,193 @@
+<header class="dashboard-header">
+  <div class="header-content">
+    <h1>Machine Manager Dashboard</h1>
+    <div class="user-info">
+      <div class="user-details" *ngIf="currentUser">
+        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
+        <div class="user-metadata">
+          <span class="user-role">Role: {{ currentUser.role }}</span>
+          <span class="user-location" *ngIf="getUserLocationInfo()">{{ getUserLocationInfo() }}</span>
+          <span class="last-login">{{ getLastLoginInfo() }}</span>
+        </div>
+      </div>
+      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<div class="loading-container" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading dashboard...</p>
+</div>
+
+<div class="dashboard-content" *ngIf="!isLoading">
+  <div class="stats-grid">
+    <div class="stat-card machines">
+      <div class="stat-icon">
+        <i class="material-icons">precision_manufacturing</i>
+      </div>
+      <div class="stat-content">
+        <h3>Active Machines</h3>
+        <p class="stat-number">{{ stats.activeMachines }}</p>
+      </div>
+    </div>
+    <div class="stat-card maintenance">
+      <div class="stat-icon">
+        <i class="material-icons">build_circle</i>
+      </div>
+      <div class="stat-content">
+        <h3>Maintenance Tasks</h3>
+        <p class="stat-number">{{ stats.maintenanceTasks }}</p>
+      </div>
+    </div>
+    <div class="stat-card efficiency">
+      <div class="stat-icon">
+        <i class="material-icons">trending_up</i>
+      </div>
+      <div class="stat-content">
+        <h3>Efficiency Rate</h3>
+        <p class="stat-number">{{ stats.efficiencyRate }}%</p>
+      </div>
+    </div>
+    <div class="stat-card downtime">
+      <div class="stat-icon">
+        <i class="material-icons">warning</i>
+      </div>
+      <div class="stat-content">
+        <h3>Downtime Hours</h3>
+        <p class="stat-number">{{ stats.downtimeHours }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Machine Operations Panel -->
+  <div class="operations-panel">
+    <h3>
+      <i class="material-icons">precision_manufacturing</i>
+      Machine Operations Overview
+    </h3>
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">power</i>
+          System Status:
+        </span>
+        <span class="metric-value status-operational">{{ systemMetrics.systemStatus }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">speed</i>
+          Production Rate:
+        </span>
+        <span class="metric-value">{{ systemMetrics.productionRate }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">schedule</i>
+          Next Maintenance:
+        </span>
+        <span class="metric-value" [class]="'maintenance-' + systemMetrics.maintenanceStatus.toLowerCase()">{{ systemMetrics.nextMaintenance }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">inventory</i>
+          Equipment Health:
+        </span>
+        <span class="metric-value">{{ stats.equipmentHealth }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Panel -->
+  <div class="actions-panel">
+    <h3>
+      <i class="material-icons">build</i>
+      Quick Actions
+    </h3>
+    <div class="action-cards">
+      <div class="action-card operations-action" (click)="navigateToOperations()">
+        <div class="action-icon">
+          <i class="material-icons">precision_manufacturing</i>
+        </div>
+        <h4>Machine Operations</h4>
+        <p>Monitor and control machine operations</p>
+        <div class="action-status">{{ stats.activeMachines }} active</div>
+      </div>
+      
+      <div class="action-card maintenance-action" (click)="navigateToMaintenance()">
+        <div class="action-icon">
+          <i class="material-icons">build_circle</i>
+        </div>
+        <h4>Maintenance</h4>
+        <p>Schedule and track maintenance tasks</p>
+        <div class="action-status">{{ stats.maintenanceTasks }} pending</div>
+      </div>
+
+      <div class="action-card equipment-action" (click)="navigateToEquipment()">
+        <div class="action-icon">
+          <i class="material-icons">inventory</i>
+        </div>
+        <h4>Equipment</h4>
+        <p>Manage equipment inventory and status</p>
+        <div class="action-status">{{ stats.totalEquipment }} items</div>
+      </div>
+
+      <div class="action-card reports-action" (click)="navigateToReports()">
+        <div class="action-icon">
+          <i class="material-icons">assessment</i>
+        </div>
+        <h4>Reports</h4>
+        <p>Generate operational and maintenance reports</p>
+        <div class="action-status">{{ stats.reportsGenerated }} reports</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <section class="user-profile-summary" *ngIf="currentUser">
+      <h2>Your Profile Summary</h2>
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i class="material-icons">account_circle</i>
+          </div>
+          <div class="profile-info">
+            <h3>{{ currentUser.name }}</h3>
+            <p>{{ currentUser.email }}</p>
+          </div>
+        </div>
+        <div class="profile-details">
+          <div class="detail-item">
+            <strong>Role:</strong> {{ currentUser.role }}
+          </div>
+          <div class="detail-item" *ngIf="currentUser.region">
+            <strong>Region:</strong> {{ currentUser.region }}
+          </div>
+          <div class="detail-item">
+            <strong>Specialization:</strong> Machine Management
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="recent-activities">
+      <h2>Recent Activities</h2>
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let activity of recentActivities">
+          <div class="activity-icon">
+            <i class="material-icons">{{ activity.icon }}</i>
+          </div>
+          <div class="activity-content">
+            <h4>{{ activity.title }}</h4>
+            <p>{{ activity.description }}</p>
+            <span class="activity-time">{{ activity.timestamp }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

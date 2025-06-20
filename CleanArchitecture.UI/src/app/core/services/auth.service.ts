@@ -99,6 +99,14 @@ export class AuthService {
     return this.hasRole('blastingengineer');
   }
 
+  isMechanicalEngineer(): boolean {
+    return this.hasRole('mechanicalengineer');
+  }
+
+  isMachineManager(): boolean {
+    return this.hasRole('machinemanager');
+  }
+
   isOperator(): boolean {
     return this.hasRole('operator');
   }
