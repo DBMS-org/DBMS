@@ -274,6 +274,7 @@ namespace Infrastructure.Data
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin", Description = "Administrator with full access", NormalizedName = "ADMIN", IsActive = true },
                 new Role { Id = 2, Name = "BlastingEngineer", Description = "Blasting Engineer with technical access", NormalizedName = "BLASTINGENGINEER", IsActive = true },
+                new Role { Id = 3, Name = "MechanicalEngineer", Description = "Mechanical Engineer with analysis and design access", NormalizedName = "MECHANICALENGINEER", IsActive = true },
                 new Role { Id = 4, Name = "Operator", Description = "Operator with operational access", NormalizedName = "OPERATOR", IsActive = true },
                 new Role { Id = 5, Name = "MachineManager", Description = "Machine Manager with machinery operational access", NormalizedName = "MACHINEMANAGER", IsActive = true }
             );

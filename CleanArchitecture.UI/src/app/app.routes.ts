@@ -5,6 +5,7 @@ import {
   VerifyResetCodeComponent, 
   ResetPasswordComponent 
 } from './components/auth';
+import { authGuard } from './core/guards/auth.guard';
 import { AdminLayoutComponent } from './components/admin/shared/admin-layout/admin-layout.component';
 import { DashboardComponent } from './components/admin/dashboard/dashboard.component';
 import { UsersComponent } from './components/admin/users/users.component';
@@ -26,12 +27,15 @@ import { ProjectManagementComponent as BlastingEngineerProjectManagementComponen
 import { ProjectSitesComponent as BlastingEngineerProjectSitesComponent } from './components/blasting-engineer/project-management/project-sites/project-sites.component';
 import { AddSiteComponent } from './components/blasting-engineer/project-management/add-site/add-site.component';
 import { SiteDashboardComponent } from './components/blasting-engineer/project-management/site-dashboard/site-dashboard.component';
+import { MechanicalEngineerLayoutComponent } from './components/mechanical-engineer/shared/mechanical-engineer-layout/mechanical-engineer-layout.component';
+import { DashboardComponent as MechanicalEngineerDashboardComponent } from './components/mechanical-engineer/dashboard/dashboard.component';
 import { OperatorLayoutComponent } from './components/operator/shared/operator-layout/operator-layout.component';
 import { OperatorDashboardComponent } from './components/operator/dashboard/dashboard.component';
 import { MyProjectComponent } from './components/operator/my-project/my-project.component';
 import { OperatorProjectSitesComponent } from './components/operator/project-sites/project-sites.component';
 import { OperatorPatternViewComponent } from './components/operator/pattern-view/pattern-view.component';
 import { ViewSequenceSimulatorComponent } from './components/admin/project-management/view-sequence-simulator/view-sequence-simulator.component';
+import { MachineManagerComponent } from './components/machine-manager/machine-manager.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -41,6 +45,7 @@ export const routes: Routes = [
   { 
     path: 'admin',
     component: AdminLayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
@@ -58,6 +63,7 @@ export const routes: Routes = [
   {
     path: 'blasting-engineer',
     component: BlastingEngineerLayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: BlastingEngineerDashboardComponent },
@@ -78,8 +84,34 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'mechanical-engineer',
+    component: MechanicalEngineerLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: MechanicalEngineerDashboardComponent },
+      { path: 'analysis', component: MechanicalEngineerDashboardComponent }, // Placeholder for now
+      { path: 'design-tools', component: MechanicalEngineerDashboardComponent }, // Placeholder for now
+      { path: 'reports', component: MechanicalEngineerDashboardComponent }, // Placeholder for now
+      { path: 'settings', component: MechanicalEngineerDashboardComponent } // Placeholder for now
+    ]
+  },
+  {
+    path: 'machine-manager',
+    component: MachineManagerComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./components/machine-manager/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      }
+    ]
+  },
+  {
     path: 'operator',
     component: OperatorLayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: OperatorDashboardComponent },
@@ -88,5 +120,5 @@ export const routes: Routes = [
       { path: 'my-project/sites/:siteId/pattern-view', component: OperatorPatternViewComponent }
     ]
   },
-  { path: '', redirectTo: '/admin/dashboard', pathMatch: 'full' }
+  { path: '', redirectTo: '/login', pathMatch: 'full' }
 ];
