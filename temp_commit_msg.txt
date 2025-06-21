@@ -1,1 +1,1 @@
-Merge branch 'master' of https://github.com/DBMS-org/DBMS
+Implement new routes for Explosive Manager and Store Manager, enhancing role-based navigation in the application. Update the Admin Dashboard to reflect changes in user roles and statistics, including new metrics for deactivated users and pending projects. Refactor user profile sections across various components for improved clarity and consistency. Enhance UI elements with updated styles and responsive design adjustments.
