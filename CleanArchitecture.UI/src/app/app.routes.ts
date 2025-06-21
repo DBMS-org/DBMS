@@ -42,8 +42,10 @@ import { MachineInventoryComponent as MachineManagerInventoryComponent } from '.
 import { AssignmentRequestsComponent } from './components/machine-manager/assignment-requests/assignment-requests.component';
 import { ExplosiveManagerLayoutComponent } from './components/explosive-manager/shared/explosive-manager-layout/explosive-manager-layout.component';
 import { DashboardComponent as ExplosiveManagerDashboardComponent } from './components/explosive-manager/dashboard/dashboard.component';
+import { StoresComponent } from './components/explosive-manager/stores/stores.component';
 import { StoreManagerLayoutComponent } from './components/store-manager/shared/store-manager-layout/store-manager-layout.component';
 import { DashboardComponent as StoreManagerDashboardComponent } from './components/store-manager/dashboard/dashboard.component';
+import { AddStockComponent } from './components/store-manager/add-stock/add-stock.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -144,7 +146,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: ExplosiveManagerDashboardComponent }
+      { path: 'dashboard', component: ExplosiveManagerDashboardComponent },
+      { path: 'stores', component: StoresComponent }
     ]
   },
   {
@@ -154,7 +157,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: StoreManagerDashboardComponent },
-      { path: 'add-stock', component: StoreManagerDashboardComponent }, // Placeholder for Add Stock Request
+      { path: 'add-stock', component: AddStockComponent },
       { path: 'edit-stock', component: StoreManagerDashboardComponent }, // Placeholder for Edit Stock Request
       { path: 'delete-stock', component: StoreManagerDashboardComponent }, // Placeholder for Delete Stock Request
       { path: 'notifications', component: StoreManagerDashboardComponent }, // Placeholder for Notifications
