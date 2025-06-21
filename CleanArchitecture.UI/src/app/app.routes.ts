@@ -16,6 +16,8 @@ import { ProjectDetailsComponent } from './components/admin/project-management/p
 import { AddProjectComponent } from './components/admin/project-management/add-project/add-project.component';
 import { EditProjectComponent } from './components/admin/project-management/edit-project/edit-project.component';
 import { ProjectSitesComponent } from './components/admin/project-management/project-sites/project-sites.component';
+import { MachineInventoryComponent } from './components/admin/machine-inventory/machine-inventory.component';
+import { MachineAssignmentsComponent } from './components/admin/machine-assignments/machine-assignments.component';
 import { BlastingEngineerLayoutComponent } from './components/blasting-engineer/shared/blasting-engineer-layout/blasting-engineer-layout.component';
 import { DashboardComponent as BlastingEngineerDashboardComponent } from './components/blasting-engineer/dashboard/dashboard.component';
 import { CsvUploadComponent } from './components/blasting-engineer/csv-upload/csv-upload.component';
@@ -36,6 +38,8 @@ import { OperatorProjectSitesComponent } from './components/operator/project-sit
 import { OperatorPatternViewComponent } from './components/operator/pattern-view/pattern-view.component';
 import { ViewSequenceSimulatorComponent } from './components/admin/project-management/view-sequence-simulator/view-sequence-simulator.component';
 import { MachineManagerComponent } from './components/machine-manager/machine-manager.component';
+import { MachineInventoryComponent as MachineManagerInventoryComponent } from './components/machine-manager/machine-inventory/machine-inventory.component';
+import { AssignmentRequestsComponent } from './components/machine-manager/assignment-requests/assignment-requests.component';
 import { ExplosiveManagerLayoutComponent } from './components/explosive-manager/shared/explosive-manager-layout/explosive-manager-layout.component';
 import { DashboardComponent as ExplosiveManagerDashboardComponent } from './components/explosive-manager/dashboard/dashboard.component';
 import { StoreManagerLayoutComponent } from './components/store-manager/shared/store-manager-layout/store-manager-layout.component';
@@ -61,7 +65,9 @@ export const routes: Routes = [
       { path: 'project-management/:id', component: ProjectDetailsComponent },
       { path: 'project-management/:id/edit', component: EditProjectComponent },
       { path: 'project-management/:id/sites', component: ProjectSitesComponent },
-      { path: 'project-management/:projectId/sites/:siteId/sequence-simulator', component: ViewSequenceSimulatorComponent }
+      { path: 'project-management/:projectId/sites/:siteId/sequence-simulator', component: ViewSequenceSimulatorComponent },
+      { path: 'machine-inventory', component: MachineInventoryComponent },
+      { path: 'machine-assignments', component: MachineAssignmentsComponent }
     ]
   },
   {
@@ -102,13 +108,21 @@ export const routes: Routes = [
   },
   {
     path: 'machine-manager',
-    component: MachineManagerComponent,
+    loadComponent: () => import('./components/machine-manager/shared/machine-manager-layout/machine-manager-layout.component').then(m => m.MachineManagerLayoutComponent),
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
         loadComponent: () => import('./components/machine-manager/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'machine-inventory',
+        component: MachineManagerInventoryComponent
+      },
+      {
+        path: 'assignment-requests',
+        component: AssignmentRequestsComponent
       }
     ]
   },

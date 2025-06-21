@@ -1,0 +1,302 @@
+<div class="machine-inventory-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">Machine Inventory & Management</h2>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="navigateToAssignments()">
+        <i class="fas fa-clipboard-list"></i> View Assignments
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-section">
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <i class="fas fa-cogs"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Total Machines</h3>
+        <p class="stat-number">{{ statistics.total }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card available">
+      <div class="stat-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Available</h3>
+        <p class="stat-number">{{ statistics.available }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card assigned">
+      <div class="stat-icon">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Assigned</h3>
+        <p class="stat-number">{{ statistics.assigned }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card maintenance">
+      <div class="stat-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Maintenance</h3>
+        <p class="stat-number">{{ statistics.maintenance }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card out-of-service">
+      <div class="stat-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Out of Service</h3>
+        <p class="stat-number">{{ statistics.outOfService }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Search machines by name, model, manufacturer, or serial number..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+      />
+    </div>
+    
+    <div class="filter-section">
+      <select class="form-select" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
+        <option value="ALL">All Statuses</option>
+        <option *ngFor="let status of machineStatusOptions" [value]="status">
+          {{ status }}
+        </option>
+      </select>
+      
+      <select class="form-select" [(ngModel)]="selectedType" (change)="onTypeFilterChange()">
+        <option value="ALL">All Types</option>
+        <option *ngFor="let type of machineTypeOptions" [value]="type">
+          {{ type }}
+        </option>
+      </select>
+      
+      <button class="btn btn-secondary filter-btn" (click)="applyFilters()">
+        <i class="fas fa-filter"></i> Filter
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null"></button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Loading machines...</p>
+  </div>
+
+  <!-- Machines Table -->
+  <div class="table-container" *ngIf="!isLoading">
+    <table class="machines-table">
+      <thead>
+        <tr>
+          <th>Machine</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Location</th>
+          <th>Assignment</th>
+          <th>Specifications</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let machine of filteredMachines" class="machine-row">
+          <td class="machine-details">
+            <div class="machine-info">
+              <h5>{{ machine.name }}</h5>
+              <p class="text-muted">{{ machine.manufacturer }} {{ machine.model }}</p>
+              <small class="text-secondary">S/N: {{ machine.serialNumber }}</small>
+            </div>
+          </td>
+          
+          <td class="machine-type">
+            <span class="badge bg-primary">{{ machine.type }}</span>
+          </td>
+          
+          <td class="machine-status">
+            <span class="badge" [ngClass]="getStatusClass(machine.status)">
+              {{ machine.status }}
+            </span>
+          </td>
+          
+          <td class="machine-location">
+            {{ machine.currentLocation || 'Not specified' }}
+          </td>
+          
+          <td class="machine-assignment">
+            <div *ngIf="machine.assignedToProject" class="assignment-info">
+              <p><strong>Project:</strong> {{ machine.assignedToProject }}</p>
+              <p *ngIf="machine.assignedToOperator"><strong>Operator:</strong> {{ machine.assignedToOperator }}</p>
+            </div>
+            <span *ngIf="!machine.assignedToProject" class="text-muted">Not assigned</span>
+          </td>
+          
+          <td class="machine-specs">
+            <div class="specs-summary">
+              <span *ngIf="machine.specifications?.power" class="badge bg-light text-dark">{{ machine.specifications.power }}</span>
+              <span *ngIf="machine.specifications?.weight" class="badge bg-light text-dark">{{ machine.specifications.weight }}</span>
+              <span *ngIf="machine.specifications?.capacity" class="badge bg-light text-dark">{{ machine.specifications.capacity }}</span>
+            </div>
+          </td>
+          
+          <td class="machine-actions">
+            <div class="action-buttons">
+              <button 
+                class="btn btn-sm btn-outline-primary action-btn" 
+                (click)="openEditMachineModal(machine)"
+                title="Edit Machine"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              
+              <button 
+                class="btn btn-sm btn-outline-info action-btn" 
+                (click)="viewMachine(machine)"
+                title="View Details"
+              >
+                <i class="fas fa-eye"></i>
+              </button>
+              
+              <button 
+                class="btn btn-sm btn-outline-danger action-btn" 
+                (click)="deleteMachine(machine)"
+                title="Delete Machine"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- No Machines Message -->
+    <div *ngIf="filteredMachines.length === 0" class="no-machines">
+      <div class="empty-state">
+        <i class="fas fa-cogs fa-3x text-muted"></i>
+        <h4>No Machines Found</h4>
+        <p>No machines match your current filters. Try adjusting your search criteria.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Machine Modal -->
+<div class="modal-overlay" *ngIf="showEditMachineModal">
+  <div class="modal-content large-modal">
+    <div class="modal-header">
+      <h5>Edit Machine</h5>
+      <button type="button" class="btn-close" (click)="closeMachineModal()"></button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="machineForm">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">Machine Name *</label>
+            <input type="text" id="name" class="form-control" formControlName="name" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="type" class="form-label">Type *</label>
+            <select id="type" class="form-select" formControlName="type">
+              <option value="">Select Type</option>
+              <option *ngFor="let type of machineTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="manufacturer" class="form-label">Manufacturer *</label>
+            <input type="text" id="manufacturer" class="form-control" formControlName="manufacturer" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="model" class="form-label">Model *</label>
+            <input type="text" id="model" class="form-control" formControlName="model" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="serialNumber" class="form-label">Serial Number *</label>
+            <input type="text" id="serialNumber" class="form-control" formControlName="serialNumber" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="currentLocation" class="form-label">Current Location</label>
+            <input type="text" id="currentLocation" class="form-control" formControlName="currentLocation" />
+          </div>
+        </div>
+
+        <h6 class="mt-4 mb-3">Specifications</h6>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="power" class="form-label">Power</label>
+            <input type="text" id="power" class="form-control" formControlName="power" placeholder="e.g., 500HP" />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="weight" class="form-label">Weight</label>
+            <input type="text" id="weight" class="form-control" formControlName="weight" placeholder="e.g., 50 tons" />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="capacity" class="form-label">Capacity</label>
+            <input type="text" id="capacity" class="form-control" formControlName="capacity" placeholder="e.g., 10 m³" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="fuelType" class="form-label">Fuel Type</label>
+            <input type="text" id="fuelType" class="form-control" formControlName="fuelType" placeholder="e.g., Diesel" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="dimensions" class="form-label">Dimensions</label>
+            <input type="text" id="dimensions" class="form-control" formControlName="dimensions" placeholder="L x W x H" />
+          </div>
+        </div>
+
+        <div class="row" *ngIf="machineForm.get('type')?.value === 'DRILL_RIG'">
+          <div class="col-md-6 mb-3">
+            <label for="maxOperatingDepth" class="form-label">Max Operating Depth</label>
+            <input type="text" id="maxOperatingDepth" class="form-control" formControlName="maxOperatingDepth" placeholder="e.g., 200m" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="drillingDiameter" class="form-label">Drilling Diameter</label>
+            <input type="text" id="drillingDiameter" class="form-control" formControlName="drillingDiameter" placeholder="e.g., 150mm" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" (click)="saveMachine()" [disabled]="machineForm.invalid">
+        <i class="fas fa-save"></i> Update Machine
+      </button>
+      <button class="btn btn-secondary" (click)="closeMachineModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+    </div>
+  </div>
+</div>
