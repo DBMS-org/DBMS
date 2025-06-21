@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { MachineService } from '../../../core/services/machine.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { AddMachineComponent } from '../add-machine/add-machine.component';
+
 import { EditMachineComponent } from '../edit-machine/edit-machine.component';
 import { MachineDetailsComponent } from '../machine-details/machine-details.component';
 import { 
@@ -23,7 +23,6 @@ import {
     CommonModule, 
     FormsModule, 
     ReactiveFormsModule,
-    AddMachineComponent,
     EditMachineComponent,
     MachineDetailsComponent
   ],
@@ -43,7 +42,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   selectedType: MachineType | 'ALL' = 'ALL';
   
   // Modal states
-  showAddMachineModal = false;
   showEditMachineModal = false;
   showDeleteConfirmModal = false;
   showMachineDetailsModal = false;
@@ -157,10 +155,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  openAddMachineModal(): void {
-    this.selectedMachine = null;
-    this.showAddMachineModal = true;
-  }
+
 
   openEditMachineModal(machine: Machine): void {
     this.selectedMachine = machine;
@@ -178,7 +173,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   }
 
   closeModals(): void {
-    this.showAddMachineModal = false;
     this.showEditMachineModal = false;
     this.showDeleteConfirmModal = false;
     this.showMachineDetailsModal = false;

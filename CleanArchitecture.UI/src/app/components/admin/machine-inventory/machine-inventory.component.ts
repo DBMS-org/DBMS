@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { MachineService } from '../../../core/services/machine.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { AddMachineComponent } from '../add-machine/add-machine.component';
 import { 
   Machine, 
   MachineType, 
@@ -14,7 +15,7 @@ import {
 @Component({
   selector: 'app-machine-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, AddMachineComponent],
   templateUrl: './machine-inventory.component.html',
   styleUrl: './machine-inventory.component.scss'
 })
@@ -30,11 +31,9 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   selectedType: MachineType | 'ALL' = 'ALL';
   
   // Modal states
-  showEditMachineModal = false;
+  showAddMachineModal = false;
+  showMachineDetailsModal = false;
   selectedMachine: Machine | null = null;
-  
-  // Forms
-  machineForm!: FormGroup;
   
   // Enums for template
   MachineStatus = MachineStatus;
@@ -56,9 +55,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private formBuilder: FormBuilder,
     private router: Router
-  ) {
-    this.initializeForms();
-  }
+  ) {}
 
   ngOnInit(): void {
     this.loadMachines();
@@ -66,24 +63,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-  }
-
-  private initializeForms(): void {
-    this.machineForm = this.formBuilder.group({
-      name: ['', [Validators.required, Validators.minLength(3)]],
-      type: ['', Validators.required],
-      model: ['', Validators.required],
-      manufacturer: ['', Validators.required],
-      serialNumber: ['', Validators.required],
-      currentLocation: [''],
-      power: [''],
-      weight: [''],
-      dimensions: [''],
-      capacity: [''],
-      fuelType: [''],
-      maxOperatingDepth: [''],
-      drillingDiameter: ['']
-    });
   }
 
   private loadMachines(): void {
@@ -143,102 +122,30 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  openEditMachineModal(machine: Machine): void {
-    this.selectedMachine = machine;
-    this.machineForm.patchValue({
-      name: machine.name,
-      type: machine.type,
-      model: machine.model,
-      manufacturer: machine.manufacturer,
-      serialNumber: machine.serialNumber,
-      currentLocation: machine.currentLocation,
-      power: machine.specifications?.power,
-      weight: machine.specifications?.weight,
-      dimensions: machine.specifications?.dimensions,
-      capacity: machine.specifications?.capacity,
-      fuelType: machine.specifications?.fuelType,
-      maxOperatingDepth: machine.specifications?.maxOperatingDepth,
-      drillingDiameter: machine.specifications?.drillingDiameter
-    });
-    this.showEditMachineModal = true;
-  }
-
-  closeMachineModal(): void {
-    this.showEditMachineModal = false;
+  openAddMachineModal(): void {
     this.selectedMachine = null;
-  }
-
-  saveMachine(): void {
-    if (this.machineForm.invalid || !this.selectedMachine) return;
-
-    const formValue = this.machineForm.value;
-    
-    const updatedMachine: Machine = {
-      ...this.selectedMachine,
-      name: formValue.name,
-      type: formValue.type,
-      model: formValue.model,
-      manufacturer: formValue.manufacturer,
-      serialNumber: formValue.serialNumber,
-      currentLocation: formValue.currentLocation,
-      specifications: {
-        power: formValue.power,
-        weight: formValue.weight,
-        dimensions: formValue.dimensions,
-        capacity: formValue.capacity,
-        fuelType: formValue.fuelType,
-        maxOperatingDepth: formValue.maxOperatingDepth,
-        drillingDiameter: formValue.drillingDiameter
-      }
-    };
-
-    const sub = this.machineService.updateMachine(this.selectedMachine.id, updatedMachine).subscribe({
-      next: () => {
-        this.loadMachines();
-        this.closeMachineModal();
-        console.log('Machine updated successfully');
-      },
-      error: (error) => {
-        this.error = 'Failed to update machine';
-        console.error('Error updating machine:', error);
-      }
-    });
-    this.subscriptions.push(sub);
-  }
-
-  updateMachineStatus(machine: Machine, newStatus: MachineStatus): void {
-    const sub = this.machineService.updateMachineStatus(machine.id, newStatus).subscribe({
-      next: () => {
-        machine.status = newStatus;
-        this.calculateStatistics();
-        this.applyFilters();
-      },
-      error: (error) => {
-        this.error = 'Failed to update machine status';
-        console.error('Error updating machine status:', error);
-      }
-    });
-    this.subscriptions.push(sub);
+    this.showAddMachineModal = true;
   }
 
   viewMachine(machine: Machine): void {
-    console.log('Viewing machine:', machine);
-    // TODO: Implement machine view details logic
+    this.selectedMachine = machine;
+    this.showMachineDetailsModal = true;
   }
 
-  deleteMachine(machine: Machine): void {
-    if (confirm(`Are you sure you want to delete ${machine.name}?`)) {
-      const sub = this.machineService.deleteMachine(machine.id).subscribe({
-        next: () => {
-          this.loadMachines();
-        },
-        error: (error) => {
-          this.error = 'Failed to delete machine';
-          console.error('Error deleting machine:', error);
-        }
-      });
-      this.subscriptions.push(sub);
-    }
+  closeMachineDetailsModal(): void {
+    this.showMachineDetailsModal = false;
+    this.selectedMachine = null;
+  }
+
+  closeModals(): void {
+    this.showAddMachineModal = false;
+    this.showMachineDetailsModal = false;
+    this.selectedMachine = null;
+  }
+
+  onMachineSaved(machine: Machine): void {
+    this.loadMachines();
+    this.closeModals();
   }
 
   getStatusClass(status: MachineStatus): string {
@@ -246,18 +153,46 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
       case MachineStatus.AVAILABLE:
         return 'bg-success';
       case MachineStatus.ASSIGNED:
-        return 'bg-warning text-dark';
+        return 'bg-warning';
       case MachineStatus.IN_MAINTENANCE:
         return 'bg-info';
       case MachineStatus.UNDER_REPAIR:
         return 'bg-danger';
       case MachineStatus.OUT_OF_SERVICE:
-        return 'bg-dark';
-      case MachineStatus.RETIRED:
         return 'bg-secondary';
       default:
-        return 'bg-light text-dark';
+        return 'bg-light';
     }
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'Available':
+        return 'check_circle';
+      case 'Assigned':
+        return 'assignment';
+      case 'In Maintenance':
+        return 'build';
+      case 'Under Repair':
+        return 'warning';
+      case 'Out of Service':
+        return 'block';
+      case 'Retired':
+        return 'archive';
+      default:
+        return 'help';
+    }
+  }
+
+  formatDate(date: Date | string | undefined): string {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 
   get machineTypeOptions() {
