@@ -1,0 +1,354 @@
+<div class="machine-assignments-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">Machine Assignment Requests</h2>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="navigateToInventory()">
+        <i class="fas fa-cogs"></i> View Inventory
+      </button>
+      <button class="btn btn-primary" (click)="openAssignmentRequestModal()">
+        <i class="fas fa-paper-plane"></i> Request Assignment
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-section">
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Total Requests</h3>
+        <p class="stat-number">{{ statistics.total }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card pending">
+      <div class="stat-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Pending</h3>
+        <p class="stat-number">{{ statistics.pending }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card approved">
+      <div class="stat-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Approved</h3>
+        <p class="stat-number">{{ statistics.approved }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card rejected">
+      <div class="stat-icon">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Rejected</h3>
+        <p class="stat-number">{{ statistics.rejected }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card completed">
+      <div class="stat-icon">
+        <i class="fas fa-check-double"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Completed</h3>
+        <p class="stat-number">{{ statistics.completed }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Search by requester, project ID, or machine type..." 
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+      />
+    </div>
+    
+    <div class="filter-section">
+      <select class="form-select" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
+        <option value="ALL">All Statuses</option>
+        <option *ngFor="let status of statusOptions" [value]="status">
+          {{ status }}
+        </option>
+      </select>
+      
+      <select class="form-select" [(ngModel)]="selectedUrgency" (change)="onUrgencyFilterChange()">
+        <option value="ALL">All Urgencies</option>
+        <option *ngFor="let urgency of urgencyOptions" [value]="urgency">{{ urgency }}</option>
+      </select>
+      
+      <button class="btn btn-secondary filter-btn" (click)="applyFilters()">
+        <i class="fas fa-filter"></i> Filter
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null"></button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Loading assignment requests...</p>
+  </div>
+
+  <!-- Assignment Requests Table -->
+  <div class="table-container" *ngIf="!isLoading">
+    <table class="requests-table">
+      <thead>
+        <tr>
+          <th>Request Details</th>
+          <th>Requester</th>
+          <th>Machine Type</th>
+          <th>Quantity</th>
+          <th>Urgency</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let request of filteredRequests" class="request-row">
+          <td class="request-details">
+            <div class="request-info">
+              <h5>{{ request.projectId }}</h5>
+              <p *ngIf="request.detailsOrExplanation" class="request-description">
+                {{ request.detailsOrExplanation }}
+              </p>
+              <div class="request-metadata">
+                <span *ngIf="request.expectedUsageDuration" class="badge bg-info">
+                  Duration: {{ request.expectedUsageDuration }}
+                </span>
+                <span *ngIf="request.expectedReturnDate" class="badge bg-warning">
+                  Return: {{ formatDate(request.expectedReturnDate) }}
+                </span>
+              </div>
+            </div>
+          </td>
+          
+          <td class="requester-info">
+            <div class="requester-details">
+              <strong>{{ request.requestedBy }}</strong>
+              <p class="text-muted">General Manager</p>
+            </div>
+          </td>
+          
+          <td class="machine-type">
+            <span class="badge bg-primary">{{ request.machineType }}</span>
+          </td>
+          
+          <td class="quantity">
+            <span class="badge bg-secondary">{{ request.quantity }}</span>
+          </td>
+          
+          <td class="urgency">
+            <span class="badge" [ngClass]="getUrgencyClass(request.urgency)">
+              {{ request.urgency }}
+            </span>
+          </td>
+          
+          <td class="status">
+            <span class="badge" [ngClass]="getStatusClass(request.status)">
+              {{ request.status }}
+            </span>
+          </td>
+          
+          <td class="request-date">
+            {{ formatDate(request.requestedDate) }}
+          </td>
+          
+          <td class="request-actions">
+            <div class="action-buttons" *ngIf="request.status === AssignmentRequestStatus.PENDING">
+              <button 
+                class="btn btn-sm btn-success action-btn" 
+                (click)="openApprovalModal(request)"
+                title="Approve Request"
+              >
+                <i class="fas fa-check"></i>
+              </button>
+              <button 
+                class="btn btn-sm btn-danger action-btn" 
+                (click)="openRejectionModal(request)"
+                title="Reject Request"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div *ngIf="request.status !== AssignmentRequestStatus.PENDING" class="text-muted">
+              <small>{{ request.status }}</small>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- No Requests Message -->
+    <div *ngIf="filteredRequests.length === 0" class="no-requests">
+      <div class="empty-state">
+        <i class="fas fa-clipboard fa-3x text-muted"></i>
+        <h4>No Assignment Requests Found</h4>
+        <p>No requests match your current filters. Try adjusting your search criteria.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Approval Modal -->
+<div class="modal-overlay" *ngIf="showApprovalModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5>Approve Assignment Request</h5>
+      <button type="button" class="btn-close" (click)="closeApprovalModal()"></button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="approvalForm">
+        <div class="mb-3">
+          <label for="assignedMachines" class="form-label">Assigned Machine IDs (comma-separated):</label>
+          <input 
+            type="text" 
+            id="assignedMachines"
+            class="form-control" 
+            formControlName="assignedMachines"
+            placeholder="Enter machine IDs separated by commas"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="comments" class="form-label">Comments (optional):</label>
+          <textarea 
+            id="comments"
+            class="form-control" 
+            formControlName="comments"
+            rows="3"
+            placeholder="Any additional comments..."
+          ></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-success" (click)="approveRequest()" [disabled]="approvalForm.invalid">
+        <i class="fas fa-check"></i> Approve
+      </button>
+      <button class="btn btn-secondary" (click)="closeApprovalModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal-overlay" *ngIf="showRejectionModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5>Reject Assignment Request</h5>
+      <button type="button" class="btn-close" (click)="closeRejectionModal()"></button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="rejectionForm">
+        <div class="mb-3">
+          <label for="rejectionComments" class="form-label">Reason for rejection:</label>
+          <textarea 
+            id="rejectionComments"
+            class="form-control" 
+            formControlName="comments"
+            rows="4"
+            placeholder="Please provide a reason for rejecting this request..."
+            required
+          ></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" (click)="rejectRequest()" [disabled]="rejectionForm.invalid">
+        <i class="fas fa-times"></i> Reject
+      </button>
+      <button class="btn btn-secondary" (click)="closeRejectionModal()">
+        <i class="fas fa-arrow-left"></i> Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Assignment Request Modal -->
+<div class="modal-overlay" *ngIf="showAssignmentRequestModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5>Request Machine Assignment</h5>
+      <button type="button" class="btn-close" (click)="closeAssignmentRequestModal()"></button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="assignmentRequestForm">
+        <div class="mb-3">
+          <label for="projectId" class="form-label">Project *</label>
+          <select id="projectId" class="form-select" formControlName="projectId">
+            <option value="">Select Project</option>
+            <option *ngFor="let project of projects" [value]="project.id">{{ project.name }}</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="machineType" class="form-label">Machine Type *</label>
+            <select id="machineType" class="form-select" formControlName="machineType">
+              <option value="">Select Type</option>
+              <option *ngFor="let type of machineTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="quantity" class="form-label">Quantity *</label>
+            <input type="number" id="quantity" class="form-control" formControlName="quantity" min="1" />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="urgency" class="form-label">Urgency *</label>
+          <select id="urgency" class="form-select" formControlName="urgency">
+            <option *ngFor="let urgency of urgencyOptions" [value]="urgency">{{ urgency }}</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="detailsOrExplanation" class="form-label">Details/Explanation</label>
+          <textarea id="detailsOrExplanation" class="form-control" formControlName="detailsOrExplanation" rows="3"></textarea>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="expectedUsageDuration" class="form-label">Expected Usage Duration</label>
+            <input type="text" id="expectedUsageDuration" class="form-control" formControlName="expectedUsageDuration" placeholder="e.g., 2 weeks" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="expectedReturnDate" class="form-label">Expected Return Date</label>
+            <input type="date" id="expectedReturnDate" class="form-control" formControlName="expectedReturnDate" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" (click)="submitAssignmentRequest()" [disabled]="assignmentRequestForm.invalid">
+        <i class="fas fa-paper-plane"></i> Submit Request
+      </button>
+      <button class="btn btn-secondary" (click)="closeAssignmentRequestModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+    </div>
+  </div>
+</div>
