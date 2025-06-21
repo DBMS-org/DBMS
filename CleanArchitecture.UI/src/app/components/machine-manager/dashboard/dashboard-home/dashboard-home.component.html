@@ -205,22 +205,5 @@
     </div>
   </div>
 
-  <div class="content-grid">
 
-    <section class="recent-activities">
-      <h2>Recent Activities</h2>
-      <div class="activity-list">
-        <div class="activity-item" [class]="getActivityTypeClass(activity.type)" *ngFor="let activity of recentActivities">
-          <div class="activity-icon">
-            <i class="material-icons">{{ activity.icon }}</i>
-          </div>
-          <div class="activity-content">
-            <h4>{{ activity.title }}</h4>
-            <p>{{ activity.description }}</p>
-            <span class="activity-time">{{ activity.timestamp }}</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
 </div>

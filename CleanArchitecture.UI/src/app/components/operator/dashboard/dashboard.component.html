@@ -292,28 +292,7 @@
     </div>
   </div>
 
-  <!-- Recent Activities -->
-  <div class="recent-activities" *ngIf="recentActivities.length > 0">
-    <h3>
-      <i class="material-icons">history</i>
-      Recent Activities
-    </h3>
-    <div class="activity-list">
-      <div class="activity-item" *ngFor="let activity of recentActivities; trackBy: trackActivity">
-        <div class="activity-icon">
-          <i class="material-icons">{{ getActivityIcon(activity.type) }}</i>
-        </div>
-        <div class="activity-content">
-          <h4>{{ activity.action }}</h4>
-          <p>{{ activity.item }}</p>
-          <div class="activity-meta">
-            <span class="activity-time">{{ activity.time }}</span>
-            <span class="activity-status" [class]="getActivityStatusColor(activity.status)">{{ activity.status }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <ng-template #noProject>
     <div class="no-project-card">

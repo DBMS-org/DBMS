@@ -20,6 +20,7 @@ export class SidebarComponent {
 
   navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/explosive-manager/dashboard' },
+    { icon: 'store', label: 'Stores', route: '/explosive-manager/stores' },
     { icon: 'inventory', label: 'Inventory', route: '/explosive-manager/inventory' },
     { icon: 'security', label: 'Safety Protocols', route: '/explosive-manager/safety' },
     { icon: 'work', label: 'Operations', route: '/explosive-manager/operations' },
