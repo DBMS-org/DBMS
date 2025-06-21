@@ -6,6 +6,13 @@
       <button class="btn btn-secondary" (click)="navigateToAssignments()">
         <i class="fas fa-clipboard-list"></i> View Assignments
       </button>
+      <button 
+        class="btn btn-primary add-btn"
+        (click)="openAddMachineModal()"
+        [disabled]="isLoading">
+        <i class="material-icons">add</i>
+        New Machine
+      </button>
     </div>
   </div>
 
@@ -120,7 +127,6 @@
           <th>Status</th>
           <th>Location</th>
           <th>Assignment</th>
-          <th>Specifications</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -156,38 +162,14 @@
             <span *ngIf="!machine.assignedToProject" class="text-muted">Not assigned</span>
           </td>
           
-          <td class="machine-specs">
-            <div class="specs-summary">
-              <span *ngIf="machine.specifications?.power" class="badge bg-light text-dark">{{ machine.specifications.power }}</span>
-              <span *ngIf="machine.specifications?.weight" class="badge bg-light text-dark">{{ machine.specifications.weight }}</span>
-              <span *ngIf="machine.specifications?.capacity" class="badge bg-light text-dark">{{ machine.specifications.capacity }}</span>
-            </div>
-          </td>
-          
           <td class="machine-actions">
             <div class="action-buttons">
-              <button 
-                class="btn btn-sm btn-outline-primary action-btn" 
-                (click)="openEditMachineModal(machine)"
-                title="Edit Machine"
-              >
-                <i class="fas fa-edit"></i>
-              </button>
-              
               <button 
                 class="btn btn-sm btn-outline-info action-btn" 
                 (click)="viewMachine(machine)"
                 title="View Details"
               >
                 <i class="fas fa-eye"></i>
-              </button>
-              
-              <button 
-                class="btn btn-sm btn-outline-danger action-btn" 
-                (click)="deleteMachine(machine)"
-                title="Delete Machine"
-              >
-                <i class="fas fa-trash"></i>
               </button>
             </div>
           </td>
@@ -201,102 +183,197 @@
         <i class="fas fa-cogs fa-3x text-muted"></i>
         <h4>No Machines Found</h4>
         <p>No machines match your current filters. Try adjusting your search criteria.</p>
+        <button class="btn btn-primary" (click)="openAddMachineModal()">
+          <i class="material-icons">add</i>
+          Add New Machine
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Edit Machine Modal -->
-<div class="modal-overlay" *ngIf="showEditMachineModal">
-  <div class="modal-content large-modal">
+<!-- Add Machine Modal -->
+@if (showAddMachineModal) {
+  <app-add-machine
+    (machineSaved)="onMachineSaved($event)"
+    (close)="closeModals()">
+  </app-add-machine>
+}
+
+<!-- Machine Details Modal -->
+<div class="modal-overlay" *ngIf="showMachineDetailsModal" (click)="closeMachineDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h5>Edit Machine</h5>
-      <button type="button" class="btn-close" (click)="closeMachineModal()"></button>
-    </div>
-    <div class="modal-body">
-      <form [formGroup]="machineForm">
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="name" class="form-label">Machine Name *</label>
-            <input type="text" id="name" class="form-control" formControlName="name" />
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="type" class="form-label">Type *</label>
-            <select id="type" class="form-select" formControlName="type">
-              <option value="">Select Type</option>
-              <option *ngFor="let type of machineTypeOptions" [value]="type">{{ type }}</option>
-            </select>
-          </div>
+      <div class="header-content">
+        <div class="header-icon">
+          <i class="material-icons">info</i>
         </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="manufacturer" class="form-label">Manufacturer *</label>
-            <input type="text" id="manufacturer" class="form-control" formControlName="manufacturer" />
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="model" class="form-label">Model *</label>
-            <input type="text" id="model" class="form-control" formControlName="model" />
-          </div>
+        <div class="header-text">
+          <h2>Machine Details</h2>
+          <p class="header-subtitle">View machine information</p>
         </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="serialNumber" class="form-label">Serial Number *</label>
-            <input type="text" id="serialNumber" class="form-control" formControlName="serialNumber" />
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="currentLocation" class="form-label">Current Location</label>
-            <input type="text" id="currentLocation" class="form-control" formControlName="currentLocation" />
-          </div>
-        </div>
-
-        <h6 class="mt-4 mb-3">Specifications</h6>
-        <div class="row">
-          <div class="col-md-4 mb-3">
-            <label for="power" class="form-label">Power</label>
-            <input type="text" id="power" class="form-control" formControlName="power" placeholder="e.g., 500HP" />
-          </div>
-          <div class="col-md-4 mb-3">
-            <label for="weight" class="form-label">Weight</label>
-            <input type="text" id="weight" class="form-control" formControlName="weight" placeholder="e.g., 50 tons" />
-          </div>
-          <div class="col-md-4 mb-3">
-            <label for="capacity" class="form-label">Capacity</label>
-            <input type="text" id="capacity" class="form-control" formControlName="capacity" placeholder="e.g., 10 m³" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="fuelType" class="form-label">Fuel Type</label>
-            <input type="text" id="fuelType" class="form-control" formControlName="fuelType" placeholder="e.g., Diesel" />
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="dimensions" class="form-label">Dimensions</label>
-            <input type="text" id="dimensions" class="form-control" formControlName="dimensions" placeholder="L x W x H" />
-          </div>
-        </div>
-
-        <div class="row" *ngIf="machineForm.get('type')?.value === 'DRILL_RIG'">
-          <div class="col-md-6 mb-3">
-            <label for="maxOperatingDepth" class="form-label">Max Operating Depth</label>
-            <input type="text" id="maxOperatingDepth" class="form-control" formControlName="maxOperatingDepth" placeholder="e.g., 200m" />
-          </div>
-          <div class="col-md-6 mb-3">
-            <label for="drillingDiameter" class="form-label">Drilling Diameter</label>
-            <input type="text" id="drillingDiameter" class="form-control" formControlName="drillingDiameter" placeholder="e.g., 150mm" />
-          </div>
-        </div>
-      </form>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-primary" (click)="saveMachine()" [disabled]="machineForm.invalid">
-        <i class="fas fa-save"></i> Update Machine
+      </div>
+      <button class="close-btn" (click)="closeMachineDetailsModal()">
+        <i class="material-icons">close</i>
       </button>
-      <button class="btn btn-secondary" (click)="closeMachineModal()">
-        <i class="fas fa-times"></i> Cancel
-      </button>
+    </div>
+
+    <div class="machine-details-form" *ngIf="selectedMachine">
+      
+      <!-- Machine Details Card -->
+      <div class="details-card">
+        <div class="card-header">
+          <div class="card-header-content">
+            <div class="card-icon">
+              <i class="material-icons">info</i>
+            </div>
+            <div class="card-title-section">
+              <h3>{{ selectedMachine.name }}</h3>
+              <p class="card-subtitle">Machine Information</p>
+            </div>
+          </div>
+          <div class="status-indicator" [class]="getStatusClass(selectedMachine.status)">
+            <i class="material-icons">{{ getStatusIcon(selectedMachine.status) }}</i>
+            <span>{{ selectedMachine.status }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">badge</i>
+                Machine Name
+              </div>
+              <div class="detail-value">{{ selectedMachine.name }}</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">person</i>
+                Operator Name
+              </div>
+              <div class="detail-value">{{ selectedMachine.operatorName || 'Not assigned' }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">model_training</i>
+                Model
+              </div>
+              <div class="detail-value">{{ selectedMachine.model }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">qr_code</i>
+                Serial Number
+              </div>
+              <div class="detail-value">{{ selectedMachine.serialNumber }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">construction</i>
+                Rig No
+              </div>
+              <div class="detail-value">{{ selectedMachine.rigNo || 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">local_shipping</i>
+                Plate No
+              </div>
+              <div class="detail-value">{{ selectedMachine.plateNo || 'N/A' }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">domain</i>
+                Company
+              </div>
+              <div class="detail-value">{{ selectedMachine.company || 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">calendar_today</i>
+                Manufacturing Year
+              </div>
+              <div class="detail-value">{{ selectedMachine.manufacturingYear || 'N/A' }}</div>
+            </div>
+
+            <div class="detail-item full-width">
+              <div class="detail-label">
+                <i class="material-icons">directions_car</i>
+                Chassis Details
+              </div>
+              <div class="detail-value chassis-details">{{ selectedMachine.chassisDetails || 'N/A' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information Card -->
+      <div class="details-card">
+        <div class="card-header">
+          <div class="card-header-content">
+            <div class="card-icon">
+              <i class="material-icons">assignment</i>
+            </div>
+            <div class="card-title-section">
+              <h3>Additional Information</h3>
+              <p class="card-subtitle">System generated details</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">location_on</i>
+                Current Location
+              </div>
+              <div class="detail-value">{{ selectedMachine.currentLocation || 'Not specified' }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">category</i>
+                Machine Type
+              </div>
+              <div class="detail-value">{{ selectedMachine.type || 'Not specified' }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">schedule</i>
+                Created Date
+              </div>
+              <div class="detail-value">{{ formatDate(selectedMachine.createdAt) }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">update</i>
+                Last Updated
+              </div>
+              <div class="detail-value">{{ formatDate(selectedMachine.updatedAt) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="details-actions">
+        <button 
+          type="button" 
+          class="close-btn-action" 
+          (click)="closeMachineDetailsModal()">
+          <i class="material-icons">close</i>
+          Close
+        </button>
+      </div>
     </div>
   </div>
 </div>
