@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { forkJoin, Subject, of } from 'rxjs';
+import { takeUntil, switchMap } from 'rxjs/operators';
 
 import { ProjectService } from '../../../../../core/services/project.service';
 import { UserService } from '../../../../../core/services/user.service';
@@ -267,16 +267,50 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
 
-    // Simulate API call for reassignment
-    setTimeout(() => {
-      this.successMessage = `${this.selectedOperator?.name} has been successfully reassigned!`;
+    if (!this.selectedOperator || !this.selectedProjectId) {
+      this.error = 'Missing required information for reassignment';
       this.isLoading = false;
-      
-      // Close modal after showing success message
-      setTimeout(() => {
-        this.onClose();
-      }, 2000);
-    }, 1500);
+      return;
+    }
+
+    // Get the selected project details first to preserve other data
+    this.projectService.getProject(this.selectedProjectId).pipe(
+      switchMap(project => {
+        // Create full update request with existing project data + new operator assignment
+        const updateRequest = {
+          id: project.id,
+          name: project.name,
+          region: project.region,
+          status: project.status,
+          description: project.description,
+          startDate: project.startDate,
+          endDate: project.endDate,
+          assignedUserId: this.selectedOperator!.id
+        };
+        
+        // Update the project with new operator assignment
+        return this.projectService.updateProject(this.selectedProjectId!, updateRequest);
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        this.successMessage = `${this.selectedOperator?.name} has been successfully reassigned to the selected project!`;
+        this.isLoading = false;
+        
+        // Refresh the data to show updated assignments
+        this.loadOperatorData();
+        
+        // Close modal after showing success message
+        setTimeout(() => {
+          this.onClose();
+        }, 2000);
+      },
+      error: (error) => {
+        console.error('Error during reassignment:', error);
+        this.error = `Failed to reassign operator: ${error.message}`;
+        this.isLoading = false;
+      }
+    });
   }
 
   cancelReassignment(): void {
