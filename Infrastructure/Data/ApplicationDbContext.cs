@@ -22,6 +22,7 @@ namespace Infrastructure.Data
         public DbSet<DrillPattern> DrillPatterns { get; set; }
         public DbSet<BlastSequence> BlastSequences { get; set; }
         public DbSet<PasswordResetCode> PasswordResetCodes { get; set; }
+        public DbSet<Machine> Machines { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -262,6 +263,43 @@ namespace Infrastructure.Data
                 // Indexes for performance
                 entity.HasIndex(e => new { e.UserId, e.Code });
                 entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // Configure Machine entity
+            modelBuilder.Entity<Machine>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Model).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Manufacturer).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.SerialNumber).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.RigNo).HasMaxLength(50);
+                entity.Property(e => e.PlateNo).HasMaxLength(50);
+                entity.Property(e => e.ChassisDetails).HasMaxLength(500);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.CurrentLocation).HasMaxLength(200);
+                entity.Property(e => e.AssignedToProject).HasMaxLength(100);
+                entity.Property(e => e.AssignedToOperator).HasMaxLength(100);
+                
+                // Foreign key relationships
+                entity.HasOne(e => e.Project)
+                      .WithMany()
+                      .HasForeignKey(e => e.ProjectId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                      
+                entity.HasOne(e => e.Operator)
+                      .WithMany()
+                      .HasForeignKey(e => e.OperatorId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                
+                // Indexes for performance and uniqueness
+                entity.HasIndex(e => e.SerialNumber).IsUnique();
+                entity.HasIndex(e => e.Name);
+                entity.HasIndex(e => e.Type);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.ProjectId);
+                entity.HasIndex(e => e.OperatorId);
             });
 
             // Seed initial data

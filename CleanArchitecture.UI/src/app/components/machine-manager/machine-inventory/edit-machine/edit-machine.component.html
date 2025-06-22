@@ -1,0 +1,198 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Machine</h2>
+      <button type="button" class="close-btn" (click)="onCancel()">
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <form [formGroup]="machineForm" (ngSubmit)="onSubmit()" class="machine-form">
+      <div class="form-body">
+        <!-- Basic Information -->
+        <div class="form-section">
+          <h3>Basic Information</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Machine Name *</label>
+              <input 
+                type="text" 
+                id="name" 
+                formControlName="name" 
+                placeholder="Enter machine name"
+                [class.error]="machineForm.get('name')?.invalid && machineForm.get('name')?.touched"
+              >
+              <div class="error-message" *ngIf="machineForm.get('name')?.invalid && machineForm.get('name')?.touched">
+                <span *ngIf="machineForm.get('name')?.errors?.['required']">Machine name is required</span>
+                <span *ngIf="machineForm.get('name')?.errors?.['minlength']">Machine name must be at least 2 characters</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="type">Machine Type *</label>
+              <select 
+                id="type" 
+                formControlName="type"
+                [class.error]="machineForm.get('type')?.invalid && machineForm.get('type')?.touched"
+              >
+                <option *ngFor="let type of machineTypeOptions" [value]="type">
+                  {{ type.replace('_', ' ') }}
+                </option>
+              </select>
+              <div class="error-message" *ngIf="machineForm.get('type')?.invalid && machineForm.get('type')?.touched">
+                Machine type is required
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="manufacturer">Manufacturer *</label>
+              <input 
+                type="text" 
+                id="manufacturer" 
+                formControlName="manufacturer" 
+                placeholder="e.g., Atlas Copco, Caterpillar"
+                [class.error]="machineForm.get('manufacturer')?.invalid && machineForm.get('manufacturer')?.touched"
+              >
+              <div class="error-message" *ngIf="machineForm.get('manufacturer')?.invalid && machineForm.get('manufacturer')?.touched">
+                <span *ngIf="machineForm.get('manufacturer')?.errors?.['required']">Manufacturer is required</span>
+                <span *ngIf="machineForm.get('manufacturer')?.errors?.['minlength']">Manufacturer must be at least 2 characters</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="model">Model *</label>
+              <input 
+                type="text" 
+                id="model" 
+                formControlName="model" 
+                placeholder="e.g., ROC L8, 320D"
+                [class.error]="machineForm.get('model')?.invalid && machineForm.get('model')?.touched"
+              >
+              <div class="error-message" *ngIf="machineForm.get('model')?.invalid && machineForm.get('model')?.touched">
+                <span *ngIf="machineForm.get('model')?.errors?.['required']">Model is required</span>
+                <span *ngIf="machineForm.get('model')?.errors?.['minlength']">Model must be at least 2 characters</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="serialNumber">Serial Number *</label>
+              <input 
+                type="text" 
+                id="serialNumber" 
+                formControlName="serialNumber" 
+                placeholder="Enter serial number"
+                [class.error]="machineForm.get('serialNumber')?.invalid && machineForm.get('serialNumber')?.touched"
+              >
+              <div class="error-message" *ngIf="machineForm.get('serialNumber')?.invalid && machineForm.get('serialNumber')?.touched">
+                <span *ngIf="machineForm.get('serialNumber')?.errors?.['required']">Serial number is required</span>
+                <span *ngIf="machineForm.get('serialNumber')?.errors?.['minlength']">Serial number must be at least 3 characters</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="manufacturingYear">Manufacturing Year</label>
+              <input 
+                type="text" 
+                id="manufacturingYear" 
+                formControlName="manufacturingYear" 
+                placeholder="YYYY"
+                [class.error]="machineForm.get('manufacturingYear')?.invalid && machineForm.get('manufacturingYear')?.touched"
+              >
+              <div class="error-message" *ngIf="machineForm.get('manufacturingYear')?.invalid && machineForm.get('manufacturingYear')?.touched">
+                Please enter a valid 4-digit year
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Details -->
+        <div class="form-section">
+          <h3>Additional Details</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="rigNo">Rig Number</label>
+              <input 
+                type="text" 
+                id="rigNo" 
+                formControlName="rigNo" 
+                placeholder="Enter rig number"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="plateNo">Plate Number</label>
+              <input 
+                type="text" 
+                id="plateNo" 
+                formControlName="plateNo" 
+                placeholder="Enter plate number"
+              >
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label for="chassisDetails">Chassis Details</label>
+              <textarea 
+                id="chassisDetails" 
+                formControlName="chassisDetails" 
+                placeholder="Enter chassis details"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="currentLocation">Current Location</label>
+              <input 
+                type="text" 
+                id="currentLocation" 
+                formControlName="currentLocation" 
+                placeholder="Enter current location"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="status">Status *</label>
+              <select 
+                id="status" 
+                formControlName="status"
+                [class.error]="machineForm.get('status')?.invalid && machineForm.get('status')?.touched"
+              >
+                <option *ngFor="let status of machineStatusOptions" [value]="status">
+                  {{ status.replace('_', ' ') }}
+                </option>
+              </select>
+              <div class="error-message" *ngIf="machineForm.get('status')?.invalid && machineForm.get('status')?.touched">
+                Status is required
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div class="error-alert" *ngIf="error">
+        <span>{{ error }}</span>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isLoading || machineForm.invalid">
+          <span *ngIf="isLoading" class="spinner"></span>
+          {{ isLoading ? 'Updating...' : 'Update Machine' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div> 
