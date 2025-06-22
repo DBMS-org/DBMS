@@ -6,7 +6,6 @@ import { Subscription } from 'rxjs';
 import { MachineService } from '../../../core/services/machine.service';
 import { AuthService } from '../../../core/services/auth.service';
 
-import { EditMachineComponent } from '../edit-machine/edit-machine.component';
 import { MachineDetailsComponent } from '../machine-details/machine-details.component';
 import { 
   Machine, 
@@ -23,7 +22,6 @@ import {
     CommonModule, 
     FormsModule, 
     ReactiveFormsModule,
-    EditMachineComponent,
     MachineDetailsComponent
   ],
   templateUrl: './machine-inventory.component.html',
@@ -42,7 +40,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   selectedType: MachineType | 'ALL' = 'ALL';
   
   // Modal states
-  showEditMachineModal = false;
   showDeleteConfirmModal = false;
   showMachineDetailsModal = false;
   selectedMachine: Machine | null = null;
@@ -157,11 +154,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
 
 
 
-  openEditMachineModal(machine: Machine): void {
-    this.selectedMachine = machine;
-    this.showEditMachineModal = true;
-  }
-
   openMachineDetailsModal(machine: Machine): void {
     this.selectedMachine = machine;
     this.showMachineDetailsModal = true;
@@ -173,7 +165,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   }
 
   closeModals(): void {
-    this.showEditMachineModal = false;
     this.showDeleteConfirmModal = false;
     this.showMachineDetailsModal = false;
     this.selectedMachine = null;

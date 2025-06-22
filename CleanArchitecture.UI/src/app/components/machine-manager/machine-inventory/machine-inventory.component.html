@@ -174,12 +174,6 @@
                 <i class="material-icons">visibility</i>
               </button>
               <button 
-                class="btn btn-sm btn-primary action-btn" 
-                (click)="openEditMachineModal(machine)"
-                title="Edit Machine">
-                <i class="material-icons">edit</i>
-              </button>
-              <button 
                 class="btn btn-sm btn-danger action-btn" 
                 (click)="openDeleteConfirmModal(machine)"
                 title="Delete Machine">
@@ -204,15 +198,6 @@
 </div>
 
 
-
-<!-- Edit Machine Modal -->
-@if (showEditMachineModal && selectedMachine) {
-  <app-edit-machine
-    [machine]="selectedMachine"
-    (machineSaved)="onMachineSaved($event)"
-    (close)="closeModals()">
-  </app-edit-machine>
-}
 
 <!-- Machine Details Modal -->
 @if (showMachineDetailsModal && selectedMachine) {
