@@ -5,8 +5,6 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { MachineService } from '../../../core/services/machine.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { AddMachineComponent } from '../add-machine/add-machine.component';
-import { EditMachineComponent } from '../edit-machine/edit-machine.component';
 import { 
   Machine, 
   MachineType, 
@@ -16,7 +14,7 @@ import {
 @Component({
   selector: 'app-machine-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, AddMachineComponent, EditMachineComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './machine-inventory.component.html',
   styleUrl: './machine-inventory.component.scss'
 })
@@ -32,8 +30,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   selectedType: MachineType | 'ALL' = 'ALL';
   
   // Modal states
-  showAddMachineModal = false;
-  showEditMachineModal = false;
   showMachineDetailsModal = false;
   showDeleteConfirmModal = false;
   selectedMachine: Machine | null = null;
@@ -43,14 +39,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   MachineStatus = MachineStatus;
   MachineType = MachineType;
   
-  // Statistics
-  statistics = {
-    total: 0,
-    available: 0,
-    assigned: 0,
-    maintenance: 0,
-    outOfService: 0
-  };
+
   
   private subscriptions: Subscription[] = [];
 
@@ -75,7 +64,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
       next: (machines) => {
         this.machines = machines;
         this.applyFilters();
-        this.calculateStatistics();
         this.isLoading = false;
       },
       error: (error) => {
@@ -87,17 +75,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
-  private calculateStatistics(): void {
-    this.statistics = {
-      total: this.machines.length,
-      available: this.machines.filter(m => m.status === MachineStatus.AVAILABLE).length,
-      assigned: this.machines.filter(m => m.status === MachineStatus.ASSIGNED).length,
-      maintenance: this.machines.filter(m => m.status === MachineStatus.IN_MAINTENANCE).length,
-      outOfService: this.machines.filter(m => 
-        m.status === MachineStatus.OUT_OF_SERVICE || m.status === MachineStatus.UNDER_REPAIR
-      ).length
-    };
-  }
+
 
   applyFilters(): void {
     this.filteredMachines = this.machines.filter(machine => {
@@ -124,16 +102,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
 
   onTypeFilterChange(): void {
     this.applyFilters();
-  }
-
-  openAddMachineModal(): void {
-    this.selectedMachine = null;
-    this.showAddMachineModal = true;
-  }
-
-  openEditMachineModal(machine: Machine): void {
-    this.selectedMachine = machine;
-    this.showEditMachineModal = true;
   }
 
   deleteMachine(machine: Machine): void {
@@ -168,17 +136,10 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   }
 
   closeModals(): void {
-    this.showAddMachineModal = false;
-    this.showEditMachineModal = false;
     this.showMachineDetailsModal = false;
     this.showDeleteConfirmModal = false;
     this.selectedMachine = null;
     this.machineToDelete = null;
-  }
-
-  onMachineSaved(machine: Machine): void {
-    this.loadMachines();
-    this.closeModals();
   }
 
   getStatusClass(status: MachineStatus): string {
