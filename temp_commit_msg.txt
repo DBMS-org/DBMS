@@ -1,1 +1,1 @@
-Enhance Machine Inventory Component with Add Machine Functionality. Introduce new modal for adding machines, update routing to include stores, and refactor existing code for improved clarity. Remove deprecated add machine component files and streamline modal handling in the inventory component.
+Add token validation endpoint in AuthController and enhance Machine Inventory component. Introduce edit and delete functionality for machines, including modals for confirmation. Remove deprecated edit machine component files to streamline the codebase.

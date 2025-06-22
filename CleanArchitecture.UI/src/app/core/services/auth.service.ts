@@ -33,12 +33,16 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     const token = localStorage.getItem('token');
-    return !!token; // Basic check - full validation happens server-side
-  }
-
-  // New method for server-side token validation
-  validateToken(): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/api/auth/validate-token`, {});
+    if (!token) return false;
+    
+    // Check if token is expired (basic check)
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      return payload.exp > currentTime;
+    } catch {
+      return false;
+    }
   }
 
   getToken(): string | null {
