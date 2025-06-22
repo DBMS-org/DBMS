@@ -1,1 +1,1 @@
-Updated add-machine.component.scss
+Temporarily disable HTTPS redirection in Program.cs for testing purposes. Update ProjectsController and ProjectSitesController to include IsOperatorCompleted property in response DTOs. Implement operator completion functionality in SiteBlastingController with endpoints to mark and revoke completion status. Enhance machine inventory component with new modal handling and statistics updates. Add completion summary to project sites component for better visibility of operator completion status.
