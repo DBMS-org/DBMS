@@ -48,7 +48,7 @@ export class AssignUserComponent implements OnInit, OnDestroy {
   
   // Available regions and roles for filtering
   regions = ['Al Hajar Mountains', 'Muscat Governorate', 'Dhofar Governorate', 'Ad Dakhiliyah Governorate', 'Al Batinah North Governorate'];
-  roles = ['Admin', 'Blasting Engineer', 'Machine Manager', 'Mechanical Engineer', 'Operator', 'Store Manager', 'Explosive Manager'];
+  roles = ['Blasting Engineer', 'Machine Manager', 'Mechanical Engineer', 'Operator', 'Store Manager', 'Explosive Manager'];
   
   private subscriptions: Subscription[] = [];
 
@@ -90,19 +90,19 @@ export class AssignUserComponent implements OnInit, OnDestroy {
   }
 
   private processUserAssignments(): void {
-    this.userAssignments = this.users.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      region: user.region,
-      status: user.status
-    }));
+    this.userAssignments = this.users
+      .filter(user => user.role !== 'Admin')
+      .map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        region: user.region,
+        status: user.status
+      }));
 
     this.applyFilters();
   }
-
-
 
   applyFilters(): void {
     let filtered = [...this.userAssignments];
