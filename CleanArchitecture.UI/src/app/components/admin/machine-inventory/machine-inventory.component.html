@@ -170,6 +170,23 @@
                 title="View Details"
               >
                 <i class="fas fa-eye"></i>
+                View
+              </button>
+              <button 
+                class="btn btn-sm btn-outline-primary action-btn" 
+                (click)="openEditMachineModal(machine)"
+                title="Edit Machine"
+              >
+                <i class="fas fa-edit"></i>
+                Edit
+              </button>
+              <button 
+                class="btn btn-sm btn-outline-danger action-btn" 
+                (click)="deleteMachine(machine)"
+                title="Delete Machine"
+              >
+                <i class="fas fa-trash"></i>
+                Delete
               </button>
             </div>
           </td>
@@ -198,6 +215,43 @@
     (machineSaved)="onMachineSaved($event)"
     (close)="closeModals()">
   </app-add-machine>
+}
+
+<!-- Edit Machine Modal -->
+@if (showEditMachineModal && selectedMachine) {
+  <app-edit-machine
+    [machine]="selectedMachine"
+    (machineSaved)="onMachineSaved($event)"
+    (close)="closeModals()">
+  </app-edit-machine>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirmModal && machineToDelete) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Confirm Delete</h5>
+        <button class="close-btn" (click)="closeModals()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete machine "{{ machineToDelete.name }}"?</p>
+        <p class="text-warning">This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" (click)="confirmDelete()">
+          <i class="fas fa-trash"></i>
+          Yes, Delete
+        </button>
+        <button class="btn btn-secondary" (click)="closeModals()">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
 }
 
 <!-- Machine Details Modal -->

@@ -1,1 +1,1 @@
-Add new routes for Machine Inventory and Assignment Requests in Machine Manager. Update sidebar navigation icons for improved clarity and adjust navbar styles for better UI consistency.
+Enhance Machine Inventory Component with Add Machine Functionality. Introduce new modal for adding machines, update routing to include stores, and refactor existing code for improved clarity. Remove deprecated add machine component files and streamline modal handling in the inventory component.

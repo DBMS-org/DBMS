@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { MachineService } from '../../../core/services/machine.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AddMachineComponent } from '../add-machine/add-machine.component';
+import { EditMachineComponent } from '../edit-machine/edit-machine.component';
 import { 
   Machine, 
   MachineType, 
@@ -15,7 +16,7 @@ import {
 @Component({
   selector: 'app-machine-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, AddMachineComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, AddMachineComponent, EditMachineComponent],
   templateUrl: './machine-inventory.component.html',
   styleUrl: './machine-inventory.component.scss'
 })
@@ -32,8 +33,11 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   
   // Modal states
   showAddMachineModal = false;
+  showEditMachineModal = false;
   showMachineDetailsModal = false;
+  showDeleteConfirmModal = false;
   selectedMachine: Machine | null = null;
+  machineToDelete: Machine | null = null;
   
   // Enums for template
   MachineStatus = MachineStatus;
@@ -127,6 +131,32 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.showAddMachineModal = true;
   }
 
+  openEditMachineModal(machine: Machine): void {
+    this.selectedMachine = machine;
+    this.showEditMachineModal = true;
+  }
+
+  deleteMachine(machine: Machine): void {
+    this.machineToDelete = machine;
+    this.showDeleteConfirmModal = true;
+  }
+
+  confirmDelete(): void {
+    if (this.machineToDelete) {
+      const sub = this.machineService.deleteMachine(this.machineToDelete.id).subscribe({
+        next: () => {
+          this.loadMachines();
+          this.closeModals();
+        },
+        error: (error) => {
+          this.error = 'Failed to delete machine';
+          console.error('Error deleting machine:', error);
+        }
+      });
+      this.subscriptions.push(sub);
+    }
+  }
+
   viewMachine(machine: Machine): void {
     this.selectedMachine = machine;
     this.showMachineDetailsModal = true;
@@ -139,8 +169,11 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
 
   closeModals(): void {
     this.showAddMachineModal = false;
+    this.showEditMachineModal = false;
     this.showMachineDetailsModal = false;
+    this.showDeleteConfirmModal = false;
     this.selectedMachine = null;
+    this.machineToDelete = null;
   }
 
   onMachineSaved(machine: Machine): void {
