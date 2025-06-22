@@ -1,1 +1,1 @@
-ui code to add machine
+Updated add-machine.component.scss

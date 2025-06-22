@@ -1,0 +1,253 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <i class="material-icons">assignment_ind</i>
+        </div>
+        <div class="header-text">
+          <h2>User Assignments</h2>
+          <p class="header-subtitle">View users assigned to regions and projects</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+      <div class="filters-header">
+        <h3>
+          <i class="material-icons">filter_list</i>
+          Filters
+        </h3>
+        <button class="refresh-btn" (click)="refreshData()" title="Refresh data">
+          <i class="material-icons">refresh</i>
+          Refresh
+        </button>
+      </div>
+
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label for="region-filter">
+            <i class="material-icons">place</i>
+            Region
+          </label>
+          <select 
+            id="region-filter" 
+            [(ngModel)]="selectedRegion" 
+            (change)="onRegionFilterChange()"
+            class="form-select">
+            <option value="">All Regions</option>
+            <option *ngFor="let region of regions" [value]="region">
+              {{ region }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="role-filter">
+            <i class="material-icons">work</i>
+            Role
+          </label>
+          <select 
+            id="role-filter" 
+            [(ngModel)]="selectedRole" 
+            (change)="onRoleFilterChange()"
+            class="form-select">
+            <option value="">All Roles</option>
+            <option *ngFor="let role of roles" [value]="role">
+              {{ role }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group search-group">
+          <label for="search-input">
+            <i class="material-icons">search</i>
+            Search
+          </label>
+          <input 
+            id="search-input"
+            type="text" 
+            [(ngModel)]="searchTerm" 
+            (input)="onSearchChange()"
+            placeholder="Search by name, email, region, or project..."
+            class="form-control">
+        </div>
+
+        <div class="filter-actions">
+          <button class="clear-filters-btn" (click)="clearFilters()">
+            <i class="material-icons">clear</i>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-alert">
+      <i class="material-icons">error</i>
+      <span>{{ error }}</span>
+      <button (click)="error = null" class="close-error">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading user assignments...</p>
+    </div>
+
+    <!-- Assignments Table -->
+    <div class="table-container" *ngIf="!isLoading">
+      <div class="table-header">
+        <h3>
+          <i class="material-icons">table_view</i>
+          User Assignment Overview
+        </h3>
+        <div class="results-count">
+          <span class="count-badge">{{ filteredAssignments.length }}</span>
+          <span class="count-text">
+            {{ filteredAssignments.length === 1 ? 'user' : 'users' }} found
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="filteredAssignments.length === 0" class="no-results">
+        <div class="empty-state">
+          <i class="material-icons">assignment_ind</i>
+          <h4>No User Assignments Found</h4>
+          <p *ngIf="selectedRegion || selectedRole || searchTerm">
+            No users match your current filters. Try adjusting your search criteria.
+          </p>
+          <p *ngIf="!selectedRegion && !selectedRole && !searchTerm">
+            No user assignments available at the moment.
+          </p>
+          <button *ngIf="selectedRegion || selectedRole || searchTerm" 
+                  class="clear-filters-btn" 
+                  (click)="clearFilters()">
+            <i class="material-icons">clear</i>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredAssignments.length > 0" class="assignments-table-wrapper">
+        <table class="assignments-table">
+          <thead>
+            <tr>
+              <th class="user-column">
+                <i class="material-icons">person</i>
+                User Details
+              </th>
+              <th class="role-column">
+                <i class="material-icons">work</i>
+                Role
+              </th>
+              <th class="region-column">
+                <i class="material-icons">place</i>
+                Assigned Region
+              </th>
+              <th class="status-column">
+                <i class="material-icons">info</i>
+                Status
+              </th>
+              <th class="actions-column">
+                <i class="material-icons">more_horiz</i>
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let assignment of filteredAssignments; trackBy: trackByUserId" 
+                class="assignment-row">
+              <td class="user-details">
+                <div class="user-info">
+                  <div class="user-avatar">
+                    <span class="avatar-initials">
+                      {{ getUserInitials(assignment.name) }}
+                    </span>
+                  </div>
+                  <div class="user-text">
+                    <h5 class="user-name">{{ assignment.name }}</h5>
+                    <p class="user-email">{{ assignment.email }}</p>
+                  </div>
+                </div>
+              </td>
+              
+              <td class="role-cell">
+                <span class="role-badge" [class]="getRoleClass(assignment.role)">
+                  <i class="material-icons">{{ getRoleIcon(assignment.role) }}</i>
+                  {{ assignment.role }}
+                </span>
+              </td>
+              
+              <td class="region-cell">
+                <div class="region-info">
+                  <i class="material-icons">place</i>
+                  <span class="region-name">{{ assignment.region }}</span>
+                </div>
+              </td>
+              
+              <td class="status-cell">
+                <span class="status-badge" [class]="getStatusClass(assignment.status)">
+                  <i class="material-icons">
+                    {{ assignment.status === 'Active' ? 'check_circle' : 'cancel' }}
+                  </i>
+                  {{ assignment.status }}
+                </span>
+              </td>
+              
+              <td class="actions-cell">
+                <!-- Operator-specific action button -->
+                <button 
+                  *ngIf="isOperator(assignment)"
+                  class="operator-assignment-btn" 
+                  (click)="viewOperatorAssignment(assignment)"
+                  title="Manage Operator Assignment">
+                  <i class="material-icons">assignment_ind</i>
+                  Manage Assignment
+                </button>
+
+                <!-- Non-operator action button -->
+                <button 
+                  *ngIf="!isOperator(assignment)"
+                  class="view-projects-btn" 
+                  (click)="viewUserProjects(assignment)"
+                  title="View Regional Projects">
+                  <i class="material-icons">work_outline</i>
+                  View Regional Projects
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="modal-actions">
+      <button class="close-btn-action" (click)="closeModal()">
+        <i class="material-icons">close</i>
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- User Projects Modal -->
+<app-user-projects 
+  *ngIf="showUserProjectsModal"
+  [selectedUser]="selectedUserForProjects"
+  (close)="onCloseUserProjects()">
+</app-user-projects>
+
+<!-- Operator Assignment Modal -->
+<app-operator-assignment
+  *ngIf="showOperatorAssignment"
+  [selectedOperator]="selectedOperatorForAssignment"
+  (closeModal)="onCloseOperatorAssignment()">
+</app-operator-assignment>

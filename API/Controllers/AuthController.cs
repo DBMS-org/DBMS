@@ -416,6 +416,68 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("validate-token")]
+        public async Task<ActionResult<ApiResponse>> ValidateToken()
+        {
+            try
+            {
+                // The token validation is handled by the JWT middleware
+                // If we reach this point, the token is valid
+                var userIdClaim = User.FindFirst("userId")?.Value;
+                
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new ApiResponse 
+                    { 
+                        Success = false, 
+                        Message = "Invalid token" 
+                    });
+                }
+
+                // Get current user info
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Id == userId && u.Status == "Active");
+
+                if (user == null)
+                {
+                    return Unauthorized(new ApiResponse 
+                    { 
+                        Success = false, 
+                        Message = "User not found or inactive" 
+                    });
+                }
+
+                // Create user DTO
+                var userDto = new UserDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Role = user.Role,
+                    Region = user.Region,
+                    Country = user.Country,
+                    OmanPhone = user.OmanPhone,
+                    CountryPhone = user.CountryPhone,
+                    Status = user.Status
+                };
+
+                return Ok(new ApiResponse 
+                { 
+                    Success = true, 
+                    Message = "Token is valid",
+                    Data = userDto
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse 
+                { 
+                    Success = false, 
+                    Message = "An error occurred while validating token" 
+                });
+            }
+        }
+
         private string GenerateSecureCode()
         {
             using (var rng = RandomNumberGenerator.Create())

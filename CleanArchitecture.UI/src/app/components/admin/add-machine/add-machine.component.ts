@@ -39,7 +39,7 @@ export class AddMachineComponent {
       serialNumber: ['', [Validators.required]],
       rigNo: ['', [Validators.required]],
       plateNo: ['', [Validators.required]],
-      company: ['', [Validators.required]],
+
       chassisDetails: ['', [Validators.required, Validators.minLength(10)]],
       manufacturingYear: ['', [
         Validators.required,
@@ -71,7 +71,7 @@ export class AddMachineComponent {
       serialNumber: 'Serial Number',
       rigNo: 'Rig No',
       plateNo: 'Plate No',
-      company: 'Company',
+
       chassisDetails: 'Chassis Details',
       manufacturingYear: 'Manufacturing Year'
     };
