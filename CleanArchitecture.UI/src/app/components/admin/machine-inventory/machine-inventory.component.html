@@ -6,68 +6,10 @@
       <button class="btn btn-secondary" (click)="navigateToAssignments()">
         <i class="fas fa-clipboard-list"></i> View Assignments
       </button>
-      <button 
-        class="btn btn-primary add-btn"
-        (click)="openAddMachineModal()"
-        [disabled]="isLoading">
-        <i class="material-icons">add</i>
-        New Machine
-      </button>
     </div>
   </div>
 
-  <!-- Statistics Cards -->
-  <div class="stats-section">
-    <div class="stat-card total">
-      <div class="stat-icon">
-        <i class="fas fa-cogs"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Total Machines</h3>
-        <p class="stat-number">{{ statistics.total }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card available">
-      <div class="stat-icon">
-        <i class="fas fa-check-circle"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Available</h3>
-        <p class="stat-number">{{ statistics.available }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card assigned">
-      <div class="stat-icon">
-        <i class="fas fa-user-check"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Assigned</h3>
-        <p class="stat-number">{{ statistics.assigned }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card maintenance">
-      <div class="stat-icon">
-        <i class="fas fa-tools"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Maintenance</h3>
-        <p class="stat-number">{{ statistics.maintenance }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card out-of-service">
-      <div class="stat-icon">
-        <i class="fas fa-exclamation-triangle"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Out of Service</h3>
-        <p class="stat-number">{{ statistics.outOfService }}</p>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Search and Filter Section -->
   <div class="search-filter-section">
@@ -173,14 +115,6 @@
                 View
               </button>
               <button 
-                class="btn btn-sm btn-outline-primary action-btn" 
-                (click)="openEditMachineModal(machine)"
-                title="Edit Machine"
-              >
-                <i class="fas fa-edit"></i>
-                Edit
-              </button>
-              <button 
                 class="btn btn-sm btn-outline-danger action-btn" 
                 (click)="deleteMachine(machine)"
                 title="Delete Machine"
@@ -200,31 +134,10 @@
         <i class="fas fa-cogs fa-3x text-muted"></i>
         <h4>No Machines Found</h4>
         <p>No machines match your current filters. Try adjusting your search criteria.</p>
-        <button class="btn btn-primary" (click)="openAddMachineModal()">
-          <i class="material-icons">add</i>
-          Add New Machine
-        </button>
       </div>
     </div>
   </div>
 </div>
-
-<!-- Add Machine Modal -->
-@if (showAddMachineModal) {
-  <app-add-machine
-    (machineSaved)="onMachineSaved($event)"
-    (close)="closeModals()">
-  </app-add-machine>
-}
-
-<!-- Edit Machine Modal -->
-@if (showEditMachineModal && selectedMachine) {
-  <app-edit-machine
-    [machine]="selectedMachine"
-    (machineSaved)="onMachineSaved($event)"
-    (close)="closeModals()">
-  </app-edit-machine>
-}
 
 <!-- Delete Confirmation Modal -->
 @if (showDeleteConfirmModal && machineToDelete) {
@@ -341,13 +254,7 @@
               <div class="detail-value">{{ selectedMachine.plateNo || 'N/A' }}</div>
             </div>
 
-            <div class="detail-item">
-              <div class="detail-label">
-                <i class="material-icons">domain</i>
-                Company
-              </div>
-              <div class="detail-value">{{ selectedMachine.company || 'N/A' }}</div>
-            </div>
+
             
             <div class="detail-item">
               <div class="detail-label">

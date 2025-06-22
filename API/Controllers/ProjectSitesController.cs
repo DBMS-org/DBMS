@@ -41,7 +41,8 @@ namespace API.Controllers
                         CreatedAt = ps.CreatedAt,
                         UpdatedAt = ps.UpdatedAt,
                         IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
+                        IsOperatorCompleted = ps.IsOperatorCompleted
                     })
                     .ToListAsync();
 
@@ -79,7 +80,8 @@ namespace API.Controllers
                     CreatedAt = projectSite.CreatedAt,
                     UpdatedAt = projectSite.UpdatedAt,
                     IsPatternApproved = projectSite.IsPatternApproved,
-                    IsSimulationConfirmed = projectSite.IsSimulationConfirmed
+                    IsSimulationConfirmed = projectSite.IsSimulationConfirmed,
+                    IsOperatorCompleted = projectSite.IsOperatorCompleted
                 };
 
                 return Ok(projectSiteDto);
@@ -117,7 +119,8 @@ namespace API.Controllers
                         CreatedAt = ps.CreatedAt,
                         UpdatedAt = ps.UpdatedAt,
                         IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
+                        IsOperatorCompleted = ps.IsOperatorCompleted
                     })
                     .ToListAsync();
 
@@ -173,7 +176,8 @@ namespace API.Controllers
                     CreatedAt = projectSite.CreatedAt,
                     UpdatedAt = projectSite.UpdatedAt,
                     IsPatternApproved = projectSite.IsPatternApproved,
-                    IsSimulationConfirmed = projectSite.IsSimulationConfirmed
+                    IsSimulationConfirmed = projectSite.IsSimulationConfirmed,
+                    IsOperatorCompleted = projectSite.IsOperatorCompleted
                 };
 
                 return CreatedAtAction(nameof(GetProjectSite), new { id = projectSite.Id }, projectSiteDto);
