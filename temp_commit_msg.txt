@@ -1,1 +1,1 @@
-Add token validation endpoint in AuthController and enhance Machine Inventory component. Introduce edit and delete functionality for machines, including modals for confirmation. Remove deprecated edit machine component files to streamline the codebase.
+ui code to add machine
