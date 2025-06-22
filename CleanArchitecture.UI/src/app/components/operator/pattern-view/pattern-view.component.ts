@@ -138,6 +138,7 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
 
   // UI state
   showInstructions = false;
+  isCompleted = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -466,6 +467,52 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
     this.error = null;
     this.loading = true;
     this.loadPattern();
+  }
+
+  markAsCompleted(): void {
+    if (this.isCompleted || this.drillPoints.length === 0) {
+      return;
+    }
+
+    // Mark the pattern as completed
+    this.isCompleted = true;
+    
+    // You can add API call here to update the completion status in the backend
+    // For example:
+    // this.siteBlastingService.markPatternCompleted(this.projectId, this.siteId).subscribe({
+    //   next: () => {
+    //     console.log('Pattern marked as completed successfully');
+    //   },
+    //   error: (err) => {
+    //     console.error('Error marking pattern as completed:', err);
+    //     this.isCompleted = false; // Revert on error
+    //   }
+    // });
+
+    console.log(`Drilling pattern for Site ${this.siteId} marked as completed`);
+  }
+
+  revokeCompletion(): void {
+    if (!this.isCompleted) {
+      return;
+    }
+
+    // Revoke the completion status
+    this.isCompleted = false;
+    
+    // You can add API call here to update the completion status in the backend
+    // For example:
+    // this.siteBlastingService.revokePatternCompletion(this.projectId, this.siteId).subscribe({
+    //   next: () => {
+    //     console.log('Pattern completion revoked successfully');
+    //   },
+    //   error: (err) => {
+    //     console.error('Error revoking pattern completion:', err);
+    //     this.isCompleted = true; // Revert on error
+    //   }
+    // });
+
+    console.log(`Drilling pattern completion for Site ${this.siteId} has been revoked`);
   }
 
   ngOnDestroy(): void {
