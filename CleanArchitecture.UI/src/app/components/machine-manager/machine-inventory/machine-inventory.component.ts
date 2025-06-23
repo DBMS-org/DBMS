@@ -6,9 +6,8 @@ import { Subscription } from 'rxjs';
 import { MachineService } from '../../../core/services/machine.service';
 import { AuthService } from '../../../core/services/auth.service';
 
+import { EditMachineComponent } from '../edit-machine/edit-machine.component';
 import { MachineDetailsComponent } from '../machine-details/machine-details.component';
-import { AddMachineComponent } from './add-machine/add-machine.component';
-import { EditMachineComponent } from './edit-machine/edit-machine.component';
 import { 
   Machine, 
   MachineType, 
@@ -24,9 +23,8 @@ import {
     CommonModule, 
     FormsModule, 
     ReactiveFormsModule,
-    MachineDetailsComponent,
-    AddMachineComponent,
-    EditMachineComponent
+    EditMachineComponent,
+    MachineDetailsComponent
   ],
   templateUrl: './machine-inventory.component.html',
   styleUrl: './machine-inventory.component.scss'
@@ -44,10 +42,9 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   selectedType: MachineType | 'ALL' = 'ALL';
   
   // Modal states
+  showEditMachineModal = false;
   showDeleteConfirmModal = false;
   showMachineDetailsModal = false;
-  showAddMachineModal = false;
-  showEditMachineModal = false;
   selectedMachine: Machine | null = null;
   machineToDelete: Machine | null = null;
   
@@ -117,33 +114,16 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   }
 
   private calculateStatistics(): void {
-    const sub = this.machineService.getMachineStatistics().subscribe({
-      next: (stats) => {
-        this.statistics = {
-          total: stats.totalMachines || 0,
-          available: stats.availableMachines || 0,
-          assigned: stats.assignedMachines || 0,
-          maintenance: stats.maintenanceMachines || 0,
-          outOfService: stats.outOfServiceMachines || 0,
-          pendingRequests: this.assignmentRequests.length
-        };
-      },
-      error: (error) => {
-        console.error('Error loading statistics:', error);
-        // Fallback to local calculation
-        this.statistics = {
-          total: this.machines.length,
-          available: this.machines.filter(m => m.status === MachineStatus.AVAILABLE).length,
-          assigned: this.machines.filter(m => m.status === MachineStatus.ASSIGNED).length,
-          maintenance: this.machines.filter(m => m.status === MachineStatus.IN_MAINTENANCE).length,
-          outOfService: this.machines.filter(m => 
-            m.status === MachineStatus.OUT_OF_SERVICE || m.status === MachineStatus.UNDER_REPAIR
-          ).length,
-          pendingRequests: this.assignmentRequests.length
-        };
-      }
-    });
-    this.subscriptions.push(sub);
+    this.statistics = {
+      total: this.machines.length,
+      available: this.machines.filter(m => m.status === MachineStatus.AVAILABLE).length,
+      assigned: this.machines.filter(m => m.status === MachineStatus.ASSIGNED).length,
+      maintenance: this.machines.filter(m => m.status === MachineStatus.IN_MAINTENANCE).length,
+      outOfService: this.machines.filter(m => 
+        m.status === MachineStatus.OUT_OF_SERVICE || m.status === MachineStatus.UNDER_REPAIR
+      ).length,
+      pendingRequests: this.assignmentRequests.length
+    };
   }
 
   applyFilters(): void {
@@ -175,10 +155,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  openAddMachineModal(): void {
-    this.selectedMachine = null;
-    this.showAddMachineModal = true;
-  }
+
 
   openEditMachineModal(machine: Machine): void {
     this.selectedMachine = machine;
@@ -196,10 +173,9 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   }
 
   closeModals(): void {
+    this.showEditMachineModal = false;
     this.showDeleteConfirmModal = false;
     this.showMachineDetailsModal = false;
-    this.showAddMachineModal = false;
-    this.showEditMachineModal = false;
     this.selectedMachine = null;
     this.machineToDelete = null;
   }
@@ -218,7 +194,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.error = 'Failed to delete machine';
-          this.isLoading = false;
           console.error('Error deleting machine:', error);
         }
       });

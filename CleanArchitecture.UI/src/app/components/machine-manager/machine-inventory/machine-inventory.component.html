@@ -13,13 +13,7 @@
           <span class="badge bg-danger ms-1">{{ statistics.pendingRequests }}</span>
         }
       </button>
-      <button 
-        class="btn btn-primary add-btn"
-        (click)="openAddMachineModal()"
-        [disabled]="isLoading">
-        <i class="material-icons">add</i>
-        New Machine
-      </button>
+
     </div>
   </div>
 
@@ -203,30 +197,13 @@
         <i class="material-icons">precision_manufacturing</i>
         <h4>No Machines Found</h4>
         <p>No machines match your current filters. Try adjusting your search criteria.</p>
-        <button class="btn btn-primary" (click)="openAddMachineModal()">
-          <i class="material-icons">add</i>
-          Add New Machine
-        </button>
+
       </div>
     </div>
   </div>
 </div>
 
-<!-- Machine Details Modal -->
-@if (showMachineDetailsModal && selectedMachine) {
-  <app-machine-details
-    [machine]="selectedMachine"
-    (close)="closeModals()">
-  </app-machine-details>
-}
 
-<!-- Add Machine Modal -->
-@if (showAddMachineModal) {
-  <app-add-machine
-    (machineSaved)="onMachineSaved($event)"
-    (close)="closeModals()">
-  </app-add-machine>
-}
 
 <!-- Edit Machine Modal -->
 @if (showEditMachineModal && selectedMachine) {
@@ -235,6 +212,14 @@
     (machineSaved)="onMachineSaved($event)"
     (close)="closeModals()">
   </app-edit-machine>
+}
+
+<!-- Machine Details Modal -->
+@if (showMachineDetailsModal && selectedMachine) {
+  <app-machine-details
+    [machine]="selectedMachine"
+    (close)="closeModals()">
+  </app-machine-details>
 }
 
 <!-- Delete Confirmation Modal -->

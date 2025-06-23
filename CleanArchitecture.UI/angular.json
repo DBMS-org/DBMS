@@ -37,13 +37,7 @@
             "scripts": [],
             "allowedCommonJsDependencies": [
               "three",
-              "three/examples/jsm/controls/OrbitControls.js",
-              "konva",
-              "html2canvas",
-              "canvg",
-              "raf",
-              "rgbcolor",
-              "core-js"
+              "three/examples/jsm/controls/OrbitControls.js"
             ]
           },
           "configurations": {
@@ -51,33 +45,21 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2MB",
-                  "maximumError": "5MB"
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10kB",
-                  "maximumError": "20kB"
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all",
-              "optimization": {
-                "scripts": true,
-                "styles": {
-                  "minify": true,
-                  "inlineCritical": false
-                },
-                "fonts": true
-              },
-              "sourceMap": false,
-              "namedChunks": false,
-              "extractLicenses": true
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true,
-              "namedChunks": true
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"

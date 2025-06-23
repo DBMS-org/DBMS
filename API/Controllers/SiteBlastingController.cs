@@ -592,34 +592,6 @@ namespace API.Controllers
 
         #endregion
 
-        #region Operator Completion Operations
-
-        /// <summary>
-        /// Mark operator completion for a site
-        /// </summary>
-        [HttpPost("projects/{projectId}/sites/{siteId}/operator-completion")]
-        public async Task<IActionResult> SetOperatorCompletion(int projectId, int siteId)
-        {
-            var success = await _siteBlastingService.SetOperatorCompletionAsync(projectId, siteId, true);
-            if (!success)
-                return NotFound("Project site not found");
-            return Ok(new { message = "Operator completion marked." });
-        }
-
-        /// <summary>
-        /// Revoke operator completion for a site
-        /// </summary>
-        [HttpDelete("projects/{projectId}/sites/{siteId}/operator-completion")]
-        public async Task<IActionResult> RevokeOperatorCompletion(int projectId, int siteId)
-        {
-            var success = await _siteBlastingService.SetOperatorCompletionAsync(projectId, siteId, false);
-            if (!success)
-                return NotFound("Project site not found");
-            return Ok(new { message = "Operator completion revoked." });
-        }
-
-        #endregion
-
         #region Helper Methods
 
         private int GetCurrentUserId()

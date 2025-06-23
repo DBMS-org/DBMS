@@ -1,1 +1,3 @@
-updated machine assignments
+Merge pull request #2 from SaadDev-01/master
+
+Created pull request DBMS .new component
