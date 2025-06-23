@@ -1,1 +1,1 @@
-Add comments to enhance clarity in various components, including modal forms, dashboard layout, and machine inventory statistics. Update section headers for consistency and improve user understanding of the UI elements.
+Enhance MachineInventoryComponent by adding statistics tracking for machine statuses and implementing a calculation method to update these statistics upon data retrieval.
