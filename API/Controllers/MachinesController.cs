@@ -46,6 +46,7 @@ namespace API.Controllers
                         ChassisDetails = m.ChassisDetails,
                         ManufacturingYear = m.ManufacturingYear,
                         Status = m.Status,
+                        CurrentLocation = m.CurrentLocation,
                         AssignedToProject = m.AssignedToProject,
                         AssignedToOperator = m.AssignedToOperator,
                         LastMaintenanceDate = m.LastMaintenanceDate,
@@ -101,6 +102,7 @@ namespace API.Controllers
                     ChassisDetails = machine.ChassisDetails,
                     ManufacturingYear = machine.ManufacturingYear,
                     Status = machine.Status,
+                    CurrentLocation = machine.CurrentLocation,
                     AssignedToProject = machine.AssignedToProject,
                     AssignedToOperator = machine.AssignedToOperator,
                     LastMaintenanceDate = machine.LastMaintenanceDate,
@@ -144,14 +146,11 @@ namespace API.Controllers
                     return BadRequest($"A machine with serial number '{request.SerialNumber}' already exists");
                 }
 
-                // Validate project exists if provided
-                if (request.ProjectId.HasValue)
+                // Validate project exists
+                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
+                if (!projectExists)
                 {
-                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId.Value);
-                    if (!projectExists)
-                    {
-                        return BadRequest($"Project with ID {request.ProjectId.Value} not found");
-                    }
+                    return BadRequest($"Project with ID {request.ProjectId} not found");
                 }
 
                 // Validate operator exists if provided
@@ -186,6 +185,7 @@ namespace API.Controllers
                     ChassisDetails = request.ChassisDetails,
                     ManufacturingYear = request.ManufacturingYear,
                     Status = request.Status,
+                    CurrentLocation = request.CurrentLocation,
                     ProjectId = request.ProjectId,
                     OperatorId = request.OperatorId,
                     RegionId = request.RegionId,
@@ -194,11 +194,8 @@ namespace API.Controllers
                 };
 
                 // Set assigned project and operator names if applicable
-                if (request.ProjectId.HasValue)
-                {
-                    var project = await _context.Projects.FindAsync(request.ProjectId.Value);
-                    machine.AssignedToProject = project?.Name;
-                }
+                var project = await _context.Projects.FindAsync(request.ProjectId);
+                machine.AssignedToProject = project?.Name;
 
                 if (request.OperatorId.HasValue)
                 {
@@ -212,8 +209,8 @@ namespace API.Controllers
                 // Load the machine with related data for response
                 var createdMachine = await _context.Machines
                     .Include(m => m.Project)
-                    .Include(m => m.Region)
                     .Include(m => m.Operator)
+                    .Include(m => m.Region)
                     .FirstOrDefaultAsync(m => m.Id == machine.Id);
 
                 var machineDto = new MachineDto
@@ -229,6 +226,7 @@ namespace API.Controllers
                     ChassisDetails = createdMachine.ChassisDetails,
                     ManufacturingYear = createdMachine.ManufacturingYear,
                     Status = createdMachine.Status,
+                    CurrentLocation = createdMachine.CurrentLocation,
                     AssignedToProject = createdMachine.AssignedToProject,
                     AssignedToOperator = createdMachine.AssignedToOperator,
                     LastMaintenanceDate = createdMachine.LastMaintenanceDate,
@@ -283,14 +281,11 @@ namespace API.Controllers
                     return BadRequest($"A machine with serial number '{request.SerialNumber}' already exists");
                 }
 
-                // Validate project exists if provided
-                if (request.ProjectId.HasValue)
+                // Validate project exists
+                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
+                if (!projectExists)
                 {
-                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId.Value);
-                    if (!projectExists)
-                    {
-                        return BadRequest($"Project with ID {request.ProjectId.Value} not found");
-                    }
+                    return BadRequest($"Project with ID {request.ProjectId} not found");
                 }
 
                 // Validate operator exists if provided
@@ -324,6 +319,7 @@ namespace API.Controllers
                 machine.ChassisDetails = request.ChassisDetails;
                 machine.ManufacturingYear = request.ManufacturingYear;
                 machine.Status = request.Status;
+                machine.CurrentLocation = request.CurrentLocation;
                 machine.ProjectId = request.ProjectId;
                 machine.OperatorId = request.OperatorId;
                 machine.RegionId = request.RegionId;
@@ -334,15 +330,8 @@ namespace API.Controllers
                     JsonSerializer.Serialize(request.Specifications) : null;
 
                 // Update assigned project and operator names
-                if (request.ProjectId.HasValue)
-                {
-                    var project = await _context.Projects.FindAsync(request.ProjectId.Value);
-                    machine.AssignedToProject = project?.Name;
-                }
-                else
-                {
-                    machine.AssignedToProject = null;
-                }
+                var project = await _context.Projects.FindAsync(request.ProjectId);
+                machine.AssignedToProject = project?.Name;
 
                 if (request.OperatorId.HasValue)
                 {
@@ -453,7 +442,6 @@ namespace API.Controllers
                 var query = _context.Machines
                     .Include(m => m.Project)
                     .Include(m => m.Operator)
-                    .Include(m => m.Region)
                     .AsQueryable();
 
                 if (!string.IsNullOrEmpty(name))
@@ -495,6 +483,7 @@ namespace API.Controllers
                         ChassisDetails = m.ChassisDetails,
                         ManufacturingYear = m.ManufacturingYear,
                         Status = m.Status,
+                        CurrentLocation = m.CurrentLocation,
                         AssignedToProject = m.AssignedToProject,
                         AssignedToOperator = m.AssignedToOperator,
                         LastMaintenanceDate = m.LastMaintenanceDate,
@@ -503,10 +492,8 @@ namespace API.Controllers
                         UpdatedAt = m.UpdatedAt,
                         ProjectId = m.ProjectId,
                         OperatorId = m.OperatorId,
-                        RegionId = m.RegionId,
                         ProjectName = m.Project != null ? m.Project.Name : null,
                         OperatorName = m.Operator != null ? m.Operator.Name : null,
-                        RegionName = m.Region != null ? m.Region.Name : null,
                         Specifications = ParseSpecifications(m.SpecificationsJson)
                     })
                     .ToListAsync();
