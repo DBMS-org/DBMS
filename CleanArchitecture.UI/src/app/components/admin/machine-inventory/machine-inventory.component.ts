@@ -63,6 +63,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     const sub = this.machineService.getAllMachines().subscribe({
       next: (machines) => {
         this.machines = machines;
+
         this.applyFilters();
         this.isLoading = false;
       },
@@ -74,7 +75,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     });
     this.subscriptions.push(sub);
   }
-
 
 
   applyFilters(): void {
