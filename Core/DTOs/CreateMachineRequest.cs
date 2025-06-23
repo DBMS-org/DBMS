@@ -40,10 +40,12 @@ namespace Core.DTOs
         [MaxLength(50)]
         public string Status { get; set; } = string.Empty;
         
+        [MaxLength(200)]
+        public string? CurrentLocation { get; set; }
+        
         public int? ProjectId { get; set; }
         public int? OperatorId { get; set; }
-        public int? RegionId { get; set; }
         
-        public MachineSpecificationsDto? Specifications { get; set; }
-    }
+            public MachineSpecificationsDto? Specifications { get; set; }
+}
 } 

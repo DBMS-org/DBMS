@@ -2,15 +2,12 @@ import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MachineService } from '../../../../core/services/machine.service';
-import { ProjectService } from '../../../../core/services/project.service';
 import { 
   Machine, 
   UpdateMachineRequest,
   MachineType, 
   MachineStatus
 } from '../../../../core/models/machine.model';
-import { Project } from '../../../../core/models/project.model';
-import { REGIONS } from '../../../../core/constants/regions';
 
 @Component({
   selector: 'app-edit-machine',
@@ -28,19 +25,13 @@ export class EditMachineComponent implements OnInit {
   isLoading = false;
   error: string | null = null;
 
-  // Data arrays
-  regions = REGIONS;
-  availableProjects: Project[] = [];
-  isLoadingProjects = false;
-
   // Enums for template
   MachineType = MachineType;
   MachineStatus = MachineStatus;
 
   constructor(
     private formBuilder: FormBuilder,
-    private machineService: MachineService,
-    private projectService: ProjectService
+    private machineService: MachineService
   ) {
     this.machineForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -52,128 +43,27 @@ export class EditMachineComponent implements OnInit {
       plateNo: [''],
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
-      region: [''],
-      projectId: [''],
+      currentLocation: [''],
       status: [MachineStatus.AVAILABLE, Validators.required]
     });
   }
 
   ngOnInit(): void {
     if (this.machine) {
-      this.initializeForm();
-    }
-
-    // Watch for region changes to load projects
-    this.machineForm.get('region')?.valueChanges.subscribe(regionValue => {
-      this.onRegionChange(regionValue);
-    });
-  }
-
-  private initializeForm(): void {
-    // Parse current location to extract region and project
-    const locationParts = this.parseLocation(this.machine.currentLocation);
-    
-    this.machineForm.patchValue({
-      name: this.machine.name,
-      type: this.machine.type,
-      manufacturer: this.machine.manufacturer,
-      model: this.machine.model,
-      serialNumber: this.machine.serialNumber,
-      rigNo: this.machine.rigNo || '',
-      plateNo: this.machine.plateNo || '',
-      manufacturingYear: this.machine.manufacturingYear?.toString() || '',
-      chassisDetails: this.machine.chassisDetails || '',
-      region: locationParts.region || '',
-      status: this.machine.status
-    });
-
-    // Load projects for the current region if it exists
-    if (locationParts.region) {
-      this.loadProjectsByRegion(locationParts.region).then(() => {
-        // Set project after projects are loaded
-        if (locationParts.projectName) {
-          const project = this.availableProjects.find(p => 
-            p.name.toLowerCase() === locationParts.projectName?.toLowerCase()
-          );
-          if (project) {
-            this.machineForm.patchValue({ projectId: project.id.toString() });
-          }
-        }
+      this.machineForm.patchValue({
+        name: this.machine.name,
+        type: this.machine.type,
+        manufacturer: this.machine.manufacturer,
+        model: this.machine.model,
+        serialNumber: this.machine.serialNumber,
+        rigNo: this.machine.rigNo || '',
+        plateNo: this.machine.plateNo || '',
+        manufacturingYear: this.machine.manufacturingYear?.toString() || '',
+        chassisDetails: this.machine.chassisDetails || '',
+        currentLocation: this.machine.currentLocation || '',
+        status: this.machine.status
       });
     }
-  }
-
-  private parseLocation(location: string | undefined): { region?: string; projectName?: string } {
-    if (!location || location === 'Default Location') {
-      return {};
-    }
-
-    // Check if location contains " - " separator (region - project format)
-    if (location.includes(' - ')) {
-      const parts = location.split(' - ');
-      return {
-        region: parts[0].trim(),
-        projectName: parts[1].trim()
-      };
-    }
-
-    // Check if location matches any region exactly
-    const matchingRegion = this.regions.find(r => 
-      r.toLowerCase() === location.toLowerCase()
-    );
-    
-    if (matchingRegion) {
-      return { region: matchingRegion };
-    }
-
-    return {};
-  }
-
-  onRegionChange(region: string): void {
-    // Reset project selection when region changes
-    this.machineForm.get('projectId')?.setValue('');
-    this.availableProjects = [];
-
-    if (region) {
-      this.loadProjectsByRegion(region);
-    }
-  }
-
-  private loadProjectsByRegion(region: string): Promise<void> {
-    return new Promise((resolve) => {
-      this.isLoadingProjects = true;
-      this.projectService.getProjects().subscribe({
-        next: (projects) => {
-          this.availableProjects = projects.filter(project => 
-            project.region.toLowerCase() === region.toLowerCase()
-          );
-          this.isLoadingProjects = false;
-          resolve();
-        },
-        error: (error) => {
-          console.error('Error loading projects:', error);
-          this.availableProjects = [];
-          this.isLoadingProjects = false;
-          resolve();
-        }
-      });
-    });
-  }
-
-  get locationPreview(): string {
-    const region = this.machineForm.get('region')?.value;
-    const projectId = this.machineForm.get('projectId')?.value;
-    
-    if (!region) {
-      return 'Default Location';
-    }
-    
-    if (projectId) {
-      const selectedProject = this.availableProjects.find(p => p.id == projectId);
-      return selectedProject ? `${region} - ${selectedProject.name}` : region;
-    }
-    
-    return region;
   }
 
   onSubmit(): void {
@@ -192,7 +82,7 @@ export class EditMachineComponent implements OnInit {
         plateNo: formValue.plateNo || undefined,
         manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
         chassisDetails: formValue.chassisDetails || undefined,
-        currentLocation: this.locationPreview,
+        currentLocation: formValue.currentLocation || undefined,
         status: formValue.status,
         lastMaintenanceDate: this.machine.lastMaintenanceDate,
         nextMaintenanceDate: this.machine.nextMaintenanceDate

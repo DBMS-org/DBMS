@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AddUserComponent } from './add-user/add-user.component';
+import { AssignUserComponent } from './assign-user/assign-user.component';
 import { UserService } from '../../../core/services/user.service';
 import { User, CreateUserRequest } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddUserComponent],
+  imports: [CommonModule, FormsModule, AddUserComponent, AssignUserComponent],
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss']
 })
@@ -19,6 +20,7 @@ export class UsersComponent implements OnInit {
   searchQuery: string = '';
   statusFilter: string = '';
   showAddUserModal = false;
+  showAssignUserModal = false;
   loading = false;
   error: string | null = null;
   showDeleteModal = false;
@@ -79,6 +81,15 @@ export class UsersComponent implements OnInit {
 
   onCloseAddUser() {
     this.showAddUserModal = false;
+  }
+
+  openAssignUserModal() {
+    this.error = null;
+    this.showAssignUserModal = true;
+  }
+
+  onCloseAssignUser() {
+    this.showAssignUserModal = false;
   }
 
   onSaveUser(userData: CreateUserRequest) {
