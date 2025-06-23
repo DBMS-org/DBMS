@@ -31,13 +31,11 @@ namespace API.Controllers
                 var projects = await _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
-                    .Include(p => p.Region)
                     .Select(p => new ProjectDto
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        RegionId = p.RegionId,
-                        RegionName = p.Region.Name,
+                        Region = p.Region,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
@@ -58,8 +56,7 @@ namespace API.Controllers
                             CreatedAt = ps.CreatedAt,
                             UpdatedAt = ps.UpdatedAt,
                             IsPatternApproved = ps.IsPatternApproved,
-                            IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                            IsOperatorCompleted = ps.IsOperatorCompleted
+                            IsSimulationConfirmed = ps.IsSimulationConfirmed
                         }).ToList()
                     })
                     .ToListAsync();
@@ -82,7 +79,6 @@ namespace API.Controllers
                 var project = await _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
-                    .Include(p => p.Region)
                     .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (project == null)
@@ -94,8 +90,7 @@ namespace API.Controllers
                 {
                     Id = project.Id,
                     Name = project.Name,
-                    RegionId = project.RegionId,
-                    RegionName = project.Region.Name,
+                    Region = project.Region,
                     Status = project.Status,
                     Description = project.Description,
                     StartDate = project.StartDate,
@@ -116,8 +111,7 @@ namespace API.Controllers
                         CreatedAt = ps.CreatedAt,
                         UpdatedAt = ps.UpdatedAt,
                         IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                        IsOperatorCompleted = ps.IsOperatorCompleted
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed
                     }).ToList()
                 };
 
@@ -151,13 +145,6 @@ namespace API.Controllers
                     }
                 }
 
-                // Validate region exists
-                var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId);
-                if (!regionExists)
-                {
-                    return BadRequest($"Region with ID {request.RegionId} not found");
-                }
-
                 // If the operator is already assigned to a different project, unassign first
                 if (request.AssignedUserId.HasValue)
                 {
@@ -171,7 +158,7 @@ namespace API.Controllers
                 var project = new Project
                 {
                     Name = request.Name,
-                    RegionId = request.RegionId,
+                    Region = request.Region,
                     Status = request.Status,
                     Description = request.Description,
                     StartDate = request.StartDate,
@@ -186,15 +173,13 @@ namespace API.Controllers
                 var createdProject = await _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
-                    .Include(p => p.Region)
                     .FirstOrDefaultAsync(p => p.Id == project.Id);
 
                 var projectDto = new ProjectDto
                 {
                     Id = createdProject!.Id,
                     Name = createdProject.Name,
-                    RegionId = createdProject.RegionId,
-                    RegionName = createdProject.Region.Name,
+                    Region = createdProject.Region,
                     Status = createdProject.Status,
                     Description = createdProject.Description,
                     StartDate = createdProject.StartDate,
@@ -252,13 +237,6 @@ namespace API.Controllers
                     }
                 }
 
-                // Validate region exists
-                var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId);
-                if (!regionExists)
-                {
-                    return BadRequest($"Region with ID {request.RegionId} not found");
-                }
-
                 // If operator reassigned, unassign from previous project
                 if (request.AssignedUserId.HasValue)
                 {
@@ -271,7 +249,7 @@ namespace API.Controllers
 
                 // Update project properties
                 project.Name = request.Name;
-                project.RegionId = request.RegionId;
+                project.Region = request.Region;
                 project.Status = request.Status;
                 project.Description = request.Description;
                 project.StartDate = request.StartDate;
@@ -356,8 +334,7 @@ namespace API.Controllers
                         CreatedAt = ps.CreatedAt,
                         UpdatedAt = ps.UpdatedAt,
                         IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                        IsOperatorCompleted = ps.IsOperatorCompleted
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed
                     })
                     .ToListAsync();
 
@@ -382,7 +359,6 @@ namespace API.Controllers
                 var query = _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
-                    .Include(p => p.Region)
                     .AsQueryable();
 
                 if (!string.IsNullOrEmpty(name))
@@ -392,7 +368,7 @@ namespace API.Controllers
 
                 if (!string.IsNullOrEmpty(region))
                 {
-                    query = query.Where(p => p.Region.Name.Contains(region));
+                    query = query.Where(p => p.Region.Contains(region));
                 }
 
                 if (!string.IsNullOrEmpty(status))
@@ -405,8 +381,7 @@ namespace API.Controllers
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        RegionId = p.RegionId,
-                        RegionName = p.Region.Name,
+                        Region = p.Region,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
@@ -427,8 +402,7 @@ namespace API.Controllers
                             CreatedAt = ps.CreatedAt,
                             UpdatedAt = ps.UpdatedAt,
                             IsPatternApproved = ps.IsPatternApproved,
-                            IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                            IsOperatorCompleted = ps.IsOperatorCompleted
+                            IsSimulationConfirmed = ps.IsSimulationConfirmed
                         }).ToList()
                     })
                     .ToListAsync();
@@ -464,7 +438,6 @@ namespace API.Controllers
         {
             var project = await _context.Projects
                 .Include(p => p.AssignedUser)
-                .Include(p => p.Region)
                 .FirstOrDefaultAsync(p => p.AssignedUserId == operatorId);
 
             if (project == null)
@@ -476,8 +449,7 @@ namespace API.Controllers
             {
                 Id = project.Id,
                 Name = project.Name,
-                RegionId = project.RegionId,
-                RegionName = project.Region.Name,
+                Region = project.Region,
                 Status = project.Status,
                 Description = project.Description,
                 StartDate = project.StartDate,

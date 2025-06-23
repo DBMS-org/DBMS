@@ -17,7 +17,6 @@ export interface ProjectSite {
   description: string;
   isPatternApproved: boolean;
   isSimulationConfirmed: boolean;
-  isOperatorCompleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -6,10 +6,6 @@
         <i class="material-icons">wifi</i>
         Test API Connection
       </button>
-      <button class="assign-user-btn" (click)="openAssignUserModal()">
-        <i class="material-icons">assignment_ind</i>
-        Assign User
-      </button>
       <button class="add-user-btn" (click)="addUser()">
         <i class="material-icons">add</i>
         Add New User
@@ -126,12 +122,6 @@
     (save)="onSaveUser($event)"
     [error]="error"
   ></app-add-user>
-}
-
-@if (showAssignUserModal) {
-  <app-assign-user 
-    (close)="onCloseAssignUser()"
-  ></app-assign-user>
 }
 
 @if (showDeleteModal) {

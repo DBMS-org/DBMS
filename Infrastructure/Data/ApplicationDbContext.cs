@@ -22,8 +22,6 @@ namespace Infrastructure.Data
         public DbSet<DrillPattern> DrillPatterns { get; set; }
         public DbSet<BlastSequence> BlastSequences { get; set; }
         public DbSet<PasswordResetCode> PasswordResetCodes { get; set; }
-        public DbSet<Machine> Machines { get; set; }
-        public DbSet<Region> Regions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -111,23 +109,17 @@ namespace Infrastructure.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Region).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Description).HasMaxLength(1000);
-                entity.Property(e => e.RegionId).HasDefaultValue(1); // Default to Muscat region
                 
-                // Foreign key relationships
+                // Foreign key relationship with User
                 entity.HasOne(e => e.AssignedUser)
                       .WithMany()
                       .HasForeignKey(e => e.AssignedUserId)
                       .OnDelete(DeleteBehavior.SetNull);
                       
-                entity.HasOne(e => e.Region)
-                      .WithMany(r => r.Projects)
-                      .HasForeignKey(e => e.RegionId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                      
                 entity.HasIndex(e => e.Name);
-                entity.HasIndex(e => e.RegionId);
 
                 // Ensure an operator (AssignedUserId) can only be linked to a single project
                 entity.HasIndex(e => e.AssignedUserId)
@@ -272,63 +264,6 @@ namespace Infrastructure.Data
                 entity.HasIndex(e => e.ExpiresAt);
             });
 
-            // Configure Machine entity
-            modelBuilder.Entity<Machine>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Model).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Manufacturer).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.SerialNumber).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.RigNo).HasMaxLength(50);
-                entity.Property(e => e.PlateNo).HasMaxLength(50);
-                entity.Property(e => e.ChassisDetails).HasMaxLength(500);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.AssignedToProject).HasMaxLength(100);
-                entity.Property(e => e.AssignedToOperator).HasMaxLength(100);
-                
-                // Foreign key relationships
-                entity.HasOne(e => e.Project)
-                      .WithMany()
-                      .HasForeignKey(e => e.ProjectId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                      
-                entity.HasOne(e => e.Operator)
-                      .WithMany()
-                      .HasForeignKey(e => e.OperatorId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                      
-                entity.HasOne(e => e.Region)
-                      .WithMany(r => r.Machines)
-                      .HasForeignKey(e => e.RegionId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                
-                // Indexes for performance and uniqueness
-                entity.HasIndex(e => e.SerialNumber).IsUnique();
-                entity.HasIndex(e => e.Name);
-                entity.HasIndex(e => e.Type);
-                entity.HasIndex(e => e.Status);
-                entity.HasIndex(e => e.ProjectId);
-                entity.HasIndex(e => e.OperatorId);
-                entity.HasIndex(e => e.RegionId);
-            });
-
-            // Configure Region entity
-            modelBuilder.Entity<Region>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.IsActive).HasDefaultValue(true);
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
-                
-                // Indexes for performance and uniqueness
-                entity.HasIndex(e => e.Name).IsUnique();
-                entity.HasIndex(e => e.IsActive);
-            });
-
             // Seed initial data
             SeedData(modelBuilder);
         }
@@ -378,28 +313,13 @@ namespace Infrastructure.Data
                 }
             );
 
-            // Seed Regions (these should match the migration data)
-            modelBuilder.Entity<Region>().HasData(
-                new Region { Id = 1, Name = "Muscat", Description = "Muscat Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 2, Name = "Dhofar", Description = "Dhofar Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 3, Name = "Musandam", Description = "Musandam Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 4, Name = "Al Buraimi", Description = "Al Buraimi Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 5, Name = "Al Dakhiliyah", Description = "Al Dakhiliyah Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 6, Name = "Al Dhahirah", Description = "Al Dhahirah Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 7, Name = "Al Wusta", Description = "Al Wusta Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 8, Name = "Al Batinah North", Description = "Al Batinah North Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 9, Name = "Al Batinah South", Description = "Al Batinah South Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 10, Name = "Ash Sharqiyah North", Description = "Ash Sharqiyah North Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 11, Name = "Ash Sharqiyah South", Description = "Ash Sharqiyah South Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
-            );
-
             // Seed Sample Projects
             modelBuilder.Entity<Project>().HasData(
                 new Project
                 {
                     Id = 1,
                     Name = "Muscat Infrastructure Development - Highway Construction",
-                    RegionId = 1, // Muscat
+                    Region = "Muscat",
                     Status = "Active",
                     Description = "Major highway development project in Muscat region",
                     StartDate = new DateTime(2024, 1, 15),
@@ -412,7 +332,7 @@ namespace Infrastructure.Data
                 {
                     Id = 2,
                     Name = "Dhofar Mining Operations - Site Development",
-                    RegionId = 2, // Dhofar
+                    Region = "Dhofar",
                     Status = "Active",
                     Description = "Mining site expansion project in Dhofar region",
                     StartDate = new DateTime(2024, 2, 1),
@@ -425,7 +345,7 @@ namespace Infrastructure.Data
                 {
                     Id = 3,
                     Name = "Sohar Industrial Zone - Development",
-                    RegionId = 8, // Al Batinah North
+                    Region = "Al Batinah North",
                     Status = "Completed",
                     Description = "Industrial zone construction project in Sohar",
                     StartDate = new DateTime(2023, 6, 1),

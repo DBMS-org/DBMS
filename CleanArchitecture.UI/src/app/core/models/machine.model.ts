@@ -1,27 +1,25 @@
 export interface Machine {
-  id: number;
+  id: string;
   name: string;
+  operatorName?: string;
   type: MachineType;
   model: string;
   manufacturer: string;
   serialNumber: string;
   rigNo?: string;
   plateNo?: string;
+  company?: string;
   chassisDetails?: string;
   manufacturingYear?: number;
   status: MachineStatus;
-  currentLocation?: string;
   assignedToProject?: string;
   assignedToOperator?: string;
+  currentLocation?: string;
   lastMaintenanceDate?: Date;
   nextMaintenanceDate?: Date;
-  specifications?: MachineSpecifications;
+  specifications: MachineSpecifications;
   createdAt: Date;
   updatedAt: Date;
-  projectId?: number;
-  operatorId?: number;
-  projectName?: string;
-  operatorName?: string;
 }
 
 export interface MachineSpecifications {
@@ -34,42 +32,6 @@ export interface MachineSpecifications {
   maxOperatingDepth?: string;
   drillingDiameter?: string;
   additionalFeatures?: string[];
-}
-
-export interface CreateMachineRequest {
-  name: string;
-  type: string;
-  model: string;
-  manufacturer: string;
-  serialNumber: string;
-  rigNo?: string;
-  plateNo?: string;
-  chassisDetails?: string;
-  manufacturingYear?: number;
-  status: string;
-  currentLocation?: string;
-  projectId?: number;
-  operatorId?: number;
-  specifications?: MachineSpecifications;
-}
-
-export interface UpdateMachineRequest {
-  name: string;
-  type: string;
-  model: string;
-  manufacturer: string;
-  serialNumber: string;
-  rigNo?: string;
-  plateNo?: string;
-  chassisDetails?: string;
-  manufacturingYear?: number;
-  status: string;
-  currentLocation?: string;
-  projectId?: number;
-  operatorId?: number;
-  lastMaintenanceDate?: Date;
-  nextMaintenanceDate?: Date;
-  specifications?: MachineSpecifications;
 }
 
 export interface MachineAssignmentRequest {

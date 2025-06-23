@@ -1,1 +1,1 @@
-Enhance machine and project management by integrating region selection in add/edit machine forms, updating related DTOs and database models to support region associations, and improving project loading based on selected regions. This update also includes UI adjustments for better user experience in machine inventory management.
+Merge branch 'SaadDev-01-master' of https://github.com/DBMS-org/DBMS into SaadDev-01-master

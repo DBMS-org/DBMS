@@ -31,7 +31,6 @@ namespace Core.Entities
         
         public bool IsPatternApproved { get; set; } = false;
         public bool IsSimulationConfirmed { get; set; } = false;
-        public bool IsOperatorCompleted { get; set; } = false;
         
         // Navigation properties
         public virtual Project Project { get; set; } = null!;

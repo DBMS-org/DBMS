@@ -13,7 +13,6 @@ namespace Core.DTOs
         public DateTime UpdatedAt { get; set; }
         public bool IsPatternApproved { get; set; }
         public bool IsSimulationConfirmed { get; set; }
-        public bool IsOperatorCompleted { get; set; }
     }
     
     public class CoordinatesDto

@@ -152,26 +152,6 @@
     </div>
   </div>
 
-  <!-- Recent Activities Section -->
-  <div class="activities-panel" *ngIf="recentActivities.length > 0">
-    <h3>
-      <i class="material-icons">history</i>
-      Recent Activities
-    </h3>
-    <div class="activities-list">
-      <div class="activity-item" *ngFor="let activity of recentActivities" [class]="getActivityTypeClass(activity.type)">
-        <div class="activity-icon">
-          <i class="material-icons">{{ activity.icon }}</i>
-        </div>
-        <div class="activity-content">
-          <h4>{{ activity.title }}</h4>
-          <p>{{ activity.description }}</p>
-          <span class="activity-timestamp">{{ activity.timestamp }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- User Profile Section -->
   <div class="user-profile-section">
     <h3>
