@@ -1,3 +1,1 @@
-Merge pull request #4 from DBMS-org/SaadDev-01-master
-
-Saad dev 01 master
+Enhance machine and project management by integrating region selection in add/edit machine forms, updating related DTOs and database models to support region associations, and improving project loading based on selected regions. This update also includes UI adjustments for better user experience in machine inventory management.
