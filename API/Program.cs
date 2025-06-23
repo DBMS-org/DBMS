@@ -99,7 +99,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Temporarily disable HTTPS redirection for testing
+// app.UseHttpsRedirection();
 
 // Use CORS
 app.UseCors("AllowAngularApp");

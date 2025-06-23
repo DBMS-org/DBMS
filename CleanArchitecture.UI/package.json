@@ -5,6 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:analyze": "ng build --stats-json && npx webpack-bundle-analyzer dist/clean-architecture.ui/stats.json",
+    "build:optimize": "node optimize-build.js && ng build --configuration=production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
