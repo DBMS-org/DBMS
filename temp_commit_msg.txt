@@ -1,1 +1,3 @@
-Register Region services in API and enhance machine and project management by integrating region selection in add/edit forms. Update related DTOs and database models to support region associations, improving project loading based on selected regions. Adjust UI for better user experience in machine inventory management.
+Merge pull request #5 from DBMS-org/SaadDev-01-master
+
+Saad dev 01 master
