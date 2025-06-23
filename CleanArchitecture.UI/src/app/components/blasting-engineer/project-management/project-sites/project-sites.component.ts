@@ -146,4 +146,18 @@ export class ProjectSitesComponent implements OnInit {
       day: 'numeric'
     }).format(date);
   }
+
+  // Completion statistics methods
+  getCompletedSitesCount(): number {
+    return this.sites.filter(site => site.isOperatorCompleted).length;
+  }
+
+  getPendingSitesCount(): number {
+    return this.sites.filter(site => !site.isOperatorCompleted).length;
+  }
+
+  getCompletionPercentage(): number {
+    if (this.sites.length === 0) return 0;
+    return Math.round((this.getCompletedSitesCount() / this.sites.length) * 100);
+  }
 }
