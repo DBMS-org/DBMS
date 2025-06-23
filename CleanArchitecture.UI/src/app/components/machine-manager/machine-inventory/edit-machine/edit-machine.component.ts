@@ -6,6 +6,7 @@ import { ProjectService } from '../../../../core/services/project.service';
 import { 
   Machine, 
   UpdateMachineRequest,
+  CreateMachineRequest,
   MachineType, 
   MachineStatus
 } from '../../../../core/models/machine.model';
@@ -53,7 +54,7 @@ export class EditMachineComponent implements OnInit {
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
       region: [''],
-      projectId: [''],
+      projectId: ['', Validators.required],
       status: [MachineStatus.AVAILABLE, Validators.required]
     });
   }
@@ -87,6 +88,36 @@ export class EditMachineComponent implements OnInit {
       status: this.machine.status
     });
 
+    // If machine has a projectId, use it directly to set the project
+    if (this.machine.projectId) {
+      // First, we need to determine which region this project belongs to
+      this.projectService.getAllProjects().subscribe({
+        next: (projects) => {
+          const machineProject = projects.find(p => p.id === this.machine.projectId);
+          if (machineProject) {
+            // Set the region based on the project
+            this.machineForm.patchValue({ 
+              region: machineProject.region,
+              projectId: this.machine.projectId.toString()
+            });
+            
+            // Load all projects for this region
+            this.loadProjectsByRegion(machineProject.region);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading project for machine:', error);
+          // Fallback to location parsing
+          this.initializeFromLocation(locationParts);
+        }
+      });
+    } else {
+      // Fallback to location parsing if no projectId
+      this.initializeFromLocation(locationParts);
+    }
+  }
+
+  private initializeFromLocation(locationParts: { region?: string; projectName?: string }): void {
     // Load projects for the current region if it exists
     if (locationParts.region) {
       this.loadProjectsByRegion(locationParts.region).then(() => {
@@ -142,10 +173,11 @@ export class EditMachineComponent implements OnInit {
   private loadProjectsByRegion(region: string): Promise<void> {
     return new Promise((resolve) => {
       this.isLoadingProjects = true;
-      this.projectService.getProjects().subscribe({
+      
+      this.projectService.getAllProjects().subscribe({
         next: (projects) => {
           this.availableProjects = projects.filter(project => 
-            project.region.toLowerCase() === region.toLowerCase()
+            project.region && project.region.toLowerCase() === region.toLowerCase()
           );
           this.isLoadingProjects = false;
           resolve();
@@ -176,42 +208,127 @@ export class EditMachineComponent implements OnInit {
     return region;
   }
 
+  private getLocationValue(): string {
+    return this.locationPreview;
+  }
+
+  private getRegionId(): number | undefined {
+    const regionName = this.machineForm.get('region')?.value;
+    if (!regionName) return undefined;
+    
+    // Find the region ID based on the region name
+    const regionMapping: { [key: string]: number } = {
+      'Muscat': 1,
+      'Dhofar': 2,
+      'Musandam': 3,
+      'Al Buraimi': 4,
+      'Al Dakhiliyah': 5,
+      'Al Dhahirah': 6,
+      'Al Wusta': 7,
+      'Al Batinah North': 8,
+      'Al Batinah South': 9,
+      'Ash Sharqiyah North': 10,
+      'Ash Sharqiyah South': 11
+    };
+    
+    return regionMapping[regionName];
+  }
+
   onSubmit(): void {
     if (this.machineForm.valid) {
       this.isLoading = true;
       this.error = null;
 
       const formValue = this.machineForm.value;
-      const request: UpdateMachineRequest = {
-        name: formValue.name,
-        type: formValue.type,
-        manufacturer: formValue.manufacturer,
-        model: formValue.model,
-        serialNumber: formValue.serialNumber,
-        rigNo: formValue.rigNo || undefined,
-        plateNo: formValue.plateNo || undefined,
-        manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
-        chassisDetails: formValue.chassisDetails || undefined,
-        currentLocation: this.locationPreview,
-        status: formValue.status,
-        lastMaintenanceDate: this.machine.lastMaintenanceDate,
-        nextMaintenanceDate: this.machine.nextMaintenanceDate
-      };
       
-      this.machineService.updateMachine(this.machine.id, request).subscribe({
-        next: (machine: Machine) => {
-          this.machineSaved.emit(machine);
-          this.isLoading = false;
-        },
-        error: (error: any) => {
-          this.error = 'Failed to update machine. Please try again.';
-          this.isLoading = false;
-          console.error('Error updating machine:', error);
-        }
-      });
+      // Check if project has changed
+      const originalProjectId = this.machine.projectId;
+      const newProjectId = parseInt(formValue.projectId);
+      const projectChanged = originalProjectId !== newProjectId;
+      
+      if (projectChanged) {
+        // If project changed, delete and recreate machine
+        this.deleteAndRecreate(formValue);
+      } else {
+        // If project is the same, do normal update
+        this.updateMachine(formValue);
+      }
     } else {
       this.markFormGroupTouched();
     }
+  }
+
+  private updateMachine(formValue: any): void {
+    const request: UpdateMachineRequest = {
+      name: formValue.name,
+      type: formValue.type,
+      manufacturer: formValue.manufacturer,
+      model: formValue.model,
+      serialNumber: formValue.serialNumber,
+      rigNo: formValue.rigNo || undefined,
+      plateNo: formValue.plateNo || undefined,
+      manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
+      chassisDetails: formValue.chassisDetails || undefined,
+      currentLocation: this.getLocationValue(),
+      projectId: parseInt(formValue.projectId),
+      regionId: this.getRegionId(),
+      status: formValue.status,
+      lastMaintenanceDate: this.machine.lastMaintenanceDate,
+      nextMaintenanceDate: this.machine.nextMaintenanceDate
+    };
+    
+    this.machineService.updateMachine(this.machine.id, request).subscribe({
+      next: (machine: Machine) => {
+        this.machineSaved.emit(machine);
+        this.isLoading = false;
+      },
+      error: (error: any) => {
+        this.error = 'Failed to update machine. Please try again.';
+        this.isLoading = false;
+        console.error('Error updating machine:', error);
+      }
+    });
+  }
+
+  private deleteAndRecreate(formValue: any): void {
+    // First delete the existing machine
+    this.machineService.deleteMachine(this.machine.id).subscribe({
+      next: () => {
+        // Then create a new machine with updated information
+        const createRequest: CreateMachineRequest = {
+          name: formValue.name,
+          type: formValue.type,
+          manufacturer: formValue.manufacturer,
+          model: formValue.model,
+          serialNumber: formValue.serialNumber,
+          rigNo: formValue.rigNo || undefined,
+          plateNo: formValue.plateNo || undefined,
+          manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
+          chassisDetails: formValue.chassisDetails || undefined,
+          currentLocation: this.getLocationValue(),
+          projectId: parseInt(formValue.projectId),
+          regionId: this.getRegionId(),
+          status: formValue.status
+        };
+
+        this.machineService.addMachine(createRequest).subscribe({
+          next: (newMachine: Machine) => {
+            this.machineSaved.emit(newMachine);
+            this.isLoading = false;
+          },
+          error: (error: any) => {
+            this.error = 'Failed to update machine. Please try again.';
+            this.isLoading = false;
+            console.error('Error recreating machine:', error);
+          }
+        });
+      },
+      error: (error: any) => {
+        this.error = 'Failed to update machine. Please try again.';
+        this.isLoading = false;
+        console.error('Error deleting machine:', error);
+      }
+    });
   }
 
   onCancel(): void {

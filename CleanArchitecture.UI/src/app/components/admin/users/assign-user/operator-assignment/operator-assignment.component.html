@@ -181,7 +181,10 @@
                     {{ machine.name }} - {{ machine.type }} ({{ machine.status }})
                   </option>
                 </select>
-                <small class="form-help">Available machines in {{ selectedOperator?.region }} region</small>
+                <small class="form-help">
+                  <span *ngIf="selectedProjectId">Available machines for selected project</span>
+                  <span *ngIf="!selectedProjectId">Available machines in {{ selectedOperator?.region }} region</span>
+                </small>
               </div>
             </div>
 
