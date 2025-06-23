@@ -1,1 +1,1 @@
-Updated project-details.component.html
+Register Region services in API and enhance machine and project management by integrating region selection in add/edit forms. Update related DTOs and database models to support region associations, improving project loading based on selected regions. Adjust UI for better user experience in machine inventory management.
