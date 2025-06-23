@@ -41,9 +41,6 @@ namespace Core.Entities
         [MaxLength(50)]
         public string Status { get; set; } = string.Empty;
         
-        [MaxLength(200)]
-        public string? CurrentLocation { get; set; }
-        
         [MaxLength(100)]
         public string? AssignedToProject { get; set; }
         
@@ -62,9 +59,11 @@ namespace Core.Entities
         // Foreign key relationships
         public int? ProjectId { get; set; }
         public int? OperatorId { get; set; }
+        public int? RegionId { get; set; }
         
         // Navigation properties
         public virtual Project? Project { get; set; }
         public virtual User? Operator { get; set; }
+        public virtual Region? Region { get; set; }
     }
 } 

@@ -1,13 +1,16 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MachineService } from '../../../../core/services/machine.service';
+import { ProjectService } from '../../../../core/services/project.service';
 import { 
   Machine, 
   CreateMachineRequest,
   MachineType, 
   MachineStatus
 } from '../../../../core/models/machine.model';
+import { Project } from '../../../../core/models/project.model';
+import { REGIONS } from '../../../../core/constants/regions';
 
 @Component({
   selector: 'app-add-machine',
@@ -16,7 +19,7 @@ import {
   templateUrl: './add-machine.component.html',
   styleUrl: './add-machine.component.scss'
 })
-export class AddMachineComponent {
+export class AddMachineComponent implements OnInit {
   @Output() machineSaved = new EventEmitter<Machine>();
   @Output() close = new EventEmitter<void>();
 
@@ -24,13 +27,19 @@ export class AddMachineComponent {
   isLoading = false;
   error: string | null = null;
 
+  // Data arrays
+  regions = REGIONS;
+  availableProjects: Project[] = [];
+  isLoadingProjects = false;
+
   // Enums for template
   MachineType = MachineType;
   MachineStatus = MachineStatus;
 
   constructor(
     private formBuilder: FormBuilder,
-    private machineService: MachineService
+    private machineService: MachineService,
+    private projectService: ProjectService
   ) {
     this.machineForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -42,9 +51,60 @@ export class AddMachineComponent {
       plateNo: [''],
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
-      currentLocation: [''],
+      region: [''],
+      projectId: [''],
       status: [MachineStatus.AVAILABLE, Validators.required]
     });
+  }
+
+  ngOnInit(): void {
+    // Watch for region changes to load projects
+    this.machineForm.get('region')?.valueChanges.subscribe(regionValue => {
+      this.onRegionChange(regionValue);
+    });
+  }
+
+  onRegionChange(region: string): void {
+    // Reset project selection when region changes
+    this.machineForm.get('projectId')?.setValue('');
+    this.availableProjects = [];
+
+    if (region) {
+      this.loadProjectsByRegion(region);
+    }
+  }
+
+  private loadProjectsByRegion(region: string): void {
+    this.isLoadingProjects = true;
+    this.projectService.getProjects().subscribe({
+      next: (projects) => {
+        this.availableProjects = projects.filter(project => 
+          project.region.toLowerCase() === region.toLowerCase()
+        );
+        this.isLoadingProjects = false;
+      },
+      error: (error) => {
+        console.error('Error loading projects:', error);
+        this.availableProjects = [];
+        this.isLoadingProjects = false;
+      }
+    });
+  }
+
+  get locationPreview(): string {
+    const region = this.machineForm.get('region')?.value;
+    const projectId = this.machineForm.get('projectId')?.value;
+    
+    if (!region) {
+      return 'Default Location';
+    }
+    
+    if (projectId) {
+      const selectedProject = this.availableProjects.find(p => p.id == projectId);
+      return selectedProject ? `${region} - ${selectedProject.name}` : region;
+    }
+    
+    return region;
   }
 
   onSubmit(): void {
@@ -63,7 +123,7 @@ export class AddMachineComponent {
         plateNo: formValue.plateNo || undefined,
         manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
         chassisDetails: formValue.chassisDetails || undefined,
-        currentLocation: formValue.currentLocation || undefined,
+        currentLocation: this.locationPreview,
         status: formValue.status
       };
       

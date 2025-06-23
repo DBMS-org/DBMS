@@ -13,7 +13,6 @@ namespace Core.DTOs
         public string? ChassisDetails { get; set; }
         public int? ManufacturingYear { get; set; }
         public string Status { get; set; } = string.Empty;
-        public string? CurrentLocation { get; set; }
         public string? AssignedToProject { get; set; }
         public string? AssignedToOperator { get; set; }
         public DateTime? LastMaintenanceDate { get; set; }
@@ -23,8 +22,10 @@ namespace Core.DTOs
         public DateTime UpdatedAt { get; set; }
         public int? ProjectId { get; set; }
         public int? OperatorId { get; set; }
+        public int? RegionId { get; set; }
         public string? ProjectName { get; set; }
         public string? OperatorName { get; set; }
+        public string? RegionName { get; set; }
     }
 
     public class MachineSpecificationsDto

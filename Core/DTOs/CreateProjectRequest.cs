@@ -9,8 +9,7 @@ namespace Core.DTOs
         public string Name { get; set; } = string.Empty;
         
         [Required(ErrorMessage = "Region is required")]
-        [StringLength(100, ErrorMessage = "Region cannot exceed 100 characters")]
-        public string Region { get; set; } = string.Empty;
+        public int RegionId { get; set; }
         
         [Required(ErrorMessage = "Status is required")]
         [StringLength(20, ErrorMessage = "Status cannot exceed 20 characters")]
