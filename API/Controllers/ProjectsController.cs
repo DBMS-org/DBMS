@@ -31,11 +31,13 @@ namespace API.Controllers
                 var projects = await _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
+                    .Include(p => p.Region)
                     .Select(p => new ProjectDto
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        Region = p.Region,
+                        RegionId = p.RegionId,
+                        RegionName = p.Region.Name,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
@@ -80,6 +82,7 @@ namespace API.Controllers
                 var project = await _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
+                    .Include(p => p.Region)
                     .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (project == null)
@@ -91,7 +94,8 @@ namespace API.Controllers
                 {
                     Id = project.Id,
                     Name = project.Name,
-                    Region = project.Region,
+                    RegionId = project.RegionId,
+                    RegionName = project.Region.Name,
                     Status = project.Status,
                     Description = project.Description,
                     StartDate = project.StartDate,
@@ -147,6 +151,13 @@ namespace API.Controllers
                     }
                 }
 
+                // Validate region exists
+                var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId);
+                if (!regionExists)
+                {
+                    return BadRequest($"Region with ID {request.RegionId} not found");
+                }
+
                 // If the operator is already assigned to a different project, unassign first
                 if (request.AssignedUserId.HasValue)
                 {
@@ -160,7 +171,7 @@ namespace API.Controllers
                 var project = new Project
                 {
                     Name = request.Name,
-                    Region = request.Region,
+                    RegionId = request.RegionId,
                     Status = request.Status,
                     Description = request.Description,
                     StartDate = request.StartDate,
@@ -175,13 +186,15 @@ namespace API.Controllers
                 var createdProject = await _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
+                    .Include(p => p.Region)
                     .FirstOrDefaultAsync(p => p.Id == project.Id);
 
                 var projectDto = new ProjectDto
                 {
                     Id = createdProject!.Id,
                     Name = createdProject.Name,
-                    Region = createdProject.Region,
+                    RegionId = createdProject.RegionId,
+                    RegionName = createdProject.Region.Name,
                     Status = createdProject.Status,
                     Description = createdProject.Description,
                     StartDate = createdProject.StartDate,
@@ -239,6 +252,13 @@ namespace API.Controllers
                     }
                 }
 
+                // Validate region exists
+                var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId);
+                if (!regionExists)
+                {
+                    return BadRequest($"Region with ID {request.RegionId} not found");
+                }
+
                 // If operator reassigned, unassign from previous project
                 if (request.AssignedUserId.HasValue)
                 {
@@ -251,7 +271,7 @@ namespace API.Controllers
 
                 // Update project properties
                 project.Name = request.Name;
-                project.Region = request.Region;
+                project.RegionId = request.RegionId;
                 project.Status = request.Status;
                 project.Description = request.Description;
                 project.StartDate = request.StartDate;
@@ -362,6 +382,7 @@ namespace API.Controllers
                 var query = _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
+                    .Include(p => p.Region)
                     .AsQueryable();
 
                 if (!string.IsNullOrEmpty(name))
@@ -371,7 +392,7 @@ namespace API.Controllers
 
                 if (!string.IsNullOrEmpty(region))
                 {
-                    query = query.Where(p => p.Region.Contains(region));
+                    query = query.Where(p => p.Region.Name.Contains(region));
                 }
 
                 if (!string.IsNullOrEmpty(status))
@@ -384,7 +405,8 @@ namespace API.Controllers
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        Region = p.Region,
+                        RegionId = p.RegionId,
+                        RegionName = p.Region.Name,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
@@ -442,6 +464,7 @@ namespace API.Controllers
         {
             var project = await _context.Projects
                 .Include(p => p.AssignedUser)
+                .Include(p => p.Region)
                 .FirstOrDefaultAsync(p => p.AssignedUserId == operatorId);
 
             if (project == null)
@@ -453,7 +476,8 @@ namespace API.Controllers
             {
                 Id = project.Id,
                 Name = project.Name,
-                Region = project.Region,
+                RegionId = project.RegionId,
+                RegionName = project.Region.Name,
                 Status = project.Status,
                 Description = project.Description,
                 StartDate = project.StartDate,
