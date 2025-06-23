@@ -56,7 +56,8 @@ namespace API.Controllers
                             CreatedAt = ps.CreatedAt,
                             UpdatedAt = ps.UpdatedAt,
                             IsPatternApproved = ps.IsPatternApproved,
-                            IsSimulationConfirmed = ps.IsSimulationConfirmed
+                            IsSimulationConfirmed = ps.IsSimulationConfirmed,
+                            IsOperatorCompleted = ps.IsOperatorCompleted
                         }).ToList()
                     })
                     .ToListAsync();
@@ -111,7 +112,8 @@ namespace API.Controllers
                         CreatedAt = ps.CreatedAt,
                         UpdatedAt = ps.UpdatedAt,
                         IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
+                        IsOperatorCompleted = ps.IsOperatorCompleted
                     }).ToList()
                 };
 
@@ -334,7 +336,8 @@ namespace API.Controllers
                         CreatedAt = ps.CreatedAt,
                         UpdatedAt = ps.UpdatedAt,
                         IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed
+                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
+                        IsOperatorCompleted = ps.IsOperatorCompleted
                     })
                     .ToListAsync();
 
@@ -402,7 +405,8 @@ namespace API.Controllers
                             CreatedAt = ps.CreatedAt,
                             UpdatedAt = ps.UpdatedAt,
                             IsPatternApproved = ps.IsPatternApproved,
-                            IsSimulationConfirmed = ps.IsSimulationConfirmed
+                            IsSimulationConfirmed = ps.IsSimulationConfirmed,
+                            IsOperatorCompleted = ps.IsOperatorCompleted
                         }).ToList()
                     })
                     .ToListAsync();
