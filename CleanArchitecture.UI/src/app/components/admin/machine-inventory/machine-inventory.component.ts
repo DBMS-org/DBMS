@@ -39,14 +39,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   MachineStatus = MachineStatus;
   MachineType = MachineType;
   
-  // Add the missing statistics property
-  statistics = {
-    total: 0,
-    available: 0,
-    assigned: 0,
-    maintenance: 0,
-    outOfService: 0
-  };
+
   
   private subscriptions: Subscription[] = [];
 
@@ -70,7 +63,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     const sub = this.machineService.getAllMachines().subscribe({
       next: (machines) => {
         this.machines = machines;
-        this.calculateStatistics();
+
         this.applyFilters();
         this.isLoading = false;
       },
@@ -83,15 +76,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
-  private calculateStatistics(): void {
-    this.statistics.total = this.machines.length;
-    this.statistics.available = this.machines.filter(m => m.status === MachineStatus.AVAILABLE).length;
-    this.statistics.assigned = this.machines.filter(m => m.status === MachineStatus.ASSIGNED).length;
-    this.statistics.maintenance = this.machines.filter(m => 
-      m.status === MachineStatus.IN_MAINTENANCE || m.status === MachineStatus.UNDER_REPAIR
-    ).length;
-    this.statistics.outOfService = this.machines.filter(m => m.status === MachineStatus.OUT_OF_SERVICE).length;
-  }
 
   applyFilters(): void {
     this.filteredMachines = this.machines.filter(machine => {
