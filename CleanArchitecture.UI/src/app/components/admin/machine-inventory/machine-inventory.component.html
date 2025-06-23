@@ -1,5 +1,5 @@
 <div class="machine-inventory-container">
-  <!-- Header Section -->
+  <!-- Page Header with Title and Action Buttons -->
   <div class="header-section">
     <h2 class="page-title">Machine Inventory & Management</h2>
     <div class="header-actions">
@@ -9,9 +9,64 @@
     </div>
   </div>
 
+<<<<<<< HEAD
 
+=======
+  <!-- Statistic OverView Cards -->
+  <div class="stats-section">
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <i class="fas fa-cogs"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Total Machines</h3>
+        <p class="stat-number">{{ statistics.total }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card available">
+      <div class="stat-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Available</h3>
+        <p class="stat-number">{{ statistics.available }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card assigned">
+      <div class="stat-icon">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Assigned</h3>
+        <p class="stat-number">{{ statistics.assigned }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card maintenance">
+      <div class="stat-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Maintenance</h3>
+        <p class="stat-number">{{ statistics.maintenance }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card out-of-service">
+      <div class="stat-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Out of Service</h3>
+        <p class="stat-number">{{ statistics.outOfService }}</p>
+      </div>
+    </div>
+  </div>
+>>>>>>> e157f4144c8382c3832e39046ba816c15c58e937
 
-  <!-- Search and Filter Section -->
+  <!-- Search and Filter Controls Section -->
   <div class="search-filter-section">
     <div class="search-box">
       <input 
@@ -44,14 +99,14 @@
     </div>
   </div>
 
-  <!-- Error Message -->
+  <!-- Error Alert Message -->
   <div *ngIf="error" class="alert alert-danger">
     <i class="fas fa-exclamation-triangle"></i>
     {{ error }}
     <button type="button" class="btn-close" (click)="error = null"></button>
   </div>
 
-  <!-- Loading State -->
+  <!-- Loading state -->
   <div *ngIf="isLoading" class="loading-container">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
@@ -187,7 +242,7 @@
 
     <div class="machine-details-form" *ngIf="selectedMachine">
       
-      <!-- Machine Details Card -->
+      <!-- Machine Information Card -->
       <div class="details-card">
         <div class="card-header">
           <div class="card-header-content">
@@ -325,7 +380,7 @@
         </div>
       </div>
 
-      <!-- Actions -->
+      <!-- Modal Footer with Close Button -->
       <div class="details-actions">
         <button 
           type="button" 
