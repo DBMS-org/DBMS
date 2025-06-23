@@ -32,6 +32,7 @@ namespace API.Controllers
                 var machines = await _context.Machines
                     .Include(m => m.Project)
                     .Include(m => m.Operator)
+                    .Include(m => m.Region)
                     .Select(m => new MachineDto
                     {
                         Id = m.Id,
@@ -45,7 +46,6 @@ namespace API.Controllers
                         ChassisDetails = m.ChassisDetails,
                         ManufacturingYear = m.ManufacturingYear,
                         Status = m.Status,
-                        CurrentLocation = m.CurrentLocation,
                         AssignedToProject = m.AssignedToProject,
                         AssignedToOperator = m.AssignedToOperator,
                         LastMaintenanceDate = m.LastMaintenanceDate,
@@ -54,8 +54,10 @@ namespace API.Controllers
                         UpdatedAt = m.UpdatedAt,
                         ProjectId = m.ProjectId,
                         OperatorId = m.OperatorId,
+                        RegionId = m.RegionId,
                         ProjectName = m.Project != null ? m.Project.Name : null,
                         OperatorName = m.Operator != null ? m.Operator.Name : null,
+                        RegionName = m.Region != null ? m.Region.Name : null,
                         Specifications = ParseSpecifications(m.SpecificationsJson)
                     })
                     .ToListAsync();
@@ -78,6 +80,7 @@ namespace API.Controllers
                 var machine = await _context.Machines
                     .Include(m => m.Project)
                     .Include(m => m.Operator)
+                    .Include(m => m.Region)
                     .FirstOrDefaultAsync(m => m.Id == id);
 
                 if (machine == null)
@@ -98,7 +101,6 @@ namespace API.Controllers
                     ChassisDetails = machine.ChassisDetails,
                     ManufacturingYear = machine.ManufacturingYear,
                     Status = machine.Status,
-                    CurrentLocation = machine.CurrentLocation,
                     AssignedToProject = machine.AssignedToProject,
                     AssignedToOperator = machine.AssignedToOperator,
                     LastMaintenanceDate = machine.LastMaintenanceDate,
@@ -107,8 +109,10 @@ namespace API.Controllers
                     UpdatedAt = machine.UpdatedAt,
                     ProjectId = machine.ProjectId,
                     OperatorId = machine.OperatorId,
+                    RegionId = machine.RegionId,
                     ProjectName = machine.Project?.Name,
                     OperatorName = machine.Operator?.Name,
+                    RegionName = machine.Region?.Name,
                     Specifications = ParseSpecifications(machine.SpecificationsJson)
                 };
 
@@ -160,6 +164,16 @@ namespace API.Controllers
                     }
                 }
 
+                // Validate region exists if provided
+                if (request.RegionId.HasValue)
+                {
+                    var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId.Value);
+                    if (!regionExists)
+                    {
+                        return BadRequest($"Region with ID {request.RegionId.Value} not found");
+                    }
+                }
+
                 var machine = new Machine
                 {
                     Name = request.Name,
@@ -172,9 +186,9 @@ namespace API.Controllers
                     ChassisDetails = request.ChassisDetails,
                     ManufacturingYear = request.ManufacturingYear,
                     Status = request.Status,
-                    CurrentLocation = request.CurrentLocation,
                     ProjectId = request.ProjectId,
                     OperatorId = request.OperatorId,
+                    RegionId = request.RegionId,
                     SpecificationsJson = request.Specifications != null ? 
                         JsonSerializer.Serialize(request.Specifications) : null
                 };
@@ -198,6 +212,7 @@ namespace API.Controllers
                 // Load the machine with related data for response
                 var createdMachine = await _context.Machines
                     .Include(m => m.Project)
+                    .Include(m => m.Region)
                     .Include(m => m.Operator)
                     .FirstOrDefaultAsync(m => m.Id == machine.Id);
 
@@ -214,7 +229,6 @@ namespace API.Controllers
                     ChassisDetails = createdMachine.ChassisDetails,
                     ManufacturingYear = createdMachine.ManufacturingYear,
                     Status = createdMachine.Status,
-                    CurrentLocation = createdMachine.CurrentLocation,
                     AssignedToProject = createdMachine.AssignedToProject,
                     AssignedToOperator = createdMachine.AssignedToOperator,
                     LastMaintenanceDate = createdMachine.LastMaintenanceDate,
@@ -223,8 +237,10 @@ namespace API.Controllers
                     UpdatedAt = createdMachine.UpdatedAt,
                     ProjectId = createdMachine.ProjectId,
                     OperatorId = createdMachine.OperatorId,
+                    RegionId = createdMachine.RegionId,
                     ProjectName = createdMachine.Project?.Name,
                     OperatorName = createdMachine.Operator?.Name,
+                    RegionName = createdMachine.Region?.Name,
                     Specifications = ParseSpecifications(createdMachine.SpecificationsJson)
                 };
 
@@ -287,6 +303,16 @@ namespace API.Controllers
                     }
                 }
 
+                // Validate region exists if provided
+                if (request.RegionId.HasValue)
+                {
+                    var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId.Value);
+                    if (!regionExists)
+                    {
+                        return BadRequest($"Region with ID {request.RegionId.Value} not found");
+                    }
+                }
+
                 // Update machine properties
                 machine.Name = request.Name;
                 machine.Type = request.Type;
@@ -298,9 +324,9 @@ namespace API.Controllers
                 machine.ChassisDetails = request.ChassisDetails;
                 machine.ManufacturingYear = request.ManufacturingYear;
                 machine.Status = request.Status;
-                machine.CurrentLocation = request.CurrentLocation;
                 machine.ProjectId = request.ProjectId;
                 machine.OperatorId = request.OperatorId;
+                machine.RegionId = request.RegionId;
                 machine.LastMaintenanceDate = request.LastMaintenanceDate;
                 machine.NextMaintenanceDate = request.NextMaintenanceDate;
                 machine.UpdatedAt = DateTime.UtcNow;
@@ -427,6 +453,7 @@ namespace API.Controllers
                 var query = _context.Machines
                     .Include(m => m.Project)
                     .Include(m => m.Operator)
+                    .Include(m => m.Region)
                     .AsQueryable();
 
                 if (!string.IsNullOrEmpty(name))
@@ -468,7 +495,6 @@ namespace API.Controllers
                         ChassisDetails = m.ChassisDetails,
                         ManufacturingYear = m.ManufacturingYear,
                         Status = m.Status,
-                        CurrentLocation = m.CurrentLocation,
                         AssignedToProject = m.AssignedToProject,
                         AssignedToOperator = m.AssignedToOperator,
                         LastMaintenanceDate = m.LastMaintenanceDate,
@@ -477,8 +503,10 @@ namespace API.Controllers
                         UpdatedAt = m.UpdatedAt,
                         ProjectId = m.ProjectId,
                         OperatorId = m.OperatorId,
+                        RegionId = m.RegionId,
                         ProjectName = m.Project != null ? m.Project.Name : null,
                         OperatorName = m.Operator != null ? m.Operator.Name : null,
+                        RegionName = m.Region != null ? m.Region.Name : null,
                         Specifications = ParseSpecifications(m.SpecificationsJson)
                     })
                     .ToListAsync();

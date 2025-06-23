@@ -36,14 +36,16 @@ namespace API.Controllers
                         Region = u.Region,
                         Status = u.Status,
                         AssignedProjects = _context.Projects
-                            .Where(p => p.AssignedUserId == u.Id)
-                            .Select(p => new UserProjectAssignmentDto
-                            {
-                                Id = p.Id,
-                                Name = p.Name,
-                                Status = p.Status,
-                                Region = p.Region
-                            })
+                                                    .Where(p => p.AssignedUserId == u.Id)
+                        .Include(p => p.Region)
+                        .Select(p => new UserProjectAssignmentDto
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Status = p.Status,
+                            RegionId = p.RegionId,
+                            RegionName = p.Region.Name
+                        })
                             .ToList()
                     })
                     .ToListAsync();
@@ -79,12 +81,14 @@ namespace API.Controllers
                     Status = user.Status,
                     AssignedProjects = await _context.Projects
                         .Where(p => p.AssignedUserId == userId)
+                        .Include(p => p.Region)
                         .Select(p => new UserProjectAssignmentDto
                         {
                             Id = p.Id,
                             Name = p.Name,
                             Status = p.Status,
-                            Region = p.Region
+                            RegionId = p.RegionId,
+                            RegionName = p.Region.Name
                         })
                         .ToListAsync()
                 };
@@ -113,12 +117,14 @@ namespace API.Controllers
                 var projects = await _context.Projects
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
+                    .Include(p => p.Region)
                     .Where(p => p.AssignedUserId == userId)
                     .Select(p => new ProjectDto
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        Region = p.Region,
+                        RegionId = p.RegionId,
+                        RegionName = p.Region.Name,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
