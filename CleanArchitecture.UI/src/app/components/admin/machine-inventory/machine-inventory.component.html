@@ -1,5 +1,5 @@
 <div class="machine-inventory-container">
-  <!-- Header Section -->
+  <!-- Page Header with Title and Action Buttons -->
   <div class="header-section">
     <h2 class="page-title">Machine Inventory & Management</h2>
     <div class="header-actions">
@@ -16,7 +16,7 @@
     </div>
   </div>
 
-  <!-- Statistic Cards -->
+  <!-- Statistic OverView Cards -->
   <div class="stats-section">
     <div class="stat-card total">
       <div class="stat-icon">
@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <!-- Search and Filter Section -->
+  <!-- Search and Filter Controls Section -->
   <div class="search-filter-section">
     <div class="search-box">
       <input 
@@ -102,7 +102,7 @@
     </div>
   </div>
 
-  <!-- Error Message -->
+  <!-- Error Alert Message -->
   <div *ngIf="error" class="alert alert-danger">
     <i class="fas fa-exclamation-triangle"></i>
     {{ error }}
@@ -220,7 +220,7 @@
 
     <div class="machine-details-form" *ngIf="selectedMachine">
       
-      <!-- Machine Details Card -->
+      <!-- Machine Information Card -->
       <div class="details-card">
         <div class="card-header">
           <div class="card-header-content">
@@ -364,7 +364,7 @@
         </div>
       </div>
 
-      <!-- Actions -->
+      <!-- Modal Footer with Close Button -->
       <div class="details-actions">
         <button 
           type="button" 
