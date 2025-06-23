@@ -1,7 +1,5 @@
-<!-- Component for displaying and editing project details, sites, timeline, and metadata. -->
-
 <div class="project-details-container">
-  <!-- Page Header with Edit/Delete Actions -->
+  <!-- Header Section -->
   <div class="header-section">
     <div class="header-left">
       <button class="btn btn-outline-secondary back-btn" (click)="goBack()">
@@ -9,8 +7,6 @@
       </button>
       <h2 class="page-title">{{ project?.name || 'Project Details' }}</h2>
     </div>
-
-    <!-- Actions when not editing -->
     <div class="header-right" *ngIf="project && !isEditing">
       <button class="btn btn-primary edit-btn" (click)="toggleEdit()">
         <i class="fas fa-edit"></i> Edit Project
@@ -19,8 +15,6 @@
         <i class="fas fa-trash"></i> Delete
       </button>
     </div>
-
-    <!-- Actions when editing -->
     <div class="header-right" *ngIf="isEditing">
       <button class="btn btn-success save-btn" (click)="saveProject()">
         <i class="fas fa-save"></i> Save Changes
@@ -43,9 +37,9 @@
     </div>
   </div>
 
-  <!-- Main Project Content -->
+  <!-- Project Details Content -->
   <div *ngIf="project && !loading" class="content-section">
-
+    
     <!-- Project Information Card -->
     <div class="info-card">
       <div class="card-header">
@@ -54,9 +48,8 @@
           {{ project.status }}
         </span>
       </div>
-
+      
       <div class="card-body">
-        <!-- Display Mode -->
         <div class="info-grid" *ngIf="!isEditing">
           <div class="info-item">
             <label>Project ID:</label>
@@ -90,7 +83,7 @@
           </div>
         </div>
 
-        <!-- Edit Mode -->
+        <!-- Edit Form -->
         <div class="edit-form" *ngIf="isEditing">
           <div class="form-grid">
             <div class="form-group">
@@ -136,16 +129,14 @@
       <div class="card-header">
         <h3><i class="fas fa-map-marker-alt"></i> Project Sites</h3>
       </div>
-
+      
       <div class="card-body">
-        <!-- No sites available -->
         <div *ngIf="projectSites.length === 0" class="empty-sites">
           <i class="fas fa-map fa-3x text-muted"></i>
           <h4>No Sites Found</h4>
           <p>No sites have been added to this project yet.</p>
         </div>
 
-        <!-- Sites List -->
         <div *ngIf="projectSites.length > 0" class="sites-grid">
           <div *ngFor="let site of projectSites" class="site-card">
             <div class="site-header">
@@ -168,12 +159,12 @@
       </div>
     </div>
 
-    <!-- Timeline Card -->
+    <!-- Project Timeline Card -->
     <div class="info-card">
       <div class="card-header">
         <h3><i class="fas fa-calendar-alt"></i> Project Timeline</h3>
       </div>
-
+      
       <div class="card-body">
         <div class="timeline-info">
           <div class="timeline-item">
@@ -186,7 +177,7 @@
               <p>Project officially commenced</p>
             </div>
           </div>
-
+          
           <div class="timeline-item">
             <div class="timeline-date">
               <i class="fas fa-flag-checkered text-primary"></i>
@@ -201,12 +192,12 @@
       </div>
     </div>
 
-    <!-- Metadata Section -->
+    <!-- Metadata Card -->
     <div class="info-card">
       <div class="card-header">
         <h3><i class="fas fa-info-circle"></i> Metadata</h3>
       </div>
-
+      
       <div class="card-body">
         <div class="metadata-grid">
           <div class="metadata-item">

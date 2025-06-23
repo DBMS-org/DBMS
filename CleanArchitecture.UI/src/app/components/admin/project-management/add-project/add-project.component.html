@@ -1,6 +1,5 @@
-<!-- Component for adding a new project with fields for details, timeline, and operator assignment.-->
 <div class="add-project-container">
-  <!-- Page Header -->
+  <!-- Header Section -->
   <div class="header-section">
     <div class="header-left">
       <button class="btn btn-outline-secondary back-btn" (click)="cancel()">
@@ -15,21 +14,21 @@
     </div>
   </div>
 
-  <!-- Display success message -->
+  <!-- Success Message -->
   <div *ngIf="successMessage" class="alert alert-success">
     <i class="fas fa-check-circle"></i> {{ successMessage }}
   </div>
 
-  <!-- Display error message -->
+  <!-- Error Message -->
   <div *ngIf="error" class="alert alert-danger">
     <i class="fas fa-exclamation-circle"></i> {{ error }}
   </div>
 
-  <!-- Project creation form -->
+  <!-- Add Project Form -->
   <div class="form-container">
     <form (ngSubmit)="onSubmit()" #addProjectForm="ngForm">
       
-      <!-- Basic Project Details -->
+      <!-- Basic Information Card -->
       <div class="form-card">
         <div class="card-header">
           <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
@@ -73,7 +72,7 @@
               </select>
             </div>
 
-            <!-- Operator selection -->
+            <!-- Operator Assignment -->
             <div class="form-group">
               <label for="assignedUserId">Assign Operator</label>
               <select
@@ -101,7 +100,7 @@
         </div>
       </div>
 
-      <!-- Project Timeline Inputs -->
+      <!-- Project Timeline Card -->
       <div class="form-card">
         <div class="card-header">
           <h3><i class="fas fa-calendar-alt"></i> Project Timeline</h3>
@@ -133,7 +132,9 @@
         </div>
       </div>
 
-      <!-- Form Buttons -->
+     
+
+      <!-- Form Actions -->
       <div class="form-actions">
         <button 
           type="button" 
@@ -156,7 +157,7 @@
   </div>
 </div>
 
-<!-- Operator Assignment Conflict Modal -->
+<!-- Operator Conflict Confirmation Modal -->
 @if (showOperatorConflictModal) {
   <div class="modal-overlay">
     <div class="modal-content">
@@ -168,4 +169,3 @@
     </div>
   </div>
 }
-

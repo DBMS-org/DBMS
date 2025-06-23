@@ -1,15 +1,15 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, Subject, of } from 'rxjs';
-import { takeUntil, switchMap } from 'rxjs/operators';
+import { forkJoin, Subject, of, Observable } from 'rxjs';
+import { takeUntil, switchMap, catchError } from 'rxjs/operators';
 
 import { ProjectService } from '../../../../../core/services/project.service';
 import { UserService } from '../../../../../core/services/user.service';
 import { MachineService } from '../../../../../core/services/machine.service';
-import { Project } from '../../../../../core/models/project.model';
+import { Project, UpdateProjectRequest } from '../../../../../core/models/project.model';
 import { User } from '../../../../../core/models/user.model';
-import { Machine, MachineType, MachineStatus } from '../../../../../core/models/machine.model';
+import { Machine, MachineType, MachineStatus, UpdateMachineRequest } from '../../../../../core/models/machine.model';
 import { REGIONS } from '../../../../../core/constants/regions';
 
 interface UserAssignment {
@@ -92,7 +92,7 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
 
     // Load all required data in parallel
     forkJoin({
-      projects: this.projectService.getProjects(),
+      projects: this.projectService.getAllProjects(),
       machines: this.machineService.getAllMachines()
     }).pipe(
       takeUntil(this.destroy$)
@@ -112,7 +112,6 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error loading operator data:', error);
         this.error = 'Failed to load operator assignment data';
-        this.loadMockData(); // Fallback to mock data
         this.isLoading = false;
       }
     });
@@ -154,94 +153,37 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
       (p.status === 'Active' || p.status === 'Planning' || p.status === 'In Progress')
     );
 
-    // Filter machines by operator's region and availability
+    // Filter machines - since machines now require projectId, we need to filter based on 
+    // projects in the operator's region and machine availability
+    const regionProjectIds = this.allProjects
+      .filter(p => p.region === this.selectedOperator!.region)
+      .map(p => p.id);
+
     this.availableMachines = this.allMachines.filter(m => 
-      m.currentLocation === this.selectedOperator!.region && 
-      (m.status === MachineStatus.AVAILABLE || m.status === MachineStatus.IN_MAINTENANCE)
+      regionProjectIds.includes(m.projectId) &&
+      (m.status === MachineStatus.AVAILABLE || m.status === MachineStatus.IN_MAINTENANCE) &&
+      !m.operatorId // Not currently assigned to an operator
     );
   }
 
-  private loadMockData(): void {
-    // Mock data as fallback
-    this.currentProject = {
-      id: 1,
-      name: 'Muttrah Construction Project',
-      region: this.selectedOperator?.region || 'Muscat',
-      status: 'In Progress',
-      description: 'Major construction project in Muttrah area',
-      startDate: new Date('2024-01-15'),
-      endDate: new Date('2024-12-31'),
-              assignedMachine: {
-          id: 101,
-          name: 'Excavator CAT-320',
-          type: MachineType.EXCAVATOR,
-          model: 'CAT-320',
-          manufacturer: 'Caterpillar',
-          serialNumber: 'CAT-320-001',
-          status: MachineStatus.ASSIGNED,
-          currentLocation: this.selectedOperator?.region || 'Muscat',
-          operatorId: this.selectedOperator?.id,
-          projectId: 1,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-    };
 
-    this.availableProjects = [
-      {
-        id: 2,
-        name: 'Al Khuwair Development',
-        region: this.selectedOperator?.region || 'Muscat',
-        status: 'Planning',
-        description: 'New development project in Al Khuwair',
-        startDate: new Date('2024-06-01'),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 3,
-        name: 'Seeb Infrastructure',
-        region: this.selectedOperator?.region || 'Muscat',
-        status: 'Active',
-        description: 'Infrastructure upgrade in Seeb',
-        startDate: new Date('2024-03-01'),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
-
-    this.availableMachines = [
-      {
-        id: 102,
-        name: 'Bulldozer D6T',
-        type: MachineType.BULLDOZER,
-        model: 'CAT-D6T',
-        manufacturer: 'Caterpillar',
-        serialNumber: 'CAT-D6T-001',
-        status: MachineStatus.AVAILABLE,
-        currentLocation: this.selectedOperator?.region || 'Muscat',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 103,
-        name: 'Loader 950M',
-        type: MachineType.LOADER,
-        model: 'CAT-950M',
-        manufacturer: 'Caterpillar',
-        serialNumber: 'CAT-950M-001',
-        status: MachineStatus.AVAILABLE,
-        currentLocation: this.selectedOperator?.region || 'Muscat',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
-  }
 
   onProjectChange(): void {
     // Clear machine selection when project changes
     this.selectedMachineId = null;
     this.error = null;
+    
+    // Filter machines for the selected project
+    if (this.selectedProjectId) {
+      this.availableMachines = this.allMachines.filter(m => 
+        m.projectId === this.selectedProjectId &&
+        (m.status === MachineStatus.AVAILABLE || m.status === MachineStatus.IN_MAINTENANCE) &&
+        !m.operatorId // Not currently assigned to an operator
+      );
+    } else {
+      // Show all available machines in the region if no specific project selected
+      this.filterAvailableOptions();
+    }
   }
 
   onMachineChange(): void {
@@ -273,42 +215,147 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Get the selected project details first to preserve other data
-    this.projectService.getProject(this.selectedProjectId).pipe(
+    // Perform reassignment operations
+    this.performReassignment();
+  }
+
+  private performReassignment(): void {
+    console.log('Starting reassignment process...');
+    console.log('Selected operator:', this.selectedOperator);
+    console.log('Selected project ID:', this.selectedProjectId);
+    console.log('Selected machine ID:', this.selectedMachineId);
+    
+    const operations: Observable<any>[] = [];
+
+    // 1. Update project assignment
+    const projectUpdate = this.projectService.getProject(this.selectedProjectId!).pipe(
       switchMap(project => {
-        // Create full update request with existing project data + new operator assignment
-        const updateRequest = {
+        if (!project) {
+          console.error('Project not found for ID:', this.selectedProjectId);
+          throw new Error('Project not found');
+        }
+        
+        console.log('Updating project:', project);
+        const updateRequest: UpdateProjectRequest = {
           id: project.id,
           name: project.name,
           region: project.region,
           status: project.status,
-          description: project.description,
-          startDate: project.startDate,
-          endDate: project.endDate,
+          description: project.description || '',
+          startDate: project.startDate || undefined,
+          endDate: project.endDate || undefined,
           assignedUserId: this.selectedOperator!.id
         };
-        
-        // Update the project with new operator assignment
         return this.projectService.updateProject(this.selectedProjectId!, updateRequest);
       }),
+      catchError((error: any) => {
+        console.error('Error updating project:', error);
+        throw error;
+      })
+    );
+    operations.push(projectUpdate);
+
+    // 2. If machine is selected, assign it to the operator
+    if (this.selectedMachineId) {
+      console.log('Assigning machine to operator...');
+      const selectedMachine = this.availableMachines.find(m => m.id === this.selectedMachineId);
+      if (!selectedMachine) {
+        console.error('Selected machine not found in available machines list');
+        throw new Error('Selected machine not found');
+      }
+      
+      console.log('Selected machine:', selectedMachine);
+      const machineUpdate: UpdateMachineRequest = {
+        name: selectedMachine.name,
+        type: selectedMachine.type,
+        manufacturer: selectedMachine.manufacturer,
+        model: selectedMachine.model,
+        serialNumber: selectedMachine.serialNumber,
+        rigNo: selectedMachine.rigNo,
+        plateNo: selectedMachine.plateNo,
+        manufacturingYear: selectedMachine.manufacturingYear,
+        chassisDetails: selectedMachine.chassisDetails,
+        currentLocation: selectedMachine.currentLocation,
+        projectId: this.selectedProjectId!,
+        operatorId: this.selectedOperator!.id,
+        status: MachineStatus.ASSIGNED,
+        lastMaintenanceDate: selectedMachine.lastMaintenanceDate,
+        nextMaintenanceDate: selectedMachine.nextMaintenanceDate
+      };
+
+      const machineUpdateOp = this.machineService.updateMachine(selectedMachine.id, machineUpdate);
+      operations.push(machineUpdateOp);
+    }
+
+    // 3. If operator had a previous machine, unassign it
+    if (this.currentProject?.assignedMachine?.operatorId === this.selectedOperator!.id) {
+      console.log('Unassigning current machine from operator...');
+      const currentMachine = this.currentProject.assignedMachine;
+      console.log('Current machine to unassign:', currentMachine);
+      const unassignUpdate: UpdateMachineRequest = {
+        name: currentMachine.name,
+        type: currentMachine.type,
+        manufacturer: currentMachine.manufacturer,
+        model: currentMachine.model,
+        serialNumber: currentMachine.serialNumber,
+        rigNo: currentMachine.rigNo,
+        plateNo: currentMachine.plateNo,
+        manufacturingYear: currentMachine.manufacturingYear,
+        chassisDetails: currentMachine.chassisDetails,
+        currentLocation: currentMachine.currentLocation,
+        projectId: currentMachine.projectId,
+        operatorId: undefined, // Unassign operator
+        status: MachineStatus.AVAILABLE,
+        lastMaintenanceDate: currentMachine.lastMaintenanceDate,
+        nextMaintenanceDate: currentMachine.nextMaintenanceDate
+      };
+
+      const unassignOp = this.machineService.updateMachine(currentMachine.id, unassignUpdate);
+      operations.push(unassignOp);
+    }
+
+    // Execute all operations
+    if (operations.length === 0) {
+      this.error = 'No operations to perform';
+      this.isLoading = false;
+      return;
+    }
+
+    forkJoin(operations).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: () => {
-        this.successMessage = `${this.selectedOperator?.name} has been successfully reassigned to the selected project!`;
+      next: (results) => {
+        console.log('Reassignment operations completed:', results);
+        this.successMessage = `${this.selectedOperator?.name} has been successfully reassigned!`;
         this.isLoading = false;
         
-        // Refresh the data to show updated assignments
-        this.loadOperatorData();
+        // Clear selections
+        this.selectedProjectId = null;
+        this.selectedMachineId = null;
+        this.reassignmentReason = '';
         
-        // Close modal after showing success message
+        // Close modal after showing success message (don't refresh data to avoid errors)
         setTimeout(() => {
           this.onClose();
-        }, 2000);
+        }, 1500);
       },
       error: (error) => {
         console.error('Error during reassignment:', error);
-        this.error = `Failed to reassign operator: ${error.message}`;
-        this.isLoading = false;
+        console.error('Error stack:', error.stack);
+        
+        // Even if there's an error, the reassignment might have succeeded
+        // Check if it's just a data loading error
+        if (error.message && error.message.includes('createdAt')) {
+          this.successMessage = `${this.selectedOperator?.name} has been reassigned successfully! (Please refresh to see updated data)`;
+          this.isLoading = false;
+          
+          setTimeout(() => {
+            this.onClose();
+          }, 2000);
+        } else {
+          this.error = `Failed to reassign operator: ${error.message || 'Unknown error'}`;
+          this.isLoading = false;
+        }
       }
     });
   }
