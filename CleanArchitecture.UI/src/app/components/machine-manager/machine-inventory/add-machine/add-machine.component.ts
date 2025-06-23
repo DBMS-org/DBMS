@@ -52,7 +52,7 @@ export class AddMachineComponent implements OnInit {
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
       region: [''],
-      projectId: [''],
+      projectId: ['', Validators.required],
       status: [MachineStatus.AVAILABLE, Validators.required]
     });
   }
@@ -76,10 +76,11 @@ export class AddMachineComponent implements OnInit {
 
   private loadProjectsByRegion(region: string): void {
     this.isLoadingProjects = true;
-    this.projectService.getProjects().subscribe({
+    
+    this.projectService.getAllProjects().subscribe({
       next: (projects) => {
         this.availableProjects = projects.filter(project => 
-          project.region.toLowerCase() === region.toLowerCase()
+          project.region && project.region.toLowerCase() === region.toLowerCase()
         );
         this.isLoadingProjects = false;
       },
@@ -107,6 +108,33 @@ export class AddMachineComponent implements OnInit {
     return region;
   }
 
+  private getLocationValue(): string {
+    return this.locationPreview;
+  }
+
+  private getRegionId(): number | undefined {
+    const regionName = this.machineForm.get('region')?.value;
+    if (!regionName) return undefined;
+    
+    // Find the region ID based on the region name
+    // Since we're using region names as strings, we need to map them to IDs
+    const regionMapping: { [key: string]: number } = {
+      'Muscat': 1,
+      'Dhofar': 2,
+      'Musandam': 3,
+      'Al Buraimi': 4,
+      'Al Dakhiliyah': 5,
+      'Al Dhahirah': 6,
+      'Al Wusta': 7,
+      'Al Batinah North': 8,
+      'Al Batinah South': 9,
+      'Ash Sharqiyah North': 10,
+      'Ash Sharqiyah South': 11
+    };
+    
+    return regionMapping[regionName];
+  }
+
   onSubmit(): void {
     if (this.machineForm.valid) {
       this.isLoading = true;
@@ -123,7 +151,9 @@ export class AddMachineComponent implements OnInit {
         plateNo: formValue.plateNo || undefined,
         manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
         chassisDetails: formValue.chassisDetails || undefined,
-        currentLocation: this.locationPreview,
+        currentLocation: this.getLocationValue(),
+        projectId: parseInt(formValue.projectId),
+        regionId: this.getRegionId(),
         status: formValue.status
       };
       
