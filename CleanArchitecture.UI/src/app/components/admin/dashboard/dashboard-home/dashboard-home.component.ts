@@ -7,7 +7,9 @@ import { UserService } from '../../../../core/services/user.service';
 import { ProjectService } from '../../../../core/services/project.service';
 import { SiteService } from '../../../../core/services/site.service';
 import { DrillHoleService, DrillHole } from '../../../../core/services/drill-hole.service';
+import { MachineService } from '../../../../core/services/machine.service';
 import { User } from '../../../../core/models/user.model';
+import { Machine, MachineStatus } from '../../../../core/models/machine.model';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -59,6 +61,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     private projectService: ProjectService,
     private siteService: SiteService,
     private drillHoleService: DrillHoleService,
+    private machineService: MachineService,
     private router: Router
   ) {}
 
@@ -99,9 +102,12 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       users: this.userService.getUsers(),
       projects: this.projectService.getProjects(),
       sites: this.siteService.getAllSites(),
-      drillHoles: this.drillHoleService.getAllDrillHoles()
+      drillHoles: this.drillHoleService.getAllDrillHoles(),
+      machines: this.machineService.getAllMachines(),
+      machineStats: this.machineService.getMachineStatistics(),
+      assignmentRequests: this.machineService.getAllAssignmentRequests()
     }).subscribe({
-      next: ({ users, projects, sites, drillHoles }) => {
+      next: ({ users, projects, sites, drillHoles, machines, machineStats, assignmentRequests }) => {
         // User statistics from database
         this.stats.totalUsers = users.length;
         this.stats.activeUsers = users.filter((u: any) => u.status === 'Active').length;
@@ -123,11 +129,11 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
         const sitesWithDrillHoles = new Set(drillHoles.map((h: any) => h.siteId).filter((id: any) => id));
         this.stats.activeDrillSites = sitesWithDrillHoles.size;
         
-        // Machine statistics (placeholder - no machine service available yet)
-        this.stats.totalMachines = 45; // Placeholder until machine service is implemented
-        this.stats.assignedMachines = 32; // Placeholder until machine service is implemented
-        this.stats.pendingAssignments = 8; // Placeholder until machine service is implemented
-        this.stats.machineRequests = 5; // Placeholder until machine service is implemented
+        // Machine statistics from real API data
+        this.stats.totalMachines = machineStats.totalMachines || machines.length || 0;
+        this.stats.assignedMachines = machineStats.assignedMachines || machines.filter((m: Machine) => m.status === MachineStatus.ASSIGNED).length || 0;
+        this.stats.pendingAssignments = assignmentRequests.filter((r: any) => r.status === 'Pending').length || 0;
+        this.stats.machineRequests = assignmentRequests.length || 0;
         
         // Calculate drill analytics from database
         this.calculateDrillAnalytics(drillHoles);
@@ -170,10 +176,10 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
           pendingProjects: 0,
           completedProjects: 0,
           archivedProjects: 0,
-          totalMachines: 45, // Placeholder
-          assignedMachines: 32, // Placeholder
-          pendingAssignments: 8, // Placeholder
-          machineRequests: 5, // Placeholder
+          totalMachines: 0,
+          assignedMachines: 0,
+          pendingAssignments: 0,
+          machineRequests: 0,
           totalSites: 0,
           activeSites: 0,
           totalDrillHoles: 0,

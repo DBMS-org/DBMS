@@ -229,31 +229,7 @@
               }
             </div>
 
-            <div class="form-group">
-              <label for="company">
-                <i class="material-icons label-icon">domain</i>
-                Company <span class="required">*</span>
-              </label>
-              <div class="input-wrapper">
-                <input 
-                  type="text" 
-                  id="company"
-                  class="form-control"
-                  [class.is-invalid]="isFieldInvalid('company')"
-                  [class.is-valid]="isFieldValid('company')"
-                  formControlName="company"
-                  placeholder="Enter company name">
-                <div class="input-icon" *ngIf="isFieldValid('company')">
-                  <i class="material-icons">check</i>
-                </div>
-              </div>
-              @if (isFieldInvalid('company')) {
-                <div class="invalid-feedback">
-                  <i class="material-icons">error</i>
-                  {{ getFieldError('company') }}
-                </div>
-              }
-            </div>
+
             
             <div class="form-group">
               <label for="manufacturingYear">

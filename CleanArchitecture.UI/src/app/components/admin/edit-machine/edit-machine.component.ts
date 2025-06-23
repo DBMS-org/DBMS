@@ -46,7 +46,7 @@ export class EditMachineComponent implements OnInit {
       serialNumber: ['', [Validators.required]],
       rigNo: ['', [Validators.required]],
       plateNo: ['', [Validators.required]],
-      company: ['', [Validators.required]],
+
       chassisDetails: ['', [Validators.required, Validators.minLength(10)]],
       manufacturingYear: ['', [
         Validators.required,
@@ -64,7 +64,7 @@ export class EditMachineComponent implements OnInit {
       serialNumber: this.machine.serialNumber || '',
       rigNo: this.machine.rigNo || '',
       plateNo: this.machine.plateNo || '',
-      company: this.machine.company || '',
+
       chassisDetails: this.machine.chassisDetails || '',
       manufacturingYear: this.machine.manufacturingYear || ''
     });
@@ -92,7 +92,7 @@ export class EditMachineComponent implements OnInit {
       serialNumber: 'Serial Number',
       rigNo: 'Rig No',
       plateNo: 'Plate No',
-      company: 'Company',
+
       chassisDetails: 'Chassis Details',
       manufacturingYear: 'Manufacturing Year'
     };
