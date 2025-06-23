@@ -39,5 +39,8 @@ namespace Core.Interfaces
         Task<bool> ValidateProjectSiteExistsAsync(int projectId, int siteId);
         Task<bool> ValidateDrillPatternOwnershipAsync(int patternId, int projectId, int siteId);
         Task<bool> ValidateBlastSequenceOwnershipAsync(int sequenceId, int projectId, int siteId);
+        
+        // Operator completion
+        Task<bool> SetOperatorCompletionAsync(int projectId, int siteId, bool completed);
     }
 } 

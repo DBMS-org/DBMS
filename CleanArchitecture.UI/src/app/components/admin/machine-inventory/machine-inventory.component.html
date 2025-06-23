@@ -6,66 +6,6 @@
       <button class="btn btn-secondary" (click)="navigateToAssignments()">
         <i class="fas fa-clipboard-list"></i> View Assignments
       </button>
-      <button 
-        class="btn btn-primary add-btn"
-        (click)="openAddMachineModal()"
-        [disabled]="isLoading">
-        <i class="material-icons">add</i>
-        New Machine
-      </button>
-    </div>
-  </div>
-
-  <!-- Statistic OverView Cards -->
-  <div class="stats-section">
-    <div class="stat-card total">
-      <div class="stat-icon">
-        <i class="fas fa-cogs"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Total Machines</h3>
-        <p class="stat-number">{{ statistics.total }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card available">
-      <div class="stat-icon">
-        <i class="fas fa-check-circle"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Available</h3>
-        <p class="stat-number">{{ statistics.available }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card assigned">
-      <div class="stat-icon">
-        <i class="fas fa-user-check"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Assigned</h3>
-        <p class="stat-number">{{ statistics.assigned }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card maintenance">
-      <div class="stat-icon">
-        <i class="fas fa-tools"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Maintenance</h3>
-        <p class="stat-number">{{ statistics.maintenance }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card out-of-service">
-      <div class="stat-icon">
-        <i class="fas fa-exclamation-triangle"></i>
-      </div>
-      <div class="stat-content">
-        <h3>Out of Service</h3>
-        <p class="stat-number">{{ statistics.outOfService }}</p>
-      </div>
     </div>
   </div>
 
@@ -170,6 +110,15 @@
                 title="View Details"
               >
                 <i class="fas fa-eye"></i>
+                View
+              </button>
+              <button 
+                class="btn btn-sm btn-outline-danger action-btn" 
+                (click)="deleteMachine(machine)"
+                title="Delete Machine"
+              >
+                <i class="fas fa-trash"></i>
+                Delete
               </button>
             </div>
           </td>
@@ -183,21 +132,37 @@
         <i class="fas fa-cogs fa-3x text-muted"></i>
         <h4>No Machines Found</h4>
         <p>No machines match your current filters. Try adjusting your search criteria.</p>
-        <button class="btn btn-primary" (click)="openAddMachineModal()">
-          <i class="material-icons">add</i>
-          Add New Machine
-        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Add Machine Modal -->
-@if (showAddMachineModal) {
-  <app-add-machine
-    (machineSaved)="onMachineSaved($event)"
-    (close)="closeModals()">
-  </app-add-machine>
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirmModal && machineToDelete) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Confirm Delete</h5>
+        <button class="close-btn" (click)="closeModals()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete machine "{{ machineToDelete.name }}"?</p>
+        <p class="text-warning">This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" (click)="confirmDelete()">
+          <i class="fas fa-trash"></i>
+          Yes, Delete
+        </button>
+        <button class="btn btn-secondary" (click)="closeModals()">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
 }
 
 <!-- Machine Details Modal -->
@@ -287,13 +252,7 @@
               <div class="detail-value">{{ selectedMachine.plateNo || 'N/A' }}</div>
             </div>
 
-            <div class="detail-item">
-              <div class="detail-label">
-                <i class="material-icons">domain</i>
-                Company
-              </div>
-              <div class="detail-value">{{ selectedMachine.company || 'N/A' }}</div>
-            </div>
+
             
             <div class="detail-item">
               <div class="detail-label">
