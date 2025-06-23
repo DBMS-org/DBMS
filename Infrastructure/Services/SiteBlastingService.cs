@@ -794,24 +794,5 @@ namespace Infrastructure.Services
         }
 
         #endregion
-
-        public async Task<bool> SetOperatorCompletionAsync(int projectId, int siteId, bool completed)
-        {
-            try
-            {
-                var site = await _context.ProjectSites.FirstOrDefaultAsync(s => s.Id == siteId && s.ProjectId == projectId);
-                if (site == null)
-                    return false;
-                site.IsOperatorCompleted = completed;
-                site.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating operator completion for project {ProjectId}, site {SiteId}", projectId, siteId);
-                return false;
-            }
-        }
     }
 } 

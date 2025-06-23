@@ -121,20 +121,6 @@
           <span>Reset View</span>
         </button>
       </div>
-
-      <!-- Pattern Completion Status -->
-      <div class="completion-status" *ngIf="drillPoints.length > 0">
-        <ng-container *ngIf="!isCompleted; else completedState">
-          <button class="btn btn-gradient" (click)="markAsCompleted()">
-            <i class="material-icons">task_alt</i>
-            Mark Pattern as Completed
-          </button>
-        </ng-container>
-        <ng-template #completedState>
-          <span class="badge completed">Pattern Completed</span>
-          <button class="btn btn-outline-danger ms-2" (click)="revokeCompletion()">Revoke</button>
-        </ng-template>
-      </div>
     </div>
   </section>
 

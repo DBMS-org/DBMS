@@ -10,69 +10,10 @@ import { ZoomService } from '../../blasting-engineer/drilling-pattern-creator/se
 import { CANVAS_CONSTANTS } from '../../blasting-engineer/drilling-pattern-creator/constants/canvas.constants';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { GridService } from '../../blasting-engineer/drilling-pattern-creator/services/grid.service';
 import { RulerService } from '../../blasting-engineer/drilling-pattern-creator/services/ruler.service';
-
-@Component({
-  selector: 'app-confirmation-dialog',
-  template: `
-    <h2 mat-dialog-title>
-      <span class="material-icons">{{ data.icon }}</span>
-      {{ data.title }}
-    </h2>
-    <mat-dialog-content>
-      <p>{{ data.message }}</p>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancel</button>
-      <button mat-raised-button [color]="data.confirmColor" (click)="confirm()">
-        {{ data.confirmText }}
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    :host {
-      display: block;
-      padding: 1rem;
-    }
-    h2 {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin: 0;
-      color: #212529;
-    }
-    .material-icons {
-      color: #1971c2;
-    }
-    mat-dialog-content {
-      margin: 1rem 0;
-    }
-    mat-dialog-actions {
-      gap: 0.5rem;
-    }
-  `],
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule]
-})
-export class ConfirmationDialogComponent {
-  constructor(
-    @Inject(MAT_DIALOG_DATA) public data: {
-      title: string;
-      message: string;
-      icon: string;
-      confirmText: string;
-      confirmColor: 'primary' | 'warn' | 'accent';
-    },
-    private dialogRef: MatDialogRef<ConfirmationDialogComponent>
-  ) {}
-
-  confirm(): void {
-    this.dialogRef.close(true);
-  }
-}
 
 @Component({
   selector: 'app-points-table-dialog',
@@ -197,7 +138,6 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
 
   // UI state
   showInstructions = false;
-  isCompleted = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -218,11 +158,10 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
       return;
     }
 
-    // fetch site to get projectId and completion status
+    // fetch site to get projectId
     this.siteService.getSite(this.siteId).subscribe({
       next: site => {
         this.projectId = site.projectId;
-        this.isCompleted = site.isOperatorCompleted;
         this.loadPattern();
       },
       error: err => {
@@ -527,72 +466,6 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
     this.error = null;
     this.loading = true;
     this.loadPattern();
-  }
-
-  markAsCompleted(): void {
-    if (this.isCompleted || this.drillPoints.length === 0) {
-      return;
-    }
-
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      data: {
-        title: 'Mark Pattern as Completed',
-        message: `Are you sure you want to mark the drilling pattern for Site ${this.siteId} as completed? This action will be recorded in the database.`,
-        icon: 'task_alt',
-        confirmText: 'Mark as Completed',
-        confirmColor: 'primary'
-      },
-      width: '400px'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.siteBlastingService.markOperatorCompletion(this.projectId, this.siteId).subscribe({
-          next: () => {
-            this.isCompleted = true;
-            console.log(`Drilling pattern for Site ${this.siteId} marked as completed`);
-          },
-          error: (err) => {
-            this.isCompleted = false;
-            this.error = err.error?.message || 'Failed to mark as completed.';
-            console.error('Error marking pattern as completed:', err);
-          }
-        });
-      }
-    });
-  }
-
-  revokeCompletion(): void {
-    if (!this.isCompleted) {
-      return;
-    }
-
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      data: {
-        title: 'Revoke Pattern Completion',
-        message: `Are you sure you want to revoke the completion status for Site ${this.siteId}? This will reset the completion status in the database.`,
-        icon: 'undo',
-        confirmText: 'Revoke Completion',
-        confirmColor: 'warn'
-      },
-      width: '400px'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.siteBlastingService.revokeOperatorCompletion(this.projectId, this.siteId).subscribe({
-          next: () => {
-            this.isCompleted = false;
-            console.log(`Drilling pattern completion for Site ${this.siteId} has been revoked`);
-          },
-          error: (err) => {
-            this.isCompleted = true;
-            this.error = err.error?.message || 'Failed to revoke completion.';
-            console.error('Error revoking pattern completion:', err);
-          }
-        });
-      }
-    });
   }
 
   ngOnDestroy(): void {

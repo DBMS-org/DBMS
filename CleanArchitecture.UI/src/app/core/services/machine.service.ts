@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { 
   Machine, 
-  CreateMachineRequest,
-  UpdateMachineRequest,
   MachineAssignmentRequest, 
   MachineAssignment, 
   MachineType, 
@@ -19,69 +16,37 @@ import {
   providedIn: 'root'
 })
 export class MachineService {
-  private apiUrl = `${environment.apiUrl}/api/machines`;
+  private apiUrl = `${environment.apiUrl}/machines`;
 
   constructor(private http: HttpClient) {}
 
   // Machine Inventory Operations
   getAllMachines(): Observable<Machine[]> {
-    return this.http.get<Machine[]>(this.apiUrl).pipe(
-      map(machines => machines.map(machine => this.mapMachine(machine)))
-    );
+    // For now, return mock data until backend is implemented
+    return of(this.getMockMachines());
   }
 
-  getMachineById(id: number): Observable<Machine> {
-    return this.http.get<Machine>(`${this.apiUrl}/${id}`).pipe(
-      map(machine => this.mapMachine(machine))
-    );
+  getMachineById(id: string): Observable<Machine> {
+    return this.http.get<Machine>(`${this.apiUrl}/${id}`);
   }
 
-  addMachine(request: CreateMachineRequest): Observable<Machine> {
-    return this.http.post<Machine>(this.apiUrl, request).pipe(
-      map(machine => this.mapMachine(machine))
-    );
+  addMachine(machine: Machine): Observable<Machine> {
+    return this.http.post<Machine>(this.apiUrl, machine);
   }
 
-  updateMachine(id: number, request: UpdateMachineRequest): Observable<Machine> {
-    return this.http.put<Machine>(`${this.apiUrl}/${id}`, request).pipe(
-      map(machine => this.mapMachine(machine))
-    );
+  updateMachine(id: string, machine: Machine): Observable<Machine> {
+    return this.http.put<Machine>(`${this.apiUrl}/${id}`, machine);
   }
 
-  deleteMachine(id: number): Observable<void> {
+  deleteMachine(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  updateMachineStatus(id: number, status: MachineStatus): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/${id}/status`, { status });
+  updateMachineStatus(id: string, status: MachineStatus): Observable<Machine> {
+    return this.http.patch<Machine>(`${this.apiUrl}/${id}/status`, { status });
   }
 
-  // Search and Statistics
-  searchMachines(params: {
-    name?: string;
-    type?: string;
-    status?: string;
-    manufacturer?: string;
-    serialNumber?: string;
-  }): Observable<Machine[]> {
-    const queryParams = new URLSearchParams();
-    
-    if (params.name) queryParams.append('name', params.name);
-    if (params.type) queryParams.append('type', params.type);
-    if (params.status) queryParams.append('status', params.status);
-    if (params.manufacturer) queryParams.append('manufacturer', params.manufacturer);
-    if (params.serialNumber) queryParams.append('serialNumber', params.serialNumber);
-
-    return this.http.get<Machine[]>(`${this.apiUrl}/search?${queryParams.toString()}`).pipe(
-      map(machines => machines.map(machine => this.mapMachine(machine)))
-    );
-  }
-
-  getMachineStatistics(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/statistics`);
-  }
-
-  // Machine Assignment Operations (Mock for now)
+  // Machine Assignment Operations
   getAllAssignmentRequests(): Observable<MachineAssignmentRequest[]> {
     return of(this.getMockAssignmentRequests());
   }
@@ -115,15 +80,81 @@ export class MachineService {
     return this.http.patch<MachineAssignment>(`${this.apiUrl}/assignments/${assignmentId}/return`, {});
   }
 
-  // Helper method to map backend response to frontend model
-  private mapMachine(machine: any): Machine {
-    return {
-      ...machine,
-      createdAt: new Date(machine.createdAt),
-      updatedAt: new Date(machine.updatedAt),
-      lastMaintenanceDate: machine.lastMaintenanceDate ? new Date(machine.lastMaintenanceDate) : undefined,
-      nextMaintenanceDate: machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : undefined
-    };
+  // Statistics
+  getMachineStatistics(): Observable<any> {
+    return of({
+      totalMachines: 45,
+      availableMachines: 32,
+      assignedMachines: 8,
+      maintenanceMachines: 3,
+      outOfServiceMachines: 2,
+      pendingRequests: 7,
+      activeAssignments: 8
+    });
+  }
+
+  // Mock data for development
+  private getMockMachines(): Machine[] {
+    return [
+      {
+        id: '1',
+        name: 'Atlas Copco ROC L8',
+        type: MachineType.DRILL_RIG,
+        model: 'ROC L8',
+        manufacturer: 'Atlas Copco',
+        serialNumber: 'AC-2023-001',
+        status: MachineStatus.AVAILABLE,
+        currentLocation: 'Muscat Depot',
+        specifications: {
+          power: '350 HP',
+          weight: '42,000 kg',
+          maxOperatingDepth: '54 m',
+          drillingDiameter: '115-152 mm',
+          fuelType: 'Diesel'
+        },
+        createdAt: new Date('2023-01-15'),
+        updatedAt: new Date('2024-01-10')
+      },
+      {
+        id: '2',
+        name: 'Caterpillar 320D',
+        type: MachineType.EXCAVATOR,
+        model: '320D',
+        manufacturer: 'Caterpillar',
+        serialNumber: 'CAT-2023-002',
+        status: MachineStatus.ASSIGNED,
+        assignedToProject: 'Al Hajar Mining Project',
+        currentLocation: 'Site A - Al Hajar',
+        specifications: {
+          power: '122 HP',
+          weight: '20,300 kg',
+          capacity: '1.2 m³ bucket',
+          fuelType: 'Diesel'
+        },
+        createdAt: new Date('2023-02-20'),
+        updatedAt: new Date('2024-01-08')
+      },
+      {
+        id: '3',
+        name: 'Komatsu PC400',
+        type: MachineType.EXCAVATOR,
+        model: 'PC400',
+        manufacturer: 'Komatsu',
+        serialNumber: 'KOM-2023-003',
+        status: MachineStatus.IN_MAINTENANCE,
+        currentLocation: 'Maintenance Bay 2',
+        lastMaintenanceDate: new Date('2024-01-05'),
+        nextMaintenanceDate: new Date('2024-01-15'),
+        specifications: {
+          power: '257 HP',
+          weight: '40,200 kg',
+          capacity: '1.9 m³ bucket',
+          fuelType: 'Diesel'
+        },
+        createdAt: new Date('2023-03-10'),
+        updatedAt: new Date('2024-01-05')
+      }
+    ];
   }
 
   private getMockAssignmentRequests(): MachineAssignmentRequest[] {

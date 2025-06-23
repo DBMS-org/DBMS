@@ -298,17 +298,6 @@ export class SiteBlastingService {
     return this.getWorkflowData(projectId, siteId, dataType);
   }
 
-  // Operator completion
-  markOperatorCompletion(projectId: number, siteId: number): Observable<any> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/operator-completion`;
-    return this.http.post(url, {}).pipe(catchError(this.handleError));
-  }
-
-  revokeOperatorCompletion(projectId: number, siteId: number): Observable<any> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/operator-completion`;
-    return this.http.delete(url).pipe(catchError(this.handleError));
-  }
-
   // Error handling
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An unknown error occurred!';

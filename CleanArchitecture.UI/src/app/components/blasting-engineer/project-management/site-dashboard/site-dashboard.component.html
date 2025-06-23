@@ -183,143 +183,45 @@
         </div>
       </div>
 
-      <!-- Enhanced Approval Sections -->
-<div class="approval-sections-container" *ngIf="isBlastingEngineer">
-  
-  <!-- Admin Simulation Confirmation Section -->
-  <div class="admin-confirm-section" *ngIf="workflowSteps[2].completed">
-    <div class="section-header">
-      <div class="section-icon">
-        <i class="material-icons">verified</i>
-      </div>
-      <div class="section-title">
-        <h4>Simulation Confirmation</h4>
-        <p>Confirm the blast simulation results for administrator review and final approval</p>
-      </div>
-    </div>
-
-    <div class="section-content">
-      <div class="status-info">
-        <div class="status-indicator" [class]="isSimulationConfirmed ? '' : 'status-pending'">
-          <div class="status-icon">
-            <i class="material-icons" *ngIf="isSimulationConfirmed">check_circle</i>
-            <i class="material-icons" *ngIf="!isSimulationConfirmed">schedule</i>
-          </div>
-          <div class="status-content">
-            <div class="status-title">
-              {{ isSimulationConfirmed ? 'Simulation Confirmed' : 'Awaiting Confirmation' }}
-            </div>
-            <div class="status-description">
-              {{ isSimulationConfirmed ? 'Ready for administrator review' : 'Click to confirm simulation results' }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="action-buttons">
+      <!-- Admin Simulation Confirmation -->
+      <div class="admin-confirm-section" *ngIf="isBlastingEngineer && workflowSteps[2].completed">
         <ng-container *ngIf="!isSimulationConfirmed; else simConfirmed">
           <button class="btn btn-gradient" (click)="confirmSimulationForAdmin()">
             <i class="material-icons">check_circle</i>
-            <span>Confirm Simulation</span>
+            Confirm Simulation for Admin
           </button>
         </ng-container>
         <ng-template #simConfirmed>
-          <span class="badge approved">
-            <i class="material-icons check-icon">verified</i>
-            <span>Simulation Confirmed</span>
-          </span>
-          <button class="btn btn-outline-danger" (click)="revokeSimulationConfirmation()">
-            <i class="material-icons">cancel</i>
-            <span>Revoke</span>
-          </button>
+          <span class="badge approved">Simulation Confirmed for Admin</span>
+          <button class="btn btn-outline-danger ms-2" (click)="revokeSimulationConfirmation()">Revoke</button>
         </ng-template>
       </div>
-    </div>
-  </div>
 
-  <!-- Pattern Approval Section -->
-  <div class="approval-section">
-    <div class="section-header">
-      <div class="section-icon">
-        <i class="material-icons">task_alt</i>
-      </div>
-      <div class="section-title">
-        <h4>Pattern Approval</h4>
-        <p>Approve the drilling pattern design for operator access and implementation</p>
-      </div>
-    </div>
-
-    <div class="section-content">
-      <div class="status-info">
-        <div class="status-indicator" [class]="isPatternApproved ? '' : 'status-pending'">
-          <div class="status-icon">
-            <i class="material-icons" *ngIf="isPatternApproved">check_circle</i>
-            <i class="material-icons" *ngIf="!isPatternApproved">schedule</i>
-          </div>
-          <div class="status-content">
-            <div class="status-title">
-              {{ isPatternApproved ? 'Pattern Approved' : 'Awaiting Approval' }}
-            </div>
-            <div class="status-description">
-              {{ isPatternApproved ? 'Operator has access to approved pattern' : 'Click to approve pattern for operator' }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="action-buttons">
+      <div class="approval-section" *ngIf="isBlastingEngineer">
         <ng-container *ngIf="!isPatternApproved; else approvedState">
           <button class="btn btn-gradient" (click)="approvePatternForOperator()">
             <i class="material-icons">check_circle</i>
-            <span>Approve Pattern</span>
+            Confirm Pattern for Operator
           </button>
         </ng-container>
         <ng-template #approvedState>
-          <span class="badge approved">
-            <i class="material-icons check-icon">verified</i>
-            <span>Approved for Operator</span>
-          </span>
-          <button class="btn btn-outline-danger" (click)="revokeApproval()">
-            <i class="material-icons">cancel</i>
-            <span>Revoke Approval</span>
-          </button>
+          <span class="badge approved">Approved for Operator</span>
+          <button class="btn btn-outline-danger ms-2" (click)="revokeApproval()">Revoke Approval</button>
         </ng-template>
       </div>
     </div>
   </div>
 
-</div>
-
-<!-- Enhanced Approval Modal -->
-@if (showApproveModal) {
-  <div class="modal-overlay">
-    <div class="enhanced-modal-content">
-      <div class="modal-header">
-        <div class="modal-icon">
-          <i class="material-icons">task_alt</i>
+  <!-- Approval modal -->
+  @if (showApproveModal) {
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <p>Confirm that the pattern is finalized and can be viewed by the operator?</p>
+        <div class="modal-actions">
+          <button class="btn btn-danger" (click)="confirmApprove()">OK</button>
+          <button class="btn btn-secondary" (click)="cancelApprove()">Cancel</button>
         </div>
-        <h3>Confirm Pattern Approval</h3>
-      </div>
-      
-      <div class="modal-body">
-        <p>Are you sure you want to approve this drilling pattern for operator access?</p>
-        <div class="modal-warning">
-          <i class="material-icons">info</i>
-          <span>Once approved, the operator will be able to view and implement this pattern.</span>
-        </div>
-      </div>
-      
-      <div class="modal-actions">
-        <button class="btn btn-gradient" (click)="confirmApprove()">
-          <i class="material-icons">check</i>
-          <span>Yes, Approve</span>
-        </button>
-        <button class="btn btn-secondary" (click)="cancelApprove()">
-          <i class="material-icons">close</i>
-          <span>Cancel</span>
-        </button>
       </div>
     </div>
-  </div>
-}
+  }
 </div> 
