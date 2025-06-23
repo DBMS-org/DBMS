@@ -75,6 +75,9 @@ builder.Services.AddScoped<IDrillHoleService, DrillHoleService>();
 // Register Site Blasting services
 builder.Services.AddScoped<ISiteBlastingService, SiteBlastingService>();
 
+// Register Region services
+builder.Services.AddScoped<IRegionService, RegionService>();
+
 var app = builder.Build();
 
 // Create database if it doesn't exist and apply migrations

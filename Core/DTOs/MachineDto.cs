@@ -21,10 +21,12 @@ namespace Core.DTOs
         public MachineSpecificationsDto? Specifications { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public int? ProjectId { get; set; }
+        public int ProjectId { get; set; }
         public int? OperatorId { get; set; }
+        public int? RegionId { get; set; }
         public string? ProjectName { get; set; }
         public string? OperatorName { get; set; }
+        public string? RegionName { get; set; }
     }
 
     public class MachineSpecificationsDto

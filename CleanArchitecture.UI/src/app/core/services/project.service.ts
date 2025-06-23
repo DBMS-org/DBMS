@@ -37,8 +37,8 @@ export class ProjectService {
       map(projects => {
         const currentUser = this.authService.getCurrentUser();
         
-        // Admin can see all projects
-        if (this.authService.isAdmin()) {
+        // Admin and Machine Manager can see all projects
+        if (this.authService.isAdmin() || this.authService.isMachineManager()) {
           return projects;
         }
         
@@ -53,6 +53,11 @@ export class ProjectService {
         return [];
       })
     );
+  }
+
+  // Get all projects for administrative purposes (machine inventory, etc.)
+  getAllProjects(): Observable<Project[]> {
+    return this.getProjects();
   }
 
   // Get project by ID

@@ -32,6 +32,7 @@ namespace API.Controllers
                 var machines = await _context.Machines
                     .Include(m => m.Project)
                     .Include(m => m.Operator)
+                    .Include(m => m.Region)
                     .Select(m => new MachineDto
                     {
                         Id = m.Id,
@@ -54,8 +55,10 @@ namespace API.Controllers
                         UpdatedAt = m.UpdatedAt,
                         ProjectId = m.ProjectId,
                         OperatorId = m.OperatorId,
+                        RegionId = m.RegionId,
                         ProjectName = m.Project != null ? m.Project.Name : null,
                         OperatorName = m.Operator != null ? m.Operator.Name : null,
+                        RegionName = m.Region != null ? m.Region.Name : null,
                         Specifications = ParseSpecifications(m.SpecificationsJson)
                     })
                     .ToListAsync();
@@ -78,6 +81,7 @@ namespace API.Controllers
                 var machine = await _context.Machines
                     .Include(m => m.Project)
                     .Include(m => m.Operator)
+                    .Include(m => m.Region)
                     .FirstOrDefaultAsync(m => m.Id == id);
 
                 if (machine == null)
@@ -107,8 +111,10 @@ namespace API.Controllers
                     UpdatedAt = machine.UpdatedAt,
                     ProjectId = machine.ProjectId,
                     OperatorId = machine.OperatorId,
+                    RegionId = machine.RegionId,
                     ProjectName = machine.Project?.Name,
                     OperatorName = machine.Operator?.Name,
+                    RegionName = machine.Region?.Name,
                     Specifications = ParseSpecifications(machine.SpecificationsJson)
                 };
 
@@ -140,14 +146,11 @@ namespace API.Controllers
                     return BadRequest($"A machine with serial number '{request.SerialNumber}' already exists");
                 }
 
-                // Validate project exists if provided
-                if (request.ProjectId.HasValue)
+                // Validate project exists
+                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
+                if (!projectExists)
                 {
-                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId.Value);
-                    if (!projectExists)
-                    {
-                        return BadRequest($"Project with ID {request.ProjectId.Value} not found");
-                    }
+                    return BadRequest($"Project with ID {request.ProjectId} not found");
                 }
 
                 // Validate operator exists if provided
@@ -157,6 +160,16 @@ namespace API.Controllers
                     if (!operatorExists)
                     {
                         return BadRequest($"Operator with ID {request.OperatorId.Value} not found");
+                    }
+                }
+
+                // Validate region exists if provided
+                if (request.RegionId.HasValue)
+                {
+                    var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId.Value);
+                    if (!regionExists)
+                    {
+                        return BadRequest($"Region with ID {request.RegionId.Value} not found");
                     }
                 }
 
@@ -175,16 +188,14 @@ namespace API.Controllers
                     CurrentLocation = request.CurrentLocation,
                     ProjectId = request.ProjectId,
                     OperatorId = request.OperatorId,
+                    RegionId = request.RegionId,
                     SpecificationsJson = request.Specifications != null ? 
                         JsonSerializer.Serialize(request.Specifications) : null
                 };
 
                 // Set assigned project and operator names if applicable
-                if (request.ProjectId.HasValue)
-                {
-                    var project = await _context.Projects.FindAsync(request.ProjectId.Value);
-                    machine.AssignedToProject = project?.Name;
-                }
+                var project = await _context.Projects.FindAsync(request.ProjectId);
+                machine.AssignedToProject = project?.Name;
 
                 if (request.OperatorId.HasValue)
                 {
@@ -199,6 +210,7 @@ namespace API.Controllers
                 var createdMachine = await _context.Machines
                     .Include(m => m.Project)
                     .Include(m => m.Operator)
+                    .Include(m => m.Region)
                     .FirstOrDefaultAsync(m => m.Id == machine.Id);
 
                 var machineDto = new MachineDto
@@ -223,8 +235,10 @@ namespace API.Controllers
                     UpdatedAt = createdMachine.UpdatedAt,
                     ProjectId = createdMachine.ProjectId,
                     OperatorId = createdMachine.OperatorId,
+                    RegionId = createdMachine.RegionId,
                     ProjectName = createdMachine.Project?.Name,
                     OperatorName = createdMachine.Operator?.Name,
+                    RegionName = createdMachine.Region?.Name,
                     Specifications = ParseSpecifications(createdMachine.SpecificationsJson)
                 };
 
@@ -267,14 +281,11 @@ namespace API.Controllers
                     return BadRequest($"A machine with serial number '{request.SerialNumber}' already exists");
                 }
 
-                // Validate project exists if provided
-                if (request.ProjectId.HasValue)
+                // Validate project exists
+                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
+                if (!projectExists)
                 {
-                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId.Value);
-                    if (!projectExists)
-                    {
-                        return BadRequest($"Project with ID {request.ProjectId.Value} not found");
-                    }
+                    return BadRequest($"Project with ID {request.ProjectId} not found");
                 }
 
                 // Validate operator exists if provided
@@ -284,6 +295,16 @@ namespace API.Controllers
                     if (!operatorExists)
                     {
                         return BadRequest($"Operator with ID {request.OperatorId.Value} not found");
+                    }
+                }
+
+                // Validate region exists if provided
+                if (request.RegionId.HasValue)
+                {
+                    var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId.Value);
+                    if (!regionExists)
+                    {
+                        return BadRequest($"Region with ID {request.RegionId.Value} not found");
                     }
                 }
 
@@ -301,6 +322,7 @@ namespace API.Controllers
                 machine.CurrentLocation = request.CurrentLocation;
                 machine.ProjectId = request.ProjectId;
                 machine.OperatorId = request.OperatorId;
+                machine.RegionId = request.RegionId;
                 machine.LastMaintenanceDate = request.LastMaintenanceDate;
                 machine.NextMaintenanceDate = request.NextMaintenanceDate;
                 machine.UpdatedAt = DateTime.UtcNow;
@@ -308,15 +330,8 @@ namespace API.Controllers
                     JsonSerializer.Serialize(request.Specifications) : null;
 
                 // Update assigned project and operator names
-                if (request.ProjectId.HasValue)
-                {
-                    var project = await _context.Projects.FindAsync(request.ProjectId.Value);
-                    machine.AssignedToProject = project?.Name;
-                }
-                else
-                {
-                    machine.AssignedToProject = null;
-                }
+                var project = await _context.Projects.FindAsync(request.ProjectId);
+                machine.AssignedToProject = project?.Name;
 
                 if (request.OperatorId.HasValue)
                 {
