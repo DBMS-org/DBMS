@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Core.DTOs;
-using Core.Entities;
-using Core.Interfaces;
+using Application.DTOs;
+using Domain.Entities;
+using Application.Interfaces;
 using Infrastructure.Data;
 
 namespace Infrastructure.Services
