@@ -47,8 +47,6 @@ namespace API.Controllers
                         ManufacturingYear = m.ManufacturingYear,
                         Status = m.Status,
                         CurrentLocation = m.CurrentLocation,
-                        AssignedToProject = m.AssignedToProject,
-                        AssignedToOperator = m.AssignedToOperator,
                         LastMaintenanceDate = m.LastMaintenanceDate,
                         NextMaintenanceDate = m.NextMaintenanceDate,
                         CreatedAt = m.CreatedAt,
@@ -103,8 +101,6 @@ namespace API.Controllers
                     ManufacturingYear = machine.ManufacturingYear,
                     Status = machine.Status,
                     CurrentLocation = machine.CurrentLocation,
-                    AssignedToProject = machine.AssignedToProject,
-                    AssignedToOperator = machine.AssignedToOperator,
                     LastMaintenanceDate = machine.LastMaintenanceDate,
                     NextMaintenanceDate = machine.NextMaintenanceDate,
                     CreatedAt = machine.CreatedAt,
@@ -193,15 +189,7 @@ namespace API.Controllers
                         JsonSerializer.Serialize(request.Specifications) : null
                 };
 
-                // Set assigned project and operator names if applicable
-                var project = await _context.Projects.FindAsync(request.ProjectId);
-                machine.AssignedToProject = project?.Name;
-
-                if (request.OperatorId.HasValue)
-                {
-                    var operatorUser = await _context.Users.FindAsync(request.OperatorId.Value);
-                    machine.AssignedToOperator = operatorUser?.Name;
-                }
+                // Note: Project and operator assignments are handled via foreign keys
 
                 _context.Machines.Add(machine);
                 await _context.SaveChangesAsync();
@@ -227,8 +215,6 @@ namespace API.Controllers
                     ManufacturingYear = createdMachine.ManufacturingYear,
                     Status = createdMachine.Status,
                     CurrentLocation = createdMachine.CurrentLocation,
-                    AssignedToProject = createdMachine.AssignedToProject,
-                    AssignedToOperator = createdMachine.AssignedToOperator,
                     LastMaintenanceDate = createdMachine.LastMaintenanceDate,
                     NextMaintenanceDate = createdMachine.NextMaintenanceDate,
                     CreatedAt = createdMachine.CreatedAt,
@@ -329,19 +315,7 @@ namespace API.Controllers
                 machine.SpecificationsJson = request.Specifications != null ? 
                     JsonSerializer.Serialize(request.Specifications) : null;
 
-                // Update assigned project and operator names
-                var project = await _context.Projects.FindAsync(request.ProjectId);
-                machine.AssignedToProject = project?.Name;
-
-                if (request.OperatorId.HasValue)
-                {
-                    var operatorUser = await _context.Users.FindAsync(request.OperatorId.Value);
-                    machine.AssignedToOperator = operatorUser?.Name;
-                }
-                else
-                {
-                    machine.AssignedToOperator = null;
-                }
+                // Note: Project and operator assignments are now handled via foreign keys and navigation properties
 
                 await _context.SaveChangesAsync();
 
@@ -484,8 +458,6 @@ namespace API.Controllers
                         ManufacturingYear = m.ManufacturingYear,
                         Status = m.Status,
                         CurrentLocation = m.CurrentLocation,
-                        AssignedToProject = m.AssignedToProject,
-                        AssignedToOperator = m.AssignedToOperator,
                         LastMaintenanceDate = m.LastMaintenanceDate,
                         NextMaintenanceDate = m.NextMaintenanceDate,
                         CreatedAt = m.CreatedAt,

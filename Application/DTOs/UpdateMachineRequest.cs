@@ -5,6 +5,9 @@ namespace Application.DTOs
     public class UpdateMachineRequest
     {
         [Required]
+        public int Id { get; set; }
+        
+        [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
         
@@ -43,14 +46,16 @@ namespace Application.DTOs
         [MaxLength(200)]
         public string? CurrentLocation { get; set; }
         
+        public DateTime? LastMaintenanceDate { get; set; }
+        
+        public DateTime? NextMaintenanceDate { get; set; }
+        
+        // Foreign key relationships
         [Required]
         public int ProjectId { get; set; }
         public int? OperatorId { get; set; }
         public int? RegionId { get; set; }
         
-        public DateTime? LastMaintenanceDate { get; set; }
-        public DateTime? NextMaintenanceDate { get; set; }
-        
-            public MachineSpecificationsDto? Specifications { get; set; }
-}
+        public MachineSpecificationsDto? Specifications { get; set; }
+    }
 } 

@@ -32,19 +32,37 @@ namespace API.Controllers
             try
             {
                 var users = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
                     .Select(u => new UserDto
                     {
                         Id = u.Id,
                         Name = u.Name,
                         Email = u.Email,
-                        Role = u.Role,
                         Status = u.Status,
                         Region = u.Region,
                         Country = u.Country,
                         OmanPhone = u.OmanPhone,
                         CountryPhone = u.CountryPhone,
+                        LastLoginAt = u.LastLoginAt,
                         CreatedAt = DateTime.SpecifyKind(u.CreatedAt, DateTimeKind.Utc),
-                        UpdatedAt = DateTime.SpecifyKind(u.UpdatedAt, DateTimeKind.Utc)
+                        UpdatedAt = DateTime.SpecifyKind(u.UpdatedAt, DateTimeKind.Utc),
+                        Roles = u.UserRoles
+                            .Where(ur => ur.IsActive && ur.RevokedAt == null)
+                            .Select(ur => ur.Role.Name)
+                            .ToList(),
+                        UserRoles = u.UserRoles
+                            .Select(ur => new UserRoleDto
+                            {
+                                Id = ur.Id,
+                                UserId = ur.UserId,
+                                RoleId = ur.RoleId,
+                                RoleName = ur.Role.Name,
+                                IsActive = ur.IsActive,
+                                AssignedAt = ur.AssignedAt,
+                                RevokedAt = ur.RevokedAt
+                            })
+                            .ToList()
                     })
                     .ToListAsync();
 
@@ -63,7 +81,10 @@ namespace API.Controllers
         {
             try
             {
-                var user = await _context.Users.FindAsync(id);
+                var user = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Id == id);
 
                 if (user == null)
                 {
@@ -81,14 +102,30 @@ namespace API.Controllers
                     Id = user.Id,
                     Name = user.Name,
                     Email = user.Email,
-                    Role = user.Role,
                     Status = user.Status,
                     Region = user.Region,
                     Country = user.Country,
                     OmanPhone = user.OmanPhone,
                     CountryPhone = user.CountryPhone,
+                    LastLoginAt = user.LastLoginAt,
                     CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc),
-                    UpdatedAt = DateTime.SpecifyKind(user.UpdatedAt, DateTimeKind.Utc)
+                    UpdatedAt = DateTime.SpecifyKind(user.UpdatedAt, DateTimeKind.Utc),
+                    Roles = user.UserRoles
+                        .Where(ur => ur.IsActive && ur.RevokedAt == null)
+                        .Select(ur => ur.Role.Name)
+                        .ToList(),
+                    UserRoles = user.UserRoles
+                        .Select(ur => new UserRoleDto
+                        {
+                            Id = ur.Id,
+                            UserId = ur.UserId,
+                            RoleId = ur.RoleId,
+                            RoleName = ur.Role.Name,
+                            IsActive = ur.IsActive,
+                            AssignedAt = ur.AssignedAt,
+                            RevokedAt = ur.RevokedAt
+                        })
+                        .ToList()
                 };
 
                 return Ok(userDto);
@@ -119,8 +156,7 @@ namespace API.Controllers
                     Name = request.Name,
                     Email = request.Email,
                     PasswordHash = hashedPassword,
-                    Role = request.Role,
-                    Status = "Active", // Default status
+                    Status = request.Status,
                     Region = request.Region,
                     Country = request.Country,
                     OmanPhone = request.OmanPhone,
@@ -130,19 +166,55 @@ namespace API.Controllers
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
+                // Assign roles to the user
+                foreach (var roleId in request.RoleIds)
+                {
+                    var userRole = new UserRole
+                    {
+                        UserId = user.Id,
+                        RoleId = roleId,
+                        IsActive = true,
+                        AssignedAt = DateTime.UtcNow
+                    };
+                    _context.UserRoles.Add(userRole);
+                }
+                await _context.SaveChangesAsync();
+
+                // Load user with roles for response
+                var createdUser = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Id == user.Id);
+
                 var userDto = new UserDto
                 {
-                    Id = user.Id,
-                    Name = user.Name,
-                    Email = user.Email,
-                    Role = user.Role,
-                    Status = user.Status,
-                    Region = user.Region,
-                    Country = user.Country,
-                    OmanPhone = user.OmanPhone,
-                    CountryPhone = user.CountryPhone,
-                    CreatedAt = user.CreatedAt,
-                    UpdatedAt = user.UpdatedAt
+                    Id = createdUser!.Id,
+                    Name = createdUser.Name,
+                    Email = createdUser.Email,
+                    Status = createdUser.Status,
+                    Region = createdUser.Region,
+                    Country = createdUser.Country,
+                    OmanPhone = createdUser.OmanPhone,
+                    CountryPhone = createdUser.CountryPhone,
+                    LastLoginAt = createdUser.LastLoginAt,
+                    CreatedAt = createdUser.CreatedAt,
+                    UpdatedAt = createdUser.UpdatedAt,
+                    Roles = createdUser.UserRoles
+                        .Where(ur => ur.IsActive && ur.RevokedAt == null)
+                        .Select(ur => ur.Role.Name)
+                        .ToList(),
+                    UserRoles = createdUser.UserRoles
+                        .Select(ur => new UserRoleDto
+                        {
+                            Id = ur.Id,
+                            UserId = ur.UserId,
+                            RoleId = ur.RoleId,
+                            RoleName = ur.Role.Name,
+                            IsActive = ur.IsActive,
+                            AssignedAt = ur.AssignedAt,
+                            RevokedAt = ur.RevokedAt
+                        })
+                        .ToList()
                 };
 
                 return CreatedAtAction(nameof(GetUser), new { id = user.Id }, userDto);
@@ -186,7 +258,9 @@ namespace API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var user = await _context.Users.FindAsync(id);
+                var user = await _context.Users
+                    .Include(u => u.UserRoles)
+                    .FirstOrDefaultAsync(u => u.Id == id);
                 if (user == null)
                 {
                     return NotFound($"User with ID {id} not found");
@@ -196,13 +270,34 @@ namespace API.Controllers
 
                 user.Name = request.Name;
                 user.Email = request.Email;
-                user.Role = request.Role;
                 user.Status = request.Status;
                 user.Region = request.Region;
                 user.Country = request.Country;
                 user.OmanPhone = request.OmanPhone;
                 user.CountryPhone = request.CountryPhone;
-                user.UpdatedAt = DateTime.UtcNow;
+                user.UpdateTimestamp(); // Use the entity method
+
+                // Update user roles
+                // Remove existing active roles
+                var existingRoles = user.UserRoles.Where(ur => ur.IsActive).ToList();
+                foreach (var existingRole in existingRoles)
+                {
+                    existingRole.IsActive = false;
+                    existingRole.RevokedAt = DateTime.UtcNow;
+                }
+
+                // Add new roles
+                foreach (var roleId in request.RoleIds)
+                {
+                    var userRole = new UserRole
+                    {
+                        UserId = user.Id,
+                        RoleId = roleId,
+                        IsActive = true,
+                        AssignedAt = DateTime.UtcNow
+                    };
+                    _context.UserRoles.Add(userRole);
+                }
 
                 _logger.LogInformation("Setting new UpdatedAt: {NewUpdatedAt}", user.UpdatedAt);
 

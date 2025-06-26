@@ -30,18 +30,20 @@ namespace API.Controllers
             {
                 var projects = await _context.Projects
                     .Include(p => p.AssignedUser)
+                    .Include(p => p.Region)
                     .Include(p => p.ProjectSites)
                     .Select(p => new ProjectDto
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        Region = p.Region,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
                         EndDate = p.EndDate,
                         AssignedUserId = p.AssignedUserId,
+                        RegionId = p.RegionId,
                         AssignedUserName = p.AssignedUser != null ? p.AssignedUser.Name : null,
+                        RegionName = p.Region != null ? p.Region.Name : null,
                         CreatedAt = p.CreatedAt,
                         UpdatedAt = p.UpdatedAt,
                         ProjectSites = p.ProjectSites.Select(ps => new ProjectSiteDto
@@ -79,6 +81,7 @@ namespace API.Controllers
             {
                 var project = await _context.Projects
                     .Include(p => p.AssignedUser)
+                    .Include(p => p.Region)
                     .Include(p => p.ProjectSites)
                     .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -91,13 +94,14 @@ namespace API.Controllers
                 {
                     Id = project.Id,
                     Name = project.Name,
-                    Region = project.Region,
                     Status = project.Status,
                     Description = project.Description,
                     StartDate = project.StartDate,
                     EndDate = project.EndDate,
                     AssignedUserId = project.AssignedUserId,
+                    RegionId = project.RegionId,
                     AssignedUserName = project.AssignedUser?.Name,
+                    RegionName = project.Region?.Name,
                     CreatedAt = project.CreatedAt,
                     UpdatedAt = project.UpdatedAt,
                     ProjectSites = project.ProjectSites.Select(ps => new ProjectSiteDto
@@ -160,7 +164,7 @@ namespace API.Controllers
                 var project = new Project
                 {
                     Name = request.Name,
-                    Region = request.Region,
+                    RegionId = request.RegionId,
                     Status = request.Status,
                     Description = request.Description,
                     StartDate = request.StartDate,
@@ -174,6 +178,7 @@ namespace API.Controllers
                 // Load the project with related data for response
                 var createdProject = await _context.Projects
                     .Include(p => p.AssignedUser)
+                    .Include(p => p.Region)
                     .Include(p => p.ProjectSites)
                     .FirstOrDefaultAsync(p => p.Id == project.Id);
 
@@ -181,13 +186,14 @@ namespace API.Controllers
                 {
                     Id = createdProject!.Id,
                     Name = createdProject.Name,
-                    Region = createdProject.Region,
                     Status = createdProject.Status,
                     Description = createdProject.Description,
                     StartDate = createdProject.StartDate,
                     EndDate = createdProject.EndDate,
                     AssignedUserId = createdProject.AssignedUserId,
+                    RegionId = createdProject.RegionId,
                     AssignedUserName = createdProject.AssignedUser?.Name,
+                    RegionName = createdProject.Region?.Name,
                     CreatedAt = createdProject.CreatedAt,
                     UpdatedAt = createdProject.UpdatedAt,
                     ProjectSites = new List<ProjectSiteDto>()
@@ -251,7 +257,7 @@ namespace API.Controllers
 
                 // Update project properties
                 project.Name = request.Name;
-                project.Region = request.Region;
+                project.RegionId = request.RegionId;
                 project.Status = request.Status;
                 project.Description = request.Description;
                 project.StartDate = request.StartDate;
@@ -361,6 +367,7 @@ namespace API.Controllers
             {
                 var query = _context.Projects
                     .Include(p => p.AssignedUser)
+                    .Include(p => p.Region)
                     .Include(p => p.ProjectSites)
                     .AsQueryable();
 
@@ -371,7 +378,7 @@ namespace API.Controllers
 
                 if (!string.IsNullOrEmpty(region))
                 {
-                    query = query.Where(p => p.Region.Contains(region));
+                    query = query.Where(p => p.Region.Name.Contains(region));
                 }
 
                 if (!string.IsNullOrEmpty(status))
@@ -384,13 +391,14 @@ namespace API.Controllers
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        Region = p.Region,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
                         EndDate = p.EndDate,
                         AssignedUserId = p.AssignedUserId,
+                        RegionId = p.RegionId,
                         AssignedUserName = p.AssignedUser != null ? p.AssignedUser.Name : null,
+                        RegionName = p.Region != null ? p.Region.Name : null,
                         CreatedAt = p.CreatedAt,
                         UpdatedAt = p.UpdatedAt,
                         ProjectSites = p.ProjectSites.Select(ps => new ProjectSiteDto
@@ -442,6 +450,7 @@ namespace API.Controllers
         {
             var project = await _context.Projects
                 .Include(p => p.AssignedUser)
+                .Include(p => p.Region)
                 .FirstOrDefaultAsync(p => p.AssignedUserId == operatorId);
 
             if (project == null)
@@ -453,13 +462,14 @@ namespace API.Controllers
             {
                 Id = project.Id,
                 Name = project.Name,
-                Region = project.Region,
                 Status = project.Status,
                 Description = project.Description,
                 StartDate = project.StartDate,
                 EndDate = project.EndDate,
                 AssignedUserId = project.AssignedUserId,
+                RegionId = project.RegionId,
                 AssignedUserName = project.AssignedUser?.Name,
+                RegionName = project.Region?.Name,
                 CreatedAt = project.CreatedAt,
                 UpdatedAt = project.UpdatedAt,
                 ProjectSites = new List<ProjectSiteDto>()

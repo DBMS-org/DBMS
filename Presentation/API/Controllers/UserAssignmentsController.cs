@@ -27,22 +27,28 @@ namespace API.Controllers
             try
             {
                 var userAssignments = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
                     .Select(u => new UserAssignmentDto
                     {
                         Id = u.Id,
                         Name = u.Name,
                         Email = u.Email,
-                        Role = u.Role,
+                        Role = u.UserRoles
+                            .Where(ur => ur.IsActive && ur.RevokedAt == null)
+                            .Select(ur => ur.Role.Name)
+                            .FirstOrDefault() ?? "No Role",
                         Region = u.Region,
                         Status = u.Status,
                         AssignedProjects = _context.Projects
+                            .Include(p => p.Region)
                             .Where(p => p.AssignedUserId == u.Id)
                             .Select(p => new UserProjectAssignmentDto
                             {
                                 Id = p.Id,
                                 Name = p.Name,
                                 Status = p.Status,
-                                Region = p.Region
+                                Region = p.Region.Name ?? ""
                             })
                             .ToList()
                     })
@@ -63,7 +69,10 @@ namespace API.Controllers
         {
             try
             {
-                var user = await _context.Users.FindAsync(userId);
+                var user = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
                 if (user == null)
                 {
                     return NotFound($"User with ID {userId} not found");
@@ -74,17 +83,21 @@ namespace API.Controllers
                     Id = user.Id,
                     Name = user.Name,
                     Email = user.Email,
-                    Role = user.Role,
+                    Role = user.UserRoles
+                        .Where(ur => ur.IsActive && ur.RevokedAt == null)
+                        .Select(ur => ur.Role.Name)
+                        .FirstOrDefault() ?? "No Role",
                     Region = user.Region,
                     Status = user.Status,
                     AssignedProjects = await _context.Projects
+                        .Include(p => p.Region)
                         .Where(p => p.AssignedUserId == userId)
                         .Select(p => new UserProjectAssignmentDto
                         {
                             Id = p.Id,
                             Name = p.Name,
                             Status = p.Status,
-                            Region = p.Region
+                            Region = p.Region.Name ?? ""
                         })
                         .ToListAsync()
                 };
@@ -112,19 +125,21 @@ namespace API.Controllers
 
                 var projects = await _context.Projects
                     .Include(p => p.AssignedUser)
+                    .Include(p => p.Region)
                     .Include(p => p.ProjectSites)
                     .Where(p => p.AssignedUserId == userId)
                     .Select(p => new ProjectDto
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        Region = p.Region,
                         Status = p.Status,
                         Description = p.Description,
                         StartDate = p.StartDate,
                         EndDate = p.EndDate,
                         AssignedUserId = p.AssignedUserId,
+                        RegionId = p.RegionId,
                         AssignedUserName = p.AssignedUser != null ? p.AssignedUser.Name : null,
+                        RegionName = p.Region != null ? p.Region.Name : null,
                         CreatedAt = p.CreatedAt,
                         UpdatedAt = p.UpdatedAt,
                         ProjectSites = p.ProjectSites.Select(ps => new ProjectSiteDto

@@ -15,9 +15,9 @@ namespace Application.DTOs
         [StringLength(255, ErrorMessage = "Email cannot exceed 255 characters")]
         public string Email { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Role is required")]
-        [StringLength(50, ErrorMessage = "Role cannot exceed 50 characters")]
-        public string Role { get; set; } = string.Empty;
+        [Required(ErrorMessage = "At least one role is required")]
+        [MinLength(1, ErrorMessage = "At least one role must be assigned")]
+        public List<int> RoleIds { get; set; } = new List<int>();
         
         [Required(ErrorMessage = "Status is required")]
         [StringLength(20, ErrorMessage = "Status cannot exceed 20 characters")]

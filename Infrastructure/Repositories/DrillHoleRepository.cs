@@ -17,17 +17,32 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<DrillHole>> GetAllAsync()
         {
             return await _context.DrillHoles
+                .Include(d => d.Project)
+                .Include(d => d.Site)
                 .OrderBy(d => d.CreatedAt)
                 .ToListAsync();
         }
 
-        public async Task<DrillHole?> GetByIdAsync(string id)
+        public async Task<DrillHole?> GetByIdAsync(int id)
         {
-            if (string.IsNullOrWhiteSpace(id))
+            if (id <= 0)
                 return null;
 
             return await _context.DrillHoles
+                .Include(d => d.Project)
+                .Include(d => d.Site)
                 .FirstOrDefaultAsync(d => d.Id == id);
+        }
+
+        public async Task<DrillHole?> GetByDrillHoleIdAsync(string drillHoleId)
+        {
+            if (string.IsNullOrWhiteSpace(drillHoleId))
+                return null;
+
+            return await _context.DrillHoles
+                .Include(d => d.Project)
+                .Include(d => d.Site)
+                .FirstOrDefaultAsync(d => d.DrillHoleId == drillHoleId);
         }
 
         public async Task<DrillHole> AddAsync(DrillHole drillHole)
@@ -49,9 +64,9 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(string id)
+        public async Task DeleteAsync(int id)
         {
-            if (string.IsNullOrWhiteSpace(id))
+            if (id <= 0)
                 return;
 
             var drillHole = await _context.DrillHoles
@@ -64,13 +79,22 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<bool> ExistsAsync(string id)
+        public async Task<bool> ExistsAsync(int id)
         {
-            if (string.IsNullOrWhiteSpace(id))
+            if (id <= 0)
                 return false;
 
             return await _context.DrillHoles
                 .AnyAsync(d => d.Id == id);
+        }
+
+        public async Task<bool> ExistsByDrillHoleIdAsync(string drillHoleId)
+        {
+            if (string.IsNullOrWhiteSpace(drillHoleId))
+                return false;
+
+            return await _context.DrillHoles
+                .AnyAsync(d => d.DrillHoleId == drillHoleId);
         }
 
         public async Task AddRangeAsync(IEnumerable<DrillHole> drillHoles)
@@ -96,16 +120,20 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<DrillHole>> GetByProjectIdAsync(int projectId)
         {
             return await _context.DrillHoles
+                .Include(d => d.Project)
+                .Include(d => d.Site)
                 .Where(d => d.ProjectId == projectId)
-                .OrderBy(d => d.Id)
+                .OrderBy(d => d.DrillHoleId)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<DrillHole>> GetBySiteIdAsync(int projectId, int siteId)
         {
             return await _context.DrillHoles
+                .Include(d => d.Project)
+                .Include(d => d.Site)
                 .Where(d => d.ProjectId == projectId && d.SiteId == siteId)
-                .OrderBy(d => d.Id)
+                .OrderBy(d => d.DrillHoleId)
                 .ToListAsync();
         }
 

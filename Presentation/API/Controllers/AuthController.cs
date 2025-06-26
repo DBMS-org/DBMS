@@ -69,21 +69,49 @@ namespace API.Controllers
                 user.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
+                // Load user with roles
+                var userWithRoles = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+                // Update last login
+                user.UpdateLastLogin();
+                await _context.SaveChangesAsync();
+
                 // Generate token
-                var token = _jwtService.GenerateToken(user);
+                var token = _jwtService.GenerateToken(userWithRoles!);
 
                 // Create user DTO
                 var userDto = new UserDto
                 {
-                    Id = user.Id,
-                    Name = user.Name,
-                    Email = user.Email,
-                    Role = user.Role,
-                    Region = user.Region,
-                    Country = user.Country,
-                    OmanPhone = user.OmanPhone,
-                    CountryPhone = user.CountryPhone,
-                    Status = user.Status
+                    Id = userWithRoles!.Id,
+                    Name = userWithRoles.Name,
+                    Email = userWithRoles.Email,
+                    Region = userWithRoles.Region,
+                    Country = userWithRoles.Country,
+                    OmanPhone = userWithRoles.OmanPhone,
+                    CountryPhone = userWithRoles.CountryPhone,
+                    Status = userWithRoles.Status,
+                    LastLoginAt = userWithRoles.LastLoginAt,
+                    CreatedAt = userWithRoles.CreatedAt,
+                    UpdatedAt = userWithRoles.UpdatedAt,
+                    Roles = userWithRoles.UserRoles
+                        .Where(ur => ur.IsActive && ur.RevokedAt == null)
+                        .Select(ur => ur.Role.Name)
+                        .ToList(),
+                    UserRoles = userWithRoles.UserRoles
+                        .Select(ur => new UserRoleDto
+                        {
+                            Id = ur.Id,
+                            UserId = ur.UserId,
+                            RoleId = ur.RoleId,
+                            RoleName = ur.Role.Name,
+                            IsActive = ur.IsActive,
+                            AssignedAt = ur.AssignedAt,
+                            RevokedAt = ur.RevokedAt
+                        })
+                        .ToList()
                 };
 
                 return Ok(new LoginResponse
@@ -128,34 +156,69 @@ namespace API.Controllers
                     Name = request.Name,
                     Email = request.Email,
                     PasswordHash = hashedPassword,
-                    Role = request.Role,
                     Region = request.Region,
                     Country = request.Country,
                     OmanPhone = request.OmanPhone,
                     CountryPhone = request.CountryPhone,
-                    Status = "Active",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    Status = request.Status
                 };
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
+                // Assign roles to the user
+                foreach (var roleId in request.RoleIds)
+                {
+                    var userRole = new UserRole
+                    {
+                        UserId = user.Id,
+                        RoleId = roleId,
+                        IsActive = true,
+                        AssignedAt = DateTime.UtcNow
+                    };
+                    _context.UserRoles.Add(userRole);
+                }
+                await _context.SaveChangesAsync();
+
+                // Load user with roles for token generation and response
+                var userWithRoles = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Id == user.Id);
+
                 // Generate token
-                var token = _jwtService.GenerateToken(user);
+                var token = _jwtService.GenerateToken(userWithRoles!);
 
                 // Create user DTO
                 var userDto = new UserDto
                 {
-                    Id = user.Id,
-                    Name = user.Name,
-                    Email = user.Email,
-                    Role = user.Role,
-                    Region = user.Region,
-                    Country = user.Country,
-                    OmanPhone = user.OmanPhone,
-                    CountryPhone = user.CountryPhone,
-                    Status = user.Status
+                    Id = userWithRoles!.Id,
+                    Name = userWithRoles.Name,
+                    Email = userWithRoles.Email,
+                    Region = userWithRoles.Region,
+                    Country = userWithRoles.Country,
+                    OmanPhone = userWithRoles.OmanPhone,
+                    CountryPhone = userWithRoles.CountryPhone,
+                    Status = userWithRoles.Status,
+                    LastLoginAt = userWithRoles.LastLoginAt,
+                    CreatedAt = userWithRoles.CreatedAt,
+                    UpdatedAt = userWithRoles.UpdatedAt,
+                    Roles = userWithRoles.UserRoles
+                        .Where(ur => ur.IsActive && ur.RevokedAt == null)
+                        .Select(ur => ur.Role.Name)
+                        .ToList(),
+                    UserRoles = userWithRoles.UserRoles
+                        .Select(ur => new UserRoleDto
+                        {
+                            Id = ur.Id,
+                            UserId = ur.UserId,
+                            RoleId = ur.RoleId,
+                            RoleName = ur.Role.Name,
+                            IsActive = ur.IsActive,
+                            AssignedAt = ur.AssignedAt,
+                            RevokedAt = ur.RevokedAt
+                        })
+                        .ToList()
                 };
 
                 return Ok(new LoginResponse
@@ -447,18 +510,42 @@ namespace API.Controllers
                     });
                 }
 
+                // Load user with roles
+                var userWithRoles = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Id == user.Id);
+
                 // Create user DTO
                 var userDto = new UserDto
                 {
-                    Id = user.Id,
-                    Name = user.Name,
-                    Email = user.Email,
-                    Role = user.Role,
-                    Region = user.Region,
-                    Country = user.Country,
-                    OmanPhone = user.OmanPhone,
-                    CountryPhone = user.CountryPhone,
-                    Status = user.Status
+                    Id = userWithRoles!.Id,
+                    Name = userWithRoles.Name,
+                    Email = userWithRoles.Email,
+                    Region = userWithRoles.Region,
+                    Country = userWithRoles.Country,
+                    OmanPhone = userWithRoles.OmanPhone,
+                    CountryPhone = userWithRoles.CountryPhone,
+                    Status = userWithRoles.Status,
+                    LastLoginAt = userWithRoles.LastLoginAt,
+                    CreatedAt = userWithRoles.CreatedAt,
+                    UpdatedAt = userWithRoles.UpdatedAt,
+                    Roles = userWithRoles.UserRoles
+                        .Where(ur => ur.IsActive && ur.RevokedAt == null)
+                        .Select(ur => ur.Role.Name)
+                        .ToList(),
+                    UserRoles = userWithRoles.UserRoles
+                        .Select(ur => new UserRoleDto
+                        {
+                            Id = ur.Id,
+                            UserId = ur.UserId,
+                            RoleId = ur.RoleId,
+                            RoleName = ur.Role.Name,
+                            IsActive = ur.IsActive,
+                            AssignedAt = ur.AssignedAt,
+                            RevokedAt = ur.RevokedAt
+                        })
+                        .ToList()
                 };
 
                 return Ok(new ApiResponse 

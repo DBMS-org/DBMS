@@ -11,7 +11,7 @@ namespace Application.Services
 
         public DrillHoleService(IDrillHoleRepository repository)
         {
-            _repository = repository;
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
         public async Task<IEnumerable<DrillHole>> GetAllDrillHolesAsync()
@@ -19,12 +19,20 @@ namespace Application.Services
             return await _repository.GetAllAsync();
         }
 
-        public async Task<DrillHole?> GetDrillHoleByIdAsync(string id)
+        public async Task<DrillHole?> GetDrillHoleByIdAsync(int id)
         {
-            if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentException("ID cannot be null or empty", nameof(id));
+            if (id <= 0)
+                throw new ArgumentException("ID must be greater than 0", nameof(id));
 
             return await _repository.GetByIdAsync(id);
+        }
+
+        public async Task<DrillHole?> GetDrillHoleByDrillHoleIdAsync(string drillHoleId)
+        {
+            if (string.IsNullOrWhiteSpace(drillHoleId))
+                throw new ArgumentException("DrillHoleId cannot be null or empty", nameof(drillHoleId));
+
+            return await _repository.GetByDrillHoleIdAsync(drillHoleId);
         }
 
         public async Task<IEnumerable<DrillHole>> GetDrillHolesByProjectIdAsync(int projectId)
@@ -42,16 +50,13 @@ namespace Application.Services
             if (drillHole == null)
                 throw new ArgumentNullException(nameof(drillHole));
 
-            if (string.IsNullOrWhiteSpace(drillHole.Id))
-                drillHole.Id = Guid.NewGuid().ToString();
+            if (string.IsNullOrWhiteSpace(drillHole.DrillHoleId))
+                drillHole.DrillHoleId = Guid.NewGuid().ToString();
 
-            if (await _repository.ExistsAsync(drillHole.Id))
-                throw new InvalidOperationException($"DrillHole with ID '{drillHole.Id}' already exists");
+            if (await _repository.ExistsByDrillHoleIdAsync(drillHole.DrillHoleId))
+                throw new InvalidOperationException($"DrillHole with DrillHoleId '{drillHole.DrillHoleId}' already exists");
 
             ValidateDrillHole(drillHole);
-
-            drillHole.CreatedAt = DateTime.UtcNow;
-            drillHole.UpdatedAt = DateTime.UtcNow;
 
             return await _repository.AddAsync(drillHole);
         }
@@ -67,16 +72,15 @@ namespace Application.Services
 
             ValidateDrillHole(drillHole);
 
-            drillHole.UpdatedAt = DateTime.UtcNow;
-            drillHole.CreatedAt = existingDrillHole.CreatedAt; // Preserve original creation date
+            drillHole.UpdateTimestamp(); // Use BaseEntity method
 
             await _repository.UpdateAsync(drillHole);
         }
 
-        public async Task DeleteDrillHoleAsync(string id)
+        public async Task DeleteDrillHoleAsync(int id)
         {
-            if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentException("ID cannot be null or empty", nameof(id));
+            if (id <= 0)
+                throw new ArgumentException("ID must be greater than 0", nameof(id));
 
             var existingDrillHole = await _repository.GetByIdAsync(id);
             if (existingDrillHole == null)
@@ -216,11 +220,7 @@ namespace Application.Services
 
         private static DrillHole ParseBlastDrillHoleFromCsvLine(string[] headers, string[] values, int lineNumber)
         {
-            var drillHole = new DrillHole
-            {
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var drillHole = new DrillHole(); // BaseEntity constructor will set timestamps
 
             for (int i = 0; i < Math.Min(headers.Length, values.Length); i++)
             {
@@ -233,12 +233,13 @@ namespace Application.Services
                     case "sr no":
                     case "serial no.":
                     case "serial number":
+                        drillHole.SerialNumber = ParseInt(value, "Serial Number", lineNumber);
                         break;
                     case "id":
                     case "hole id":
                     case "holeid":
-                        drillHole.Id = string.IsNullOrWhiteSpace(value) ? Guid.NewGuid().ToString() : value;
-                        drillHole.Name = drillHole.Id; // Use ID as name for blast holes
+                        drillHole.DrillHoleId = string.IsNullOrWhiteSpace(value) ? Guid.NewGuid().ToString() : value;
+                        drillHole.Name = drillHole.DrillHoleId; // Use DrillHoleId as name for blast holes
                         break;
                     case "east":
                     case "easting":
@@ -300,11 +301,7 @@ namespace Application.Services
         // Keep the original method for backward compatibility with standard CSV format
         private static DrillHole ParseDrillHoleFromCsvLine(string[] headers, string[] values, int lineNumber)
         {
-            var drillHole = new DrillHole
-            {
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var drillHole = new DrillHole(); // BaseEntity constructor will set timestamps
 
             for (int i = 0; i < headers.Length; i++)
             {
@@ -314,7 +311,7 @@ namespace Application.Services
                 switch (header)
                 {
                     case "id":
-                        drillHole.Id = string.IsNullOrWhiteSpace(value) ? Guid.NewGuid().ToString() : value;
+                        drillHole.DrillHoleId = string.IsNullOrWhiteSpace(value) ? Guid.NewGuid().ToString() : value;
                         break;
                     case "name":
                         drillHole.Name = value ?? string.Empty;
@@ -368,11 +365,11 @@ namespace Application.Services
 
         private static void ValidateDrillHole(DrillHole drillHole)
         {
-            if (string.IsNullOrWhiteSpace(drillHole.Id))
-                throw new ArgumentException("DrillHole ID cannot be null or empty");
+            if (string.IsNullOrWhiteSpace(drillHole.DrillHoleId))
+                throw new ArgumentException("DrillHole DrillHoleId cannot be null or empty");
 
             if (string.IsNullOrWhiteSpace(drillHole.Name))
-                drillHole.Name = drillHole.Id; // Use ID as name if name is empty
+                drillHole.Name = drillHole.DrillHoleId; // Use DrillHoleId as name if name is empty
 
             if (drillHole.Depth < 0)
                 throw new ArgumentException("DrillHole Depth cannot be negative");

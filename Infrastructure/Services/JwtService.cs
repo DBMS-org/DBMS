@@ -27,13 +27,25 @@ namespace Infrastructure.Services
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Email, user.Email)
             };
+            
+            // Add role claims from UserRoles navigation property
+            var activeRoles = user.GetActiveRoles();
+            foreach (var role in activeRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+            
+            // If no roles found, add a default role (for backwards compatibility)
+            if (!activeRoles.Any())
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "User"));
+            }
             
             var token = new JwtSecurityToken(
                 issuer: issuer,

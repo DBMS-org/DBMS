@@ -14,19 +14,26 @@ namespace Application.DTOs
         public int? ManufacturingYear { get; set; }
         public string Status { get; set; } = string.Empty;
         public string? CurrentLocation { get; set; }
-        public string? AssignedToProject { get; set; }
-        public string? AssignedToOperator { get; set; }
         public DateTime? LastMaintenanceDate { get; set; }
         public DateTime? NextMaintenanceDate { get; set; }
         public MachineSpecificationsDto? Specifications { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        
+        // Foreign key properties
         public int ProjectId { get; set; }
         public int? OperatorId { get; set; }
         public int? RegionId { get; set; }
+        
+        // Navigation property values (populated from relationships)
         public string? ProjectName { get; set; }
         public string? OperatorName { get; set; }
         public string? RegionName { get; set; }
+        
+        // Business logic convenience properties
+        public bool IsAvailable => Status.Equals("Available", StringComparison.OrdinalIgnoreCase);
+        public bool IsInUse => Status.Equals("In Use", StringComparison.OrdinalIgnoreCase);
+        public bool RequiresMaintenance => NextMaintenanceDate.HasValue && NextMaintenanceDate.Value <= DateTime.UtcNow;
     }
 
     public class MachineSpecificationsDto

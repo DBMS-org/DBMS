@@ -26,7 +26,7 @@ namespace API.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<DrillHole>> GetDrillHole(string id)
+        public async Task<ActionResult<DrillHole>> GetDrillHole(int id)
         {
             var drillHole = await _drillHoleService.GetDrillHoleByIdAsync(id);
             if (drillHole == null)
@@ -104,7 +104,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDrillHole(string id, DrillHole drillHole)
+        public async Task<IActionResult> UpdateDrillHole(int id, DrillHole drillHole)
         {
             if (id != drillHole.Id)
             {
@@ -124,7 +124,7 @@ namespace API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDrillHole(string id)
+        public async Task<IActionResult> DeleteDrillHole(int id)
         {
             try
             {

@@ -17,9 +17,9 @@ namespace Application.DTOs
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
         public string Password { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Role is required")]
-        [StringLength(50, ErrorMessage = "Role cannot exceed 50 characters")]
-        public string Role { get; set; } = string.Empty;
+        [Required(ErrorMessage = "At least one role is required")]
+        [MinLength(1, ErrorMessage = "At least one role must be assigned")]
+        public List<int> RoleIds { get; set; } = new List<int>();
         
         [StringLength(100, ErrorMessage = "Region cannot exceed 100 characters")]
         public string Region { get; set; } = string.Empty;
@@ -34,5 +34,8 @@ namespace Application.DTOs
         [Phone(ErrorMessage = "Invalid phone number format")]
         [StringLength(20, ErrorMessage = "Phone number cannot exceed 20 characters")]
         public string CountryPhone { get; set; } = string.Empty;
+        
+        [StringLength(20, ErrorMessage = "Status cannot exceed 20 characters")]
+        public string Status { get; set; } = "Active"; // Default to Active
     }
 } 
