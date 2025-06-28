@@ -1,0 +1,12 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <nav class="nav-menu">
+    @for (item of navItems; track item.route) {
+      <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+        <i class="material-icons">{{item.icon}}</i>
+        @if (!isCollapsed) {
+          <span>{{item.label}}</span>
+        }
+      </a>
+    }
+  </nav>
+</aside>

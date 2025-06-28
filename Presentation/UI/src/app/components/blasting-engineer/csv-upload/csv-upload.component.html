@@ -1,0 +1,69 @@
+<!-- csv-upload.component.html -->
+<div class="csv-upload-container">
+  <div class="upload-card">
+    <h2>Upload Drill Plan Data</h2>
+    <p class="instructions">Please select a CSV file containing drill hole data</p>
+
+    <!-- Site Information Section -->
+    <div *ngIf="siteName" class="site-info-section">
+      <div class="site-info-card">
+        <div class="site-info-header">
+          <div class="site-info-content">
+            <h4><i class="fas fa-map-marker-alt"></i> Survey Upload for Site</h4>
+            <p><strong>Site:</strong> {{ siteName }}</p>
+            <p *ngIf="siteId"><strong>Site ID:</strong> {{ siteId }}</p>
+          </div>
+          <button class="btn btn-sm btn-outline-light back-to-sites-btn" (click)="goBackToSites()">
+            <i class="fas fa-arrow-left"></i> Back to Sites
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-section">
+      <div class="file-input-wrapper">
+        <input 
+          type="file" 
+          id="csvFile" 
+          accept=".csv" 
+          (change)="onFileSelected($event)"
+          [disabled]="isUploading"
+          class="file-input"
+        >
+        <label for="csvFile" class="file-label">
+          {{ selectedFile ? selectedFile.name : 'Choose CSV file' }}
+        </label>
+      </div>
+
+      <div class="button-group">
+        <button 
+          (click)="uploadFile()" 
+          [disabled]="!selectedFile || isUploading"
+          class="upload-button"
+        >
+          {{ isUploading ? 'Uploading...' : 'Upload' }}
+        </button>
+        <button 
+          (click)="resetForm()" 
+          [disabled]="isUploading"
+          class="reset-button"
+        >
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div *ngIf="isUploading" class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+      </div>
+      <span class="progress-text">{{ uploadProgress }}%</span>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="uploadError" class="error-message">
+      {{ uploadError }}
+    </div>
+  </div>
+</div>

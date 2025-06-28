@@ -1,0 +1,147 @@
+<div class="users-container">
+  <div class="users-header">
+    <h1>Users</h1>
+    <div class="header-actions">
+      <button class="test-connection-btn" (click)="testConnection()">
+        <i class="material-icons">wifi</i>
+        Test API Connection
+      </button>
+      <button class="assign-user-btn" (click)="openAssignUserModal()">
+        <i class="material-icons">assignment_ind</i>
+        Assign User
+      </button>
+      <button class="add-user-btn" (click)="addUser()">
+        <i class="material-icons">add</i>
+        Add New User
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  @if (error) {
+    <div class="error-alert">
+      <i class="material-icons">error</i>
+      <span>{{error}}</span>
+      <button (click)="error = null" class="close-error">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading users...</p>
+    </div>
+  } @else {
+    <div class="filters-section">
+      <div class="filters-row">
+        <div class="search-section">
+          <h3>Search</h3>
+          <div class="search-input">
+            <i class="material-icons">search</i>
+            <input 
+              type="text" 
+              [(ngModel)]="searchQuery" 
+              (input)="onSearch()"
+              placeholder="Search by name, email or region..."
+            >
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <h3>Filter</h3>
+          <div class="status-filter">
+            <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onSearch()">
+              <option value="">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="users-table">
+      @if (filteredUsers.length === 0) {
+        <div class="no-users">
+          <i class="material-icons">person_off</i>
+          <p>No users found</p>
+          @if (searchQuery || statusFilter) {
+            <button (click)="searchQuery = ''; statusFilter = ''; onSearch()" class="clear-filters-btn">
+              Clear Filters
+            </button>
+          }
+        </div>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Oman Phone</th>
+              <th>Region</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filteredUsers; track user.id) {
+              <tr>
+                <td>{{user.name}}</td>
+                <td>{{user.email}}</td>
+                <td>{{user.role}}</td>
+                <td>{{user.omanPhone}}</td>
+                <td>{{user.region}}</td>
+                <td>
+                  <span class="status-badge" [class.active]="user.status === 'Active'">
+                    {{user.status}}
+                  </span>
+                </td>
+                <td class="actions">
+                  <button class="action-btn details" (click)="showUserDetails(user)" title="View Details">
+                    <i class="material-icons">visibility</i>
+                  </button>
+                  <button class="action-btn edit" (click)="editUser(user.id)" title="Edit User">
+                    <i class="material-icons">edit</i>
+                  </button>
+                  <button class="action-btn delete" (click)="deleteUser(user.id)" title="Delete User">
+                    <i class="material-icons">delete</i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>
+
+@if (showAddUserModal) {
+  <app-add-user 
+    (close)="onCloseAddUser()" 
+    (save)="onSaveUser($event)"
+    [error]="error"
+  ></app-add-user>
+}
+
+@if (showAssignUserModal) {
+  <app-assign-user 
+    (close)="onCloseAssignUser()"
+  ></app-assign-user>
+}
+
+@if (showDeleteModal) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <p>Are you sure you want to delete this user?</p>
+      <div class="modal-actions">
+        <button class="btn btn-danger" (click)="confirmDelete()">Yes</button>
+        <button class="btn btn-secondary" (click)="closeDeleteModal()">No</button>
+      </div>
+    </div>
+  </div>
+}

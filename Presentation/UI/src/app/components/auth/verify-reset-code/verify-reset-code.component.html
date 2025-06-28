@@ -1,0 +1,69 @@
+<div class="verify-code-container">
+  <div class="verify-code-card">
+    <div class="header">
+      <h2>Enter Verification Code</h2>
+      <p>We've sent a 6-digit code to <strong>{{ email }}</strong></p>
+      <p class="timer" [class.expired]="timeLeft <= 0">
+        <i class="material-icons">timer</i>
+        Code expires in: {{ getFormattedTime() }}
+      </p>
+    </div>
+
+    <form [formGroup]="verifyCodeForm" (ngSubmit)="onSubmit()" class="verify-code-form">
+      <div class="form-group">
+        <label for="code">6-Digit Code</label>
+        <input 
+          type="text" 
+          id="code" 
+          formControlName="code" 
+          placeholder="000000"
+          maxlength="6"
+          (input)="onCodeInput($event)"
+          [class.is-invalid]="verifyCodeForm.get('code')?.invalid && verifyCodeForm.get('code')?.touched"
+          class="code-input"
+        >
+        <div class="error-message" *ngIf="verifyCodeForm.get('code')?.invalid && verifyCodeForm.get('code')?.touched">
+          <span *ngIf="verifyCodeForm.get('code')?.errors?.['required']">Code is required</span>
+          <span *ngIf="verifyCodeForm.get('code')?.errors?.['pattern']">Code must be exactly 6 digits</span>
+        </div>
+      </div>
+
+      <div class="message" *ngIf="message" [class]="messageType">
+        <i class="material-icons">{{ messageType === 'success' ? 'check_circle' : 'error' }}</i>
+        {{ message }}
+      </div>
+
+      <button 
+        type="submit" 
+        class="verify-button" 
+        [disabled]="!verifyCodeForm.valid || isLoading || timeLeft <= 0"
+      >
+        <span *ngIf="!isLoading">Verify Code</span>
+        <span *ngIf="isLoading">
+          <i class="material-icons spinning">sync</i>
+          Verifying...
+        </span>
+      </button>
+
+      <div class="resend-section">
+        <p>Didn't receive the code?</p>
+        <button 
+          type="button" 
+          class="resend-button" 
+          (click)="resendCode()"
+          [disabled]="isLoading"
+        >
+          <i class="material-icons">refresh</i>
+          Resend Code
+        </button>
+      </div>
+
+      <div class="back-to-forgot">
+        <button type="button" class="back-button" (click)="goBackToForgotPassword()">
+          <i class="material-icons">arrow_back</i>
+          Back to Email Entry
+        </button>
+      </div>
+    </form>
+  </div>
+</div> 

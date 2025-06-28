@@ -1,0 +1,157 @@
+<div class="project-sites-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="breadcrumb-nav">
+        <button class="btn btn-link back-btn" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Back to Projects
+        </button>
+      </div>
+      <div class="page-title-section">
+        <h2 class="page-title">
+          <i class="fas fa-map-marker-alt"></i>
+          Project Sites
+        </h2>
+        <p class="project-name" *ngIf="project">{{ project.name }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Error Message -->
+    <div *ngIf="error" class="alert alert-danger">
+      {{ error }}
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="loading" class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading sites...</span>
+      </div>
+    </div>
+
+    <!-- Sites Content -->
+    <div *ngIf="!loading" class="sites-content">
+      <!-- Sites Header -->
+      <div class="sites-header">
+        <div class="sites-header-content">
+          <h3>Project Sites ({{ sites.length }})</h3>
+          <button class="btn btn-primary add-site-btn" (click)="addNewSite()">
+            <i class="fas fa-plus"></i> Add Site
+          </button>
+        </div>
+      </div>
+
+      <!-- Completion Summary -->
+      <div class="completion-summary" *ngIf="sites.length > 0">
+        <div class="summary-card">
+          <div class="summary-header">
+            <h4><i class="fas fa-chart-pie"></i> Operator Completion Summary</h4>
+          </div>
+          <div class="summary-stats">
+            <div class="stat-item completed">
+              <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-number">{{ getCompletedSitesCount() }}</span>
+                <span class="stat-label">Completed</span>
+              </div>
+            </div>
+            <div class="stat-item pending">
+              <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-number">{{ getPendingSitesCount() }}</span>
+                <span class="stat-label">Pending</span>
+              </div>
+            </div>
+            <div class="stat-item total">
+              <div class="stat-icon">
+                <i class="fas fa-percentage"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-number">{{ getCompletionPercentage() }}%</span>
+                <span class="stat-label">Completion Rate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sites List -->
+      <div class="sites-list" *ngIf="sites.length > 0">
+        <div class="site-card" *ngFor="let site of sites">
+          <div class="site-header">
+            <div class="site-info">
+              <h5 class="site-name">{{ site.name }}</h5>
+              <p class="site-location">
+                <i class="fas fa-map-marker-alt"></i>
+                {{ site.location }}
+              </p>
+              <div class="site-statuses">
+                <span class="site-status status-{{ site.status.toLowerCase() }}" [attr.data-tooltip]="'Status: ' + site.status">{{ site.status }}</span>
+                <span class="completion-status" [class.completed]="site.isOperatorCompleted" [class.pending]="!site.isOperatorCompleted" [attr.data-tooltip]="site.isOperatorCompleted ? 'Operator has marked this site as completed' : 'Operator has not completed this site yet'">
+                  <i class="fas" [class.fa-check-circle]="site.isOperatorCompleted" [class.fa-clock]="!site.isOperatorCompleted"></i>
+                  {{ site.isOperatorCompleted ? 'Completed' : 'Pending' }}
+                </span>
+              </div>
+            </div>
+            <div class="site-actions">
+              <button class="btn btn-sm btn-outline-info" (click)="viewDrillVisualization(site)" title="View Drill Visualization">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-success" (click)="uploadSurvey(site)" title="Upload Survey">
+                <i class="fas fa-upload"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-primary" (click)="createPattern(site)" title="Open Site Dashboard">
+                <i class="fas fa-cog"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" (click)="openDeleteModal(site)" title="Delete Site">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="site-details" *ngIf="site.description">
+            <p class="site-description">{{ site.description }}</p>
+          </div>
+          
+          <div class="site-meta">
+            <small class="text-muted">
+              Created: {{ formatDate(site.createdAt) }}
+            </small>
+            <small class="text-muted" *ngIf="site.coordinates">
+              • Lat: {{ site.coordinates.latitude.toFixed(4) }}, Lng: {{ site.coordinates.longitude.toFixed(4) }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Sites Message -->
+      <div class="no-sites" *ngIf="sites.length === 0">
+        <div class="empty-state">
+          <i class="fas fa-map-marker-alt fa-3x text-muted"></i>
+          <h4>No Sites Found</h4>
+          <p>This project doesn't have any sites yet.</p>
+          <button class="btn btn-primary" (click)="addNewSite()">
+            <i class="fas fa-plus"></i> Add First Site
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteModal">
+    <div class="modal-content">
+      <p>Are you sure you want to delete the site "{{ siteToDelete?.name }}"?</p>
+      <div class="modal-actions">
+        <button class="btn btn-danger" (click)="confirmDelete()">Yes</button>
+        <button class="btn btn-secondary" (click)="closeDeleteModal()">No</button>
+      </div>
+    </div>
+  </div>
+</div>

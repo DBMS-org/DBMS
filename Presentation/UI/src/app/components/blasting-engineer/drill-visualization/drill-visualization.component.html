@@ -1,0 +1,333 @@
+<div class="drill-visualization-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="breadcrumb-nav">
+        <button class="btn btn-link back-btn" (click)="navigateToSites()">
+          <i class="fas fa-arrow-left"></i> Back to Sites
+      </button>
+      </div>
+      <div class="page-title-section">
+        <h2 class="page-title">
+          <i class="fas fa-chart-line"></i>
+          Drill Hole Visualization
+        </h2>
+        <p class="subtitle" *ngIf="isDataLoaded">
+          {{ drillData.length }} drill holes loaded for visualization
+        </p>
+        <p class="subtitle" *ngIf="!isDataLoaded">
+          No drill hole data available
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+  <!-- Messages Section -->
+  <div class="messages enhanced-messages" *ngIf="saveMessage || deleteMessage || errorMessage">
+    <div class="alert alert-success" *ngIf="saveMessage && !errorMessage">
+      <i class="fas fa-check-circle"></i>
+      <span [innerHTML]="saveMessage"></span>
+    </div>
+    <div class="alert alert-success" *ngIf="deleteMessage">
+      <i class="fas fa-check-circle"></i>
+      <span [innerHTML]="deleteMessage"></span>
+    </div>
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span [innerHTML]="errorMessage"></span>
+    </div>
+  </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+      <div class="control-header">
+        <h3>
+          <i class="fas fa-cogs"></i>
+          Visualization Controls
+        </h3>
+        <div class="data-status" *ngIf="isDataLoaded">
+          <span class="status-badge success">
+            <i class="fas fa-database"></i>
+            {{ drillData.length }} holes loaded
+          </span>
+    </div>
+  </div>
+
+      <div class="control-grid">
+        <!-- View Controls -->
+        <div class="control-group">
+          <label class="control-label">View Mode</label>
+          <div class="button-group">
+            <button (click)="toggle3DView()" class="btn btn-primary" [class.active]="show3DView">
+              <i class="fas fa-cube"></i>
+              3D View
+            </button>
+            <button (click)="toggle3DView()" class="btn btn-secondary" [class.active]="!show3DView">
+              <i class="fas fa-table"></i>
+              Table View
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D Controls -->
+        <div class="control-group" *ngIf="show3DView">
+          <label class="control-label">3D Options</label>
+          <div class="button-group">
+            <button (click)="toggleLabels()" class="btn btn-outline">
+              <i class="fas fa-tag"></i>
+              {{ showLabels ? 'Hide Labels' : 'Show Labels' }}
+            </button>
+            <button (click)="resetCamera()" class="btn btn-outline">
+              <i class="fas fa-video"></i>
+              Reset Camera
+            </button>
+            <button (click)="refresh3DVisualization()" class="btn btn-outline" title="Force refresh 3D visualization">
+              <i class="fas fa-sync"></i>
+              Refresh 3D
+            </button>
+          </div>
+        </div>
+
+        <!-- Save/Delete Controls -->
+        <div class="control-group" *ngIf="isDataLoaded">
+          <label class="control-label">Actions</label>
+          <div class="button-group">
+            <button (click)="saveDrillData()" class="btn btn-success" [disabled]="isSaving">
+              <i class="fas fa-save" *ngIf="!isSaving"></i>
+              <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+              {{ isSaving ? 'Saving & Verifying...' : 'Save to DB' }}
+            </button>
+            <button (click)="verifyDatabaseSave()" class="btn btn-info">
+              <i class="fas fa-check-circle"></i>
+              Verify Save
+            </button>
+            <button (click)="reloadDataFromDatabase()" class="btn btn-secondary" title="Reload data from database">
+              <i class="fas fa-sync-alt"></i>
+              Reload Data
+            </button>
+            <button (click)="deleteAllDrillData()" class="btn btn-danger" [disabled]="isDeleting">
+              <i class="fas fa-trash" *ngIf="!isDeleting"></i>
+              <i class="fas fa-spinner fa-spin" *ngIf="isDeleting"></i>
+              {{ isDeleting ? 'Deleting...' : 'Delete All' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3D Visualization Section -->
+    <div *ngIf="show3DView && isDataLoaded" class="visualization-card">
+      <div class="card-header">
+        <h4>
+          <i class="fas fa-cube"></i>
+          3D Drill Pattern View
+        </h4>
+        <div class="viewer-controls">
+          <span class="control-hint">
+            <i class="fas fa-mouse"></i>
+            Left click + drag to rotate • Scroll to zoom • Right click + drag to pan
+          </span>
+        </div>
+      </div>
+      
+      <div class="canvas-wrapper">
+        <!-- 3D Canvas Container -->
+    <div class="threejs-container"></div>
+        
+        <!-- Floating UI Overlays -->
+        <div class="canvas-overlays">
+          <!-- Top Stats Bar -->
+          <div class="stats-overlay">
+            <div class="stat-item">
+              <i class="fas fa-crosshairs"></i>
+              <span class="stat-label">Holes</span>
+              <span class="stat-value">{{ drillData.length }}</span>
+            </div>
+            <div class="stat-item">
+              <i class="fas fa-rulers"></i>
+              <span class="stat-label">Area</span>
+              <span class="stat-value">{{ ((getMaxEasting() - getMinEasting()) * (getMaxNorthing() - getMinNorthing()) / 1000000).toFixed(2) }} km²</span>
+            </div>
+            <div class="stat-item">
+              <i class="fas fa-mountain"></i>
+              <span class="stat-label">Depth Range</span>
+              <span class="stat-value">{{ (getMaxElevation() - getMinElevation()).toFixed(1) }}m</span>
+            </div>
+          </div>
+
+          <!-- Floating Camera Controls -->
+          <div class="camera-controls">
+            <div class="control-group-title">
+              <i class="fas fa-video"></i>
+              Camera Views
+            </div>
+            <button class="camera-btn" (click)="setTopView()" title="Top View">
+              <i class="fas fa-eye"></i>
+              <span>Top</span>
+            </button>
+            <button class="camera-btn" (click)="setSideView()" title="Side View">
+              <i class="fas fa-eye"></i>
+              <span>Side</span>
+            </button>
+            <button class="camera-btn" (click)="setIsometricView()" title="Isometric View">
+              <i class="fas fa-cube"></i>
+              <span>ISO</span>
+            </button>
+            <button class="camera-btn" (click)="autoFramePattern()" title="Auto Frame Pattern">
+              <i class="fas fa-expand-arrows-alt"></i>
+              <span>Frame</span>
+            </button>
+            <button class="camera-btn" (click)="toggleAutoRotate()" title="Toggle Auto Rotate">
+              <i class="fas fa-sync-alt"></i>
+              <span>Rotate</span>
+            </button>
+          </div>
+
+          <!-- 3D Options Panel -->
+          <div class="options-panel">
+            <div class="control-group-title">
+              <i class="fas fa-cog"></i>
+              3D Options
+            </div>
+            <div class="option-item">
+              <label class="option-toggle">
+                <input type="checkbox" [checked]="showLabels" (change)="toggleLabels()">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Show Labels</span>
+              </label>
+            </div>
+            <div class="option-item">
+              <label class="option-toggle">
+                <input type="checkbox" [checked]="showDetailedLabels" (change)="showDetailedLabels = !showDetailedLabels">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Detailed Labels</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Loading Indicator -->
+          <div class="loading-overlay" *ngIf="!isDataLoaded">
+            <div class="loading-content">
+              <div class="loading-spinner"></div>
+              <span>Loading 3D Scene...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Info (Bottom Right) -->
+        <div class="performance-info">
+          <div class="perf-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>FPS: Auto</span>
+          </div>
+          <div class="perf-item">
+            <i class="fas fa-memory"></i>
+            <span>GPU: WebGL</span>
+          </div>
+        </div>
+      </div>
+  </div>
+
+  <!-- Data Table Section -->
+    <div *ngIf="!show3DView && isDataLoaded" class="data-card">
+      <div class="card-header">
+        <h4>
+          <i class="fas fa-table"></i>
+          Drill Hole Data Table
+        </h4>
+        <div class="data-summary-inline">
+          <span class="summary-item">
+            <i class="fas fa-list"></i>
+            {{ drillData.length }} holes
+          </span>
+        </div>
+    </div>
+
+    <!-- Drill Holes Table -->
+      <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Easting</th>
+            <th>Northing</th>
+            <th>Elevation</th>
+            <th>Depth</th>
+            <th>Azimuth</th>
+            <th>Dip</th>
+            <th>Stemming</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let hole of drillData; let i = index" [class.even]="i % 2 === 0">
+              <td><span class="hole-id">{{hole.id}}</span></td>
+            <td>{{hole.easting | number:'1.2-2'}}</td>
+            <td>{{hole.northing | number:'1.2-2'}}</td>
+            <td>{{hole.elevation | number:'1.2-2'}}</td>
+              <td><span class="depth-value">{{hole.depth | number:'1.1-1'}}m</span></td>
+              <td><span class="angle-value">{{hole.azimuth}}°</span></td>
+              <td><span class="angle-value">{{hole.dip}}°</span></td>
+              <td><span class="depth-value">{{hole.stemming | number:'1.1-1'}}m</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Coordinate Bounds Summary -->
+      <div class="bounds-card" *ngIf="drillData.length > 0">
+        <h5>
+          <i class="fas fa-map-marked-alt"></i>
+          Site Coordinates Range
+        </h5>
+      <div class="bounds-grid">
+        <div class="bound-item">
+            <span class="label">
+              <i class="fas fa-arrows-alt-h"></i>
+              Easting Range
+            </span>
+          <span class="value">{{getMinEasting() | number:'1.2-2'}} - {{getMaxEasting() | number:'1.2-2'}}</span>
+        </div>
+        <div class="bound-item">
+            <span class="label">
+              <i class="fas fa-arrows-alt-v"></i>
+              Northing Range
+            </span>
+          <span class="value">{{getMinNorthing() | number:'1.2-2'}} - {{getMaxNorthing() | number:'1.2-2'}}</span>
+        </div>
+        <div class="bound-item">
+            <span class="label">
+              <i class="fas fa-mountain"></i>
+              Elevation Range
+            </span>
+          <span class="value">{{getMinElevation() | number:'1.2-2'}} - {{getMaxElevation() | number:'1.2-2'}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Data Section -->
+    <div *ngIf="!isDataLoaded" class="no-data-card">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-database fa-3x"></i>
+        </div>
+        <h4>No Drill Data Available</h4>
+        <p>No drill hole data has been uploaded yet for this site.</p>
+      <p>Please upload a CSV file with drill data to visualize the holes.</p>
+      
+        <div class="empty-actions">
+          <button (click)="reloadDataFromDatabase()" class="btn btn-secondary" *ngIf="projectId && siteId" title="Try to reload data from database">
+            <i class="fas fa-sync-alt"></i>
+            Reload from Database
+          </button>
+          <button (click)="navigateToCSVUpload()" class="btn btn-primary btn-upload">
+            <i class="fas fa-upload"></i>
+            Upload CSV Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

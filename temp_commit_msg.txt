@@ -1,3 +1,1 @@
-Merge pull request #6 from SaadDev-01/master
-
-merge
+Refactor project structure by removing the Core project and migrating relevant DTOs and entities to the Domain project. Update references in API and Infrastructure projects to reflect the new structure. Enhance API controllers and services to utilize the new Domain entities and DTOs, improving overall organization and maintainability.

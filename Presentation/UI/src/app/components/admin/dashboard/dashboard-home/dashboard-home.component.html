@@ -1,0 +1,306 @@
+<header class="dashboard-header">
+  <div class="header-content">
+    <h1>General Manager Dashboard</h1>
+    <div class="user-info">
+      <div class="user-details" *ngIf="currentUser">
+        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
+        <div class="user-metadata">
+          <span class="user-role">Role: General Manager</span>
+          <span class="user-location" *ngIf="getUserLocationInfo()">{{ getUserLocationInfo() }}</span>
+          <span class="last-login">{{ getLastLoginInfo() }}</span>
+        </div>
+      </div>
+      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<div class="loading-container" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Loading dashboard...</p>
+</div>
+
+<div class="dashboard-content" *ngIf="!isLoading">
+  <!-- User Management Statistics -->
+  <div class="stats-section">
+    <h3><i class="material-icons">people</i> User Management Overview</h3>
+    <div class="stats-grid">
+      <div class="stat-card users">
+        <div class="stat-icon">
+          <i class="material-icons">people</i>
+        </div>
+        <div class="stat-content">
+          <h3>Total Users</h3>
+          <p class="stat-number">{{ stats.totalUsers }}</p>
+        </div>
+      </div>
+      <div class="stat-card active">
+        <div class="stat-icon">
+          <i class="material-icons">verified_user</i>
+        </div>
+        <div class="stat-content">
+          <h3>Active Users</h3>
+          <p class="stat-number">{{ stats.activeUsers }}</p>
+        </div>
+      </div>
+      <div class="stat-card deactivated">
+        <div class="stat-icon">
+          <i class="material-icons">person_remove</i>
+        </div>
+        <div class="stat-content">
+          <h3>Deactivated Users</h3>
+          <p class="stat-number">{{ stats.deactivatedUsers }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Management Statistics -->
+  <div class="stats-section">
+    <h3><i class="material-icons">work</i> Project Management Overview</h3>
+    <div class="stats-grid">
+      <div class="stat-card projects">
+        <div class="stat-icon">
+          <i class="material-icons">work</i>
+        </div>
+        <div class="stat-content">
+          <h3>Total Projects</h3>
+          <p class="stat-number">{{ stats.totalProjects }}</p>
+        </div>
+      </div>
+      <div class="stat-card pending-projects">
+        <div class="stat-icon">
+          <i class="material-icons">hourglass_empty</i>
+        </div>
+        <div class="stat-content">
+          <h3>Pending Projects</h3>
+          <p class="stat-number">{{ stats.pendingProjects }}</p>
+        </div>
+      </div>
+      <div class="stat-card active-projects">
+        <div class="stat-icon">
+          <i class="material-icons">trending_up</i>
+        </div>
+        <div class="stat-content">
+          <h3>In Progress</h3>
+          <p class="stat-number">{{ stats.activeProjects }}</p>
+        </div>
+      </div>
+      <div class="stat-card completed-projects">
+        <div class="stat-icon">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <div class="stat-content">
+          <h3>Completed</h3>
+          <p class="stat-number">{{ stats.completedProjects }}</p>
+        </div>
+      </div>
+      <div class="stat-card archived-projects">
+        <div class="stat-icon">
+          <i class="material-icons">archive</i>
+        </div>
+        <div class="stat-content">
+          <h3>Archived</h3>
+          <p class="stat-number">{{ stats.archivedProjects }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Machine Inventory & Assignment Statistics -->
+  <div class="stats-section">
+    <h3><i class="material-icons">precision_manufacturing</i> Machine Inventory & Assignment</h3>
+    <div class="stats-grid">
+      <div class="stat-card machines">
+        <div class="stat-icon">
+          <i class="material-icons">precision_manufacturing</i>
+        </div>
+        <div class="stat-content">
+          <h3>Total Machines</h3>
+          <p class="stat-number">{{ stats.totalMachines }}</p>
+        </div>
+      </div>
+      <div class="stat-card assigned-machines">
+        <div class="stat-icon">
+          <i class="material-icons">assignment_turned_in</i>
+        </div>
+        <div class="stat-content">
+          <h3>Assigned Machines</h3>
+          <p class="stat-number">{{ stats.assignedMachines }}</p>
+        </div>
+      </div>
+      <div class="stat-card pending-assignments">
+        <div class="stat-icon">
+          <i class="material-icons">assignment</i>
+        </div>
+        <div class="stat-content">
+          <h3>Pending Assignments</h3>
+          <p class="stat-number">{{ stats.pendingAssignments }}</p>
+        </div>
+      </div>
+      <div class="stat-card machine-requests">
+        <div class="stat-icon">
+          <i class="material-icons">request_page</i>
+        </div>
+        <div class="stat-content">
+          <h3>Assignment Requests</h3>
+          <p class="stat-number">{{ stats.machineRequests }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Overview Panel -->
+  <div class="system-metrics-panel">
+    <h3>
+      <i class="material-icons">analytics</i>
+      System Overview
+    </h3>
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">storage</i>
+          Database Status:
+        </span>
+        <span class="metric-value database-connected">{{ systemMetrics.databaseStatus }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">place</i>
+          Total Sites:
+        </span>
+        <span class="metric-value">{{ stats.totalSites }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">scatter_plot</i>
+          Total Drill Holes:
+        </span>
+        <span class="metric-value">{{ stats.totalDrillHoles }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">assignment_turned_in</i>
+          Data Quality:
+        </span>
+        <span class="metric-value" [class]="'quality-' + systemMetrics.dataQuality.toLowerCase()">{{ systemMetrics.dataQuality }}</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">straighten</i>
+          Avg. Drill Depth:
+        </span>
+        <span class="metric-value">{{ systemMetrics.averageDrillDepth }}m</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">
+          <i class="material-icons">linear_scale</i>
+          Total Drill Length:
+        </span>
+        <span class="metric-value">{{ quickStats.totalDrillLength }}m</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Panel -->
+  <div class="admin-actions-panel">
+    <h3>
+      <i class="material-icons">admin_panel_settings</i>
+      Quick Actions
+    </h3>
+    <div class="action-cards">
+      <div class="action-card users-management" (click)="navigateToUsers()">
+        <div class="action-icon">
+          <i class="material-icons">manage_accounts</i>
+        </div>
+        <h4>User Management</h4>
+        <p>Manage, deactivate, or delete users</p>
+        <div class="action-status">{{ stats.totalUsers }} total users</div>
+      </div>
+      
+      <div class="action-card projects-management" (click)="navigateToProjects()">
+        <div class="action-icon">
+          <i class="material-icons">work</i>
+        </div>
+        <h4>Project Management</h4>
+        <p>Edit, update status, archive projects</p>
+        <div class="action-status">{{ stats.activeProjects }} in progress</div>
+      </div>
+
+      <div class="action-card machine-inventory" (click)="navigateToMachineInventory()">
+        <div class="action-icon">
+          <i class="material-icons">inventory</i>
+        </div>
+        <h4>Machine Inventory</h4>
+        <p>View and manage machine inventory</p>
+        <div class="action-status">{{ stats.totalMachines }} machines</div>
+      </div>
+
+      <div class="action-card machine-request" (click)="submitMachineAssignmentRequest()">
+        <div class="action-icon">
+          <i class="material-icons">request_page</i>
+        </div>
+        <h4>Request Machine Assignment</h4>
+        <p>Submit machine assignment requests</p>
+        <div class="action-status">{{ stats.machineRequests }} pending</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Section -->
+  <div class="user-profile-section">
+    <h3>
+      <i class="material-icons">account_circle</i>
+      General Manager Profile
+    </h3>
+    <div class="profile-card" *ngIf="currentUser">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <span class="avatar-initials">{{ getInitials() }}</span>
+        </div>
+        <div class="profile-main-info">
+          <h4>{{ currentUser.name }}</h4>
+          <p class="profile-email">{{ currentUser.email }}</p>
+          <div class="profile-role-badge">
+            <span class="role-badge">General Manager</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="profile-details-grid">
+        <div class="profile-detail-item">
+          <div class="detail-label">Specialization:</div>
+          <div class="detail-value">System Administration</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Operating Region:</div>
+          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Country:</div>
+          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Contact:</div>
+          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Status:</div>
+          <div class="detail-value">
+            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
+              {{ currentUser.status || 'ACTIVE' }}
+            </span>
+          </div>
+        </div>
+        <div class="profile-detail-item">
+          <div class="detail-label">Data Sets:</div>
+          <div class="detail-value">{{ stats.totalProjects }} managed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

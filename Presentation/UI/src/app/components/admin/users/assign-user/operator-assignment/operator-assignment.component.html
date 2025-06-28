@@ -1,0 +1,302 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-content">
+        <div class="operator-info">
+          <div class="operator-avatar">
+            <span class="avatar-initials">
+              {{ getUserInitials(selectedOperator?.name || '') }}
+            </span>
+          </div>
+          <div class="operator-details">
+            <h2>{{ selectedOperator?.name }}</h2>
+            <p class="operator-meta">
+              <span class="role">{{ selectedOperator?.role }}</span>
+              <span class="separator">•</span>
+              <span class="region">{{ selectedOperator?.region }} Region</span>
+              <span class="separator">•</span>
+              <span class="email">{{ selectedOperator?.email }}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <button class="close-btn" (click)="onClose()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="success-alert">
+      <i class="material-icons">check_circle</i>
+      <span>{{ successMessage }}</span>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-alert">
+      <i class="material-icons">error</i>
+      <span>{{ error }}</span>
+      <button (click)="error = null" class="close-error">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading && !successMessage" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading operator assignment data...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="assignment-container" *ngIf="!isLoading || successMessage">
+      
+      <!-- Current Assignment Section -->
+      <div class="section-card current-assignment">
+        <div class="card-header">
+          <h3>
+            <i class="material-icons">work</i>
+            Current Assignment
+          </h3>
+        </div>
+        <div class="card-body">
+          <div *ngIf="currentProject" class="project-info">
+            <div class="project-header">
+              <div class="project-title">
+                <h4>{{ currentProject.name }}</h4>
+                <span class="project-status" [class]="getStatusClass(currentProject.status)">
+                  <i class="material-icons">
+                    {{ currentProject.status === 'Completed' ? 'check_circle' : 
+                       currentProject.status === 'Active' ? 'play_circle' :
+                       currentProject.status === 'In Progress' ? 'pending' :
+                       currentProject.status === 'On Hold' ? 'pause_circle' :
+                       currentProject.status === 'Cancelled' ? 'cancel' : 'info' }}
+                  </i>
+                  {{ currentProject.status }}
+                </span>
+              </div>
+            </div>
+
+            <div class="project-details">
+              <div class="detail-row">
+                <div class="detail-item">
+                  <i class="material-icons">place</i>
+                  <span class="detail-label">Region:</span>
+                  <span class="detail-value">{{ currentProject.region }}</span>
+                </div>
+                
+                <div class="detail-item" *ngIf="currentProject.startDate">
+                  <i class="material-icons">event</i>
+                  <span class="detail-label">Start Date:</span>
+                  <span class="detail-value">{{ formatDate(currentProject.startDate) }}</span>
+                </div>
+              </div>
+
+              <div class="detail-row" *ngIf="currentProject.endDate">
+                <div class="detail-item">
+                  <i class="material-icons">event_available</i>
+                  <span class="detail-label">Expected End:</span>
+                  <span class="detail-value">{{ formatDate(currentProject.endDate) }}</span>
+                </div>
+              </div>
+
+              <div class="project-description" *ngIf="currentProject.description">
+                <p>{{ currentProject.description }}</p>
+              </div>
+            </div>
+
+            <!-- Assigned Machine -->
+            <div *ngIf="currentProject.assignedMachine" class="machine-info">
+              <h5>
+                <i class="material-icons">precision_manufacturing</i>
+                Assigned Machine
+              </h5>
+              <div class="machine-card">
+                <div class="machine-header">
+                  <span class="machine-name">{{ currentProject.assignedMachine.name }}</span>
+                  <span class="machine-status" [class]="getMachineStatusClass(currentProject.assignedMachine.status)">
+                    {{ currentProject.assignedMachine.status }}
+                  </span>
+                </div>
+                <div class="machine-details">
+                  <span class="machine-type">{{ currentProject.assignedMachine.type }}</span>
+                  <span class="separator">•</span>
+                  <span class="machine-model">{{ currentProject.assignedMachine.model }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!currentProject" class="no-assignment">
+            <div class="empty-state">
+              <i class="material-icons">work_off</i>
+              <h4>No Current Assignment</h4>
+              <p>This operator is not currently assigned to any project.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reassignment Section -->
+      <div class="section-card reassignment-section">
+        <div class="card-header">
+          <h3>
+            <i class="material-icons">swap_horiz</i>
+            Reassign Operator
+          </h3>
+        </div>
+        <div class="card-body">
+          <form class="reassignment-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="project-select">
+                  <i class="material-icons">work_outline</i>
+                  Select New Project
+                </label>
+                <select 
+                  id="project-select"
+                  class="form-select"
+                  [(ngModel)]="selectedProjectId"
+                  name="projectId"
+                  (change)="onProjectChange()">
+                  <option [ngValue]="null">-- Select Project --</option>
+                  <option *ngFor="let project of availableProjects" [ngValue]="project.id">
+                    {{ project.name }} ({{ project.status }})
+                  </option>
+                </select>
+                <small class="form-help">Available projects in {{ selectedOperator?.region }} region</small>
+              </div>
+
+              <div class="form-group">
+                <label for="machine-select">
+                  <i class="material-icons">precision_manufacturing</i>
+                  Assign Machine (Optional)
+                </label>
+                <select 
+                  id="machine-select"
+                  class="form-select"
+                  [(ngModel)]="selectedMachineId"
+                  name="machineId"
+                  (change)="onMachineChange()">
+                  <option [ngValue]="null">-- No Machine Assignment --</option>
+                  <option *ngFor="let machine of availableMachines" [ngValue]="machine.id">
+                    {{ machine.name }} - {{ machine.type }} ({{ machine.status }})
+                  </option>
+                </select>
+                <small class="form-help">
+                  <span *ngIf="selectedProjectId">Available machines for selected project</span>
+                  <span *ngIf="!selectedProjectId">Available machines in {{ selectedOperator?.region }} region</span>
+                </small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="reason">
+                <i class="material-icons">comment</i>
+                Reassignment Reason <span class="required">*</span>
+              </label>
+              <textarea 
+                id="reason"
+                class="form-control"
+                rows="3"
+                [(ngModel)]="reassignmentReason"
+                name="reason"
+                placeholder="Please provide a reason for this reassignment..."
+                required></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button 
+                type="button" 
+                class="btn btn-secondary" 
+                (click)="onClose()">
+                <i class="material-icons">cancel</i>
+                Cancel
+              </button>
+              
+              <button 
+                type="button" 
+                class="btn btn-primary" 
+                (click)="reassignOperator()"
+                [disabled]="!selectedProjectId || !reassignmentReason.trim()">
+                <i class="material-icons">swap_horiz</i>
+                Reassign Operator
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Available Projects Summary -->
+      <div class="section-card projects-summary" *ngIf="availableProjects.length > 0">
+        <div class="card-header">
+          <h3>
+            <i class="material-icons">list</i>
+            Available Projects ({{ availableProjects.length }})
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="projects-grid">
+            <div *ngFor="let project of availableProjects" class="project-summary-card">
+              <div class="project-summary-header">
+                <span class="project-name">{{ project.name }}</span>
+                <span class="project-status" [class]="getStatusClass(project.status)">
+                  {{ project.status }}
+                </span>
+              </div>
+              <div class="project-summary-details">
+                <small *ngIf="project.startDate">
+                  Starts: {{ formatDate(project.startDate) }}
+                </small>
+                <small *ngIf="project.description">
+                  {{ project.description }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Dialog -->
+<div *ngIf="showConfirmDialog" class="confirmation-overlay">
+  <div class="confirmation-dialog">
+    <div class="dialog-header">
+      <h3>
+        <i class="material-icons">help_outline</i>
+        Confirm Reassignment
+      </h3>
+    </div>
+    <div class="dialog-body">
+      <p>Are you sure you want to reassign <strong>{{ selectedOperator?.name }}</strong>?</p>
+      <div class="reassignment-summary">
+        <div class="summary-item">
+          <span class="label">From:</span>
+          <span class="value">{{ currentProject?.name || 'No current assignment' }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">To:</span>
+          <span class="value">{{ selectedProjectName }}</span>
+        </div>
+        <div class="summary-item" *ngIf="selectedMachineId">
+          <span class="label">Machine:</span>
+          <span class="value">{{ selectedMachineName }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Reason:</span>
+          <span class="value">{{ reassignmentReason }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-secondary" (click)="cancelReassignment()">
+        <i class="material-icons">cancel</i>
+        Cancel
+      </button>
+      <button class="btn btn-primary" (click)="confirmReassignment()">
+        <i class="material-icons">check</i>
+        Confirm Reassignment
+      </button>
+    </div>
+  </div>
+</div>

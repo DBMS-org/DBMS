@@ -1,0 +1,92 @@
+<!-- Modal Overlay -->
+<div class="modal-overlay" *ngIf="isVisible" (click)="closeModal()">
+  
+  <!-- Modal Content -->
+  <div class="modal-content" (click)="$event.stopPropagation()" *ngIf="project">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title">
+        <h3><i class="fas fa-project-diagram"></i> {{ project.name }}</h3>
+        <span class="status-badge" [ngClass]="getStatusClass(project.status)">
+          {{ project.status }}
+        </span>
+      </div>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      
+      <!-- Project Information Section -->
+      <div class="info-section">
+        <h4><i class="fas fa-info-circle"></i> Project Information</h4>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Region:</label>
+            <span>{{ project.region }}</span>
+          </div>
+          <div class="info-item">
+            <label>Project Name:</label>
+            <span>{{ project.name }}</span>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <span class="status-badge" [ngClass]="getStatusClass(project.status)">
+              {{ project.status }}
+            </span>
+          </div>
+          <div class="info-item">
+            <label>Start Date:</label>
+            <span>{{ formatDate(project.startDate) }}</span>
+          </div>
+          <div class="info-item">
+            <label>End Date:</label>
+            <span>{{ formatDate(project.endDate) }}</span>
+          </div>
+          <div class="info-item full-width" *ngIf="project.description">
+            <label>Description:</label>
+            <span>{{ project.description }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Sites Navigation Section -->
+      <div class="info-section">
+        <h4><i class="fas fa-map-marker-alt"></i> Project Sites</h4>
+        <div class="sites-navigation">
+          <p>View and manage all sites associated with this project.</p>
+          <button class="btn btn-primary sites-btn" (click)="goToProjectSites()">
+            <i class="fas fa-map-marker-alt"></i> View Project Sites
+          </button>
+        </div>
+      </div>
+
+      <!-- Metadata Section -->
+      <div class="info-section">
+        <h4><i class="fas fa-info-circle"></i> Metadata</h4>
+        <div class="metadata-grid">
+          <div class="metadata-item">
+            <label>Created:</label>
+            <span>{{ formatDate(project.createdAt) }}</span>
+          </div>
+          <div class="metadata-item">
+            <label>Last Updated:</label>
+            <span>{{ formatDate(project.updatedAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModal()">
+        <i class="fas fa-times"></i> Close
+      </button>
+    </div>
+
+  </div>
+</div>

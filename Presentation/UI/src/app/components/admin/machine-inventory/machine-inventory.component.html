@@ -1,0 +1,338 @@
+<div class="machine-inventory-container">
+  <!-- Page Header with Title and Action Buttons -->
+  <div class="header-section">
+    <h2 class="page-title">Machine Inventory & Management</h2>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="navigateToAssignments()">
+        <i class="fas fa-clipboard-list"></i> View Assignments
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filter Controls Section -->
+  <div class="search-filter-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Search machines by name, model, manufacturer, or serial number..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+      />
+    </div>
+    
+    <div class="filter-section">
+      <select class="form-select" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
+        <option value="ALL">All Statuses</option>
+        <option *ngFor="let status of machineStatusOptions" [value]="status">
+          {{ status }}
+        </option>
+      </select>
+      
+      <select class="form-select" [(ngModel)]="selectedType" (change)="onTypeFilterChange()">
+        <option value="ALL">All Types</option>
+        <option *ngFor="let type of machineTypeOptions" [value]="type">
+          {{ type }}
+        </option>
+      </select>
+      
+      <button class="btn btn-secondary filter-btn" (click)="applyFilters()">
+        <i class="fas fa-filter"></i> Filter
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert Message -->
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null"></button>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Loading machines...</p>
+  </div>
+
+  <!-- Machines Table -->
+  <div class="table-container" *ngIf="!isLoading">
+    <table class="machines-table">
+      <thead>
+        <tr>
+          <th>Machine</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Location</th>
+          <th>Assignment</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let machine of filteredMachines" class="machine-row">
+          <td class="machine-details">
+            <div class="machine-info">
+              <h5>{{ machine.name }}</h5>
+              <p class="text-muted">{{ machine.manufacturer }} {{ machine.model }}</p>
+              <small class="text-secondary">S/N: {{ machine.serialNumber }}</small>
+            </div>
+          </td>
+          
+          <td class="machine-type">
+            <span class="badge bg-primary">{{ machine.type }}</span>
+          </td>
+          
+          <td class="machine-status">
+            <span class="badge" [ngClass]="getStatusClass(machine.status)">
+              {{ machine.status }}
+            </span>
+          </td>
+          
+          <td class="machine-location">
+            {{ machine.currentLocation || 'Not specified' }}
+          </td>
+          
+          <td class="machine-assignment">
+            <div *ngIf="machine.assignedToProject" class="assignment-info">
+              <p><strong>Project:</strong> {{ machine.assignedToProject }}</p>
+              <p *ngIf="machine.assignedToOperator"><strong>Operator:</strong> {{ machine.assignedToOperator }}</p>
+            </div>
+            <span *ngIf="!machine.assignedToProject" class="text-muted">Not assigned</span>
+          </td>
+          
+          <td class="machine-actions">
+            <div class="action-buttons">
+              <button 
+                class="btn btn-sm btn-outline-info action-btn" 
+                (click)="viewMachine(machine)"
+                title="View Details"
+              >
+                <i class="fas fa-eye"></i>
+                View
+              </button>
+              <button 
+                class="btn btn-sm btn-outline-danger action-btn" 
+                (click)="deleteMachine(machine)"
+                title="Delete Machine"
+              >
+                <i class="fas fa-trash"></i>
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- No Machines Message -->
+    <div *ngIf="filteredMachines.length === 0" class="no-machines">
+      <div class="empty-state">
+        <i class="fas fa-cogs fa-3x text-muted"></i>
+        <h4>No Machines Found</h4>
+        <p>No machines match your current filters. Try adjusting your search criteria.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirmModal && machineToDelete) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Confirm Delete</h5>
+        <button class="close-btn" (click)="closeModals()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete machine "{{ machineToDelete.name }}"?</p>
+        <p class="text-warning">This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" (click)="confirmDelete()">
+          <i class="fas fa-trash"></i>
+          Yes, Delete
+        </button>
+        <button class="btn btn-secondary" (click)="closeModals()">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Machine Details Modal -->
+<div class="modal-overlay" *ngIf="showMachineDetailsModal" (click)="closeMachineDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <i class="material-icons">info</i>
+        </div>
+        <div class="header-text">
+          <h2>Machine Details</h2>
+          <p class="header-subtitle">View machine information</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeMachineDetailsModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <div class="machine-details-form" *ngIf="selectedMachine">
+      
+      <!-- Machine Information Card -->
+      <div class="details-card">
+        <div class="card-header">
+          <div class="card-header-content">
+            <div class="card-icon">
+              <i class="material-icons">info</i>
+            </div>
+            <div class="card-title-section">
+              <h3>{{ selectedMachine.name }}</h3>
+              <p class="card-subtitle">Machine Information</p>
+            </div>
+          </div>
+          <div class="status-indicator" [class]="getStatusClass(selectedMachine.status)">
+            <i class="material-icons">{{ getStatusIcon(selectedMachine.status) }}</i>
+            <span>{{ selectedMachine.status }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">badge</i>
+                Machine Name
+              </div>
+              <div class="detail-value">{{ selectedMachine.name }}</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">person</i>
+                Operator Name
+              </div>
+              <div class="detail-value">{{ selectedMachine.operatorName || 'Not assigned' }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">model_training</i>
+                Model
+              </div>
+              <div class="detail-value">{{ selectedMachine.model }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">qr_code</i>
+                Serial Number
+              </div>
+              <div class="detail-value">{{ selectedMachine.serialNumber }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">construction</i>
+                Rig No
+              </div>
+              <div class="detail-value">{{ selectedMachine.rigNo || 'N/A' }}</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">local_shipping</i>
+                Plate No
+              </div>
+              <div class="detail-value">{{ selectedMachine.plateNo || 'N/A' }}</div>
+            </div>
+
+
+            
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">calendar_today</i>
+                Manufacturing Year
+              </div>
+              <div class="detail-value">{{ selectedMachine.manufacturingYear || 'N/A' }}</div>
+            </div>
+
+            <div class="detail-item full-width">
+              <div class="detail-label">
+                <i class="material-icons">directions_car</i>
+                Chassis Details
+              </div>
+              <div class="detail-value chassis-details">{{ selectedMachine.chassisDetails || 'N/A' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information Card -->
+      <div class="details-card">
+        <div class="card-header">
+          <div class="card-header-content">
+            <div class="card-icon">
+              <i class="material-icons">assignment</i>
+            </div>
+            <div class="card-title-section">
+              <h3>Additional Information</h3>
+              <p class="card-subtitle">System generated details</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">location_on</i>
+                Current Location
+              </div>
+              <div class="detail-value">{{ selectedMachine.currentLocation || 'Not specified' }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">category</i>
+                Machine Type
+              </div>
+              <div class="detail-value">{{ selectedMachine.type || 'Not specified' }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">schedule</i>
+                Created Date
+              </div>
+              <div class="detail-value">{{ formatDate(selectedMachine.createdAt) }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">
+                <i class="material-icons">update</i>
+                Last Updated
+              </div>
+              <div class="detail-value">{{ formatDate(selectedMachine.updatedAt) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer with Close Button -->
+      <div class="details-actions">
+        <button 
+          type="button" 
+          class="close-btn-action" 
+          (click)="closeMachineDetailsModal()">
+          <i class="material-icons">close</i>
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
