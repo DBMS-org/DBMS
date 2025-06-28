@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Core.DTOs;
-using Core.Interfaces;
+using Application.DTOs;
+using Application.Interfaces;
 using System.Security.Claims;
 
 namespace API.Controllers
