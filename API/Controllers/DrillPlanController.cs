@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Core.Interfaces;
-using Core.Entities;
-using Core.DTOs;
+using Application.Interfaces;
+using Domain.Entities;
+using Application.DTOs;
 
 namespace API.Controllers
 {

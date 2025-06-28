@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
-using Core.DTOs;
+using Application.DTOs;
 
 namespace API.Controllers
 {
