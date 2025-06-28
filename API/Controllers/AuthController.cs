@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Core.DTOs;
+using Application.DTOs;
 using Infrastructure.Data;
 using Infrastructure.Services;
-using Core.Entities;
+using Domain.Entities;
 using System.Security.Cryptography;
 
 namespace API.Controllers
