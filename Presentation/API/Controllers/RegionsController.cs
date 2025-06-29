@@ -1,5 +1,5 @@
-using Application.DTOs;
 using Application.Interfaces;
+using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,14 +18,14 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RegionDto>>> GetRegions()
+        public async Task<ActionResult<IEnumerable<Region>>> GetRegions()
         {
             var regions = await _regionService.GetAllRegionsAsync();
             return Ok(regions);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<RegionDto>> GetRegion(int id)
+        public async Task<ActionResult<Region>> GetRegion(int id)
         {
             var region = await _regionService.GetRegionByIdAsync(id);
             if (region == null)
@@ -36,7 +36,7 @@ namespace API.Controllers
         }
 
         [HttpGet("by-name/{name}")]
-        public async Task<ActionResult<RegionDto>> GetRegionByName(string name)
+        public async Task<ActionResult<Region>> GetRegionByName(string name)
         {
             var region = await _regionService.GetRegionByNameAsync(name);
             if (region == null)

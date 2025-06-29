@@ -1,11 +1,11 @@
-using Application.DTOs;
+using Domain.Entities;
 
 namespace Application.Interfaces
 {
     public interface IRegionService
     {
-        Task<IEnumerable<RegionDto>> GetAllRegionsAsync();
-        Task<RegionDto?> GetRegionByIdAsync(int id);
-        Task<RegionDto?> GetRegionByNameAsync(string name);
+        Task<IEnumerable<Region>> GetAllRegionsAsync();
+        Task<Region?> GetRegionByIdAsync(int id);
+        Task<Region?> GetRegionByNameAsync(string name);
     }
 } 
