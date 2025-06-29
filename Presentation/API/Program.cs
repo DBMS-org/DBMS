@@ -73,10 +73,12 @@ builder.Services.AddScoped<IDrillHoleRepository, DrillHoleRepository>();
 builder.Services.AddScoped<IDrillHoleService, DrillHoleService>();
 
 // Register Site Blasting services
-builder.Services.AddScoped<ISiteBlastingService, SiteBlastingService>();
+builder.Services.AddScoped<ISiteBlastingRepository, SiteBlastingRepository>();
+builder.Services.AddScoped<ISiteBlastingService, SiteBlastingApplicationService>();
 
 // Register Region services
-builder.Services.AddScoped<IRegionService, RegionService>();
+builder.Services.AddScoped<IRegionRepository, RegionRepository>();
+builder.Services.AddScoped<IRegionService, RegionApplicationService>();
 
 var app = builder.Build();
 
