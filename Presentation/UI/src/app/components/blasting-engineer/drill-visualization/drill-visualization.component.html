@@ -13,11 +13,25 @@
           Drill Hole Visualization
         </h2>
         <p class="subtitle" *ngIf="isDataLoaded">
-          {{ drillData.length }} drill holes loaded for visualization
+          {{ totalHoles }} drill holes loaded for visualization
         </p>
         <p class="subtitle" *ngIf="!isDataLoaded">
           No drill hole data available
         </p>
+      </div>
+      
+      <!-- 2D/3D Mode Indicator -->
+      <div class="mode-indicator" *ngIf="isDataLoaded">
+        <div class="mode-badge" [class.mode-3d]="visualization3DCapable" [class.mode-2d]="isIn2DMode">
+          <i class="fas fa-cube" *ngIf="visualization3DCapable"></i>
+          <i class="fas fa-layer-group" *ngIf="isIn2DMode"></i>
+          <span class="mode-text">
+            {{ visualization3DCapable ? '3D Mode' : '2D Mode (No azimuth/dip data)' }}
+          </span>
+                     <div class="mode-details" *ngIf="has3DData">
+             <small>{{ holes3DDataText }}</small>
+           </div>
+        </div>
       </div>
     </div>
   </div>
@@ -50,7 +64,7 @@
         <div class="data-status" *ngIf="isDataLoaded">
           <span class="status-badge success">
             <i class="fas fa-database"></i>
-            {{ drillData.length }} holes loaded
+            {{ totalHoles }} holes loaded
           </span>
     </div>
   </div>
@@ -143,7 +157,7 @@
             <div class="stat-item">
               <i class="fas fa-crosshairs"></i>
               <span class="stat-label">Holes</span>
-              <span class="stat-value">{{ drillData.length }}</span>
+              <span class="stat-value">{{ totalHoles }}</span>
             </div>
             <div class="stat-item">
               <i class="fas fa-rulers"></i>
@@ -240,7 +254,7 @@
         <div class="data-summary-inline">
           <span class="summary-item">
             <i class="fas fa-list"></i>
-            {{ drillData.length }} holes
+            {{ totalHoles }} holes
           </span>
         </div>
     </div>
@@ -276,7 +290,7 @@
     </div>
 
     <!-- Coordinate Bounds Summary -->
-      <div class="bounds-card" *ngIf="drillData.length > 0">
+              <div class="bounds-card" *ngIf="totalHoles > 0">
         <h5>
           <i class="fas fa-map-marked-alt"></i>
           Site Coordinates Range

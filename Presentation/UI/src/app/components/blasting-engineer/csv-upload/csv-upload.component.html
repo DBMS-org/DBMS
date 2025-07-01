@@ -61,9 +61,20 @@
       <span class="progress-text">{{ uploadProgress }}%</span>
     </div>
 
-    <!-- Error Message -->
-    <div *ngIf="uploadError" class="error-message">
-      {{ uploadError }}
+    <!-- Selector Buttons -->
+    <div *ngIf="selectorVisible" class="selector-buttons">
+      <button class="selector-btn" (click)="navigateTo2D()">2D Pattern Creator</button>
+      <button class="selector-btn" (click)="navigateTo3D()" [disabled]="!has3DData">3D Visualization</button>
+    </div>
+
+    <!-- Enhanced Error Message -->
+    <div *ngIf="uploadError" class="error-message-container">
+      <div class="error-message">
+        <div class="error-content" [innerHTML]="formatErrorMessage(uploadError)"></div>
+        <button class="error-dismiss" (click)="uploadError = null" title="Dismiss error">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
     </div>
   </div>
 </div>

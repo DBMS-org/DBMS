@@ -1,9 +1,10 @@
+using Application.Interfaces;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Infrastructure.Services
 {
-    public class PasswordService
+    public class PasswordService : IPasswordService
     {
         public string HashPassword(string password)
         {

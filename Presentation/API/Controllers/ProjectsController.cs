@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Infrastructure.Data;
-using Domain.Entities;
 using Application.DTOs;
-using System.Text.Json;
+using Application.Interfaces;
 
 namespace API.Controllers
 {
@@ -11,14 +8,14 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class ProjectsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProjectService _projectService;
         private readonly ILogger<ProjectsController> _logger;
 
         public ProjectsController(
-            ApplicationDbContext context, 
+            IProjectService projectService, 
             ILogger<ProjectsController> logger)
         {
-            _context = context;
+            _projectService = projectService;
             _logger = logger;
         }
 
@@ -28,40 +25,7 @@ namespace API.Controllers
         {
             try
             {
-                var projects = await _context.Projects
-                    .Include(p => p.AssignedUser)
-                    .Include(p => p.ProjectSites)
-                    .Select(p => new ProjectDto
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Region = p.Region,
-                        Status = p.Status,
-                        Description = p.Description,
-                        StartDate = p.StartDate,
-                        EndDate = p.EndDate,
-                        AssignedUserId = p.AssignedUserId,
-                        AssignedUserName = p.AssignedUser != null ? p.AssignedUser.Name : null,
-                        CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                        ProjectSites = p.ProjectSites.Select(ps => new ProjectSiteDto
-                        {
-                            Id = ps.Id,
-                            ProjectId = ps.ProjectId,
-                            Name = ps.Name,
-                            Location = ps.Location,
-                            Coordinates = ParseCoordinates(ps.Coordinates),
-                            Status = ps.Status,
-                            Description = ps.Description,
-                            CreatedAt = ps.CreatedAt,
-                            UpdatedAt = ps.UpdatedAt,
-                            IsPatternApproved = ps.IsPatternApproved,
-                            IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                            IsOperatorCompleted = ps.IsOperatorCompleted
-                        }).ToList()
-                    })
-                    .ToListAsync();
-
+                var projects = await _projectService.GetAllProjectsAsync();
                 return Ok(projects);
             }
             catch (Exception ex)
@@ -77,47 +41,13 @@ namespace API.Controllers
         {
             try
             {
-                var project = await _context.Projects
-                    .Include(p => p.AssignedUser)
-                    .Include(p => p.ProjectSites)
-                    .FirstOrDefaultAsync(p => p.Id == id);
-
+                var project = await _projectService.GetProjectByIdAsync(id);
                 if (project == null)
                 {
                     return NotFound($"Project with ID {id} not found");
                 }
 
-                var projectDto = new ProjectDto
-                {
-                    Id = project.Id,
-                    Name = project.Name,
-                    Region = project.Region,
-                    Status = project.Status,
-                    Description = project.Description,
-                    StartDate = project.StartDate,
-                    EndDate = project.EndDate,
-                    AssignedUserId = project.AssignedUserId,
-                    AssignedUserName = project.AssignedUser?.Name,
-                    CreatedAt = project.CreatedAt,
-                    UpdatedAt = project.UpdatedAt,
-                    ProjectSites = project.ProjectSites.Select(ps => new ProjectSiteDto
-                    {
-                        Id = ps.Id,
-                        ProjectId = ps.ProjectId,
-                        Name = ps.Name,
-                        Location = ps.Location,
-                        Coordinates = ParseCoordinates(ps.Coordinates),
-                        Status = ps.Status,
-                        Description = ps.Description,
-                        CreatedAt = ps.CreatedAt,
-                        UpdatedAt = ps.UpdatedAt,
-                        IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                        IsOperatorCompleted = ps.IsOperatorCompleted
-                    }).ToList()
-                };
-
-                return Ok(projectDto);
+                return Ok(project);
             }
             catch (Exception ex)
             {
@@ -137,68 +67,12 @@ namespace API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Validate assigned user exists if provided
-                if (request.AssignedUserId.HasValue)
-                {
-                    var userExists = await _context.Users.AnyAsync(u => u.Id == request.AssignedUserId.Value);
-                    if (!userExists)
-                    {
-                        return BadRequest($"User with ID {request.AssignedUserId.Value} not found");
-                    }
-                }
-
-                // If the operator is already assigned to a different project, unassign first
-                if (request.AssignedUserId.HasValue)
-                {
-                    var existing = await _context.Projects.FirstOrDefaultAsync(p => p.AssignedUserId == request.AssignedUserId);
-                    if (existing != null)
-                    {
-                        existing.AssignedUserId = null;
-                    }
-                }
-
-                var project = new Project
-                {
-                    Name = request.Name,
-                    Region = request.Region,
-                    Status = request.Status,
-                    Description = request.Description,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
-                    AssignedUserId = request.AssignedUserId
-                };
-
-                _context.Projects.Add(project);
-                await _context.SaveChangesAsync();
-
-                // Load the project with related data for response
-                var createdProject = await _context.Projects
-                    .Include(p => p.AssignedUser)
-                    .Include(p => p.ProjectSites)
-                    .FirstOrDefaultAsync(p => p.Id == project.Id);
-
-                var projectDto = new ProjectDto
-                {
-                    Id = createdProject!.Id,
-                    Name = createdProject.Name,
-                    Region = createdProject.Region,
-                    Status = createdProject.Status,
-                    Description = createdProject.Description,
-                    StartDate = createdProject.StartDate,
-                    EndDate = createdProject.EndDate,
-                    AssignedUserId = createdProject.AssignedUserId,
-                    AssignedUserName = createdProject.AssignedUser?.Name,
-                    CreatedAt = createdProject.CreatedAt,
-                    UpdatedAt = createdProject.UpdatedAt,
-                    ProjectSites = new List<ProjectSiteDto>()
-                };
-
-                return CreatedAtAction(nameof(GetProject), new { id = project.Id }, projectDto);
+                var project = await _projectService.CreateProjectAsync(request);
+                return CreatedAtAction(nameof(GetProject), new { id = project.Id }, project);
             }
-            catch (DbUpdateException ex)
+            catch (ArgumentException ex)
             {
-                _logger.LogError(ex, "Database error occurred while creating project");
-                return StatusCode(500, "Database error occurred while creating project");
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -213,75 +87,26 @@ namespace API.Controllers
         {
             try
             {
-                if (id != request.Id)
-                {
-                    return BadRequest("Project ID mismatch");
-                }
-
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
 
-                var project = await _context.Projects.FindAsync(id);
-                if (project == null)
+                var success = await _projectService.UpdateProjectAsync(id, request);
+                if (!success)
                 {
                     return NotFound($"Project with ID {id} not found");
                 }
-
-                // Validate assigned user exists if provided
-                if (request.AssignedUserId.HasValue)
-                {
-                    var userExists = await _context.Users.AnyAsync(u => u.Id == request.AssignedUserId.Value);
-                    if (!userExists)
-                    {
-                        return BadRequest($"User with ID {request.AssignedUserId.Value} not found");
-                    }
-                }
-
-                // If operator reassigned, unassign from previous project
-                if (request.AssignedUserId.HasValue)
-                {
-                    var previous = await _context.Projects.FirstOrDefaultAsync(p => p.AssignedUserId == request.AssignedUserId && p.Id != id);
-                    if (previous != null)
-                    {
-                        previous.AssignedUserId = null;
-                    }
-                }
-
-                // Update project properties
-                project.Name = request.Name;
-                project.Region = request.Region;
-                project.Status = request.Status;
-                project.Description = request.Description;
-                project.StartDate = request.StartDate;
-                project.EndDate = request.EndDate;
-                project.AssignedUserId = request.AssignedUserId;
-                project.UpdatedAt = DateTime.UtcNow;
-
-                await _context.SaveChangesAsync();
 
                 return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException ex)
             {
-                if (!ProjectExists(id))
-                {
-                    return NotFound($"Project with ID {id} not found");
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Database error occurred while updating project {ProjectId}", id);
-                return StatusCode(500, "Database error occurred while updating project");
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating project {ProjectId}", id);
+                _logger.LogError(ex, "Error occurred while updating project with ID {ProjectId}", id);
                 return StatusCode(500, "Internal server error occurred while updating project");
             }
         }
@@ -292,60 +117,33 @@ namespace API.Controllers
         {
             try
             {
-                var project = await _context.Projects.FindAsync(id);
-                if (project == null)
+                var success = await _projectService.DeleteProjectAsync(id);
+                if (!success)
                 {
                     return NotFound($"Project with ID {id} not found");
                 }
-
-                _context.Projects.Remove(project);
-                await _context.SaveChangesAsync();
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while deleting project {ProjectId}", id);
+                _logger.LogError(ex, "Error occurred while deleting project with ID {ProjectId}", id);
                 return StatusCode(500, "Internal server error occurred while deleting project");
             }
         }
 
-        // GET: api/projects/{id}/sites
+        // GET: api/projects/5/sites
         [HttpGet("{id}/sites")]
         public async Task<ActionResult<IEnumerable<ProjectSiteDto>>> GetProjectSites(int id)
         {
             try
             {
-                var project = await _context.Projects.FindAsync(id);
-                if (project == null)
-                {
-                    return NotFound($"Project with ID {id} not found");
-                }
-
-                var sites = await _context.ProjectSites
-                    .Where(ps => ps.ProjectId == id)
-                    .Select(ps => new ProjectSiteDto
-                    {
-                        Id = ps.Id,
-                        ProjectId = ps.ProjectId,
-                        Name = ps.Name,
-                        Location = ps.Location,
-                        Coordinates = ParseCoordinates(ps.Coordinates),
-                        Status = ps.Status,
-                        Description = ps.Description,
-                        CreatedAt = ps.CreatedAt,
-                        UpdatedAt = ps.UpdatedAt,
-                        IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                        IsOperatorCompleted = ps.IsOperatorCompleted
-                    })
-                    .ToListAsync();
-
-                return Ok(sites);
+                var projectSites = await _projectService.GetProjectSitesAsync(id);
+                return Ok(projectSites);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching sites for project {ProjectId}", id);
+                _logger.LogError(ex, "Error occurred while fetching project sites for project {ProjectId}", id);
                 return StatusCode(500, "Internal server error occurred while fetching project sites");
             }
         }
@@ -359,58 +157,7 @@ namespace API.Controllers
         {
             try
             {
-                var query = _context.Projects
-                    .Include(p => p.AssignedUser)
-                    .Include(p => p.ProjectSites)
-                    .AsQueryable();
-
-                if (!string.IsNullOrEmpty(name))
-                {
-                    query = query.Where(p => p.Name.Contains(name));
-                }
-
-                if (!string.IsNullOrEmpty(region))
-                {
-                    query = query.Where(p => p.Region.Contains(region));
-                }
-
-                if (!string.IsNullOrEmpty(status))
-                {
-                    query = query.Where(p => p.Status == status);
-                }
-
-                var projects = await query
-                    .Select(p => new ProjectDto
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Region = p.Region,
-                        Status = p.Status,
-                        Description = p.Description,
-                        StartDate = p.StartDate,
-                        EndDate = p.EndDate,
-                        AssignedUserId = p.AssignedUserId,
-                        AssignedUserName = p.AssignedUser != null ? p.AssignedUser.Name : null,
-                        CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                        ProjectSites = p.ProjectSites.Select(ps => new ProjectSiteDto
-                        {
-                            Id = ps.Id,
-                            ProjectId = ps.ProjectId,
-                            Name = ps.Name,
-                            Location = ps.Location,
-                            Coordinates = ParseCoordinates(ps.Coordinates),
-                            Status = ps.Status,
-                            Description = ps.Description,
-                            CreatedAt = ps.CreatedAt,
-                            UpdatedAt = ps.UpdatedAt,
-                            IsPatternApproved = ps.IsPatternApproved,
-                            IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                            IsOperatorCompleted = ps.IsOperatorCompleted
-                        }).ToList()
-                    })
-                    .ToListAsync();
-
+                var projects = await _projectService.SearchProjectsAsync(name, region, status);
                 return Ok(projects);
             }
             catch (Exception ex)
@@ -422,17 +169,16 @@ namespace API.Controllers
 
         // GET: api/projects/test-connection
         [HttpGet("test-connection")]
-        public async Task<ActionResult> TestConnection()
+        public ActionResult TestConnection()
         {
             try
             {
-                var count = await _context.Projects.CountAsync();
-                return Ok(new { message = "Database connection successful", projectCount = count });
+                return Ok(new { message = "Connection successful", timestamp = DateTime.UtcNow });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Database connection test failed");
-                return StatusCode(500, "Database connection failed");
+                _logger.LogError(ex, "Error occurred while testing connection");
+                return StatusCode(500, "Internal server error occurred while testing connection");
             }
         }
 
@@ -440,66 +186,15 @@ namespace API.Controllers
         [HttpGet("by-operator/{operatorId}")]
         public async Task<ActionResult<ProjectDto?>> GetProjectByOperator(int operatorId)
         {
-            var project = await _context.Projects
-                .Include(p => p.AssignedUser)
-                .FirstOrDefaultAsync(p => p.AssignedUserId == operatorId);
-
-            if (project == null)
-            {
-                return Ok(null); // No project assigned
-            }
-
-            var dto = new ProjectDto
-            {
-                Id = project.Id,
-                Name = project.Name,
-                Region = project.Region,
-                Status = project.Status,
-                Description = project.Description,
-                StartDate = project.StartDate,
-                EndDate = project.EndDate,
-                AssignedUserId = project.AssignedUserId,
-                AssignedUserName = project.AssignedUser?.Name,
-                CreatedAt = project.CreatedAt,
-                UpdatedAt = project.UpdatedAt,
-                ProjectSites = new List<ProjectSiteDto>()
-            };
-
-            return Ok(dto);
-        }
-
-        private bool ProjectExists(int id)
-        {
-            return _context.Projects.Any(e => e.Id == id);
-        }
-
-        private static CoordinatesDto? ParseCoordinates(string coordinates)
-        {
-            if (string.IsNullOrEmpty(coordinates))
-                return null;
-
             try
             {
-                // Try to parse as JSON first (for structured coordinates)
-                if (coordinates.StartsWith("{") && coordinates.EndsWith("}"))
-                {
-                    return JsonSerializer.Deserialize<CoordinatesDto>(coordinates);
-                }
-
-                // Try to parse as comma-separated lat,lng
-                var parts = coordinates.Split(',');
-                if (parts.Length == 2 &&
-                    double.TryParse(parts[0].Trim(), out var lat) &&
-                    double.TryParse(parts[1].Trim(), out var lng))
-                {
-                    return new CoordinatesDto { Latitude = lat, Longitude = lng };
-                }
-
-                return null;
+                var project = await _projectService.GetProjectByOperatorAsync(operatorId);
+                return Ok(project);
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
+                _logger.LogError(ex, "Error occurred while fetching project for operator {OperatorId}", operatorId);
+                return StatusCode(500, "Internal server error occurred while fetching project");
             }
         }
     }
