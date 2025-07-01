@@ -99,7 +99,7 @@ export class CsvUploadComponent implements OnInit {
           this.uploadError = `Excel files (.xlsx/.xls) are not supported. Please convert "${file.name}" to CSV format first. In Excel: File → Save As → CSV (Comma delimited)`;
         } else if (fileName.endsWith('.txt')) {
           this.uploadError = `Text files (.txt) are not supported. Please save "${file.name}" as CSV format with comma separators.`;
-        } else {
+      } else {
           this.uploadError = `File type "${fileType || 'unknown'}" is not supported. Please select a CSV file (.csv) only. Current file: "${file.name}"`;
         }
         this.selectedFile = null;

@@ -1,31 +1,25 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef, ChangeDetectionStrategy, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { of, throwError, Subject } from 'rxjs';
-import { catchError, takeUntil } from 'rxjs/operators';
 import Konva from 'konva';
-
-// Models and Constants
-import { DrillPoint, PatternSettings } from './models/drill-point.model';
-import { CANVAS_CONSTANTS } from './constants/canvas.constants';
-import { Logger } from './utils/logger.util';
-import { KonvaHelpers } from './utils/konva-helpers.util';
-
-// Services
 import { CanvasService } from './services/canvas.service';
 import { GridService } from './services/grid.service';
 import { RulerService } from './services/ruler.service';
 import { DrillPointCanvasService } from './services/drill-point-canvas.service';
 import { DrillPointService } from './services/drill-point.service';
 import { ZoomService } from './services/zoom.service';
+import { DrillPoint, PatternSettings } from './models/drill-point.model';
+import { CANVAS_CONSTANTS } from './constants/canvas.constants';
 import { PatternDataService } from '../shared/pattern-data.service';
 import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
 import { SiteBlastingService } from '../../../core/services/site-blasting.service';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SiteService } from '../../../core/services/site.service';
 import { NavigationController, WorkflowStepId } from '../shared/services/navigation-controller.service';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
+import { of, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-drilling-pattern-creator',
@@ -37,8 +31,6 @@ import { DrillDataService } from '../csv-upload/csv-upload.component';
 })
 export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy {
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
-  
-  // Canvas objects
   private stage!: Konva.Stage;
   private gridLayer!: Konva.Layer;
   private rulerLayer!: Konva.Layer;
@@ -46,26 +38,20 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private gridGroup!: Konva.Group;
   private rulerGroup!: Konva.Group;
   private intersectionGroup!: Konva.Group;
-  
-  // Component state
   public drillPoints: DrillPoint[] = [];
   public selectedPoint: DrillPoint | null = null;
   public isHolePlacementMode = false;
   public isPreciseMode = false;
   public showInstructions = false;
-  public cursorPosition: { x: number; y: number } | null = null;
-  public duplicateAttemptMessage: string | null = null;
-  public isSaved = false;
-  
-  // Internal state
   private offsetX = 0;
   private offsetY = 0;
   private gridAnimationFrame = 0;
+  public cursorPosition: { x: number; y: number } | null = null;
   private isDragging = false;
   private draggedPoint: DrillPoint | null = null;
   private drillPointObjects: Map<string, Konva.Group> = new Map();
+  private resizeTimeout: any;
   private isInitialized = false;
-  private isReadOnly = false;
   
   // Panning functionality
   private isPanning = false;
@@ -74,21 +60,22 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private panOffsetX = 0;
   private panOffsetY = 0;
 
-  // Timeouts - properly typed
-  private resizeTimeout: number | null = null;
-  private duplicateMessageTimeout: number | null = null;
-  private saveTimeout: number | null = null;
+  public readonly ARIA_LABELS = CANVAS_CONSTANTS.ARIA_LABELS;
+  public settings: PatternSettings = { ...CANVAS_CONSTANTS.DEFAULT_SETTINGS };
+
+  // Duplicate placement feedback
+  public duplicateAttemptMessage: string | null = null;
+  private duplicateMessageTimeout: any;
+
+  // Save functionality
+  public isSaved = false;
+  private saveTimeout: any;
 
   // Site context
   private currentProjectId!: number;
   private currentSiteId!: number;
 
-  // Component lifecycle
-  private destroy$ = new Subject<void>();
-
-  // Constants for template
-  public readonly ARIA_LABELS = CANVAS_CONSTANTS.ARIA_LABELS;
-  public settings: PatternSettings = { ...CANVAS_CONSTANTS.DEFAULT_SETTINGS };
+  private isReadOnly = false;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -158,7 +145,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     const siteId = routeMatch ? +routeMatch[2] : null;
     
     if (projectId && siteId) {
-      Logger.info('Pattern Creator - Setting site context', { projectId, siteId });
+      console.log('Pattern Creator - Setting site context:', { projectId, siteId });
       this.currentProjectId = projectId;
       this.currentSiteId = siteId;
       this.blastSequenceDataService.setSiteContext(projectId, siteId);
@@ -167,11 +154,11 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       this.loadExistingPatternData();
       this.loadBackendPatternData();
     } else {
-      Logger.warn('Pattern Creator - Could not extract site context from route', this.router.url);
-      Logger.warn('Route match result', routeMatch);
+      console.warn('Pattern Creator - Could not extract site context from route:', this.router.url);
+      console.warn('Route match result:', routeMatch);
       
       // For testing purposes, use the known valid site combination
-      Logger.info('Falling back to test site context: Project 1, Site 3');
+      console.log('Falling back to test site context: Project 1, Site 3');
       this.currentProjectId = 1;
       this.currentSiteId = 3;
       this.blastSequenceDataService.setSiteContext(1, 3);
@@ -200,10 +187,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         this.settings = { ...existingPatternData.settings };
       }
       
-      Logger.info('Loaded existing pattern data', {
-        pointsCount: this.drillPoints.length,
-        nextId: this.drillPointService.getCurrentId()
-      });
+      console.log('Loaded existing pattern data:', this.drillPoints.length, 'points, next ID will be:', this.drillPointService.getCurrentId());
       
       // Redraw points after loading (need to wait for canvas to be ready)
       setTimeout(() => {
@@ -318,41 +302,23 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   ngOnDestroy(): void {
-    Logger.info('Component destroying');
-    
-    // Signal component destruction
-    this.destroy$.next();
-    this.destroy$.complete();
-    
-    // Mark as not initialized
+    console.log('Component destroying');
     this.isInitialized = false;
     
-    // Clean up timeouts
-    this.clearAllTimeouts();
-    
-    // Clean up animation frame
-    if (this.gridAnimationFrame) {
-      cancelAnimationFrame(this.gridAnimationFrame);
-    }
-    
-    // Clean up zoom events and stage
+    // Clean up zoom events
     if (this.stage) {
       this.zoomService.removeZoomEvents(this.stage);
       this.stage.destroy();
     }
-    
-    // Clean up grid cache
-    this.gridService.clearGridCache();
-  }
-
-  private clearAllTimeouts(): void {
-    const timeouts = [this.resizeTimeout, this.duplicateMessageTimeout, this.saveTimeout];
-    timeouts.forEach(timeout => {
-      if (timeout) clearTimeout(timeout);
-    });
-    this.resizeTimeout = null;
-    this.duplicateMessageTimeout = null;
-    this.saveTimeout = null;
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    if (this.gridAnimationFrame) {
+      cancelAnimationFrame(this.gridAnimationFrame);
+    }
+    if (this.duplicateMessageTimeout) {
+      clearTimeout(this.duplicateMessageTimeout);
+    }
   }
 
   private initializeCanvas(): void {
@@ -367,7 +333,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     }
 
     if (this.isInitialized) {
-      Logger.warn('Canvas already initialized, skipping');
+      console.log('Canvas already initialized, skipping');
       return;
     }
 
@@ -375,11 +341,11 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     
     // Check if container has proper dimensions
     if (container.offsetWidth === 0 || container.offsetHeight === 0) {
-      Logger.warn('Container not ready, retrying...');
+      console.log('Container not ready, retrying...');
       // Retry after a short delay if container isn't ready
-              setTimeout(() => {
-          this.initializeCanvas();
-        }, CANVAS_CONSTANTS.TIMEOUTS.CANVAS_INIT_RETRY);
+      setTimeout(() => {
+        this.initializeCanvas();
+      }, 50);
       return;
     }
 
@@ -585,15 +551,23 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       e.evt.preventDefault();
       
       if (e.target !== this.stage) {
-        // Check for pointId using type-safe helper
-        const pointId = KonvaHelpers.getPointIdFromTarget(e.target);
+        // Check for pointId in target or parent group
+        let pointId = e.target.attrs.pointId || (e.target.parent && (e.target.parent as any).pointId);
+        
+        if (!pointId && e.target.hasName && e.target.hasName('drill-point-group')) {
+          pointId = (e.target as any).pointId;
+        }
+        
+        if (!pointId && e.target.parent) {
+          pointId = (e.target.parent as any).pointId;
+        }
         
         if (pointId) {
           const point = this.drillPoints.find(p => p.id === pointId);
           if (point) {
             // Select the point and show context action
             this.selectPoint(point);
-            Logger.debug('Right-clicked on point for context actions', point.id);
+            console.log('Right-clicked on point:', point.id, '- Point selected for quick actions');
           }
         }
       }
@@ -604,11 +578,15 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         this.isDragging = true;
         this.isPanning = false;
         
-        // Look for pointId using type-safe helper
-        const pointId = KonvaHelpers.getPointIdFromTarget(e.target);
+        // Look for pointId in target or parent group (same logic as click)
+        let pointId = e.target.attrs.pointId || (e.target.parent && (e.target.parent as any).pointId);
+        
+        if (!pointId && e.target.hasName && e.target.hasName('drill-point-group')) {
+          pointId = (e.target as any).pointId;
+        }
         
         this.draggedPoint = this.drillPoints.find(p => p.id === pointId) || null;
-        Logger.debug('Drag started for point', { pointId, draggedPointId: this.draggedPoint?.id });
+        console.log('Drag started for point:', pointId, this.draggedPoint?.id);
         
         // Auto-select the dragged point
         if (this.draggedPoint) {

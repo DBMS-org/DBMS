@@ -92,4 +92,67 @@ export class DrillPointService {
       settings: { ...settings }
     };
   }
+
+  /**
+   * Robustly estimates grid pitch (spacing & burden).
+   * Steps:
+   *   1.  Collect all successive deltas for sorted coords.
+   *   2.  Discard anything < 0.5 m (assumed measurement noise).
+   *   3.  Round remaining deltas to nearest 0.1 m, build a frequency table.
+   *   4.  If the most common bucket accounts for ≥10 % of samples, use it (mode).
+   *      Otherwise return the median of the cleaned delta list.
+   *   5.  Fallback to 1 m when no usable deltas exist.
+   */
+  calculateGridPitch(drillPoints: DrillPoint[]): { spacing: number; burden: number } {
+    const estimate = (coords: number[]): number => {
+      if (coords.length < 2) return 1;
+
+      // Sort coordinates ascending
+      const sorted = [...coords].sort((a, b) => a - b);
+
+      // Build list of deltas, filter out sub-0.5 m jitter
+      const deltas: number[] = [];
+      for (let i = 1; i < sorted.length; i++) {
+        const delta = +(sorted[i] - sorted[i - 1]).toFixed(3); // keep high precision initially
+        if (delta >= 0.5) deltas.push(delta);
+      }
+
+      if (deltas.length === 0) return 1;
+
+      // Bucket to 0.1 m resolution and build histogram
+      const freq: Record<string, number> = {};
+      deltas.forEach(d => {
+        const bucket = (Math.round(d * 10) / 10).toFixed(1); // string key like "1.8"
+        freq[bucket] = (freq[bucket] || 0) + 1;
+      });
+
+      // Determine mode and its support percentage
+      const entries = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+      const [modeBucket, modeCount] = entries[0];
+      const support = modeCount / deltas.length;
+
+      if (support >= 0.10) {
+        return parseFloat(modeBucket);
+      }
+
+      // Fallback: median of deltas rounded to 0.1 m
+      deltas.sort((a, b) => a - b);
+      const median = deltas[Math.floor(deltas.length / 2)];
+      return +(Math.round(median * 10) / 10).toFixed(1);
+    };
+
+    return {
+      spacing: estimate(drillPoints.map(p => p.x)),
+      burden: estimate(drillPoints.map(p => p.y))
+    };
+  }
+
+  /**
+   * Euclidean distance between two drill points (unit: same as X,Y coordinates).
+   */
+  getDistance(a: DrillPoint, b: DrillPoint): number {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
 } 

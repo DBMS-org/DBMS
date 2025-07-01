@@ -23,5 +23,28 @@ export const CANVAS_CONSTANTS = {
     savePattern: 'Save drilling pattern',
     toBlastDesigner: 'Send pattern to blast sequence designer',
     showHelp: 'Show help instructions'
+  },
+  // Development/Production settings
+  DEBUG: {
+    ENABLED: false, // Set to false for production
+    LOG_LEVELS: {
+      INFO: 'info',
+      WARN: 'warn', 
+      ERROR: 'error'
+    }
+  },
+  // Performance thresholds
+  PERFORMANCE: {
+    GRID_PITCH_MIN_THRESHOLD: 0.5, // meters
+    GRID_PITCH_SUPPORT_THRESHOLD: 0.10, // 10%
+    COORDINATE_PRECISION: 2, // decimal places
+    DUPLICATE_TOLERANCE: 0.01 // meters
+  },
+  // Timeout values
+  TIMEOUTS: {
+    CANVAS_INIT_RETRY: 50, // ms
+    DUPLICATE_MESSAGE: 3000, // ms
+    SAVE_FEEDBACK: 2000, // ms
+    RESIZE_DEBOUNCE: 150 // ms
   }
 } as const; 
