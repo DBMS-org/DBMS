@@ -44,9 +44,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Register Authentication services
-builder.Services.AddScoped<PasswordService>();
-builder.Services.AddScoped<JwtService>();
+// Register Authentication services (Infrastructure implementations)
+builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Add JWT Authentication
@@ -70,7 +70,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Register DrillHole services
 builder.Services.AddScoped<IDrillHoleRepository, DrillHoleRepository>();
-builder.Services.AddScoped<IDrillHoleService, DrillHoleService>();
+builder.Services.AddScoped<IDrillHoleService, DrillHoleApplicationService>();
 
 // Register Site Blasting services
 builder.Services.AddScoped<ISiteBlastingRepository, SiteBlastingRepository>();
@@ -79,6 +79,17 @@ builder.Services.AddScoped<ISiteBlastingService, SiteBlastingApplicationService>
 // Register Region services
 builder.Services.AddScoped<IRegionRepository, RegionRepository>();
 builder.Services.AddScoped<IRegionService, RegionApplicationService>();
+
+// Register Project services
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectService, ProjectApplicationService>();
+builder.Services.AddScoped<IProjectSiteRepository, ProjectSiteRepository>();
+builder.Services.AddScoped<IProjectSiteService, ProjectSiteApplicationService>();
+
+// Register User/Auth services
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserApplicationService>();
+builder.Services.AddScoped<IAuthService, AuthApplicationService>();
 
 var app = builder.Build();
 
