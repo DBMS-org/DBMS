@@ -161,8 +161,19 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> DeleteDrillPatternAsync(int id)
         {
-            var pattern = await _context.DrillPatterns.FindAsync(id);
+            // Retrieve the drill pattern together with any related blast sequences
+            var pattern = await _context.DrillPatterns
+                .Include(p => p.BlastSequences)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
             if (pattern == null) return false;
+
+            // Remove any blast sequences that reference this pattern first to avoid
+            // FK constraint violations (DrillPatternId is configured with DeleteBehavior.Restrict)
+            if (pattern.BlastSequences != null && pattern.BlastSequences.Count > 0)
+            {
+                _context.BlastSequences.RemoveRange(pattern.BlastSequences);
+            }
 
             _context.DrillPatterns.Remove(pattern);
             await _context.SaveChangesAsync();

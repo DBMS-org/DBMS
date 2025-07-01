@@ -30,7 +30,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   showLabels = true;
   showDetailedLabels = false;
   show3DView = true;
-  
+
   // 2D/3D mode detection
   has3DData = false;
   isIn2DMode = false;
