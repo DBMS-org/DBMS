@@ -78,4 +78,32 @@ export class DrillingPatternError extends Error {
     super(message);
     this.name = 'DrillingPatternError';
   }
+}
+
+// Type-safe interfaces for Konva event handling
+export interface KonvaTargetWithPointId {
+  pointId?: string;
+  attrs: { pointId?: string; [key: string]: any };
+  parent?: KonvaTargetWithPointId;
+  getClassName?: () => string;
+}
+
+export interface DrillHoleData {
+  id?: number;
+  easting?: number;
+  northing?: number;
+  depth?: number;
+  length?: number;
+  [key: string]: any;
+}
+
+export interface CanvasPosition {
+  x: number;
+  y: number;
+}
+
+export interface ViewportSettings {
+  scale: number;
+  panOffsetX: number;
+  panOffsetY: number;
 } 
