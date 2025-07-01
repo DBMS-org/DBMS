@@ -30,6 +30,11 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   showLabels = true;
   showDetailedLabels = false;
   show3DView = true;
+  
+  // 2D/3D mode detection
+  has3DData = false;
+  isIn2DMode = false;
+  visualization3DCapable = false;
 
   // Route context
   projectId: number = 0;
@@ -145,6 +150,10 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
             this.drillData = databaseHoles;
             this.isDataLoaded = true;
             console.log('✅ Loaded', databaseHoles.length, 'drill holes from database');
+            
+            // Detect 3D capability
+            this.detect3DCapability();
+            
             this.logDrillDataSummary();
             
             // Update 3D visualization if it's already initialized
@@ -183,6 +192,10 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     
     if (this.isDataLoaded) {
       console.log('Sample drill hole:', this.drillData[0]);
+      
+      // Detect 3D capability
+      this.detect3DCapability();
+      
       this.logDrillDataSummary();
       
       // Update 3D visualization if it's already initialized
@@ -196,6 +209,52 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     } else {
       console.log('No drill data available. Please upload a CSV file first.');
     }
+  }
+
+  /// <summary>
+  /// Detects whether the loaded data has 3D capability (azimuth and dip values)
+  /// </summary>
+  private detect3DCapability(): void {
+    if (!this.drillData || this.drillData.length === 0) {
+      this.has3DData = false;
+      this.visualization3DCapable = false;
+      this.isIn2DMode = true;
+      return;
+    }
+
+    // Check if any drill hole has valid azimuth and dip data
+    const holesWithAzimuth = this.drillData.filter(hole => 
+      hole.azimuth !== null && hole.azimuth !== undefined && !isNaN(hole.azimuth));
+    const holesWithDip = this.drillData.filter(hole => 
+      hole.dip !== null && hole.dip !== undefined && !isNaN(hole.dip));
+    
+    // We need both azimuth and dip for 3D capability
+    const holesWithBoth3DParams = this.drillData.filter(hole => 
+      hole.azimuth !== null && hole.azimuth !== undefined && !isNaN(hole.azimuth) &&
+      hole.dip !== null && hole.dip !== undefined && !isNaN(hole.dip));
+
+    this.has3DData = holesWithBoth3DParams.length > 0;
+    this.visualization3DCapable = holesWithBoth3DParams.length >= this.drillData.length * 0.5; // At least 50% have 3D data
+    this.isIn2DMode = !this.visualization3DCapable;
+
+    const percentWith3D = (holesWithBoth3DParams.length / this.drillData.length * 100).toFixed(1);
+
+    console.log(`🔍 3D Capability Analysis:
+      📊 Total holes: ${this.drillData.length}
+      🧭 Holes with Azimuth: ${holesWithAzimuth.length}
+      📐 Holes with Dip: ${holesWithDip.length}
+      🎯 Holes with both Azimuth & Dip: ${holesWithBoth3DParams.length} (${percentWith3D}%)
+      ✅ Has 3D Data: ${this.has3DData}
+      🎮 3D Capable: ${this.visualization3DCapable}
+      📺 Fallback to 2D Mode: ${this.isIn2DMode}`);
+
+    // Update hole data with helper properties
+    this.drillData.forEach(hole => {
+      hole.has3DData = hole.azimuth !== null && hole.azimuth !== undefined && 
+                       hole.dip !== null && hole.dip !== undefined &&
+                       !isNaN(hole.azimuth) && !isNaN(hole.dip);
+      hole.requiresFallbackTo2D = !hole.has3DData;
+    });
   }
 
   private logDrillDataSummary(): void {
@@ -789,13 +848,27 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     return label;
   }
 
-  private orientDrillHole(drillObject: THREE.Object3D, azimuth: number, dip: number): void {
+  private orientDrillHole(drillObject: THREE.Object3D, azimuth?: number | null, dip?: number | null): void {
     // Reset rotations
     drillObject.rotation.set(0, 0, 0);
     
+    // Handle nullable azimuth and dip for 2D fallback
+    const effectiveAzimuth = azimuth ?? 0; // Default to North (0°) if null
+    const effectiveDip = dip ?? 90; // Default to vertical (90°) if null
+    
+    // Check if we have valid 3D data
+    const has3DData = azimuth !== null && azimuth !== undefined && dip !== null && dip !== undefined;
+    
+    if (!has3DData) {
+      console.log(`2D Mode: Using default orientation (Azimuth=0°, Dip=90°) for hole without 3D data`);
+      // In 2D mode, keep holes vertical for simpler visualization
+      // No rotation needed as cylinder is already vertical
+      return;
+    }
+    
     // Convert angles to radians
-    const azimuthRad = THREE.MathUtils.degToRad(azimuth);
-    const dipRad = THREE.MathUtils.degToRad(dip);
+    const azimuthRad = THREE.MathUtils.degToRad(effectiveAzimuth);
+    const dipRad = THREE.MathUtils.degToRad(effectiveDip);
     
     // Drill hole orientation in mining/surveying convention:
     // Azimuth: 0° = North, 90° = East, 180° = South, 270° = West
@@ -809,10 +882,12 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     // Azimuth 0° = North (+Z), rotate around Y-axis
     drillObject.rotateY(-azimuthRad); // Negative for correct direction
     
-    console.log(`Oriented hole: Azimuth=${azimuth}° (${this.getAzimuthDirection(azimuth)}), Dip=${dip}°`);
+    console.log(`3D Mode: Oriented hole: Azimuth=${effectiveAzimuth}° (${this.getAzimuthDirection(effectiveAzimuth)}), Dip=${effectiveDip}°`);
   }
 
-  private getAzimuthDirection(azimuth: number): string {
+  private getAzimuthDirection(azimuth?: number | null): string {
+    if (azimuth === null || azimuth === undefined) return 'Vertical (2D)';
+    
     const normalizedAzimuth = azimuth % 360;
     if (normalizedAzimuth >= 337.5 || normalizedAzimuth < 22.5) return 'North';
     if (normalizedAzimuth >= 22.5 && normalizedAzimuth < 67.5) return 'NorthEast';
@@ -1378,5 +1453,19 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     
     // Reset camera view
     this.autoFramePattern();
+  }
+
+  // Getter methods for template expressions (Angular templates cannot use complex expressions)
+  get holesWithAzimuthAndDip(): number {
+    if (!this.drillData) return 0;
+    return this.drillData.filter(h => h.has3DData).length;
+  }
+
+  get totalHoles(): number {
+    return this.drillData?.length || 0;
+  }
+
+  get holes3DDataText(): string {
+    return `${this.holesWithAzimuthAndDip}/${this.totalHoles} holes have 3D data`;
   }
 }

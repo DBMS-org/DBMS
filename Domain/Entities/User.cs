@@ -41,6 +41,8 @@ namespace Domain.Entities
         public string CountryPhone { get; set; } = string.Empty;
         
         public DateTime? LastLoginAt { get; set; }
+        public string? PasswordResetCode { get; set; }
+        public DateTime? PasswordResetCodeExpiry { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
