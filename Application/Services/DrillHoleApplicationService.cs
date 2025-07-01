@@ -1,15 +1,16 @@
 using Domain.Entities;
 using Application.Interfaces;
 using Application.DTOs;
+using Application.Utilities;
 using System.Globalization;
 
 namespace Application.Services
 {
-    public class DrillHoleService : IDrillHoleService
+    public class DrillHoleApplicationService : IDrillHoleService
     {
         private readonly IDrillHoleRepository _repository;
 
-        public DrillHoleService(IDrillHoleRepository repository)
+        public DrillHoleApplicationService(IDrillHoleRepository repository)
         {
             _repository = repository;
         }
@@ -97,11 +98,12 @@ namespace Application.Services
 
             using var reader = new StreamReader(csvRequest.FileStream);
             
-            // Skip the summary lines at the top (Number of Holes, Total drilling, etc.)
             string? line;
             var headers = new string[0];
+            var mappedHeaders = new Dictionary<string, string>();
             var dataStarted = false;
             var lineNumber = 0;
+            var has3DCapability = false;
             
             while ((line = await reader.ReadLineAsync()) != null)
             {
@@ -112,74 +114,26 @@ namespace Application.Services
 
                 var values = line.Split(',').Select(v => v.Trim()).ToArray();
                 
-                // Look for the header line (starts with "Sr No.")
-                if (!dataStarted && values.Length > 0 && values[0].Equals("Sr No.", StringComparison.OrdinalIgnoreCase))
+                // Auto-detect header line - look for lines with common drill hole column indicators
+                if (!dataStarted && IsHeaderLine(values))
                 {
-                    headers = values.Select(h => h.Trim().ToLowerInvariant()).ToArray();
-                    dataStarted = true;
+                    headers = values;
+                    mappedHeaders = CsvColumnMapper.MapHeaders(headers);
                     
-                    // Validate that we have the required columns for blast data
-                    var requiredHeaders = new List<string> 
-                    { 
-                        "id", 
-                        "east", 
-                        "north", 
-                        "elev", 
-                        "length", 
-                        "azi", 
-                        "dip", 
-                        "actual dep", 
-                        "stemming" 
-                    };
-                    var missingHeaders = new List<string>();
-                    
-                    foreach (var required in requiredHeaders)
+                    // Validate required columns
+                    var (isValid, missingColumns) = CsvColumnMapper.ValidateRequiredColumns(mappedHeaders);
+                    if (!isValid)
                     {
-                        bool found = false;
-                        switch (required)
-                        {
-                            case "sr no.":
-                                found = headers.Any(h => h == "sr no." || h == "sr no" || h == "serial no." || h == "serial number");
-                                break;
-                            case "id":
-                                found = headers.Any(h => h == "id" || h == "hole id" || h == "holeid");
-                                break;
-                            case "east":
-                                found = headers.Any(h => h == "east" || h == "easting" || h == "x");
-                                break;
-                            case "north":
-                                found = headers.Any(h => h == "north" || h == "northing" || h == "y");
-                                break;
-                            case "elev":
-                                found = headers.Any(h => h == "elev" || h == "elevation" || h == "z");
-                                break;
-                            case "length":
-                                found = headers.Any(h => h == "length" || h == "hole length");
-                                break;
-                            case "azi":
-                                found = headers.Any(h => h == "azi" || h == "azimuth" || h == "bearing");
-                                break;
-                            case "dip":
-                                found = headers.Any(h => h == "dip" || h == "inclination" || h == "angle");
-                                break;
-                            case "actual dep":
-                                found = headers.Any(h => h == "actual dep" || h == "actualdep" || h == "actual depth" || h == "actual_depth");
-                                break;
-                            case "stemming":
-                                found = headers.Any(h => h == "stemming" || h == "stem");
-                                break;
-                            default:
-                                found = headers.Contains(required);
-                                break;
-                        }
-                        
-                        if (!found)
-                            missingHeaders.Add(required);
+                        // Not a real header row, continue scanning
+                        Console.WriteLine($"⚠️ Potential header at line {lineNumber} skipped – missing columns: {string.Join(", ", missingColumns)}");
+                        continue;
                     }
                     
-                    if (missingHeaders.Any())
-                        throw new InvalidOperationException($"Missing required CSV headers: {string.Join(", ", missingHeaders)}");
+                    // Check if we have 3D capability
+                    has3DCapability = CsvColumnMapper.Has3DCapability(mappedHeaders);
+                    Console.WriteLine($"✅ Header found at line {lineNumber}. 3D capability: {has3DCapability}");
                     
+                    dataStarted = true;
                     continue;
                 }
                 
@@ -187,13 +141,13 @@ namespace Application.Services
                 if (!dataStarted)
                     continue;
                 
-                // Skip empty lines or summary rows
-                if (values.Length < headers.Length || string.IsNullOrWhiteSpace(values[1])) // Check if ID column is empty
+                // Skip empty lines or rows without proper data
+                if (values.Length < 3 || IsDataRowEmpty(values, mappedHeaders))
                     continue;
 
                 try
                 {
-                    var drillHole = ParseBlastDrillHoleFromCsvLine(headers, values, lineNumber);
+                    var drillHole = ParseFlexibleDrillHoleFromCsvLine(headers, values, mappedHeaders, lineNumber);
                     
                     if (drillHole != null)
                     {
@@ -202,16 +156,204 @@ namespace Application.Services
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException($"Error parsing line {lineNumber}: {ex.Message}");
+                    // Log and skip invalid row instead of aborting entire upload
+                    Console.WriteLine($"⚠️ Skipping line {lineNumber} due to parsing error: {ex.Message}");
+                    continue;
                 }
+            }
+
+            if (!dataStarted)
+            {
+                throw new InvalidOperationException("No valid CSV header row found containing required columns (ID, Easting, Northing, Elevation).");
             }
 
             if (drillHoles.Any())
             {
                 await _repository.AddRangeAsync(drillHoles);
+                Console.WriteLine($"Successfully imported {drillHoles.Count} drill holes. 3D data available: {has3DCapability}");
             }
 
             return drillHoles;
+        }
+
+        /// <summary>
+        /// Auto-detects if a line contains header information
+        /// </summary>
+        private static bool IsHeaderLine(string[] values)
+        {
+            if (values.Length < 3) return false;
+            
+            // Extended header indicators to cover more CSV formats
+            var headerIndicators = new[] 
+            { 
+                "id", "hole", "east", "north", "elev", "elevation", "x", "y", "z",
+                "azi", "azimuth", "dip", "length", "depth", "sr", "serial", "name",
+                "collar", "design", "coord", "coordinate", "rl", "reduced", "level",
+                "identifier", "mass", "diameter", "pattern", "assumed", "actual"
+            };
+            
+            var normalizedValues = values.Select(v => v.ToLowerInvariant()).ToArray();
+
+            // Check if at least 2 values contain header indicators
+            var headerCount = normalizedValues.Count(v => headerIndicators.Any(indicator => v.Contains(indicator)));
+
+            // Extra rule: if line contains any "design collar" columns, treat as header
+            var containsDesignCollar = normalizedValues.Any(v => v.Contains("design collar"));
+
+            return headerCount >= 2 || containsDesignCollar;
+        }
+
+        /// <summary>
+        /// Checks if a data row is empty or invalid
+        /// </summary>
+        private static bool IsDataRowEmpty(string[] values, Dictionary<string, string> mappedHeaders)
+        {
+            // If no mappings available, check basic criteria
+            if (!mappedHeaders.Any())
+            {
+                // Count non-empty values
+                var nonEmptyCount = values.Count(v => !string.IsNullOrWhiteSpace(v));
+                return nonEmptyCount < 3; // Need at least 3 non-empty values
+            }
+
+            // Find the ID column and check if it has data
+            var idColumn = mappedHeaders.FirstOrDefault(kv => kv.Value == "id");
+            if (idColumn.Key != null)
+            {
+                // We need to find the index in the original headers array, not the mapped headers
+                // Since we don't have access to the headers array here, let's use a simpler approach
+                var requiredValues = new List<string>();
+                
+                // Check if we have values for essential columns
+                foreach (var mapping in mappedHeaders)
+                {
+                    if (mapping.Value == "id" || mapping.Value == "easting" || mapping.Value == "northing")
+                    {
+                        // Find the corresponding index - this is a simplified approach
+                        var headersList = mappedHeaders.Keys.ToList();
+                        var index = headersList.IndexOf(mapping.Key);
+                        if (index >= 0 && index < values.Length)
+                        {
+                            requiredValues.Add(values[index]);
+                        }
+                    }
+                }
+                
+                // Return true if any essential value is missing
+                return requiredValues.Any(string.IsNullOrWhiteSpace);
+            }
+            
+            // Fallback: check if first few columns are empty
+            return values.Take(3).All(string.IsNullOrWhiteSpace);
+        }
+
+        /// <summary>
+        /// Flexible CSV parsing that works with any column format using the mapping system
+        /// </summary>
+        private static DrillHole ParseFlexibleDrillHoleFromCsvLine(string[] headers, string[] values, Dictionary<string, string> mappedHeaders, int lineNumber)
+        {
+            var drillHole = new DrillHole
+            {
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            // Parse each column using the mapped headers
+            for (int i = 0; i < Math.Min(headers.Length, values.Length); i++)
+            {
+                var originalHeader = headers[i];
+                var value = values[i];
+                var standardColumn = CsvColumnMapper.GetStandardColumnName(originalHeader, mappedHeaders);
+
+                if (string.IsNullOrEmpty(standardColumn))
+                    continue; // Skip unmapped columns
+
+                try
+                {
+                    switch (standardColumn)
+                    {
+                        case "id":
+                            drillHole.Id = SafeDataConverter.ParseStringWithDefault(value, Guid.NewGuid().ToString());
+                            if (string.IsNullOrWhiteSpace(drillHole.Name)) // Use ID as name if name not set
+                                drillHole.Name = drillHole.Id;
+                            break;
+
+                        case "name":
+                            drillHole.Name = SafeDataConverter.ParseStringWithDefault(value, drillHole.Id);
+                            break;
+
+                        case "easting":
+                            drillHole.Easting = SafeDataConverter.ParseDoubleRequired(value, "Easting", lineNumber);
+                            break;
+
+                        case "northing":
+                            drillHole.Northing = SafeDataConverter.ParseDoubleRequired(value, "Northing", lineNumber);
+                            break;
+
+                        case "elevation":
+                            drillHole.Elevation = SafeDataConverter.ParseDoubleRequired(value, "Elevation", lineNumber);
+                            break;
+
+                        case "length":
+                            drillHole.Length = SafeDataConverter.ParseDoubleWithDefault(value, 0.0, "Length", lineNumber);
+                            // If depth is not separately provided, use length as depth
+                            if (drillHole.Depth == 0)
+                                drillHole.Depth = drillHole.Length;
+                            break;
+
+                        case "depth":
+                            drillHole.Depth = SafeDataConverter.ParseDoubleWithDefault(value, 0.0, "Depth", lineNumber);
+                            break;
+
+                        case "azimuth":
+                            drillHole.Azimuth = SafeDataConverter.ParseDoubleOrNull(value, "Azimuth", lineNumber);
+                            break;
+
+                        case "dip":
+                            drillHole.Dip = SafeDataConverter.ParseDoubleOrNull(value, "Dip", lineNumber);
+                            break;
+
+                        case "stemming":
+                            drillHole.Stemming = SafeDataConverter.ParseDoubleWithDefault(value, 0.0, "Stemming", lineNumber);
+                            break;
+
+                        default:
+                            // Handle any other mapped columns that might be added in the future
+                            Console.WriteLine($"Unknown standard column '{standardColumn}' at line {lineNumber}");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Error parsing '{standardColumn}' from value '{value}' at line {lineNumber}: {ex.Message}");
+                }
+            }
+
+            // Set default values if required fields are missing
+            if (string.IsNullOrWhiteSpace(drillHole.Id))
+                drillHole.Id = Guid.NewGuid().ToString();
+                
+            if (string.IsNullOrWhiteSpace(drillHole.Name))
+                drillHole.Name = drillHole.Id;
+
+            // Validate coordinates
+            try
+            {
+                (drillHole.Easting, drillHole.Northing, drillHole.Elevation) = 
+                    SafeDataConverter.ValidateCoordinates(drillHole.Easting, drillHole.Northing, drillHole.Elevation, lineNumber);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Invalid coordinates at line {lineNumber}: {ex.Message}");
+            }
+
+            // Validate 3D data if present
+            (drillHole.Azimuth, drillHole.Dip) = SafeDataConverter.ValidateOptional3DData(drillHole.Azimuth, drillHole.Dip, lineNumber);
+
+            // Final validation
+            ValidateDrillHole(drillHole);
+            
+            return drillHole;
         }
 
         private static DrillHole ParseBlastDrillHoleFromCsvLine(string[] headers, string[] values, int lineNumber)
@@ -263,12 +405,12 @@ namespace Application.Services
                     case "azi":
                     case "azimuth":
                     case "bearing":
-                        drillHole.Azimuth = ParseDouble(value, "Azimuth", lineNumber);
+                        drillHole.Azimuth = ParseDoubleNullable(value, "Azimuth", lineNumber);
                         break;
                     case "dip":
                     case "inclination":
                     case "angle":
-                        drillHole.Dip = ParseDouble(value, "Dip", lineNumber);
+                        drillHole.Dip = ParseDoubleNullable(value, "Dip", lineNumber);
                         break;
                     case "actual dep":
                     case "actualdep":
@@ -332,10 +474,10 @@ namespace Application.Services
                         drillHole.Depth = ParseDouble(value, "Depth", lineNumber);
                         break;
                     case "azimuth":
-                        drillHole.Azimuth = ParseDouble(value, "Azimuth", lineNumber);
+                        drillHole.Azimuth = ParseDoubleNullable(value, "Azimuth", lineNumber);
                         break;
                     case "dip":
-                        drillHole.Dip = ParseDouble(value, "Dip", lineNumber);
+                        drillHole.Dip = ParseDoubleNullable(value, "Dip", lineNumber);
                         break;
                 }
             }
@@ -351,6 +493,20 @@ namespace Application.Services
 
             if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
                 throw new InvalidOperationException($"Line {lineNumber}: Invalid {fieldName} value '{value}'");
+
+            return result;
+        }
+
+        private static double? ParseDoubleNullable(string value, string fieldName, int lineNumber)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null; // Return null for empty values for optional 3D data
+
+            if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
+            {
+                Console.WriteLine($"Warning: Line {lineNumber}: Invalid {fieldName} value '{value}'. Setting to null for 2D fallback.");
+                return null;
+            }
 
             return result;
         }
@@ -386,12 +542,12 @@ namespace Application.Services
             if (drillHole.Stemming < 0)
                 throw new ArgumentException("DrillHole Stemming cannot be negative");
 
-            // More lenient validation for blast hole data
-            if (drillHole.Azimuth < 0 || drillHole.Azimuth > 360)
-                drillHole.Azimuth = Math.Max(0, Math.Min(360, drillHole.Azimuth)); // Clamp to valid range
+            // More lenient validation for blast hole data - handle nullable values
+            if (drillHole.Azimuth.HasValue && (drillHole.Azimuth < 0 || drillHole.Azimuth > 360))
+                drillHole.Azimuth = Math.Max(0, Math.Min(360, drillHole.Azimuth.Value)); // Clamp to valid range
 
-            if (drillHole.Dip < -90 || drillHole.Dip > 90)
-                drillHole.Dip = Math.Max(-90, Math.Min(90, drillHole.Dip)); // Clamp to valid range
+            if (drillHole.Dip.HasValue && (drillHole.Dip < -90 || drillHole.Dip > 90))
+                drillHole.Dip = Math.Max(-90, Math.Min(90, drillHole.Dip.Value)); // Clamp to valid range
         }
 
         public async Task DeleteDrillHolesByProjectIdAsync(int projectId)

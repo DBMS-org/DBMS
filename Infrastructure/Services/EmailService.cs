@@ -1,3 +1,4 @@
+using Application.Interfaces;
 using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
@@ -5,11 +6,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services
 {
-    public interface IEmailService
-    {
-        Task<bool> SendPasswordResetCodeAsync(string email, string code, string userName);
-    }
-
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
@@ -21,13 +17,13 @@ namespace Infrastructure.Services
             _logger = logger;
         }
 
-        public async Task<bool> SendPasswordResetCodeAsync(string email, string code, string userName)
+        public async Task SendPasswordResetEmailAsync(string email, string resetCode)
         {
             try
             {
                 // ALWAYS log the code for testing/debugging
-                _logger.LogWarning($"🔐 PASSWORD RESET CODE for {email}: {code}");
-                Console.WriteLine($"🔐 PASSWORD RESET CODE for {email}: {code}");
+                _logger.LogWarning($"🔐 PASSWORD RESET CODE for {email}: {resetCode}");
+                Console.WriteLine($"🔐 PASSWORD RESET CODE for {email}: {resetCode}");
                 
                 var smtpHost = _configuration["Email:SmtpHost"];
                 var smtpPort = _configuration["Email:SmtpPort"];
@@ -52,7 +48,7 @@ namespace Infrastructure.Services
                     {
                         From = new MailAddress(fromAddress ?? username, fromName ?? "DBMS System"),
                         Subject = "Password Reset Code - DBMS System",
-                        Body = GetPasswordResetEmailBody(userName, code),
+                        Body = GetPasswordResetEmailBody("User", resetCode),
                         IsBodyHtml = true,
                     };
                     
@@ -67,12 +63,51 @@ namespace Infrastructure.Services
                     // Don't return false - the code is still valid and logged
                 }
                 
-                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"❌ Failed to generate password reset code for {email}");
-                return false;
+                throw;
+            }
+        }
+
+        public async Task SendEmailAsync(string to, string subject, string body)
+        {
+            try
+            {
+                var smtpHost = _configuration["Email:SmtpHost"];
+                var smtpPort = _configuration["Email:SmtpPort"];
+                var username = _configuration["Email:Username"];
+                var password = _configuration["Email:Password"];
+                var fromAddress = _configuration["Email:FromAddress"];
+                var fromName = _configuration["Email:FromName"];
+
+                using var smtpClient = new SmtpClient(smtpHost)
+                {
+                    Port = int.Parse(smtpPort ?? "587"),
+                    Credentials = new NetworkCredential(username, password),
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false
+                };
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(fromAddress ?? username, fromName ?? "DBMS System"),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true,
+                };
+                
+                mailMessage.To.Add(to);
+                
+                await smtpClient.SendMailAsync(mailMessage);
+                _logger.LogInformation($"✅ Email sent successfully to {to}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"❌ Failed to send email to {to}");
+                throw;
             }
         }
 

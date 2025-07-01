@@ -93,11 +93,79 @@
       }
     }
   }
+
+  // 2D/3D Mode Indicator
+  .mode-indicator {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-direction: column;
+      text-align: center;
+
+      &.mode-3d {
+        background: rgba(40, 167, 69, 0.15);
+        border-color: rgba(40, 167, 69, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+
+        i {
+          color: #28a745;
+          animation: rotate3d 3s linear infinite;
+        }
+      }
+
+      &.mode-2d {
+        background: rgba(255, 193, 7, 0.15);
+        border-color: rgba(255, 193, 7, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+
+        i {
+          color: #ffc107;
+        }
+      }
+
+      .mode-text {
+        font-size: 1rem;
+        line-height: 1;
+        margin: 0;
+      }
+
+      .mode-details {
+        margin-top: 0.25rem;
+        
+        small {
+          font-size: 0.85rem;
+          opacity: 0.8;
+          font-weight: 400;
+        }
+      }
+
+      i {
+        font-size: 1.2rem;
+        margin-bottom: 0.25rem;
+      }
+    }
+  }
 }
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
+}
+
+@keyframes rotate3d {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
 }
 
 // Main Content Area

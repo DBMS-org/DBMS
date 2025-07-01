@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Infrastructure.Data;
-using Domain.Entities;
 using Application.DTOs;
-using System.Text.Json;
+using Application.Interfaces;
 
 namespace API.Controllers
 {
@@ -11,14 +8,14 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class ProjectSitesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProjectSiteService _projectSiteService;
         private readonly ILogger<ProjectSitesController> _logger;
 
         public ProjectSitesController(
-            ApplicationDbContext context, 
+            IProjectSiteService projectSiteService, 
             ILogger<ProjectSitesController> logger)
         {
-            _context = context;
+            _projectSiteService = projectSiteService;
             _logger = logger;
         }
 
@@ -28,24 +25,7 @@ namespace API.Controllers
         {
             try
             {
-                var projectSites = await _context.ProjectSites
-                    .Select(ps => new ProjectSiteDto
-                    {
-                        Id = ps.Id,
-                        ProjectId = ps.ProjectId,
-                        Name = ps.Name,
-                        Location = ps.Location,
-                        Coordinates = ParseCoordinates(ps.Coordinates),
-                        Status = ps.Status,
-                        Description = ps.Description,
-                        CreatedAt = ps.CreatedAt,
-                        UpdatedAt = ps.UpdatedAt,
-                        IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                        IsOperatorCompleted = ps.IsOperatorCompleted
-                    })
-                    .ToListAsync();
-
+                var projectSites = await _projectSiteService.GetAllProjectSitesAsync();
                 return Ok(projectSites);
             }
             catch (Exception ex)
@@ -61,30 +41,14 @@ namespace API.Controllers
         {
             try
             {
-                var projectSite = await _context.ProjectSites.FindAsync(id);
+                var projectSite = await _projectSiteService.GetProjectSiteByIdAsync(id);
 
                 if (projectSite == null)
                 {
                     return NotFound($"Project site with ID {id} not found");
                 }
 
-                var projectSiteDto = new ProjectSiteDto
-                {
-                    Id = projectSite.Id,
-                    ProjectId = projectSite.ProjectId,
-                    Name = projectSite.Name,
-                    Location = projectSite.Location,
-                    Coordinates = ParseCoordinates(projectSite.Coordinates),
-                    Status = projectSite.Status,
-                    Description = projectSite.Description,
-                    CreatedAt = projectSite.CreatedAt,
-                    UpdatedAt = projectSite.UpdatedAt,
-                    IsPatternApproved = projectSite.IsPatternApproved,
-                    IsSimulationConfirmed = projectSite.IsSimulationConfirmed,
-                    IsOperatorCompleted = projectSite.IsOperatorCompleted
-                };
-
-                return Ok(projectSiteDto);
+                return Ok(projectSite);
             }
             catch (Exception ex)
             {
@@ -99,32 +63,12 @@ namespace API.Controllers
         {
             try
             {
-                var projectExists = await _context.Projects.AnyAsync(p => p.Id == projectId);
-                if (!projectExists)
-                {
-                    return NotFound($"Project with ID {projectId} not found");
-                }
-
-                var projectSites = await _context.ProjectSites
-                    .Where(ps => ps.ProjectId == projectId)
-                    .Select(ps => new ProjectSiteDto
-                    {
-                        Id = ps.Id,
-                        ProjectId = ps.ProjectId,
-                        Name = ps.Name,
-                        Location = ps.Location,
-                        Coordinates = ParseCoordinates(ps.Coordinates),
-                        Status = ps.Status,
-                        Description = ps.Description,
-                        CreatedAt = ps.CreatedAt,
-                        UpdatedAt = ps.UpdatedAt,
-                        IsPatternApproved = ps.IsPatternApproved,
-                        IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                        IsOperatorCompleted = ps.IsOperatorCompleted
-                    })
-                    .ToListAsync();
-
+                var projectSites = await _projectSiteService.GetProjectSitesByProjectIdAsync(projectId);
                 return Ok(projectSites);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
             }
             catch (Exception ex)
             {
@@ -144,48 +88,12 @@ namespace API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Validate that the project exists
-                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
-                if (!projectExists)
-                {
-                    return BadRequest($"Project with ID {request.ProjectId} not found");
-                }
-
-                var projectSite = new ProjectSite
-                {
-                    ProjectId = request.ProjectId,
-                    Name = request.Name,
-                    Location = request.Location,
-                    Coordinates = SerializeCoordinates(request.Coordinates),
-                    Status = request.Status,
-                    Description = request.Description
-                };
-
-                _context.ProjectSites.Add(projectSite);
-                await _context.SaveChangesAsync();
-
-                var projectSiteDto = new ProjectSiteDto
-                {
-                    Id = projectSite.Id,
-                    ProjectId = projectSite.ProjectId,
-                    Name = projectSite.Name,
-                    Location = projectSite.Location,
-                    Coordinates = ParseCoordinates(projectSite.Coordinates),
-                    Status = projectSite.Status,
-                    Description = projectSite.Description,
-                    CreatedAt = projectSite.CreatedAt,
-                    UpdatedAt = projectSite.UpdatedAt,
-                    IsPatternApproved = projectSite.IsPatternApproved,
-                    IsSimulationConfirmed = projectSite.IsSimulationConfirmed,
-                    IsOperatorCompleted = projectSite.IsOperatorCompleted
-                };
-
-                return CreatedAtAction(nameof(GetProjectSite), new { id = projectSite.Id }, projectSiteDto);
+                var projectSite = await _projectSiteService.CreateProjectSiteAsync(request);
+                return CreatedAtAction(nameof(GetProjectSite), new { id = projectSite.Id }, projectSite);
             }
-            catch (DbUpdateException ex)
+            catch (InvalidOperationException ex)
             {
-                _logger.LogError(ex, "Database error occurred while creating project site");
-                return StatusCode(500, "Database error occurred while creating project site");
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -210,47 +118,17 @@ namespace API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var projectSite = await _context.ProjectSites.FindAsync(id);
-                if (projectSite == null)
+                var success = await _projectSiteService.UpdateProjectSiteAsync(id, request);
+                if (!success)
                 {
                     return NotFound($"Project site with ID {id} not found");
                 }
-
-                // Validate that the project exists
-                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
-                if (!projectExists)
-                {
-                    return BadRequest($"Project with ID {request.ProjectId} not found");
-                }
-
-                // Update project site properties
-                projectSite.ProjectId = request.ProjectId;
-                projectSite.Name = request.Name;
-                projectSite.Location = request.Location;
-                projectSite.Coordinates = SerializeCoordinates(request.Coordinates);
-                projectSite.Status = request.Status;
-                projectSite.Description = request.Description;
-                projectSite.UpdatedAt = DateTime.UtcNow;
-
-                await _context.SaveChangesAsync();
 
                 return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (InvalidOperationException ex)
             {
-                if (!ProjectSiteExists(id))
-                {
-                    return NotFound($"Project site with ID {id} not found");
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Database error occurred while updating project site {ProjectSiteId}", id);
-                return StatusCode(500, "Database error occurred while updating project site");
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -265,14 +143,11 @@ namespace API.Controllers
         {
             try
             {
-                var projectSite = await _context.ProjectSites.FindAsync(id);
-                if (projectSite == null)
+                var success = await _projectSiteService.DeleteProjectSiteAsync(id);
+                if (!success)
                 {
                     return NotFound($"Project site with ID {id} not found");
                 }
-
-                _context.ProjectSites.Remove(projectSite);
-                await _context.SaveChangesAsync();
 
                 return NoContent();
             }
@@ -287,97 +162,83 @@ namespace API.Controllers
         [HttpPost("{id}/approve")]
         public async Task<IActionResult> ApprovePattern(int id)
         {
-            var site = await _context.ProjectSites.FindAsync(id);
-            if (site == null) return NotFound();
-            site.IsPatternApproved = true;
-            site.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                var success = await _projectSiteService.ApprovePatternAsync(id);
+                if (!success)
+                {
+                    return NotFound($"Project site with ID {id} not found");
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while approving pattern for project site {ProjectSiteId}", id);
+                return StatusCode(500, "Internal server error occurred while approving pattern");
+            }
         }
 
         // POST: api/projectsites/{id}/revoke
         [HttpPost("{id}/revoke")]
         public async Task<IActionResult> RevokePattern(int id)
         {
-            var site = await _context.ProjectSites.FindAsync(id);
-            if (site == null) return NotFound();
-            site.IsPatternApproved = false;
-            site.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                var success = await _projectSiteService.RevokePatternAsync(id);
+                if (!success)
+                {
+                    return NotFound($"Project site with ID {id} not found");
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while revoking pattern for project site {ProjectSiteId}", id);
+                return StatusCode(500, "Internal server error occurred while revoking pattern");
+            }
         }
 
         // POST: api/projectsites/{id}/confirm-simulation
         [HttpPost("{id}/confirm-simulation")]
         public async Task<IActionResult> ConfirmSimulation(int id)
         {
-            var site = await _context.ProjectSites.FindAsync(id);
-            if (site == null) return NotFound();
-            site.IsSimulationConfirmed = true;
-            site.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                var success = await _projectSiteService.ConfirmSimulationAsync(id);
+                if (!success)
+                {
+                    return NotFound($"Project site with ID {id} not found");
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while confirming simulation for project site {ProjectSiteId}", id);
+                return StatusCode(500, "Internal server error occurred while confirming simulation");
+            }
         }
 
         // POST: api/projectsites/{id}/revoke-simulation
         [HttpPost("{id}/revoke-simulation")]
         public async Task<IActionResult> RevokeSimulation(int id)
         {
-            var site = await _context.ProjectSites.FindAsync(id);
-            if (site == null) return NotFound();
-            site.IsSimulationConfirmed = false;
-            site.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        private bool ProjectSiteExists(int id)
-        {
-            return _context.ProjectSites.Any(e => e.Id == id);
-        }
-
-        private static CoordinatesDto? ParseCoordinates(string coordinates)
-        {
-            if (string.IsNullOrEmpty(coordinates))
-                return null;
-
             try
             {
-                // Try to parse as JSON first (for structured coordinates)
-                if (coordinates.StartsWith("{") && coordinates.EndsWith("}"))
+                var success = await _projectSiteService.RevokeSimulationAsync(id);
+                if (!success)
                 {
-                    return JsonSerializer.Deserialize<CoordinatesDto>(coordinates);
+                    return NotFound($"Project site with ID {id} not found");
                 }
 
-                // Try to parse as comma-separated lat,lng
-                var parts = coordinates.Split(',');
-                if (parts.Length == 2 &&
-                    double.TryParse(parts[0].Trim(), out var lat) &&
-                    double.TryParse(parts[1].Trim(), out var lng))
-                {
-                    return new CoordinatesDto { Latitude = lat, Longitude = lng };
-                }
-
-                return null;
+                return NoContent();
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
-            }
-        }
-
-        private static string SerializeCoordinates(CoordinatesDto? coordinates)
-        {
-            if (coordinates == null)
-                return string.Empty;
-
-            try
-            {
-                return JsonSerializer.Serialize(coordinates);
-            }
-            catch
-            {
-                return $"{coordinates.Latitude},{coordinates.Longitude}";
+                _logger.LogError(ex, "Error occurred while revoking simulation for project site {ProjectSiteId}", id);
+                return StatusCode(500, "Internal server error occurred while revoking simulation");
             }
         }
     }

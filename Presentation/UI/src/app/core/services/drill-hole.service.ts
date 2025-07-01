@@ -13,14 +13,18 @@ export interface DrillHole {
   elevation: number;
   length: number;
   depth: number;
-  azimuth: number;
-  dip: number;
+  azimuth?: number | null; // Made optional for 2D fallback
+  dip?: number | null;     // Made optional for 2D fallback
   actualDepth: number;
   stemming: number;
   projectId?: number;
   siteId?: number;
   createdAt?: string;
   updatedAt?: string;
+  
+  // Helper properties for 2D/3D detection
+  has3DData?: boolean;
+  requiresFallbackTo2D?: boolean;
 }
 
 @Injectable({
