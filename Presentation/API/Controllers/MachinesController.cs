@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
-using Domain.Entities;
-using Application.DTOs;
+using Domain.Entities.MachineManagement;
+using Domain.Entities.ProjectManagement;
+using Domain.Entities.UserManagement;
+using Application.DTOs.MachineManagement;
 using System.Text.Json;
 using System.ComponentModel.DataAnnotations;
 
@@ -25,7 +27,7 @@ namespace API.Controllers
 
         // GET: api/machines
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MachineDto>>> GetMachines()
+        public async Task<ActionResult<IEnumerable<Machine>>> GetMachines()
         {
             try
             {
@@ -33,34 +35,6 @@ namespace API.Controllers
                     .Include(m => m.Project)
                     .Include(m => m.Operator)
                     .Include(m => m.Region)
-                    .Select(m => new MachineDto
-                    {
-                        Id = m.Id,
-                        Name = m.Name,
-                        Type = m.Type,
-                        Model = m.Model,
-                        Manufacturer = m.Manufacturer,
-                        SerialNumber = m.SerialNumber,
-                        RigNo = m.RigNo,
-                        PlateNo = m.PlateNo,
-                        ChassisDetails = m.ChassisDetails,
-                        ManufacturingYear = m.ManufacturingYear,
-                        Status = m.Status,
-                        CurrentLocation = m.CurrentLocation,
-                        AssignedToProject = m.AssignedToProject,
-                        AssignedToOperator = m.AssignedToOperator,
-                        LastMaintenanceDate = m.LastMaintenanceDate,
-                        NextMaintenanceDate = m.NextMaintenanceDate,
-                        CreatedAt = m.CreatedAt,
-                        UpdatedAt = m.UpdatedAt,
-                        ProjectId = m.ProjectId,
-                        OperatorId = m.OperatorId,
-                        RegionId = m.RegionId,
-                        ProjectName = m.Project != null ? m.Project.Name : null,
-                        OperatorName = m.Operator != null ? m.Operator.Name : null,
-                        RegionName = m.Region != null ? m.Region.Name : null,
-                        Specifications = ParseSpecifications(m.SpecificationsJson)
-                    })
                     .ToListAsync();
 
                 return Ok(machines);
@@ -74,7 +48,7 @@ namespace API.Controllers
 
         // GET: api/machines/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<MachineDto>> GetMachine(int id)
+        public async Task<ActionResult<Machine?>> GetMachine(int id)
         {
             try
             {
@@ -89,36 +63,7 @@ namespace API.Controllers
                     return NotFound($"Machine with ID {id} not found");
                 }
 
-                var machineDto = new MachineDto
-                {
-                    Id = machine.Id,
-                    Name = machine.Name,
-                    Type = machine.Type,
-                    Model = machine.Model,
-                    Manufacturer = machine.Manufacturer,
-                    SerialNumber = machine.SerialNumber,
-                    RigNo = machine.RigNo,
-                    PlateNo = machine.PlateNo,
-                    ChassisDetails = machine.ChassisDetails,
-                    ManufacturingYear = machine.ManufacturingYear,
-                    Status = machine.Status,
-                    CurrentLocation = machine.CurrentLocation,
-                    AssignedToProject = machine.AssignedToProject,
-                    AssignedToOperator = machine.AssignedToOperator,
-                    LastMaintenanceDate = machine.LastMaintenanceDate,
-                    NextMaintenanceDate = machine.NextMaintenanceDate,
-                    CreatedAt = machine.CreatedAt,
-                    UpdatedAt = machine.UpdatedAt,
-                    ProjectId = machine.ProjectId,
-                    OperatorId = machine.OperatorId,
-                    RegionId = machine.RegionId,
-                    ProjectName = machine.Project?.Name,
-                    OperatorName = machine.Operator?.Name,
-                    RegionName = machine.Region?.Name,
-                    Specifications = ParseSpecifications(machine.SpecificationsJson)
-                };
-
-                return Ok(machineDto);
+                return Ok(machine);
             }
             catch (Exception ex)
             {
@@ -129,7 +74,7 @@ namespace API.Controllers
 
         // POST: api/machines
         [HttpPost]
-        public async Task<ActionResult<MachineDto>> CreateMachine(CreateMachineRequest request)
+        public async Task<ActionResult<Machine>> CreateMachine(CreateMachineRequest request)
         {
             try
             {
@@ -173,25 +118,30 @@ namespace API.Controllers
                     }
                 }
 
-                var machine = new Machine
+                // Parse status string to enum (defaults to Active)
+                if (!Enum.TryParse<MachineStatus>(request.Status, true, out var statusEnum))
                 {
-                    Name = request.Name,
-                    Type = request.Type,
-                    Model = request.Model,
-                    Manufacturer = request.Manufacturer,
-                    SerialNumber = request.SerialNumber,
-                    RigNo = request.RigNo,
-                    PlateNo = request.PlateNo,
-                    ChassisDetails = request.ChassisDetails,
-                    ManufacturingYear = request.ManufacturingYear,
-                    Status = request.Status,
-                    CurrentLocation = request.CurrentLocation,
-                    ProjectId = request.ProjectId,
-                    OperatorId = request.OperatorId,
-                    RegionId = request.RegionId,
-                    SpecificationsJson = request.Specifications != null ? 
-                        JsonSerializer.Serialize(request.Specifications) : null
-                };
+                    return BadRequest($"Invalid status '{request.Status}'. Valid values: {string.Join(", ", Enum.GetNames<MachineStatus>())}");
+                }
+
+                var machine = Machine.Create(
+                    request.Name,
+                    request.Type,
+                    request.Model,
+                    request.Manufacturer,
+                    request.SerialNumber,
+                    request.ProjectId);
+
+                // optional fields
+                machine.RigNo = request.RigNo;
+                machine.PlateNo = request.PlateNo;
+                machine.ChassisDetails = request.ChassisDetails;
+                machine.ManufacturingYear = request.ManufacturingYear;
+                machine.ChangeStatus(statusEnum);
+                machine.CurrentLocation = request.CurrentLocation;
+                machine.OperatorId = request.OperatorId;
+                machine.RegionId = request.RegionId;
+                machine.SpecificationsJson = request.Specifications != null ? JsonSerializer.Serialize(request.Specifications) : null;
 
                 // Set assigned project and operator names if applicable
                 var project = await _context.Projects.FindAsync(request.ProjectId);
@@ -206,43 +156,7 @@ namespace API.Controllers
                 _context.Machines.Add(machine);
                 await _context.SaveChangesAsync();
 
-                // Load the machine with related data for response
-                var createdMachine = await _context.Machines
-                    .Include(m => m.Project)
-                    .Include(m => m.Operator)
-                    .Include(m => m.Region)
-                    .FirstOrDefaultAsync(m => m.Id == machine.Id);
-
-                var machineDto = new MachineDto
-                {
-                    Id = createdMachine!.Id,
-                    Name = createdMachine.Name,
-                    Type = createdMachine.Type,
-                    Model = createdMachine.Model,
-                    Manufacturer = createdMachine.Manufacturer,
-                    SerialNumber = createdMachine.SerialNumber,
-                    RigNo = createdMachine.RigNo,
-                    PlateNo = createdMachine.PlateNo,
-                    ChassisDetails = createdMachine.ChassisDetails,
-                    ManufacturingYear = createdMachine.ManufacturingYear,
-                    Status = createdMachine.Status,
-                    CurrentLocation = createdMachine.CurrentLocation,
-                    AssignedToProject = createdMachine.AssignedToProject,
-                    AssignedToOperator = createdMachine.AssignedToOperator,
-                    LastMaintenanceDate = createdMachine.LastMaintenanceDate,
-                    NextMaintenanceDate = createdMachine.NextMaintenanceDate,
-                    CreatedAt = createdMachine.CreatedAt,
-                    UpdatedAt = createdMachine.UpdatedAt,
-                    ProjectId = createdMachine.ProjectId,
-                    OperatorId = createdMachine.OperatorId,
-                    RegionId = createdMachine.RegionId,
-                    ProjectName = createdMachine.Project?.Name,
-                    OperatorName = createdMachine.Operator?.Name,
-                    RegionName = createdMachine.Region?.Name,
-                    Specifications = ParseSpecifications(createdMachine.SpecificationsJson)
-                };
-
-                return CreatedAtAction(nameof(GetMachine), new { id = machine.Id }, machineDto);
+                return CreatedAtAction(nameof(GetMachine), new { id = machine.Id }, machine);
             }
             catch (DbUpdateException ex)
             {
@@ -318,14 +232,7 @@ namespace API.Controllers
                 machine.PlateNo = request.PlateNo;
                 machine.ChassisDetails = request.ChassisDetails;
                 machine.ManufacturingYear = request.ManufacturingYear;
-                machine.Status = request.Status;
-                machine.CurrentLocation = request.CurrentLocation;
-                machine.ProjectId = request.ProjectId;
-                machine.OperatorId = request.OperatorId;
-                machine.RegionId = request.RegionId;
-                machine.LastMaintenanceDate = request.LastMaintenanceDate;
-                machine.NextMaintenanceDate = request.NextMaintenanceDate;
-                machine.UpdatedAt = DateTime.UtcNow;
+                machine.MarkUpdated();
                 machine.SpecificationsJson = request.Specifications != null ? 
                     JsonSerializer.Serialize(request.Specifications) : null;
 
@@ -341,6 +248,16 @@ namespace API.Controllers
                 else
                 {
                     machine.AssignedToOperator = null;
+                }
+
+                // Update status
+                if (request.Status != null)
+                {
+                    if (!Enum.TryParse<MachineStatus>(request.Status, true, out var newStatus))
+                    {
+                        return BadRequest($"Invalid status '{request.Status}'.");
+                    }
+                    machine.ChangeStatus(newStatus);
                 }
 
                 await _context.SaveChangesAsync();
@@ -414,8 +331,14 @@ namespace API.Controllers
                     return NotFound($"Machine with ID {id} not found");
                 }
 
-                machine.Status = request.Status;
-                machine.UpdatedAt = DateTime.UtcNow;
+                // Parse status string to enum (defaults to Active)
+                if (!Enum.TryParse<MachineStatus>(request.Status, true, out var statusEnum))
+                {
+                    return BadRequest($"Invalid status '{request.Status}'. Valid values: {string.Join(", ", Enum.GetNames<MachineStatus>())}");
+                }
+
+                machine.ChangeStatus(statusEnum);
+                machine.MarkUpdated();
 
                 await _context.SaveChangesAsync();
 
@@ -430,7 +353,7 @@ namespace API.Controllers
 
         // GET: api/machines/search
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<MachineDto>>> SearchMachines(
+        public async Task<ActionResult<IEnumerable<Machine>>> SearchMachines(
             [FromQuery] string? name = null,
             [FromQuery] string? type = null,
             [FromQuery] string? status = null,
@@ -456,7 +379,11 @@ namespace API.Controllers
 
                 if (!string.IsNullOrEmpty(status))
                 {
-                    query = query.Where(m => m.Status == status);
+                    if (!Enum.TryParse<MachineStatus>(status, true, out var statusEnum))
+                    {
+                        return BadRequest($"Invalid status '{status}'. Valid values: {string.Join(", ", Enum.GetNames<MachineStatus>())}");
+                    }
+                    query = query.Where(m => m.Status == statusEnum);
                 }
 
                 if (!string.IsNullOrEmpty(manufacturer))
@@ -470,32 +397,6 @@ namespace API.Controllers
                 }
 
                 var machines = await query
-                    .Select(m => new MachineDto
-                    {
-                        Id = m.Id,
-                        Name = m.Name,
-                        Type = m.Type,
-                        Model = m.Model,
-                        Manufacturer = m.Manufacturer,
-                        SerialNumber = m.SerialNumber,
-                        RigNo = m.RigNo,
-                        PlateNo = m.PlateNo,
-                        ChassisDetails = m.ChassisDetails,
-                        ManufacturingYear = m.ManufacturingYear,
-                        Status = m.Status,
-                        CurrentLocation = m.CurrentLocation,
-                        AssignedToProject = m.AssignedToProject,
-                        AssignedToOperator = m.AssignedToOperator,
-                        LastMaintenanceDate = m.LastMaintenanceDate,
-                        NextMaintenanceDate = m.NextMaintenanceDate,
-                        CreatedAt = m.CreatedAt,
-                        UpdatedAt = m.UpdatedAt,
-                        ProjectId = m.ProjectId,
-                        OperatorId = m.OperatorId,
-                        ProjectName = m.Project != null ? m.Project.Name : null,
-                        OperatorName = m.Operator != null ? m.Operator.Name : null,
-                        Specifications = ParseSpecifications(m.SpecificationsJson)
-                    })
                     .ToListAsync();
 
                 return Ok(machines);
@@ -514,11 +415,10 @@ namespace API.Controllers
             try
             {
                 var totalMachines = await _context.Machines.CountAsync();
-                var availableMachines = await _context.Machines.CountAsync(m => m.Status == "Available");
-                var assignedMachines = await _context.Machines.CountAsync(m => m.Status == "Assigned");
-                var maintenanceMachines = await _context.Machines.CountAsync(m => m.Status == "In Maintenance");
-                var outOfServiceMachines = await _context.Machines.CountAsync(m => 
-                    m.Status == "Out of Service" || m.Status == "Under Repair");
+                var availableMachines = await _context.Machines.CountAsync(m => m.Status == MachineStatus.Active);
+                var assignedMachines = await _context.Machines.CountAsync(m => m.Status == MachineStatus.Active && m.OperatorId != null);
+                var maintenanceMachines = await _context.Machines.CountAsync(m => m.Status == MachineStatus.Maintenance);
+                var outOfServiceMachines = await _context.Machines.CountAsync(m => m.Status == MachineStatus.OutOfService || m.Status == MachineStatus.Retired);
 
                 var statistics = new
                 {
@@ -541,21 +441,6 @@ namespace API.Controllers
         private bool MachineExists(int id)
         {
             return _context.Machines.Any(e => e.Id == id);
-        }
-
-        private static MachineSpecificationsDto? ParseSpecifications(string? specificationsJson)
-        {
-            if (string.IsNullOrEmpty(specificationsJson))
-                return null;
-
-            try
-            {
-                return JsonSerializer.Deserialize<MachineSpecificationsDto>(specificationsJson);
-            }
-            catch
-            {
-                return null;
-            }
         }
     }
 

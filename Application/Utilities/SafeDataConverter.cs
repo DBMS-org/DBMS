@@ -196,5 +196,102 @@ namespace Application.Utilities
 
             return (azimuth, dip);
         }
+
+        /// <summary>
+        /// Safely parses enum values with fallback to default
+        /// </summary>
+        public static T ParseEnumWithDefault<T>(string? value, T defaultValue, string fieldName = "", int lineNumber = 0) where T : struct, Enum
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return defaultValue;
+
+            if (Enum.TryParse<T>(value, true, out T result))
+                return result;
+
+            Console.WriteLine($"Warning: Could not parse '{value}' as {typeof(T).Name} for field '{fieldName}' at line {lineNumber}. Using default value {defaultValue}.");
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// Safely parses enum values, throws exception if parsing fails
+        /// </summary>
+        public static T ParseEnumRequired<T>(string? value, string fieldName, int lineNumber = 0) where T : struct, Enum
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new InvalidOperationException($"Required enum field '{fieldName}' is empty at line {lineNumber}");
+
+            if (Enum.TryParse<T>(value, true, out T result))
+                return result;
+
+            throw new InvalidOperationException($"Cannot parse '{value}' as {typeof(T).Name} for required field '{fieldName}' at line {lineNumber}");
+        }
+
+        /// <summary>
+        /// Safely extracts numeric ID from string with prefix (e.g., "DH123" -> 123)
+        /// </summary>
+        public static int ExtractIdFromString(string? value, string prefix, int defaultValue = 0, string fieldName = "", int lineNumber = 0)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return defaultValue;
+
+            if (!value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"Warning: Value '{value}' does not start with expected prefix '{prefix}' for field '{fieldName}' at line {lineNumber}. Using default value {defaultValue}.");
+                return defaultValue;
+            }
+
+            var numericPart = value.Substring(prefix.Length);
+            if (int.TryParse(numericPart, out int result))
+                return result;
+
+            Console.WriteLine($"Warning: Could not extract numeric ID from '{value}' for field '{fieldName}' at line {lineNumber}. Using default value {defaultValue}.");
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// Validates that a string is not null or empty, with better error messages
+        /// </summary>
+        public static bool IsValidString(string? value, bool allowEmpty = false, string fieldName = "", int lineNumber = 0)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                if (!allowEmpty)
+                {
+                    Console.WriteLine($"Warning: Field '{fieldName}' is empty at line {lineNumber}");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Safely converts string to lowercase with null safety
+        /// </summary>
+        public static string SafeToLower(string? value, string defaultValue = "")
+        {
+            return string.IsNullOrWhiteSpace(value) ? defaultValue : value.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Safely trims string with null safety
+        /// </summary>
+        public static string SafeTrim(string? value, string defaultValue = "")
+        {
+            return string.IsNullOrWhiteSpace(value) ? defaultValue : value.Trim();
+        }
+
+        /// <summary>
+        /// Safely splits string with null safety and trimming
+        /// </summary>
+        public static string[] SafeSplit(string? value, char separator = ',', bool removeEmptyEntries = true)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return Array.Empty<string>();
+
+            var options = removeEmptyEntries ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None;
+            return value.Split(separator, options)
+                       .Select(v => v.Trim())
+                       .ToArray();
+        }
     }
 } 

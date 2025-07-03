@@ -1,4 +1,4 @@
-<div class="blast-sequence-designer" [class.connection-mode-active]="isConnectionMode">
+<div class="blast-sequence-designer">
   <!-- Header -->
   <div class="header">
     <div class="header-content">
@@ -255,38 +255,7 @@
 
     </div>
 
-    <!-- Instructions Panel -->
-    <div class="instructions-panel" *ngIf="isConnectionMode">
-      <div class="instructions-content">
-        <h4>Connection Mode Active</h4>
-        <ul>
-          <li *ngIf="!canCreateConnections()" class="warning-instruction">
-            <span class="material-icons">warning</span>
-            <strong>Select a delay before creating connections</strong>
-          </li>
-          <li>
-            <span class="material-icons">mouse</span>
-            Click first hole to start connection
-          </li>
-          <li>
-            <span class="material-icons">timeline</span>
-            Click second hole to complete connection
-          </li>
-          <li>
-            <span class="material-icons">schedule</span>
-            Available delays: 17ms, 25ms, 42ms (Detonating Cord), +67ms (Connectors)
-          </li>
-          <li>
-            <span class="material-icons">cancel</span>
-            Click empty area or same hole to cancel
-          </li>
-          <li>
-            <span class="material-icons">mouse</span>
-            Mouse wheel to zoom, right-click and drag to pan
-          </li>
-        </ul>
-      </div>
-    </div>
+
 
     <!-- Canvas Container -->
     <div class="canvas-container" 

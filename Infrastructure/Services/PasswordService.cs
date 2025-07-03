@@ -1,4 +1,4 @@
-using Application.Interfaces;
+using Application.Interfaces.Infrastructure;
 using System.Security.Cryptography;
 using System.Text;
 
