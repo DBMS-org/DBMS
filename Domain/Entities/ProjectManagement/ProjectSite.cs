@@ -3,7 +3,7 @@ using Domain.Entities.ProjectManagement;
 
 namespace Domain.Entities.ProjectManagement
 {
-    public class ProjectSite : BaseAuditableEntity
+    public class ProjectSite : BaseAuditableEntity, IEntityOwnedByUser
     {
         public int ProjectId { get; set; }
         
@@ -20,6 +20,8 @@ namespace Domain.Entities.ProjectManagement
         public bool IsPatternApproved { get; set; } = false;
         public bool IsSimulationConfirmed { get; set; } = false;
         public bool IsOperatorCompleted { get; set; } = false;
+
+        public int OwningUserId => Project?.OwningUserId ?? 0;
         
         // Navigation properties
         public virtual Project Project { get; set; } = null!;
