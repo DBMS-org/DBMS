@@ -4,83 +4,36 @@ using Infrastructure.Data;
 using Application.DTOs.UserManagement;
 using Domain.Entities.ProjectManagement;
 using Domain.Entities.UserManagement;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UserAssignmentsController : ControllerBase
+    [Authorize(Policy = "RequireAdminRole")]
+    public class UserAssignmentsController : BaseApiController
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<UserAssignmentsController> _logger;
 
-        public UserAssignmentsController(
-            ApplicationDbContext context, 
-            ILogger<UserAssignmentsController> logger)
+        public UserAssignmentsController(ApplicationDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
-        // GET: api/userassignments
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserAssignmentDto>>> GetUserAssignments()
+        public async Task<IActionResult> GetUserAssignments()
         {
-            try
-            {
-                var userAssignments = await _context.Users
-                    .Select(u => new UserAssignmentDto
-                    {
-                        Id = u.Id,
-                        Name = u.Name,
-                        Email = u.Email,
-                        Role = u.Role,
-                        Region = u.Region,
-                        Status = u.Status.ToString(),
-                        AssignedProjects = _context.Projects
-                            .Where(p => p.AssignedUserId == u.Id)
-                            .Select(p => new UserProjectAssignmentDto
-                            {
-                                Id = p.Id,
-                                Name = p.Name,
-                                Status = p.Status.ToString(),
-                                Region = p.Region
-                            })
-                            .ToList()
-                    })
-                    .ToListAsync();
-
-                return Ok(userAssignments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching user assignments");
-                return StatusCode(500, "Internal server error occurred while fetching user assignments");
-            }
-        }
-
-        // GET: api/userassignments/{userId}
-        [HttpGet("{userId}")]
-        public async Task<ActionResult<UserAssignmentDto>> GetUserAssignment(int userId)
-        {
-            try
-            {
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
+            var userAssignments = await _context.Users
+                .Select(u => new UserAssignmentDto
                 {
-                    return NotFound($"User with ID {userId} not found");
-                }
-
-                var userAssignment = new UserAssignmentDto
-                {
-                    Id = user.Id,
-                    Name = user.Name,
-                    Email = user.Email,
-                    Role = user.Role,
-                    Region = user.Region,
-                    Status = user.Status.ToString(),
-                    AssignedProjects = await _context.Projects
-                        .Where(p => p.AssignedUserId == userId)
+                    Id = u.Id,
+                    Name = u.Name,
+                    Email = u.Email,
+                    Role = u.Role,
+                    Region = u.Region,
+                    Status = u.Status.ToString(),
+                    AssignedProjects = _context.Projects
+                        .Where(p => p.AssignedUserId == u.Id)
                         .Select(p => new UserProjectAssignmentDto
                         {
                             Id = p.Id,
@@ -88,157 +41,140 @@ namespace API.Controllers
                             Status = p.Status.ToString(),
                             Region = p.Region
                         })
-                        .ToListAsync()
-                };
+                        .ToList()
+                })
+                .ToListAsync();
 
-                return Ok(userAssignment);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching user assignment for user {UserId}", userId);
-                return StatusCode(500, "Internal server error occurred while fetching user assignment");
-            }
+            return Ok(userAssignments);
         }
 
-        // GET: api/userassignments/{userId}/projects
-        [HttpGet("{userId}/projects")]
-        public async Task<ActionResult<IEnumerable<Project>>> GetUserProjects(int userId)
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUserAssignment(int userId)
         {
-            try
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
             {
-                var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
-                if (!userExists)
-                {
-                    return NotFound($"User with ID {userId} not found");
-                }
+                return NotFound($"User with ID {userId} not found");
+            }
 
-                var projects = await _context.Projects
-                    .Include(p => p.AssignedUser)
-                    .Include(p => p.ProjectSites)
+            var userAssignment = new UserAssignmentDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Role = user.Role,
+                Region = user.Region,
+                Status = user.Status.ToString(),
+                AssignedProjects = await _context.Projects
                     .Where(p => p.AssignedUserId == userId)
-                    .ToListAsync();
+                    .Select(p => new UserProjectAssignmentDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Status = p.Status.ToString(),
+                        Region = p.Region
+                    })
+                    .ToListAsync()
+            };
 
-                return Ok(projects);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching projects for user {UserId}", userId);
-                return StatusCode(500, "Internal server error occurred while fetching user projects");
-            }
+            return Ok(userAssignment);
         }
 
-        // POST: api/userassignments/{userId}/assign-project
+        [HttpGet("{userId}/projects")]
+        public async Task<IActionResult> GetUserProjects(int userId)
+        {
+            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+            {
+                return NotFound($"User with ID {userId} not found");
+            }
+
+            var projects = await _context.Projects
+                .Include(p => p.AssignedUser)
+                .Include(p => p.ProjectSites)
+                .Where(p => p.AssignedUserId == userId)
+                .ToListAsync();
+
+            return Ok(projects);
+        }
+
         [HttpPost("{userId}/assign-project")]
         public async Task<IActionResult> AssignProjectToUser(int userId, [FromBody] AssignProjectRequest request)
         {
-            try
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
-                {
-                    return NotFound($"User with ID {userId} not found");
-                }
-
-                var project = await _context.Projects.FindAsync(request.ProjectId);
-                if (project == null)
-                {
-                    return NotFound($"Project with ID {request.ProjectId} not found");
-                }
-
-                // Check if project is already assigned to another user
-                if (project.AssignedUserId.HasValue && project.AssignedUserId != userId)
-                {
-                    return BadRequest($"Project is already assigned to another user");
-                }
-
-                // Assign project to user
-                project.AssignedUserId = userId;
-                project.UpdatedAt = DateTime.UtcNow;
-
-                await _context.SaveChangesAsync();
-
-                return Ok(new { message = $"Project '{project.Name}' assigned to user '{user.Name}' successfully" });
+                return NotFound($"User with ID {userId} not found");
             }
-            catch (Exception ex)
+
+            var project = await _context.Projects.FindAsync(request.ProjectId);
+            if (project == null)
             {
-                _logger.LogError(ex, "Error occurred while assigning project {ProjectId} to user {UserId}", request.ProjectId, userId);
-                return StatusCode(500, "Internal server error occurred while assigning project");
+                return NotFound($"Project with ID {request.ProjectId} not found");
             }
+            
+            if (project.AssignedUserId.HasValue && project.AssignedUserId != userId)
+            {
+                return Conflict($"Project is already assigned to another user");
+            }
+            
+            project.AssignedUserId = userId;
+            project.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
 
-        // DELETE: api/userassignments/{userId}/unassign-project/{projectId}
         [HttpDelete("{userId}/unassign-project/{projectId}")]
         public async Task<IActionResult> UnassignProjectFromUser(int userId, int projectId)
         {
-            try
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
             {
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
-                {
-                    return NotFound($"User with ID {userId} not found");
-                }
-
-                var project = await _context.Projects.FindAsync(projectId);
-                if (project == null)
-                {
-                    return NotFound($"Project with ID {projectId} not found");
-                }
-
-                if (project.AssignedUserId != userId)
-                {
-                    return BadRequest($"Project is not assigned to this user");
-                }
-
-                // Unassign project from user
-                project.AssignedUserId = null;
-                project.UpdatedAt = DateTime.UtcNow;
-
-                await _context.SaveChangesAsync();
-
-                return Ok(new { message = $"Project '{project.Name}' unassigned from user '{user.Name}' successfully" });
+                return NotFound($"User with ID {userId} not found");
             }
-            catch (Exception ex)
+
+            var project = await _context.Projects.FindAsync(projectId);
+            if (project == null)
             {
-                _logger.LogError(ex, "Error occurred while unassigning project {ProjectId} from user {UserId}", projectId, userId);
-                return StatusCode(500, "Internal server error occurred while unassigning project");
+                return NotFound($"Project with ID {projectId} not found");
             }
+
+            if (project.AssignedUserId != userId)
+            {
+                return BadRequest($"Project is not assigned to this user");
+            }
+            
+            project.AssignedUserId = null;
+            project.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
 
-        // GET: api/userassignments/statistics
         [HttpGet("statistics")]
-        public async Task<ActionResult<UserAssignmentStatisticsDto>> GetUserAssignmentStatistics()
+        public async Task<IActionResult> GetUserAssignmentStatistics()
         {
-            try
-            {
-                var totalUsers = await _context.Users.CountAsync();
-                var activeUsers = await _context.Users.CountAsync(u => u.Status == UserStatus.Active);
-                var usersWithProjects = await _context.Users
-                    .CountAsync(u => _context.Projects.Any(p => p.AssignedUserId == u.Id));
-                var totalProjects = await _context.Projects.CountAsync();
-                var assignedProjects = await _context.Projects.CountAsync(p => p.AssignedUserId.HasValue);
+            var totalUsers = await _context.Users.CountAsync();
+            var activeUsers = await _context.Users.CountAsync(u => u.Status == UserStatus.Active);
+            var usersWithProjects = await _context.Users
+                .CountAsync(u => _context.Projects.Any(p => p.AssignedUserId == u.Id));
+            var totalProjects = await _context.Projects.CountAsync();
+            var assignedProjects = await _context.Projects.CountAsync(p => p.AssignedUserId.HasValue);
 
-                var statistics = new UserAssignmentStatisticsDto
-                {
-                    TotalUsers = totalUsers,
-                    ActiveUsers = activeUsers,
-                    UsersWithProjects = usersWithProjects,
-                    TotalProjects = totalProjects,
-                    AssignedProjects = assignedProjects,
-                    UnassignedProjects = totalProjects - assignedProjects
-                };
-
-                return Ok(statistics);
-            }
-            catch (Exception ex)
+            var statistics = new UserAssignmentStatisticsDto
             {
-                _logger.LogError(ex, "Error occurred while fetching user assignment statistics");
-                return StatusCode(500, "Internal server error occurred while fetching statistics");
-            }
+                TotalUsers = totalUsers,
+                ActiveUsers = activeUsers,
+                UsersWithProjects = usersWithProjects,
+                TotalProjects = totalProjects,
+                AssignedProjects = assignedProjects,
+                UnassignedProjects = totalProjects - assignedProjects
+            };
+
+            return Ok(statistics);
         }
     }
 } 

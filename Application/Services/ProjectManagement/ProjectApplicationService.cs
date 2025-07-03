@@ -1,11 +1,13 @@
 using Application.DTOs.ProjectManagement;
 using Application.DTOs.Shared;
 using Application.Exceptions;
+using Application.Interfaces.Infrastructure;
 using Application.Interfaces.ProjectManagement;
 using Application.Utilities;
 using Domain.Entities.ProjectManagement;
 using Microsoft.Extensions.Logging;
 using System.Data;
+using System.Data.Common;
 
 namespace Application.Services.ProjectManagement
 {

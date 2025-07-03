@@ -70,7 +70,13 @@ namespace Application.Services.Infrastructure
 
         public void LogUnexpectedError(string operationName, Exception exception, object? context = null)
         {
-            _logger.LogError(exception, "[{CorrelationId}] Unexpected error in {OperationName} {@Context}",
+            _logger.LogError(exception, "[{CorrelationId}] Unexpected error during {Operation} {@Context}",
+                _correlationId, operationName, context);
+        }
+
+        public void LogOperationStart(string operationName, object? context = null)
+        {
+            _logger.LogInformation("[{CorrelationId}] Starting operation {Operation} {@Context}",
                 _correlationId, operationName, context);
         }
 
