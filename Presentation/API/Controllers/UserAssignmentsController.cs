@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
-using Application.DTOs;
+using Application.DTOs.UserManagement;
+using Domain.Entities.ProjectManagement;
+using Domain.Entities.UserManagement;
 
 namespace API.Controllers
 {
@@ -34,14 +36,14 @@ namespace API.Controllers
                         Email = u.Email,
                         Role = u.Role,
                         Region = u.Region,
-                        Status = u.Status,
+                        Status = u.Status.ToString(),
                         AssignedProjects = _context.Projects
                             .Where(p => p.AssignedUserId == u.Id)
                             .Select(p => new UserProjectAssignmentDto
                             {
                                 Id = p.Id,
                                 Name = p.Name,
-                                Status = p.Status,
+                                Status = p.Status.ToString(),
                                 Region = p.Region
                             })
                             .ToList()
@@ -76,14 +78,14 @@ namespace API.Controllers
                     Email = user.Email,
                     Role = user.Role,
                     Region = user.Region,
-                    Status = user.Status,
+                    Status = user.Status.ToString(),
                     AssignedProjects = await _context.Projects
                         .Where(p => p.AssignedUserId == userId)
                         .Select(p => new UserProjectAssignmentDto
                         {
                             Id = p.Id,
                             Name = p.Name,
-                            Status = p.Status,
+                            Status = p.Status.ToString(),
                             Region = p.Region
                         })
                         .ToListAsync()
@@ -100,7 +102,7 @@ namespace API.Controllers
 
         // GET: api/userassignments/{userId}/projects
         [HttpGet("{userId}/projects")]
-        public async Task<ActionResult<IEnumerable<ProjectDto>>> GetUserProjects(int userId)
+        public async Task<ActionResult<IEnumerable<Project>>> GetUserProjects(int userId)
         {
             try
             {
@@ -114,34 +116,6 @@ namespace API.Controllers
                     .Include(p => p.AssignedUser)
                     .Include(p => p.ProjectSites)
                     .Where(p => p.AssignedUserId == userId)
-                    .Select(p => new ProjectDto
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Region = p.Region,
-                        Status = p.Status,
-                        Description = p.Description,
-                        StartDate = p.StartDate,
-                        EndDate = p.EndDate,
-                        AssignedUserId = p.AssignedUserId,
-                        AssignedUserName = p.AssignedUser != null ? p.AssignedUser.Name : null,
-                        CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                        ProjectSites = p.ProjectSites.Select(ps => new ProjectSiteDto
-                        {
-                            Id = ps.Id,
-                            ProjectId = ps.ProjectId,
-                            Name = ps.Name,
-                            Location = ps.Location,
-                            Status = ps.Status,
-                            Description = ps.Description,
-                            CreatedAt = ps.CreatedAt,
-                            UpdatedAt = ps.UpdatedAt,
-                            IsPatternApproved = ps.IsPatternApproved,
-                            IsSimulationConfirmed = ps.IsSimulationConfirmed,
-                            IsOperatorCompleted = ps.IsOperatorCompleted
-                        }).ToList()
-                    })
                     .ToListAsync();
 
                 return Ok(projects);
@@ -242,7 +216,7 @@ namespace API.Controllers
             try
             {
                 var totalUsers = await _context.Users.CountAsync();
-                var activeUsers = await _context.Users.CountAsync(u => u.Status == "Active");
+                var activeUsers = await _context.Users.CountAsync(u => u.Status == UserStatus.Active);
                 var usersWithProjects = await _context.Users
                     .CountAsync(u => _context.Projects.Any(p => p.AssignedUserId == u.Id));
                 var totalProjects = await _context.Projects.CountAsync();

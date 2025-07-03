@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Application.DTOs;
-using Application.Interfaces;
+using Application.DTOs.UserManagement;
+using Application.DTOs.Shared;
+using Application.Interfaces.UserManagement;
 
 namespace API.Controllers
 {
@@ -23,145 +24,132 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
-            try
+            var result = await _userService.GetAllUsersAsync();
+            
+            if (result.IsFailure)
             {
-                var users = await _userService.GetAllUsersAsync();
-                return Ok(users);
+                _logger.LogError("Error occurred while fetching users: {Error}", result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching users");
-                return StatusCode(500, "Internal server error occurred while fetching users");
-            }
+
+            return Ok(result.Value);
         }
 
         // GET: api/users/5
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUser(int id)
         {
-            try
-            {
-                var user = await _userService.GetUserByIdAsync(id);
+            var result = await _userService.GetUserByIdAsync(id);
 
-                if (user == null)
+            if (result.IsFailure)
+            {
+                if (result.Error.Contains("not found"))
                 {
-                    return NotFound($"User with ID {id} not found");
+                    return NotFound(result.Error);
                 }
+                
+                _logger.LogError("Error occurred while fetching user with ID {UserId}: {Error}", id, result.Error);
+                return StatusCode(500, result.Error);
+            }
 
-                return Ok(user);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching user with ID {UserId}", id);
-                return StatusCode(500, "Internal server error occurred while fetching user");
-            }
+            return Ok(result.Value);
         }
 
         // POST: api/users
         [HttpPost]
         public async Task<ActionResult<UserDto>> CreateUser(CreateUserRequest request)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                return BadRequest(ModelState);
+            }
 
-                var user = await _userService.CreateUserAsync(request);
-                return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
-            }
-            catch (InvalidOperationException ex)
+            var result = await _userService.CreateUserAsync(request);
+
+            if (result.IsFailure)
             {
-                return BadRequest(ex.Message);
+                if (result.Error.Contains("already exists"))
+                {
+                    return BadRequest(result.Error);
+                }
+                
+                _logger.LogError("Error occurred while creating user: {Error}", result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while creating user");
-                return StatusCode(500, "Internal server error occurred while creating user");
-            }
+
+            return CreatedAtAction(nameof(GetUser), new { id = result.Value.Id }, result.Value);
         }
 
         // PUT: api/users/5
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, UpdateUserRequest request)
         {
-            try
+            if (id != request.Id)
             {
-                if (id != request.Id)
-                {
-                    return BadRequest("ID mismatch");
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var success = await _userService.UpdateUserAsync(id, request);
-                if (!success)
-                {
-                    return NotFound($"User with ID {id} not found");
-                }
-
-                return NoContent();
+                return BadRequest("ID mismatch");
             }
-            catch (Exception ex)
+
+            if (!ModelState.IsValid)
             {
-                _logger.LogError(ex, "Error occurred while updating user with ID {UserId}", id);
-                return StatusCode(500, "Internal server error occurred while updating user");
+                return BadRequest(ModelState);
             }
+
+            var result = await _userService.UpdateUserAsync(id, request);
+
+            if (result.IsFailure)
+            {
+                if (result.Error.Contains("not found"))
+                {
+                    return NotFound(result.Error);
+                }
+                
+                _logger.LogError("Error occurred while updating user with ID {UserId}: {Error}", id, result.Error);
+                return StatusCode(500, result.Error);
+            }
+
+            return NoContent();
         }
 
         // DELETE: api/users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            try
-            {
-                var success = await _userService.DeleteUserAsync(id);
-                if (!success)
-                {
-                    return NotFound($"User with ID {id} not found");
-                }
+            var result = await _userService.DeleteUserAsync(id);
 
-                return NoContent();
-            }
-            catch (Exception ex)
+            if (result.IsFailure)
             {
-                _logger.LogError(ex, "Error occurred while deleting user with ID {UserId}", id);
-                return StatusCode(500, "Internal server error occurred while deleting user");
+                if (result.Error.Contains("not found"))
+                {
+                    return NotFound(result.Error);
+                }
+                
+                _logger.LogError("Error occurred while deleting user with ID {UserId}: {Error}", id, result.Error);
+                return StatusCode(500, result.Error);
             }
+
+            return NoContent();
         }
 
         // GET: api/users/test-connection
         [HttpGet("test-connection")]
         public async Task<ActionResult> TestConnection()
         {
-            try
+            var result = await _userService.TestConnectionAsync();
+
+            if (result.IsFailure)
             {
-                var canConnect = await _userService.TestConnectionAsync();
-                if (canConnect)
-                {
-                    return Ok(new { 
-                        message = "Database connection successful!", 
-                        database = "DB-MS",
-                        timestamp = DateTime.UtcNow
-                    });
-                }
-                else
-                {
-                    return StatusCode(500, "Unable to connect to database");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Database connection test failed");
+                _logger.LogError("Database connection test failed: {Error}", result.Error);
                 return StatusCode(500, new { 
                     message = "Database connection failed", 
-                    error = ex.Message 
+                    error = result.Error 
                 });
             }
+
+            return Ok(new { 
+                message = "Database connection successful!", 
+                database = "DB-MS",
+                timestamp = DateTime.UtcNow
+            });
         }
     }
 } 

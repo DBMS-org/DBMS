@@ -1,13 +1,31 @@
-using Application.Interfaces;
-using Application.Services;
-using Infrastructure.Repositories;
+using Application.Interfaces.Infrastructure;
+using Application.Interfaces.UserManagement;
+using Application.Interfaces.ProjectManagement;
+using Application.Interfaces.DrillingOperations;
+using Application.Interfaces.BlastingOperations;
+using Application.Services.UserManagement;
+using Application.Services.ProjectManagement;
+using Application.Services.DrillingOperations;
+using Application.Services.BlastingOperations;
+using Domain.Services;
+using Infrastructure.Repositories.UserManagement;
+using Infrastructure.Repositories.ProjectManagement;
+using Infrastructure.Repositories.DrillingOperations;
+using Infrastructure.Repositories.BlastingOperations;
 using Infrastructure.Data;
 using Infrastructure.Services;
+using Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Application.Validators.UserManagement;
+using Application.Validators.ProjectManagement;
+using Application.Validators.MachineManagement;
+using Application.Validators.DrillingOperations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +39,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.WriteIndented = true;
         
+        // Ignore circular references (Project -> Sites -> Project)
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        
         // Ensure DateTime is serialized as UTC with proper timezone information
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
@@ -28,9 +49,18 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
+builder.Services.AddFluentValidationAutoValidation();
+
+// Add Infrastructure layer services (DbContext, dispatcher, handlers, misc)
+builder.Services.AddInfrastructure();
+
 // Add Entity Framework
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -68,12 +98,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Register DrillHole services
+// Register DrillHole services (split into focused services)
 builder.Services.AddScoped<IDrillHoleRepository, DrillHoleRepository>();
+builder.Services.AddScoped<IDrillHoleValidationService, DrillHoleValidationService>();
+builder.Services.AddScoped<ICsvImportService, CsvImportApplicationService>();
 builder.Services.AddScoped<IDrillHoleService, DrillHoleApplicationService>();
+
+// Register Drill Point Pattern services
+builder.Services.AddScoped<IDrillPointRepository, DrillPointRepository>();
+builder.Services.AddScoped<IDrillPointPatternService, DrillPointPatternApplicationService>();
+builder.Services.AddScoped<DrillPointDomainService>();
 
 // Register Site Blasting services
 builder.Services.AddScoped<ISiteBlastingRepository, SiteBlastingRepository>();
+builder.Services.AddScoped<ISiteBlastingDataService, SiteBlastingDataApplicationService>();
+builder.Services.AddScoped<IDrillPatternService, DrillPatternApplicationService>();
+builder.Services.AddScoped<IBlastSequenceService, BlastSequenceApplicationService>();
+builder.Services.AddScoped<IWorkflowProgressService, WorkflowProgressApplicationService>();
 builder.Services.AddScoped<ISiteBlastingService, SiteBlastingApplicationService>();
 
 // Register Region services

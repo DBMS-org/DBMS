@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Application.DTOs;
-using Application.Interfaces;
+using Application.DTOs.UserManagement;
+using Application.DTOs.Shared;
+using Application.Interfaces.UserManagement;
 
 namespace API.Controllers
 {
