@@ -4,7 +4,6 @@ using Application.Exceptions;
 using Application.Interfaces.UserManagement;
 using Application.Interfaces.Infrastructure;
 using Application.Utilities;
-using Application.Services.Infrastructure;
 using Domain.Entities.UserManagement;
 using Microsoft.Extensions.Logging;
 using System.Data;
@@ -17,21 +16,24 @@ namespace Application.Services.UserManagement
         private readonly IUserRepository _userRepository;
         private readonly IPasswordService _passwordService;
         private readonly IValidationService _validationService;
-        private readonly IStructuredLogger<UserApplicationService> _logger;
         private readonly ICacheService _cacheService;
+        private readonly IStructuredLogger<UserApplicationService> _logger;
+
+        private const string AllUsersCacheKey = "all_users";
+        private static string UserByIdCacheKey(int id) => $"user_{id}";
 
         public UserApplicationService(
             IUserRepository userRepository,
             IPasswordService passwordService,
             IValidationService validationService,
-            IStructuredLogger<UserApplicationService> logger,
-            ICacheService cacheService)
+            ICacheService cacheService,
+            IStructuredLogger<UserApplicationService> logger)
         {
             _userRepository = userRepository;
             _passwordService = passwordService;
             _validationService = validationService;
-            _logger = logger;
             _cacheService = cacheService;
+            _logger = logger;
         }
 
         public async Task<Result<IEnumerable<UserDto>>> GetAllUsersAsync()
@@ -39,16 +41,11 @@ namespace Application.Services.UserManagement
             using var operation = _logger.BeginOperation("GetAllUsers");
             try
             {
-                // Use caching for GetAll operations with shorter TTL for frequently updated data
-                var userDtos = await _cacheService.GetOrSetAsync(
-                    CacheKeyExtensions.AllUsersKey(),
-                    async () =>
-                    {
-                        var users = await _userRepository.GetAllAsync().ConfigureAwait(false);
-                        return users.Select(MapToDto).ToList();
-                    },
-                    TimeSpan.FromMinutes(5) // Shorter TTL for user list as it changes frequently
-                );
+                var userDtos = await _cacheService.GetOrCreateAsync(AllUsersCacheKey, async () =>
+                {
+                    var users = await _userRepository.GetAllAsync();
+                    return users.Select(MapToDto);
+                }, TimeSpan.FromMinutes(10));
 
                 _logger.LogOperationSuccess("GetAllUsers", new { UserCount = userDtos.Count() });
                 return Result.Success(userDtos);
@@ -70,15 +67,11 @@ namespace Application.Services.UserManagement
             using var operation = _logger.BeginOperation("GetUserById", new { UserId = id });
             try
             {
-                // Use caching for individual user lookups
-                var userDto = await _cacheService.GetOrSetAsync(
-                    CacheKeyExtensions.UserKey(id),
-                    async () =>
-                    {
-                        var user = await _userRepository.GetByIdAsync(id).ConfigureAwait(false);
-                        return user != null ? MapToDto(user) : null;
-                    }
-                );
+                var userDto = await _cacheService.GetOrCreateAsync(UserByIdCacheKey(id), async () =>
+                {
+                    var user = await _userRepository.GetByIdAsync(id);
+                    return user == null ? null : MapToDto(user);
+                }, TimeSpan.FromMinutes(10));
 
                 if (userDto == null)
                 {
@@ -142,12 +135,10 @@ namespace Application.Services.UserManagement
                 };
 
                 var createdUser = await _userRepository.CreateAsync(user);
-                
-                // Invalidate relevant cache entries
-                await _cacheService.RemoveAsync(CacheKeyExtensions.AllUsersKey());
-                await _cacheService.RemoveAsync(CacheKeyExtensions.UserByEmailKey(createdUser.Email));
-                await _cacheService.RemoveAsync(CacheKeyExtensions.UserByNameKey(createdUser.Name));
-                
+
+                // Invalidate cache
+                _cacheService.Remove(AllUsersCacheKey);
+
                 _logger.LogOperationSuccess("CreateUser", new { UserId = createdUser.Id, Email = createdUser.Email });
                 return Result.Success(MapToDto(createdUser));
             }
@@ -200,14 +191,13 @@ namespace Application.Services.UserManagement
                 user.UpdatedAt = DateTime.UtcNow;
 
                 var updateResult = await _userRepository.UpdateAsync(user);
+                
+                // Invalidate cache
+                _cacheService.Remove(AllUsersCacheKey);
+                _cacheService.Remove(UserByIdCacheKey(id));
+
                 if (updateResult)
                 {
-                    // Invalidate cache entries for updated user
-                    await _cacheService.RemoveAsync(CacheKeyExtensions.UserKey(id));
-                    await _cacheService.RemoveAsync(CacheKeyExtensions.AllUsersKey());
-                    await _cacheService.RemoveAsync(CacheKeyExtensions.UserByEmailKey(request.Email));
-                    await _cacheService.RemoveAsync(CacheKeyExtensions.UserByNameKey(request.Name));
-                    
                     _logger.LogOperationSuccess("UpdateUser", new { UserId = id, Email = request.Email });
                     return Result.Success();
                 }
@@ -236,28 +226,63 @@ namespace Application.Services.UserManagement
 
         public async Task<Result> DeleteUserAsync(int id)
         {
+            using var operation = _logger.BeginOperation("DeleteUser", new { UserId = id });
             try
             {
                 var deleteResult = await _userRepository.DeleteAsync(id);
-                return deleteResult ? Result.Success() : Result.Failure(ErrorCodes.Messages.UserNotFound(id));
+
+                // Invalidate cache
+                _cacheService.Remove(AllUsersCacheKey);
+                _cacheService.Remove(UserByIdCacheKey(id));
+
+                if (deleteResult)
+                {
+                    _logger.LogOperationSuccess("DeleteUser", new { UserId = id });
+                    return Result.Success();
+                }
+                else
+                {
+                    _logger.LogBusinessWarning("User not found for deletion", new { UserId = id });
+                    return Result.Failure(ErrorCodes.Messages.UserNotFound(id));
+                }
+            }
+            catch (DbException ex)
+            {
+                _logger.LogDataAccessError("DeleteUser", ex, new { UserId = id });
+                return Result.Failure("Database error occurred while deleting user");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting user {UserId}", id);
+                _logger.LogUnexpectedError("DeleteUser", ex, new { UserId = id });
                 return Result.Failure(ErrorCodes.Messages.InternalError);
             }
         }
 
         public async Task<Result> TestConnectionAsync()
         {
+            using var operation = _logger.BeginOperation("TestDbConnection");
             try
             {
                 var canConnect = await _userRepository.CanConnectAsync();
-                return canConnect ? Result.Success() : Result.Failure("Database connection failed");
+                if(canConnect) 
+                {
+                    _logger.LogOperationSuccess("TestDbConnection");
+                    return Result.Success();
+                }
+                else
+                {
+                    _logger.LogBusinessWarning("Database connection test failed");
+                    return Result.Failure("Database connection failed");
+                }
+            }
+            catch (DbException ex)
+            {
+                _logger.LogDataAccessError("TestDbConnection", ex);
+                return Result.Failure("Database connection failed");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error testing database connection");
+                _logger.LogUnexpectedError("TestDbConnection", ex);
                 return Result.Failure(ErrorCodes.Messages.InternalError);
             }
         }

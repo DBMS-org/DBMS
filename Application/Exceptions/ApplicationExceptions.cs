@@ -114,4 +114,29 @@ namespace Application.Exceptions
             Operation = operation;
         }
     }
+
+    public class NotFoundException : ApplicationException
+    {
+        public NotFoundException(string message) : base(message) { }
+    }
+
+    public class UnauthorizedException : ApplicationException
+    {
+        public UnauthorizedException(string message) : base(message) { }
+    }
+
+    public class ForbiddenException : ApplicationException
+    {
+        public ForbiddenException(string message) : base(message) { }
+    }
+
+    public class ConflictException : ApplicationException
+    {
+        public ConflictException(string message) : base(message) { }
+    }
+
+    public class InternalServerException : ApplicationException
+    {
+        public InternalServerException(string message) : base(message) { }
+    }
 } 

@@ -26,6 +26,9 @@ using Application.Validators.UserManagement;
 using Application.Validators.ProjectManagement;
 using Application.Validators.MachineManagement;
 using Application.Validators.DrillingOperations;
+using API.Middleware;
+using Microsoft.AspNetCore.Authorization;
+using API.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +58,13 @@ builder.Services.AddFluentValidationAutoValidation();
 
 // Add Infrastructure layer services (DbContext, dispatcher, handlers, misc)
 builder.Services.AddInfrastructure();
+
+// Core shared services
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ICacheService, Application.Services.Infrastructure.CacheService>();
+builder.Services.AddScoped<IPerformanceMonitor, Application.Services.Infrastructure.PerformanceMonitor>();
+builder.Services.AddScoped<IValidationService, Application.Services.Infrastructure.ValidationService>();
+builder.Services.AddScoped(typeof(IStructuredLogger<>), typeof(Application.Services.Infrastructure.StructuredLogger<>));
 
 // Add Entity Framework
 builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
@@ -97,6 +107,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
         };
     });
+
+builder.Services.AddScoped<IAuthorizationHandler, OwnershipAuthorizationHandler>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin", "Administrator"));
+    options.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "StandardUser"));
+    options.AddPolicy("RequireOwnership", policy => policy.Requirements.Add(new OwnershipRequirement()));
+});
 
 // Register DrillHole services (split into focused services)
 builder.Services.AddScoped<IDrillHoleRepository, DrillHoleRepository>();
@@ -162,9 +181,14 @@ if (app.Environment.IsDevelopment())
 // Use CORS
 app.UseCors("AllowAngularApp");
 
+// Use the global exception handler
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 // Add Authentication and Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<API.Middleware.AuditPerformanceMiddleware>();
 
 app.MapControllers();
 

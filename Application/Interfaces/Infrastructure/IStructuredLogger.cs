@@ -53,6 +53,11 @@ namespace Application.Interfaces.Infrastructure
         void LogUnexpectedError(string operationName, Exception exception, object? context = null);
 
         /// <summary>
+        /// Logs the start of an operation
+        /// </summary>
+        void LogOperationStart(string operationName, object? context = null);
+
+        /// <summary>
         /// Logs an information message with structured data
         /// </summary>
         void LogInformation(string message, object? context = null);

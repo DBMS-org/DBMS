@@ -4,7 +4,7 @@ using Domain.Entities.MachineManagement;
 
 namespace Domain.Entities.ProjectManagement
 {
-    public class Project : BaseAuditableEntity
+    public class Project : BaseAuditableEntity, IEntityOwnedByUser
     {
         public string Name { get; set; } = string.Empty;
         
@@ -20,6 +20,8 @@ namespace Domain.Entities.ProjectManagement
         
         public int? AssignedUserId { get; set; }
         public int? RegionId { get; set; }
+        
+        public int OwningUserId => AssignedUserId ?? 0;
         
         // Navigation properties
         public virtual User? AssignedUser { get; set; }
