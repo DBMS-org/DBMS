@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Application.DTOs;
-using Application.Interfaces;
+using Application.DTOs.ProjectManagement;
+using Application.DTOs.Shared;
+using Domain.Entities.ProjectManagement;
+using Application.Interfaces.ProjectManagement;
 
 namespace API.Controllers
 {
@@ -21,150 +23,140 @@ namespace API.Controllers
 
         // GET: api/projects
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProjects()
+        public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
         {
-            try
+            var result = await _projectService.GetAllProjectsAsync();
+            
+            if (result.IsFailure)
             {
-                var projects = await _projectService.GetAllProjectsAsync();
-                return Ok(projects);
+                _logger.LogError("Error occurred while fetching projects: {Error}", result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching projects");
-                return StatusCode(500, "Internal server error occurred while fetching projects");
-            }
+
+            return Ok(result.Value);
         }
 
         // GET: api/projects/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProjectDto>> GetProject(int id)
+        public async Task<ActionResult<Project?>> GetProject(int id)
         {
-            try
+            var result = await _projectService.GetProjectByIdAsync(id);
+            
+            if (result.IsFailure)
             {
-                var project = await _projectService.GetProjectByIdAsync(id);
-                if (project == null)
+                if (result.Error.Contains("not found"))
                 {
-                    return NotFound($"Project with ID {id} not found");
+                    return NotFound(result.Error);
                 }
+                
+                _logger.LogError("Error occurred while fetching project with ID {ProjectId}: {Error}", id, result.Error);
+                return StatusCode(500, result.Error);
+            }
 
-                return Ok(project);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching project with ID {ProjectId}", id);
-                return StatusCode(500, "Internal server error occurred while fetching project");
-            }
+            return Ok(result.Value);
         }
 
         // POST: api/projects
         [HttpPost]
-        public async Task<ActionResult<ProjectDto>> CreateProject(CreateProjectRequest request)
+        public async Task<ActionResult<Project>> CreateProject(CreateProjectRequest request)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                return BadRequest(ModelState);
+            }
 
-                var project = await _projectService.CreateProjectAsync(request);
-                return CreatedAtAction(nameof(GetProject), new { id = project.Id }, project);
-            }
-            catch (ArgumentException ex)
+            var result = await _projectService.CreateProjectAsync(request);
+            
+            if (result.IsFailure)
             {
-                return BadRequest(ex.Message);
+                if (result.Error.Contains("not found"))
+                {
+                    return BadRequest(result.Error);
+                }
+                
+                _logger.LogError("Error occurred while creating project: {Error}", result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while creating project");
-                return StatusCode(500, "Internal server error occurred while creating project");
-            }
+
+            return CreatedAtAction(nameof(GetProject), new { id = result.Value.Id }, result.Value);
         }
 
         // PUT: api/projects/5
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProject(int id, UpdateProjectRequest request)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                return BadRequest(ModelState);
+            }
 
-                var success = await _projectService.UpdateProjectAsync(id, request);
-                if (!success)
+            var result = await _projectService.UpdateProjectAsync(id, request);
+            
+            if (result.IsFailure)
+            {
+                if (result.Error.Contains("not found"))
                 {
-                    return NotFound($"Project with ID {id} not found");
+                    return NotFound(result.Error);
                 }
+                
+                _logger.LogError("Error occurred while updating project with ID {ProjectId}: {Error}", id, result.Error);
+                return StatusCode(500, result.Error);
+            }
 
-                return NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while updating project with ID {ProjectId}", id);
-                return StatusCode(500, "Internal server error occurred while updating project");
-            }
+            return NoContent();
         }
 
         // DELETE: api/projects/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
-            try
+            var result = await _projectService.DeleteProjectAsync(id);
+            
+            if (result.IsFailure)
             {
-                var success = await _projectService.DeleteProjectAsync(id);
-                if (!success)
+                if (result.Error.Contains("not found"))
                 {
-                    return NotFound($"Project with ID {id} not found");
+                    return NotFound(result.Error);
                 }
+                
+                _logger.LogError("Error occurred while deleting project with ID {ProjectId}: {Error}", id, result.Error);
+                return StatusCode(500, result.Error);
+            }
 
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while deleting project with ID {ProjectId}", id);
-                return StatusCode(500, "Internal server error occurred while deleting project");
-            }
+            return NoContent();
         }
 
         // GET: api/projects/5/sites
         [HttpGet("{id}/sites")]
-        public async Task<ActionResult<IEnumerable<ProjectSiteDto>>> GetProjectSites(int id)
+        public async Task<ActionResult<IEnumerable<ProjectSite>>> GetProjectSites(int id)
         {
-            try
+            var result = await _projectService.GetProjectSitesAsync(id);
+            
+            if (result.IsFailure)
             {
-                var projectSites = await _projectService.GetProjectSitesAsync(id);
-                return Ok(projectSites);
+                _logger.LogError("Error occurred while fetching project sites for project {ProjectId}: {Error}", id, result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching project sites for project {ProjectId}", id);
-                return StatusCode(500, "Internal server error occurred while fetching project sites");
-            }
+
+            return Ok(result.Value);
         }
 
         // GET: api/projects/search
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<ProjectDto>>> SearchProjects(
+        public async Task<ActionResult<IEnumerable<Project>>> SearchProjects(
             [FromQuery] string? name = null,
             [FromQuery] string? region = null,
             [FromQuery] string? status = null)
         {
-            try
+            var result = await _projectService.SearchProjectsAsync(name, region, status);
+            
+            if (result.IsFailure)
             {
-                var projects = await _projectService.SearchProjectsAsync(name, region, status);
-                return Ok(projects);
+                _logger.LogError("Error occurred while searching projects: {Error}", result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while searching projects");
-                return StatusCode(500, "Internal server error occurred while searching projects");
-            }
+
+            return Ok(result.Value);
         }
 
         // GET: api/projects/test-connection
@@ -184,18 +176,22 @@ namespace API.Controllers
 
         // GET: api/projects/by-operator/5
         [HttpGet("by-operator/{operatorId}")]
-        public async Task<ActionResult<ProjectDto?>> GetProjectByOperator(int operatorId)
+        public async Task<ActionResult<Project?>> GetProjectByOperator(int operatorId)
         {
-            try
+            var result = await _projectService.GetProjectByOperatorAsync(operatorId);
+            
+            if (result.IsFailure)
             {
-                var project = await _projectService.GetProjectByOperatorAsync(operatorId);
-                return Ok(project);
+                if (result.Error.Contains("not found"))
+                {
+                    return NotFound(result.Error);
+                }
+                
+                _logger.LogError("Error occurred while fetching project for operator {OperatorId}: {Error}", operatorId, result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching project for operator {OperatorId}", operatorId);
-                return StatusCode(500, "Internal server error occurred while fetching project");
-            }
+
+            return Ok(result.Value);
         }
     }
 } 

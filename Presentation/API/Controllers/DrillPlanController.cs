@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Application.Interfaces;
-using Domain.Entities;
-using Application.DTOs;
+using Application.Interfaces.DrillingOperations;
+using Domain.Entities.DrillingOperations;
+using Application.DTOs.DrillingOperations;
+using Application.DTOs.Shared;
 
 namespace API.Controllers
 {
@@ -11,96 +12,118 @@ namespace API.Controllers
     {
         private readonly ILogger<DrillPlanController> _logger;
         private readonly IDrillHoleService _drillHoleService;
+        private readonly ICsvImportService _csvImportService;
 
-        public DrillPlanController(ILogger<DrillPlanController> logger, IDrillHoleService drillHoleService)
+        public DrillPlanController(
+            ILogger<DrillPlanController> logger, 
+            IDrillHoleService drillHoleService,
+            ICsvImportService csvImportService)
         {
             _logger = logger;
             _drillHoleService = drillHoleService;
+            _csvImportService = csvImportService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DrillHole>>> GetAllDrillHoles()
         {
-            var drillHoles = await _drillHoleService.GetAllDrillHolesAsync();
-            return Ok(drillHoles);
+            var result = await _drillHoleService.GetAllDrillHolesAsync();
+            
+            if (result.IsFailure)
+            {
+                _logger.LogError("Error occurred while fetching drill holes: {Error}", result.Error);
+                return StatusCode(500, result.Error);
+            }
+
+            return Ok(result.Value);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<DrillHole>> GetDrillHole(string id)
         {
-            var drillHole = await _drillHoleService.GetDrillHoleByIdAsync(id);
-            if (drillHole == null)
+            var result = await _drillHoleService.GetDrillHoleByIdAsync(id);
+            
+            if (result.IsFailure)
             {
-                return NotFound();
+                if (result.Error.Contains("not found"))
+                {
+                    return NotFound(result.Error);
+                }
+                
+                _logger.LogError("Error occurred while fetching drill hole with ID {DrillHoleId}: {Error}", id, result.Error);
+                return StatusCode(500, result.Error);
             }
-            return Ok(drillHole);
+
+            return Ok(result.Value);
         }
 
         [HttpPost("upload-csv")]
         public async Task<IActionResult> UploadAndParseCsv(IFormFile file)
         {
-            try
+            _logger.LogInformation("Starting CSV file upload process");
+            
+            if (file == null)
             {
-                _logger.LogInformation("Starting CSV file upload process");
-                
-                if (file == null)
-                {
-                    _logger.LogWarning("File is null");
-                    return BadRequest("No file was provided");
-                }
-
-                if (file.Length == 0)
-                {
-                    _logger.LogWarning("File is empty");
-                    return BadRequest("The uploaded file is empty");
-                }
-
-                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (fileExtension != ".csv")
-                {
-                    _logger.LogWarning("Invalid file type uploaded: {Extension}", fileExtension);
-                    return BadRequest($"Only CSV files are allowed. Received file type: {fileExtension}");
-                }
-
-                // Convert IFormFile to DTO
-                var csvRequest = new CsvUploadRequest
-                {
-                    FileStream = file.OpenReadStream(),
-                    FileName = file.FileName,
-                    FileSize = file.Length
-                };
-
-                var drillHoles = await _drillHoleService.CreateDrillHolesFromCsvAsync(csvRequest);
-                
-                if (!drillHoles.Any())
-                {
-                    _logger.LogWarning("No valid drill holes found in the CSV");
-                    return BadRequest("No valid drill holes found in the CSV file. Please check the file format.");
-                }
-
-                _logger.LogInformation("Successfully parsed {DrillHoleCount} drill holes", drillHoles.Count());
-                return Ok(drillHoles);
+                _logger.LogWarning("File is null");
+                return BadRequest("No file was provided");
             }
-            catch (Exception ex)
+
+            if (file.Length == 0)
             {
-                _logger.LogError(ex, "Error processing uploaded CSV file: {ErrorMessage}", ex.Message);
-                return StatusCode(500, $"An error occurred while processing the CSV file: {ex.Message}");
+                _logger.LogWarning("File is empty");
+                return BadRequest("The uploaded file is empty");
             }
+
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (fileExtension != ".csv")
+            {
+                _logger.LogWarning("Invalid file type uploaded: {Extension}", fileExtension);
+                return BadRequest($"Only CSV files are allowed. Received file type: {fileExtension}");
+            }
+
+            // Convert IFormFile to DTO
+            var csvRequest = new CsvUploadRequest
+            {
+                FileStream = file.OpenReadStream(),
+                FileName = file.FileName,
+                FileSize = file.Length
+            };
+
+            var result = await _csvImportService.CreateDrillHolesFromCsvAsync(csvRequest);
+            
+            if (result.IsFailure)
+            {
+                _logger.LogError("Error processing uploaded CSV file: {Error}", result.Error);
+                return BadRequest(result.Error);
+            }
+            
+            if (!result.Value.Any())
+            {
+                _logger.LogWarning("No valid drill holes found in the CSV");
+                return BadRequest("No valid drill holes found in the CSV file. Please check the file format.");
+            }
+
+            _logger.LogInformation("Successfully parsed {DrillHoleCount} drill holes", result.Value.Count());
+            return Ok(result.Value);
         }
 
         [HttpPost]
         public async Task<ActionResult<DrillHole>> CreateDrillHole(DrillHole drillHole)
         {
-            try
+            var result = await _drillHoleService.CreateDrillHoleAsync(drillHole);
+            
+            if (result.IsFailure)
             {
-                var createdDrillHole = await _drillHoleService.CreateDrillHoleAsync(drillHole);
-                return CreatedAtAction(nameof(GetDrillHole), new { id = createdDrillHole.Id }, createdDrillHole);
+                if (result.Error.Contains("already exists"))
+                {
+                    return BadRequest(result.Error);
+                }
+                
+                _logger.LogError("Error creating drill hole: {Error}", result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating drill hole: {ErrorMessage}", ex.Message);
-                return BadRequest(ex.Message);
-            }
+
+            return CreatedAtAction(nameof(GetDrillHole), new { id = result.Value.Id }, result.Value);
         }
 
         [HttpPut("{id}")]
@@ -111,31 +134,39 @@ namespace API.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            try
+            var result = await _drillHoleService.UpdateDrillHoleAsync(drillHole);
+            
+            if (result.IsFailure)
             {
-                await _drillHoleService.UpdateDrillHoleAsync(drillHole);
-                return NoContent();
+                if (result.Error.Contains("not found"))
+                {
+                    return NotFound(result.Error);
+                }
+                
+                _logger.LogError("Error updating drill hole: {Error}", result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating drill hole: {ErrorMessage}", ex.Message);
-                return BadRequest(ex.Message);
-            }
+
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDrillHole(string id)
         {
-            try
+            var result = await _drillHoleService.DeleteDrillHoleAsync(id);
+            
+            if (result.IsFailure)
             {
-                await _drillHoleService.DeleteDrillHoleAsync(id);
-                return NoContent();
+                if (result.Error.Contains("not found"))
+                {
+                    return NotFound(result.Error);
+                }
+                
+                _logger.LogError("Error deleting drill hole: {Error}", result.Error);
+                return StatusCode(500, result.Error);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting drill hole: {ErrorMessage}", ex.Message);
-                return BadRequest(ex.Message);
-            }
+
+            return NoContent();
         }
     }
 } 

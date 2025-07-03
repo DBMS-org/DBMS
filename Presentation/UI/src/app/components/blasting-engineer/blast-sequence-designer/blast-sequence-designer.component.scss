@@ -10,17 +10,7 @@
   overflow-x: hidden; // Prevent horizontal scrolling
   position: relative;
   
-  // Adjust layout when instructions panel is visible
-  &.connection-mode-active {
-    .main-content {
-      .canvas-container {
-        min-height: 400px; // Maintain reasonable size even with instructions
-        flex: 1 1 400px; // Prioritize canvas size
-        height: auto; // Allow natural height calculation
-        // Remove max-height constraint to allow proper sizing
-      }
-    }
-  }
+
 }
 
 // Modern Header
@@ -722,72 +712,7 @@
   }
 }
 
-// Instructions Panel
-.instructions-panel {
-  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-  border: 1px solid #b8dabd;
-  padding: 0.75rem 1.5rem; // Reduced padding
-  margin: 0;
-  flex-shrink: 0; // Don't let it shrink
-  max-height: 140px; // Reduced height to save space for 2D canvas
-  overflow-y: auto; // Allow scrolling within panel if needed
 
-  .instructions-content {
-    h4 {
-      margin: 0 0 0.5rem 0; // Reduced margin
-      color: #155724;
-      font-size: 0.9rem; // Slightly smaller
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 600;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem; // Reduced gap
-
-      li {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem; // Reduced gap
-        color: #155724;
-        font-size: 0.8rem; // Smaller text
-        background: rgba(255, 255, 255, 0.5);
-        padding: 0.4rem 0.6rem; // Reduced padding
-        border-radius: 4px; // Smaller radius
-        border: 1px solid rgba(21, 87, 36, 0.2);
-
-        .material-icons {
-          font-size: 0.9rem; // Smaller icons
-          color: #28a745;
-        }
-
-        &.warning-instruction {
-          background: #fff3cd;
-          border: 1px solid #ffeaa7;
-          color: #856404;
-          flex-basis: 100%;
-          margin-bottom: 0.25rem; // Reduced margin
-          padding: 0.6rem 0.8rem; // Reduced padding
-
-          .material-icons {
-            color: #dc3545;
-            font-size: 1rem; // Keep warning icon normal size
-          }
-
-          strong {
-            font-weight: 600;
-          }
-        }
-      }
-    }
-  }
-}
 
 // Canvas Container
 .canvas-container {
