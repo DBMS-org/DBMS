@@ -1,12 +1,24 @@
 using Microsoft.EntityFrameworkCore;
-using Domain.Entities;
+using Domain.Entities.UserManagement;
+using Domain.Entities.ProjectManagement;
+using Domain.Entities.DrillingOperations;
+using Domain.Entities.BlastingOperations;
+using Domain.Entities.MachineManagement;
+using Domain.Common;
+using Application.Interfaces.Infrastructure;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace Infrastructure.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        private readonly IDomainEventDispatcher? _dispatcher;
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IDomainEventDispatcher? dispatcher = null) : base(options)
         {
+            _dispatcher = dispatcher;
         }
 
         // DbSets for all entities
@@ -24,312 +36,18 @@ namespace Infrastructure.Data
         public DbSet<PasswordResetCode> PasswordResetCodes { get; set; }
         public DbSet<Machine> Machines { get; set; }
         public DbSet<Region> Regions { get; set; }
+        public DbSet<DrillPoint> DrillPoints { get; set; }
+        public DbSet<PatternSettings> PatternSettings { get; set; }
+        public DbSet<BlastConnection> BlastConnections { get; set; }
+        public DbSet<DetonatorInfo> DetonatorInfos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure User entity
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-                entity.Property(e => e.PasswordHash).IsRequired();
-                entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Region).HasMaxLength(100);
-                entity.Property(e => e.Country).HasMaxLength(100);
-                entity.Property(e => e.OmanPhone).HasMaxLength(20);
-                entity.Property(e => e.CountryPhone).HasMaxLength(20);
-                entity.HasIndex(e => e.Email).IsUnique();
-                entity.HasIndex(e => e.Name).IsUnique();
-            });
-
-            // Configure Role entity
-            modelBuilder.Entity<Role>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Description).HasMaxLength(255);
-                entity.Property(e => e.NormalizedName).HasMaxLength(100);
-                entity.HasIndex(e => e.Name).IsUnique();
-            });
-
-            // Configure Permission entity
-            modelBuilder.Entity<Permission>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(255);
-                entity.Property(e => e.Module).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Action).IsRequired().HasMaxLength(50);
-                entity.HasIndex(e => new { e.Module, e.Action }).IsUnique();
-            });
-
-            // Configure UserRole entity (Many-to-Many)
-            modelBuilder.Entity<UserRole>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.User)
-                      .WithMany(e => e.UserRoles)
-                      .HasForeignKey(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                
-                entity.HasOne(e => e.Role)
-                      .WithMany(e => e.UserRoles)
-                      .HasForeignKey(e => e.RoleId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Configure RolePermission entity (Many-to-Many)
-            modelBuilder.Entity<RolePermission>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.Role)
-                      .WithMany(e => e.RolePermissions)
-                      .HasForeignKey(e => e.RoleId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                
-                entity.HasOne(e => e.Permission)
-                      .WithMany(e => e.RolePermissions)
-                      .HasForeignKey(e => e.PermissionId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Configure DrillHole entity
-            modelBuilder.Entity<DrillHole>(entity =>
-            {
-                entity.HasKey(e => e.SerialNumber);
-                entity.Property(e => e.SerialNumber).ValueGeneratedOnAdd();
-                entity.Property(e => e.Id).IsRequired();
-                entity.Property(e => e.Name).IsRequired();
-            });
-
-            // Configure Project entity
-            modelBuilder.Entity<Project>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Region).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Description).HasMaxLength(1000);
-                
-                // Foreign key relationship with User
-                entity.HasOne(e => e.AssignedUser)
-                      .WithMany()
-                      .HasForeignKey(e => e.AssignedUserId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                      
-                // Foreign key relationship with Region
-                entity.HasOne(e => e.RegionNavigation)
-                      .WithMany(r => r.Projects)
-                      .HasForeignKey(e => e.RegionId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                      
-                entity.HasIndex(e => e.Name);
-                entity.HasIndex(e => e.RegionId);
-
-                // Ensure an operator (AssignedUserId) can only be linked to a single project
-                entity.HasIndex(e => e.AssignedUserId)
-                      .IsUnique()
-                      .HasFilter("[AssignedUserId] IS NOT NULL"); // Unique when not null
-            });
-
-            // Configure ProjectSite entity
-            modelBuilder.Entity<ProjectSite>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Location).HasMaxLength(200);
-                entity.Property(e => e.Coordinates).HasMaxLength(200);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                
-                // Foreign key relationship with Project
-                entity.HasOne(e => e.Project)
-                      .WithMany(e => e.ProjectSites)
-                      .HasForeignKey(e => e.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                      
-                entity.HasIndex(e => e.ProjectId);
-            });
-
-            // Configure SiteBlastingData entity
-            modelBuilder.Entity<SiteBlastingData>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.DataType).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.JsonData).IsRequired();
-                
-                // Foreign key relationships
-                entity.HasOne(e => e.Project)
-                      .WithMany()
-                      .HasForeignKey(e => e.ProjectId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                      
-                entity.HasOne(e => e.Site)
-                      .WithMany()
-                      .HasForeignKey(e => e.SiteId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                      
-                entity.HasOne(e => e.CreatedBy)
-                      .WithMany()
-                      .HasForeignKey(e => e.CreatedByUserId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                
-                // Indexes for performance
-                entity.HasIndex(e => new { e.ProjectId, e.SiteId, e.DataType }).IsUnique();
-                entity.HasIndex(e => e.ProjectId);
-                entity.HasIndex(e => e.SiteId);
-            });
-
-            // Configure DrillPattern entity
-            modelBuilder.Entity<DrillPattern>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.DrillPointsJson).IsRequired();
-                
-                // Foreign key relationships
-                entity.HasOne(e => e.Project)
-                      .WithMany()
-                      .HasForeignKey(e => e.ProjectId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                      
-                entity.HasOne(e => e.Site)
-                      .WithMany()
-                      .HasForeignKey(e => e.SiteId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                      
-                entity.HasOne(e => e.CreatedBy)
-                      .WithMany()
-                      .HasForeignKey(e => e.CreatedByUserId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                
-                // Indexes for performance
-                entity.HasIndex(e => new { e.ProjectId, e.SiteId });
-                entity.HasIndex(e => e.ProjectId);
-                entity.HasIndex(e => e.SiteId);
-                entity.HasIndex(e => e.IsActive);
-            });
-
-            // Configure BlastSequence entity
-            modelBuilder.Entity<BlastSequence>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.ConnectionsJson).IsRequired();
-                entity.Property(e => e.SimulationSettingsJson).HasDefaultValue("{}");
-                
-                // Foreign key relationships
-                entity.HasOne(e => e.Project)
-                      .WithMany()
-                      .HasForeignKey(e => e.ProjectId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                      
-                entity.HasOne(e => e.Site)
-                      .WithMany()
-                      .HasForeignKey(e => e.SiteId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                      
-                entity.HasOne(e => e.DrillPattern)
-                      .WithMany(e => e.BlastSequences)
-                      .HasForeignKey(e => e.DrillPatternId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                      
-                entity.HasOne(e => e.CreatedBy)
-                      .WithMany()
-                      .HasForeignKey(e => e.CreatedByUserId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                
-                // Indexes for performance
-                entity.HasIndex(e => new { e.ProjectId, e.SiteId });
-                entity.HasIndex(e => e.DrillPatternId);
-                entity.HasIndex(e => e.ProjectId);
-                entity.HasIndex(e => e.SiteId);
-                entity.HasIndex(e => e.IsActive);
-            });
-
-            // Configure PasswordResetCode entity
-            modelBuilder.Entity<PasswordResetCode>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Code).IsRequired().HasMaxLength(6);
-                entity.Property(e => e.ExpiresAt).IsRequired();
-                entity.Property(e => e.IsUsed).HasDefaultValue(false);
-                entity.Property(e => e.AttemptCount).HasDefaultValue(0);
-                
-                // Foreign key relationship with User
-                entity.HasOne(e => e.User)
-                      .WithMany()
-                      .HasForeignKey(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                      
-                // Indexes for performance
-                entity.HasIndex(e => new { e.UserId, e.Code });
-                entity.HasIndex(e => e.ExpiresAt);
-            });
-
-            // Configure Machine entity
-            modelBuilder.Entity<Machine>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Model).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Manufacturer).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.SerialNumber).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.RigNo).HasMaxLength(50);
-                entity.Property(e => e.PlateNo).HasMaxLength(50);
-                entity.Property(e => e.ChassisDetails).HasMaxLength(500);
-                entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.CurrentLocation).HasMaxLength(200);
-                entity.Property(e => e.AssignedToProject).HasMaxLength(100);
-                entity.Property(e => e.AssignedToOperator).HasMaxLength(100);
-                
-                // Foreign key relationships
-                entity.HasOne(e => e.Project)
-                      .WithMany(p => p.Machines)
-                      .HasForeignKey(e => e.ProjectId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                      
-                entity.HasOne(e => e.Operator)
-                      .WithMany()
-                      .HasForeignKey(e => e.OperatorId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                      
-                entity.HasOne(e => e.Region)
-                      .WithMany(r => r.Machines)
-                      .HasForeignKey(e => e.RegionId)
-                      .OnDelete(DeleteBehavior.SetNull);
-                
-                // Indexes for performance and uniqueness
-                entity.HasIndex(e => e.SerialNumber).IsUnique();
-                entity.HasIndex(e => e.Name);
-                entity.HasIndex(e => e.Type);
-                entity.HasIndex(e => e.Status);
-                entity.HasIndex(e => e.ProjectId);
-                entity.HasIndex(e => e.OperatorId);
-                entity.HasIndex(e => e.RegionId);
-            });
-
-            // Configure Region entity
-            modelBuilder.Entity<Region>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.IsActive).HasDefaultValue(true);
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
-                
-                // Unique index on Name
-                entity.HasIndex(e => e.Name).IsUnique();
-                entity.HasIndex(e => e.IsActive);
-            });
+            // Automatically apply all IEntityTypeConfiguration<T> from this assembly
+            // This will pick up all configurations from the categorized folders
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
             // Seed initial data
             SeedData(modelBuilder);
@@ -337,134 +55,79 @@ namespace Infrastructure.Data
 
         private void SeedData(ModelBuilder modelBuilder)
         {
-            // Seed Roles
+            // Seeding Roles
             modelBuilder.Entity<Role>().HasData(
-                new Role { Id = 1, Name = "Admin", Description = "Administrator with full access", NormalizedName = "ADMIN", IsActive = true },
-                new Role { Id = 2, Name = "BlastingEngineer", Description = "Blasting Engineer with technical access", NormalizedName = "BLASTINGENGINEER", IsActive = true },
-                new Role { Id = 3, Name = "MechanicalEngineer", Description = "Mechanical Engineer with analysis and design access", NormalizedName = "MECHANICALENGINEER", IsActive = true },
-                new Role { Id = 4, Name = "Operator", Description = "Operator with operational access", NormalizedName = "OPERATOR", IsActive = true },
-                new Role { Id = 5, Name = "MachineManager", Description = "Machine Manager with machinery operational access", NormalizedName = "MACHINEMANAGER", IsActive = true },
-                new Role { Id = 6, Name = "ExplosiveManager", Description = "Explosive Manager with explosives handling and safety access", NormalizedName = "EXPLOSIVEMANAGER", IsActive = true },
-                new Role { Id = 7, Name = "StoreManager", Description = "Store Manager with inventory and supply chain access", NormalizedName = "STOREMANAGER", IsActive = true }
+                new Role { Id = 1, Name = "Admin", NormalizedName = "ADMIN", Description = "Administrator with full access" },
+                new Role { Id = 2, Name = "Blasting Engineer", NormalizedName = "BLASTING_ENGINEER", Description = "Manages blasting operations" },
+                new Role { Id = 3, Name = "Mechanical Engineer", NormalizedName = "MECHANICAL_ENGINEER", Description = "Manages mechanical tasks" },
+                new Role { Id = 4, Name = "Machine Manager", NormalizedName = "MACHINE_MANAGER", Description = "Manages machine inventory and assignments" },
+                new Role { Id = 5, Name = "Explosive Manager", NormalizedName = "EXPLOSIVE_MANAGER", Description = "Manages explosive materials" },
+                new Role { Id = 6, Name = "Store Manager", NormalizedName = "STORE_MANAGER", Description = "Manages store inventory" },
+                new Role { Id = 7, Name = "Operator", NormalizedName = "OPERATOR", Description = "Operates machinery" }
             );
 
-            // Seed Permissions
+            // Seeding Permissions
             modelBuilder.Entity<Permission>().HasData(
-                new Permission { Id = 1, Name = "View Users", Description = "Can view user list", Module = "Users", Action = "View", IsActive = true },
-                new Permission { Id = 2, Name = "Create User", Description = "Can create new users", Module = "Users", Action = "Create", IsActive = true },
-                new Permission { Id = 3, Name = "Edit User", Description = "Can edit user details", Module = "Users", Action = "Edit", IsActive = true },
-                new Permission { Id = 4, Name = "Delete User", Description = "Can delete users", Module = "Users", Action = "Delete", IsActive = true },
-                new Permission { Id = 5, Name = "View Dashboard", Description = "Can view dashboard", Module = "Dashboard", Action = "View", IsActive = true },
-                new Permission { Id = 6, Name = "Upload CSV", Description = "Can upload CSV files", Module = "DrillHole", Action = "Upload", IsActive = true },
-                new Permission { Id = 7, Name = "View DrillHoles", Description = "Can view drill holes", Module = "DrillHole", Action = "View", IsActive = true },
-                new Permission { Id = 8, Name = "View Projects", Description = "Can view project list", Module = "Projects", Action = "View", IsActive = true },
-                new Permission { Id = 9, Name = "Create Project", Description = "Can create new projects", Module = "Projects", Action = "Create", IsActive = true },
-                new Permission { Id = 10, Name = "Edit Project", Description = "Can edit project details", Module = "Projects", Action = "Edit", IsActive = true },
-                new Permission { Id = 11, Name = "Delete Project", Description = "Can delete projects", Module = "Projects", Action = "Delete", IsActive = true }
+                new Permission { Id = 1, Module = "UserManagement", Action = "Create", Name = "Create User", Description = "Allows creating a new user" },
+                new Permission { Id = 2, Module = "UserManagement", Action = "Read", Name = "Read User", Description = "Allows viewing user details" },
+                new Permission { Id = 3, Module = "UserManagement", Action = "Update", Name = "Update User", Description = "Allows editing user details" },
+                new Permission { Id = 4, Module = "UserManagement", Action = "Delete", Name = "Delete User", Description = "Allows deleting a user" },
+                new Permission { Id = 5, Module = "ProjectManagement", Action = "Create", Name = "Create Project", Description = "Allows creating a new project" },
+                new Permission { Id = 6, Module = "ProjectManagement", Action = "Read", Name = "Read Project", Description = "Allows viewing project details" },
+                new Permission { Id = 7, Module = "ProjectManagement", Action = "Update", Name = "Update Project", Description = "Allows editing project details" },
+                new Permission { Id = 8, Module = "ProjectManagement", Action = "Delete", Name = "Delete Project", Description = "Allows deleting a project" }
             );
 
-            // Seed Admin User
-            modelBuilder.Entity<User>().HasData(
-                new User 
-                { 
-                    Id = 1, 
-                    Name = "System Administrator", 
-                    Email = "admin@dbms.com",
-                    PasswordHash = "$2a$11$K8QQfR6Z5j6XgkHjWo9xXeNqO7QDj9qQVvjBZjR8g1jzQzKL9Yd3W", // Password: "admin123"
-                    Role = "Admin", 
-                    Status = "Active",
-                    Region = "Muscat",
-                    Country = "Oman",
-                    OmanPhone = "+968 9999 9999",
-                    CountryPhone = "+968 9999 9999"
-                }
+            // Seeding RolePermissions
+            modelBuilder.Entity<RolePermission>().HasData(
+                // Admin has all permissions
+                new RolePermission { Id = 1, RoleId = 1, PermissionId = 1 },
+                new RolePermission { Id = 2, RoleId = 1, PermissionId = 2 },
+                new RolePermission { Id = 3, RoleId = 1, PermissionId = 3 },
+                new RolePermission { Id = 4, RoleId = 1, PermissionId = 4 },
+                new RolePermission { Id = 5, RoleId = 1, PermissionId = 5 },
+                new RolePermission { Id = 6, RoleId = 1, PermissionId = 6 },
+                new RolePermission { Id = 7, RoleId = 1, PermissionId = 7 },
+                new RolePermission { Id = 8, RoleId = 1, PermissionId = 8 },
+                // Blasting Engineer can read projects
+                new RolePermission { Id = 9, RoleId = 2, PermissionId = 6 }
             );
 
-            // Seed Sample Projects
-            modelBuilder.Entity<Project>().HasData(
-                new Project
-                {
-                    Id = 1,
-                    Name = "Muscat Infrastructure Development - Highway Construction",
-                    Region = "Muscat",
-                    Status = "Active",
-                    Description = "Major highway development project in Muscat region",
-                    StartDate = new DateTime(2024, 1, 15),
-                    EndDate = new DateTime(2024, 12, 31),
-                    AssignedUserId = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                },
-                new Project
-                {
-                    Id = 2,
-                    Name = "Dhofar Mining Operations - Site Development",
-                    Region = "Dhofar",
-                    Status = "Active",
-                    Description = "Mining site expansion project in Dhofar region",
-                    StartDate = new DateTime(2024, 2, 1),
-                    EndDate = new DateTime(2024, 11, 30),
-                    AssignedUserId = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                },
-                new Project
-                {
-                    Id = 3,
-                    Name = "Sohar Industrial Zone - Development",
-                    Region = "Al Batinah North",
-                    Status = "Completed",
-                    Description = "Industrial zone construction project in Sohar",
-                    StartDate = new DateTime(2023, 6, 1),
-                    EndDate = new DateTime(2023, 12, 31),
-                    AssignedUserId = 1,
-                    CreatedAt = DateTime.UtcNow.AddMonths(-6),
-                    UpdatedAt = DateTime.UtcNow.AddMonths(-1)
-                }
-            );
-
-            // Seed Sample Project Sites
-            modelBuilder.Entity<ProjectSite>().HasData(
-                new ProjectSite
-                {
-                    Id = 1,
-                    ProjectId = 1,
-                    Name = "Muscat Main Site",
-                    Location = "Muscat Highway Junction",
-                    Coordinates = "{\"Latitude\":23.5880,\"Longitude\":58.3829}",
-                    Status = "Active",
-                    Description = "Primary construction site for highway project",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                },
-                new ProjectSite
-                {
-                    Id = 2,
-                    ProjectId = 2,
-                    Name = "Dhofar Mining Pit A",
-                    Location = "Dhofar Mining Area",
-                    Coordinates = "{\"Latitude\":17.0194,\"Longitude\":54.1085}",
-                    Status = "Active",
-                    Description = "Main mining pit for ore extraction",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                }
-            );
-
-            // Seed Regions
+            // Seeding Regions
             modelBuilder.Entity<Region>().HasData(
-                new Region { Id = 1, Name = "Muscat", Description = "Capital Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 2, Name = "Dhofar", Description = "Southern Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 3, Name = "Musandam", Description = "Northern Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 4, Name = "Al Buraimi", Description = "Western Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 5, Name = "Al Dakhiliyah", Description = "Interior Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 6, Name = "Al Dhahirah", Description = "Al Dhahirah Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 7, Name = "Al Wusta", Description = "Central Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 8, Name = "Al Batinah North", Description = "Northern Batinah Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 9, Name = "Al Batinah South", Description = "Southern Batinah Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 10, Name = "Ash Sharqiyah North", Description = "Northern Sharqiyah Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Region { Id = 11, Name = "Ash Sharqiyah South", Description = "Southern Sharqiyah Governorate", IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new Region { Id = 1, Name = "Muscat", Country = "Oman" },
+                new Region { Id = 2, Name = "Dhofar", Country = "Oman" },
+                new Region { Id = 3, Name = "Musandam", Country = "Oman" },
+                new Region { Id = 4, Name = "Al Buraimi", Country = "Oman" },
+                new Region { Id = 5, Name = "Ad Dakhiliyah", Country = "Oman" },
+                new Region { Id = 6, Name = "Al Batinah North", Country = "Oman" },
+                new Region { Id = 7, Name = "Al Batinah South", Country = "Oman" },
+                new Region { Id = 8, Name = "Ash Sharqiyah South", Country = "Oman" },
+                new Region { Id = 9, Name = "Ash Sharqiyah North", Country = "Oman" },
+                new Region { Id = 10, Name = "Ad Dhahirah", Country = "Oman" },
+                new Region { Id = 11, Name = "Al Wusta", Country = "Oman" }
             );
         }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var result = await base.SaveChangesAsync(cancellationToken);
+
+            if (_dispatcher != null)
+            {
+                var domainEntities = ChangeTracker.Entries<Domain.Common.BaseEntity>()
+                    .Where(e => e.Entity.DomainEvents.Any())
+                    .Select(e => e.Entity);
+
+                var domainEvents = domainEntities.SelectMany(e => e.PullDomainEvents()).ToList();
+
+                foreach (var domainEvent in domainEvents)
+                {
+                    await _dispatcher.DispatchAsync(domainEvent, cancellationToken);
+                }
+            }
+
+            return result;
+        }
     }
-} 
+}

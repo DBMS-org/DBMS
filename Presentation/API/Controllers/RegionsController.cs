@@ -1,5 +1,5 @@
-using Application.Interfaces;
-using Domain.Entities;
+using Application.Interfaces.ProjectManagement;
+using Domain.Entities.ProjectManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

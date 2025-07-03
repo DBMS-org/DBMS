@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Application.DTOs;
-using Application.Interfaces;
+using Application.DTOs.BlastingOperations;
+using Application.DTOs.DrillingOperations;
+using Application.DTOs.Shared;
+using Application.Interfaces.BlastingOperations;
 using System.Security.Claims;
 
 namespace API.Controllers
@@ -10,12 +12,23 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class SiteBlastingController : ControllerBase
     {
-        private readonly ISiteBlastingService _siteBlastingService;
+        private readonly ISiteBlastingDataService _dataService;
+        private readonly IDrillPatternService _patternService;
+        private readonly IBlastSequenceService _sequenceService;
+        private readonly IWorkflowProgressService _workflowService;
         private readonly ILogger<SiteBlastingController> _logger;
 
-        public SiteBlastingController(ISiteBlastingService siteBlastingService, ILogger<SiteBlastingController> logger)
+        public SiteBlastingController(
+            ISiteBlastingDataService dataService,
+            IDrillPatternService patternService,
+            IBlastSequenceService sequenceService,
+            IWorkflowProgressService workflowService,
+            ILogger<SiteBlastingController> logger)
         {
-            _siteBlastingService = siteBlastingService;
+            _dataService = dataService;
+            _patternService = patternService;
+            _sequenceService = sequenceService;
+            _workflowService = workflowService;
             _logger = logger;
         }
 
@@ -29,7 +42,7 @@ namespace API.Controllers
         {
             try
             {
-                var data = await _siteBlastingService.GetSiteDataAsync(projectId, siteId, dataType);
+                var data = await _dataService.GetSiteDataAsync(projectId, siteId, dataType);
                 
                 if (data == null)
                 {
@@ -54,7 +67,7 @@ namespace API.Controllers
         {
             try
             {
-                var data = await _siteBlastingService.GetAllSiteDataAsync(projectId, siteId);
+                var data = await _dataService.GetAllSiteDataAsync(projectId, siteId);
                 return Ok(data);
             }
             catch (Exception ex)
@@ -83,7 +96,7 @@ namespace API.Controllers
                 request.SiteId = siteId;
 
                 var userId = GetCurrentUserId();
-                var savedData = await _siteBlastingService.SaveSiteDataAsync(request, userId);
+                var savedData = await _dataService.SaveSiteDataAsync(request, userId);
 
                 return Ok(savedData);
             }
@@ -107,7 +120,7 @@ namespace API.Controllers
         {
             try
             {
-                var deleted = await _siteBlastingService.DeleteSiteDataAsync(projectId, siteId, dataType);
+                var deleted = await _dataService.DeleteSiteDataAsync(projectId, siteId, dataType);
                 
                 if (!deleted)
                 {
@@ -132,7 +145,7 @@ namespace API.Controllers
         {
             try
             {
-                var deleted = await _siteBlastingService.DeleteAllSiteDataAsync(projectId, siteId);
+                var deleted = await _dataService.DeleteAllSiteDataAsync(projectId, siteId);
                 
                 if (!deleted)
                 {
@@ -166,7 +179,7 @@ namespace API.Controllers
                 request.ProjectId = projectId;
                 request.SiteId = siteId;
 
-                var success = await _siteBlastingService.CleanupSiteDataAsync(request);
+                var success = await _dataService.CleanupSiteDataAsync(request);
                 
                 if (!success)
                 {
@@ -209,7 +222,7 @@ namespace API.Controllers
                 request.SiteId = siteId;
 
                 var userId = GetCurrentUserId();
-                var success = await _siteBlastingService.SaveBulkSiteDataAsync(request, userId);
+                var success = await _dataService.SaveBulkSiteDataAsync(request, userId);
                 
                 if (!success)
                 {
@@ -238,7 +251,7 @@ namespace API.Controllers
         {
             try
             {
-                var data = await _siteBlastingService.GetBulkSiteDataAsync(projectId, siteId);
+                var data = await _dataService.GetBulkSiteDataAsync(projectId, siteId);
                 return Ok(data);
             }
             catch (Exception ex)
@@ -261,7 +274,7 @@ namespace API.Controllers
         {
             try
             {
-                var patterns = await _siteBlastingService.GetDrillPatternsAsync(projectId, siteId);
+                var patterns = await _patternService.GetDrillPatternsAsync(projectId, siteId);
                 return Ok(patterns);
             }
             catch (Exception ex)
@@ -280,7 +293,7 @@ namespace API.Controllers
         {
             try
             {
-                var pattern = await _siteBlastingService.GetDrillPatternAsync(id);
+                var pattern = await _patternService.GetDrillPatternAsync(id);
                 
                 if (pattern == null)
                 {
@@ -314,7 +327,7 @@ namespace API.Controllers
                 request.SiteId = siteId;
 
                 var userId = GetCurrentUserId();
-                var pattern = await _siteBlastingService.CreateDrillPatternAsync(request, userId);
+                var pattern = await _patternService.CreateDrillPatternAsync(request, userId);
 
                 return CreatedAtAction(nameof(GetDrillPattern), new { id = pattern.Id }, pattern);
             }
@@ -344,7 +357,7 @@ namespace API.Controllers
                 }
 
                 var userId = GetCurrentUserId();
-                var pattern = await _siteBlastingService.UpdateDrillPatternAsync(id, request, userId);
+                var pattern = await _patternService.UpdateDrillPatternAsync(id, request, userId);
 
                 return Ok(pattern);
             }
@@ -371,7 +384,7 @@ namespace API.Controllers
         {
             try
             {
-                var deleted = await _siteBlastingService.DeleteDrillPatternAsync(id);
+                var deleted = await _patternService.DeleteDrillPatternAsync(id);
                 
                 if (!deleted)
                 {
@@ -399,7 +412,7 @@ namespace API.Controllers
         {
             try
             {
-                var sequences = await _siteBlastingService.GetBlastSequencesAsync(projectId, siteId);
+                var sequences = await _sequenceService.GetBlastSequencesAsync(projectId, siteId);
                 return Ok(sequences);
             }
             catch (Exception ex)
@@ -418,7 +431,7 @@ namespace API.Controllers
         {
             try
             {
-                var sequence = await _siteBlastingService.GetBlastSequenceAsync(id);
+                var sequence = await _sequenceService.GetBlastSequenceAsync(id);
                 
                 if (sequence == null)
                 {
@@ -452,7 +465,7 @@ namespace API.Controllers
                 request.SiteId = siteId;
 
                 var userId = GetCurrentUserId();
-                var sequence = await _siteBlastingService.CreateBlastSequenceAsync(request, userId);
+                var sequence = await _sequenceService.CreateBlastSequenceAsync(request, userId);
 
                 return CreatedAtAction(nameof(GetBlastSequence), new { id = sequence.Id }, sequence);
             }
@@ -482,7 +495,7 @@ namespace API.Controllers
                 }
 
                 var userId = GetCurrentUserId();
-                var sequence = await _siteBlastingService.UpdateBlastSequenceAsync(id, request, userId);
+                var sequence = await _sequenceService.UpdateBlastSequenceAsync(id, request, userId);
 
                 return Ok(sequence);
             }
@@ -509,7 +522,7 @@ namespace API.Controllers
         {
             try
             {
-                var deleted = await _siteBlastingService.DeleteBlastSequenceAsync(id);
+                var deleted = await _sequenceService.DeleteBlastSequenceAsync(id);
                 
                 if (!deleted)
                 {
@@ -537,7 +550,7 @@ namespace API.Controllers
         {
             try
             {
-                var progress = await _siteBlastingService.GetWorkflowProgressAsync(projectId, siteId);
+                var progress = await _workflowService.GetWorkflowProgressAsync(projectId, siteId);
                 return Ok(progress);
             }
             catch (Exception ex)
@@ -556,7 +569,7 @@ namespace API.Controllers
         {
             try
             {
-                var progress = await _siteBlastingService.UpdateWorkflowProgressAsync(projectId, siteId, stepId, completed);
+                var progress = await _workflowService.UpdateWorkflowProgressAsync(projectId, siteId, stepId, completed);
                 return Ok(progress);
             }
             catch (Exception ex)
@@ -579,7 +592,7 @@ namespace API.Controllers
         {
             try
             {
-                var isValid = await _siteBlastingService.ValidateProjectSiteExistsAsync(projectId, siteId);
+                var isValid = await _dataService.ValidateProjectSiteExistsAsync(projectId, siteId);
                 return Ok(new { isValid, projectId, siteId });
             }
             catch (Exception ex)
@@ -600,7 +613,7 @@ namespace API.Controllers
         [HttpPost("projects/{projectId}/sites/{siteId}/operator-completion")]
         public async Task<IActionResult> SetOperatorCompletion(int projectId, int siteId)
         {
-            var success = await _siteBlastingService.SetOperatorCompletionAsync(projectId, siteId, true);
+            var success = await _workflowService.SetOperatorCompletionAsync(projectId, siteId, true);
             if (!success)
                 return NotFound("Project site not found");
             return Ok(new { message = "Operator completion marked." });
@@ -612,7 +625,7 @@ namespace API.Controllers
         [HttpDelete("projects/{projectId}/sites/{siteId}/operator-completion")]
         public async Task<IActionResult> RevokeOperatorCompletion(int projectId, int siteId)
         {
-            var success = await _siteBlastingService.SetOperatorCompletionAsync(projectId, siteId, false);
+            var success = await _workflowService.SetOperatorCompletionAsync(projectId, siteId, false);
             if (!success)
                 return NotFound("Project site not found");
             return Ok(new { message = "Operator completion revoked." });

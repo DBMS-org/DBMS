@@ -26,6 +26,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SiteService } from '../../../core/services/site.service';
 import { NavigationController, WorkflowStepId } from '../shared/services/navigation-controller.service';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
+import { DrillPointPatternService } from '../../../core/services/drill-point-pattern.service';
 
 @Component({
   selector: 'app-drilling-pattern-creator',
@@ -105,7 +106,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     private authService: AuthService,
     private siteService: SiteService,
     private navigationController: NavigationController,
-    private drillDataService: DrillDataService
+    private drillDataService: DrillDataService,
+    private drillPointPatternService: DrillPointPatternService
   ) {}
 
   formatValue(value: number): string {
@@ -223,36 +225,20 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     }
 
     // Try to load saved drill patterns from backend first
-    this.siteBlastingService.getDrillPatterns(this.currentProjectId, this.currentSiteId)
+    this.drillPointPatternService.getPattern(this.currentProjectId, this.currentSiteId)
       .subscribe({
-        next: (patterns) => {
-          if (patterns && patterns.length > 0) {
+        next: (pattern) => {
+          if (pattern && pattern.drillPoints) {
             // Load the most recent pattern
-            const latestPattern = patterns[0];
-            
-            // Handle drillPointsJson which can be either string (from backend) or array (already parsed)
-            let drillPoints: DrillPoint[] = [];
-            if (latestPattern.drillPointsJson) {
-              if (typeof latestPattern.drillPointsJson === 'string') {
-                try {
-                  drillPoints = JSON.parse(latestPattern.drillPointsJson);
-                } catch (error) {
-                  console.warn('Failed to parse drill points JSON:', error);
-                  drillPoints = [];
-                }
-              } else {
-                drillPoints = latestPattern.drillPointsJson;
-              }
-            }
-            this.drillPoints = drillPoints;
+            this.drillPoints = [...pattern.drillPoints];
             
             this.settings = {
-              spacing: latestPattern.spacing,
-              burden: latestPattern.burden,
-              depth: latestPattern.depth
+              spacing: pattern.spacing,
+              burden: pattern.burden,
+              depth: pattern.depth
             };
             
-            console.log('Loaded pattern from backend:', latestPattern.name, 'with', this.drillPoints.length, 'points');
+            console.log('Loaded pattern from backend:', pattern.name, 'with', this.drillPoints.length, 'points');
             
             // Redraw if canvas is ready
             setTimeout(() => {
@@ -1012,30 +998,21 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     const patternName = `Drill Pattern ${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
 
     // Save to backend as a drill pattern
-    this.siteBlastingService.saveDrillPatternFromCreator(
-      this.currentProjectId,
-      this.currentSiteId,
-      patternName,
-      `Drill pattern created with ${this.drillPoints.length} holes`,
-      this.drillPoints,
-      this.settings.spacing,
-      this.settings.burden,
-      this.settings.depth
-    ).subscribe({
+    const saveRequest = {
+      projectId: this.currentProjectId,
+      siteId: this.currentSiteId,
+      name: patternName,
+      description: `Drill pattern created with ${this.drillPoints.length} holes`,
+      spacing: this.settings.spacing,
+      burden: this.settings.burden,
+      depth: this.settings.depth,
+      drillPoints: this.drillPoints
+    };
+
+    this.drillPointPatternService.savePattern(saveRequest).subscribe({
       next: (savedPattern) => {
         console.log('Pattern saved to backend successfully:', savedPattern);
         
-        // Also save workflow state
-        this.siteBlastingService.saveWorkflowState(
-          this.currentProjectId,
-          this.currentSiteId,
-          'pattern',
-          patternData
-        ).subscribe({
-          next: () => console.log('Workflow state saved successfully'),
-          error: (error) => console.error('Error saving workflow state:', error)
-        });
-
         // Update local state
         this.isSaved = true;
         this.cdr.markForCheck();

@@ -54,7 +54,7 @@ export class SiteService {
 
   // Get all sites for a specific project
   getProjectSites(projectId: number): Observable<ProjectSite[]> {
-    const url = `${environment.apiUrl}/api/projects/${projectId}/sites`;
+    const url = `${environment.apiUrl}/api/projectsites/project/${projectId}`;
     return this.http.get<ProjectSite[]>(url, this.getHttpOptions())
       .pipe(
         catchError(this.handleError)

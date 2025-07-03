@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Application.DTOs;
-using Application.Interfaces;
+using Application.DTOs.ProjectManagement;
+using Application.Interfaces.ProjectManagement;
+using Domain.Entities.ProjectManagement;
 
 namespace API.Controllers
 {
@@ -21,7 +22,7 @@ namespace API.Controllers
 
         // GET: api/projectsites
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectSiteDto>>> GetProjectSites()
+        public async Task<ActionResult<IEnumerable<ProjectSite>>> GetProjectSites()
         {
             try
             {
@@ -37,7 +38,7 @@ namespace API.Controllers
 
         // GET: api/projectsites/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProjectSiteDto>> GetProjectSite(int id)
+        public async Task<ActionResult<ProjectSite?>> GetProjectSite(int id)
         {
             try
             {
@@ -59,7 +60,7 @@ namespace API.Controllers
 
         // GET: api/projectsites/project/5
         [HttpGet("project/{projectId}")]
-        public async Task<ActionResult<IEnumerable<ProjectSiteDto>>> GetProjectSitesByProject(int projectId)
+        public async Task<ActionResult<IEnumerable<ProjectSite>>> GetProjectSitesByProject(int projectId)
         {
             try
             {
@@ -79,7 +80,7 @@ namespace API.Controllers
 
         // POST: api/projectsites
         [HttpPost]
-        public async Task<ActionResult<ProjectSiteDto>> CreateProjectSite(CreateProjectSiteRequest request)
+        public async Task<ActionResult<ProjectSite>> CreateProjectSite(CreateProjectSiteRequest request)
         {
             try
             {
@@ -104,7 +105,7 @@ namespace API.Controllers
 
         // PUT: api/projectsites/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProjectSite(int id, ProjectSiteDto request)
+        public async Task<IActionResult> UpdateProjectSite(int id, ProjectSite request)
         {
             try
             {
