@@ -7,8 +7,8 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
-    public class RegionsController : ControllerBase
+    [Authorize(Policy = "RequireAdminRole")]
+    public class RegionsController : BaseApiController
     {
         private readonly IRegionService _regionService;
 
@@ -18,14 +18,14 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Region>>> GetRegions()
+        public async Task<IActionResult> GetRegions()
         {
             var regions = await _regionService.GetAllRegionsAsync();
             return Ok(regions);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Region>> GetRegion(int id)
+        public async Task<IActionResult> GetRegion(int id)
         {
             var region = await _regionService.GetRegionByIdAsync(id);
             if (region == null)
@@ -36,7 +36,7 @@ namespace API.Controllers
         }
 
         [HttpGet("by-name/{name}")]
-        public async Task<ActionResult<Region>> GetRegionByName(string name)
+        public async Task<IActionResult> GetRegionByName(string name)
         {
             var region = await _regionService.GetRegionByNameAsync(name);
             if (region == null)

@@ -117,7 +117,7 @@ namespace Application.Services.BlastingOperations
                     $"SaveBulkSiteData_{request.ProjectId}_{request.SiteId}",
                     timeoutMinutes: 5, // Bulk save timeout
                     cancellationToken: cancellationToken);
-            }
+                }
             catch (TimeoutException ex)
             {
                 _logger.LogError(ex, "Timeout saving bulk site data for project {ProjectId}, site {SiteId}", request.ProjectId, request.SiteId);

@@ -113,12 +113,14 @@ namespace Application.Services.UserManagement
 
         public async Task<Result<AuthenticationResult>> RegisterAsync(CreateUserRequest request)
         {
+            using var operation = _logger.BeginOperation("UserRegistration", new { Email = request.Email, Username = request.Name });
             try
             {
                 // Validate input
                 var validationResult = await _validationService.ValidateAsync(request);
                 if (validationResult.IsFailure)
                 {
+                    _logger.LogValidationFailure("Registration", validationResult.Errors, new { Email = request.Email });
                     return Result.Failure<AuthenticationResult>(validationResult.Errors);
                 }
 
@@ -127,6 +129,7 @@ namespace Application.Services.UserManagement
 
                 if (existingUser)
                 {
+                    _logger.LogBusinessWarning("Registration failed - user already exists", new { Email = request.Email });
                     return Result.Failure<AuthenticationResult>("User with this name or email already exists");
                 }
 
@@ -144,7 +147,7 @@ namespace Application.Services.UserManagement
                     Country = request.Country,
                     OmanPhone = request.OmanPhone,
                     CountryPhone = request.CountryPhone,
-                    Status = UserStatus.Active,
+                    Status = UserStatus.Active, // Default to Active on registration
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -163,28 +166,29 @@ namespace Application.Services.UserManagement
                     User = userDto
                 };
 
+                _logger.LogOperationSuccess("UserRegistration", new { UserId = createdUser.Id, Email = createdUser.Email });
                 return Result.Success(authResult);
             }
             catch (ValidationException ex)
             {
-                _logger.LogWarning("Validation failed for registration {Email}: {Errors}", 
-                    request.Email, string.Join(", ", ex.ValidationErrors));
+                _logger.LogValidationFailure("Registration", ex.ValidationErrors, new { Email = request.Email });
                 return Result.Failure<AuthenticationResult>(ex.ValidationErrors);
             }
             catch (DbException ex)
             {
-                _logger.LogError(ex, "Database error during registration for user {Email}", request.Email);
+                _logger.LogDataAccessError("UserRegistration", ex, new { Email = request.Email });
                 return Result.Failure<AuthenticationResult>("Registration service temporarily unavailable");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error during registration for user {Email}", request.Email);
+                _logger.LogUnexpectedError("UserRegistration", ex, new { Email = request.Email });
                 return Result.Failure<AuthenticationResult>(ErrorCodes.Messages.InternalError);
             }
         }
 
         public async Task<Result> ForgotPasswordAsync(ForgotPasswordRequest request)
         {
+            using var operation = _logger.BeginOperation("ForgotPassword", new { Email = request.Email });
             try
             {
                 // Find user by email
@@ -192,6 +196,7 @@ namespace Application.Services.UserManagement
 
                 if (user == null || user.Status != UserStatus.Active)
                 {
+                    _logger.LogBusinessWarning("Password reset requested for non-existent or inactive user", new { Email = request.Email });
                     // For security, don't reveal if email exists or not
                     return Result.Success();
                 }
@@ -208,105 +213,137 @@ namespace Application.Services.UserManagement
                 try
                 {
                     await _emailService.SendPasswordResetEmailAsync(user.Email, resetCode);
-                    _logger.LogInformation("Password reset code sent to user {Email}", request.Email);
+                    _logger.LogOperationSuccess("Password reset code sent", new { Email = request.Email });
                 }
                 catch (Exception emailEx)
                 {
-                    _logger.LogWarning(emailEx, "Failed to send password reset email to {Email}, but code was generated", request.Email);
-                    // Don't fail the entire operation if email fails - user can still use the code
+                    _logger.LogBusinessWarning("Failed to send password reset email, but code was generated", new { Email = request.Email, Error = emailEx.Message });
+                    // Don't fail the entire operation if email fails - user can still use the code if they obtain it otherwise
                 }
 
+                _logger.LogOperationSuccess("ForgotPassword");
                 return Result.Success();
             }
             catch (DbException ex)
             {
-                _logger.LogError(ex, "Database error processing forgot password request for email {Email}", request.Email);
+                _logger.LogDataAccessError("ForgotPassword", ex, new { Email = request.Email });
                 return Result.Failure("Password reset service temporarily unavailable");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error processing forgot password request for email {Email}", request.Email);
+                _logger.LogUnexpectedError("ForgotPassword", ex, new { Email = request.Email });
                 return Result.Failure(ErrorCodes.Messages.InternalError);
             }
         }
 
         public async Task<Result> VerifyResetCodeAsync(VerifyResetCodeRequest request)
         {
+            using var operation = _logger.BeginOperation("VerifyResetCode", new { Email = request.Email });
             try
             {
                 var user = await _userRepository.GetByEmailAsync(request.Email);
 
-                if (user == null || 
+                if (user == null ||
                     user.Status != UserStatus.Active ||
                     string.IsNullOrEmpty(user.PasswordResetCode) ||
                     user.PasswordResetCodeExpiry == null ||
                     user.PasswordResetCodeExpiry < DateTime.UtcNow ||
                     user.PasswordResetCode != request.Code)
                 {
+                    _logger.LogBusinessWarning("Invalid or expired reset code provided", new { Email = request.Email });
                     return Result.Failure("Invalid or expired reset code.");
                 }
 
+                _logger.LogOperationSuccess("VerifyResetCode", new { Email = request.Email });
                 return Result.Success();
+            }
+            catch (DbException ex)
+            {
+                _logger.LogDataAccessError("VerifyResetCode", ex, new { Email = request.Email });
+                return Result.Failure("Verification service temporarily unavailable.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error verifying reset code for email {Email}", request.Email);
+                _logger.LogUnexpectedError("VerifyResetCode", ex, new { Email = request.Email });
                 return Result.Failure(ErrorCodes.Messages.InternalError);
             }
         }
 
         public async Task<Result> ResetPasswordAsync(ResetPasswordRequest request)
         {
+            using var operation = _logger.BeginOperation("ResetPassword", new { Email = request.Email });
             try
             {
+                // Validate input
+                var validationResult = await _validationService.ValidateAsync(request);
+                if (validationResult.IsFailure)
+                {
+                    _logger.LogValidationFailure("ResetPassword", validationResult.Errors, new { Email = request.Email });
+                    return Result.Failure(validationResult.Errors);
+                }
+
                 var user = await _userRepository.GetByEmailAsync(request.Email);
 
-                if (user == null || 
+                if (user == null ||
                     user.Status != UserStatus.Active ||
                     string.IsNullOrEmpty(user.PasswordResetCode) ||
                     user.PasswordResetCodeExpiry == null ||
                     user.PasswordResetCodeExpiry < DateTime.UtcNow ||
                     user.PasswordResetCode != request.Code)
                 {
+                    _logger.LogBusinessWarning("Attempt to reset password with invalid or expired code", new { Email = request.Email });
                     return Result.Failure("Invalid or expired reset code.");
                 }
 
-                // Hash new password
+                // Hash new password and clear reset code
                 user.PasswordHash = _passwordService.HashPassword(request.NewPassword);
-                
-                // Clear reset code
                 user.PasswordResetCode = null;
                 user.PasswordResetCodeExpiry = null;
                 user.UpdatedAt = DateTime.UtcNow;
 
                 await _userRepository.UpdateAsync(user);
 
+                _logger.LogOperationSuccess("ResetPassword", new { Email = request.Email });
                 return Result.Success();
+            }
+            catch (ValidationException ex)
+            {
+                _logger.LogValidationFailure("ResetPassword", ex.ValidationErrors, new { Email = request.Email });
+                return Result.Failure(ex.ValidationErrors);
+            }
+            catch (DbException ex)
+            {
+                _logger.LogDataAccessError("ResetPassword", ex, new { Email = request.Email });
+                return Result.Failure("Password reset service temporarily unavailable");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error resetting password for email {Email}", request.Email);
+                _logger.LogUnexpectedError("ResetPassword", ex, new { Email = request.Email });
                 return Result.Failure(ErrorCodes.Messages.InternalError);
             }
         }
 
-        public async Task<Result> ValidateTokenAsync(string token)
+        public Task<Result> ValidateTokenAsync(string token)
         {
+            using var operation = _logger.BeginOperation("ValidateToken");
             try
             {
                 var isValid = _jwtService.ValidateToken(token);
-                
-                if (!isValid)
+                if (isValid)
                 {
-                    return Result.Failure("Invalid token");
+                    _logger.LogOperationSuccess("ValidateToken");
+                    return Task.FromResult(Result.Success());
                 }
-                
-                return Result.Success();
+                else
+                {
+                    _logger.LogBusinessWarning("Invalid token provided for validation");
+                    return Task.FromResult(Result.Failure("Invalid token"));
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error validating token");
-                return Result.Failure(ErrorCodes.Messages.InternalError);
+                _logger.LogUnexpectedError("ValidateToken", ex);
+                return Task.FromResult(Result.Failure(ErrorCodes.Messages.InternalError));
             }
         }
 

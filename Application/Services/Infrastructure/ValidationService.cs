@@ -69,11 +69,11 @@ namespace Application.Services.Infrastructure
             {
                 if (result.Errors.Length > 0)
                 {
-                    throw new ValidationException(result.Errors);
+                    throw new Application.Exceptions.ValidationException(result.Errors);
                 }
                 else
                 {
-                    throw new ValidationException(result.Error);
+                    throw new Application.Exceptions.ValidationException(result.Error);
                 }
             }
         }
