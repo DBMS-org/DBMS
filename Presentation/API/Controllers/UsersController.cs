@@ -46,7 +46,7 @@ namespace API.Controllers
             if (result.IsFailure)
             {
                 return Conflict(result.Error);
-            }
+                }
             return CreatedAtAction(nameof(GetUser), new { id = result.Value.Id }, result.Value);
         }
 
@@ -59,12 +59,12 @@ namespace API.Controllers
             {
                 return BadRequest("ID mismatch");
             }
-            
+
             var result = await _userService.UpdateUserAsync(id, request);
             if (result.IsFailure)
             {
                 return NotFound();
-            }
+                }
             return Ok();
         }
 
@@ -77,7 +77,7 @@ namespace API.Controllers
             if (result.IsFailure)
             {
                 return NotFound();
-            }
+                }
             return Ok();
         }
 

@@ -26,32 +26,32 @@ namespace API.Controllers
         // GET: api/machines
         [HttpGet]
         public async Task<IActionResult> GetMachines()
-        {
-            var machines = await _context.Machines
-                .Include(m => m.Project)
-                .Include(m => m.Operator)
-                .Include(m => m.Region)
-                .ToListAsync();
+            {
+                var machines = await _context.Machines
+                    .Include(m => m.Project)
+                    .Include(m => m.Operator)
+                    .Include(m => m.Region)
+                    .ToListAsync();
 
-            return Ok(machines);
+                return Ok(machines);
         }
 
         // GET: api/machines/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMachine(int id)
-        {
-            var machine = await _context.Machines
-                .Include(m => m.Project)
-                .Include(m => m.Operator)
-                .Include(m => m.Region)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (machine == null)
             {
-                return NotFound($"Machine with ID {id} not found");
-            }
+                var machine = await _context.Machines
+                    .Include(m => m.Project)
+                    .Include(m => m.Operator)
+                    .Include(m => m.Region)
+                    .FirstOrDefaultAsync(m => m.Id == id);
 
-            return Ok(machine);
+                if (machine == null)
+                {
+                    return NotFound($"Machine with ID {id} not found");
+                }
+
+                return Ok(machine);
         }
 
         // POST: api/machines
@@ -59,71 +59,71 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> CreateMachine(CreateMachineRequest request)
         {
-            var existingMachine = await _context.Machines
-                .FirstOrDefaultAsync(m => m.SerialNumber == request.SerialNumber);
-            if (existingMachine != null)
-            {
+                var existingMachine = await _context.Machines
+                    .FirstOrDefaultAsync(m => m.SerialNumber == request.SerialNumber);
+                if (existingMachine != null)
+                {
                 return Conflict($"A machine with serial number '{request.SerialNumber}' already exists");
-            }
-
-            var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
-            if (!projectExists)
-            {
-                return BadRequest($"Project with ID {request.ProjectId} not found");
-            }
-
-            if (request.OperatorId.HasValue)
-            {
-                var operatorExists = await _context.Users.AnyAsync(u => u.Id == request.OperatorId.Value);
-                if (!operatorExists)
-                {
-                    return BadRequest($"Operator with ID {request.OperatorId.Value} not found");
                 }
-            }
 
-            if (request.RegionId.HasValue)
-            {
-                var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId.Value);
-                if (!regionExists)
+                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
+                if (!projectExists)
                 {
-                    return BadRequest($"Region with ID {request.RegionId.Value} not found");
+                    return BadRequest($"Project with ID {request.ProjectId} not found");
                 }
-            }
-            
-            if (!Enum.TryParse<MachineStatus>(request.Status, true, out var statusEnum))
-            {
-                return BadRequest($"Invalid status '{request.Status}'. Valid values: {string.Join(", ", Enum.GetNames<MachineStatus>())}");
-            }
 
-            var machine = Machine.Create(
-                request.Name,
-                request.Type,
-                request.Model,
-                request.Manufacturer,
-                request.SerialNumber,
-                request.ProjectId);
+                if (request.OperatorId.HasValue)
+                {
+                    var operatorExists = await _context.Users.AnyAsync(u => u.Id == request.OperatorId.Value);
+                    if (!operatorExists)
+                    {
+                        return BadRequest($"Operator with ID {request.OperatorId.Value} not found");
+                    }
+                }
 
-            machine.RigNo = request.RigNo;
-            machine.PlateNo = request.PlateNo;
-            machine.ChassisDetails = request.ChassisDetails;
-            machine.ManufacturingYear = request.ManufacturingYear;
-            machine.ChangeStatus(statusEnum);
-            machine.CurrentLocation = request.CurrentLocation;
-            machine.OperatorId = request.OperatorId;
-            machine.RegionId = request.RegionId;
-            machine.SpecificationsJson = request.Specifications != null ? JsonSerializer.Serialize(request.Specifications) : null;
-            
-            var project = await _context.Projects.FindAsync(request.ProjectId);
-            machine.AssignedToProject = project?.Name;
+                if (request.RegionId.HasValue)
+                {
+                    var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId.Value);
+                    if (!regionExists)
+                    {
+                        return BadRequest($"Region with ID {request.RegionId.Value} not found");
+                    }
+                }
 
-            if (request.OperatorId.HasValue)
-            {
-                var operatorUser = await _context.Users.FindAsync(request.OperatorId.Value);
-                machine.AssignedToOperator = operatorUser?.Name;
-            }
+                if (!Enum.TryParse<MachineStatus>(request.Status, true, out var statusEnum))
+                {
+                    return BadRequest($"Invalid status '{request.Status}'. Valid values: {string.Join(", ", Enum.GetNames<MachineStatus>())}");
+                }
 
-            _context.Machines.Add(machine);
-            await _context.SaveChangesAsync();
+                var machine = Machine.Create(
+                    request.Name,
+                    request.Type,
+                    request.Model,
+                    request.Manufacturer,
+                    request.SerialNumber,
+                    request.ProjectId);
+
+                machine.RigNo = request.RigNo;
+                machine.PlateNo = request.PlateNo;
+                machine.ChassisDetails = request.ChassisDetails;
+                machine.ManufacturingYear = request.ManufacturingYear;
+                machine.ChangeStatus(statusEnum);
+                machine.CurrentLocation = request.CurrentLocation;
+                machine.OperatorId = request.OperatorId;
+                machine.RegionId = request.RegionId;
+                machine.SpecificationsJson = request.Specifications != null ? JsonSerializer.Serialize(request.Specifications) : null;
+
+                var project = await _context.Projects.FindAsync(request.ProjectId);
+                machine.AssignedToProject = project?.Name;
+
+                if (request.OperatorId.HasValue)
+                {
+                    var operatorUser = await _context.Users.FindAsync(request.OperatorId.Value);
+                    machine.AssignedToOperator = operatorUser?.Name;
+                }
+
+                _context.Machines.Add(machine);
+                await _context.SaveChangesAsync();
 
             return Created(machine, nameof(GetMachine));
         }
@@ -133,74 +133,74 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> UpdateMachine(int id, UpdateMachineRequest request)
         {
-            var machine = await _context.Machines.FindAsync(id);
-            if (machine == null)
-            {
-                return NotFound($"Machine with ID {id} not found");
-            }
-            
-            var existingMachine = await _context.Machines
-                .FirstOrDefaultAsync(m => m.SerialNumber == request.SerialNumber && m.Id != id);
-            if (existingMachine != null)
-            {
+                var machine = await _context.Machines.FindAsync(id);
+                if (machine == null)
+                {
+                    return NotFound($"Machine with ID {id} not found");
+                }
+
+                var existingMachine = await _context.Machines
+                    .FirstOrDefaultAsync(m => m.SerialNumber == request.SerialNumber && m.Id != id);
+                if (existingMachine != null)
+                {
                 return Conflict($"A machine with serial number '{request.SerialNumber}' already exists");
-            }
-            
-            var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
-            if (!projectExists)
-            {
-                return BadRequest($"Project with ID {request.ProjectId} not found");
-            }
-            
-            if (request.OperatorId.HasValue)
-            {
-                var operatorExists = await _context.Users.AnyAsync(u => u.Id == request.OperatorId.Value);
-                if (!operatorExists)
-                {
-                    return BadRequest($"Operator with ID {request.OperatorId.Value} not found");
                 }
-            }
-            
-            if (request.RegionId.HasValue)
-            {
-                var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId.Value);
-                if (!regionExists)
+
+                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
+                if (!projectExists)
                 {
-                    return BadRequest($"Region with ID {request.RegionId.Value} not found");
+                    return BadRequest($"Project with ID {request.ProjectId} not found");
                 }
-            }
-            
-            machine.Name = request.Name;
-            machine.Type = request.Type;
-            machine.Model = request.Model;
-            machine.Manufacturer = request.Manufacturer;
-            machine.SerialNumber = request.SerialNumber;
-            machine.RigNo = request.RigNo;
-            machine.PlateNo = request.PlateNo;
-            machine.ChassisDetails = request.ChassisDetails;
-            machine.ManufacturingYear = request.ManufacturingYear;
-            machine.MarkUpdated();
-            machine.SpecificationsJson = request.Specifications != null ? 
-                JsonSerializer.Serialize(request.Specifications) : null;
-            
-            var project = await _context.Projects.FindAsync(request.ProjectId);
-            machine.AssignedToProject = project?.Name;
 
-            if (request.OperatorId.HasValue)
-            {
-                var operatorUser = await _context.Users.FindAsync(request.OperatorId.Value);
-                machine.AssignedToOperator = operatorUser?.Name;
-            }
-            else
-            {
-                machine.AssignedToOperator = null;
-            }
+                if (request.OperatorId.HasValue)
+                {
+                    var operatorExists = await _context.Users.AnyAsync(u => u.Id == request.OperatorId.Value);
+                    if (!operatorExists)
+                    {
+                        return BadRequest($"Operator with ID {request.OperatorId.Value} not found");
+                    }
+                }
+
+                if (request.RegionId.HasValue)
+                {
+                    var regionExists = await _context.Regions.AnyAsync(r => r.Id == request.RegionId.Value);
+                    if (!regionExists)
+                    {
+                        return BadRequest($"Region with ID {request.RegionId.Value} not found");
+                    }
+                }
+
+                machine.Name = request.Name;
+                machine.Type = request.Type;
+                machine.Model = request.Model;
+                machine.Manufacturer = request.Manufacturer;
+                machine.SerialNumber = request.SerialNumber;
+                machine.RigNo = request.RigNo;
+                machine.PlateNo = request.PlateNo;
+                machine.ChassisDetails = request.ChassisDetails;
+                machine.ManufacturingYear = request.ManufacturingYear;
+                machine.MarkUpdated();
+                machine.SpecificationsJson = request.Specifications != null ? 
+                    JsonSerializer.Serialize(request.Specifications) : null;
+
+                var project = await _context.Projects.FindAsync(request.ProjectId);
+                machine.AssignedToProject = project?.Name;
+
+                if (request.OperatorId.HasValue)
+                {
+                    var operatorUser = await _context.Users.FindAsync(request.OperatorId.Value);
+                    machine.AssignedToOperator = operatorUser?.Name;
+                }
+                else
+                {
+                    machine.AssignedToOperator = null;
+                }
 
             if (request.RegionId.HasValue)
-            {
+                    {
                 var region = await _context.Regions.FindAsync(request.RegionId.Value);
                 machine.CurrentLocation = region?.Name;
-            }
+                }
             else
             {
                 machine.CurrentLocation = null;
@@ -219,38 +219,38 @@ namespace API.Controllers
         [HttpDelete("{id}")]
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> DeleteMachine(int id)
-        {
-            var machine = await _context.Machines.FindAsync(id);
-            if (machine == null)
             {
-                return NotFound($"Machine with ID {id} not found");
-            }
+                var machine = await _context.Machines.FindAsync(id);
+                if (machine == null)
+                {
+                    return NotFound($"Machine with ID {id} not found");
+                }
 
-            _context.Machines.Remove(machine);
-            await _context.SaveChangesAsync();
+                _context.Machines.Remove(machine);
+                await _context.SaveChangesAsync();
 
             return Ok();
-        }
+            }
 
         [HttpPatch("{id}/status")]
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> UpdateMachineStatus(int id, [FromBody] UpdateMachineStatusRequest request)
         {
-            var machine = await _context.Machines.FindAsync(id);
-            if (machine == null)
-            {
-                return NotFound($"Machine with ID {id} not found");
-            }
-            
-            if (!Enum.TryParse<MachineStatus>(request.Status, true, out var statusEnum))
-            {
-                return BadRequest($"Invalid status '{request.Status}'. Valid values: {string.Join(", ", Enum.GetNames<MachineStatus>())}");
-            }
+                var machine = await _context.Machines.FindAsync(id);
+                if (machine == null)
+                {
+                    return NotFound($"Machine with ID {id} not found");
+                }
 
-            machine.ChangeStatus(statusEnum);
-            machine.MarkUpdated();
+                if (!Enum.TryParse<MachineStatus>(request.Status, true, out var statusEnum))
+                {
+                    return BadRequest($"Invalid status '{request.Status}'. Valid values: {string.Join(", ", Enum.GetNames<MachineStatus>())}");
+                }
 
-            await _context.SaveChangesAsync();
+                machine.ChangeStatus(statusEnum);
+                machine.MarkUpdated();
+
+                await _context.SaveChangesAsync();
 
             return Ok();
         }
@@ -266,41 +266,41 @@ namespace API.Controllers
         {
             var query = _context.Machines.AsQueryable();
 
-            if (!string.IsNullOrEmpty(name))
-            {
-                query = query.Where(m => m.Name.Contains(name));
-            }
-            if (!string.IsNullOrEmpty(type))
-            {
+                if (!string.IsNullOrEmpty(name))
+                {
+                    query = query.Where(m => m.Name.Contains(name));
+                }
+                if (!string.IsNullOrEmpty(type))
+                {
                 query = query.Where(m => m.Type.Contains(type));
-            }
+                }
             if (!string.IsNullOrEmpty(status) && Enum.TryParse<MachineStatus>(status, true, out var statusEnum))
-            {
-                query = query.Where(m => m.Status == statusEnum);
-            }
-            if (!string.IsNullOrEmpty(manufacturer))
-            {
-                query = query.Where(m => m.Manufacturer.Contains(manufacturer));
-            }
-            if (!string.IsNullOrEmpty(serialNumber))
-            {
-                query = query.Where(m => m.SerialNumber.Contains(serialNumber));
-            }
+                    {
+                    query = query.Where(m => m.Status == statusEnum);
+                }
+                if (!string.IsNullOrEmpty(manufacturer))
+                {
+                    query = query.Where(m => m.Manufacturer.Contains(manufacturer));
+                }
+                if (!string.IsNullOrEmpty(serialNumber))
+                {
+                    query = query.Where(m => m.SerialNumber.Contains(serialNumber));
+                }
 
-            var machines = await query
+                var machines = await query
                 .Include(m => m.Project)
                 .Include(m => m.Operator)
                 .Include(m => m.Region)
-                .ToListAsync();
+                    .ToListAsync();
 
-            return Ok(machines);
+                return Ok(machines);
         }
 
         // GET: api/machines/statistics
         [HttpGet("statistics")]
         public async Task<IActionResult> GetMachineStatistics()
-        {
-            var totalMachines = await _context.Machines.CountAsync();
+            {
+                var totalMachines = await _context.Machines.CountAsync();
             var machinesByStatus = await _context.Machines
                 .GroupBy(m => m.Status)
                 .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
@@ -311,11 +311,11 @@ namespace API.Controllers
                 .ToListAsync();
 
             var stats = new
-            {
-                TotalMachines = totalMachines,
+                {
+                    TotalMachines = totalMachines,
                 MachinesByStatus = machinesByStatus,
                 MachinesByType = machinesByType
-            };
+                };
 
             return Ok(stats);
         }

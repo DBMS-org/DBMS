@@ -115,7 +115,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin", "Administrator"));
     options.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "StandardUser"));
     options.AddPolicy("RequireOwnership", policy => policy.Requirements.Add(new OwnershipRequirement()));
-});
+    });
 
 // Register DrillHole services (split into focused services)
 builder.Services.AddScoped<IDrillHoleRepository, DrillHoleRepository>();

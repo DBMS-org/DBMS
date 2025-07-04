@@ -10,7 +10,7 @@ import { ProjectManagementComponent as BlastingEngineerProjectManagementComponen
 import { ProjectSitesComponent as BlastingEngineerProjectSitesComponent } from './project-management/project-sites/project-sites.component';
 import { AddSiteComponent } from './project-management/add-site/add-site.component';
 import { SiteDashboardComponent } from './project-management/site-dashboard/site-dashboard.component';
-import { ViewSequenceSimulatorComponent } from '../admin/project-management/view-sequence-simulator/view-sequence-simulator.component';
+import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/view-sequence-simulator/view-sequence-simulator.component';
 
 export const BLASTING_ENGINEER_ROUTES: Routes = [
     {

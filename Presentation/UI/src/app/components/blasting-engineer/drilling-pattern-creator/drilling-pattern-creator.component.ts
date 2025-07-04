@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
 import Konva from 'konva';
+import { MatDialog } from '@angular/material/dialog';
 
 // Models and Constants
 import { DrillPoint, PatternSettings } from './models/drill-point.model';
@@ -27,6 +28,9 @@ import { SiteService } from '../../../core/services/site.service';
 import { NavigationController, WorkflowStepId } from '../shared/services/navigation-controller.service';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
 import { DrillPointPatternService } from '../../../core/services/drill-point-pattern.service';
+import { StateService } from '../../../core/services/state.service';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/shared/components/confirm-dialog/confirm-dialog.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-drilling-pattern-creator',
@@ -107,7 +111,10 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     private siteService: SiteService,
     private navigationController: NavigationController,
     private drillDataService: DrillDataService,
-    private drillPointPatternService: DrillPointPatternService
+    private drillPointPatternService: DrillPointPatternService,
+    private stateService: StateService,
+    private dialog: MatDialog,
+    private notification: NotificationService
   ) {}
 
   formatValue(value: number): string {
@@ -133,14 +140,14 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       this.siteService.getSite(this.currentSiteId).subscribe({
         next: site => {
           if (!site.isPatternApproved) {
-            alert('Pattern not yet approved by engineer.');
+            this.notification.showError('Pattern not yet approved by engineer.');
             this.router.navigate(['/operator/dashboard']);
             return;
           }
           this.isReadOnly = true;
         },
         error: () => {
-          alert('Unable to verify pattern approval.');
+          this.notification.showError('Unable to verify pattern approval.');
           this.router.navigate(['/operator/dashboard']);
         }
       });
@@ -154,28 +161,39 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   private initializeSiteContext(): void {
-    // Get projectId and siteId from route URL pattern: /blasting-engineer/project-management/:projectId/sites/:siteId/pattern-creator
+    // 1) Try to use global state first
+    const { activeProjectId, activeSiteId } = this.stateService.currentState;
+    if (activeProjectId && activeSiteId) {
+      Logger.info('Pattern Creator - Using StateService context', { projectId: activeProjectId, siteId: activeSiteId });
+      this.currentProjectId = activeProjectId;
+      this.currentSiteId = activeSiteId;
+      this.blastSequenceDataService.setSiteContext(activeProjectId, activeSiteId);
+      this.loadExistingPatternData();
+      this.loadBackendPatternData();
+      return;
+    }
+
+    // 2) Fallback: extract from route and push into StateService (direct link / page refresh)
     const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
     const projectId = routeMatch ? +routeMatch[1] : null;
     const siteId = routeMatch ? +routeMatch[2] : null;
-    
+
     if (projectId && siteId) {
-      Logger.info('Pattern Creator - Setting site context', { projectId, siteId });
+      Logger.info('Pattern Creator - Setting site context from route', { projectId, siteId });
       this.currentProjectId = projectId;
       this.currentSiteId = siteId;
+      // Persist to global state for later screens
+      this.stateService.setProjectId(projectId);
+      this.stateService.setSiteId(siteId);
       this.blastSequenceDataService.setSiteContext(projectId, siteId);
-      
-      // Load existing pattern data for this site
       this.loadExistingPatternData();
       this.loadBackendPatternData();
     } else {
-      Logger.warn('Pattern Creator - Could not extract site context from route', this.router.url);
-      Logger.warn('Route match result', routeMatch);
-      
-      // For testing purposes, use the known valid site combination
-      Logger.info('Falling back to test site context: Project 1, Site 3');
+      Logger.warn('Pattern Creator - Could not determine site context; falling back to defaults');
       this.currentProjectId = 1;
       this.currentSiteId = 3;
+      this.stateService.setProjectId(1);
+      this.stateService.setSiteId(3);
       this.blastSequenceDataService.setSiteContext(1, 3);
       this.loadExistingPatternData();
       this.loadBackendPatternData();
@@ -1235,7 +1253,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     this.updateDrillPointPosition(this.selectedPoint, newX, newY);
   }
 
-  private processIncomingDrillData(): void {
+  private async processIncomingDrillData(): Promise<void> {
     // Retrieve any drill data uploaded in CSV Upload component
     const uploadedDrillData = this.drillDataService.getDrillData();
     if (!uploadedDrillData || uploadedDrillData.length === 0) {
@@ -1247,10 +1265,17 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
 
     // If there is already a pattern, confirm with user
     if (hasExistingPattern) {
-      proceedWithImport = window.confirm(
-        'A drilling pattern already exists for this site.\n' +
-        'Do you want to delete the existing pattern and import the new one from the recently uploaded CSV file?'
-      );
+      const dialogResult = await this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
+        width: '340px',
+        data: {
+          title: 'Overwrite Pattern?',
+          message: 'Existing pattern data detected. Importing new CSV will overwrite current data. Continue?',
+          confirmText: 'Import',
+          cancelText: 'Cancel'
+        }
+      }).afterClosed().toPromise();
+
+      proceedWithImport = dialogResult === true;
     }
 
     if (!proceedWithImport) {
@@ -1331,5 +1356,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
 
     // Clear the staged drill data to prevent re-import on navigation history
     this.drillDataService.clearDrillData();
+
+    this.notification.showSuccess('Pattern imported successfully!');
   }
 }

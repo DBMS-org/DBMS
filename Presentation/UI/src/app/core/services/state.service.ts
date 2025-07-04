@@ -19,13 +19,13 @@ export class StateService {
 
     public readonly state$ = this.state.asObservable();
 
-    public get currentSate(): AppState {
+    public get currentState(): AppState {
         return this.state.getValue();
     }
 
     public setProjectId(projectId: number | null): void {
         this.state.next({
-            ...this.currentSate,
+            ...this.currentState,
             activeProjectId: projectId,
             activeSiteId: null // Reset site when project changes
         });
@@ -33,14 +33,14 @@ export class StateService {
 
     public setSiteId(siteId: number | null): void {
         this.state.next({
-            ...this.currentSate,
+            ...this.currentState,
             activeSiteId: siteId
         });
     }
 
     public setLoading(isLoading: boolean): void {
         this.state.next({
-            ...this.currentSate,
+            ...this.currentState,
             isLoading
         });
     }

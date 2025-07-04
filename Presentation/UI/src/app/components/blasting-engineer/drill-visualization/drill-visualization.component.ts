@@ -1,6 +1,7 @@
 import { Component, OnInit, ElementRef, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { StateService } from '../../../core/services/state.service';
 import { DrillDataService } from '../csv-upload/csv-upload.component';
 import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
 import { SiteService } from '../../../core/services/site.service';
@@ -11,7 +12,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
   selector: 'app-drill-visualization',
   imports: [CommonModule],
   templateUrl: './drill-visualization.component.html',
-  styleUrl: './drill-visualization.component.scss'
+  styleUrls: ['./drill-visualization.component.scss']
 })
 export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDestroy {
   drillData: DrillHole[] = [];
@@ -53,13 +54,22 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     private drillHoleService: DrillHoleService,
     private siteService: SiteService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private stateService: StateService
   ) {}
 
   ngOnInit(): void {
     console.log('DrillVisualizationComponent initialized successfully!');
     console.log('Current URL:', this.router.url);
-    this.extractRouteContext();
+    const { activeProjectId, activeSiteId } = this.stateService.currentState;
+    if (activeProjectId && activeSiteId) {
+      this.projectId = activeProjectId;
+      this.siteId = activeSiteId;
+      console.log('Drill Visualization - Using StateService context', { projectId: this.projectId, siteId: this.siteId });
+      this.loadDrillData();
+    } else {
+      this.extractRouteContext();
+    }
   }
 
   private extractRouteContext(): void {
@@ -72,9 +82,12 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       const newSiteId = +(params.get('siteId') || '0');
       
       // Update context and load data if we have valid IDs
-      if (newProjectId !== this.projectId || newSiteId !== this.siteId) {
+      if (newProjectId && newSiteId && (newProjectId !== this.projectId || newSiteId !== this.siteId)) {
         this.projectId = newProjectId;
         this.siteId = newSiteId;
+        // Persist to global state for downstream components
+        this.stateService.setProjectId(newProjectId);
+        this.stateService.setSiteId(newSiteId);
         console.log('Extracted route context from params:', { projectId: this.projectId, siteId: this.siteId });
         
         // Load data now that we have the route context
