@@ -8,6 +8,9 @@ import { BlastSequenceDataService } from '../../shared/services/blast-sequence-d
 import { AuthService } from '../../../../core/services/auth.service';
 import { StateService } from '../../../../core/services/state.service';
 import { Observable } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../shared/shared/components/confirm-dialog/confirm-dialog.component';
+import { NotificationService } from '../../../../core/services/notification.service';
 
 interface WorkflowStep {
   id: string;
@@ -77,7 +80,9 @@ export class SiteDashboardComponent implements OnInit {
     private siteService: SiteService,
     private blastSequenceDataService: BlastSequenceDataService,
     private authService: AuthService,
-    private stateService: StateService
+    private stateService: StateService,
+    private dialog: MatDialog,
+    private notification: NotificationService
   ) {
     this.state$ = this.stateService.state$;
   }
@@ -98,7 +103,7 @@ export class SiteDashboardComponent implements OnInit {
 
   loadProject() {
     this.loading = true;
-    const projectId = this.stateService.currentSate.activeProjectId;
+    const projectId = this.stateService.currentState.activeProjectId;
     if (!projectId) return;
 
     this.projectService.getProject(projectId).subscribe({
@@ -115,14 +120,14 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   loadSite() {
-    const siteId = this.stateService.currentSate.activeSiteId;
+    const siteId = this.stateService.currentState.activeSiteId;
     if (!siteId) return;
 
     this.siteService.getSite(siteId).subscribe({
       next: (site) => {
         this.site = site;
         // Initialize site-specific data service
-        this.blastSequenceDataService.setSiteContext(this.stateService.currentSate.activeProjectId!, this.stateService.currentSate.activeSiteId!);
+        this.blastSequenceDataService.setSiteContext(this.stateService.currentState.activeProjectId!, this.stateService.currentState.activeSiteId!);
         
         // Wait a moment for backend data to load before checking progress
         setTimeout(() => {
@@ -139,7 +144,7 @@ export class SiteDashboardComponent implements OnInit {
   loadWorkflowProgress() {
     // Load progress for each workflow step
     // This would integrate with your data service to check completion status
-    this.blastSequenceDataService.getSiteWorkflowProgress(this.stateService.currentSate.activeSiteId!).subscribe({
+    this.blastSequenceDataService.getSiteWorkflowProgress(this.stateService.currentState.activeSiteId!).subscribe({
       next: (progress: any) => {
         this.updateWorkflowSteps(progress);
       },
@@ -172,14 +177,14 @@ export class SiteDashboardComponent implements OnInit {
   navigateToStep(step: WorkflowStep) {
     if (!step.enabled) return;
     
-    const projectId = this.stateService.currentSate.activeProjectId;
-    const siteId = this.stateService.currentSate.activeSiteId;
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
     const route = `/blasting-engineer/project-management/${projectId}/sites/${siteId}/${step.route}`;
     this.router.navigate([route]);
   }
 
   goBack() {
-    const projectId = this.stateService.currentSate.activeProjectId;
+    const projectId = this.stateService.currentState.activeProjectId;
     this.router.navigate(['/blasting-engineer/project-management', projectId, 'sites']);
   }
 
@@ -220,8 +225,8 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   cleanupSiteData(): void {
-    const projectId = this.stateService.currentSate.activeProjectId;
-    const siteId = this.stateService.currentSate.activeSiteId;
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
 
     if (projectId && siteId) {
       console.log('🧹 Starting complete cleanup for site:', projectId, siteId);
@@ -246,8 +251,8 @@ export class SiteDashboardComponent implements OnInit {
 
   // Individual step cleanup methods
   cleanupStepData(stepId: string): void {
-    const projectId = this.stateService.currentSate.activeProjectId;
-    const siteId = this.stateService.currentSate.activeSiteId;
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
 
     if (!projectId || !siteId) return;
 
@@ -309,8 +314,8 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   private getApprovalKey(): string {
-    const projectId = this.stateService.currentSate.activeProjectId;
-    const siteId = this.stateService.currentSate.activeSiteId;
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
     return `patternApproved_${projectId}_${siteId}`;
   }
 
@@ -323,7 +328,7 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   confirmApprove(): void {
-    this.siteService.approvePattern(this.stateService.currentSate.activeSiteId!).subscribe({
+    this.siteService.approvePattern(this.stateService.currentState.activeSiteId!).subscribe({
       next: () => {
         if (this.site) this.site.isPatternApproved = true;
         this.showApproveModal = false;
@@ -336,17 +341,29 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   revokeApproval(): void {
-    const confirmRevoke = window.confirm('Revoke pattern approval for the operator? They will lose access until you approve again.');
-    if (!confirmRevoke) return;
-    this.siteService.revokePattern(this.stateService.currentSate.activeSiteId!).subscribe(() => {
-      if (this.site) this.site.isPatternApproved = false;
-      alert('Pattern approval revoked.');
+    const dialogRef = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
+      width: '320px',
+      data: {
+        title: 'Revoke Approval',
+        message: 'Revoke pattern approval for the operator? They will lose access until you approve again.',
+        confirmText: 'Revoke',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+
+      this.siteService.revokePattern(this.stateService.currentState.activeSiteId!).subscribe(() => {
+        if (this.site) this.site.isPatternApproved = false;
+        this.notification.showSuccess('Pattern approval revoked.');
+      });
     });
   }
 
   // Simulation confirmation for admin
   private simulationConfirmKey(): string {
-    const siteId = this.stateService.currentSate.activeSiteId;
+    const siteId = this.stateService.currentState.activeSiteId;
     return `simulation_confirmed_${siteId}`;
   }
 
@@ -355,13 +372,13 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   confirmSimulationForAdmin() {
-    this.siteService.confirmSimulation(this.stateService.currentSate.activeSiteId!).subscribe(() => {
+    this.siteService.confirmSimulation(this.stateService.currentState.activeSiteId!).subscribe(() => {
       if(this.site) this.site.isSimulationConfirmed = true;
     });
   }
 
   revokeSimulationConfirmation() {
-    this.siteService.revokeSimulation(this.stateService.currentSate.activeSiteId!).subscribe(() => {
+    this.siteService.revokeSimulation(this.stateService.currentState.activeSiteId!).subscribe(() => {
       if(this.site) this.site.isSimulationConfirmed = false;
     });
   }

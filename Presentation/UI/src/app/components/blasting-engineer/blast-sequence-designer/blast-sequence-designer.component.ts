@@ -7,6 +7,8 @@ import { NavigationController } from '../shared/services/navigation-controller.s
 import { PatternDataService } from '../shared/pattern-data.service';
 import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
 import { SiteBlastingService } from '../../../core/services/site-blasting.service';
+import { StateService } from '../../../core/services/state.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { 
   PatternData, 
   DrillPoint, 
@@ -93,7 +95,9 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     private blastSequenceDataService: BlastSequenceDataService,
     private siteBlastingService: SiteBlastingService,
     private router: Router,
-    private navigationController: NavigationController
+    private navigationController: NavigationController,
+    private stateService: StateService,
+    private notification: NotificationService
   ) {}
 
   ngAfterViewInit(): void {
@@ -108,27 +112,37 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private initializeSiteContext(): void {
-    // Get projectId and siteId from route URL pattern: /blasting-engineer/project-management/:projectId/sites/:siteId/sequence-designer
+    // 1. Prefer StateService context (set by SiteDashboard or earlier components)
+    const { activeProjectId, activeSiteId } = this.stateService.currentState;
+    if (activeProjectId && activeSiteId) {
+      console.log('Sequence Designer - Using StateService context', { projectId: activeProjectId, siteId: activeSiteId });
+      this.currentProjectId = activeProjectId;
+      this.currentSiteId = activeSiteId;
+      this.blastSequenceDataService.setSiteContext(activeProjectId, activeSiteId);
+      this.loadBackendSequenceData();
+      return;
+    }
+
+    // 2. Fallback to route parsing (direct deep link)
     const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
     const projectId = routeMatch ? +routeMatch[1] : null;
     const siteId = routeMatch ? +routeMatch[2] : null;
-    
+
     if (projectId && siteId) {
-      console.log('Sequence Designer - Setting site context:', { projectId, siteId });
+      console.log('Sequence Designer - Setting site context from route', { projectId, siteId });
       this.currentProjectId = projectId;
       this.currentSiteId = siteId;
+      // Persist into global state for further screens
+      this.stateService.setProjectId(projectId);
+      this.stateService.setSiteId(siteId);
       this.blastSequenceDataService.setSiteContext(projectId, siteId);
-      
-      // Load existing blast sequences and connections from backend
       this.loadBackendSequenceData();
     } else {
-      console.warn('Sequence Designer - Could not extract site context from route:', this.router.url);
-      console.warn('Route match result:', routeMatch);
-      
-      // For testing purposes, use the known valid site combination
-      console.log('Falling back to test site context: Project 1, Site 3');
+      console.warn('Sequence Designer - No context available; defaulting to Project 1, Site 3');
       this.currentProjectId = 1;
       this.currentSiteId = 3;
+      this.stateService.setProjectId(1);
+      this.stateService.setSiteId(3);
       this.blastSequenceDataService.setSiteContext(1, 3);
       this.loadBackendSequenceData();
     }
@@ -842,7 +856,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
     // Check if delay is selected
     if (this.currentDelay === null) {
-      alert('Please select a delay before creating connections.');
+      this.notification.showError('Please select a delay before creating connections.');
       return;
     }
 

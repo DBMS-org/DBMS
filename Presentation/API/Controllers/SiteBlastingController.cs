@@ -37,13 +37,13 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("projects/{projectId}/sites/{siteId}/data/{dataType}")]
         public async Task<IActionResult> GetSiteData(int projectId, int siteId, string dataType)
-        {
-            var data = await _dataService.GetSiteDataAsync(projectId, siteId, dataType);
-            if (data == null)
             {
-                return NotFound($"No {dataType} data found for project {projectId}, site {siteId}");
-            }
-            return Ok(data);
+                var data = await _dataService.GetSiteDataAsync(projectId, siteId, dataType);
+                if (data == null)
+                {
+                    return NotFound($"No {dataType} data found for project {projectId}, site {siteId}");
+                }
+                return Ok(data);
         }
 
         /// <summary>
@@ -51,9 +51,9 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("projects/{projectId}/sites/{siteId}/data")]
         public async Task<IActionResult> GetAllSiteData(int projectId, int siteId)
-        {
-            var data = await _dataService.GetAllSiteDataAsync(projectId, siteId);
-            return Ok(data);
+            {
+                var data = await _dataService.GetAllSiteDataAsync(projectId, siteId);
+                return Ok(data);
         }
 
         /// <summary>
@@ -63,13 +63,13 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> SaveSiteData(int projectId, int siteId, [FromBody] CreateSiteBlastingDataRequest request)
         {
-            request.ProjectId = projectId;
-            request.SiteId = siteId;
+                request.ProjectId = projectId;
+                request.SiteId = siteId;
 
-            var userId = GetCurrentUserId();
-            var savedData = await _dataService.SaveSiteDataAsync(request, userId);
+                var userId = GetCurrentUserId();
+                var savedData = await _dataService.SaveSiteDataAsync(request, userId);
 
-            return Ok(savedData);
+                return Ok(savedData);
         }
 
         /// <summary>
@@ -78,12 +78,12 @@ namespace API.Controllers
         [HttpDelete("projects/{projectId}/sites/{siteId}/data/{dataType}")]
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> DeleteSiteData(int projectId, int siteId, string dataType)
-        {
-            var deleted = await _dataService.DeleteSiteDataAsync(projectId, siteId, dataType);
-            if (!deleted)
             {
-                return NotFound($"No {dataType} data found for project {projectId}, site {siteId}");
-            }
+                var deleted = await _dataService.DeleteSiteDataAsync(projectId, siteId, dataType);
+                if (!deleted)
+                {
+                    return NotFound($"No {dataType} data found for project {projectId}, site {siteId}");
+                }
             return Ok();
         }
 
@@ -93,12 +93,12 @@ namespace API.Controllers
         [HttpDelete("projects/{projectId}/sites/{siteId}/data")]
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> DeleteAllSiteData(int projectId, int siteId)
-        {
-            var deleted = await _dataService.DeleteAllSiteDataAsync(projectId, siteId);
-            if (!deleted)
             {
-                return NotFound($"No data found for project {projectId}, site {siteId}");
-            }
+                var deleted = await _dataService.DeleteAllSiteDataAsync(projectId, siteId);
+                if (!deleted)
+                {
+                    return NotFound($"No data found for project {projectId}, site {siteId}");
+                }
             return Ok();
         }
 
@@ -109,14 +109,14 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> CleanupSiteData(int projectId, int siteId, [FromBody] CleanupSiteDataRequest request)
         {
-            request.ProjectId = projectId;
-            request.SiteId = siteId;
+                request.ProjectId = projectId;
+                request.SiteId = siteId;
 
-            var success = await _dataService.CleanupSiteDataAsync(request);
-            if (!success)
-            {
-                return BadRequest("Failed to cleanup site data");
-            }
+                var success = await _dataService.CleanupSiteDataAsync(request);
+                if (!success)
+                {
+                    return BadRequest("Failed to cleanup site data");
+                }
 
             return Ok();
         }
@@ -132,15 +132,15 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> SaveBulkSiteData(int projectId, int siteId, [FromBody] BulkSiteDataRequest request)
         {
-            request.ProjectId = projectId;
-            request.SiteId = siteId;
+                request.ProjectId = projectId;
+                request.SiteId = siteId;
 
-            var userId = GetCurrentUserId();
-            var success = await _dataService.SaveBulkSiteDataAsync(request, userId);
-            if (!success)
-            {
-                return BadRequest("Failed to save bulk site data");
-            }
+                var userId = GetCurrentUserId();
+                var success = await _dataService.SaveBulkSiteDataAsync(request, userId);
+                if (!success)
+                {
+                    return BadRequest("Failed to save bulk site data");
+                }
             return Ok();
         }
 
@@ -149,7 +149,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("projects/{projectId}/sites/{siteId}/bulk")]
         public async Task<IActionResult> GetBulkSiteData(int projectId, int siteId)
-        {
+            {
             var result = await _dataService.GetBulkSiteDataAsync(projectId, siteId);
             return Ok(result);
         }
@@ -163,7 +163,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("projects/{projectId}/sites/{siteId}/patterns")]
         public async Task<IActionResult> GetDrillPatterns(int projectId, int siteId)
-        {
+            {
             var result = await _patternService.GetDrillPatternsAsync(projectId, siteId);
             return Ok(result);
         }
@@ -173,12 +173,12 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("patterns/{id}")]
         public async Task<IActionResult> GetDrillPattern(int id)
-        {
+            {
             var result = await _patternService.GetDrillPatternAsync(id);
             if (result == null)
-            {
+                {
                 return NotFound();
-            }
+                }
             return Ok(result);
         }
 
@@ -189,9 +189,9 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> CreateDrillPattern(int projectId, int siteId, [FromBody] CreateDrillPatternRequest request)
         {
-            request.ProjectId = projectId;
-            request.SiteId = siteId;
-            var userId = GetCurrentUserId();
+                request.ProjectId = projectId;
+                request.SiteId = siteId;
+                var userId = GetCurrentUserId();
 
             var result = await _patternService.CreateDrillPatternAsync(request, userId);
             return CreatedAtAction(nameof(GetDrillPattern), new { id = result.Id }, result);
@@ -204,7 +204,7 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> UpdateDrillPattern(int id, [FromBody] CreateDrillPatternRequest request)
         {
-            var userId = GetCurrentUserId();
+                var userId = GetCurrentUserId();
             var result = await _patternService.UpdateDrillPatternAsync(id, request, userId);
             if (result == null)
             {
@@ -222,9 +222,9 @@ namespace API.Controllers
         {
             var success = await _patternService.DeleteDrillPatternAsync(id);
             if (!success)
-            {
+                {
                 return NotFound();
-            }
+                }
             return Ok();
         }
 
@@ -237,7 +237,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("projects/{projectId}/sites/{siteId}/sequences")]
         public async Task<IActionResult> GetBlastSequences(int projectId, int siteId)
-        {
+            {
             var result = await _sequenceService.GetBlastSequencesAsync(projectId, siteId);
             return Ok(result);
         }
@@ -247,12 +247,12 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("sequences/{id}")]
         public async Task<IActionResult> GetBlastSequence(int id)
-        {
+            {
             var result = await _sequenceService.GetBlastSequenceAsync(id);
             if (result == null)
-            {
+                {
                 return NotFound();
-            }
+                }
             return Ok(result);
         }
 
@@ -263,9 +263,9 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> CreateBlastSequence(int projectId, int siteId, [FromBody] CreateBlastSequenceRequest request)
         {
-            request.ProjectId = projectId;
-            request.SiteId = siteId;
-            var userId = GetCurrentUserId();
+                request.ProjectId = projectId;
+                request.SiteId = siteId;
+                var userId = GetCurrentUserId();
 
             var result = await _sequenceService.CreateBlastSequenceAsync(request, userId);
             return CreatedAtAction(nameof(GetBlastSequence), new { id = result.Id }, result);
@@ -278,7 +278,7 @@ namespace API.Controllers
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> UpdateBlastSequence(int id, [FromBody] CreateBlastSequenceRequest request)
         {
-            var userId = GetCurrentUserId();
+                var userId = GetCurrentUserId();
             var result = await _sequenceService.UpdateBlastSequenceAsync(id, request, userId);
             if (result == null)
             {
@@ -296,9 +296,9 @@ namespace API.Controllers
         {
             var success = await _sequenceService.DeleteBlastSequenceAsync(id);
             if (!success)
-            {
+                {
                 return NotFound();
-            }
+                }
             return Ok();
         }
 
@@ -311,7 +311,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("projects/{projectId}/sites/{siteId}/progress")]
         public async Task<IActionResult> GetWorkflowProgress(int projectId, int siteId)
-        {
+            {
             var result = await _workflowService.GetWorkflowProgressAsync(projectId, siteId);
             return Ok(result);
         }
@@ -322,7 +322,7 @@ namespace API.Controllers
         [HttpPut("projects/{projectId}/sites/{siteId}/progress/{stepId}")]
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> UpdateWorkflowProgress(int projectId, int siteId, string stepId, [FromBody] bool completed)
-        {
+            {
             var result = await _workflowService.UpdateWorkflowProgressAsync(projectId, siteId, stepId, completed);
             if (result == null)
             {
@@ -340,7 +340,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("projects/{projectId}/sites/{siteId}/validate")]
         public async Task<IActionResult> ValidateProjectSite(int projectId, int siteId)
-        {
+            {
             var result = await _dataService.ValidateProjectSiteExistsAsync(projectId, siteId);
             return Ok(result);
         }
