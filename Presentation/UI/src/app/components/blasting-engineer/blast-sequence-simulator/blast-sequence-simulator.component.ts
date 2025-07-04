@@ -15,12 +15,13 @@ import {
   BlastEffect
 } from '../shared/models/simulation.model';
 import { PatternData, BlastConnection } from '../drilling-pattern-creator/models/drill-point.model';
-  import { TimelineComponent } from './components/timeline/timeline.component';
+import { TimelineComponent } from './components/timeline/timeline.component';
 import { PatternRendererComponent } from './components/pattern-renderer/pattern-renderer.component';
 import { ViewControlsComponent } from './components/view-controls/view-controls.component';
 import { AnimationService } from './services/animation.service';
 import { ReportExportService } from './services/report-export.service';
 import { NavigationController } from '../shared/services/navigation-controller.service';
+import { StateService } from '../../../core/services/state.service';
 
 @Component({
   selector: 'app-blast-sequence-simulator',
@@ -287,14 +288,26 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     private animationService: AnimationService,
     private reportExportService: ReportExportService,
     private cdr: ChangeDetectorRef,
-    private navigationController: NavigationController
+    private navigationController: NavigationController,
+    private stateService: StateService
   ) {}
 
   ngOnInit(): void {
-    // Always set site context from URL or default
-    const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
-    const projectId = routeMatch ? +routeMatch[1] : 1;
-    const siteId = routeMatch ? +routeMatch[2] : 3;
+    // Resolve site context via StateService, fallback to URL parsing
+    const { activeProjectId, activeSiteId } = this.stateService.currentState;
+    let projectId = activeProjectId;
+    let siteId = activeSiteId;
+
+    if (!projectId || !siteId) {
+      const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
+      projectId = routeMatch ? +routeMatch[1] : 1;
+      siteId = routeMatch ? +routeMatch[2] : 3;
+
+      // Store back to global state so later components have it
+      this.stateService.setProjectId(projectId);
+      this.stateService.setSiteId(siteId);
+    }
+
     this.currentProjectId = projectId;
     this.currentSiteId = siteId;
     this.dataService.setSiteContext(projectId, siteId);

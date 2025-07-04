@@ -44,8 +44,8 @@ namespace API.Controllers
         {
             var result = await _projectService.CreateProjectAsync(request);
             if (result.IsFailure)
-            {
-                return BadRequest(result.Error);
+                {
+                    return BadRequest(result.Error);
             }
             return CreatedAtAction(nameof(GetProject), new { id = result.Value.Id }, result.Value);
         }
@@ -66,12 +66,12 @@ namespace API.Controllers
             {
                 return Forbid();
             }
-            
+
             var result = await _projectService.UpdateProjectAsync(id, request);
             if (result.IsFailure)
             {
                 return NotFound();
-            }
+                }
             return Ok();
         }
 
@@ -96,7 +96,7 @@ namespace API.Controllers
             if (result.IsFailure)
             {
                 return NotFound();
-            }
+                }
             return Ok();
         }
 
