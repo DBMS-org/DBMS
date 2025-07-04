@@ -2,8 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef,
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, takeUntil, firstValueFrom } from 'rxjs';
-import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
+import { Subject, takeUntil, firstValueFrom, map } from 'rxjs';
 import { 
   SimulationState, 
   SimulationSettings, 
@@ -14,7 +13,11 @@ import {
   AnimationFrame,
   BlastEffect
 } from '../shared/models/simulation.model';
-import { PatternData, BlastConnection } from '../drilling-pattern-creator/models/drill-point.model';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { DrillPoint, PatternData, BlastConnection } from '../drilling-pattern-creator/models/drill-point.model';
 import { TimelineComponent } from './components/timeline/timeline.component';
 import { PatternRendererComponent } from './components/pattern-renderer/pattern-renderer.component';
 import { ViewControlsComponent } from './components/view-controls/view-controls.component';
@@ -22,6 +25,9 @@ import { AnimationService } from './services/animation.service';
 import { ReportExportService } from './services/report-export.service';
 import { NavigationController } from '../shared/services/navigation-controller.service';
 import { StateService } from '../../../core/services/state.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
+import { Project } from '../../../core/models/project.model';
 
 @Component({
   selector: 'app-blast-sequence-simulator',
@@ -31,7 +37,11 @@ import { StateService } from '../../../core/services/state.service';
     FormsModule,
     TimelineComponent,
     PatternRendererComponent,
-    ViewControlsComponent
+    ViewControlsComponent,
+    MatTabsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressBarModule
   ],
   template: `
     <div class="simulator-container" [class.fullscreen]="isFullscreen">
@@ -289,48 +299,35 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     private reportExportService: ReportExportService,
     private cdr: ChangeDetectorRef,
     private navigationController: NavigationController,
-    private stateService: StateService
+    private stateService: StateService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
-    // Resolve site context via StateService, fallback to URL parsing
-    const { activeProjectId, activeSiteId } = this.stateService.currentState;
-    let projectId = activeProjectId;
-    let siteId = activeSiteId;
+    this.stateService.state$.pipe(
+      takeUntil(this.destroy$),
+      map(state => state.activeProjectId)
+    ).subscribe(projectId => {
+      if (projectId) this.currentProjectId = projectId;
+    });
+    
+    this.stateService.state$.pipe(
+      takeUntil(this.destroy$),
+      map(state => state.activeSiteId)
+    ).subscribe(siteId => {
+      if (siteId) this.currentSiteId = siteId;
+    });
 
-    if (!projectId || !siteId) {
-      const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
-      projectId = routeMatch ? +routeMatch[1] : 1;
-      siteId = routeMatch ? +routeMatch[2] : 3;
-
-      // Store back to global state so later components have it
-      this.stateService.setProjectId(projectId);
-      this.stateService.setSiteId(siteId);
-    }
-
-    this.currentProjectId = projectId;
-    this.currentSiteId = siteId;
-    this.dataService.setSiteContext(projectId, siteId);
-
-    // Wait for data to load before enabling simulation
-    this.dataService.blastSequenceData$
+    this.dataService.patternData$
       .pipe(takeUntil(this.destroy$))
       .subscribe(data => {
-        this.patternData = data.patternData;
-        this.connections = data.connections;
-        this.simulationState = {
-          ...data.simulationState,
-          isPlaying: false,
-          isPaused: false,
-          currentTime: 0,
-          currentStep: 0,
-          totalDuration: data.simulationState.totalDuration
-        };
-        this.simulationSettings = data.simulationSettings;
-        this.animationService.resetAnimation();
-        // If data is missing, show a warning
-        if (!this.patternData || this.connections.length === 0) {
-          // Optionally, show a message or redirect
+        if (data) {
+          this.patternData = data;
+          this.initializeSimulation();
+        } else {
+          // If no data, maybe navigate back or show a message
+          this.notificationService.showError('No pattern data loaded.');
+          this.navigationController.navigateToPatternCreator();
         }
       });
 
@@ -487,10 +484,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
 
   // Export functionality
   async exportReport(): Promise<void> {
-    if (!this.patternData) {
-      console.warn('No pattern data available for report export');
-      return;
-    }
+    if (!this.patternData) return;
 
     try {
       const currentProject = await firstValueFrom(this.dataService.currentProject$);
@@ -512,8 +506,10 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
           connectionUtilization: this.metrics.connectionUtilization
         }
       });
+      this.notificationService.showSuccess('Report exported successfully.');
     } catch (error) {
-      console.error('Error exporting report:', error);
+      this.notificationService.showError('Failed to export report.');
+      console.error('Report export failed:', error);
     }
   }
 
@@ -597,5 +593,36 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
         this.seekToTime(this.simulationState.currentTime + 1000);
         break;
     }
+  }
+
+  private onRunValidation(data: any) {
+    this.validation = {
+      ...this.validation,
+      ...data.validation,
+      isValidating: false,
+    };
+    this.metrics = { ...this.metrics, ...data.metrics };
+    this.cdr.markForCheck();
+  }
+  
+  private onConnectionValidated(validation: SimulationValidation) {
+    if (validation.errors.length > 0) {
+      this.notificationService.showError('Sequence has validation errors.');
+    }
+    this.validation.errors = validation.errors;
+    this.cdr.markForCheck();
+  }
+
+  private initializeSimulation(): void {
+    if (!this.patternData) return;
+    this.dataService.updateSimulationState({
+      isPlaying: false,
+      isPaused: false,
+      currentTime: 0,
+      currentStep: 0,
+      totalDuration: this.patternData.drillPoints.length * this.simulationSettings.effectIntensity
+    });
+    this.animationService.resetAnimation();
+    this.animationService.startAnimation(this.simulationState, this.connections);
   }
 } 
