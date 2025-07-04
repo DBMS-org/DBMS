@@ -1,14 +1,14 @@
 import { Component, OnInit, AfterViewInit, ElementRef, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BlastSequenceSimulatorComponent } from '../../../blasting-engineer/blast-sequence-simulator/blast-sequence-simulator.component';
+import { BlastSequenceSimulatorComponent } from '../../../../components/blasting-engineer/blast-sequence-simulator/blast-sequence-simulator.component';
 
 @Component({
   selector: 'app-view-sequence-simulator',
   standalone: true,
   imports: [CommonModule, BlastSequenceSimulatorComponent],
   templateUrl: './view-sequence-simulator.component.html',
-  styleUrl: './view-sequence-simulator.component.scss'
+  styleUrls: ['./view-sequence-simulator.component.scss']
 })
 export class ViewSequenceSimulatorComponent implements OnInit, AfterViewInit {
   projectId = 0;
@@ -27,7 +27,7 @@ export class ViewSequenceSimulatorComponent implements OnInit, AfterViewInit {
       this.projectId = +(params.get('projectId') || '0');
       this.siteId = +(params.get('siteId') || '0');
       
-      console.log('Admin Sequence Simulator - Project ID:', this.projectId, 'Site ID:', this.siteId);
+      console.log('View Sequence Simulator - Project ID:', this.projectId, 'Site ID:', this.siteId);
     });
   }
 
@@ -76,12 +76,12 @@ export class ViewSequenceSimulatorComponent implements OnInit, AfterViewInit {
   goBack(): void {
     console.log('Navigating back to sites from admin simulator...');
     
+    const firstSegment = this.router.url.split('/')[1]; // 'admin' or 'blasting-engineer'
+
     if (this.projectId) {
-      // Navigate to the specific project's sites page
-      this.router.navigate(['/admin/project-management', this.projectId, 'sites']);
+      this.router.navigate([`/${firstSegment}/project-management`, this.projectId, 'sites']);
     } else {
-      // Fallback to general project management
-      this.router.navigate(['/admin/project-management']);
+      this.router.navigate([`/${firstSegment}/project-management`]);
     }
   }
 } 

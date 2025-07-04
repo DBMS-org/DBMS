@@ -53,7 +53,7 @@ namespace API.Controllers
             {
                 return BadRequest($"Only CSV files are allowed. Received file type: {fileExtension}");
             }
-            
+
             var csvRequest = new CsvUploadRequest
             {
                 FileStream = file.OpenReadStream(),
@@ -72,7 +72,7 @@ namespace API.Controllers
             {
                 return BadRequest("No valid drill holes found in the CSV file. Please check the file format.");
             }
-            
+
             return Ok(result.Value);
         }
 
@@ -83,7 +83,7 @@ namespace API.Controllers
             if (result.IsFailure)
             {
                 return Conflict(result.Error);
-            }
+                }
             return CreatedAtAction(nameof(GetDrillHole), new { id = result.Value.Id }, result.Value);
         }
 
@@ -111,7 +111,7 @@ namespace API.Controllers
             if (result.IsFailure)
             {
                 return NotFound();
-            }
+                }
             return Ok();
         }
     }

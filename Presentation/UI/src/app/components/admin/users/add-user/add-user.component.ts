@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { REGIONS } from '../../../../core/constants/regions';
 import { USER_ROLES_ARRAY } from '../../../../core/constants/roles';
+import { Router } from '@angular/router';
+import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-add-user',
@@ -32,6 +34,11 @@ export class AddUserComponent {
   regions = REGIONS;
   countries = ['Oman', 'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain'];
 
+  constructor(
+    private router: Router,
+    private notification: NotificationService
+  ) {}
+
   onSubmit() {
     if (this.validatePassword()) {
       // Remove confirmPassword before sending to backend
@@ -42,11 +49,11 @@ export class AddUserComponent {
 
   validatePassword(): boolean {
     if (this.user.password !== this.user.confirmPassword) {
-      alert('Passwords do not match!');
+      this.notification.showError('Passwords do not match!');
       return false;
     }
     if (this.user.password.length < 8) {
-      alert('Password must be at least 8 characters long!');
+      this.notification.showError('Password must be at least 8 characters long!');
       return false;
     }
     return true;

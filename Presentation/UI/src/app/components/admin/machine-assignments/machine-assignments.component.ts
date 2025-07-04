@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { MachineService } from '../../../core/services/machine.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { 
   MachineAssignmentRequest, 
   AssignmentRequestStatus,
@@ -65,7 +66,8 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
     private projectService: ProjectService,
     private authService: AuthService,
     private formBuilder: FormBuilder,
-    private router: Router
+    private router: Router,
+    private notification: NotificationService
   ) {
     this.initializeForms();
   }
@@ -314,8 +316,7 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
   }
 
   private showNotification(message: string): void {
-    // In a real application, you would use a proper notification service
-    alert(message);
+    this.notification.showSuccess(message);
   }
 
   get statusOptions() {

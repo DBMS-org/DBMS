@@ -11,7 +11,7 @@ import { EditProjectComponent } from './project-management/edit-project/edit-pro
 import { ProjectSitesComponent } from './project-management/project-sites/project-sites.component';
 import { MachineInventoryComponent } from './machine-inventory/machine-inventory.component';
 import { MachineAssignmentsComponent } from './machine-assignments/machine-assignments.component';
-import { ViewSequenceSimulatorComponent } from './project-management/view-sequence-simulator/view-sequence-simulator.component';
+import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/view-sequence-simulator/view-sequence-simulator.component';
 
 export const ADMIN_ROUTES: Routes = [
     {

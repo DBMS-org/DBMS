@@ -6,6 +6,7 @@ import { AddUserComponent } from './add-user/add-user.component';
 import { AssignUserComponent } from './assign-user/assign-user.component';
 import { UserService } from '../../../core/services/user.service';
 import { User, CreateUserRequest } from '../../../core/models/user.model';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-users',
@@ -28,7 +29,8 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    private notification: NotificationService
   ) {}
 
   ngOnInit() {
@@ -157,10 +159,10 @@ export class UsersComponent implements OnInit {
   testConnection() {
     this.userService.testConnection().subscribe({
       next: (result) => {
-        alert(`Connection successful! Database: ${result.database}, Users: ${result.userCount}`);
+        this.notification.showSuccess(`Connection successful! Database: ${result.database}, Users: ${result.userCount}`);
       },
       error: (error) => {
-        alert(`Connection failed: ${error.message}`);
+        this.notification.showError(`Connection failed: ${error.message}`);
       }
     });
   }
