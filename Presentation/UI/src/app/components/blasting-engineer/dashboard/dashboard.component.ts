@@ -6,8 +6,9 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { SiteService, ProjectSite } from '../../../core/services/site.service';
 import { UserActivityService } from '../../../core/services/user-activity.service';
-import { DrillDataService } from '../csv-upload/csv-upload.component';
+import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
 import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
+import { DrillLocation } from '../../../core/models/drilling.model';
 import { User } from '../../../core/models/user.model';
 import { Project } from '../../../core/models/project.model';
 
@@ -39,6 +40,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   recentActivities: any[] = [];
   userProjects: Project[] = [];
   drillData: DrillHole[] = [];
+  drillLocations: DrillLocation[] = [];
   recentUploads: any[] = [];
   quickStats = {
     averageDepth: 0,
@@ -53,7 +55,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private projectService: ProjectService,
     private siteService: SiteService,
     private userActivityService: UserActivityService,
-    private drillDataService: DrillDataService,
+    private unifiedDrillDataService: UnifiedDrillDataService,
     private drillHoleService: DrillHoleService,
     private router: Router
   ) {}
@@ -158,8 +160,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDrillData() {
-    // Try to get data from local service first (for immediate display)
-    this.drillData = this.drillDataService.getDrillData();
+    // Try to get data from unified service first (for immediate display)
+    this.drillLocations = this.unifiedDrillDataService.getDrillLocations();
+    // Convert drill locations to drill holes for backward compatibility
+    this.drillData = this.drillLocations.map(loc => ({
+      id: loc.id,
+      easting: loc.easting || loc.x,
+      northing: loc.northing || loc.y,
+      elevation: loc.elevation || 0,
+      depth: loc.depth || 0,
+      length: loc.length || loc.depth || 0,
+      azimuth: loc.azimuth || 0,
+      dip: loc.dip || 0,
+      actualDepth: loc.actualDepth || loc.depth || 0,
+      stemming: loc.stemming || 0,
+      projectId: loc.projectId,
+      siteId: loc.siteId,
+      createdAt: loc.createdAt.toISOString(),
+      updatedAt: loc.updatedAt.toISOString()
+    } as DrillHole));
     this.calculateQuickStats();
     this.loadRecentUploads();
     
@@ -280,7 +299,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   logout() {
     this.userActivityService.trackActivity('logged out', 'User session ended', 'auth');
-    this.authService.logout();
+    this.authService.logoutWithConfirmation();
   }
 
   getUserWelcomeMessage(): string {

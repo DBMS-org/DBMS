@@ -3,6 +3,8 @@ using Application.DTOs.DrillingOperations;
 using Application.DTOs.Shared;
 using Application.Interfaces.DrillingOperations;
 using Application.Interfaces.BlastingOperations;
+using Application.Interfaces.ProjectManagement;
+using Application.Interfaces.Infrastructure;
 using Application.Utilities;
 using Domain.Entities.DrillingOperations;
 using Domain.Services;
@@ -14,6 +16,8 @@ namespace Application.Services.DrillingOperations
     {
         private readonly IDrillPointRepository _drillPointRepository;
         private readonly ISiteBlastingService _siteBlastingService;
+        private readonly IProjectRepository _projectRepository;
+        private readonly IUserContext _userContext;
         private readonly DrillPointDomainService _domainService;
         private readonly ILogger<DrillPointPatternApplicationService> _logger;
         
@@ -23,19 +27,49 @@ namespace Application.Services.DrillingOperations
         public DrillPointPatternApplicationService(
             IDrillPointRepository drillPointRepository,
             ISiteBlastingService siteBlastingService,
+            IProjectRepository projectRepository,
+            IUserContext userContext,
             DrillPointDomainService domainService,
             ILogger<DrillPointPatternApplicationService> logger)
         {
             _drillPointRepository = drillPointRepository;
             _siteBlastingService = siteBlastingService;
+            _projectRepository = projectRepository;
+            _userContext = userContext;
             _domainService = domainService;
             _logger = logger;
+        }
+        
+        private async Task<bool> ValidateRegionAccessAsync(int projectId)
+        {
+            if (_userContext.IsInRole("Admin"))
+            {
+                return true; // Admins have access to all regions
+            }
+
+            if (_userContext.IsInRole("BlastingEngineer"))
+            {
+                var region = _userContext.Region;
+                if (!string.IsNullOrEmpty(region))
+                {
+                    var project = await _projectRepository.GetByIdAsync(projectId);
+                    return project != null && project.Region == region;
+                }
+            }
+
+            return false;
         }
         
         public async Task<DrillPointDto> CreateDrillPointAsync(CreateDrillPointRequest request)
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(request.ProjectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {request.ProjectId}");
+                }
+
                 // Validate coordinates
                 if (!_domainService.ValidateCoordinates(request.X, request.Y))
                 {
@@ -92,12 +126,18 @@ namespace Application.Services.DrillingOperations
             {
                 var existingPoint = await _drillPointRepository.GetByIdAsync(
                     request.PointId, 
-                    0, // Will need to be passed in context
-                    0); // Will need to be passed in context
+                    request.ProjectId, 
+                    request.SiteId);
                     
                 if (existingPoint == null)
                 {
                     throw new DrillPointNotFoundException(request.PointId);
+                }
+
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(existingPoint.ProjectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {existingPoint.ProjectId}");
                 }
                 
                 // Validate new coordinates
@@ -137,6 +177,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var result = await _drillPointRepository.DeleteAsync(pointId, projectId, siteId);
                 
                 if (result)
@@ -161,6 +207,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var drillPoints = await _drillPointRepository.GetAllAsync(projectId, siteId);
                 return drillPoints.Select(ConvertToDto).ToList();
             }
@@ -176,6 +228,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var drillPoint = await _drillPointRepository.GetByIdAsync(pointId, projectId, siteId);
                 return drillPoint != null ? ConvertToDto(drillPoint) : null;
             }
@@ -190,6 +248,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var result = await _drillPointRepository.DeleteAllAsync(projectId, siteId);
                 
                 if (result)
@@ -212,6 +276,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var settings = await _drillPointRepository.GetPatternSettingsAsync(projectId, siteId);
                 return settings != null ? ConvertToDto(settings) : new PatternSettingsDto();
             }
@@ -227,6 +297,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var settings = new PatternSettings
                 {
                     Spacing = settingsDto.Spacing,
@@ -268,57 +344,68 @@ namespace Application.Services.DrillingOperations
             }
         }
         
-        public async Task<SavePatternResult> SavePatternAsync(SavePatternRequest request)
+        public async Task<bool> SavePatternAsync(int projectId, int siteId, List<DrillPointDto> drillPoints, string patternName)
         {
             try
             {
-                if (!request.DrillPoints.Any())
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
                 {
-                    return new SavePatternResult
-                    {
-                        Success = false,
-                        Message = "No drill points to save"
-                    };
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
                 }
-                
-                // Save pattern settings
-                await UpdatePatternSettingsAsync(request.ProjectId, request.SiteId, request.Settings);
-                
-                // Create drill pattern in the existing system
-                var patternName = $"Pattern_{DateTime.UtcNow:yyyy-MM-dd_HH-mm}";
-                var drillPatternRequest = new CreateDrillPatternRequest
+
+                var currentUserId = GetCurrentUserId();
+                if (!currentUserId.HasValue)
                 {
-                    ProjectId = request.ProjectId,
-                    SiteId = request.SiteId,
-                    Name = patternName,
-                    Description = "Pattern created from drill point pattern creator",
-                    Spacing = request.Settings.Spacing,
-                    Burden = request.Settings.Burden,
-                    Depth = request.Settings.Depth,
-                    DrillPointsJson = System.Text.Json.JsonSerializer.Serialize(request.DrillPoints)
-                };
-                
-                var savedPattern = await _siteBlastingService.CreateDrillPatternAsync(drillPatternRequest, 1); // TODO: Get user ID from context
-                
-                _logger.LogInformation("Pattern saved successfully with ID: {PatternId}", savedPattern.Id);
-                
-                return new SavePatternResult
+                    _logger.LogError("Current user ID not found in context");
+                    return false;
+                }
+
+                _logger.LogInformation("Starting SavePatternAsync for project {ProjectId}, site {SiteId} with {Count} drill points", 
+                    projectId, siteId, drillPoints.Count);
+
+                // Log the drill points being saved
+                foreach (var dp in drillPoints)
                 {
-                    Success = true,
-                    Message = "Pattern saved successfully",
-                    PatternId = savedPattern.Id
-                };
+                    _logger.LogInformation("Drill Point: Id={Id}, X={X}, Y={Y}, Depth={Depth}, Spacing={Spacing}, Burden={Burden}", 
+                        dp.Id, dp.X, dp.Y, dp.Depth, dp.Spacing, dp.Burden);
+                }
+
+                // Clear existing drill points for this project/site
+                await _drillPointRepository.DeleteByProjectSiteAsync(projectId, siteId);
+                _logger.LogInformation("Cleared existing drill points for project {ProjectId}, site {SiteId}", projectId, siteId);
+
+                // Convert DTOs to entities and save
+                var drillPointEntities = drillPoints.Select(dp => new DrillPoint
+                {
+                    Id = dp.Id,
+                    ProjectId = projectId,
+                    SiteId = siteId,
+                    X = dp.X,
+                    Y = dp.Y,
+                    Depth = dp.Depth,
+                    Spacing = dp.Spacing,
+                    Burden = dp.Burden,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                }).ToList();
+
+                await _drillPointRepository.AddRangeAsync(drillPointEntities);
+
+                _logger.LogInformation("Successfully saved {Count} drill points for pattern '{PatternName}'", 
+                    drillPointEntities.Count, patternName);
+
+                // Verify the data was saved by reading it back
+                var savedPoints = await _drillPointRepository.GetAllAsync(projectId, siteId);
+                _logger.LogInformation("Verification: Found {Count} drill points after save", savedPoints.Count);
+
+                return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving pattern for project {ProjectId}, site {SiteId}", 
-                    request.ProjectId, request.SiteId);
-                
-                return new SavePatternResult
-                {
-                    Success = false,
-                    Message = $"Error saving pattern: {ex.Message}"
-                };
+                _logger.LogError(ex, "Error saving pattern '{PatternName}' for project {ProjectId}, site {SiteId}", 
+                    patternName, projectId, siteId);
+                return false;
             }
         }
         
@@ -331,6 +418,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(request.ProjectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {request.ProjectId}");
+                }
+
                 if (!request.CsvData.Any())
                 {
                     throw new ArgumentException("No CSV data provided");
@@ -382,6 +475,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var drillPoints = await _drillPointRepository.GetAllAsync(projectId, siteId);
                 return _domainService.CalculateGridPitch(drillPoints);
             }
@@ -397,6 +496,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var drillPoints = await _drillPointRepository.GetAllAsync(projectId, siteId);
                 var anchoredPoints = _domainService.AnchorPointsToOrigin(drillPoints);
                 
@@ -429,6 +534,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var existingPoints = await _drillPointRepository.GetAllAsync(projectId, siteId);
                 
                 if (!string.IsNullOrEmpty(excludePointId))
@@ -450,6 +561,12 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
+                // Validate region access
+                if (!await ValidateRegionAccessAsync(projectId))
+                {
+                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
+                }
+
                 var currentCount = await _drillPointRepository.GetCountAsync(projectId, siteId);
                 return _domainService.ValidateDrillPointCount(currentCount, maxPoints);
             }
@@ -520,6 +637,13 @@ namespace Application.Services.DrillingOperations
                 Burden = settings.Burden,
                 Depth = settings.Depth
             };
+        }
+        
+        private Guid? GetCurrentUserId()
+        {
+            // Implement the logic to retrieve the current user ID from the context
+            // This is a placeholder and should be replaced with the actual implementation
+            return Guid.NewGuid(); // Placeholder return, actual implementation needed
         }
     }
 } 

@@ -1,4 +1,5 @@
 using Domain.Entities.ProjectManagement;
+using Domain.Entities.DrillingOperations;
 
 namespace Domain.Entities.BlastingOperations
 {
@@ -6,17 +7,14 @@ namespace Domain.Entities.BlastingOperations
     {
         public string Id { get; set; } = string.Empty;
         
-        public string FromHoleId { get; set; } = string.Empty;
+        // Foreign key relationships to two DrillPoints (Point 1 and Point 2)
+        public string Point1DrillPointId { get; set; } = string.Empty;
+        public string Point2DrillPointId { get; set; } = string.Empty;
         
-        public string ToHoleId { get; set; } = string.Empty;
-        
+        // Connection properties
         public ConnectorType ConnectorType { get; set; }
         public int Delay { get; set; } // milliseconds
         public int Sequence { get; set; }
-        
-        // Hidden starting and ending points for connectors
-        public string StartPointJson { get; set; } = string.Empty;
-        public string EndPointJson { get; set; } = string.Empty;
         
         // Project and Site context
         public int ProjectId { get; set; }
@@ -28,13 +26,16 @@ namespace Domain.Entities.BlastingOperations
         // Navigation properties
         public virtual Project Project { get; set; } = null!;
         public virtual ProjectSite Site { get; set; } = null!;
+        public virtual DrillPoint Point1DrillPoint { get; set; } = null!;
+        public virtual DrillPoint Point2DrillPoint { get; set; } = null!;
     }
     
     public class DetonatorInfo
     {
         public string Id { get; set; } = string.Empty;
         
-        public string HoleId { get; set; } = string.Empty;
+        // Foreign key relationship to DrillPoint
+        public string DrillPointId { get; set; } = string.Empty;
         
         public DetonatorType Type { get; set; }
         public int Delay { get; set; } // milliseconds
@@ -50,18 +51,19 @@ namespace Domain.Entities.BlastingOperations
         // Navigation properties
         public virtual Project Project { get; set; } = null!;
         public virtual ProjectSite Site { get; set; } = null!;
+        public virtual DrillPoint DrillPoint { get; set; } = null!;
     }
     
     public enum ConnectorType
     {
-        DetonatingCord,
-        Connectors
+        DetonatingCord = 0,
+        Connectors = 1
     }
     
     public enum DetonatorType
     {
-        Electric,
-        NonElectric,
-        Electronic
+        Electric = 0,
+        NonElectric = 1,
+        Electronic = 2
     }
 } 

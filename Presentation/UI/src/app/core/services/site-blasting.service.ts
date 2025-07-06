@@ -1,346 +1,120 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   SiteBlastingData,
   CreateSiteBlastingDataRequest,
   UpdateSiteBlastingDataRequest,
-  DrillPattern,
-  CreateDrillPatternRequest,
-  UpdateDrillPatternRequest,
   BlastSequence,
   CreateBlastSequenceRequest,
   UpdateBlastSequenceRequest,
-  DrillPatternResponse,
-  BlastSequenceResponse,
-  SiteBlastingDataResponse
+  BlastConnection,
+  CreateBlastConnectionRequest,
+  UpdateBlastConnectionRequest,
+  WorkflowState
 } from '../models/site-blasting.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SiteBlastingService {
-  private readonly apiUrl = `${environment.apiUrl}/api/siteblasting`;
+  private apiUrl = `${environment.apiUrl}/api/siteblasting`;
 
   constructor(private http: HttpClient) {}
 
-  // ========== Site Blasting Data Operations ==========
-
-  // Get workflow data by type for a specific site
-  getWorkflowData(projectId: number, siteId: number, dataType: string): Observable<SiteBlastingData> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/data/${dataType}`;
-    return this.http.get<SiteBlastingData>(url).pipe(
-      map(response => ({
-        ...response,
-        createdAt: new Date(response.createdAt),
-        updatedAt: new Date(response.updatedAt)
-      })),
-      catchError(this.handleError)
-    );
+  // Site Blasting Data Methods
+  getSiteData(projectId: number, siteId: number, dataType: string): Observable<SiteBlastingData> {
+    return this.http.get<SiteBlastingData>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data/${dataType}`);
   }
 
-  // Save workflow data for a specific site
-  saveWorkflowData(request: CreateSiteBlastingDataRequest): Observable<SiteBlastingData> {
-    const url = `${this.apiUrl}/projects/${request.projectId}/sites/${request.siteId}/data`;
-    return this.http.post<SiteBlastingData>(url, request).pipe(
-      map(response => ({
-        ...response,
-        createdAt: new Date(response.createdAt),
-        updatedAt: new Date(response.updatedAt)
-      })),
-      catchError(this.handleError)
-    );
+  getAllSiteData(projectId: number, siteId: number): Observable<SiteBlastingData[]> {
+    return this.http.get<SiteBlastingData[]>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data`);
   }
 
-  // Update workflow data
-  updateWorkflowData(projectId: number, siteId: number, dataType: string, request: UpdateSiteBlastingDataRequest): Observable<void> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/data/${dataType}`;
-    return this.http.put<void>(url, request).pipe(
-      catchError(this.handleError)
-    );
+  saveSiteData(request: CreateSiteBlastingDataRequest): Observable<SiteBlastingData> {
+    return this.http.post<SiteBlastingData>(`${this.apiUrl}/data`, request);
   }
 
-  // Get all workflow data for a site
-  getAllWorkflowData(projectId: number, siteId: number): Observable<SiteBlastingData[]> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/data`;
-    return this.http.get<SiteBlastingData[]>(url).pipe(
-      map(data => data.map(item => ({
-        ...item,
-        createdAt: new Date(item.createdAt),
-        updatedAt: new Date(item.updatedAt)
-      }))),
-      catchError(this.handleError)
-    );
+  updateSiteData(projectId: number, siteId: number, dataType: string, request: UpdateSiteBlastingDataRequest): Observable<SiteBlastingData> {
+    return this.http.put<SiteBlastingData>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data/${dataType}`, request);
   }
 
-  // Delete workflow data by type for a specific site
-  deleteWorkflowData(projectId: number, siteId: number, dataType: string): Observable<void> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/data/${dataType}`;
-    return this.http.delete<void>(url).pipe(
-      catchError(this.handleError)
-    );
+  deleteSiteData(projectId: number, siteId: number, dataType: string): Observable<boolean> {
+    return this.http.delete<boolean>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data/${dataType}`);
   }
 
-  // Delete all workflow data for a site
-  deleteAllWorkflowData(projectId: number, siteId: number): Observable<void> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/data`;
-    return this.http.delete<void>(url).pipe(
-      catchError(this.handleError)
-    );
+  deleteAllSiteData(projectId: number, siteId: number): Observable<boolean> {
+    return this.http.delete<boolean>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data`);
   }
 
-  // ========== Drill Pattern Operations ==========
-
-  // Get all drill patterns for a site
-  getDrillPatterns(projectId: number, siteId: number): Observable<DrillPattern[]> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/patterns`;
-    return this.http.get<DrillPattern[]>(url).pipe(
-      map(patterns => patterns.map(pattern => ({
-        ...pattern,
-        drillPointsJson: typeof pattern.drillPointsJson === 'string' 
-          ? JSON.parse(pattern.drillPointsJson) 
-          : pattern.drillPointsJson,
-        createdAt: new Date(pattern.createdAt),
-        updatedAt: new Date(pattern.updatedAt)
-      }))),
-      catchError(this.handleError)
-    );
-  }
-
-  // Get specific drill pattern
-  getDrillPattern(projectId: number, siteId: number, patternId: number): Observable<DrillPattern> {
-    const url = `${this.apiUrl}/patterns/${patternId}`;
-    return this.http.get<DrillPattern>(url).pipe(
-      map(response => ({
-        ...response,
-        createdAt: new Date(response.createdAt),
-        updatedAt: new Date(response.updatedAt)
-      })),
-      catchError(this.handleError)
-    );
-  }
-
-  // Create drill pattern
-  createDrillPattern(request: CreateDrillPatternRequest): Observable<DrillPattern> {
-    const url = `${this.apiUrl}/projects/${request.projectId}/sites/${request.siteId}/patterns`;
-    return this.http.post<DrillPattern>(url, request).pipe(
-      map(response => ({
-        ...response,
-        createdAt: new Date(response.createdAt),
-        updatedAt: new Date(response.updatedAt)
-      })),
-      catchError(this.handleError)
-    );
-  }
-
-  // Update drill pattern
-  updateDrillPattern(projectId: number, siteId: number, patternId: number, request: UpdateDrillPatternRequest): Observable<void> {
-    const url = `${this.apiUrl}/patterns/${patternId}`;
-    return this.http.put<void>(url, request).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // Delete drill pattern
-  deleteDrillPattern(projectId: number, siteId: number, patternId: number): Observable<void> {
-    const url = `${this.apiUrl}/patterns/${patternId}`;
-    return this.http.delete<void>(url).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // ========== Blast Sequence Operations ==========
-
-  // Get all blast sequences for a site
+  // Blast Sequence Methods
   getBlastSequences(projectId: number, siteId: number): Observable<BlastSequence[]> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/sequences`;
-    return this.http.get<BlastSequence[]>(url).pipe(
-      map(sequences => sequences.map(sequence => ({
-        ...sequence,
-        connectionsJson: typeof sequence.connectionsJson === 'string' 
-          ? JSON.parse(sequence.connectionsJson) 
-          : sequence.connectionsJson,
-        simulationSettingsJson: typeof sequence.simulationSettingsJson === 'string' 
-          ? JSON.parse(sequence.simulationSettingsJson) 
-          : sequence.simulationSettingsJson,
-        createdAt: new Date(sequence.createdAt),
-        updatedAt: new Date(sequence.updatedAt)
-      }))),
-      catchError(this.handleError)
-    );
+    return this.http.get<BlastSequence[]>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/sequences`);
   }
 
-  // Get specific blast sequence
-  getBlastSequence(projectId: number, siteId: number, sequenceId: number): Observable<BlastSequence> {
-    const url = `${this.apiUrl}/sequences/${sequenceId}`;
-    return this.http.get<BlastSequence>(url).pipe(
-      map(response => ({
-        ...response,
-        createdAt: new Date(response.createdAt),
-        updatedAt: new Date(response.updatedAt)
-      })),
-      catchError(this.handleError)
-    );
+  getBlastSequence(id: number): Observable<BlastSequence> {
+    return this.http.get<BlastSequence>(`${this.apiUrl}/sequences/${id}`);
   }
 
-  // Create blast sequence
   createBlastSequence(request: CreateBlastSequenceRequest): Observable<BlastSequence> {
-    const url = `${this.apiUrl}/projects/${request.projectId}/sites/${request.siteId}/sequences`;
-    return this.http.post<BlastSequence>(url, request).pipe(
-      map(response => ({
-        ...response,
-        createdAt: new Date(response.createdAt),
-        updatedAt: new Date(response.updatedAt)
-      })),
-      catchError(this.handleError)
-    );
+    return this.http.post<BlastSequence>(`${this.apiUrl}/projects/${request.projectId}/sites/${request.siteId}/sequences`, request);
   }
 
-  // Update blast sequence
-  updateBlastSequence(projectId: number, siteId: number, sequenceId: number, request: UpdateBlastSequenceRequest): Observable<void> {
-    const url = `${this.apiUrl}/sequences/${sequenceId}`;
-    return this.http.put<void>(url, request).pipe(
-      catchError(this.handleError)
-    );
+  updateBlastSequence(id: number, request: UpdateBlastSequenceRequest): Observable<BlastSequence> {
+    return this.http.put<BlastSequence>(`${this.apiUrl}/sequences/${id}`, request);
   }
 
-  // Delete blast sequence
-  deleteBlastSequence(projectId: number, siteId: number, sequenceId: number): Observable<void> {
-    const url = `${this.apiUrl}/sequences/${sequenceId}`;
-    return this.http.delete<void>(url).pipe(
-      catchError(this.handleError)
-    );
+  deleteBlastSequence(id: number): Observable<boolean> {
+    return this.http.delete<boolean>(`${this.apiUrl}/sequences/${id}`);
   }
 
-  // Get blast sequences for a specific drill pattern
-  getBlastSequencesByPattern(projectId: number, siteId: number, patternId: number): Observable<BlastSequence[]> {
-    // Filter sequences by drill pattern ID client-side since there's no specific endpoint
-    return this.getBlastSequences(projectId, siteId).pipe(
-      map(sequences => sequences.filter(seq => seq.drillPatternId === patternId))
-    );
+  // Blast Connection Methods
+  getBlastConnections(projectId: number, siteId: number): Observable<BlastConnection[]> {
+    return this.http.get<BlastConnection[]>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/connections`);
   }
 
-  // ========== Convenience Methods ==========
-
-  // Save drill pattern from drilling pattern creator
-  saveDrillPatternFromCreator(
-    projectId: number, 
-    siteId: number, 
-    name: string, 
-    description: string,
-    drillPoints: any[], 
-    spacing: number, 
-    burden: number, 
-    depth: number
-  ): Observable<DrillPattern> {
-    const request: CreateDrillPatternRequest = {
-      projectId,
-      siteId,
-      name,
-      description,
-      spacing,
-      burden,
-      depth,
-      drillPointsJson: JSON.stringify(drillPoints) // Ensure it's a JSON string
-    };
-    console.log('Creating drill pattern with request:', request);
-    return this.createDrillPattern(request);
+  getBlastConnection(id: string, projectId: number, siteId: number): Observable<BlastConnection> {
+    return this.http.get<BlastConnection>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/connections/${id}`);
   }
 
-  // Save blast sequence from blast sequence designer
-  saveBlastSequenceFromDesigner(
-    projectId: number,
-    siteId: number,
-    drillPatternId: number,
-    name: string,
-    description: string,
-    connections: any[],
-    simulationSettings: any
-  ): Observable<BlastSequence> {
-    const request: CreateBlastSequenceRequest = {
-      projectId,
-      siteId,
-      drillPatternId,
-      name,
-      description,
-      connectionsJson: JSON.stringify(connections), // Ensure it's a JSON string
-      simulationSettingsJson: JSON.stringify(simulationSettings) // Ensure it's a JSON string
-    };
-    console.log('Creating blast sequence with request:', request);
-    return this.createBlastSequence(request);
+  getBlastConnectionsBySequence(projectId: number, siteId: number, sequence: number): Observable<BlastConnection[]> {
+    return this.http.get<BlastConnection[]>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/connections/sequence/${sequence}`);
   }
 
-  // Save generic workflow state (pattern, connections, simulation_settings, etc.)
-  saveWorkflowState(
-    projectId: number,
-    siteId: number,
-    dataType: 'pattern' | 'connections' | 'simulation_settings' | 'simulation_state',
-    data: any
-  ): Observable<SiteBlastingData> {
+  createBlastConnection(request: CreateBlastConnectionRequest): Observable<BlastConnection> {
+    return this.http.post<BlastConnection>(`${this.apiUrl}/projects/${request.projectId}/sites/${request.siteId}/connections`, request);
+  }
+
+  updateBlastConnection(id: string, projectId: number, siteId: number, request: UpdateBlastConnectionRequest): Observable<BlastConnection> {
+    return this.http.put<BlastConnection>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/connections/${id}`, request);
+  }
+
+  deleteBlastConnection(id: string, projectId: number, siteId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/connections/${id}`);
+  }
+
+  // Workflow State Methods
+  getWorkflowState(projectId: number, siteId: number): Observable<WorkflowState> {
+    return this.http.get<WorkflowState>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data/pattern`);
+  }
+
+  updateWorkflowState(projectId: number, siteId: number, workflowState: WorkflowState): Observable<WorkflowState> {
     const request: CreateSiteBlastingDataRequest = {
       projectId,
       siteId,
-      dataType,
-      jsonData: typeof data === 'string' ? data : JSON.stringify(data) // Ensure it's a JSON string
+      dataType: 'pattern',
+      jsonData: workflowState
     };
-    console.log('Saving workflow state:', { dataType, request });
-    return this.saveWorkflowData(request);
+    return this.http.post<WorkflowState>(`${this.apiUrl}/data`, request);
   }
 
-  // Get workflow state
-  getWorkflowState(
-    projectId: number,
-    siteId: number,
-    dataType: 'pattern' | 'connections' | 'simulation_settings' | 'simulation_state'
-  ): Observable<SiteBlastingData> {
-    return this.getWorkflowData(projectId, siteId, dataType);
+  // Utility Methods
+  deleteAllWorkflowData(projectId: number, siteId: number): Observable<boolean> {
+    return this.http.delete<boolean>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data`);
   }
 
-  // Operator completion
-  markOperatorCompletion(projectId: number, siteId: number): Observable<any> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/operator-completion`;
-    return this.http.post(url, {}).pipe(catchError(this.handleError));
-  }
-
-  revokeOperatorCompletion(projectId: number, siteId: number): Observable<any> {
-    const url = `${this.apiUrl}/projects/${projectId}/sites/${siteId}/operator-completion`;
-    return this.http.delete(url).pipe(catchError(this.handleError));
-  }
-
-  // Error handling
-  private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'An unknown error occurred!';
-    
-    if (error.error instanceof ErrorEvent) {
-      // Client-side error
-      errorMessage = `Client Error: ${error.error.message}`;
-    } else {
-      // Server-side error
-      console.error('Full error response:', error);
-      
-      if (error.status === 404) {
-        errorMessage = 'Resource not found';
-      } else if (error.status === 400) {
-        if (typeof error.error === 'string') {
-          errorMessage = `Validation Error: ${error.error}`;
-        } else if (error.error && error.error.errors) {
-          const validationErrors = Object.values(error.error.errors).flat();
-          errorMessage = `Validation Errors: ${validationErrors.join(', ')}`;
-        } else if (error.error && error.error.message) {
-          errorMessage = `Validation Error: ${error.error.message}`;
-        } else {
-          errorMessage = 'Invalid request data - please check all required fields';
-        }
-      } else if (error.status === 500) {
-        errorMessage = 'Server error occurred';
-      } else {
-        errorMessage = `Server Error Code: ${error.status}\nMessage: ${error.message}`;
-      }
-    }
-    
-    console.error('SiteBlastingService Error:', errorMessage);
-    return throwError(() => new Error(errorMessage));
+  hasWorkflowData(projectId: number, siteId: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/has-data`);
   }
 } 
