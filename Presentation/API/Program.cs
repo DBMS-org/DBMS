@@ -115,6 +115,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin", "Administrator"));
     options.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "StandardUser"));
     options.AddPolicy("RequireOwnership", policy => policy.Requirements.Add(new OwnershipRequirement()));
+    options.AddPolicy("ReadDrillData", policy => policy.RequireRole("Admin", "Administrator", "BlastingEngineer"));
+    options.AddPolicy("ManageDrillData", policy => policy.RequireRole("BlastingEngineer"));
+    options.AddPolicy("ManageProjectSites", policy => policy.RequireRole("BlastingEngineer"));
     });
 
 // Register DrillHole services (split into focused services)
@@ -130,11 +133,12 @@ builder.Services.AddScoped<DrillPointDomainService>();
 
 // Register Site Blasting services
 builder.Services.AddScoped<ISiteBlastingRepository, SiteBlastingRepository>();
-builder.Services.AddScoped<ISiteBlastingDataService, SiteBlastingDataApplicationService>();
-builder.Services.AddScoped<IDrillPatternService, DrillPatternApplicationService>();
 builder.Services.AddScoped<IBlastSequenceService, BlastSequenceApplicationService>();
-builder.Services.AddScoped<IWorkflowProgressService, WorkflowProgressApplicationService>();
 builder.Services.AddScoped<ISiteBlastingService, SiteBlastingApplicationService>();
+
+// Register Blast Connection services
+builder.Services.AddScoped<IBlastConnectionRepository, BlastConnectionRepository>();
+builder.Services.AddScoped<IBlastConnectionService, BlastConnectionApplicationService>();
 
 // Register Region services
 builder.Services.AddScoped<IRegionRepository, RegionRepository>();
@@ -150,6 +154,9 @@ builder.Services.AddScoped<IProjectSiteService, ProjectSiteApplicationService>()
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserApplicationService>();
 builder.Services.AddScoped<IAuthService, AuthApplicationService>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContext, Infrastructure.Services.UserContext>();
 
 var app = builder.Build();
 

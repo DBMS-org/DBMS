@@ -168,6 +168,6 @@ export class ProjectService {
     }
     
     console.error('ProjectService Error:', errorMessage);
-    return throwError(() => new Error(errorMessage));
+    return throwError(() => error);
   }
 } 

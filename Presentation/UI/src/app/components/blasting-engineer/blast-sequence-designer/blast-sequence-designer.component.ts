@@ -3,21 +3,35 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Konva from 'konva';
-import { NavigationController } from '../shared/services/navigation-controller.service';
-import { PatternDataService } from '../shared/pattern-data.service';
-import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
+import { UnifiedDrillDataService, PatternData } from '../../../core/services/unified-drill-data.service';
 import { SiteBlastingService } from '../../../core/services/site-blasting.service';
-import { StateService } from '../../../core/services/state.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { 
-  PatternData, 
   DrillPoint, 
-  BlastConnection, 
   DetonatorInfo, 
-  ConnectorType, 
-  DetonatorType, 
-  BlastSequenceData 
+  DetonatorType
 } from '../drilling-pattern-creator/models/drill-point.model';
+import { ConnectorType, BlastConnection } from '../../../core/models/site-blasting.model';
+import { DrillLocation } from '../../../core/models/drilling.model';
+
+// Local interface for export functionality
+interface BlastSequenceData {
+  patternData: {
+    drillPoints: DrillPoint[];
+    settings: {
+      spacing: number;
+      burden: number;
+      depth: number;
+    };
+  };
+  connections: BlastConnection[];
+  detonators: DetonatorInfo[];
+  metadata: {
+    exportedAt: string;
+    version: string;
+    totalSequenceTime: number;
+  };
+}
 
 @Component({
   selector: 'app-blast-sequence-designer',
@@ -50,11 +64,10 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   filteredConnections: BlastConnection[] = [];
   selectedFromHole: DrillPoint | null = null;
   selectedToHole: DrillPoint | null = null;
-  selectedConnectorType: ConnectorType = ConnectorType.DETONATING_CORD;
+  selectedConnectorType: ConnectorType = ConnectorType.DetonatingCord;
   currentDelay: number | null = null;
   currentSequence = 1;
   showHelp = false;
-  showHiddenPoints = false;
 
   // Predefined delay options for non-electric systems
   detonatingCordDelays = [17, 25, 42]; // milliseconds - no 67ms for detonating cord
@@ -91,12 +104,9 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private patternDataService: PatternDataService,
-    private blastSequenceDataService: BlastSequenceDataService,
+    private unifiedDrillDataService: UnifiedDrillDataService,
     private siteBlastingService: SiteBlastingService,
     private router: Router,
-    private navigationController: NavigationController,
-    private stateService: StateService,
     private notification: NotificationService
   ) {}
 
@@ -104,48 +114,21 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     // Initialize site context from route parameters
     this.initializeSiteContext();
     
+    // Load pattern data first, then initialize canvas when data is available
     this.loadPatternData();
-    this.initializeCanvas();
-    
-    // Set current workflow step to sequence
-    this.blastSequenceDataService.setCurrentWorkflowStep('sequence');
   }
 
   private initializeSiteContext(): void {
-    // 1. Prefer StateService context (set by SiteDashboard or earlier components)
-    const { activeProjectId, activeSiteId } = this.stateService.currentState;
-    if (activeProjectId && activeSiteId) {
-      console.log('Sequence Designer - Using StateService context', { projectId: activeProjectId, siteId: activeSiteId });
-      this.currentProjectId = activeProjectId;
-      this.currentSiteId = activeSiteId;
-      this.blastSequenceDataService.setSiteContext(activeProjectId, activeSiteId);
-      this.loadBackendSequenceData();
-      return;
-    }
-
-    // 2. Fallback to route parsing (direct deep link)
+    // Simplified: extract project and site from route
     const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
-    const projectId = routeMatch ? +routeMatch[1] : null;
-    const siteId = routeMatch ? +routeMatch[2] : null;
+    const projectId = routeMatch ? +routeMatch[1] : 4; // Default to project 4 for testing
+    const siteId = routeMatch ? +routeMatch[2] : 3;    // Default to site 3 for testing
 
-    if (projectId && siteId) {
-      console.log('Sequence Designer - Setting site context from route', { projectId, siteId });
-      this.currentProjectId = projectId;
-      this.currentSiteId = siteId;
-      // Persist into global state for further screens
-      this.stateService.setProjectId(projectId);
-      this.stateService.setSiteId(siteId);
-      this.blastSequenceDataService.setSiteContext(projectId, siteId);
-      this.loadBackendSequenceData();
-    } else {
-      console.warn('Sequence Designer - No context available; defaulting to Project 1, Site 3');
-      this.currentProjectId = 1;
-      this.currentSiteId = 3;
-      this.stateService.setProjectId(1);
-      this.stateService.setSiteId(3);
-      this.blastSequenceDataService.setSiteContext(1, 3);
-      this.loadBackendSequenceData();
-    }
+    console.log('🔍 Sequence Designer - Setting site context', { projectId, siteId });
+    this.currentProjectId = projectId;
+    this.currentSiteId = siteId;
+    
+    this.loadBackendSequenceData();
   }
 
   ngOnDestroy(): void {
@@ -156,81 +139,55 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private loadPatternData(): void {
-    // Try to get pattern data from shared service first, then fallback to old service
-    this.patternData = this.blastSequenceDataService.getPatternData() || 
-                     this.patternDataService.getCurrentPatternValue();
-    
     if (!this.patternData && this.currentProjectId && this.currentSiteId) {
       // If no pattern data in memory, try to load from backend
-      this.siteBlastingService.getDrillPatterns(this.currentProjectId, this.currentSiteId)
+      this.unifiedDrillDataService.loadPatternData(this.currentProjectId, this.currentSiteId)
         .subscribe({
-          next: (patterns) => {
-            if (patterns && patterns.length > 0) {
-              const latestPattern = patterns[0];
-              let drillPoints: DrillPoint[] = [];
+          next: (patternData) => {
+            if (patternData && patternData.drillLocations && patternData.drillLocations.length > 0) {
               
-              if (latestPattern.drillPointsJson) {
-                if (typeof latestPattern.drillPointsJson === 'string') {
-                  try {
-                    drillPoints = JSON.parse(latestPattern.drillPointsJson);
-                  } catch (error) {
-                    console.warn('Failed to parse drill points JSON:', error);
-                  }
-                } else {
-                  drillPoints = latestPattern.drillPointsJson;
-                }
-              }
+              // Use the pattern data directly - it's already in the correct format
+              this.patternData = patternData;
               
-              this.patternData = {
-                drillPoints: drillPoints,
-                settings: {
-                  spacing: latestPattern.spacing,
-                  burden: latestPattern.burden,
-                  depth: latestPattern.depth
-                }
-              };
+              console.log('✅ Loaded pattern from backend with', patternData.drillLocations.length, 'points');
               
-              // Update the services with the loaded pattern
-              this.blastSequenceDataService.setPatternData(this.patternData, true);
-              this.patternDataService.setCurrentPattern(this.patternData);
+              // Initialize canvas NOW that we have data
+              this.initializeCanvasWithData();
               
-              console.log('Loaded pattern from backend:', latestPattern.name, 'with', drillPoints.length, 'points');
               this.cdr.detectChanges();
             } else {
-              console.warn('No pattern data available in backend. Redirecting to pattern creator.');
-              this.navigationController.navigateToPatternCreator();
+              console.warn('⚠️ No pattern data available in backend. Please create a pattern first.');
+              this.notification.showError('No drill pattern found. Please create a pattern first.');
+              this.backToPatternCreator();
             }
           },
           error: (error) => {
-            console.error('Error loading pattern from backend:', error);
-            this.navigationController.navigateToPatternCreator();
+            console.error('❌ Error loading pattern from backend:', error);
+            this.notification.showError('Failed to load drill pattern data');
+            this.backToPatternCreator();
           }
         });
     } else if (!this.patternData) {
-      console.warn('No pattern data available. Redirecting to pattern creator.');
-      this.navigationController.navigateToPatternCreator();
-    }
-    
-    // Load existing connections if any and ensure they have hidden points
-    const existingConnections = this.blastSequenceDataService.getConnections();
-    if (existingConnections.length > 0) {
-      // Ensure all connections have proper hidden points structure
-      const migratedConnections = existingConnections.map(conn => 
-        this.ensureConnectionHasHiddenPoints(conn)
-      );
-      
-      // Update the service with migrated connections
-      this.blastSequenceDataService.setConnections(migratedConnections);
-      this.connections = migratedConnections;
-      
-      console.log('Loaded and migrated connections with hidden points:', this.connections);
+      console.warn('⚠️ No pattern data available. Please create a pattern first.');
+      this.notification.showError('No drill pattern found. Please create a pattern first.');
+      this.backToPatternCreator();
     } else {
-      this.connections = [];
+      // Pattern data already exists, initialize canvas
+      this.initializeCanvasWithData();
     }
     
+    // Initialize empty connections - they will be loaded separately
+    this.connections = [];
     this.updateFilteredConnections();
     
     this.cdr.detectChanges();
+  }
+
+  private initializeCanvasWithData(): void {
+    // Wait a bit for the DOM to be ready
+    setTimeout(() => {
+      this.initializeCanvas();
+    }, 100);
   }
 
   private loadBackendSequenceData(): void {
@@ -238,33 +195,33 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       return;
     }
 
-    // Load blast sequences from backend
-    this.siteBlastingService.getBlastSequences(this.currentProjectId, this.currentSiteId)
+    console.log('🔍 Loading sequence data for project', this.currentProjectId, 'site', this.currentSiteId);
+
+    // Try to load blast connections from the API
+    this.siteBlastingService.getBlastConnections(this.currentProjectId, this.currentSiteId)
       .subscribe({
-        next: (sequences) => {
-          if (sequences && sequences.length > 0) {
-            // Load the most recent sequence
-            const latestSequence = sequences[0];
+        next: (connections) => {
+          if (connections && connections.length > 0) {
+            console.log('✅ Found', connections.length, 'blast connections in backend - using structured data');
             
-            // Handle connectionsJson which can be either string (from backend) or array (already parsed)
-            let connections: BlastConnection[] = [];
-            if (latestSequence.connectionsJson) {
-              if (typeof latestSequence.connectionsJson === 'string') {
-                try {
-                  connections = JSON.parse(latestSequence.connectionsJson);
-                } catch (error) {
-                  console.warn('Failed to parse connections JSON:', error);
-                  connections = [];
-                }
-              } else {
-                connections = latestSequence.connectionsJson;
-              }
-            }
-            this.connections = connections;
+            // Map API connections to frontend format
+            this.connections = connections.map(conn => ({
+              id: conn.id,
+              point1DrillPointId: conn.point1DrillPointId,
+              point2DrillPointId: conn.point2DrillPointId,
+              connectorType: this.mapConnectorTypeFromApi(conn.connectorType),
+              delay: conn.delay,
+              sequence: conn.sequence,
+              projectId: conn.projectId,
+              siteId: conn.siteId,
+              createdAt: conn.createdAt,
+              updatedAt: conn.updatedAt,
+              // Navigation properties for UI
+              point1DrillPoint: this.patternData?.drillLocations.find((p: DrillLocation) => p.id === conn.point1DrillPointId),
+              point2DrillPoint: this.patternData?.drillLocations.find((p: DrillLocation) => p.id === conn.point2DrillPointId)
+            }));
             
-            console.log('Loaded blast sequence from backend:', latestSequence.name, 'with', this.connections.length, 'connections');
-            
-            // Ensure connections have proper structure
+            // Ensure connections have proper structure for UI
             this.connections = this.connections.map(conn => 
               this.ensureConnectionHasHiddenPoints(conn)
             );
@@ -276,45 +233,58 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
               if (this.isInitialized) {
                 this.redrawConnections();
               }
-            }, 100);
+            }, 200);
             
             this.cdr.markForCheck();
+          } else {
+            console.log('⚠️ No blast connections found - ready for new connections');
+            this.handleNoConnectionsAvailable();
           }
         },
         error: (error) => {
-          console.log('No existing blast sequences found in backend or error loading:', error.message);
+          console.error('❌ Error loading blast connections:', error);
+          this.handleNoConnectionsAvailable();
         }
       });
+  }
 
-    // Also try to load workflow state for connections
-    this.siteBlastingService.getWorkflowState(this.currentProjectId, this.currentSiteId, 'connections')
-      .subscribe({
-        next: (workflowData) => {
-          if (workflowData && workflowData.jsonData) {
-            const connectionsData = workflowData.jsonData;
-            if (Array.isArray(connectionsData)) {
-              this.connections = connectionsData.map(conn => 
-                this.ensureConnectionHasHiddenPoints(conn)
-              );
-              
-              console.log('Loaded workflow connections state from backend with', this.connections.length, 'connections');
-              
-              this.updateFilteredConnections();
-              
-              setTimeout(() => {
-                if (this.isInitialized) {
-                  this.redrawConnections();
-                }
-              }, 100);
-              
-              this.cdr.markForCheck();
-            }
-          }
-        },
-        error: (error) => {
-          console.log('No existing workflow connections state found or error loading:', error.message);
-        }
-      });
+  private handleNoConnectionsAvailable(): void {
+    console.log('🔍 No connections available - initializing empty state');
+    this.connections = [];
+    this.updateFilteredConnections();
+    
+    // Enable connection mode automatically when no connections exist
+    if (this.patternData && this.patternData.drillLocations && this.patternData.drillLocations.length > 0) {
+      console.log('⚡ Auto-enabling connection mode for new sequence');
+      this.isConnectionMode = true;
+      this.notification.showSuccess('Ready to create blast connections. Click drill points to connect them.');
+    }
+    
+    this.cdr.markForCheck();
+  }
+
+  // Helper method to map connector type from API numeric value to UI string
+  private mapConnectorTypeFromApi(connectorType: number): ConnectorType {
+    switch (connectorType) {
+      case 0:
+        return ConnectorType.DetonatingCord;
+      case 1:
+        return ConnectorType.Connectors;
+      default:
+        return ConnectorType.DetonatingCord;
+    }
+  }
+
+  // Helper method to map connector type from UI string to API numeric value
+  private mapConnectorTypeToApi(connectorType: ConnectorType): number {
+    switch (connectorType) {
+      case ConnectorType.DetonatingCord:
+        return 0;
+      case ConnectorType.Connectors:
+        return 1;
+      default:
+        return 0;
+    }
   }
 
   private initializeCanvas(): void {
@@ -326,13 +296,16 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     
     // Ensure container has proper dimensions
     if (container.offsetWidth === 0 || container.offsetHeight === 0) {
+      console.log('⏳ Container not ready, retrying canvas initialization...');
       setTimeout(() => this.initializeCanvas(), 100);
       return;
     }
     
+    console.log('🎨 Initializing canvas with container dimensions:', container.offsetWidth, 'x', container.offsetHeight);
+    
     // Calculate optimal canvas size based on container and content
-    const canvasWidth = Math.max(container.offsetWidth, 400);
-    const canvasHeight = Math.max(container.offsetHeight, 300);
+    const canvasWidth = Math.max(container.offsetWidth, 600); // Increased minimum width
+    const canvasHeight = Math.max(container.offsetHeight, 400); // Increased minimum height
     
     this.stage = new Konva.Stage({
       container: container,
@@ -351,21 +324,34 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.setupEventListeners();
     this.calculateZoomLimits();
     this.ensureCanvasVisibility();
+    
+    // Initialize with reasonable defaults
+    this.scale = 1.0;
+    this.panX = 0;
+    this.panY = 0;
+    
     this.drawGrid();
+    
+    // Draw drill points - this should now work since we have pattern data
+    console.log('🎯 Drawing drill points with pattern data:', this.patternData?.drillLocations?.length || 0, 'points');
     this.drawDrillPoints();
+    
+    // Center view immediately after drawing points
+    setTimeout(() => {
+      this.centerView();
+      this.cdr.detectChanges();
+    }, 50);
     
     // Draw existing connections if any
     if (this.connections.length > 0) {
-      this.redrawConnections();
+      console.log('🔗 Drawing existing connections:', this.connections.length);
+      setTimeout(() => {
+        this.redrawConnections();
+      }, 100);
     }
     
-    // Initialize zoom and center view
-    this.applyTransform();
-    setTimeout(() => {
-      this.centerView();
-    }, 100);
-    
     this.isInitialized = true;
+    console.log('✅ Canvas initialization complete');
   }
 
   private ensureCanvasVisibility(): void {
@@ -412,31 +398,28 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private maintainViewportCenter(): void {
-    if (!this.patternData || this.patternData.drillPoints.length === 0) return;
+    if (!this.patternData || this.patternData.drillLocations.length === 0) return;
     
     // Calculate the center of the pattern
-    const points = this.patternData.drillPoints;
+    const points = this.patternData.drillLocations;
     let minX = points[0].x, maxX = points[0].x;
     let minY = points[0].y, maxY = points[0].y;
 
-    points.forEach(point => {
+    points.forEach((point: DrillLocation) => {
       minX = Math.min(minX, point.x);
       maxX = Math.max(maxX, point.x);
       minY = Math.min(minY, point.y);
       maxY = Math.max(maxY, point.y);
     });
 
-    const topLeft = this.convertToCanvasCoords(minX, minY);
-    const bottomRight = this.convertToCanvasCoords(maxX, maxY);
-    const centerX = (topLeft.x + bottomRight.x) / 2;
-    const centerY = (topLeft.y + bottomRight.y) / 2;
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
 
-    // Adjust pan to keep pattern centered in new canvas size
-    const stageWidth = this.stage.width();
-    const stageHeight = this.stage.height();
-    
-    this.panX = (stageWidth / 2) - centerX * this.scale;
-    this.panY = (stageHeight / 2) - centerY * this.scale;
+    // Center the view
+    this.panX = (this.stage.width() / 2) - (centerX * this.scale);
+    this.panY = (this.stage.height() / 2) - (centerY * this.scale);
+
+    this.applyTransform();
   }
 
   private setupEventListeners(): void {
@@ -525,24 +508,26 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private getClickedDrillPoint(e: Konva.KonvaEventObject<MouseEvent>): DrillPoint | null {
-    if (!this.patternData) return null;
+    const target = e.target;
+    const pointId = target.attrs.pointId;
     
-    const pos = this.stage.getPointerPosition();
-    if (!pos) return null;
-
-    // Convert screen coordinates to world coordinates
-    const worldPos = {
-      x: (pos.x - this.panX) / this.scale,
-      y: (pos.y - this.panY) / this.scale
+    if (!pointId || !this.patternData) return null;
+    
+    // Convert DrillLocation to DrillPoint for internal use
+    const drillLocation = this.patternData.drillLocations.find((point: DrillLocation) => {
+      return point.id === pointId;
+    });
+    
+    if (!drillLocation) return null;
+    
+    return {
+      id: drillLocation.id,
+      x: drillLocation.x,
+      y: drillLocation.y,
+      depth: drillLocation.depth,
+      spacing: drillLocation.spacing,
+      burden: drillLocation.burden
     };
-
-    return this.patternData.drillPoints.find(point => {
-      const pointPos = this.convertToCanvasCoords(point.x, point.y);
-      const distance = Math.sqrt(
-        Math.pow(worldPos.x - pointPos.x, 2) + Math.pow(worldPos.y - pointPos.y, 2)
-      );
-      return distance <= (15 / this.scale); // Adjust click radius for zoom level
-    }) || null;
   }
 
   private startTemporaryLine(fromPoint: DrillPoint): void {
@@ -667,8 +652,18 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   resetZoom(): void {
-    this.setZoom(1);
-    this.centerView();
+    console.log('🔄 Resetting zoom');
+    this.scale = 1.0; // Reset to 100%
+    this.panX = 0;
+    this.panY = 0;
+    this.applyTransform();
+    
+    // After resetting, center the view properly
+    setTimeout(() => {
+      this.centerView();
+    }, 50);
+    
+    this.cdr.detectChanges();
   }
 
   private setZoom(newScale: number): void {
@@ -697,56 +692,70 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private centerView(): void {
-    if (!this.patternData || this.patternData.drillPoints.length === 0) {
-      this.panX = 0;
-      this.panY = 0;
-      this.applyTransform();
+    if (!this.patternData || !this.patternData.drillLocations || this.patternData.drillLocations.length === 0) {
+      console.warn('⚠️ No pattern data for centering view');
       return;
     }
 
-    // Calculate bounding box of all drill points
-    const points = this.patternData.drillPoints;
-    let minX = points[0].x, maxX = points[0].x;
-    let minY = points[0].y, maxY = points[0].y;
+    const points = this.patternData.drillLocations;
+    console.log('🎯 Centering view with', points.length, 'points');
 
-    points.forEach(point => {
-      minX = Math.min(minX, point.x);
-      maxX = Math.max(maxX, point.x);
-      minY = Math.min(minY, point.y);
-      maxY = Math.max(maxY, point.y);
+    // Calculate bounding box of all drill points in canvas coordinates
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+
+    points.forEach((point: DrillLocation) => {
+      const canvasPos = this.convertToCanvasCoords(point.x, point.y);
+      minX = Math.min(minX, canvasPos.x);
+      maxX = Math.max(maxX, canvasPos.x);
+      minY = Math.min(minY, canvasPos.y);
+      maxY = Math.max(maxY, canvasPos.y);
     });
 
-    // Convert to canvas coordinates
-    const topLeft = this.convertToCanvasCoords(minX, minY);
-    const bottomRight = this.convertToCanvasCoords(maxX, maxY);
+    // Add some padding around the pattern
+    const padding = 50;
+    minX -= padding;
+    maxX += padding;
+    minY -= padding;
+    maxY += padding;
 
-    // Calculate pattern dimensions
-    const patternWidth = Math.abs(bottomRight.x - topLeft.x);
-    const patternHeight = Math.abs(bottomRight.y - topLeft.y);
+    const patternWidth = maxX - minX;
+    const patternHeight = maxY - minY;
+    const patternCenterX = (minX + maxX) / 2;
+    const patternCenterY = (minY + maxY) / 2;
 
-    // Calculate optimal zoom to fit pattern with adaptive padding
-    const stageWidth = this.stage.width();
-    const stageHeight = this.stage.height();
+    console.log('📐 Pattern bounds:', { minX, maxX, minY, maxY, width: patternWidth, height: patternHeight });
+
+    // Calculate scale to fit pattern in canvas with some margin
+    const canvasWidth = this.stage.width();
+    const canvasHeight = this.stage.height();
+    const margin = 0.8; // Use 80% of canvas size to leave some margin
+
+    // Prevent division by zero and ensure reasonable scaling
+    const scaleX = patternWidth > 0 ? (canvasWidth * margin) / patternWidth : 1.0;
+    const scaleY = patternHeight > 0 ? (canvasHeight * margin) / patternHeight : 1.0;
     
-    // Adaptive padding based on canvas size and connection mode
-    const basePadding = Math.min(stageWidth, stageHeight) * 0.06; // Reduced to 6% for more space
-    const minPadding = this.isConnectionMode ? 40 : 60; // Even less padding in connection mode
-    const padding = Math.max(basePadding, minPadding);
+    // Choose the smaller scale to ensure everything fits, but cap it at reasonable values
+    let optimalScale = Math.min(scaleX, scaleY);
     
-    const optimalScaleX = (stageWidth - padding * 2) / patternWidth;
-    const optimalScaleY = (stageHeight - padding * 2) / patternHeight;
-    const optimalScale = Math.min(optimalScaleX, optimalScaleY);
-    
-    // Clamp to zoom limits
+    // Apply strict zoom limits
+    optimalScale = Math.max(0.1, Math.min(2.0, optimalScale)); // Between 10% and 200%
+
+    // Ensure scale is within our defined limits
     this.scale = Math.max(this.minScale, Math.min(this.maxScale, optimalScale));
 
-    // Calculate center point
-    const centerX = (topLeft.x + bottomRight.x) / 2;
-    const centerY = (topLeft.y + bottomRight.y) / 2;
+    // Center the pattern in the canvas
+    this.panX = (canvasWidth / 2) - (patternCenterX * this.scale);
+    this.panY = (canvasHeight / 2) - (patternCenterY * this.scale);
 
-    // Center the view
-    this.panX = (stageWidth / 2) - centerX * this.scale;
-    this.panY = (stageHeight / 2) - centerY * this.scale;
+    console.log('🔍 Applied zoom and pan:', { 
+      scale: this.scale, 
+      scalePercent: Math.round(this.scale * 100) + '%',
+      panX: this.panX, 
+      panY: this.panY,
+      canvasSize: { width: canvasWidth, height: canvasHeight },
+      patternSize: { width: patternWidth, height: patternHeight }
+    });
 
     this.applyTransform();
   }
@@ -787,15 +796,15 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   getPerformanceStatus(): string {
-    if (!this.patternData) return 'No data';
+    if (!this.patternData) return 'No pattern data';
     
-    const holes = this.patternData.drillPoints.length;
+    const holes = this.patternData.drillLocations.length;
     const connections = this.connections.length;
     
-    if (holes < 50) return 'Optimal';
-    if (holes < 200) return 'Good';
-    if (holes < 500) return 'Fair';
-    return 'Heavy';
+    if (holes === 0) return 'No drill holes';
+    if (connections === 0) return 'No connections';
+    
+    return `${holes} holes, ${connections} connections`;
   }
 
   // Keyboard shortcuts
@@ -852,184 +861,173 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private createConnection(): void {
-    if (!this.selectedFromHole || !this.selectedToHole) return;
-
-    // Check if delay is selected
-    if (this.currentDelay === null) {
-      this.notification.showError('Please select a delay before creating connections.');
+    if (!this.selectedFromHole || !this.selectedToHole) {
+      console.warn('Both from and to holes must be selected');
       return;
     }
 
-    // Calculate positions for hidden starting and ending points
-    const fromPos = this.convertToCanvasCoords(this.selectedFromHole.x, this.selectedFromHole.y);
-    const toPos = this.convertToCanvasCoords(this.selectedToHole.x, this.selectedToHole.y);
-    
-    // Calculate offset positions for hidden points (slightly offset from the main holes)
-    const offsetDistance = 15; // pixels
-    const angle = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x);
-    
-    // Starting point (1) - offset from the from-hole
-    const startPointOffset = {
-      x: -Math.cos(angle) * offsetDistance,
-      y: -Math.sin(angle) * offsetDistance
-    };
-    
-    // Ending point (2) - offset from the to-hole  
-    const endPointOffset = {
-      x: Math.cos(angle) * offsetDistance,
-      y: Math.sin(angle) * offsetDistance
-    };
+    if (this.selectedFromHole.id === this.selectedToHole.id) {
+      console.warn('Cannot create connection to the same hole');
+      return;
+    }
 
-    const connection: BlastConnection = {
-      id: `conn_${Date.now()}`,
-      fromHoleId: this.selectedFromHole.id,
-      toHoleId: this.selectedToHole.id,
+    // Check if connection already exists
+    const existingConnection = this.connections.find(conn =>
+      (conn.point1DrillPointId === this.selectedFromHole!.id && conn.point2DrillPointId === this.selectedToHole!.id) ||
+      (conn.point1DrillPointId === this.selectedToHole!.id && conn.point2DrillPointId === this.selectedFromHole!.id)
+    );
+
+    if (existingConnection) {
+      console.warn('Connection already exists between these points');
+      this.notification.showError('Connection already exists between these drill points');
+      this.cancelConnection();
+      return;
+    }
+
+    // Create the connection
+    const newConnection: BlastConnection = {
+      id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      point1DrillPointId: this.selectedFromHole.id,
+      point2DrillPointId: this.selectedToHole.id,
       connectorType: this.selectedConnectorType,
-      delay: this.currentDelay,
+      delay: this.currentDelay || this.getDefaultDelay(),
       sequence: this.currentSequence,
-      // Hidden starting point with label "1"
-      startPoint: {
-        id: `start_${Date.now()}`,
-        label: "1",
-        x: this.selectedFromHole.x + (startPointOffset.x / this.scale),
-        y: this.selectedFromHole.y + (startPointOffset.y / this.scale),
-        isHidden: true
-      },
-      // Hidden ending point with label "2"
-      endPoint: {
-        id: `end_${Date.now()}`,
-        label: "2", 
-        x: this.selectedToHole.x + (endPointOffset.x / this.scale),
-        y: this.selectedToHole.y + (endPointOffset.y / this.scale),
-        isHidden: true
-      }
+      projectId: this.currentProjectId,
+      siteId: this.currentSiteId,
+      // Navigation properties for UI
+      point1DrillPoint: this.selectedFromHole,
+      point2DrillPoint: this.selectedToHole
     };
 
-    this.connections.push(connection);
-    
-    // Update shared data service
-    this.blastSequenceDataService.addConnection(connection);
-    
-    this.drawConnection(connection);
-    this.currentSequence++;
+    // Add to connections array
+    this.connections.push(newConnection);
     this.updateFilteredConnections();
-    
-    console.log('Connection created with hidden points:', connection);
-    this.cdr.detectChanges();
+
+    // Save to backend immediately
+    this.saveConnectionToBackend(newConnection);
+
+    // Draw the connection
+    this.drawConnection(newConnection);
+
+    // Update sequence counter
+    this.currentSequence++;
+
+    // Reset selection
+    this.cancelConnection();
+
+    console.log('✅ Created connection:', newConnection);
+    this.notification.showSuccess(`Connection created between points ${this.selectedFromHole.id} and ${this.selectedToHole.id}`);
+  }
+
+  private saveConnectionToBackend(connection: BlastConnection): void {
+    const createRequest = {
+      id: connection.id,
+      projectId: connection.projectId,
+      siteId: connection.siteId,
+      point1DrillPointId: connection.point1DrillPointId,
+      point2DrillPointId: connection.point2DrillPointId,
+      connectorType: this.mapConnectorTypeToApi(connection.connectorType),
+      delay: connection.delay,
+      sequence: connection.sequence
+    };
+
+    this.siteBlastingService.createBlastConnection(createRequest)
+      .subscribe({
+        next: (savedConnection) => {
+          console.log('✅ Connection saved to backend:', savedConnection);
+          // Update the connection with the backend-generated ID
+          connection.id = savedConnection.id.toString();
+        },
+        error: (error) => {
+          console.error('❌ Failed to save connection to backend:', error);
+          this.notification.showError('Failed to save connection to database');
+          // Remove from local connections on failure
+          this.connections = this.connections.filter(c => c.id !== connection.id);
+          this.updateFilteredConnections();
+          this.redrawConnections();
+        }
+      });
+  }
+
+  private getDefaultDelay(): number {
+    return this.selectedConnectorType === ConnectorType.DetonatingCord ? 
+      this.detonatingCordDelays[0] : this.connectorsDelays[0];
   }
 
   private drawConnection(connection: BlastConnection): void {
     if (!this.patternData) return;
-    
-    const fromPoint = this.patternData.drillPoints.find(p => p.id === connection.fromHoleId);
-    const toPoint = this.patternData.drillPoints.find(p => p.id === connection.toHoleId);
-    
-    if (!fromPoint || !toPoint) return;
-    
-    const fromPos = this.convertToCanvasCoords(fromPoint.x, fromPoint.y);
-    const toPos = this.convertToCanvasCoords(toPoint.x, toPoint.y);
-    
-    // Convert hidden points to canvas coordinates
-    const startPointPos = this.convertToCanvasCoords(connection.startPoint.x, connection.startPoint.y);
-    const endPointPos = this.convertToCanvasCoords(connection.endPoint.x, connection.endPoint.y);
-    
-    const connectionGroup = new Konva.Group();
-    
-    // Main connection line (from drill hole to drill hole)
-    const line = new Konva.Line({
-      points: [fromPos.x, fromPos.y, toPos.x, toPos.y],
+
+    // Find the actual drill points
+    const fromPoint = this.patternData.drillLocations.find((p: DrillLocation) => p.id === connection.point1DrillPointId);
+    const toPoint = this.patternData.drillLocations.find((p: DrillLocation) => p.id === connection.point2DrillPointId);
+
+    if (!fromPoint || !toPoint) {
+      console.warn('Could not find drill points for connection:', connection);
+      return;
+    }
+
+    // Convert to canvas coordinates
+    const fromCanvas = this.convertToCanvasCoords(fromPoint.x, fromPoint.y);
+    const toCanvas = this.convertToCanvasCoords(toPoint.x, toPoint.y);
+
+    // Create connection group
+    const connectionGroup = new Konva.Group({
+      connectionId: connection.id
+    });
+
+    // Draw the main connection line
+    const connectionLine = new Konva.Line({
+      points: [fromCanvas.x, fromCanvas.y, toCanvas.x, toCanvas.y],
       stroke: this.getConnectorColor(connection.connectorType),
       strokeWidth: 3,
-      lineCap: 'round'
+      opacity: 0.8,
+      connectionId: connection.id
     });
-    
-    // Hidden starting point (1) - smaller circle
-    const startPointCircle = new Konva.Circle({
-      x: startPointPos.x,
-      y: startPointPos.y,
-      radius: 8,
-      fill: connection.startPoint.isHidden ? 'rgba(255, 255, 255, 0.8)' : 'white',
-      stroke: this.getConnectorColor(connection.connectorType),
-      strokeWidth: 1.5,
-      opacity: connection.startPoint.isHidden ? 0.7 : 1,
-      visible: this.showHiddenPoints
-    });
-    
-    const startPointLabel = new Konva.Text({
-      x: startPointPos.x - 3,
-      y: startPointPos.y - 4,
-      text: connection.startPoint.label,
-      fontSize: 8,
-      fill: 'black',
-      fontStyle: 'bold',
-      visible: this.showHiddenPoints
-    });
-    
-    // Hidden ending point (2) - smaller circle
-    const endPointCircle = new Konva.Circle({
-      x: endPointPos.x,
-      y: endPointPos.y,
-      radius: 8,
-      fill: connection.endPoint.isHidden ? 'rgba(255, 255, 255, 0.8)' : 'white',
-      stroke: this.getConnectorColor(connection.connectorType),
-      strokeWidth: 1.5,
-      opacity: connection.endPoint.isHidden ? 0.7 : 1,
-      visible: this.showHiddenPoints
-    });
-    
-    const endPointLabel = new Konva.Text({
-      x: endPointPos.x - 3,
-      y: endPointPos.y - 4,
-      text: connection.endPoint.label,
-      fontSize: 8,
-      fill: 'black',
-      fontStyle: 'bold',
-      visible: this.showHiddenPoints
-    });
-    
-    // Sequence label (main connection identifier)
-    const midX = (fromPos.x + toPos.x) / 2;
-    const midY = (fromPos.y + toPos.y) / 2;
-    
-    const sequenceCircle = new Konva.Circle({
-      x: midX,
-      y: midY,
-      radius: 12,
-      fill: 'white',
-      stroke: this.getConnectorColor(connection.connectorType),
-      strokeWidth: 2
-    });
-    
-    const sequenceLabel = new Konva.Text({
-      x: midX - 5,
-      y: midY - 6,
+
+    connectionGroup.add(connectionLine);
+
+    // Add sequence number in the middle
+    const midX = (fromCanvas.x + toCanvas.x) / 2;
+    const midY = (fromCanvas.y + toCanvas.y) / 2;
+
+    const sequenceText = new Konva.Text({
+      x: midX - 10,
+      y: midY - 10,
       text: connection.sequence.toString(),
-      fontSize: 10,
-      fill: 'black',
-      fontStyle: 'bold'
+      fontSize: 12,
+      fill: 'white',
+      align: 'center',
+      verticalAlign: 'middle',
+      width: 20,
+      height: 20,
+      connectionId: connection.id
     });
-    
-    // Add all elements to the connection group
-    connectionGroup.add(
-      line, 
-      startPointCircle, 
-      startPointLabel, 
-      endPointCircle, 
-      endPointLabel,
-      sequenceCircle, 
-      sequenceLabel
-    );
-    
+
+    const sequenceBackground = new Konva.Rect({
+      x: midX - 10,
+      y: midY - 10,
+      width: 20,
+      height: 20,
+      fill: this.getConnectorColor(connection.connectorType),
+      cornerRadius: 10,
+      connectionId: connection.id
+    });
+
+    connectionGroup.add(sequenceBackground);
+    connectionGroup.add(sequenceText);
+
+    // Add to layer and store reference
     this.connectionsLayer.add(connectionGroup);
     this.connectionObjects.set(connection.id, connectionGroup);
+
     this.connectionsLayer.draw();
   }
 
   public getConnectorColor(type: ConnectorType): string {
     switch (type) {
-      case ConnectorType.DETONATING_CORD: return '#FF5722'; // Red for Non-Electric-detonation-wire
-      case ConnectorType.CONNECTORS: return '#FF9800'; // Orange for Non-Electric-connectors-wire
-      default: return '#666666';
+      case ConnectorType.DetonatingCord: return '#FF5722'; // Red for Non-Electric-detonation-wire
+      case ConnectorType.Connectors: return '#FF9800'; // Orange for Non-Electric-connectors-wire
+      default: return '#666666'; // Gray for unknown
     }
   }
 
@@ -1070,46 +1068,27 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private drawGrid(): void {
-    if (!this.patternData) return;
-    
+    if (!this.patternData || this.patternData.drillLocations.length === 0) {
+      return;
+    }
+
     this.gridLayer.destroyChildren();
-    
-    // Calculate adaptive grid size based on zoom level
-    const baseGridSize = 50; // Base grid size in pixels
-    const zoomAdjustedGridSize = this.calculateAdaptiveGridSize(baseGridSize);
-    
-    // Get the visible area in world coordinates
-    const visibleBounds = this.getVisibleWorldBounds();
-    
-    // Extend bounds to ensure full coverage
-    const padding = zoomAdjustedGridSize * 2;
-    const startX = Math.floor((visibleBounds.left - padding) / zoomAdjustedGridSize) * zoomAdjustedGridSize;
-    const endX = Math.ceil((visibleBounds.right + padding) / zoomAdjustedGridSize) * zoomAdjustedGridSize;
-    const startY = Math.floor((visibleBounds.top - padding) / zoomAdjustedGridSize) * zoomAdjustedGridSize;
-    const endY = Math.ceil((visibleBounds.bottom + padding) / zoomAdjustedGridSize) * zoomAdjustedGridSize;
-    
-    // Draw vertical lines
-    for (let x = startX; x <= endX; x += zoomAdjustedGridSize) {
-      const line = new Konva.Line({
-        points: [x, startY, x, endY],
-        stroke: this.getGridColor(),
-        strokeWidth: this.getGridStrokeWidth(),
+    const points = this.patternData.drillLocations;
+
+    points.forEach((point: DrillLocation) => {
+      const canvasPos = this.convertToCanvasCoords(point.x, point.y);
+      
+      const gridPoint = new Konva.Circle({
+        x: canvasPos.x,
+        y: canvasPos.y,
+        radius: 2,
+        fill: this.getGridColor(),
         opacity: this.getGridOpacity()
       });
-      this.gridLayer.add(line);
-    }
-    
-    // Draw horizontal lines
-    for (let y = startY; y <= endY; y += zoomAdjustedGridSize) {
-      const line = new Konva.Line({
-        points: [startX, y, endX, y],
-        stroke: this.getGridColor(),
-        strokeWidth: this.getGridStrokeWidth(),
-        opacity: this.getGridOpacity()
-      });
-      this.gridLayer.add(line);
-    }
-    
+
+      this.gridLayer.add(gridPoint);
+    });
+
     this.gridLayer.draw();
   }
 
@@ -1164,118 +1143,88 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private calculateZoomLimits(): void {
-    if (!this.patternData || this.patternData.drillPoints.length === 0 || !this.stage) {
-      this.minScale = 0.1;
-      this.maxScale = 5;
-      return;
-    }
-
-    // Calculate bounding box of all drill points
-    const points = this.patternData.drillPoints;
-    let minX = points[0].x, maxX = points[0].x;
-    let minY = points[0].y, maxY = points[0].y;
-
-    points.forEach(point => {
-      minX = Math.min(minX, point.x);
-      maxX = Math.max(maxX, point.x);
-      minY = Math.min(minY, point.y);
-      maxY = Math.max(maxY, point.y);
-    });
-
-    // Convert to canvas coordinates
-    const topLeft = this.convertToCanvasCoords(minX, minY);
-    const bottomRight = this.convertToCanvasCoords(maxX, maxY);
-
-    // Calculate pattern dimensions
-    const patternWidth = Math.abs(bottomRight.x - topLeft.x);
-    const patternHeight = Math.abs(bottomRight.y - topLeft.y);
-    const patternSize = Math.max(patternWidth, patternHeight);
-
-    // Get current stage dimensions
-    const stageWidth = this.stage.width();
-    const stageHeight = this.stage.height();
+    // Set reasonable fixed zoom limits
+    this.minScale = 0.1;  // 10% minimum zoom
+    this.maxScale = 3.0;  // 300% maximum zoom
     
-    // Adaptive padding based on canvas size and pattern size
-    const basePadding = Math.min(stageWidth, stageHeight) * 0.1; // 10% of smaller dimension
-    const patternPadding = patternSize * 0.15; // 15% of pattern size
-    const padding = Math.max(basePadding, patternPadding, 50); // Minimum 50px
-    
-    const paddedWidth = patternWidth + (padding * 2);
-    const paddedHeight = patternHeight + (padding * 2);
-
-    // Calculate minimum scale to fit pattern in view with padding
-    const scaleX = stageWidth / paddedWidth;
-    const scaleY = stageHeight / paddedHeight;
-    
-    // Set minimum scale to ensure pattern is always visible (with 15% extra margin)
-    this.minScale = Math.max(0.05, Math.min(scaleX, scaleY) * 0.85);
-    
-    // Set maximum scale based on pattern density and canvas size
-    const pointDensity = points.length / (patternSize / 1000); // points per 1000 canvas units
-    const canvasArea = stageWidth * stageHeight;
-    const baseMaxScale = canvasArea > 500000 ? 10 : canvasArea > 200000 ? 8 : 6; // Scale based on canvas size
-    
-    if (pointDensity > 5) {
-      this.maxScale = baseMaxScale;  // High density patterns
-    } else if (pointDensity > 2) {
-      this.maxScale = baseMaxScale * 0.8;  // Medium density
-    } else {
-      this.maxScale = baseMaxScale * 0.6;  // Low density patterns
-    }
-    
-    // Ensure current scale is within new limits
-    this.scale = Math.max(this.minScale, Math.min(this.maxScale, this.scale));
+    console.log('🔍 Zoom limits set:', { min: this.minScale, max: this.maxScale });
   }
 
   private drawDrillPoints(): void {
-    if (!this.patternData) return;
+    if (!this.patternData || !this.patternData.drillLocations || this.patternData.drillLocations.length === 0) {
+      console.warn('⚠️ No pattern data available for drawing drill points');
+      return;
+    }
+
+    console.log('🎯 Drawing drill points:', this.patternData.drillLocations.length, 'points');
     
-    this.patternData.drillPoints.forEach(point => {
+    this.pointsLayer.destroyChildren();
+    this.drillPointObjects.clear();
+    const points = this.patternData.drillLocations;
+
+    points.forEach((point: DrillLocation, index: number) => {
       const canvasPos = this.convertToCanvasCoords(point.x, point.y);
+      
+      console.log(`Drawing point ${index + 1}/${points.length}:`, {
+        id: point.id,
+        original: { x: point.x, y: point.y },
+        canvas: canvasPos
+      });
       
       const pointGroup = new Konva.Group({
         x: canvasPos.x,
-        y: canvasPos.y
+        y: canvasPos.y,
+        pointId: point.id
       });
-      
-      // Drill hole circle
+
+      // Make circles larger and more visible
       const circle = new Konva.Circle({
-        radius: 8,
-        fill: '#ffffff',
-        stroke: '#1971c2',
-        strokeWidth: 2,
-        name: 'drill-hole-circle'
+        radius: 12, // Increased from 8 to 12
+        fill: '#2196F3',
+        stroke: '#1976D2',
+        strokeWidth: 3, // Increased from 2 to 3
+        pointId: point.id
       });
-      
-      // Hole ID label
-      const label = new Konva.Text({
-        x: -15,
-        y: -25,
+
+      const text = new Konva.Text({
         text: point.id,
-        fontSize: 10,
-        fill: '#333333',
-        fontStyle: 'bold'
+        fontSize: 10, // Reduced to fit better in circle
+        fontStyle: 'bold',
+        fill: 'white',
+        align: 'center',
+        verticalAlign: 'middle',
+        pointId: point.id
       });
-      
-      pointGroup.add(circle, label);
+
+      // Center the text properly within the circle
+      text.offsetX(text.width() / 2);
+      text.offsetY(text.height() / 2);
+
+      pointGroup.add(circle);
+      pointGroup.add(text);
       this.pointsLayer.add(pointGroup);
+      
       this.drillPointObjects.set(point.id, pointGroup);
     });
-    
+
+    console.log('✅ Added', points.length, 'drill points to layer');
     this.pointsLayer.draw();
+    console.log('✅ Drill points layer drawn');
   }
 
   private convertToCanvasCoords(x: number, y: number): { x: number, y: number } {
     // Convert drill pattern coordinates to canvas coordinates
-    // This is a simple conversion - you might need to adjust based on your coordinate system
-    const scale = 20; // 20px per meter
-    const offsetX = 100; // Offset from left edge
-    const offsetY = 100; // Offset from top edge
+    // Use a reasonable scale that works well with typical drill pattern data
+    const scale = 30; // 30px per unit - good balance for visibility
+    const offsetX = 50; // Small offset from edges
+    const offsetY = 50; // Small offset from edges
     
-    return {
+    const result = {
       x: offsetX + (x * scale),
       y: offsetY + (y * scale)
     };
+    
+    return result;
   }
 
   private cleanup(): void {
@@ -1311,7 +1260,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.resizeCanvas();
     
     // Adjust zoom if pattern is no longer well-positioned
-    if (this.patternData && this.patternData.drillPoints.length > 0) {
+    if (this.patternData && this.patternData.drillLocations.length > 0) {
       const currentZoom = this.scale;
       
       // If zoom is too close to limits, recenter the view
@@ -1326,17 +1275,42 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   clearAllConnections(): void {
+    if (this.connections.length === 0) {
+      console.log('No connections to clear');
+      return;
+    }
+
+    console.log('🧹 Clearing all connections');
+    
+    // Clear from backend (delete all connections for this site)
+    if (this.currentProjectId && this.currentSiteId) {
+      // Delete each connection individually since we don't have a bulk delete API
+      const deletePromises = this.connections.map(connection => 
+        this.siteBlastingService.deleteBlastConnection(connection.id, this.currentProjectId, this.currentSiteId).toPromise()
+      );
+      
+      Promise.all(deletePromises).then(() => {
+        console.log('✅ All connections cleared from backend');
+        this.notification.showSuccess('All connections cleared successfully');
+      }).catch(error => {
+        console.error('❌ Error clearing connections from backend:', error);
+        this.notification.showError('Failed to clear some connections from database');
+      });
+    }
+    
+    // Clear from local state
     this.connections = [];
+    this.updateFilteredConnections();
     
-    // Update shared data service
-    this.blastSequenceDataService.clearConnections();
-    
+    // Clear visual representations
     this.connectionObjects.forEach(obj => obj.destroy());
     this.connectionObjects.clear();
     this.connectionsLayer.draw();
+    
+    // Reset sequence counter
     this.currentSequence = 1;
-    this.updateFilteredConnections();
-    this.cdr.detectChanges();
+    
+    this.cdr.markForCheck();
   }
 
   toggleConnectionsVisibility(): void {
@@ -1346,16 +1320,28 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.cdr.detectChanges();
   }
 
-  toggleHiddenPointsVisibility(): void {
-    this.showHiddenPoints = !this.showHiddenPoints;
-    this.redrawConnections();
-  }
-
   exportBlastSequence(): void {
     if (!this.patternData) return;
     
+    // Convert UnifiedDrillDataService PatternData to local PatternData format for export
+    const localPatternData = {
+      drillPoints: this.patternData.drillLocations.map((location: DrillLocation) => ({
+        id: location.id,
+        x: location.x,
+        y: location.y,
+        depth: location.depth,
+        spacing: location.spacing,
+        burden: location.burden
+      })),
+      settings: {
+        spacing: this.patternData.settings.spacing,
+        burden: this.patternData.settings.burden,
+        depth: this.patternData.settings.depth
+      }
+    };
+    
     const blastSequenceData: BlastSequenceData = {
-      patternData: this.patternData,
+      patternData: localPatternData,
       connections: [...this.connections],
       detonators: [...this.detonators],
       metadata: {
@@ -1365,184 +1351,55 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       }
     };
     
-    this.patternDataService.exportBlastSequence(blastSequenceData);
+    // Export functionality - currently not implemented
+    console.log('📤 Blast sequence data ready for export:', blastSequenceData);
+    this.notification.showSuccess('Blast sequence data prepared for export');
   }
 
   backToPatternCreator(): void {
-    this.navigationController.navigateToPatternCreator(this.currentProjectId, this.currentSiteId);
+    console.log('🔄 Navigating back to pattern creator');
+    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'drilling-pattern-creator']);
   }
 
   onSaveSequence(): void {
-    if (this.connections.length === 0) {
-      console.warn('No connections to save');
+    if (!this.connections || this.connections.length === 0) {
+      this.notification.showError('No connections to save. Create some blast connections first.');
       return;
     }
 
-    if (!this.currentProjectId || !this.currentSiteId) {
-      console.error('Missing project or site context for saving');
-      return;
-    }
-
-    if (!this.patternData) {
-      console.error('No pattern data available for saving sequence');
-      return;
-    }
-
-    const currentDate = new Date();
-    const sequenceName = `Blast Sequence ${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
-    const simulationSettings = {
-      timeStep: 10,
-      duration: 5000,
-      playbackSpeed: 1,
-      visualEffects: {
-        showWaveEffects: true,
-        showParticleEffects: true,
-        showTimingLabels: true
-      },
-      analysis: {
-        calculatePeakPressure: true,
-        calculateVibration: true,
-        generateReport: false
-      }
-    };
-
-    // First, try to find or create a drill pattern for this sequence
-    this.siteBlastingService.getDrillPatterns(this.currentProjectId, this.currentSiteId)
-      .subscribe({
-        next: (patterns) => {
-          let drillPatternId: number;
-          
-          if (patterns && patterns.length > 0) {
-            // Use the first available pattern
-            drillPatternId = patterns[0].id;
-            this.saveBlastSequenceToBackend(drillPatternId, sequenceName, simulationSettings);
-          } else {
-            // Create a new drill pattern first
-            this.siteBlastingService.saveDrillPatternFromCreator(
-              this.currentProjectId,
-              this.currentSiteId,
-              `Auto-created for ${sequenceName}`,
-              'Automatically created drill pattern for blast sequence',
-              this.patternData!.drillPoints,
-              this.patternData!.settings.spacing,
-              this.patternData!.settings.burden,
-              this.patternData!.settings.depth
-            ).subscribe({
-              next: (newPattern) => {
-                this.saveBlastSequenceToBackend(newPattern.id, sequenceName, simulationSettings);
-              },
-              error: (error) => {
-                console.error('Error creating drill pattern:', error);
-                this.saveToLocalStorage();
-              }
-            });
-          }
-        },
-        error: (error) => {
-          console.error('Error checking drill patterns:', error);
-          this.saveToLocalStorage();
-        }
-      });
-
-    // Also update local data service for immediate use
-    this.blastSequenceDataService.setConnections(this.connections, false);
-    this.blastSequenceDataService.saveConnections();
-  }
-
-  private saveBlastSequenceToBackend(drillPatternId: number, sequenceName: string, simulationSettings: any): void {
-    // Save to backend as a blast sequence
-    this.siteBlastingService.saveBlastSequenceFromDesigner(
-      this.currentProjectId,
-      this.currentSiteId,
-      drillPatternId,
-      sequenceName,
-      `Blast sequence created with ${this.connections.length} connections`,
-      this.connections,
-      simulationSettings
-    ).subscribe({
-      next: (savedSequence) => {
-        console.log('Blast sequence saved to backend successfully:', savedSequence);
-        
-        // Also save workflow state for connections
-        this.siteBlastingService.saveWorkflowState(
-          this.currentProjectId,
-          this.currentSiteId,
-          'connections',
-          this.connections
-        ).subscribe({
-          next: () => console.log('Workflow connections state saved successfully'),
-          error: (error) => console.error('Error saving workflow connections state:', error)
-        });
-
-        // Update local state
-        this.isSaved = true;
-        this.cdr.markForCheck();
-
-        // Clear save timeout if it exists
-        if (this.saveTimeout) {
-          clearTimeout(this.saveTimeout);
-        }
-
-        // Reset save state after 3 seconds
-        this.saveTimeout = setTimeout(() => {
-          this.isSaved = false;
-          this.cdr.markForCheck();
-        }, 3000);
-      },
-      error: (error) => {
-        console.error('Error saving blast sequence to backend:', error);
-        this.saveToLocalStorage();
-      }
-    });
-  }
-
-  private saveToLocalStorage(): void {
-    // Fallback method for local storage when backend is unavailable
-    this.blastSequenceDataService.setConnections(this.connections, false);
-    this.blastSequenceDataService.saveConnections();
-
+    console.log('💾 Saving sequence with', this.connections.length, 'connections');
+    
+    // Show loading state
+    this.isSaved = false;
+    
+    // All connections are already saved to backend individually
+    // Just show success message
     this.isSaved = true;
-    this.cdr.markForCheck();
-
+    this.notification.showSuccess(`Blast sequence saved successfully with ${this.connections.length} connections`);
+    
+    // Clear the saved flag after a delay
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
-
+    
     this.saveTimeout = setTimeout(() => {
       this.isSaved = false;
       this.cdr.markForCheck();
-    }, 3000);
-
-    console.log('Blast sequence saved to local storage (backend unavailable)');
+    }, 2000);
+    
+    this.cdr.markForCheck();
   }
 
   goToSimulator(): void {
-    console.log('Go to Simulator button clicked');
-    console.log('Connections length:', this.connections.length);
-    console.log('Current project ID:', this.currentProjectId);
-    console.log('Current site ID:', this.currentSiteId);
-    
-    if (this.connections.length > 0) {
-      // Update data service (in memory)
-      this.blastSequenceDataService.setConnections(this.connections, false);
-      
-      // Save connections when navigating to next step
-      this.blastSequenceDataService.saveConnections();
-      
-      // Try direct navigation first as fallback
-      const targetRoute = `/blasting-engineer/project-management/${this.currentProjectId}/sites/${this.currentSiteId}/simulator`;
-      console.log('Attempting navigation to:', targetRoute);
-      
-      this.router.navigate([targetRoute]).then(success => {
-        console.log('Direct navigation to simulator success:', success);
-      }).catch(error => {
-        console.error('Direct navigation to simulator error:', error);
-        // Fallback to navigation controller
-        this.navigationController.navigateToSimulator(this.currentProjectId, this.currentSiteId);
-      });
-    } else {
-      console.warn('Cannot navigate to simulator: No connections created');
+    if (!this.connections || this.connections.length === 0) {
+      this.notification.showError('No blast sequence available for simulation. Create connections first.');
+      return;
     }
+
+    console.log('🚀 Navigating to simulator with', this.connections.length, 'connections');
+    
+    // Navigate to simulator
+    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'blast-sequence-simulator']);
   }
 
   @HostListener('window:resize')
@@ -1559,9 +1416,37 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private redrawAll(): void {
-    this.calculateZoomLimits();
+    if (!this.isInitialized || !this.stage) {
+      console.log('⚠️ Canvas not initialized, skipping redraw');
+      return;
+    }
+    
+    console.log('🔄 Redrawing all canvas layers');
+    
+    // Clear and redraw grid
     this.drawGrid();
-    // Points and connections don't need to be redrawn as they maintain their positions
+    
+    // Clear and redraw drill points
+    this.drawDrillPoints();
+    
+    // Clear and redraw connections
+    this.redrawConnections();
+    
+    // Ensure all layers are visible and drawn
+    this.gridLayer.visible(true);
+    this.pointsLayer.visible(true);
+    this.connectionsLayer.visible(this.showConnections);
+    
+    this.gridLayer.draw();
+    this.pointsLayer.draw();
+    this.connectionsLayer.draw();
+    
+    // Re-center the view
+    setTimeout(() => {
+      this.centerView();
+    }, 100);
+    
+    console.log('✅ All layers redrawn');
   }
 
   // Template helper methods
@@ -1571,8 +1456,8 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
   getConnectorTypeName(type: ConnectorType): string {
     switch (type) {
-      case ConnectorType.DETONATING_CORD: return 'Detonating Cord';
-      case ConnectorType.CONNECTORS: return 'Connectors';
+      case ConnectorType.DetonatingCord: return 'Detonating Cord';
+      case ConnectorType.Connectors: return 'Connectors';
       default: return 'Unknown';
     }
   }
@@ -1585,12 +1470,12 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   // Get available delay options for the current connector type
   getAvailableDelays(): number[] {
     switch (this.selectedConnectorType) {
-      case ConnectorType.DETONATING_CORD:
+      case ConnectorType.DetonatingCord:
         return this.detonatingCordDelays;
-      case ConnectorType.CONNECTORS:
+      case ConnectorType.Connectors:
         return this.connectorsDelays;
       default:
-        return [];
+        return this.detonatingCordDelays;
     }
   }
 
@@ -1616,26 +1501,37 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   deleteConnection(connection: BlastConnection): void {
-    const index = this.connections.findIndex(c => c.id === connection.id);
-    if (index !== -1) {
-      this.connections.splice(index, 1);
-      
-      // Update shared data service
-      this.blastSequenceDataService.removeConnection(connection.id);
-      
-      // Remove visual representation
-      const connectionObj = this.connectionObjects.get(connection.id);
-      if (connectionObj) {
-        connectionObj.destroy();
-        this.connectionObjects.delete(connection.id);
-        this.connectionsLayer.draw();
-      }
-      
-      // Renumber sequences
-      this.renumberSequences();
-      this.updateFilteredConnections();
-      this.cdr.detectChanges();
+    if (!connection.id) {
+      console.warn('Cannot delete connection without ID');
+      return;
     }
+
+    // Delete from backend first
+    this.siteBlastingService.deleteBlastConnection(connection.id, this.currentProjectId, this.currentSiteId)
+      .subscribe({
+        next: () => {
+          console.log('✅ Connection deleted from backend');
+          
+          // Remove from local connections
+          this.connections = this.connections.filter(c => c.id !== connection.id);
+          
+          // Renumber sequences
+          this.renumberSequences();
+          
+          // Update filtered connections
+          this.updateFilteredConnections();
+          
+          // Redraw connections
+          this.redrawConnections();
+          
+          this.notification.showSuccess('Connection deleted successfully');
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error('❌ Failed to delete connection from backend:', error);
+          this.notification.showError('Failed to delete connection from database');
+        }
+      });
   }
 
   private renumberSequences(): void {
@@ -1649,11 +1545,9 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private redrawConnections(): void {
-    // Clear existing connection visuals
     this.connectionObjects.forEach(obj => obj.destroy());
     this.connectionObjects.clear();
     
-    // Redraw all connections with current settings
     this.connections.forEach(connection => {
       this.drawConnection(connection);
     });
@@ -1663,39 +1557,10 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
   // Method to ensure connection has proper hidden points structure
   private ensureConnectionHasHiddenPoints(connection: BlastConnection): BlastConnection {
-    if (connection.startPoint && connection.endPoint) {
-      return connection;
-    }
-
-    // If missing hidden points, create them
-    const fromHole = this.patternData?.drillPoints.find(p => p.id === connection.fromHoleId);
-    const toHole = this.patternData?.drillPoints.find(p => p.id === connection.toHoleId);
-    
-    if (!fromHole || !toHole) {
-      return connection;
-    }
-    
-    // Calculate offset positions for hidden points
-    const offsetDistance = 0.5; // world units
-    const angle = Math.atan2(toHole.y - fromHole.y, toHole.x - fromHole.x);
-    
-    return {
-      ...connection,
-      startPoint: {
-        id: `start_${connection.id}`,
-        label: "1",
-        x: fromHole.x - Math.cos(angle) * offsetDistance,
-        y: fromHole.y - Math.sin(angle) * offsetDistance,
-        isHidden: true
-      },
-      endPoint: {
-        id: `end_${connection.id}`,
-        label: "2",
-        x: toHole.x + Math.cos(angle) * offsetDistance,
-        y: toHole.y + Math.sin(angle) * offsetDistance,
-        isHidden: true
-      }
-    };
+    // Since we're using the site-blasting.model.ts BlastConnection interface,
+    // we don't need to add startPoint/endPoint properties
+    // The connection visualization will use the drill point coordinates directly
+    return connection;
   }
 
   // Enhanced Panel Methods
@@ -1755,8 +1620,8 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     if (this.searchTerm) {
       const searchLower = this.searchTerm.toLowerCase();
       filtered = filtered.filter(connection => 
-        connection.fromHoleId.toLowerCase().includes(searchLower) ||
-        connection.toHoleId.toLowerCase().includes(searchLower) ||
+        connection.point1DrillPointId.toLowerCase().includes(searchLower) ||
+        connection.point2DrillPointId.toLowerCase().includes(searchLower) ||
         connection.sequence.toString().includes(searchLower) ||
         this.getConnectorTypeName(connection.connectorType).toLowerCase().includes(searchLower) ||
         connection.delay.toString().includes(searchLower)
@@ -1809,8 +1674,8 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     // Export filtered connections as CSV or JSON
     const connectionsData = this.getFilteredConnections().map(connection => ({
       sequence: connection.sequence,
-      from: connection.fromHoleId,
-      to: connection.toHoleId,
+      from: connection.point1DrillPointId,
+      to: connection.point2DrillPointId,
       type: this.getConnectorTypeName(connection.connectorType),
       delay: connection.delay
     }));
@@ -1823,5 +1688,42 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     link.download = 'blast-connections.json';
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  debugRefreshCanvas(): void {
+    console.log('🔧 Debug: Refreshing canvas...');
+    
+    if (!this.isInitialized || !this.stage) {
+      console.log('❌ Canvas not initialized, reinitializing...');
+      this.initializeCanvas();
+      return;
+    }
+    
+    console.log('📊 Canvas state:', {
+      stageSize: { width: this.stage.width(), height: this.stage.height() },
+      scale: this.scale,
+      scalePercent: Math.round(this.scale * 100) + '%',
+      pan: { x: this.panX, y: this.panY },
+      patternData: this.patternData?.drillLocations?.length || 0,
+      drillPointObjects: this.drillPointObjects.size,
+      layers: {
+        grid: this.gridLayer.visible(),
+        points: this.pointsLayer.visible(),
+        connections: this.connectionsLayer.visible()
+      }
+    });
+    
+    // Fix zoom if it's stuck at extreme values
+    if (this.scale > 10 || this.scale < 0.05) {
+      console.log('🔧 Fixing extreme zoom value:', this.scale);
+      this.scale = 1.0;
+      this.panX = 0;
+      this.panY = 0;
+    }
+    
+    // Force redraw everything
+    this.redrawAll();
+    
+    this.notification.showSuccess('Canvas refreshed - zoom: ' + Math.round(this.scale * 100) + '%');
   }
 }

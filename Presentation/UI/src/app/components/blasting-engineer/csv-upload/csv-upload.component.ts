@@ -4,6 +4,8 @@ import { HttpClient, HttpEventType } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
+import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
+import { DrillLocation, DrillModelConverter } from '../../../core/models/drilling.model';
 
 interface DrillHole {
   serialNumber?: number;
@@ -27,24 +29,8 @@ interface DrillHole {
 }
 
 // Service to share drill data between components
-@Injectable({
-  providedIn: 'root'
-})
-export class DrillDataService {
-  private drillData: DrillHole[] = [];
-  
-  setDrillData(data: DrillHole[]): void {
-    this.drillData = data;
-  }
-  
-  getDrillData(): DrillHole[] {
-    return this.drillData;
-  }
-  
-  clearDrillData(): void {
-    this.drillData = [];
-  }
-}
+// DrillDataService has been deprecated and replaced by UnifiedDrillDataService
+// This service is kept temporarily for backward compatibility but will be removed
 
 @Component({
   selector: 'app-csv-upload',
@@ -70,7 +56,7 @@ export class CsvUploadComponent implements OnInit {
   selectorVisible: boolean = false;
   has3DData: boolean = false;
 
-  constructor(private http: HttpClient, private router: Router, private drillDataService: DrillDataService, private activatedRoute: ActivatedRoute) {}
+  constructor(private http: HttpClient, private router: Router, private unifiedDrillDataService: UnifiedDrillDataService, private activatedRoute: ActivatedRoute) {}
 
   ngOnInit(): void {
     // Handle query parameters
@@ -165,8 +151,12 @@ export class CsvUploadComponent implements OnInit {
             this.dataLoaded.emit(event.body);
             console.log('CsvUploadComponent - dataLoaded event emitted successfully');
 
-            // Store the data in the service
-            this.drillDataService.setDrillData(event.body);
+            // Store the data in the unified service
+            // Convert drill holes to drill locations
+            const drillLocations = event.body.map(hole => 
+              DrillModelConverter.drillHoleToDrillLocation(hole)
+            );
+            this.unifiedDrillDataService.setDrillLocations(drillLocations);
 
             // Compute 3D capability
             this.has3DData = event.body.some(hole => (hole as any).azimuth !== null && (hole as any).azimuth !== undefined && (hole as any).dip !== null && (hole as any).dip !== undefined);

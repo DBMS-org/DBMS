@@ -149,39 +149,33 @@ export class BlastSequenceDataService {
   }
 
   private migrateConnectionsToNewFormat(connections: BlastConnection[]): BlastConnection[] {
-    return connections.map(connection => {
-      // Check if connection already has hidden points
-      if (connection.startPoint && connection.endPoint) {
-        return connection;
-      }
+    return connections.map((connection, i) => {
+      // Find the drill points for this connection
+      const patternData = this.patternDataSubject.value;
+      if (!patternData) return connection;
+
+      const fromHole = patternData.drillPoints.find(p => p.id === connection.point1DrillPointId);
+      const toHole = patternData.drillPoints.find(p => p.id === connection.point2DrillPointId);
       
-      // Create default hidden points if they don't exist
-      const fromHole = this.getPatternData()?.drillPoints.find(p => p.id === connection.fromHoleId);
-      const toHole = this.getPatternData()?.drillPoints.find(p => p.id === connection.toHoleId);
-      
-      if (!fromHole || !toHole) {
-        return connection;
-      }
-      
-      // Calculate offset positions for hidden points
-      const offsetDistance = 0.5; // world units
+      if (!fromHole || !toHole) return connection;
+
+      // Calculate offset positions for start/end points
       const angle = Math.atan2(toHole.y - fromHole.y, toHole.x - fromHole.x);
-      
+      const offsetDistance = 0.5; // Small offset to avoid overlap
+
       return {
         ...connection,
         startPoint: {
           id: `start_${connection.id}`,
           label: "1",
           x: fromHole.x - Math.cos(angle) * offsetDistance,
-          y: fromHole.y - Math.sin(angle) * offsetDistance,
-          isHidden: true
+          y: fromHole.y - Math.sin(angle) * offsetDistance
         },
         endPoint: {
           id: `end_${connection.id}`,
           label: "2",
           x: toHole.x + Math.cos(angle) * offsetDistance,
-          y: toHole.y + Math.sin(angle) * offsetDistance,
-          isHidden: true
+          y: toHole.y + Math.sin(angle) * offsetDistance
         }
       };
     });
@@ -352,7 +346,7 @@ export class BlastSequenceDataService {
         warnings.push({
           type: 'timing_overlap',
           message: `${conns.length} holes are set to detonate simultaneously at ${delay}ms`,
-          affectedHoles: conns.flatMap(c => [c.fromHoleId, c.toHoleId]),
+          affectedHoles: conns.flatMap(c => [c.point1DrillPointId, c.point2DrillPointId]),
           severity: 'high'
         });
       }
@@ -364,8 +358,8 @@ export class BlastSequenceDataService {
   private detectOrphanedHoles(holes: DrillPoint[], connections: BlastConnection[]): string[] {
     const connectedHoles = new Set<string>();
     connections.forEach(conn => {
-      connectedHoles.add(conn.fromHoleId);
-      connectedHoles.add(conn.toHoleId);
+      connectedHoles.add(conn.point1DrillPointId);
+      connectedHoles.add(conn.point2DrillPointId);
     });
 
     return holes
@@ -506,7 +500,7 @@ export class BlastSequenceDataService {
 
     // Calculate connection utilization
     const totalHoles = patternData.drillPoints.length;
-    const connectedHoles = new Set([...connections.map(c => c.fromHoleId), ...connections.map(c => c.toHoleId)]);
+    const connectedHoles = new Set([...connections.map(c => c.point1DrillPointId), ...connections.map(c => c.point2DrillPointId)]);
     const connectionUtilization = (connectedHoles.size / totalHoles) * 100;
 
     return {

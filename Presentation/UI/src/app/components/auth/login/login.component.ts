@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { LoginRequest, LoginResponse } from '../../../core/models/user.model';
+import { LoginRequest } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-login',
@@ -40,14 +40,28 @@ export class LoginComponent {
 
       this.authService.login(loginData.username, loginData.password)
         .subscribe({
-          next: (response: LoginResponse) => {
-            console.log('Login successful:', response);
+          next: (response: any) => {
+            // In case the ApiResponse wrapper wasn't unwrapped for some reason
+            const auth = (response && response.user && response.token) ? response : response?.data;
+
+            if (!auth || !auth.user) {
+              this.errorMessage = 'Unexpected server response. Please try again later.';
+              this.isLoading = false;
+              return;
+            }
+
+            console.log('Login successful:', auth);
             
             // Set current user in auth service
-            this.authService.setCurrentUser(response.user, response.token);
+            this.authService.setCurrentUser(auth.user, auth.token);
             
-            // Navigate based on user role
-            this.navigateByRole(response.user.role);
+            // Navigate based on user role (safeguard against null)
+            const role = auth.user?.role;
+            if (role) {
+              this.navigateByRole(role);
+            } else {
+              this.errorMessage = 'Your account does not have an assigned role.';
+            }
           },
           error: (error) => {
             console.error('Login error:', error);

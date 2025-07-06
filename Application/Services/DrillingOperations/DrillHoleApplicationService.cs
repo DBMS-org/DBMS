@@ -3,19 +3,28 @@ using Application.Interfaces.DrillingOperations;
 using Microsoft.Extensions.Logging;
 using Application.DTOs.Shared;
 using Application.Utilities;
+using Application.Interfaces.Infrastructure;
+using Application.Interfaces.ProjectManagement;
+using System.Linq;
 
 namespace Application.Services.DrillingOperations
 {
     public class DrillHoleApplicationService : IDrillHoleService
     {
         private readonly IDrillHoleRepository _drillHoleRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly IUserContext _userContext;
         private readonly ILogger<DrillHoleApplicationService> _logger;
 
         public DrillHoleApplicationService(
             IDrillHoleRepository drillHoleRepository,
+            IProjectRepository projectRepository,
+            IUserContext userContext,
             ILogger<DrillHoleApplicationService> logger)
         {
             _drillHoleRepository = drillHoleRepository;
+            _projectRepository = projectRepository;
+            _userContext = userContext;
             _logger = logger;
         }
 
@@ -24,6 +33,26 @@ namespace Application.Services.DrillingOperations
             try
             {
                 var drillHoles = await _drillHoleRepository.GetAllAsync();
+
+                // If the user is a blasting engineer, filter by their region
+                if (_userContext.IsInRole("BlastingEngineer"))
+                {
+                    var region = _userContext.Region;
+                    if (!string.IsNullOrEmpty(region))
+                    {
+                        // Get projects for that region
+                        var projects = await _projectRepository.SearchAsync(region: region);
+                        var projectIds = projects.Select(p => p.Id).ToHashSet();
+
+                        drillHoles = drillHoles.Where(h => projectIds.Contains(h.ProjectId));
+                    }
+                    else
+                    {
+                        // No region claim, return empty set
+                        drillHoles = Enumerable.Empty<DrillHole>();
+                    }
+                }
+
                 return Result.Success(drillHoles);
             }
             catch (Exception ex)

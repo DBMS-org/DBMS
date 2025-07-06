@@ -4,19 +4,27 @@ using Application.Utilities;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Domain.Entities.ProjectManagement;
+using Application.Interfaces.Infrastructure;
+using System.Linq;
 
 namespace Application.Services.ProjectManagement
 {
     public class ProjectSiteApplicationService : IProjectSiteService
     {
         private readonly IProjectSiteRepository _projectSiteRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly IUserContext _userContext;
         private readonly ILogger<ProjectSiteApplicationService> _logger;
 
         public ProjectSiteApplicationService(
             IProjectSiteRepository projectSiteRepository,
+            IProjectRepository projectRepository,
+            IUserContext userContext,
             ILogger<ProjectSiteApplicationService> logger)
         {
             _projectSiteRepository = projectSiteRepository;
+            _projectRepository = projectRepository;
+            _userContext = userContext;
             _logger = logger;
         }
 
@@ -24,7 +32,25 @@ namespace Application.Services.ProjectManagement
         {
             try
             {
-                return await _projectSiteRepository.GetAllAsync();
+                var sites = await _projectSiteRepository.GetAllAsync();
+
+                if (_userContext.IsInRole("BlastingEngineer"))
+                {
+                    var region = _userContext.Region;
+                    if (!string.IsNullOrEmpty(region))
+                    {
+                        // Fetch projects in the same region
+                        var projects = await _projectRepository.SearchAsync(region: region);
+                        var projectIds = projects.Select(p => p.Id).ToHashSet();
+                        sites = sites.Where(s => projectIds.Contains(s.ProjectId));
+                    }
+                    else
+                    {
+                        sites = Enumerable.Empty<ProjectSite>();
+                    }
+                }
+
+                return sites;
             }
             catch (Exception ex)
             {
@@ -37,7 +63,32 @@ namespace Application.Services.ProjectManagement
         {
             try
             {
-                return await _projectSiteRepository.GetByIdAsync(id);
+                var projectSite = await _projectSiteRepository.GetByIdAsync(id);
+                if (projectSite == null)
+                {
+                    return null;
+                }
+
+                // Apply region filtering for BlastingEngineer
+                if (_userContext.IsInRole("BlastingEngineer"))
+                {
+                    var region = _userContext.Region;
+                    if (!string.IsNullOrEmpty(region))
+                    {
+                        // Check if the project site belongs to a project in user's region
+                        var project = await _projectRepository.GetByIdAsync(projectSite.ProjectId);
+                        if (project == null || project.Region != region)
+                        {
+                            return null; // Site not in user's region
+                        }
+                    }
+                    else
+                    {
+                        return null; // No region claim
+                    }
+                }
+
+                return projectSite;
             }
             catch (Exception ex)
             {
@@ -55,6 +106,25 @@ namespace Application.Services.ProjectManagement
                 if (!projectExists)
                 {
                     throw new InvalidOperationException($"Project with ID {projectId} not found");
+                }
+
+                // Apply region filtering for BlastingEngineer
+                if (_userContext.IsInRole("BlastingEngineer"))
+                {
+                    var region = _userContext.Region;
+                    if (!string.IsNullOrEmpty(region))
+                    {
+                        // Check if the project belongs to user's region
+                        var project = await _projectRepository.GetByIdAsync(projectId);
+                        if (project == null || project.Region != region)
+                        {
+                            return Enumerable.Empty<ProjectSite>(); // Project not in user's region
+                        }
+                    }
+                    else
+                    {
+                        return Enumerable.Empty<ProjectSite>(); // No region claim
+                    }
                 }
 
                 return await _projectSiteRepository.GetByProjectIdAsync(projectId);

@@ -2,7 +2,8 @@ import { Component, OnInit, ElementRef, AfterViewInit, OnDestroy, HostListener }
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { StateService } from '../../../core/services/state.service';
-import { DrillDataService } from '../csv-upload/csv-upload.component';
+import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
+import { DrillLocation } from '../../../core/models/drilling.model';
 import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
 import { SiteService } from '../../../core/services/site.service';
 import * as THREE from 'three';
@@ -50,7 +51,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
 
   constructor(
     private el: ElementRef, 
-    private drillDataService: DrillDataService,
+    private unifiedDrillDataService: UnifiedDrillDataService,
     private drillHoleService: DrillHoleService,
     private siteService: SiteService,
     private router: Router,
@@ -197,7 +198,24 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   }
   
   private loadFromLocalService(): void {
-    this.drillData = this.drillDataService.getDrillData();
+    // Get drill locations from unified service and convert to drill holes
+    const drillLocations = this.unifiedDrillDataService.getDrillLocations();
+    this.drillData = drillLocations.map(loc => ({
+      id: loc.id,
+      easting: loc.easting || loc.x,
+      northing: loc.northing || loc.y,
+      elevation: loc.elevation || 0,
+      depth: loc.depth || 0,
+      length: loc.length || loc.depth || 0,
+      azimuth: loc.azimuth || 0,
+      dip: loc.dip || 0,
+      actualDepth: loc.actualDepth || loc.depth || 0,
+      stemming: loc.stemming || 0,
+      projectId: loc.projectId,
+      siteId: loc.siteId,
+      createdAt: loc.createdAt.toISOString(),
+      updatedAt: loc.updatedAt.toISOString()
+    } as DrillHole));
     this.isDataLoaded = this.drillData.length > 0;
     
     console.log('Loaded drill data from local service:', this.drillData);
@@ -409,7 +427,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
             }
             
             // Clear local data
-            this.drillDataService.clearDrillData();
+            this.unifiedDrillDataService.clearLocalDrillLocations();
             this.drillData = [];
             this.isDataLoaded = false;
             

@@ -24,6 +24,7 @@ import { SiteBlastingService } from '../../../../core/services/site-blasting.ser
 import { BlastTimeCalculatorService } from '../../blast-sequence-simulator/services/blast-time-calculator.service';
 import { ProjectService } from '../../../../core/services/project.service';
 import { Project } from '../../../../core/models/project.model';
+import { UnifiedDrillDataService } from '../../../../core/services/unified-drill-data.service';
 
 export interface WorkflowStep {
   id: string;
@@ -127,7 +128,8 @@ export class BlastSequenceDataService {
   constructor(
     private siteBlastingService: SiteBlastingService,
     private blastTimeCalculator: BlastTimeCalculatorService,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private unifiedDrillDataService: UnifiedDrillDataService
   ) {}
 
   // Site Context Methods
@@ -178,23 +180,20 @@ export class BlastSequenceDataService {
       }
     });
 
-    // Also delete individual drill patterns and blast sequences
-    this.siteBlastingService.getDrillPatterns(projectId, siteId).subscribe({
-      next: (patterns) => {
-        patterns.forEach(pattern => {
-          this.siteBlastingService.deleteDrillPattern(projectId, siteId, pattern.id).subscribe({
-            next: () => console.log(`✅ Deleted drill pattern ${pattern.id} from backend`),
-            error: (error) => console.warn(`⚠️ Failed to delete drill pattern ${pattern.id}:`, error.message)
-          });
-        });
+    // Also delete drill points and blast sequences
+    this.unifiedDrillDataService.clearAllDrillPoints(projectId, siteId).subscribe({
+      next: (success) => {
+        if (success) {
+          console.log('✅ Cleared all drill points from backend');
+        }
       },
-      error: (error) => console.warn('⚠️ Failed to fetch drill patterns for deletion:', error.message)
+      error: (error) => console.warn('⚠️ Failed to clear drill points:', error.message)
     });
 
     this.siteBlastingService.getBlastSequences(projectId, siteId).subscribe({
       next: (sequences) => {
         sequences.forEach(sequence => {
-          this.siteBlastingService.deleteBlastSequence(projectId, siteId, sequence.id).subscribe({
+          this.siteBlastingService.deleteBlastSequence(sequence.id).subscribe({
             next: () => console.log(`✅ Deleted blast sequence ${sequence.id} from backend`),
             error: (error) => console.warn(`⚠️ Failed to delete blast sequence ${sequence.id}:`, error.message)
           });
@@ -262,21 +261,18 @@ export class BlastSequenceDataService {
     const siteKey = `site_${projectId}_${siteId}`;
     console.log('🧹 DELETING PATTERN data from backend and frontend for:', siteKey);
     
-    // Delete drill patterns from backend
-    this.siteBlastingService.getDrillPatterns(projectId, siteId).subscribe({
-      next: (patterns) => {
-        patterns.forEach(pattern => {
-          this.siteBlastingService.deleteDrillPattern(projectId, siteId, pattern.id).subscribe({
-            next: () => console.log(`✅ Deleted drill pattern ${pattern.id} from backend`),
-            error: (error) => console.warn(`⚠️ Failed to delete drill pattern ${pattern.id}:`, error.message)
-          });
-        });
+    // Delete drill points from backend
+    this.unifiedDrillDataService.clearAllDrillPoints(projectId, siteId).subscribe({
+      next: (success) => {
+        if (success) {
+          console.log('✅ Cleared all drill points from backend');
+        }
       },
-      error: (error) => console.warn('⚠️ Failed to fetch drill patterns for deletion:', error.message)
+      error: (error) => console.warn('⚠️ Failed to clear drill points:', error.message)
     });
 
     // Delete workflow data for pattern
-    this.siteBlastingService.deleteWorkflowData(projectId, siteId, 'pattern').subscribe({
+    this.siteBlastingService.deleteSiteData(projectId, siteId, 'pattern').subscribe({
       next: () => console.log('✅ Deleted pattern workflow data from backend'),
       error: (error) => console.warn('⚠️ Failed to delete pattern workflow data:', error.message)
     });
@@ -309,7 +305,7 @@ export class BlastSequenceDataService {
     this.siteBlastingService.getBlastSequences(projectId, siteId).subscribe({
       next: (sequences) => {
         sequences.forEach(sequence => {
-          this.siteBlastingService.deleteBlastSequence(projectId, siteId, sequence.id).subscribe({
+          this.siteBlastingService.deleteBlastSequence(sequence.id).subscribe({
             next: () => console.log(`✅ Deleted blast sequence ${sequence.id} from backend`),
             error: (error) => console.warn(`⚠️ Failed to delete blast sequence ${sequence.id}:`, error.message)
           });
@@ -319,7 +315,7 @@ export class BlastSequenceDataService {
     });
 
     // Delete workflow data for connections
-    this.siteBlastingService.deleteWorkflowData(projectId, siteId, 'connections').subscribe({
+    this.siteBlastingService.deleteSiteData(projectId, siteId, 'connections').subscribe({
       next: () => console.log('✅ Deleted connections workflow data from backend'),
       error: (error) => console.warn('⚠️ Failed to delete connections workflow data:', error.message)
     });
@@ -348,14 +344,14 @@ export class BlastSequenceDataService {
     console.log('🧹 DELETING SIMULATION data from backend and frontend for:', siteKey);
     
     // Delete simulation workflow data from backend
-    this.siteBlastingService.deleteWorkflowData(projectId, siteId, 'simulation_settings').subscribe({
+    this.siteBlastingService.deleteSiteData(projectId, siteId, 'simulation_settings').subscribe({
       next: () => console.log('✅ Deleted simulation settings from backend'),
-      error: (error) => console.warn('⚠️ Failed to delete simulation settings:', error.message)
+      error: (error: any) => console.warn('⚠️ Failed to delete simulation settings:', error.message)
     });
 
-    this.siteBlastingService.deleteWorkflowData(projectId, siteId, 'simulation_state').subscribe({
+    this.siteBlastingService.deleteSiteData(projectId, siteId, 'simulation_state').subscribe({
       next: () => console.log('✅ Deleted simulation state from backend'),
-      error: (error) => console.warn('⚠️ Failed to delete simulation state:', error.message)
+      error: (error: any) => console.warn('⚠️ Failed to delete simulation state:', error.message)
     });
     
     // Remove simulation data from localStorage
@@ -468,38 +464,31 @@ export class BlastSequenceDataService {
   private loadFromBackend(projectId: number, siteId: number): void {
     console.log('Loading data from backend for site:', { projectId, siteId });
     
-    // Load drill patterns
-    this.siteBlastingService.getDrillPatterns(projectId, siteId).subscribe({
-      next: (patterns) => {
-        if (patterns && patterns.length > 0) {
-          const latestPattern = patterns[0]; // Get most recent pattern
+    // Load drill points using unified service
+    this.unifiedDrillDataService.loadPatternData(projectId, siteId).subscribe({
+      next: (patternData) => {
+        if (patternData && patternData.drillLocations.length > 0) {
+          // Convert DrillLocation to DrillPoint format
+          const drillPoints: DrillPoint[] = patternData.drillLocations.map(location => ({
+            id: location.id,
+            x: location.x,
+            y: location.y,
+            depth: location.depth,
+            spacing: location.spacing,
+            burden: location.burden
+          }));
           
-          // Handle drillPointsJson which can be either string (from backend) or array (already parsed)
-          let drillPoints: DrillPoint[] = [];
-          if (latestPattern.drillPointsJson) {
-            if (typeof latestPattern.drillPointsJson === 'string') {
-              try {
-                drillPoints = JSON.parse(latestPattern.drillPointsJson);
-              } catch (error) {
-                console.warn('Failed to parse drill points JSON:', error);
-                drillPoints = [];
-              }
-            } else {
-              drillPoints = latestPattern.drillPointsJson;
-            }
-          }
-          
-          const patternData: PatternData = {
+          const convertedPatternData: PatternData = {
             drillPoints: drillPoints,
             settings: {
-              spacing: latestPattern.spacing,
-              burden: latestPattern.burden,
-              depth: latestPattern.depth
+              spacing: patternData.settings.spacing,
+              burden: patternData.settings.burden,
+              depth: patternData.settings.depth
             }
           };
           
-          this.patternDataSubject.next(patternData);
-          console.log('Loaded pattern from backend:', latestPattern.name, 'with', patternData.drillPoints.length, 'points');
+          this.patternDataSubject.next(convertedPatternData);
+          console.log('Loaded pattern from backend with', convertedPatternData.drillPoints.length, 'points');
           
           // After loading pattern, load blast sequences
           this.loadBlastSequencesFromBackend(projectId, siteId);
@@ -508,7 +497,7 @@ export class BlastSequenceDataService {
           this.loadFromLocalStorage(projectId, siteId);
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.log('Error loading patterns from backend, trying localStorage:', error.message);
         this.loadFromLocalStorage(projectId, siteId);
       }
@@ -516,75 +505,59 @@ export class BlastSequenceDataService {
   }
 
   private loadBlastSequencesFromBackend(projectId: number, siteId: number): void {
-    this.siteBlastingService.getBlastSequences(projectId, siteId).subscribe({
-      next: (sequences) => {
-        if (sequences && sequences.length > 0) {
-          const latestSequence = sequences[0]; // Get most recent sequence
-          
-          // Handle connectionsJson which can be either string (from backend) or array (already parsed)
-          let connections: BlastConnection[] = [];
-          if (latestSequence.connectionsJson) {
-            if (typeof latestSequence.connectionsJson === 'string') {
-              try {
-                connections = JSON.parse(latestSequence.connectionsJson);
-              } catch (error) {
-                console.warn('Failed to parse connections JSON:', error);
-                connections = [];
-              }
-            } else {
-              connections = latestSequence.connectionsJson;
-            }
-          }
+    // Load connections directly from the new API instead of from blast sequence JSON
+    this.siteBlastingService.getBlastConnections(projectId, siteId).subscribe({
+      next: (connections) => {
+        if (connections && connections.length > 0) {
+          // Map API connections to frontend format
+          const mappedConnections = connections.map(conn => this.mapFromApiResponse(conn));
           
           // Validate connections against current pattern
           if (this.patternDataSubject.value) {
-            const validConnections = this.validateConnections(connections, this.patternDataSubject.value.drillPoints);
+            const validConnections = this.validateConnections(mappedConnections, this.patternDataSubject.value.drillPoints);
             this.connectionsSubject.next(validConnections);
-            console.log('Loaded blast sequence from backend:', latestSequence.name, 'with', validConnections.length, 'connections');
+            console.log('Loaded connections from backend API:', validConnections.length, 'valid connections');
           } else {
-            this.connectionsSubject.next(connections);
-            console.log('Loaded blast sequence from backend:', latestSequence.name, 'with', connections.length, 'connections');
+            this.connectionsSubject.next(mappedConnections);
+            console.log('Loaded connections from backend API:', mappedConnections.length, 'connections');
           }
         } else {
-          console.log('No blast sequences found in backend');
+          console.log('No blast connections found in backend');
         }
         
-        // After loading backend data, load workflow state
+        // After loading connections, load workflow state
         this.loadWorkflowStateFromBackend(projectId, siteId);
       },
       error: (error) => {
-        console.log('Error loading blast sequences from backend:', error.message);
+        console.log('Error loading blast connections from backend:', error.message);
         this.loadWorkflowStateFromBackend(projectId, siteId);
       }
     });
   }
 
   private loadWorkflowStateFromBackend(projectId: number, siteId: number): void {
-    // Load simulation settings and state
-    this.siteBlastingService.getWorkflowState(projectId, siteId, 'simulation_settings').subscribe({
-      next: (data) => {
-        if (data && data.jsonData) {
-          const settings = data.jsonData;
-          this.simulationSettingsSubject.next(settings);
-          console.log('Loaded simulation settings from backend');
-        }
-      },
-      error: (error) => {
-        console.log('No simulation settings found in backend:', error.message);
-      }
+    // Use default simulation settings instead of trying to load from non-existent API
+    console.log('Using default simulation settings and state');
+    
+    // Set default simulation settings
+    this.simulationSettingsSubject.next({
+      showTiming: true,
+      showConnections: true,
+      showEffects: true,
+      showSequenceNumbers: true,
+      effectIntensity: 75,
+      animationQuality: 'medium'
     });
 
-    this.siteBlastingService.getWorkflowState(projectId, siteId, 'simulation_state').subscribe({
-      next: (data) => {
-        if (data && data.jsonData) {
-          const state = data.jsonData;
-          this.simulationStateSubject.next(state);
-          console.log('Loaded simulation state from backend');
-        }
-      },
-      error: (error) => {
-        console.log('No simulation state found in backend:', error.message);
-      }
+    // Set default simulation state
+    this.simulationStateSubject.next({
+      isPlaying: false,
+      isPaused: false,
+      currentTime: 0,
+      totalDuration: 0,
+      playbackSpeed: 1,
+      currentStep: 0,
+      totalSteps: 0
     });
   }
 
@@ -670,15 +643,13 @@ export class BlastSequenceDataService {
     const validHoleIds = new Set(drillPoints.map(point => point.id));
     
     return connections.filter(connection => {
-      const isValid = validHoleIds.has(connection.fromHoleId) && validHoleIds.has(connection.toHoleId);
+      const isValid = validHoleIds.has(connection.point1DrillPointId) && validHoleIds.has(connection.point2DrillPointId);
       if (!isValid) {
-        console.warn('Removing invalid connection:', connection.fromHoleId, '->', connection.toHoleId);
+        console.warn('Removing invalid connection:', connection.point1DrillPointId, '->', connection.point2DrillPointId);
       }
       return isValid;
     });
   }
-
-
 
   // Pattern Data Methods
   setPatternData(patternData: PatternData, autoSave: boolean = false): void {
@@ -710,12 +681,52 @@ export class BlastSequenceDataService {
   }
 
   clearPatternData(): void {
+    console.log('🗑️ Clearing pattern data');
+    
+    if (this.currentSiteContext && this.currentSiteContext.projectId && this.currentSiteContext.siteId) {
+      // Clear drill points using the unified service
+      this.unifiedDrillDataService.clearAllDrillPoints(this.currentSiteContext.projectId, this.currentSiteContext.siteId).subscribe({
+        next: (success) => {
+          if (success) {
+            console.log('✅ Drill points cleared from backend');
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error clearing drill points from backend:', error);
+        }
+      });
+    }
+    
+    // Clear local storage
+    const siteKey = `site_${this.currentSiteContext?.projectId}_${this.currentSiteContext?.siteId}`;
+    localStorage.removeItem(`${siteKey}_pattern_data`);
+    localStorage.removeItem(`${siteKey}_connections`);
+    localStorage.removeItem(`${siteKey}_simulation_state`);
+    localStorage.removeItem(`${siteKey}_simulation_settings`);
+    
+    // Clear internal state
     this.patternDataSubject.next(null);
-    this.clearConnections();
-    this.resetWorkflow();
+    this.connectionsSubject.next([]);
+    this.simulationStateSubject.next({
+      isPlaying: false,
+      isPaused: false,
+      currentTime: 0,
+      totalDuration: 0,
+      playbackSpeed: 1,
+      currentStep: 0,
+      totalSteps: 0
+    });
+    this.simulationSettingsSubject.next({
+      showTiming: true,
+      showConnections: true,
+      showEffects: true,
+      showSequenceNumbers: true,
+      effectIntensity: 75,
+      animationQuality: 'medium'
+    });
   }
 
-  // Connections Methods
+  // Connections Methods - Updated to use API-based approach
   setConnections(connections: BlastConnection[], autoSave: boolean = false): void {
     this.connectionsSubject.next([...connections]);
     this.updateWorkflowStep('sequence', connections.length > 0);
@@ -723,42 +734,160 @@ export class BlastSequenceDataService {
     this.validateSequence();
     this.calculateSimulationDuration();
     
-    // Only save to storage if explicitly requested
+    // Save to backend if explicitly requested and we have site context
     if (autoSave && this.currentSiteContext) {
-      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
-      localStorage.setItem(`${siteKey}_connections`, JSON.stringify(connections));
+      this.saveConnectionsToBackend();
     }
   }
 
-  // Explicit save method for connections
+  // Save all connections to backend API
   saveConnections(): void {
-    const currentConnections = this.connectionsSubject.value;
     if (this.currentSiteContext) {
-      const siteKey = `site_${this.currentSiteContext.projectId}_${this.currentSiteContext.siteId}`;
-      localStorage.setItem(`${siteKey}_connections`, JSON.stringify(currentConnections));
-      console.log('Connections saved to localStorage');
+      this.saveConnectionsToBackend();
     }
+  }
+
+  private saveConnectionsToBackend(): void {
+    if (!this.currentSiteContext) return;
+    
+    const currentConnections = this.connectionsSubject.value;
+    const { projectId, siteId } = this.currentSiteContext;
+    
+    // First, get existing connections from backend to compare
+    this.siteBlastingService.getBlastConnections(projectId, siteId).subscribe({
+      next: (existingConnections) => {
+        // Determine which connections to create, update, or delete
+        const connectionsToCreate = currentConnections.filter(conn => 
+          !existingConnections.some(existing => existing.id === conn.id)
+        );
+        const connectionsToUpdate = currentConnections.filter(conn => 
+          existingConnections.some(existing => existing.id === conn.id)
+        );
+        const connectionsToDelete = existingConnections.filter(existing => 
+          !currentConnections.some(conn => conn.id === existing.id)
+        );
+
+        // Create new connections
+        connectionsToCreate.forEach(connection => {
+          const request = this.mapToCreateRequest(connection, projectId, siteId);
+          this.siteBlastingService.createBlastConnection(request).subscribe({
+            next: () => console.log(`Created connection ${connection.id}`),
+            error: (error) => console.error(`Failed to create connection ${connection.id}:`, error)
+          });
+        });
+
+        // Update existing connections
+        connectionsToUpdate.forEach(connection => {
+          const request = this.mapToUpdateRequest(connection, projectId, siteId);
+          this.siteBlastingService.updateBlastConnection(connection.id, projectId, siteId, request).subscribe({
+            next: () => console.log(`Updated connection ${connection.id}`),
+            error: (error) => console.error(`Failed to update connection ${connection.id}:`, error)
+          });
+        });
+
+        // Delete removed connections
+        connectionsToDelete.forEach(connection => {
+          this.siteBlastingService.deleteBlastConnection(connection.id, projectId, siteId).subscribe({
+            next: () => console.log(`Deleted connection ${connection.id}`),
+            error: (error) => console.error(`Failed to delete connection ${connection.id}:`, error)
+          });
+        });
+      },
+      error: (error) => {
+        console.error('Failed to get existing connections for comparison:', error);
+        // Fallback: try to create all connections (may fail if they exist)
+        currentConnections.forEach(connection => {
+          const request = this.mapToCreateRequest(connection, projectId, siteId);
+          this.siteBlastingService.createBlastConnection(request).subscribe({
+            next: () => console.log(`Created connection ${connection.id}`),
+            error: (error) => console.warn(`Failed to create connection ${connection.id} (may already exist):`, error)
+          });
+        });
+      }
+    });
   }
 
   addConnection(connection: BlastConnection): void {
-    const current = this.connectionsSubject.value;
-    this.setConnections([...current, connection], false); // Don't auto-save
+    if (!this.currentSiteContext) {
+      console.warn('Cannot add connection: no site context set');
+      return;
+    }
+
+    const { projectId, siteId } = this.currentSiteContext;
+    const request = this.mapToCreateRequest(connection, projectId, siteId);
+    
+    this.siteBlastingService.createBlastConnection(request).subscribe({
+      next: (createdConnection) => {
+        const current = this.connectionsSubject.value;
+        this.setConnections([...current, this.mapFromApiResponse(createdConnection)], false);
+        console.log(`Added connection ${connection.id} to backend and frontend`);
+      },
+      error: (error) => {
+        console.error(`Failed to add connection ${connection.id}:`, error);
+        // Fallback: add to frontend only
+        const current = this.connectionsSubject.value;
+        this.setConnections([...current, connection], false);
+      }
+    });
   }
 
   removeConnection(connectionId: string): void {
-    const current = this.connectionsSubject.value;
-    const filtered = current.filter(c => c.id !== connectionId);
-    this.setConnections(filtered, false); // Don't auto-save
+    if (!this.currentSiteContext) {
+      console.warn('Cannot remove connection: no site context set');
+      return;
+    }
+
+    const { projectId, siteId } = this.currentSiteContext;
+    
+    this.siteBlastingService.deleteBlastConnection(connectionId, projectId, siteId).subscribe({
+      next: () => {
+        const current = this.connectionsSubject.value;
+        const filtered = current.filter(c => c.id !== connectionId);
+        this.setConnections(filtered, false);
+        console.log(`Removed connection ${connectionId} from backend and frontend`);
+      },
+      error: (error) => {
+        console.error(`Failed to remove connection ${connectionId}:`, error);
+        // Fallback: remove from frontend only
+        const current = this.connectionsSubject.value;
+        const filtered = current.filter(c => c.id !== connectionId);
+        this.setConnections(filtered, false);
+      }
+    });
   }
 
   updateConnection(updatedConnection: BlastConnection): void {
-    const current = this.connectionsSubject.value;
-    const index = current.findIndex(c => c.id === updatedConnection.id);
-    if (index !== -1) {
-      const updated = [...current];
-      updated[index] = updatedConnection;
-      this.setConnections(updated, false); // Don't auto-save
+    if (!this.currentSiteContext) {
+      console.warn('Cannot update connection: no site context set');
+      return;
     }
+
+    const { projectId, siteId } = this.currentSiteContext;
+    const request = this.mapToUpdateRequest(updatedConnection, projectId, siteId);
+    
+    this.siteBlastingService.updateBlastConnection(updatedConnection.id, projectId, siteId, request).subscribe({
+      next: (apiConnection) => {
+        const current = this.connectionsSubject.value;
+        const index = current.findIndex(c => c.id === updatedConnection.id);
+        if (index !== -1) {
+          const updated = [...current];
+          updated[index] = this.mapFromApiResponse(apiConnection);
+          this.setConnections(updated, false);
+          console.log(`Updated connection ${updatedConnection.id} in backend and frontend`);
+        }
+      },
+      error: (error) => {
+        console.error(`Failed to update connection ${updatedConnection.id}:`, error);
+        // Fallback: update frontend only
+        const current = this.connectionsSubject.value;
+        const index = current.findIndex(c => c.id === updatedConnection.id);
+        if (index !== -1) {
+          const updated = [...current];
+          updated[index] = updatedConnection;
+          this.setConnections(updated, false);
+        }
+      }
+    });
   }
 
   getConnections(): BlastConnection[] {
@@ -766,9 +895,86 @@ export class BlastSequenceDataService {
   }
 
   clearConnections(): void {
+    if (this.currentSiteContext) {
+      const { projectId, siteId } = this.currentSiteContext;
+      // Delete all connections from backend
+      this.siteBlastingService.getBlastConnections(projectId, siteId).subscribe({
+        next: (connections) => {
+          connections.forEach(connection => {
+            this.siteBlastingService.deleteBlastConnection(connection.id, projectId, siteId).subscribe({
+              next: () => console.log(`Deleted connection ${connection.id} from backend`),
+              error: (error) => console.error(`Failed to delete connection ${connection.id}:`, error)
+            });
+          });
+        },
+        error: (error) => console.error('Failed to get connections for deletion:', error)
+      });
+    }
+    
     this.connectionsSubject.next([]);
     this.updateWorkflowStep('sequence', false);
     this.disableWorkflowStep('simulate');
+  }
+
+  // Helper methods for API mapping
+  private mapToCreateRequest(connection: BlastConnection, projectId: number, siteId: number): any {
+    return {
+      id: connection.id,
+      point1DrillPointId: connection.point1DrillPointId || connection.point1DrillPointId, // Support legacy format
+      point2DrillPointId: connection.point2DrillPointId || connection.point2DrillPointId, // Support legacy format
+      connectorType: this.mapConnectorTypeToApi(connection.connectorType),
+      delay: connection.delay,
+      sequence: connection.sequence,
+      projectId: projectId,
+      siteId: siteId
+    };
+  }
+
+  private mapToUpdateRequest(connection: BlastConnection, projectId: number, siteId: number): any {
+    return this.mapToCreateRequest(connection, projectId, siteId);
+  }
+
+  private mapFromApiResponse(apiConnection: any): BlastConnection {
+    return {
+      id: apiConnection.id,
+      point1DrillPointId: apiConnection.point1DrillPointId,
+      point2DrillPointId: apiConnection.point2DrillPointId,
+      connectorType: this.mapConnectorTypeFromApi(apiConnection.connectorType),
+      delay: apiConnection.delay,
+      sequence: apiConnection.sequence,
+      projectId: apiConnection.projectId,
+      siteId: apiConnection.siteId,
+      // Navigation properties will be populated by the component
+      point1DrillPoint: undefined,
+      point2DrillPoint: undefined
+    };
+  }
+
+  private mapConnectorTypeToApi(connectorType: any): number {
+    if (typeof connectorType === 'string') {
+      switch (connectorType) {
+        case 'Non-Electric-detonation-wire':
+        case 'DETONATING_CORD':
+          return 0; // DetonatingCord
+        case 'Non-Electric-connectors-wire':
+        case 'CONNECTORS':
+          return 1; // Connectors
+        default:
+          return 0;
+      }
+    }
+    return connectorType || 0;
+  }
+
+  private mapConnectorTypeFromApi(connectorType: number): any {
+    switch (connectorType) {
+      case 0:
+        return 'Non-Electric-detonation-wire'; // Legacy format for UI compatibility
+      case 1:
+        return 'Non-Electric-connectors-wire'; // Legacy format for UI compatibility
+      default:
+        return 'Non-Electric-detonation-wire';
+    }
   }
 
   // Simulation State Methods
@@ -931,7 +1137,7 @@ export class BlastSequenceDataService {
         warnings.push({
           type: 'timing_overlap',
           message: `${conns.length} holes are set to detonate simultaneously at ${delay}ms`,
-          affectedHoles: conns.flatMap(c => [c.fromHoleId, c.toHoleId]),
+          affectedHoles: conns.flatMap(c => [c.point1DrillPointId, c.point2DrillPointId]),
           severity: 'high'
         });
       }
@@ -943,8 +1149,8 @@ export class BlastSequenceDataService {
   private detectOrphanedHoles(holes: DrillPoint[], connections: BlastConnection[]): string[] {
     const connectedHoles = new Set<string>();
     connections.forEach(conn => {
-      connectedHoles.add(conn.fromHoleId);
-      connectedHoles.add(conn.toHoleId);
+      connectedHoles.add(conn.point1DrillPointId);
+      connectedHoles.add(conn.point2DrillPointId);
     });
 
     return holes
@@ -956,8 +1162,7 @@ export class BlastSequenceDataService {
     const suggestions: OptimizationSuggestion[] = [];
     
     if (connections.length > 0) {
-      const maxDelay = Math.max(...connections.map(c => c.delay));
-      const totalTime = maxDelay + 100; // Add some buffer
+      const totalTime = this.blastTimeCalculator.calculateBlastSequenceTime(connections);
       
       if (totalTime > 5000) { // More than 5 seconds
         suggestions.push({
@@ -1001,7 +1206,7 @@ export class BlastSequenceDataService {
      * overall duration of the sequence.
      */
     const holeStartTimes = new Map<string, number>();
-    const toHoleIds = new Set(connections.map(c => c.toHoleId));
+    const toHoleIds = new Set(connections.map(c => c.point2DrillPointId));
 
     // Identify root holes (no incoming signal)
     const queue: Array<{ holeId: string; start: number }> = [];
@@ -1014,7 +1219,7 @@ export class BlastSequenceDataService {
 
     // Edge case: every hole has an incoming connection – fall back to the first connection's origin
     if (queue.length === 0 && connections.length > 0) {
-      const rootId = connections[0].fromHoleId;
+      const rootId = connections[0].point1DrillPointId;
       holeStartTimes.set(rootId, 0);
       queue.push({ holeId: rootId, start: 0 });
     }
@@ -1022,17 +1227,17 @@ export class BlastSequenceDataService {
     // Propagate signals through the network
     while (queue.length > 0) {
       const { holeId, start } = queue.shift()!;
-      const outgoing = connections.filter(c => c.fromHoleId === holeId);
+      const outgoing = connections.filter(c => c.point1DrillPointId === holeId);
 
       outgoing.forEach(conn => {
         const connStart = start;
         const connEnd = connStart + (conn.delay || 0);
         const nextHoleBlast = connEnd + 500; // 500 ms after signal arrival
 
-        const existingTime = holeStartTimes.get(conn.toHoleId);
+        const existingTime = holeStartTimes.get(conn.point2DrillPointId);
         if (existingTime === undefined || nextHoleBlast > existingTime) {
-          holeStartTimes.set(conn.toHoleId, nextHoleBlast);
-          queue.push({ holeId: conn.toHoleId, start: nextHoleBlast });
+          holeStartTimes.set(conn.point2DrillPointId, nextHoleBlast);
+          queue.push({ holeId: conn.point2DrillPointId, start: nextHoleBlast });
         }
       });
     }
@@ -1134,19 +1339,19 @@ export class BlastSequenceDataService {
     // Group connections by their starting holes (for wave analysis)
     const connectionsByFromHole = new Map<string, BlastConnection[]>();
     connections.forEach(conn => {
-      if (!connectionsByFromHole.has(conn.fromHoleId)) {
-        connectionsByFromHole.set(conn.fromHoleId, []);
+      if (!connectionsByFromHole.has(conn.point1DrillPointId)) {
+        connectionsByFromHole.set(conn.point1DrillPointId, []);
       }
-      connectionsByFromHole.get(conn.fromHoleId)!.push(conn);
+      connectionsByFromHole.get(conn.point1DrillPointId)!.push(conn);
     });
 
     // Find initial connections (not targeted by other connections' point 2)
-    const allToHoleIds = new Set(connections.map(conn => conn.toHoleId));
+    const allToHoleIds = new Set(connections.map(conn => conn.point2DrillPointId));
     const initialFromHoles = new Set<string>();
     
     connections.forEach(conn => {
-      if (!allToHoleIds.has(conn.fromHoleId)) {
-        initialFromHoles.add(conn.fromHoleId);
+      if (!allToHoleIds.has(conn.point1DrillPointId)) {
+        initialFromHoles.add(conn.point1DrillPointId);
       }
     });
     
@@ -1179,7 +1384,7 @@ export class BlastSequenceDataService {
       const nextWaveConnections: BlastConnection[] = [];
       
       connectionsToProcess.forEach(connection => {
-        const potentialNextConnections = connectionsByFromHole.get(connection.toHoleId) || [];
+        const potentialNextConnections = connectionsByFromHole.get(connection.point2DrillPointId) || [];
         potentialNextConnections.forEach(nextConn => {
           if (!processedConnections.has(nextConn.id) && !nextWaveConnections.includes(nextConn)) {
             nextWaveConnections.push(nextConn);
@@ -1248,7 +1453,7 @@ export class BlastSequenceDataService {
         const detonationTime = baseTime + 50;
         markers.push({
           time: detonationTime,
-          label: `${conn.toHoleId} Detonation`,
+          label: `${conn.point2DrillPointId} Detonation`,
           type: 'hole_blast',
           color: '#F44336'
         });
@@ -1297,13 +1502,13 @@ export class BlastSequenceDataService {
     }
 
     // Use the new path-based calculation for totalBlastTime
-    const totalBlastTime = this.blastTimeCalculator.calculateTotalBlastTime(connections);
+    const totalBlastTime = this.blastTimeCalculator.calculateBlastSequenceTime(connections);
     // Use the new path-based calculation for average delay between detonations
     const averageDelayBetweenHoles = this.blastTimeCalculator.getAverageDelayBetweenDetonations(connections);
     // Use wave-based metrics for the rest
     const waveMetrics = this.calculateWaveBasedMetrics(connections);
     const totalHoles = patternData.drillPoints.length;
-    const connectedHoles = new Set([...connections.map(c => c.fromHoleId), ...connections.map(c => c.toHoleId)]);
+    const connectedHoles = new Set([...connections.map(c => c.point1DrillPointId), ...connections.map(c => c.point2DrillPointId)]);
     const connectionUtilization = (connectedHoles.size / totalHoles) * 100;
     const timingConflicts = this.detectTimingConflicts(connections);
     const criticalConflicts = timingConflicts.filter(w => w.severity === 'high').length;
@@ -1325,19 +1530,19 @@ export class BlastSequenceDataService {
     // Group connections by their starting holes (for wave analysis)
     const connectionsByFromHole = new Map<string, BlastConnection[]>();
     connections.forEach(conn => {
-      if (!connectionsByFromHole.has(conn.fromHoleId)) {
-        connectionsByFromHole.set(conn.fromHoleId, []);
+      if (!connectionsByFromHole.has(conn.point1DrillPointId)) {
+        connectionsByFromHole.set(conn.point1DrillPointId, []);
       }
-      connectionsByFromHole.get(conn.fromHoleId)!.push(conn);
+      connectionsByFromHole.get(conn.point1DrillPointId)!.push(conn);
     });
 
     // Find initial connections (not targeted by other connections' point 2)
-    const allToHoleIds = new Set(connections.map(conn => conn.toHoleId));
+    const allToHoleIds = new Set(connections.map(conn => conn.point2DrillPointId));
     const initialFromHoles = new Set<string>();
     
     connections.forEach(conn => {
-      if (!allToHoleIds.has(conn.fromHoleId)) {
-        initialFromHoles.add(conn.fromHoleId);
+      if (!allToHoleIds.has(conn.point1DrillPointId)) {
+        initialFromHoles.add(conn.point1DrillPointId);
       }
     });
     
@@ -1375,7 +1580,7 @@ export class BlastSequenceDataService {
       const nextWaveConnections: BlastConnection[] = [];
       
       connectionsToProcess.forEach(connection => {
-        const potentialNextConnections = connectionsByFromHole.get(connection.toHoleId) || [];
+        const potentialNextConnections = connectionsByFromHole.get(connection.point2DrillPointId) || [];
         potentialNextConnections.forEach(nextConn => {
           if (!processedConnections.has(nextConn.id) && !nextWaveConnections.includes(nextConn)) {
             nextWaveConnections.push(nextConn);

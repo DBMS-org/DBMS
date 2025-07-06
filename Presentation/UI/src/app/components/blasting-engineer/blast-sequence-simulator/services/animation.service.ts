@@ -94,11 +94,11 @@ export class AnimationService {
 
     // Update hole states
     connections.forEach(connection => {
-      if (connection.fromHoleId && connection.toHoleId) {
-        const fromState = this.calculateHoleState(connection.fromHoleId, currentTime, connections);
-        const toState = this.calculateHoleState(connection.toHoleId, currentTime, connections);
-        frame.holeStates.set(connection.fromHoleId, fromState);
-        frame.holeStates.set(connection.toHoleId, toState);
+      if (connection.point1DrillPointId && connection.point2DrillPointId) {
+        const fromState = this.calculateHoleState(connection.point1DrillPointId, currentTime, connections);
+        const toState = this.calculateHoleState(connection.point2DrillPointId, currentTime, connections);
+        frame.holeStates.set(connection.point1DrillPointId, fromState);
+        frame.holeStates.set(connection.point2DrillPointId, toState);
       }
     });
 
@@ -119,19 +119,19 @@ export class AnimationService {
     this.connectionStartTimes.clear();
 
     // Determine holes that are never a toHoleId (no incoming connections)
-    const allToHoles = new Set(connections.map(c => c.toHoleId));
+    const allToHoles = new Set(connections.map(c => c.point2DrillPointId));
 
     const queue: Array<{holeId: string, start: number}> = [];
     connections.forEach(conn => {
-      if (!allToHoles.has(conn.fromHoleId) && !this.holeStartTimes.has(conn.fromHoleId)) {
-        this.holeStartTimes.set(conn.fromHoleId, 0);
-        queue.push({ holeId: conn.fromHoleId, start: 0 });
+      if (!allToHoles.has(conn.point1DrillPointId) && !this.holeStartTimes.has(conn.point1DrillPointId)) {
+        this.holeStartTimes.set(conn.point1DrillPointId, 0);
+        queue.push({ holeId: conn.point1DrillPointId, start: 0 });
       }
     });
 
     // Edge case: if every hole has incoming, choose the first connection's fromHole as root
     if (queue.length === 0 && connections.length > 0) {
-      const root = connections[0].fromHoleId;
+      const root = connections[0].point1DrillPointId;
       this.holeStartTimes.set(root, 0);
       queue.push({ holeId: root, start: 0 });
     }
@@ -141,23 +141,23 @@ export class AnimationService {
       const { holeId, start } = queue.shift()!;
 
       // For every outgoing connection from this hole
-      connections.filter(c => c.fromHoleId === holeId).forEach(conn => {
+      connections.filter(c => c.point1DrillPointId === holeId).forEach(conn => {
         const connStart = start;
         const connEnd = connStart + (conn.delay || 0);
         const nextHoleBlast = connEnd + 500; // extra 500ms after arrival
         this.connectionStartTimes.set(conn.id, connStart);
 
-        const existingHoleTime = this.holeStartTimes.get(conn.toHoleId);
+        const existingHoleTime = this.holeStartTimes.get(conn.point2DrillPointId);
         if (existingHoleTime === undefined || nextHoleBlast < existingHoleTime) {
-          this.holeStartTimes.set(conn.toHoleId, nextHoleBlast);
-          queue.push({ holeId: conn.toHoleId, start: nextHoleBlast });
+          this.holeStartTimes.set(conn.point2DrillPointId, nextHoleBlast);
+          queue.push({ holeId: conn.point2DrillPointId, start: nextHoleBlast });
         }
       });
     }
   }
 
   private calculateConnectionState(connection: BlastConnection, currentTime: number): ConnectionAnimationState {
-    const startTime = this.holeStartTimes.get(connection.fromHoleId) || 0;
+    const startTime = this.holeStartTimes.get(connection.point1DrillPointId) || 0;
     const endTime = startTime + (connection.delay || 0);
     const activationWindow = 100; // ms window for activation
 

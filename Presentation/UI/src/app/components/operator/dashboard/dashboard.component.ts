@@ -9,6 +9,7 @@ import { DrillHoleService } from '../../../core/services/drill-hole.service';
 import { SiteBlastingService } from '../../../core/services/site-blasting.service';
 import { Project } from '../../../core/models/project.model';
 import { User } from '../../../core/models/user.model';
+import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
 
 @Component({
   selector: 'app-operator-dashboard',
@@ -55,7 +56,8 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     private siteService: SiteService,
     private drillHoleService: DrillHoleService,
     private siteBlastingService: SiteBlastingService,
-    private router: Router
+    private router: Router,
+    private unifiedDrillDataService: UnifiedDrillDataService
   ) {}
 
   ngOnInit(): void {
@@ -155,35 +157,32 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   private loadSiteSpecificData(): void {
     if (!this.assignedProject || this.projectSites.length === 0) return;
 
-    // Load drill patterns and blast sequences for each site
+    // Load drill points and blast sequences for each site
     this.projectSites.forEach(site => {
-      // Load drill patterns
-      const patternsSub = this.siteBlastingService.getDrillPatterns(this.assignedProject!.id, site.id).subscribe({
-        next: (patterns) => {
-          if (patterns.length > 0) {
+      // Load drill points instead of drill patterns
+      const drillPointsSub = this.unifiedDrillDataService.getDrillPoints(this.assignedProject!.id, site.id).subscribe({
+        next: (drillPoints) => {
+          if (drillPoints.length > 0) {
             this.stats.sitesWithPatterns++;
           }
           
-          // Load blast sequences for each pattern
-          patterns.forEach(pattern => {
-            const sequencesSub = this.siteBlastingService.getBlastSequencesByPattern(
-              this.assignedProject!.id, 
-              site.id, 
-              pattern.id
-            ).subscribe({
-              next: (sequences) => {
-                if (sequences.length > 0) {
-                  this.stats.sitesWithSequences++;
-                }
-              },
-              error: (err) => console.warn('Failed to load sequences for pattern', pattern.id, err)
-            });
-            this.subscriptions.add(sequencesSub);
+          // Load blast sequences for the site
+          const sequencesSub = this.siteBlastingService.getBlastSequences(
+            this.assignedProject!.id, 
+            site.id
+          ).subscribe({
+            next: (sequences) => {
+              if (sequences.length > 0) {
+                this.stats.sitesWithSequences++;
+              }
+            },
+            error: (err) => console.warn('Failed to load sequences for site', site.id, err)
           });
+          this.subscriptions.add(sequencesSub);
         },
-        error: (err) => console.warn('Failed to load patterns for site', site.id, err)
+        error: (err) => console.warn('Failed to load drill points for site', site.id, err)
       });
-      this.subscriptions.add(patternsSub);
+      this.subscriptions.add(drillPointsSub);
     });
   }
 

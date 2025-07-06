@@ -9,7 +9,7 @@
 .pattern-creator-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background-color: #f8f9fa;
   padding: 1rem;
   gap: 1rem;
@@ -680,4 +680,30 @@
       color: #bdbdbd !important;
     }
   }
+}
+
+/* Fullscreen mode adjustments */
+.pattern-creator-container.fullscreen {
+  padding: 0;
+  gap: 0;
+}
+
+.pattern-creator-container.fullscreen .toolbar,
+.pattern-creator-container.fullscreen .status-bar {
+  display: none;
+}
+
+.pattern-creator-container.fullscreen .canvas-container {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pattern-creator-container.fullscreen .status-bar {
+  display: none;
+}
+
+/* Removed toolbar hiding to allow exit fullscreen button */
+
+.pattern-creator-container.fullscreen .toolbar {
+  display: flex !important;
 }

@@ -8,7 +8,7 @@ namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize]
     public class DrillPlanController : BaseApiController
     {
         private readonly IDrillHoleService _drillHoleService;
@@ -23,6 +23,7 @@ namespace API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "ReadDrillData")]
         public async Task<IActionResult> GetAllDrillHoles()
         {
             var result = await _drillHoleService.GetAllDrillHolesAsync();
@@ -30,6 +31,7 @@ namespace API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "ReadDrillData")]
         public async Task<IActionResult> GetDrillHole(string id)
         {
             var result = await _drillHoleService.GetDrillHoleByIdAsync(id);
@@ -41,6 +43,7 @@ namespace API.Controllers
         }
 
         [HttpPost("upload-csv")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> UploadAndParseCsv(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -77,6 +80,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> CreateDrillHole(DrillHole drillHole)
         {
             var result = await _drillHoleService.CreateDrillHoleAsync(drillHole);
@@ -88,6 +92,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> UpdateDrillHole(string id, DrillHole drillHole)
         {
             if (id != drillHole.Id)
@@ -105,6 +110,7 @@ namespace API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> DeleteDrillHole(string id)
         {
             var result = await _drillHoleService.DeleteDrillHoleAsync(id);

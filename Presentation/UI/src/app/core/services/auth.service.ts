@@ -2,8 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { environment } from '../../../environments/environment';
 import { User, LoginResponse } from '../models/user.model';
+import { LogoutConfirmationDialogComponent, LogoutDialogData } from '../../shared/shared/components/logout-confirmation-dialog/logout-confirmation-dialog.component';
+import { SessionService } from './session.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +17,9 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog,
+    private sessionService: SessionService
   ) {
     // Load user from localStorage on service initialization
     this.loadCurrentUser();
@@ -25,10 +30,60 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    const token = this.getToken();
+    
+    // Call backend logout endpoint if token exists
+    if (token) {
+      this.http.post(`${environment.apiUrl}/api/auth/logout`, {}).subscribe({
+        next: (response) => {
+          console.log('Server logout successful:', response);
+        },
+        error: (error) => {
+          console.warn('Server logout failed, but continuing with client logout:', error);
+        },
+        complete: () => {
+          this.performClientLogout();
+        }
+      });
+    } else {
+      this.performClientLogout();
+    }
+  }
+
+  logoutWithConfirmation(): void {
+    const currentUser = this.getCurrentUser();
+    const dialogData: LogoutDialogData = {
+      userName: currentUser?.name
+    };
+
+    const dialogRef = this.dialog.open(LogoutConfirmationDialogComponent, {
+      width: '450px',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        this.logout();
+      }
+    });
+  }
+
+  private performClientLogout(): void {
+    // Backup session data for debugging (optional)
+    const sessionBackup = this.sessionService.backupSessionData();
+    console.log('Session backup created:', sessionBackup);
+
+    // Clear all session data comprehensively
+    this.sessionService.clearAllSessionData();
+    
+    // Reset user subject
     this.currentUserSubject.next(null);
+    
+    // Navigate to login
     this.router.navigate(['/login']);
+    
+    console.log('Logout completed successfully');
   }
 
   isAuthenticated(): boolean {
