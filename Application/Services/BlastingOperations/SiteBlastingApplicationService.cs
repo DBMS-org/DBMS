@@ -1,126 +1,109 @@
 using Application.DTOs.BlastingOperations;
-using Application.DTOs.DrillingOperations;
-using Application.DTOs.Shared;
 using Application.Interfaces.BlastingOperations;
+using Domain.Entities.BlastingOperations;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Services.BlastingOperations
 {
-    /// <summary>
-    /// Facade that keeps the original ISiteBlastingService contract intact while delegating the
-    /// actual work to smaller, focused services.
-    /// </summary>
     public class SiteBlastingApplicationService : ISiteBlastingService
     {
-        private readonly ISiteBlastingDataService _dataService;
-        private readonly IDrillPatternService _patternService;
-        private readonly IBlastSequenceService _sequenceService;
-        private readonly IWorkflowProgressService _workflowService;
-        private readonly ISiteBlastingRepository _repository; // For direct validation helpers
+        private readonly ISiteBlastingRepository _repository;
+        private readonly ILogger<SiteBlastingApplicationService> _logger;
 
         public SiteBlastingApplicationService(
-            ISiteBlastingDataService dataService,
-            IDrillPatternService patternService,
-            IBlastSequenceService sequenceService,
-            IWorkflowProgressService workflowService,
-            ISiteBlastingRepository repository)
+            ISiteBlastingRepository repository,
+            ILogger<SiteBlastingApplicationService> logger)
         {
-            _dataService = dataService;
-            _patternService = patternService;
-            _sequenceService = sequenceService;
-            _workflowService = workflowService;
             _repository = repository;
+            _logger = logger;
         }
 
-        #region Site Blasting Data (JSON CRUD)
+        public async Task<bool> DeleteAllWorkflowDataAsync(int projectId, int siteId)
+        {
+            _logger.LogInformation("Deleting all workflow data for project {ProjectId}, site {SiteId}", projectId, siteId);
+            return await _repository.DeleteAllWorkflowDataAsync(projectId, siteId);
+        }
 
-        public Task<SiteBlastingDataDto?> GetSiteDataAsync(int projectId, int siteId, string dataType) =>
-            _dataService.GetSiteDataAsync(projectId, siteId, dataType);
+        public async Task<bool> HasWorkflowDataAsync(int projectId, int siteId)
+        {
+            return await _repository.HasWorkflowDataAsync(projectId, siteId);
+        }
 
-        public Task<List<SiteBlastingDataDto>> GetAllSiteDataAsync(int projectId, int siteId) =>
-            _dataService.GetAllSiteDataAsync(projectId, siteId);
+        public async Task<List<BlastSequenceDto>> GetBlastSequencesAsync(int projectId, int siteId)
+        {
+            var sequences = await _repository.GetBlastSequencesAsync(projectId, siteId);
+            return sequences.Select(ConvertToDto).ToList();
+        }
 
-        public Task<SiteBlastingDataDto> SaveSiteDataAsync(CreateSiteBlastingDataRequest request, int userId) =>
-            _dataService.SaveSiteDataAsync(request, userId);
+        public async Task<BlastSequenceDto?> GetBlastSequenceAsync(int id)
+        {
+            var sequence = await _repository.GetBlastSequenceAsync(id);
+            return sequence == null ? null : ConvertToDto(sequence);
+        }
 
-        public Task<bool> DeleteSiteDataAsync(int projectId, int siteId, string dataType) =>
-            _dataService.DeleteSiteDataAsync(projectId, siteId, dataType);
+        public async Task<BlastSequenceDto> CreateBlastSequenceAsync(CreateBlastSequenceRequest request, int userId)
+        {
+            var entity = new BlastSequence
+            {
+                ProjectId = request.ProjectId,
+                SiteId = request.SiteId,
+                Name = request.Name,
+                Description = request.Description,
+                DelayBetweenHoles = request.DelayBetweenHoles,
+                DelayBetweenRows = request.DelayBetweenRows,
+                SimulationSettingsJson = request.SimulationSettingsJson,
+                CreatedByUserId = userId
+            };
 
-        public Task<bool> DeleteAllSiteDataAsync(int projectId, int siteId) =>
-            _dataService.DeleteAllSiteDataAsync(projectId, siteId);
+            var saved = await _repository.CreateBlastSequenceAsync(entity);
+            return ConvertToDto(saved);
+        }
 
-        public Task<bool> CleanupSiteDataAsync(CleanupSiteDataRequest request) =>
-            _dataService.CleanupSiteDataAsync(request);
+        public async Task<BlastSequenceDto> UpdateBlastSequenceAsync(int id, UpdateBlastSequenceRequest request, int userId)
+        {
+            var existing = await _repository.GetBlastSequenceAsync(id);
+            if (existing == null)
+                throw new ArgumentException($"Blast sequence with ID {id} not found");
 
-        public Task<bool> SaveBulkSiteDataAsync(BulkSiteDataRequest request, int userId) =>
-            _dataService.SaveBulkSiteDataAsync(request, userId);
+            existing.Name = request.Name;
+            existing.Description = request.Description;
+            existing.DelayBetweenHoles = request.DelayBetweenHoles;
+            existing.DelayBetweenRows = request.DelayBetweenRows;
+            existing.SimulationSettingsJson = request.SimulationSettingsJson;
 
-        public Task<Dictionary<string, SiteBlastingDataDto>> GetBulkSiteDataAsync(int projectId, int siteId) =>
-            _dataService.GetBulkSiteDataAsync(projectId, siteId);
+            var updated = await _repository.UpdateBlastSequenceAsync(existing);
+            return ConvertToDto(updated);
+        }
 
-        #endregion
+        public async Task<bool> DeleteBlastSequenceAsync(int id)
+        {
+            return await _repository.DeleteBlastSequenceAsync(id);
+        }
 
-        #region Drill Pattern
+        public async Task<bool> ValidateProjectSiteExistsAsync(int projectId, int siteId)
+        {
+            return await _repository.ValidateProjectSiteExistsAsync(projectId, siteId);
+        }
 
-        public Task<List<DrillPatternDto>> GetDrillPatternsAsync(int projectId, int siteId) =>
-            _patternService.GetDrillPatternsAsync(projectId, siteId);
+        public async Task<bool> ValidateBlastSequenceOwnershipAsync(int sequenceId, int projectId, int siteId)
+        {
+            return await _repository.ValidateBlastSequenceOwnershipAsync(sequenceId, projectId, siteId);
+        }
 
-        public Task<DrillPatternDto?> GetDrillPatternAsync(int id) =>
-            _patternService.GetDrillPatternAsync(id);
-
-        public Task<DrillPatternDto> CreateDrillPatternAsync(CreateDrillPatternRequest request, int userId) =>
-            _patternService.CreateDrillPatternAsync(request, userId);
-
-        public Task<DrillPatternDto> UpdateDrillPatternAsync(int id, CreateDrillPatternRequest request, int userId) =>
-            _patternService.UpdateDrillPatternAsync(id, request, userId);
-
-        public Task<bool> DeleteDrillPatternAsync(int id) =>
-            _patternService.DeleteDrillPatternAsync(id);
-
-        #endregion
-
-        #region Blast Sequence
-
-        public Task<List<BlastSequenceDto>> GetBlastSequencesAsync(int projectId, int siteId) =>
-            _sequenceService.GetBlastSequencesAsync(projectId, siteId);
-
-        public Task<BlastSequenceDto?> GetBlastSequenceAsync(int id) =>
-            _sequenceService.GetBlastSequenceAsync(id);
-
-        public Task<BlastSequenceDto> CreateBlastSequenceAsync(CreateBlastSequenceRequest request, int userId) =>
-            _sequenceService.CreateBlastSequenceAsync(request, userId);
-
-        public Task<BlastSequenceDto> UpdateBlastSequenceAsync(int id, CreateBlastSequenceRequest request, int userId) =>
-            _sequenceService.UpdateBlastSequenceAsync(id, request, userId);
-
-        public Task<bool> DeleteBlastSequenceAsync(int id) =>
-            _sequenceService.DeleteBlastSequenceAsync(id);
-
-        #endregion
-
-        #region Workflow Progress
-
-        public Task<SiteWorkflowProgressDto> GetWorkflowProgressAsync(int projectId, int siteId) =>
-            _workflowService.GetWorkflowProgressAsync(projectId, siteId);
-
-        public Task<SiteWorkflowProgressDto> UpdateWorkflowProgressAsync(int projectId, int siteId, string stepId, bool completed) =>
-            _workflowService.UpdateWorkflowProgressAsync(projectId, siteId, stepId, completed);
-
-        public Task<bool> SetOperatorCompletionAsync(int projectId, int siteId, bool completed) =>
-            _workflowService.SetOperatorCompletionAsync(projectId, siteId, completed);
-
-        #endregion
-
-        #region Validation
-
-        public Task<bool> ValidateProjectSiteExistsAsync(int projectId, int siteId) =>
-            _repository.ValidateProjectSiteExistsAsync(projectId, siteId);
-
-        public Task<bool> ValidateDrillPatternOwnershipAsync(int patternId, int projectId, int siteId) =>
-            _patternService.ValidateDrillPatternOwnershipAsync(patternId, projectId, siteId);
-
-        public Task<bool> ValidateBlastSequenceOwnershipAsync(int sequenceId, int projectId, int siteId) =>
-            _sequenceService.ValidateBlastSequenceOwnershipAsync(sequenceId, projectId, siteId);
-
-        #endregion
+        private static BlastSequenceDto ConvertToDto(BlastSequence entity) => new()
+        {
+            Id = entity.Id,
+            ProjectId = entity.ProjectId,
+            SiteId = entity.SiteId,
+            Name = entity.Name,
+            Description = entity.Description,
+            DelayBetweenHoles = entity.DelayBetweenHoles,
+            DelayBetweenRows = entity.DelayBetweenRows,
+            SimulationSettingsJson = entity.SimulationSettingsJson,
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt,
+            CreatedByUserId = entity.CreatedByUserId
+        };
     }
 }

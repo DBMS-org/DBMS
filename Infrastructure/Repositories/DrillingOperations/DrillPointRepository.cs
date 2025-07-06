@@ -2,16 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using Application.Interfaces.DrillingOperations;
 using Domain.Entities.DrillingOperations;
 using Infrastructure.Data;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Repositories.DrillingOperations
 {
     public class DrillPointRepository : IDrillPointRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<DrillPointRepository> _logger;
 
-        public DrillPointRepository(ApplicationDbContext context)
+        public DrillPointRepository(ApplicationDbContext context, ILogger<DrillPointRepository> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<DrillPoint> AddAsync(DrillPoint drillPoint)
@@ -55,13 +58,53 @@ namespace Infrastructure.Repositories.DrillingOperations
 
         public async Task<bool> DeleteAllAsync(int projectId, int siteId)
         {
-            var drillPoints = await GetAllAsync(projectId, siteId);
-            if (!drillPoints.Any())
-                return false;
+            try
+            {
+                var drillPoints = await _context.DrillPoints
+                    .Where(dp => dp.ProjectId == projectId && dp.SiteId == siteId)
+                    .ToListAsync();
 
-            _context.DrillPoints.RemoveRange(drillPoints);
-            await _context.SaveChangesAsync();
-            return true;
+                if (drillPoints.Any())
+                {
+                    _context.DrillPoints.RemoveRange(drillPoints);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Deleted {Count} drill points for project {ProjectId}, site {SiteId}", 
+                        drillPoints.Count, projectId, siteId);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting all drill points for project {ProjectId}, site {SiteId}", projectId, siteId);
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteByProjectSiteAsync(int projectId, int siteId)
+        {
+            try
+            {
+                var drillPoints = await _context.DrillPoints
+                    .Where(dp => dp.ProjectId == projectId && dp.SiteId == siteId)
+                    .ToListAsync();
+
+                if (drillPoints.Any())
+                {
+                    _context.DrillPoints.RemoveRange(drillPoints);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Deleted {Count} drill points for project {ProjectId}, site {SiteId}", 
+                        drillPoints.Count, projectId, siteId);
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting drill points by project/site for project {ProjectId}, site {SiteId}", projectId, siteId);
+                return false;
+            }
         }
 
         public async Task<List<DrillPoint>> AddRangeAsync(IEnumerable<DrillPoint> drillPoints)

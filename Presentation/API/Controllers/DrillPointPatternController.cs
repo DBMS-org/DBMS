@@ -7,7 +7,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize(Policy = "ReadDrillData")]
     public class DrillPointPatternController : BaseApiController
     {
         private readonly IDrillPointPatternService _drillPointPatternService;
@@ -18,6 +18,7 @@ namespace API.Controllers
         }
 
         [HttpPost("drill-points")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> CreateDrillPoint([FromBody] CreateDrillPointRequest request)
             {
                 var result = await _drillPointPatternService.CreateDrillPointAsync(request);
@@ -25,14 +26,18 @@ namespace API.Controllers
         }
 
         [HttpPut("drill-points/{pointId}/position")]
-        public async Task<IActionResult> UpdateDrillPointPosition(string pointId, [FromBody] UpdateDrillPointPositionRequest request)
+        [Authorize(Policy = "ManageDrillData")]
+        public async Task<IActionResult> UpdateDrillPointPosition(string pointId, [FromQuery] int projectId, [FromQuery] int siteId, [FromBody] UpdateDrillPointPositionRequest request)
             {
                 request.PointId = pointId;
+                request.ProjectId = projectId;
+                request.SiteId = siteId;
                 var result = await _drillPointPatternService.UpdateDrillPointPositionAsync(request);
                 return Ok(result);
         }
 
         [HttpDelete("drill-points/{pointId}")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> RemoveDrillPoint(string pointId, [FromQuery] int projectId, [FromQuery] int siteId)
             {
                 var result = await _drillPointPatternService.RemoveDrillPointAsync(pointId, projectId, siteId);
@@ -47,6 +52,7 @@ namespace API.Controllers
         }
 
         [HttpDelete("drill-points")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> ClearAllDrillPoints([FromQuery] int projectId, [FromQuery] int siteId)
             {
                 var result = await _drillPointPatternService.ClearAllDrillPointsAsync(projectId, siteId);
@@ -61,10 +67,16 @@ namespace API.Controllers
         }
 
         [HttpPost("save-pattern")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> SavePattern([FromBody] SavePatternRequest request)
-            {
-                var result = await _drillPointPatternService.SavePatternAsync(request);
-                return Ok(result);
+        {
+            var patternName = request.Settings?.Name ?? $"Pattern_{DateTime.UtcNow:yyyy-MM-dd_HH-mm}";
+            var result = await _drillPointPatternService.SavePatternAsync(
+                request.ProjectId, 
+                request.SiteId, 
+                request.DrillPoints, 
+                patternName);
+            return Ok(new { success = result });
         }
 
         [HttpGet("pattern-settings")]
@@ -75,6 +87,7 @@ namespace API.Controllers
         }
 
         [HttpPut("pattern-settings")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> UpdatePatternSettings([FromQuery] int projectId, [FromQuery] int siteId, [FromBody] PatternSettingsDto settings)
             {
                 await _drillPointPatternService.UpdatePatternSettingsAsync(projectId, siteId, settings);
@@ -82,6 +95,7 @@ namespace API.Controllers
         }
 
         [HttpPost("process-csv")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> ProcessUploadedCsvData([FromBody] ProcessCsvDataRequest request)
             {
                 var result = await _drillPointPatternService.ProcessUploadedCsvDataAsync(request);
@@ -103,6 +117,7 @@ namespace API.Controllers
         }
 
         [HttpPost("validate-coordinates")]
+        [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> ValidateCoordinates([FromBody] ValidateCoordinatesRequest request)
             {
                 var result = await _drillPointPatternService.ValidateCoordinatesAsync(request.X, request.Y);

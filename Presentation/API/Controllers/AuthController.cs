@@ -3,6 +3,7 @@ using Application.DTOs.UserManagement;
 using Application.DTOs.Shared;
 using Application.Interfaces.UserManagement;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace API.Controllers
 {
@@ -96,6 +97,53 @@ namespace API.Controllers
 
                 var response = await _authService.ValidateTokenAsync(token);
                 return Ok(response);
+        }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+                var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                
+                var logoutResult = await _authService.LogoutAsync(token ?? string.Empty);
+                
+                if (logoutResult.IsFailure)
+                {
+                    return BadRequest(logoutResult.Error);
+                }
+
+                return Ok(logoutResult.Value);
+        }
+
+        [HttpGet("debug/current-user")]
+        public async Task<IActionResult> GetCurrentUserDebug()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                var userRegion = User.FindFirst("region")?.Value;
+                
+                var debugInfo = new
+                {
+                    UserIdClaim = userIdClaim,
+                    UserIdParsed = int.TryParse(userIdClaim, out var id) ? id : (int?)null,
+                    UserName = userName,
+                    UserEmail = userEmail,
+                    UserRole = userRole,
+                    UserRegion = userRegion,
+                    IsAuthenticated = User.Identity?.IsAuthenticated ?? false,
+                    AllClaims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
+                };
+                
+                return Ok(debugInfo);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
         }
     }
 } 

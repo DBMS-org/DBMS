@@ -1,4 +1,4 @@
-<div class="pattern-creator-container" role="main" aria-label="Drilling Pattern Creator">
+<div class="pattern-creator-container" role="main" aria-label="Drilling Pattern Creator" [class.fullscreen]="isFullscreen">
   <div class="toolbar" role="toolbar" aria-label="Pattern Creator Tools">
     <div class="toolbar-section" role="group" aria-label="Placement Controls">
       <button mat-button
@@ -30,6 +30,15 @@
           {{ isPreciseMode ? 'grid_on' : 'grid_off' }}
         </span>
         {{ isPreciseMode ? 'Exit Precise Mode' : 'Precise Mode' }}
+      </button>
+
+      <button mat-button
+              class="toolbar-button fullscreen-button"
+              (click)="toggleFullscreen()"
+              [matTooltip]="isFullscreen ? 'Exit Full Screen' : 'Full Screen Mode'"
+              [attr.aria-label]="isFullscreen ? 'Exit Full Screen' : 'Full Screen Mode'">
+        <span class="material-icons" aria-hidden="true">{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</span>
+        {{ isFullscreen ? 'Exit Fullscreen' : 'Full Screen' }}
       </button>
     </div>
 

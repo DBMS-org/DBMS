@@ -11,6 +11,7 @@ namespace Application.Interfaces.DrillingOperations
         Task<DrillPoint> UpdateAsync(DrillPoint drillPoint);
         Task<bool> DeleteAsync(string id, int projectId, int siteId);
         Task<bool> DeleteAllAsync(int projectId, int siteId);
+        Task<bool> DeleteByProjectSiteAsync(int projectId, int siteId);
         
         // Bulk operations
         Task<List<DrillPoint>> AddRangeAsync(IEnumerable<DrillPoint> drillPoints);

@@ -347,6 +347,55 @@ namespace Application.Services.UserManagement
             }
         }
 
+        public async Task<Result<LogoutResponse>> LogoutAsync(string token)
+        {
+            using var operation = _logger.BeginOperation("UserLogout");
+            try
+            {
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogBusinessWarning("Logout attempted with empty token");
+                    return Result.Success(new LogoutResponse
+                    {
+                        Success = true,
+                        Message = "Logout successful"
+                    });
+                }
+
+                // Validate token first
+                if (!_jwtService.ValidateToken(token))
+                {
+                    _logger.LogBusinessWarning("Logout attempted with invalid token");
+                    return Result.Success(new LogoutResponse
+                    {
+                        Success = true,
+                        Message = "Logout successful"
+                    });
+                }
+
+                // Blacklist the token
+                await _jwtService.BlacklistTokenAsync(token);
+
+                _logger.LogOperationSuccess("UserLogout");
+                return Result.Success(new LogoutResponse
+                {
+                    Success = true,
+                    Message = "Logout successful"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogUnexpectedError("UserLogout", ex);
+                // Even if logout fails on server side, we still return success
+                // to ensure client-side cleanup happens
+                return Result.Success(new LogoutResponse
+                {
+                    Success = true,
+                    Message = "Logout completed"
+                });
+            }
+        }
+
         private static UserDto MapToUserDto(User user)
         {
             return new UserDto

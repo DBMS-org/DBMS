@@ -1,182 +1,192 @@
 import { Injectable } from '@angular/core';
-import { BlastConnection } from '../../../../core/models/site-blasting.model';
+import { BlastConnection } from '../../drilling-pattern-creator/models/drill-point.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BlastTimeCalculatorService {
-  calculateTotalBlastTime(connections: BlastConnection[]): number {
-    if (connections.length === 0) {
-      return 0;
-    }
 
-    // Build a map from fromHoleId to connections
+  calculateBlastSequenceTime(connections: BlastConnection[]): number {
+    if (connections.length === 0) return 0;
+
+    // Group connections by their starting hole
     const connectionsByFromHole = new Map<string, BlastConnection[]>();
     connections.forEach(conn => {
-      if (!connectionsByFromHole.has(conn.fromHoleId)) {
-        connectionsByFromHole.set(conn.fromHoleId, []);
+      if (!connectionsByFromHole.has(conn.point1DrillPointId)) {
+        connectionsByFromHole.set(conn.point1DrillPointId, []);
       }
-      connectionsByFromHole.get(conn.fromHoleId)!.push(conn);
+      connectionsByFromHole.get(conn.point1DrillPointId)!.push(conn);
     });
 
-    // Find initial holes (those that are not a toHoleId)
-    const allToHoleIds = new Set(connections.map(c => c.toHoleId));
-    const initialHoles = Array.from(new Set(connections.map(c => c.fromHoleId))).filter(holeId => !allToHoleIds.has(holeId));
+    // Find starting holes (holes that are not the destination of any connection)
+    const allToHoleIds = new Set(connections.map(c => c.point2DrillPointId));
+    const startingHoles = Array.from(new Set(connections.map(c => c.point1DrillPointId))).filter(holeId => !allToHoleIds.has(holeId));
 
-    // Track the maximum detonation time
-    let maxDetonationTime = 0;
+    let maxTime = 0;
+    const visited = new Set<string>();
 
-    // Recursive function to traverse all paths
-    function traverse(holeId: string, accumulatedDelay: number, visited: Set<string>) {
-      // Prevent cycles
-      if (visited.has(holeId)) return;
-      visited.add(holeId);
+    // Traverse from each starting hole
+    const traverse = (holeId: string, accumulatedDelay: number, path: Set<string>) => {
+      if (path.has(holeId)) return; // Prevent cycles
 
-      const outgoing = connectionsByFromHole.get(holeId) || [];
-      if (outgoing.length === 0) {
-        // Leaf node (no outgoing connections), update max detonation time
-        if (accumulatedDelay > maxDetonationTime) {
-          maxDetonationTime = accumulatedDelay;
-        }
-        return;
+      const newPath = new Set(path);
+      newPath.add(holeId);
+      
+      maxTime = Math.max(maxTime, accumulatedDelay);
+      
+      const outgoingConnections = connectionsByFromHole.get(holeId) || [];
+      outgoingConnections.forEach(conn => {
+        traverse(conn.point2DrillPointId, accumulatedDelay + conn.delay, newPath);
+      });
+    };
+
+    startingHoles.forEach(startingHole => {
+      if (!visited.has(startingHole)) {
+        traverse(startingHole, 0, new Set());
       }
-      for (const conn of outgoing) {
-        // For each outgoing connection, add its delay and traverse to its toHoleId
-        traverse(conn.toHoleId, accumulatedDelay + conn.delay, new Set(visited));
-      }
-    }
-
-    // Start traversal from each initial hole
-    for (const holeId of initialHoles) {
-      traverse(holeId, 0, new Set());
-    }
-
-    // Count unique holes (fromHoleId and toHoleId)
-    const uniqueHoles = new Set<string>();
-    connections.forEach(conn => {
-      uniqueHoles.add(conn.fromHoleId);
-      uniqueHoles.add(conn.toHoleId);
     });
-    const holeCount = uniqueHoles.size;
 
-    // Add 500ms per hole
-    return maxDetonationTime + holeCount * 500;
+    return maxTime;
   }
 
-  calculateWaveMetrics(connections: BlastConnection[]): {
-    totalBlastTime: number;
-    averageDelayBetweenWaves: number;
-    maxSimultaneousDetonations: number;
-    waveCount: number;
-  } {
-    if (connections.length === 0) {
-      return {
-        totalBlastTime: 0,
-        averageDelayBetweenWaves: 0,
-        maxSimultaneousDetonations: 0,
-        waveCount: 0
-      };
-    }
-
-    const waves: BlastConnection[][] = [];
-    const processedConnections = new Set<string>();
-    const connectionsByFromHole = new Map<string, BlastConnection[]>();
-
-    // Build connections map
+  getTotalHoles(connections: BlastConnection[]): number {
+    const uniqueHoles = new Set<string>();
     connections.forEach(conn => {
-      const fromConnections = connectionsByFromHole.get(conn.fromHoleId) || [];
+      uniqueHoles.add(conn.point1DrillPointId);
+      uniqueHoles.add(conn.point2DrillPointId);
+    });
+    return uniqueHoles.size;
+  }
+
+  getAverageDelayBetweenDetonations(connections: BlastConnection[]): number {
+    if (connections.length === 0) return 0;
+    
+    const totalDelay = connections.reduce((sum, conn) => sum + conn.delay, 0);
+    return totalDelay / connections.length;
+  }
+
+  getConnectionsPerHole(connections: BlastConnection[]): number {
+    if (connections.length === 0) return 0;
+    
+    const uniqueHoles = new Set<string>();
+    connections.forEach(conn => {
+      uniqueHoles.add(conn.point1DrillPointId);
+      uniqueHoles.add(conn.point2DrillPointId);
+    });
+    
+    return connections.length / uniqueHoles.size;
+  }
+
+  analyzeSequenceTiming(connections: BlastConnection[]): any {
+    if (connections.length === 0) return { waves: [], totalTime: 0 };
+
+    // Group connections by their starting hole
+    const connectionsByFromHole = new Map<string, BlastConnection[]>();
+    connections.forEach(conn => {
+      const fromConnections = connectionsByFromHole.get(conn.point1DrillPointId) || [];
       fromConnections.push(conn);
-      connectionsByFromHole.set(conn.fromHoleId, fromConnections);
+      connectionsByFromHole.set(conn.point1DrillPointId, fromConnections);
     });
 
-    // Find initial connections
-    const targetHoles = new Set(connections.map(c => c.toHoleId));
-    const initialConnections = connections.filter(c => !targetHoles.has(c.fromHoleId));
+    // Find initial connections (not targeted by other connections)
+    const targetHoles = new Set(connections.map(c => c.point2DrillPointId));
+    const initialConnections = connections.filter(c => !targetHoles.has(c.point1DrillPointId));
 
-    // Process waves
-    const processWave = (connectionsToProcess: BlastConnection[], waveStartTime: number, waveNumber: number) => {
-      if (connectionsToProcess.length === 0) return;
+    const waves: any[] = [];
+    let currentTime = 0;
+    let currentWave = initialConnections.slice();
+    let waveNumber = 1;
 
-      waves.push(connectionsToProcess);
-      connectionsToProcess.forEach(conn => processedConnections.add(conn.id));
+    while (currentWave.length > 0) {
+      const nextWave: BlastConnection[] = [];
+      
+      currentWave.forEach(connection => {
+        const nextConnections = connectionsByFromHole.get(connection.point2DrillPointId) || [];
+        nextWave.push(...nextConnections);
+      });
 
-      const nextWaveConnections: BlastConnection[] = [];
-      connectionsToProcess.forEach(connection => {
-        const potentialNextConnections = connectionsByFromHole.get(connection.toHoleId) || [];
-        potentialNextConnections.forEach(nextConn => {
-          if (!processedConnections.has(nextConn.id) && !nextWaveConnections.includes(nextConn)) {
-            nextWaveConnections.push(nextConn);
+      waves.push({
+        wave: waveNumber,
+        connections: currentWave.length,
+        time: currentTime,
+        holes: currentWave.map(c => ({ from: c.point1DrillPointId, to: c.point2DrillPointId }))
+      });
+
+      // Calculate time for next wave
+      if (nextWave.length > 0) {
+        const avgDelay = currentWave.reduce((sum, conn) => sum + conn.delay, 0) / currentWave.length;
+        currentTime += avgDelay;
+      }
+
+      currentWave = nextWave;
+      waveNumber++;
+    }
+
+    return {
+      waves,
+      totalTime: currentTime,
+      totalWaves: waves.length
+    };
+  }
+
+  calculateWaveBasedTiming(connections: BlastConnection[]): any {
+    if (connections.length === 0) return { waves: [], totalTime: 0 };
+
+    // Group connections by their starting hole
+    const connectionsByFromHole = new Map<string, BlastConnection[]>();
+    connections.forEach(conn => {
+      if (!connectionsByFromHole.has(conn.point1DrillPointId)) {
+        connectionsByFromHole.set(conn.point1DrillPointId, []);
+      }
+      connectionsByFromHole.get(conn.point1DrillPointId)!.push(conn);
+    });
+
+    // Find starting holes (holes that are not the destination of any connection)
+    const allToHoleIds = new Set(connections.map(c => c.point2DrillPointId));
+    const initialFromHoles = Array.from(new Set(connections.map(c => c.point1DrillPointId))).filter(holeId => !allToHoleIds.has(holeId));
+
+    const waves: any[] = [];
+    let currentTime = 0;
+    let currentFromHoles = initialFromHoles.slice();
+    let waveNumber = 1;
+    const processedConnections = new Set<string>();
+
+    while (currentFromHoles.length > 0) {
+      const currentWaveConnections: BlastConnection[] = [];
+      const nextFromHoles: string[] = [];
+
+      currentFromHoles.forEach(fromHole => {
+        const connections = connectionsByFromHole.get(fromHole) || [];
+        connections.forEach(conn => {
+          if (!processedConnections.has(conn.id)) {
+            currentWaveConnections.push(conn);
+            processedConnections.add(conn.id);
+            nextFromHoles.push(conn.point2DrillPointId);
           }
         });
       });
 
-      if (nextWaveConnections.length > 0) {
-        processWave(nextWaveConnections, waveStartTime + 500, waveNumber + 1);
+      if (currentWaveConnections.length > 0) {
+        waves.push({
+          wave: waveNumber,
+          connections: currentWaveConnections.length,
+          time: currentTime,
+          holes: currentWaveConnections.map(c => ({ from: c.point1DrillPointId, to: c.point2DrillPointId }))
+        });
+
+        // Calculate time for next wave (average delay of current wave)
+        const avgDelay = currentWaveConnections.reduce((sum, conn) => sum + conn.delay, 0) / currentWaveConnections.length;
+        currentTime += avgDelay;
       }
-    };
 
-    processWave(initialConnections, 0, 1);
-
-    const totalBlastTime = this.calculateTotalBlastTime(connections);
-    const maxSimultaneousDetonations = Math.max(...waves.map(wave => wave.length));
-    const averageDelayBetweenWaves = waves.length > 1 ? 
-      (totalBlastTime - 1500) / (waves.length - 1) : 0;
+      currentFromHoles = Array.from(new Set(nextFromHoles));
+      waveNumber++;
+    }
 
     return {
-      totalBlastTime,
-      averageDelayBetweenWaves,
-      maxSimultaneousDetonations,
-      waveCount: waves.length
+      waves,
+      totalTime: currentTime,
+      totalWaves: waves.length
     };
-  }
-
-  /**
-   * Returns an array of detonation times for all leaf holes (holes with no outgoing connections)
-   */
-  getAllDetonationTimes(connections: BlastConnection[]): number[] {
-    if (connections.length === 0) return [];
-
-    const connectionsByFromHole = new Map<string, BlastConnection[]>();
-    connections.forEach(conn => {
-      if (!connectionsByFromHole.has(conn.fromHoleId)) {
-        connectionsByFromHole.set(conn.fromHoleId, []);
-      }
-      connectionsByFromHole.get(conn.fromHoleId)!.push(conn);
-    });
-
-    const allToHoleIds = new Set(connections.map(c => c.toHoleId));
-    const initialHoles = Array.from(new Set(connections.map(c => c.fromHoleId))).filter(holeId => !allToHoleIds.has(holeId));
-
-    const detonationTimes: number[] = [];
-
-    function traverse(holeId: string, accumulatedDelay: number, visited: Set<string>) {
-      if (visited.has(holeId)) return;
-      visited.add(holeId);
-      const outgoing = connectionsByFromHole.get(holeId) || [];
-      if (outgoing.length === 0) {
-        detonationTimes.push(accumulatedDelay);
-        return;
-      }
-      for (const conn of outgoing) {
-        traverse(conn.toHoleId, accumulatedDelay + conn.delay, new Set(visited));
-      }
-    }
-    for (const holeId of initialHoles) {
-      traverse(holeId, 0, new Set());
-    }
-    return detonationTimes;
-  }
-
-  /**
-   * Returns the average delay between detonations (sorted detonation times)
-   */
-  getAverageDelayBetweenDetonations(connections: BlastConnection[]): number {
-    const times = this.getAllDetonationTimes(connections).sort((a, b) => a - b);
-    if (times.length <= 1) return 0;
-    let total = 0;
-    for (let i = 1; i < times.length; i++) {
-      total += times[i] - times[i - 1];
-    }
-    return total / (times.length - 1);
   }
 } 

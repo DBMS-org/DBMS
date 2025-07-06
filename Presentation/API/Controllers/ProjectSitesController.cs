@@ -21,7 +21,7 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ReadDrillData")]
         public async Task<IActionResult> GetProjectSites()
             {
                 var projectSites = await _projectSiteService.GetAllProjectSitesAsync();
@@ -29,24 +29,20 @@ namespace API.Controllers
             }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "ReadDrillData")]
         public async Task<IActionResult> GetProjectSite(int id)
             {
                 var projectSite = await _projectSiteService.GetProjectSiteByIdAsync(id);
                 if (projectSite == null)
                 {
                     return NotFound($"Project site with ID {id} not found");
-                }
-
-            var authorizationResult = await _authorizationService.AuthorizeAsync(User, projectSite, "RequireOwnership");
-            if (!authorizationResult.Succeeded)
-            {
-                return Forbid();
             }
 
             return Ok(projectSite);
         }
 
         [HttpGet("project/{projectId}")]
+        [Authorize(Policy = "ReadDrillData")]
         public async Task<IActionResult> GetProjectSitesByProject(int projectId)
             {
                 var projectSites = await _projectSiteService.GetProjectSitesByProjectIdAsync(projectId);
@@ -54,7 +50,7 @@ namespace API.Controllers
             }
 
         [HttpPost]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageProjectSites")]
         public async Task<IActionResult> CreateProjectSite(CreateProjectSiteRequest request)
         {
                 var projectSite = await _projectSiteService.CreateProjectSiteAsync(request);
@@ -62,7 +58,7 @@ namespace API.Controllers
             }
 
         [HttpPut("{id}")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageProjectSites")]
         public async Task<IActionResult> UpdateProjectSite(int id, ProjectSite request)
         {
                 if (id != request.Id)
@@ -80,7 +76,7 @@ namespace API.Controllers
             }
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageProjectSites")]
         public async Task<IActionResult> DeleteProjectSite(int id)
             {
                 var success = await _projectSiteService.DeleteProjectSiteAsync(id);
@@ -92,7 +88,7 @@ namespace API.Controllers
             }
 
         [HttpPost("{id}/approve")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageProjectSites")]
         public async Task<IActionResult> ApprovePattern(int id)
             {
                 var success = await _projectSiteService.ApprovePatternAsync(id);
@@ -104,7 +100,7 @@ namespace API.Controllers
             }
 
         [HttpPost("{id}/revoke")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageProjectSites")]
         public async Task<IActionResult> RevokePattern(int id)
             {
                 var success = await _projectSiteService.RevokePatternAsync(id);
@@ -116,7 +112,7 @@ namespace API.Controllers
             }
 
         [HttpPost("{id}/confirm-simulation")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageProjectSites")]
         public async Task<IActionResult> ConfirmSimulation(int id)
             {
                 var success = await _projectSiteService.ConfirmSimulationAsync(id);
@@ -128,7 +124,7 @@ namespace API.Controllers
             }
 
         [HttpPost("{id}/revoke-simulation")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageProjectSites")]
         public async Task<IActionResult> RevokeSimulation(int id)
             {
                 var success = await _projectSiteService.RevokeSimulationAsync(id);

@@ -1,6 +1,5 @@
 using Domain.Entities.ProjectManagement;
 using Domain.Entities.UserManagement;
-using Domain.Entities.DrillingOperations;
 
 namespace Domain.Entities.BlastingOperations
 {
@@ -12,17 +11,16 @@ namespace Domain.Entities.BlastingOperations
         
         public int SiteId { get; set; }
         
-        public int DrillPatternId { get; set; }
-        
         public string Name { get; set; } = string.Empty;
         
         public string Description { get; set; } = string.Empty;
         
-        // Blast connections as JSON
-        public string ConnectionsJson { get; set; } = string.Empty;
+        // Sequence timing settings
+        public double DelayBetweenHoles { get; set; } = 25.0;
+        public double DelayBetweenRows { get; set; } = 50.0;
         
-        // Simulation settings as JSON
-        public string SimulationSettingsJson { get; set; } = string.Empty;
+        // Simulation settings stored as JSON  
+        public string SimulationSettingsJson { get; set; } = "{}";
         
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -33,7 +31,6 @@ namespace Domain.Entities.BlastingOperations
         // Navigation properties
         public virtual Project Project { get; set; } = null!;
         public virtual ProjectSite Site { get; set; } = null!;
-        public virtual DrillPattern DrillPattern { get; set; } = null!;
         public virtual User CreatedBy { get; set; } = null!;
     }
 } 

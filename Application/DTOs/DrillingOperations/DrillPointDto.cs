@@ -50,6 +50,12 @@ namespace Application.DTOs.DrillingOperations
         
         [Required]
         public double Y { get; set; }
+        
+        [Required]
+        public int ProjectId { get; set; }
+        
+        [Required]
+        public int SiteId { get; set; }
     }
     
     public class PatternSettingsDto
@@ -103,7 +109,27 @@ namespace Application.DTOs.DrillingOperations
         public List<DrillPointDto> DrillPoints { get; set; } = new();
         
         [Required]
-        public PatternSettingsDto Settings { get; set; } = new();
+        public UnifiedPatternSettingsDto Settings { get; set; } = new();
+    }
+    
+    public class UnifiedPatternSettingsDto
+    {
+        public string Name { get; set; } = "Default Pattern";
+        
+        [Required]
+        public int ProjectId { get; set; }
+        
+        [Required]
+        public int SiteId { get; set; }
+        
+        [Range(0.1, 50.0)]
+        public double Spacing { get; set; } = 3.0;
+        
+        [Range(0.1, 50.0)]
+        public double Burden { get; set; } = 2.5;
+        
+        [Range(0.1, 100.0)]
+        public double Depth { get; set; } = 10.0;
     }
     
     public class SavePatternResult

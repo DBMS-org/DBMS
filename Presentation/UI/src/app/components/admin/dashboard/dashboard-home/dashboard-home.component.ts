@@ -191,7 +191,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    this.authService.logout();
+    this.authService.logoutWithConfirmation();
   }
 
   getUserWelcomeMessage(): string {

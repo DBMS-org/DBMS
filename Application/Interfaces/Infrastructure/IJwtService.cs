@@ -6,5 +6,8 @@ namespace Application.Interfaces.Infrastructure
     {
         string GenerateToken(User user);
         bool ValidateToken(string token);
+        bool IsTokenBlacklisted(string token);
+        Task BlacklistTokenAsync(string token);
+        Task CleanupExpiredTokensAsync();
     }
 } 
