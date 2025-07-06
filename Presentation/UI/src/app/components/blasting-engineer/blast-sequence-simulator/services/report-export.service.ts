@@ -81,8 +81,8 @@ export class ReportExportService {
       startY: y,
       head: [['From', 'To', 'Type', 'Delay (ms)', 'Sequence']],
       body: connections.map(conn => [
-        conn.fromHoleId,
-        conn.toHoleId,
+        conn.point1DrillPointId,
+        conn.point2DrillPointId,
         conn.connectorType,
         conn.delay,
         conn.sequence

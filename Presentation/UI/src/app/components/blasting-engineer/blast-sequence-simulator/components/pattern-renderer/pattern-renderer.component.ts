@@ -301,8 +301,8 @@ export class PatternRendererComponent implements OnChanges {
   }
 
   private renderConnection(conn: BlastConnection): void {
-    const fromHole = this.patternData!.drillPoints.find(h => h.id === conn.fromHoleId);
-    const toHole = this.patternData!.drillPoints.find(h => h.id === conn.toHoleId);
+    const fromHole = this.patternData!.drillPoints.find(h => h.id === conn.point1DrillPointId);
+    const toHole = this.patternData!.drillPoints.find(h => h.id === conn.point2DrillPointId);
 
     if (!fromHole || !toHole) return;
 

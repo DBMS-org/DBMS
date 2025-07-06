@@ -11,5 +11,6 @@ namespace Application.Interfaces.UserManagement
         Task<Result> VerifyResetCodeAsync(VerifyResetCodeRequest request);
         Task<Result> ResetPasswordAsync(ResetPasswordRequest request);
         Task<Result> ValidateTokenAsync(string token);
+        Task<Result<LogoutResponse>> LogoutAsync(string token);
     }
 } 

@@ -19,7 +19,7 @@ namespace Application.Interfaces.DrillingOperations
         
         // Pattern data operations
         Task<PatternDataDto> GetPatternDataAsync(int projectId, int siteId);
-        Task<SavePatternResult> SavePatternAsync(SavePatternRequest request);
+        Task<bool> SavePatternAsync(int projectId, int siteId, List<DrillPointDto> drillPoints, string patternName);
         Task<PatternDataDto> ExportPatternForBlastDesignerAsync(int projectId, int siteId);
         
         // CSV data processing

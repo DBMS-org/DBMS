@@ -8,7 +8,7 @@
         </div>
         <div class="title-text">
           <h2>Blast Sequence Designer</h2>
-          <p class="subtitle" *ngIf="patternData">{{ patternData.drillPoints.length }} holes loaded</p>
+          <p class="subtitle" *ngIf="patternData">{{ patternData.drillLocations.length }} holes loaded</p>
         </div>
       </div>
       <div class="header-actions">
@@ -126,15 +126,15 @@
           <div class="connector-settings">
             <div class="connector-type-selector">
               <button class="connector-type-btn"
-                      [class.active]="selectedConnectorType === ConnectorType.DETONATING_CORD"
-                      (click)="setConnectorType(ConnectorType.DETONATING_CORD)"
+                      [class.active]="selectedConnectorType === ConnectorType.DetonatingCord"
+                      (click)="setConnectorType(ConnectorType.DetonatingCord)"
                       title="Detonating Cord">
                 <span class="material-icons">cable</span>
                 <span class="connector-label">Det Cord</span>
               </button>
               <button class="connector-type-btn"
-                      [class.active]="selectedConnectorType === ConnectorType.CONNECTORS"
-                      (click)="setConnectorType(ConnectorType.CONNECTORS)"
+                      [class.active]="selectedConnectorType === ConnectorType.Connectors"
+                      (click)="setConnectorType(ConnectorType.Connectors)"
                       title="Connectors">
                 <span class="material-icons">electrical_services</span>
                 <span class="connector-label">Connectors</span>
@@ -216,6 +216,14 @@
               </span>
               <span class="button-label">{{ showConnections ? 'Hide' : 'Show' }}</span>
             </button>
+
+            <!-- Debug Refresh Button -->
+            <button class="toggle-button debug-refresh" 
+                    (click)="debugRefreshCanvas()"
+                    title="Refresh Canvas (Debug)">
+              <span class="material-icons">refresh</span>
+              <span class="button-label">Refresh</span>
+            </button>
           </div>
         </div>
 
@@ -267,8 +275,8 @@
     <div class="status-bar">
       <div class="status-left">
         <div class="status-badge primary">
-          <span class="material-icons">pattern</span>
-          <span class="badge-text">{{ patternData.drillPoints.length }} holes</span>
+          <span class="material-icons">location_on</span>
+          <span class="badge-text">{{ patternData.drillLocations.length }} holes</span>
         </div>
         
         <div class="status-badge" [class.success]="connections.length > 0" [class.muted]="connections.length === 0">
@@ -394,14 +402,14 @@
           </div>
           <div class="connection-cell connection-details-cell">
             <div class="connection-path">
-              <span class="hole-id from-hole">{{ connection.fromHoleId }}</span>
-              <span class="material-icons arrow">arrow_forward</span>
-              <span class="hole-id to-hole">{{ connection.toHoleId }}</span>
+              <span class="hole-id from-hole">{{ connection.point1DrillPointId }}</span>
+              <i class="fas fa-arrow-right"></i>
+              <span class="hole-id to-hole">{{ connection.point2DrillPointId }}</span>
             </div>
           </div>
           <div class="connection-cell type-cell">
             <span class="connector-type-badge" 
-                  [class]="'badge-' + connection.connectorType.toLowerCase()">
+                  [class]="'badge-' + getConnectorTypeName(connection.connectorType).toLowerCase()">
               {{ getConnectorTypeName(connection.connectorType) }}
             </span>
           </div>

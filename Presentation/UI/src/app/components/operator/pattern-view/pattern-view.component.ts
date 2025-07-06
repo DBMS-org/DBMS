@@ -14,6 +14,8 @@ import { MatDialog, MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angu
 import { MatIconModule } from '@angular/material/icon';
 import { GridService } from '../../blasting-engineer/drilling-pattern-creator/services/grid.service';
 import { RulerService } from '../../blasting-engineer/drilling-pattern-creator/services/ruler.service';
+import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-confirmation-dialog',
@@ -207,7 +209,9 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
     private zoomService: ZoomService,
     private dialog: MatDialog,
     private gridService: GridService,
-    private rulerService: RulerService
+    private rulerService: RulerService,
+    private unifiedDrillDataService: UnifiedDrillDataService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -223,7 +227,7 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
       next: site => {
         this.projectId = site.projectId;
         this.isCompleted = site.isOperatorCompleted;
-        this.loadPattern();
+        this.loadPatternData();
       },
       error: err => {
         this.error = err.message;
@@ -451,36 +455,30 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
     this.pointsLayer.batchDraw();
   }
 
-  private loadPattern() {
-    this.siteBlastingService.getDrillPatterns(this.projectId, this.siteId).subscribe({
-      next: patterns => {
-        if (patterns && patterns.length > 0) {
-          const latest = patterns[0];
+  private loadPatternData(): void {
+    if (!this.projectId || !this.siteId) {
+      console.error('Project ID or Site ID not available');
+      return;
+    }
 
-          // Load drill points
-          if (typeof latest.drillPointsJson === 'string') {
-            try {
-              this.drillPoints = JSON.parse(latest.drillPointsJson);
-            } catch {
-              this.drillPoints = [];
-            }
-          } else {
-            this.drillPoints = latest.drillPointsJson || [];
-          }
-
-          // Load settings (spacing, burden, depth)
-          this.settings = {
-            spacing: latest.spacing,
-            burden: latest.burden,
-            depth: latest.depth
-          } as PatternSettings;
-        }
-        this.loading = false;
-        this.renderCanvas();
+    // Load drill points instead of drill patterns
+    this.unifiedDrillDataService.getDrillPoints(this.projectId, this.siteId).subscribe({
+      next: (drillPoints) => {
+        console.log('Drill points loaded:', drillPoints);
+        this.drillPoints = drillPoints.map(point => ({
+          id: point.id,
+          x: point.x,
+          y: point.y,
+          depth: point.depth,
+          spacing: point.spacing,
+          burden: point.burden
+        }));
+        this.cdr.detectChanges();
       },
-      error: err => {
-        this.error = err.message;
-        this.loading = false;
+      error: (error) => {
+        console.error('Error loading drill points:', error);
+        this.drillPoints = [];
+        this.cdr.detectChanges();
       }
     });
   }
@@ -526,7 +524,7 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
   retryLoad(): void {
     this.error = null;
     this.loading = true;
-    this.loadPattern();
+    this.loadPatternData();
   }
 
   markAsCompleted(): void {
@@ -547,17 +545,9 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.siteBlastingService.markOperatorCompletion(this.projectId, this.siteId).subscribe({
-          next: () => {
-            this.isCompleted = true;
-            console.log(`Drilling pattern for Site ${this.siteId} marked as completed`);
-          },
-          error: (err) => {
-            this.isCompleted = false;
-            this.error = err.error?.message || 'Failed to mark as completed.';
-            console.error('Error marking pattern as completed:', err);
-          }
-        });
+        // TODO: Implement operator completion tracking in backend
+        this.isCompleted = true;
+        console.log(`Drilling pattern for Site ${this.siteId} marked as completed`);
       }
     });
   }
@@ -580,17 +570,9 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.siteBlastingService.revokeOperatorCompletion(this.projectId, this.siteId).subscribe({
-          next: () => {
-            this.isCompleted = false;
-            console.log(`Drilling pattern completion for Site ${this.siteId} has been revoked`);
-          },
-          error: (err) => {
-            this.isCompleted = true;
-            this.error = err.error?.message || 'Failed to revoke completion.';
-            console.error('Error revoking pattern completion:', err);
-          }
-        });
+        // TODO: Implement operator completion revocation in backend
+        this.isCompleted = false;
+        console.log(`Drilling pattern completion for Site ${this.siteId} has been revoked`);
       }
     });
   }
