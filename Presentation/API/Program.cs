@@ -133,7 +133,7 @@ builder.Services.AddScoped<DrillPointDomainService>();
 
 // Register Site Blasting services
 builder.Services.AddScoped<ISiteBlastingRepository, SiteBlastingRepository>();
-builder.Services.AddScoped<IBlastSequenceService, BlastSequenceApplicationService>();
+
 builder.Services.AddScoped<ISiteBlastingService, SiteBlastingApplicationService>();
 
 // Register Blast Connection services

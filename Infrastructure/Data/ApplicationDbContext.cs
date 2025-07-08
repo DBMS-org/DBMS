@@ -31,7 +31,6 @@ namespace Infrastructure.Data
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectSite> ProjectSites { get; set; }
         public DbSet<SiteBlastingData> SiteBlastingData { get; set; }
-        public DbSet<BlastSequence> BlastSequences { get; set; }
         public DbSet<PasswordResetCode> PasswordResetCodes { get; set; }
         public DbSet<Machine> Machines { get; set; }
         public DbSet<Region> Regions { get; set; }

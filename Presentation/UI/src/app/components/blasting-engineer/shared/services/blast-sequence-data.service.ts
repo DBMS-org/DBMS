@@ -190,17 +190,8 @@ export class BlastSequenceDataService {
       error: (error) => console.warn('⚠️ Failed to clear drill points:', error.message)
     });
 
-    this.siteBlastingService.getBlastSequences(projectId, siteId).subscribe({
-      next: (sequences) => {
-        sequences.forEach(sequence => {
-          this.siteBlastingService.deleteBlastSequence(sequence.id).subscribe({
-            next: () => console.log(`✅ Deleted blast sequence ${sequence.id} from backend`),
-            error: (error) => console.warn(`⚠️ Failed to delete blast sequence ${sequence.id}:`, error.message)
-          });
-        });
-      },
-      error: (error) => console.warn('⚠️ Failed to fetch blast sequences for deletion:', error.message)
-    });
+    // Note: BlastSequence entity was removed as it's not used in the application
+    console.log('ℹ️ BlastSequence cleanup skipped - entity removed from system');
     
     // Remove ALL site-specific localStorage data
     const keysToRemove = [
@@ -301,18 +292,8 @@ export class BlastSequenceDataService {
     const siteKey = `site_${projectId}_${siteId}`;
     console.log('🧹 DELETING SEQUENCE data from backend and frontend for:', siteKey);
     
-    // Delete blast sequences from backend
-    this.siteBlastingService.getBlastSequences(projectId, siteId).subscribe({
-      next: (sequences) => {
-        sequences.forEach(sequence => {
-          this.siteBlastingService.deleteBlastSequence(sequence.id).subscribe({
-            next: () => console.log(`✅ Deleted blast sequence ${sequence.id} from backend`),
-            error: (error) => console.warn(`⚠️ Failed to delete blast sequence ${sequence.id}:`, error.message)
-          });
-        });
-      },
-      error: (error) => console.warn('⚠️ Failed to fetch blast sequences for deletion:', error.message)
-    });
+    // Note: BlastSequence entity was removed as it's not used in the application
+    console.log('ℹ️ BlastSequence cleanup skipped - entity removed from system');
 
     // Delete workflow data for connections
     this.siteBlastingService.deleteSiteData(projectId, siteId, 'connections').subscribe({

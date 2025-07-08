@@ -1391,15 +1391,40 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   goToSimulator(): void {
+    // Check if we have any connections first
     if (!this.connections || this.connections.length === 0) {
-      this.notification.showError('No blast sequence available for simulation. Create connections first.');
+      this.notification.showError('No blast sequence available for simulation. Create at least one connection first.');
+      return;
+    }
+
+    // Check for disconnected drill points
+    const disconnectedPoints = this.getDisconnectedDrillPoints();
+    
+    if (disconnectedPoints.length > 0) {
+      // Use a more user-friendly confirmation approach
+      this.showDisconnectedPointsDialog(disconnectedPoints);
       return;
     }
 
     console.log('🚀 Navigating to simulator with', this.connections.length, 'connections');
     
     // Navigate to simulator
-    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'blast-sequence-simulator']);
+    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'simulator']);
+  }
+
+  private showDisconnectedPointsDialog(disconnectedPoints: DrillLocation[]): void {
+    const message = `⚠️ Warning: ${disconnectedPoints.length} drill point(s) are not connected to any blast sequence:\n\n` +
+      `${disconnectedPoints.slice(0, 5).map((p: DrillLocation) => `• ${p.id}`).join('\n')}` +
+      `${disconnectedPoints.length > 5 ? `\n• ... and ${disconnectedPoints.length - 5} more` : ''}\n\n` +
+      `These points will not participate in the blast simulation.\n\n` +
+      `Do you really want to proceed to the simulator?`;
+    
+    if (confirm(message)) {
+      console.log('🚀 User confirmed navigation with disconnected points. Navigating to simulator with', this.connections.length, 'connections');
+      this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'simulator']);
+    } else {
+              this.notification.showError('Simulation cancelled. You can add connections to include all drill points.');
+    }
   }
 
   @HostListener('window:resize')
@@ -1487,6 +1512,24 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   // Check if user can create connections
   canCreateConnections(): boolean {
     return this.currentDelay !== null;
+  }
+
+  // Get drill points that are not connected to any blast sequence
+  private getDisconnectedDrillPoints(): DrillLocation[] {
+    if (!this.patternData || !this.patternData.drillLocations) {
+      return [];
+    }
+
+    const connectedPointIds = new Set<string>();
+    
+    // Add all connected drill point IDs to the set
+    this.connections.forEach(connection => {
+      connectedPointIds.add(connection.point1DrillPointId);
+      connectedPointIds.add(connection.point2DrillPointId);
+    });
+
+    // Return drill points that are not in the connected set
+    return this.patternData.drillLocations.filter(point => !connectedPointIds.has(point.id));
   }
 
   // Get current delay display text

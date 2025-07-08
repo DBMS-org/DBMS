@@ -21,39 +21,7 @@ export interface UpdateSiteBlastingDataRequest {
   jsonData: any;
 }
 
-// Blast Sequence Models
-export interface BlastSequence {
-  id: number;
-  projectId: number;
-  siteId: number;
-  name: string;
-  description: string;
-  delayBetweenHoles: number;
-  delayBetweenRows: number;
-  simulationSettingsJson: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  createdByUserId: number;
-}
 
-export interface CreateBlastSequenceRequest {
-  projectId: number;
-  siteId: number;
-  name: string;
-  description: string;
-  delayBetweenHoles: number;
-  delayBetweenRows: number;
-  simulationSettingsJson: string;
-}
-
-export interface UpdateBlastSequenceRequest {
-  name: string;
-  description: string;
-  delayBetweenHoles: number;
-  delayBetweenRows: number;
-  simulationSettingsJson: string;
-}
 
 // Related Models (from existing drill-point.model.ts)
 export interface DrillPoint {
@@ -129,8 +97,4 @@ export interface SiteBlastingResponse {
   message?: string;
 }
 
-export interface BlastSequenceResponse {
-  success: boolean;
-  data: BlastSequence;
-  message?: string;
-} 
+ 
