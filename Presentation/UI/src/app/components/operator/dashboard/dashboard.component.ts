@@ -166,19 +166,8 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
             this.stats.sitesWithPatterns++;
           }
           
-          // Load blast sequences for the site
-          const sequencesSub = this.siteBlastingService.getBlastSequences(
-            this.assignedProject!.id, 
-            site.id
-          ).subscribe({
-            next: (sequences) => {
-              if (sequences.length > 0) {
-                this.stats.sitesWithSequences++;
-              }
-            },
-            error: (err) => console.warn('Failed to load sequences for site', site.id, err)
-          });
-          this.subscriptions.add(sequencesSub);
+          // Note: BlastSequence entity was removed as it's not used in the application
+          // Statistics for sitesWithSequences will be calculated differently if needed in the future
         },
         error: (err) => console.warn('Failed to load drill points for site', site.id, err)
       });

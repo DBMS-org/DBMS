@@ -6,9 +6,7 @@ import {
   SiteBlastingData,
   CreateSiteBlastingDataRequest,
   UpdateSiteBlastingDataRequest,
-  BlastSequence,
-  CreateBlastSequenceRequest,
-  UpdateBlastSequenceRequest,
+
   BlastConnection,
   CreateBlastConnectionRequest,
   UpdateBlastConnectionRequest,
@@ -48,26 +46,7 @@ export class SiteBlastingService {
     return this.http.delete<boolean>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data`);
   }
 
-  // Blast Sequence Methods
-  getBlastSequences(projectId: number, siteId: number): Observable<BlastSequence[]> {
-    return this.http.get<BlastSequence[]>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/sequences`);
-  }
 
-  getBlastSequence(id: number): Observable<BlastSequence> {
-    return this.http.get<BlastSequence>(`${this.apiUrl}/sequences/${id}`);
-  }
-
-  createBlastSequence(request: CreateBlastSequenceRequest): Observable<BlastSequence> {
-    return this.http.post<BlastSequence>(`${this.apiUrl}/projects/${request.projectId}/sites/${request.siteId}/sequences`, request);
-  }
-
-  updateBlastSequence(id: number, request: UpdateBlastSequenceRequest): Observable<BlastSequence> {
-    return this.http.put<BlastSequence>(`${this.apiUrl}/sequences/${id}`, request);
-  }
-
-  deleteBlastSequence(id: number): Observable<boolean> {
-    return this.http.delete<boolean>(`${this.apiUrl}/sequences/${id}`);
-  }
 
   // Blast Connection Methods
   getBlastConnections(projectId: number, siteId: number): Observable<BlastConnection[]> {

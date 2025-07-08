@@ -151,12 +151,38 @@ export class CsvUploadComponent implements OnInit {
             this.dataLoaded.emit(event.body);
             console.log('CsvUploadComponent - dataLoaded event emitted successfully');
 
-            // Store the data in the unified service
             // Convert drill holes to drill locations
             const drillLocations = event.body.map(hole => 
               DrillModelConverter.drillHoleToDrillLocation(hole)
             );
-            this.unifiedDrillDataService.setDrillLocations(drillLocations);
+
+            // Create a proper pattern context first
+            const patternData = {
+              drillLocations: drillLocations,
+              settings: {
+                name: 'CSV Import',
+                projectId: Number(this.projectId) || 0,
+                siteId: Number(this.siteId) || 0,
+                spacing: 3.0,
+                burden: 2.5,
+                depth: 10.0
+              },
+              projectId: Number(this.projectId) || 0,
+              siteId: Number(this.siteId) || 0
+            };
+
+            // Set the complete pattern context to ensure data persistence
+            this.unifiedDrillDataService.setCurrentPattern(patternData);
+            
+            console.log('✅ Pattern data stored in unified service:', {
+              drillLocationCount: drillLocations.length,
+              projectId: patternData.projectId,
+              siteId: patternData.siteId
+            });
+
+            // Verify the data was stored correctly
+            const retrievedData = this.unifiedDrillDataService.getDrillLocations();
+            console.log('🔍 Verification - Retrieved data count:', retrievedData.length);
 
             // Compute 3D capability
             this.has3DData = event.body.some(hole => (hole as any).azimuth !== null && (hole as any).azimuth !== undefined && (hole as any).dip !== null && (hole as any).dip !== undefined);
