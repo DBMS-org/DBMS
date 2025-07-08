@@ -36,53 +36,7 @@ namespace Presentation.API.Controllers
             return Ok(new { success = true, hadData = hasData });
         }
 
-        #region Blast Sequences
-        
-        [HttpGet("projects/{projectId}/sites/{siteId}/sequences")]
-        public async Task<IActionResult> GetBlastSequences(int projectId, int siteId)
-            {
-            var result = await _siteBlastingService.GetBlastSequencesAsync(projectId, siteId);
-            return Ok(result);
-        }
 
-        [HttpGet("sequences/{id}")]
-        public async Task<IActionResult> GetBlastSequence(int id)
-            {
-            var result = await _siteBlastingService.GetBlastSequenceAsync(id);
-            if (result == null)
-                return NotFound();
-            return Ok(result);
-        }
-
-        [HttpPost("projects/{projectId}/sites/{siteId}/sequences")]
-        public async Task<IActionResult> CreateBlastSequence(int projectId, int siteId, [FromBody] CreateBlastSequenceRequest request)
-        {
-                request.ProjectId = projectId;
-                request.SiteId = siteId;
-            
-                var userId = GetCurrentUserId();
-            var result = await _siteBlastingService.CreateBlastSequenceAsync(request, userId);
-            return CreatedAtAction(nameof(GetBlastSequence), new { id = result.Id }, result);
-        }
-
-        [HttpPut("sequences/{id}")]
-        public async Task<IActionResult> UpdateBlastSequence(int id, [FromBody] UpdateBlastSequenceRequest request)
-        {
-                var userId = GetCurrentUserId();
-            var result = await _siteBlastingService.UpdateBlastSequenceAsync(id, request, userId);
-            return Ok(result);
-        }
-
-        [HttpDelete("sequences/{id}")]
-        public async Task<IActionResult> DeleteBlastSequence(int id)
-        {
-            var success = await _siteBlastingService.DeleteBlastSequenceAsync(id);
-            if (!success)
-                return NotFound();
-            return NoContent();
-        }
-
-        #endregion
 
         #region Blast Connections
         

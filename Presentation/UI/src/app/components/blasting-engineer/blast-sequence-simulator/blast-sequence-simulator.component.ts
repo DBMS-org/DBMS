@@ -23,11 +23,12 @@ import { PatternRendererComponent } from './components/pattern-renderer/pattern-
 import { ViewControlsComponent } from './components/view-controls/view-controls.component';
 import { AnimationService } from './services/animation.service';
 import { ReportExportService } from './services/report-export.service';
-import { NavigationController } from '../shared/services/navigation-controller.service';
-import { StateService } from '../../../core/services/state.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { BlastSequenceDataService } from '../shared/services/blast-sequence-data.service';
-import { Project } from '../../../core/models/project.model';
+import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
+import { SiteBlastingService } from '../../../core/services/site-blasting.service';
+import { ActivatedRoute } from '@angular/router';
+import { ConnectorType } from '../../../core/models/site-blasting.model';
+import { DrillLocation } from '../../../core/models/drilling.model';
 
 @Component({
   selector: 'app-blast-sequence-simulator',
@@ -293,50 +294,21 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
   private currentSiteId!: number;
 
   constructor(
-    private dataService: BlastSequenceDataService,
+    private route: ActivatedRoute,
     private router: Router,
     private animationService: AnimationService,
     private reportExportService: ReportExportService,
     private cdr: ChangeDetectorRef,
-    private navigationController: NavigationController,
-    private stateService: StateService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private unifiedDrillDataService: UnifiedDrillDataService,
+    private siteBlastingService: SiteBlastingService
   ) {}
 
   ngOnInit(): void {
-    this.stateService.state$.pipe(
-      takeUntil(this.destroy$),
-      map(state => state.activeProjectId)
-    ).subscribe(projectId => {
-      if (projectId) this.currentProjectId = projectId;
-    });
+    // Initialize site context from route parameters
+    this.initializeSiteContext();
     
-    this.stateService.state$.pipe(
-      takeUntil(this.destroy$),
-      map(state => state.activeSiteId)
-    ).subscribe(siteId => {
-      if (siteId) this.currentSiteId = siteId;
-    });
-
-    this.dataService.patternData$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(data => {
-        if (data) {
-          this.patternData = data;
-          this.initializeSimulation();
-        } else {
-          // If no data, maybe navigate back or show a message
-          this.notificationService.showError('No pattern data loaded.');
-          this.navigationController.navigateToPatternCreator();
-        }
-      });
-
-    this.dataService.validation$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(validation => {
-        this.validation = validation;
-      });
-
+    // Setup animation frame subscription
     this.animationService.getAnimationFrame()
       .pipe(takeUntil(this.destroy$))
       .subscribe(frame => {
@@ -345,8 +317,107 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
         // Manually trigger change detection because animation frames run outside Angular's zone
         this.cdr.detectChanges();
       });
+  }
 
-    this.dataService.setCurrentWorkflowStep('simulate');
+  private initializeSiteContext(): void {
+    // Get project and site from route parameters
+    this.route.params.subscribe(params => {
+      this.currentProjectId = +params['projectId'];
+      this.currentSiteId = +params['siteId'];
+      
+      console.log('🔍 Simulator - Setting site context', { 
+        projectId: this.currentProjectId, 
+        siteId: this.currentSiteId 
+      });
+      
+      // Load data now that we have context
+      this.loadDataFromBackend();
+    });
+  }
+
+  private loadDataFromBackend(): void {
+    if (!this.currentProjectId || !this.currentSiteId) {
+      console.error('❌ Missing project or site ID for simulator');
+      this.notificationService.showError('Missing project or site context');
+      return;
+    }
+
+    // Load pattern data first
+    this.loadPatternData();
+    
+    // Load blast connections
+    this.loadBlastConnections();
+  }
+
+  private loadPatternData(): void {
+    this.unifiedDrillDataService.loadPatternData(this.currentProjectId, this.currentSiteId)
+      .subscribe({
+        next: (patternData) => {
+          if (patternData && patternData.drillLocations && patternData.drillLocations.length > 0) {
+            // Convert unified service PatternData to component PatternData format
+            this.patternData = {
+              drillPoints: patternData.drillLocations as any,
+              settings: patternData.settings
+            } as any;
+            console.log('✅ Simulator loaded pattern data with', patternData.drillLocations.length, 'points');
+            this.cdr.detectChanges();
+          } else {
+            console.warn('⚠️ No pattern data available for simulation');
+            this.notificationService.showError('No drill pattern found. Please create a pattern first.');
+            this.goToPatternCreator();
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error loading pattern data:', error);
+          this.notificationService.showError('Failed to load drill pattern data');
+          this.goToPatternCreator();
+        }
+      });
+  }
+
+  private loadBlastConnections(): void {
+    this.siteBlastingService.getBlastConnections(this.currentProjectId, this.currentSiteId)
+      .subscribe({
+        next: (connections) => {
+          if (connections && connections.length > 0) {
+            // Map API connections to frontend format
+            this.connections = connections.map(conn => ({
+              id: conn.id,
+              point1DrillPointId: conn.point1DrillPointId,
+              point2DrillPointId: conn.point2DrillPointId,
+              connectorType: this.mapConnectorTypeFromApi(conn.connectorType),
+              delay: conn.delay,
+              sequence: conn.sequence,
+              projectId: conn.projectId,
+              siteId: conn.siteId,
+              createdAt: conn.createdAt,
+              updatedAt: conn.updatedAt
+            }));
+            
+            console.log('✅ Simulator loaded', connections.length, 'blast connections');
+            this.initializeSimulation();
+            this.cdr.detectChanges();
+          } else {
+            console.warn('⚠️ No blast connections found for simulation');
+            this.notificationService.showError('No blast sequence found. Please create connections first.');
+            this.goToSequenceDesigner();
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error loading blast connections:', error);
+          this.notificationService.showError('Failed to load blast sequence data');
+          this.goToSequenceDesigner();
+        }
+      });
+  }
+
+  private mapConnectorTypeFromApi(connectorType: number): any {
+    // Map from backend enum to frontend enum
+    switch (connectorType) {
+      case 0: return 'DETONATING_CORD'; // ConnectorType.DetonatingCord
+      case 1: return 'CONNECTORS'; // ConnectorType.Connectors  
+      default: return 'DETONATING_CORD';
+    }
   }
 
   ngOnDestroy(): void {
@@ -358,36 +429,30 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
   // Animation Controls
   play(): void {
     if (!this.patternData || this.connections.length === 0) return;
-    this.dataService.updateSimulationState({ 
-      isPlaying: true, 
-      isPaused: false,
-      currentTime: 0
-    });
+    this.simulationState.isPlaying = true;
+    this.simulationState.isPaused = false;
+    this.simulationState.currentTime = 0;
     this.animationService.startAnimation(this.simulationState, this.connections);
   }
 
   pause(): void {
-    this.dataService.updateSimulationState({ 
-      isPlaying: false, 
-      isPaused: true 
-    });
+    this.simulationState.isPlaying = false;
+    this.simulationState.isPaused = true;
     this.animationService.stopAnimation();
   }
 
   stop(): void {
-    this.dataService.updateSimulationState({ 
-      isPlaying: false, 
-      isPaused: false,
-      currentTime: 0,
-      currentStep: 0
-    });
+    this.simulationState.isPlaying = false;
+    this.simulationState.isPaused = false;
+    this.simulationState.currentTime = 0;
+    this.simulationState.currentStep = 0;
     this.animationService.stopAnimation();
     this.animationService.resetAnimation();
   }
 
   seekToTime(time: number): void {
     const clampedTime = Math.max(0, Math.min(time, this.simulationState.totalDuration));
-    this.dataService.updateSimulationState({ currentTime: clampedTime });
+    this.simulationState.currentTime = clampedTime;
   }
 
   // View Controls
@@ -487,17 +552,16 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     if (!this.patternData) return;
 
     try {
-      const currentProject = await firstValueFrom(this.dataService.currentProject$);
       await this.reportExportService.exportReport({
         patternData: this.patternData,
         connections: this.connections,
         simulationSettings: this.simulationSettings,
         simulationState: this.simulationState,
-        projectName: currentProject?.name || 'Unnamed Project',
+        projectName: `Project ${this.currentProjectId} - Site ${this.currentSiteId}`,
         canvasRef: this.containerRef,
         metrics: {
           totalBlastTime: this.simulationState.totalDuration,
-          holes: this.patternData.drillPoints.length,
+          holes: this.patternData.drillPoints?.length || 0,
           connections: this.connections.length,
           averageDelayBetweenHoles: this.metrics.averageDelayBetweenHoles,
           maxSimultaneousDetonations: this.metrics.maxSimultaneousDetonations,
@@ -524,18 +588,17 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     }
 
     try {
-      // Save pattern data and connections
-      this.dataService.setPatternData(this.patternData, true);
-      this.dataService.setConnections(this.connections, true);
-      this.dataService.savePatternData();
-      this.dataService.saveConnections();
-
+      // For simulator, we don't need to save data since it's loaded from database
+      // Just show success message
       this.isSaved = true;
+      this.notificationService.showSuccess('Simulation state saved.');
+      
       this.saveTimeout = setTimeout(() => {
         this.isSaved = false;
       }, 3000);
     } catch (error) {
       console.error('Error saving simulation:', error);
+      this.notificationService.showError('Failed to save simulation.');
     }
   }
 
@@ -555,11 +618,11 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
 
   // Navigation methods for breadcrumb navigation
   goToPatternCreator(): void {
-    this.navigationController.navigateToPatternCreator(this.currentProjectId, this.currentSiteId);
+    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'pattern-creator']);
   }
 
   goToSequenceDesigner(): void {
-    this.navigationController.navigateToSequenceDesigner(this.currentProjectId, this.currentSiteId);
+    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'sequence-designer']);
   }
 
   /**
@@ -615,13 +678,14 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
 
   private initializeSimulation(): void {
     if (!this.patternData) return;
-    this.dataService.updateSimulationState({
-      isPlaying: false,
-      isPaused: false,
-      currentTime: 0,
-      currentStep: 0,
-      totalDuration: this.patternData.drillPoints.length * this.simulationSettings.effectIntensity
-    });
+    
+    // Update simulation state directly
+    this.simulationState.isPlaying = false;
+    this.simulationState.isPaused = false;
+    this.simulationState.currentTime = 0;
+    this.simulationState.currentStep = 0;
+    this.simulationState.totalDuration = (this.patternData.drillPoints?.length || 0) * this.simulationSettings.effectIntensity;
+    
     this.animationService.resetAnimation();
     this.animationService.startAnimation(this.simulationState, this.connections);
   }

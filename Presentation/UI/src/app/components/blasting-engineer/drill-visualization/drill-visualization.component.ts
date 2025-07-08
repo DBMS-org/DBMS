@@ -1,19 +1,18 @@
 import { Component, OnInit, ElementRef, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { StateService } from '../../../core/services/state.service';
 import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
-import { DrillLocation } from '../../../core/models/drilling.model';
 import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
 import { SiteService } from '../../../core/services/site.service';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { DrillLocation } from '../../../core/models/drilling.model';
 
 @Component({
   selector: 'app-drill-visualization',
   imports: [CommonModule],
   templateUrl: './drill-visualization.component.html',
-  styleUrls: ['./drill-visualization.component.scss']
+  styleUrl: './drill-visualization.component.scss'
 })
 export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDestroy {
   drillData: DrillHole[] = [];
@@ -55,22 +54,13 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     private drillHoleService: DrillHoleService,
     private siteService: SiteService,
     private router: Router,
-    private route: ActivatedRoute,
-    private stateService: StateService
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     console.log('DrillVisualizationComponent initialized successfully!');
     console.log('Current URL:', this.router.url);
-    const { activeProjectId, activeSiteId } = this.stateService.currentState;
-    if (activeProjectId && activeSiteId) {
-      this.projectId = activeProjectId;
-      this.siteId = activeSiteId;
-      console.log('Drill Visualization - Using StateService context', { projectId: this.projectId, siteId: this.siteId });
-      this.loadDrillData();
-    } else {
-      this.extractRouteContext();
-    }
+    this.extractRouteContext();
   }
 
   private extractRouteContext(): void {
@@ -83,12 +73,9 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       const newSiteId = +(params.get('siteId') || '0');
       
       // Update context and load data if we have valid IDs
-      if (newProjectId && newSiteId && (newProjectId !== this.projectId || newSiteId !== this.siteId)) {
+      if (newProjectId !== this.projectId || newSiteId !== this.siteId) {
         this.projectId = newProjectId;
         this.siteId = newSiteId;
-        // Persist to global state for downstream components
-        this.stateService.setProjectId(newProjectId);
-        this.stateService.setSiteId(newSiteId);
         console.log('Extracted route context from params:', { projectId: this.projectId, siteId: this.siteId });
         
         // Load data now that we have the route context
@@ -198,24 +185,8 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   }
   
   private loadFromLocalService(): void {
-    // Get drill locations from unified service and convert to drill holes
-    const drillLocations = this.unifiedDrillDataService.getDrillLocations();
-    this.drillData = drillLocations.map(loc => ({
-      id: loc.id,
-      easting: loc.easting || loc.x,
-      northing: loc.northing || loc.y,
-      elevation: loc.elevation || 0,
-      depth: loc.depth || 0,
-      length: loc.length || loc.depth || 0,
-      azimuth: loc.azimuth || 0,
-      dip: loc.dip || 0,
-      actualDepth: loc.actualDepth || loc.depth || 0,
-      stemming: loc.stemming || 0,
-      projectId: loc.projectId,
-      siteId: loc.siteId,
-      createdAt: loc.createdAt.toISOString(),
-      updatedAt: loc.updatedAt.toISOString()
-    } as DrillHole));
+    const locations = this.unifiedDrillDataService.getDrillLocations();
+    this.drillData = locations.map(loc => this.convertLocationToHole(loc));
     this.isDataLoaded = this.drillData.length > 0;
     
     console.log('Loaded drill data from local service:', this.drillData);
@@ -240,6 +211,30 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     } else {
       console.log('No drill data available. Please upload a CSV file first.');
     }
+  }
+
+  // Helper to convert unified DrillLocation to legacy DrillHole shape
+  private convertLocationToHole(location: DrillLocation): DrillHole {
+    return {
+      serialNumber: undefined,
+      id: location.id,
+      name: location.name,
+      easting: location.easting ?? location.x,
+      northing: location.northing ?? location.y,
+      elevation: location.elevation ?? 0,
+      length: location.length ?? location.depth,
+      depth: location.depth,
+      azimuth: location.azimuth,
+      dip: location.dip,
+      actualDepth: location.actualDepth ?? location.depth,
+      stemming: location.stemming ?? 0,
+      projectId: location.projectId,
+      siteId: location.siteId,
+      createdAt: location.createdAt.toISOString?.() || '',
+      updatedAt: location.updatedAt.toISOString?.() || '',
+      has3DData: location.has3DData,
+      requiresFallbackTo2D: location.requiresFallbackTo2D
+    } as DrillHole;
   }
 
   /// <summary>
@@ -575,8 +570,8 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
 
     // Calculate optimal viewing distance
     const maxDimension = Math.max(patternWidth, patternHeight, 20);
-    const distance = maxDimension * 2.0;
-    const height = Math.max(distance * 0.5, 40);
+    const distance = maxDimension * 1.2; // Give a bit more room to see the context
+    const height = Math.max(distance * 0.8, 50); // Ensure a higher camera angle to keep the grid visible
 
     // Position camera to frame the pattern
     this.camera.position.set(
@@ -602,7 +597,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   // Set preset camera views
   setTopView(): void {
     if (this.camera && this.controls) {
-      this.camera.position.set(50, 150, 50);
+      this.camera.position.set(50, 100, 50); // Lowered camera
       this.controls.target.set(50, 0, 50);
       this.controls.update();
       console.log('📷 Top view activated');
@@ -611,7 +606,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
 
   setSideView(): void {
     if (this.camera && this.controls) {
-      this.camera.position.set(150, 30, 50);
+      this.camera.position.set(100, 30, 50); // Closer camera
       this.controls.target.set(50, 0, 50);
       this.controls.update();
       console.log('📷 Side view activated');
@@ -620,7 +615,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
 
   setIsometricView(): void {
     if (this.camera && this.controls) {
-      this.camera.position.set(120, 80, 120);
+      this.camera.position.set(90, 60, 90); // Closer camera
       this.controls.target.set(50, 0, 50);
       this.controls.update();
       console.log('📷 Isometric view activated');
@@ -706,8 +701,8 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   private setOptimalCameraView(): void {
     // Position camera for best overview of drilling pattern
     const gridCenter = 50; // Center of 100x100 grid
-    const distance = 120;   // Optimal viewing distance
-    const height = 60;      // Good elevation angle
+    const distance = 90;   // Closer viewing distance
+    const height = 50;      // Lower elevation angle
     const angle = Math.PI / 6; // 30 degrees from north
     
     this.camera.position.set(
@@ -777,6 +772,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
 
     // Create new grid sized to match the drilling pattern
     this.gridHelper = new THREE.GridHelper(gridSize, gridDivisions, 0x444444, 0x888888);
+    this.gridHelper.position.set(gridSize / 2, 0, gridSize / 2); // Center the grid
     this.scene.add(this.gridHelper);
 
     // Create new ground plane sized to match the drilling pattern  
@@ -788,6 +784,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     });
     this.groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
     this.groundPlane.rotation.x = -Math.PI / 2;
+    this.groundPlane.position.set(gridSize / 2, 0, gridSize / 2); // Center the ground plane
     this.groundPlane.receiveShadow = true;
     this.scene.add(this.groundPlane);
 
@@ -795,53 +792,41 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   }
 
   private createCustomAxes(): void {
-    // Create custom axes with proper colors for drilling coordinates
-    // Red = East (X-axis), Green = North (Z-axis), Blue = Up (Y-axis)
-    
-    const axisLength = 10;
-    const axisWidth = 3;
+    const axisLength = 12;
+    const origin = new THREE.Vector3(0, 0, 0);
 
-    // East axis (X) - Red
-    const eastGeometry = new THREE.CylinderGeometry(0.05, 0.05, axisLength, 8);
-    const eastMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const eastAxis = new THREE.Mesh(eastGeometry, eastMaterial);
-    eastAxis.rotation.z = -Math.PI / 2; // Rotate to align with X-axis
-    eastAxis.position.x = axisLength / 2;
-    this.scene.add(eastAxis);
+    // East (X) - Red
+    const eastArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), origin, axisLength, 0xff0000, 2, 1.5);
+    this.scene.add(eastArrow);
 
-    // North axis (Z) - Green  
-    const northGeometry = new THREE.CylinderGeometry(0.05, 0.05, axisLength, 8);
-    const northMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const northAxis = new THREE.Mesh(northGeometry, northMaterial);
-    northAxis.rotation.x = Math.PI / 2; // Rotate to align with Z-axis
-    northAxis.position.z = axisLength / 2;
-    this.scene.add(northAxis);
+    // North (Z) - Green
+    const northArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), origin, axisLength, 0x00ff00, 2, 1.5);
+    this.scene.add(northArrow);
 
-    // Up axis (Y) - Blue
-    const upGeometry = new THREE.CylinderGeometry(0.05, 0.05, axisLength, 8);
-    const upMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-    const upAxis = new THREE.Mesh(upGeometry, upMaterial);
-    upAxis.position.y = axisLength / 2;
-    this.scene.add(upAxis);
+    // Up (Y) - Blue
+    const upArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), origin, axisLength, 0x0000ff, 2, 1.5);
+    this.scene.add(upArrow);
     
     // Add axis labels
     this.addAxisLabels();
   }
 
   private addAxisLabels(): void {
+    const axisOffset = 14; // Position labels just beyond the arrows
+
     // East label (Red)
     const eastLabel = this.createAxisLabel('EAST', 0xff0000);
-    eastLabel.position.set(12, 0.5, 0);
+    eastLabel.position.set(axisOffset, 0.5, 0);
     this.scene.add(eastLabel);
 
     // North label (Green)  
     const northLabel = this.createAxisLabel('NORTH', 0x00ff00);
-    northLabel.position.set(0, 0.5, 12);
+    northLabel.position.set(0, 0.5, axisOffset);
     this.scene.add(northLabel);
 
     // Up label (Blue)
     const upLabel = this.createAxisLabel('UP', 0x0000ff);
-    upLabel.position.set(0, 12, 0);
+    upLabel.position.set(0, axisOffset, 0);
     this.scene.add(upLabel);
   }
 
@@ -852,8 +837,8 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       return new THREE.Sprite(new THREE.SpriteMaterial({ color: 0xffffff }));
     }
 
-    canvas.width = 128;
-    canvas.height = 32;
+    canvas.width = 200;
+    canvas.height = 50;
     
     // Background
     context.fillStyle = 'rgba(255, 255, 255, 0.9)';
@@ -866,15 +851,31 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     
     // Text
     context.fillStyle = `#${color.toString(16).padStart(6, '0')}`;
-    context.font = 'bold 16px Arial';
+    context.font = 'bold 18px "Segoe UI", Arial, sans-serif';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
+    
+    // Add text stroke for better readability
+    context.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    context.lineWidth = 3;
+    context.strokeText(text, canvas.width/2, canvas.height/2);
+    
+    // Fill text
     context.fillText(text, canvas.width/2, canvas.height/2);
     
     const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({ map: texture });
+    texture.colorSpace = THREE.SRGBColorSpace;
+    
+    const material = new THREE.SpriteMaterial({ 
+      map: texture,
+      transparent: true,
+      alphaTest: 0.1,
+      depthTest: false,
+      depthWrite: false
+    });
+    
     const label = new THREE.Sprite(material);
-    label.scale.set(3, 0.75, 1);
+    label.scale.set(4, 1, 1); // Larger scale for better visibility
     
     return label;
   }
@@ -948,7 +949,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       return;
     }
 
-        // PRECISE METHOD: Convert UTM coordinates to local meter-based grid system
+    // PRECISE METHOD: Convert UTM coordinates to local meter-based grid system
     
     // Step 1: Find the lowest coordinates (this becomes our origin 0,0,0)
     console.log(`🔍 Raw drill data check:`, this.drillData.map(h => ({
@@ -959,11 +960,24 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     })));
     
     // Ensure coordinates are numbers and filter out invalid 0.00 UTM coordinates
-    const eastings = this.drillData.map(h => Number(h.easting)).filter(n => !isNaN(n) && n > 0);
-    const northings = this.drillData.map(h => Number(h.northing)).filter(n => !isNaN(n) && n > 0);
-    const elevations = this.drillData.map(h => Number(h.elevation)).filter(n => !isNaN(n) && n > 0);
+    const MIN_UTM_COORDINATE = 1000; // Heuristic to prevent tiny, invalid coordinates from becoming the origin
+    const validHolesForOrigin = this.drillData.filter(h => 
+      !isNaN(Number(h.easting)) && Number(h.easting) > MIN_UTM_COORDINATE &&
+      !isNaN(Number(h.northing)) && Number(h.northing) > MIN_UTM_COORDINATE
+    );
+
+    if (validHolesForOrigin.length === 0) {
+      this.errorMessage = `Error: No valid drill holes found for visualization. Please ensure Easting/Northing coordinates are greater than ${MIN_UTM_COORDINATE}.`;
+      console.error('No valid holes for origin calculation. Aborting.');
+      this.clearMessagesAfterDelay();
+      return;
+    }
     
-    console.log(`🔍 Extracted coordinates:`, {
+    const eastings = validHolesForOrigin.map(h => Number(h.easting));
+    const northings = validHolesForOrigin.map(h => Number(h.northing));
+    const elevations = validHolesForOrigin.map(h => Number(h.elevation)).filter(n => !isNaN(n));
+    
+    console.log(`🔍 Extracted coordinates from ${validHolesForOrigin.length} valid holes:`, {
       eastings,
       northings,
       elevations
@@ -989,10 +1003,19 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       📍 Invalid hole IDs: [${invalidHoles.map(h => h.id).join(', ')}]`);
     
     // Step 2: Calculate pattern dimensions in meters from origin
-    const eastingRange = Math.max(...this.drillData.map(h => h.easting)) - originEasting;
-    const northingRange = Math.max(...this.drillData.map(h => h.northing)) - originNorthing;
-    const elevationRange = Math.max(...this.drillData.map(h => h.elevation)) - originElevation;
+    const eastingRange = Math.max(...eastings) - originEasting;
+    const northingRange = Math.max(...northings) - originNorthing;
+    const elevationRange = Math.max(...elevations) - originElevation;
     
+    // Center the pattern in the 100x100 grid
+    const gridSize = 100;
+    const patternCenterX = eastingRange / 2;
+    const patternCenterZ = northingRange / 2;
+    const gridCenterX = gridSize / 2;
+    const gridCenterZ = gridSize / 2;
+    const offsetX = gridCenterX - patternCenterX;
+    const offsetZ = gridCenterZ - patternCenterZ;
+
     // Step 3: Set 1:1 meter scale for grid positioning
     const meterScale = 1.0; // 1 UTM meter = 1 grid unit
     
@@ -1005,13 +1028,13 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       📐 Pattern Size: ${eastingRange.toFixed(2)}m East × ${northingRange.toFixed(2)}m North × ${elevationRange.toFixed(2)}m Up
       📊 Total Holes: ${this.drillData.length}
       🔄 Conversion: UTM - Origin = Grid Meters
-      🔍 All Eastings: [${this.drillData.map(h => h.easting.toFixed(2)).join(', ')}]
-      🔍 All Northings: [${this.drillData.map(h => h.northing.toFixed(2)).join(', ')}]`);
+      🔍 All Eastings: [${this.drillData.map(h => h.easting?.toFixed(2)).join(', ')}]
+      🔍 All Northings: [${this.drillData.map(h => h.northing?.toFixed(2)).join(', ')}]`);
 
     this.drillData.forEach((hole, index) => {
-      // Skip holes with invalid coordinates (0.00 values)
-      if (hole.easting <= 0 || hole.northing <= 0 || hole.elevation <= 0) {
-        console.log(`⚠️ Skipping hole ${hole.id} - invalid coordinates: E=${hole.easting}, N=${hole.northing}, Z=${hole.elevation}`);
+      // Skip holes with invalid coordinates (e.g. 0.00 values or non-UTM outliers)
+      if (hole.easting <= MIN_UTM_COORDINATE || hole.northing <= MIN_UTM_COORDINATE) {
+        console.log(`⚠️ Skipping hole ${hole.id} - invalid or outlier coordinates: E=${hole.easting}, N=${hole.northing}`);
         return;
       }
       
@@ -1030,8 +1053,8 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       
       // Position holes starting from grid corner (0,0,0) - bottom-left corner of grid
       // Grid extends from (0,0) to (100,100), so holes are positioned within this area
-      const x = eastMetersFromCorner;   // X = East from corner (0 to 100m)
-      const z = northMetersFromCorner;  // Z = North from corner (0 to 100m)  
+      const x = eastMetersFromCorner + offsetX;   // Centered X
+      const z = northMetersFromCorner + offsetZ;  // Centered Z
       const y = upMetersFromCorner;     // Y = Up from corner base elevation
       
       // Step 6: Create drill hole with exact positioning - NO ADJUSTMENTS
@@ -1084,7 +1107,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
         🌍 UTM Coordinates: E=${hole.easting.toFixed(2)}, N=${hole.northing.toFixed(2)}, Z=${hole.elevation.toFixed(2)}
         📐 Distance from Grid Corner: East=${eastMetersFromCorner.toFixed(2)}m, North=${northMetersFromCorner.toFixed(2)}m, Up=${upMetersFromCorner.toFixed(2)}m
         🎯 Grid Position: X=${x.toFixed(2)}, Y=${y.toFixed(2)}, Z=${z.toFixed(2)}
-        📏 Hole Depth: ${hole.depth}m (rendered: ${depth.toFixed(2)}m)
+        🏗️ Hole Depth: ${hole.depth}m (rendered: ${depth.toFixed(2)}m)
         🧭 Azimuth: ${hole.azimuth}° (${this.getAzimuthDirection(hole.azimuth)})
         📐 Dip: ${hole.dip}° downward
         🏗️ Stemming: ${hole.stemming}m`);
