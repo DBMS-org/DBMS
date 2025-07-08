@@ -45,9 +45,7 @@ public static class ErrorCodes
     public const string InvalidCsvFormat = "INVALID_CSV_FORMAT";
 
     // Blasting operations errors
-    public const string BlastSequenceNotFound = "BLAST_SEQUENCE_NOT_FOUND";
     public const string DrillPatternNotFound = "DRILL_PATTERN_NOT_FOUND";
-    public const string InvalidBlastSequenceOwnership = "INVALID_BLAST_SEQUENCE_OWNERSHIP";
     public const string InvalidDrillPatternOwnership = "INVALID_DRILL_PATTERN_OWNERSHIP";
 
     // Error messages
@@ -72,7 +70,7 @@ public static class ErrorCodes
         public static string MachineNotFound(int id) => $"Machine with ID {id} was not found.";
         public static string DrillHoleNotFound(string id) => $"Drill hole with ID '{id}' was not found.";
         public static string DrillHoleAlreadyExists(string id) => $"Drill hole with ID '{id}' already exists.";
-        public static string BlastSequenceNotFound(int id) => $"Blast sequence with ID {id} was not found.";
+
         public static string DrillPatternNotFound(int id) => $"Drill pattern with ID {id} was not found.";
         public static string InvalidCoordinates(double x, double y) => $"Invalid coordinates: ({x}, {y}).";
         public static string DuplicateCoordinates(double x, double y) => $"A drill point already exists at coordinates ({x:F2}, {y:F2}).";

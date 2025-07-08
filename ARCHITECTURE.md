@@ -157,7 +157,7 @@ DBMS/
 * **Entities Used Directly:** Region, Permission, Role (simple CRUD)
 * **DTOs (23 total):**
   * **Security-Sensitive** – `UserDto`, `LoginRequest`, `LoginResponse`, `ForgotPasswordRequest`, `ResetPasswordRequest`.
-  * **Complex Mapping** – `ProjectDto`, `MachineDto`, `ProjectSiteDto`, `DrillPatternDto`, `BlastSequenceDto`, `WorkflowProgressDto`, `SiteBlastingDto`, `UserAssignmentDto`.
+  * **Complex Mapping** – `ProjectDto`, `MachineDto`, `ProjectSiteDto`, `DrillPatternDto`, `WorkflowProgressDto`, `SiteBlastingDto`, `UserAssignmentDto`.
   * **Command/Request Objects** – `Create*Request`, `Update*Request`, `CsvUploadRequest`.
   * **Utility** – `ApiResponse<T>`.
 
@@ -195,7 +195,7 @@ DBMS/
 ## 10. Future Improvement Back-log
 | 📝 Item | Priority |
 |---------|----------|
-| Split `ISiteBlastingService` into smaller interfaces (`IDrillPatternService`, `IBlastSequenceService`, `IWorkflowService`). | High |
+| Split `ISiteBlastingService` into smaller interfaces (`IDrillPatternService`, `IWorkflowService`). | High |
 | Refactor `DrillHoleService` to return DTOs instead of entities (security). | Med |
 | Introduce FluentValidation for request objects. | Med |
 | Add global exception-handling middleware with Problem-Details output. | Med |
