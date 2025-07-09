@@ -59,7 +59,7 @@ cd Presentation/API
 # dotnet ef database update   # first time only
 dotnet run
 ```
-API will listen on **https://localhost:5001** and **http://localhost:5000** (see launchSettings.json).
+API will listen on **https://localhost:5019** (see launchSettings.json).
 
 ### Run Angular UI
 ```bash
@@ -67,7 +67,7 @@ cd Presentation/UI
 npm install
 npm start     # alias for ng serve --open
 ```
-UI will be served from **http://localhost:4200** and proxy API calls to `5000`.
+UI will be served from **http://localhost:4200** and proxy API calls to `5019`.
 
 ---
 
