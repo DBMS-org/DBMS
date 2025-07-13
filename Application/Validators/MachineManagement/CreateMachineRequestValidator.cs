@@ -26,7 +26,9 @@ namespace Application.Validators.MachineManagement
                 .RequiredString("Status", 1, 50);
 
             RuleFor(x => x.ProjectId)
-                .PositiveInteger("Project ID");
+                .GreaterThan(0)
+                .WithMessage("Project ID must be greater than 0")
+                .When(x => x.ProjectId.HasValue);
 
             RuleFor(x => x.RigNo)
                 .MaximumLength(50)

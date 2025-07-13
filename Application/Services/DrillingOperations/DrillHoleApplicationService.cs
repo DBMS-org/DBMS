@@ -1,5 +1,6 @@
 using Domain.Entities.DrillingOperations;
 using Application.Interfaces.DrillingOperations;
+using Application.DTOs.DrillingOperations;
 using Microsoft.Extensions.Logging;
 using Application.DTOs.Shared;
 using Application.Utilities;
@@ -280,6 +281,177 @@ namespace Application.Services.DrillingOperations
                 _logger.LogError(ex, "Error getting drill hole count for project {ProjectId} and site {SiteId}", projectId, siteId);
                 return Result.Failure<int>(ErrorCodes.Messages.InternalError);
             }
+        }
+
+        // DTO-based methods for better frontend-backend mapping
+        public async Task<Result<IEnumerable<DrillHoleDto>>> GetAllDrillHolesDtoAsync()
+        {
+            try
+            {
+                var result = await GetAllDrillHolesAsync();
+                if (result.IsFailure)
+                {
+                    return Result.Failure<IEnumerable<DrillHoleDto>>(result.Error);
+                }
+
+                var drillHoleDtos = result.Value.Select(MapToDto);
+                return Result.Success(drillHoleDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all drill holes as DTOs");
+                return Result.Failure<IEnumerable<DrillHoleDto>>(ErrorCodes.Messages.InternalError);
+            }
+        }
+
+        public async Task<Result<DrillHoleDto>> GetDrillHoleDtoByIdAsync(string id)
+        {
+            try
+            {
+                var result = await GetDrillHoleByIdAsync(id);
+                if (result.IsFailure)
+                {
+                    return Result.Failure<DrillHoleDto>(result.Error);
+                }
+
+                var drillHoleDto = MapToDto(result.Value);
+                return Result.Success(drillHoleDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting drill hole {DrillHoleId} as DTO", id);
+                return Result.Failure<DrillHoleDto>(ErrorCodes.Messages.InternalError);
+            }
+        }
+
+        public async Task<Result<DrillHoleDto>> CreateDrillHoleFromDtoAsync(CreateDrillHoleRequest request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return Result.Failure<DrillHoleDto>(ErrorCodes.Messages.ArgumentNull);
+                }
+
+                // Map DTO to entity
+                var drillHole = new DrillHole
+                {
+                    Id = Guid.NewGuid().ToString(), // Generate new ID
+                    Name = request.Name,
+                    Easting = request.Easting,
+                    Northing = request.Northing,
+                    Elevation = request.Elevation,
+                    Length = request.Length,
+                    Depth = request.Depth,
+                    Azimuth = request.Azimuth,
+                    Dip = request.Dip,
+                    ActualDepth = request.ActualDepth,
+                    Stemming = request.Stemming,
+                    ProjectId = request.ProjectId,
+                    SiteId = request.SiteId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                var result = await CreateDrillHoleAsync(drillHole);
+                if (result.IsFailure)
+                {
+                    return Result.Failure<DrillHoleDto>(result.Error);
+                }
+
+                var drillHoleDto = MapToDto(result.Value);
+                return Result.Success(drillHoleDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating drill hole from DTO");
+                return Result.Failure<DrillHoleDto>(ErrorCodes.Messages.InternalError);
+            }
+        }
+
+        public async Task<Result> UpdateDrillHoleFromDtoAsync(string id, UpdateDrillHoleRequest request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return Result.Failure(ErrorCodes.Messages.ArgumentNull);
+                }
+
+                // Get existing drill hole
+                var existingResult = await GetDrillHoleByIdAsync(id);
+                if (existingResult.IsFailure)
+                {
+                    return Result.Failure(existingResult.Error);
+                }
+
+                var existingDrillHole = existingResult.Value;
+
+                // Update properties
+                existingDrillHole.Name = request.Name;
+                existingDrillHole.Easting = request.Easting;
+                existingDrillHole.Northing = request.Northing;
+                existingDrillHole.Elevation = request.Elevation;
+                existingDrillHole.Length = request.Length;
+                existingDrillHole.Depth = request.Depth;
+                existingDrillHole.Azimuth = request.Azimuth;
+                existingDrillHole.Dip = request.Dip;
+                existingDrillHole.ActualDepth = request.ActualDepth;
+                existingDrillHole.Stemming = request.Stemming;
+                existingDrillHole.UpdatedAt = DateTime.UtcNow;
+
+                var result = await UpdateDrillHoleAsync(existingDrillHole);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating drill hole {DrillHoleId} from DTO", id);
+                return Result.Failure(ErrorCodes.Messages.InternalError);
+            }
+        }
+
+        public async Task<Result<IEnumerable<DrillHoleDto>>> GetDrillHolesDtoBySiteIdAsync(int projectId, int siteId)
+        {
+            try
+            {
+                var result = await GetDrillHolesBySiteIdAsync(projectId, siteId);
+                if (result.IsFailure)
+                {
+                    return Result.Failure<IEnumerable<DrillHoleDto>>(result.Error);
+                }
+
+                var drillHoleDtos = result.Value.Select(MapToDto);
+                return Result.Success(drillHoleDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting drill holes for project {ProjectId} and site {SiteId} as DTOs", projectId, siteId);
+                return Result.Failure<IEnumerable<DrillHoleDto>>(ErrorCodes.Messages.InternalError);
+            }
+        }
+
+        // Helper method to map entity to DTO
+        private DrillHoleDto MapToDto(DrillHole drillHole)
+        {
+            return new DrillHoleDto
+            {
+                SerialNumber = drillHole.SerialNumber,
+                Id = drillHole.Id,
+                Name = drillHole.Name,
+                Easting = drillHole.Easting,
+                Northing = drillHole.Northing,
+                Elevation = drillHole.Elevation,
+                Length = drillHole.Length,
+                Depth = drillHole.Depth,
+                Azimuth = drillHole.Azimuth,
+                Dip = drillHole.Dip,
+                ActualDepth = drillHole.ActualDepth,
+                Stemming = drillHole.Stemming,
+                ProjectId = drillHole.ProjectId,
+                SiteId = drillHole.SiteId,
+                CreatedAt = drillHole.CreatedAt,
+                UpdatedAt = drillHole.UpdatedAt
+            };
         }
     }
 } 

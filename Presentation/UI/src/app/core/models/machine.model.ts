@@ -18,7 +18,7 @@ export interface Machine {
   specifications?: MachineSpecifications;
   createdAt: Date;
   updatedAt: Date;
-  projectId: number;
+  projectId?: number;
   operatorId?: number;
   projectName?: string;
   operatorName?: string;
@@ -48,7 +48,7 @@ export interface CreateMachineRequest {
   manufacturingYear?: number;
   status: string;
   currentLocation?: string;
-  projectId: number;
+  projectId?: number;
   operatorId?: number;
   regionId?: number;
   specifications?: MachineSpecifications;
@@ -66,7 +66,7 @@ export interface UpdateMachineRequest {
   manufacturingYear?: number;
   status: string;
   currentLocation?: string;
-  projectId: number;
+  projectId?: number;
   operatorId?: number;
   regionId?: number;
   lastMaintenanceDate?: Date;

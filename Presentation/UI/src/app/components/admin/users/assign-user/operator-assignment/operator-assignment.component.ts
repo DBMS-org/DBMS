@@ -126,7 +126,7 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
     if (assignedProject) {
       // Find machine assigned to this project (if any)
       const assignedMachine = this.allMachines.find(m => 
-        m.projectId === assignedProject.id || 
+        (m.projectId && m.projectId === assignedProject.id) || 
         m.operatorId === this.selectedOperator!.id
       );
 
@@ -160,7 +160,7 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
       .map(p => p.id);
 
     this.availableMachines = this.allMachines.filter(m => 
-      regionProjectIds.includes(m.projectId) &&
+      m.projectId && regionProjectIds.includes(m.projectId) &&
       (m.status === MachineStatus.AVAILABLE || m.status === MachineStatus.IN_MAINTENANCE) &&
       !m.operatorId // Not currently assigned to an operator
     );
@@ -176,7 +176,7 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
     // Filter machines for the selected project
     if (this.selectedProjectId) {
       this.availableMachines = this.allMachines.filter(m => 
-        m.projectId === this.selectedProjectId &&
+        m.projectId && m.projectId === this.selectedProjectId &&
         (m.status === MachineStatus.AVAILABLE || m.status === MachineStatus.IN_MAINTENANCE) &&
         !m.operatorId // Not currently assigned to an operator
       );
@@ -303,7 +303,7 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
         manufacturingYear: currentMachine.manufacturingYear,
         chassisDetails: currentMachine.chassisDetails,
         currentLocation: currentMachine.currentLocation,
-        projectId: currentMachine.projectId,
+        projectId: currentMachine.projectId || undefined,
         operatorId: undefined, // Unassign operator
         status: MachineStatus.AVAILABLE,
         lastMaintenanceDate: currentMachine.lastMaintenanceDate,

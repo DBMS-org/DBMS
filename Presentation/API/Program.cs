@@ -118,6 +118,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ReadDrillData", policy => policy.RequireRole("Admin", "Administrator", "BlastingEngineer"));
     options.AddPolicy("ManageDrillData", policy => policy.RequireRole("BlastingEngineer"));
     options.AddPolicy("ManageProjectSites", policy => policy.RequireRole("BlastingEngineer"));
+    options.AddPolicy("ManageMachines", policy => policy.RequireRole("Admin", "Administrator", "MachineManager"));
     });
 
 // Register DrillHole services (split into focused services)

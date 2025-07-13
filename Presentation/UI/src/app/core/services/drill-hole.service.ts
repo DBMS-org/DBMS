@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 
 export interface DrillHole {
   serialNumber?: number;
-  id: string;
+  id?: string; // Optional when creating; server will generate
   name?: string;
   easting: number;
   northing: number;
@@ -27,6 +27,22 @@ export interface DrillHole {
   requiresFallbackTo2D?: boolean;
 }
 
+// DTO interface for backend communication
+export interface CreateDrillHoleRequest {
+  name: string;
+  easting: number;
+  northing: number;
+  elevation: number;
+  length: number;
+  depth: number;
+  azimuth?: number | null;
+  dip?: number | null;
+  actualDepth: number;
+  stemming: number;
+  projectId: number;
+  siteId: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -38,9 +54,8 @@ export class DrillHoleService {
   // Get all drill holes
   getAllDrillHoles(): Observable<DrillHole[]> {
     return this.http.get<DrillHole[]>(this.apiUrl).pipe(
-      catchError(this.handleError)
-    );
-  }
+   catchError(this.handleError)
+    );}
 
   // Get drill hole by ID
   getDrillHole(id: string): Observable<DrillHole> {
@@ -54,10 +69,26 @@ export class DrillHoleService {
     // Validate and clean single drill hole
     const cleanedHole = this.validateAndCleanDrillHole(drillHole);
     
-    return this.http.post<DrillHole>(this.apiUrl, cleanedHole).pipe(
+    // Convert to CreateDrillHoleRequest format
+    const request: CreateDrillHoleRequest = {
+      name: cleanedHole.name || '',
+      easting: cleanedHole.easting,
+      northing: cleanedHole.northing,
+      elevation: cleanedHole.elevation,
+      length: cleanedHole.length,
+      depth: cleanedHole.depth,
+      azimuth: cleanedHole.azimuth,
+      dip: cleanedHole.dip,
+      actualDepth: cleanedHole.actualDepth,
+      stemming: cleanedHole.stemming,
+      projectId: cleanedHole.projectId || 0,
+      siteId: cleanedHole.siteId || 0
+    };
+    
+    return this.http.post<DrillHole>(this.apiUrl, request).pipe(
       catchError((error) => {
         console.error('Error creating drill hole:', error);
-        console.error('Drill hole data:', cleanedHole);
+        console.error('Drill hole data:', request);
         return this.handleError(error);
       })
     );
@@ -74,10 +105,19 @@ export class DrillHoleService {
       siteId: siteId || hole.siteId || 0
     }));
     
-    // First delete all existing drill holes, then create new ones
-    return this.deleteAllDrillHoles().pipe(
+    // Validate that we have valid project and site IDs
+    const validProjectId = projectId || holesWithContext[0]?.projectId;
+    const validSiteId = siteId || holesWithContext[0]?.siteId;
+    
+    if (!validProjectId || !validSiteId) {
+      console.error('Cannot save drill holes without valid projectId and siteId', { projectId: validProjectId, siteId: validSiteId });
+      return throwError(() => new Error('Project ID and Site ID are required to save drill holes'));
+    }
+    
+    // First delete existing drill holes for this specific project/site, then create new ones
+    return this.deleteDrillHolesBySite(validProjectId, validSiteId).pipe(
       switchMap(() => {
-        console.log('Existing data cleared, now creating new drill holes...');
+        console.log('Existing data cleared for project/site, now creating new drill holes...', { projectId: validProjectId, siteId: validSiteId });
         
         // Validate and clean the drill holes before sending
         const cleanedHoles = holesWithContext.map(hole => this.validateAndCleanDrillHole(hole));
@@ -109,16 +149,7 @@ export class DrillHoleService {
 
   // Delete drill holes for a specific site
   deleteDrillHolesBySite(projectId: number, siteId: number): Observable<void> {
-    return this.getDrillHolesBySite(projectId, siteId).pipe(
-      switchMap(holes => {
-        if (holes.length === 0) {
-          return of(undefined);
-        }
-        
-        const deleteRequests = holes.map(hole => this.deleteDrillHole(hole.id));
-        return forkJoin(deleteRequests);
-      }),
-      map(() => undefined),
+    return this.http.delete<void>(`${this.apiUrl}/site/${projectId}/${siteId}`).pipe(
       catchError(this.handleError)
     );
   }
@@ -157,7 +188,7 @@ export class DrillHoleService {
         
         console.log('Deleting holes with IDs:', holes.map(h => h.id));
         const deleteRequests = holes.map(hole => 
-          this.deleteDrillHole(hole.id).pipe(
+          this.deleteDrillHole(hole.id!).pipe(
             catchError(error => {
               console.warn(`Failed to delete hole ${hole.id}:`, error);
               // Continue with other deletions even if one fails
@@ -225,7 +256,6 @@ export class DrillHoleService {
     };
     
     const cleaned: DrillHole = {
-      id: cleanId,
       name: hole.name && hole.name.trim() ? hole.name.trim() : cleanId,
       easting: safeNumber(hole.easting, 0),
       northing: safeNumber(hole.northing, 0),
@@ -286,4 +316,4 @@ export class DrillHoleService {
     console.error('DrillHoleService Error:', errorMessage, error);
     return throwError(() => error);
   }
-} 
+}

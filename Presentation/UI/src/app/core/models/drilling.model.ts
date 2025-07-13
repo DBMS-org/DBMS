@@ -215,8 +215,8 @@ export class DrillModelConverter {
       stemming: drillHole.stemming,
       projectId: drillHole.projectId || 0,
       siteId: drillHole.siteId || 0,
-      createdAt: drillHole.createdAt || new Date(),
-      updatedAt: drillHole.updatedAt || new Date(),
+      createdAt: drillHole.createdAt ? new Date(drillHole.createdAt) : new Date(),
+      updatedAt: drillHole.updatedAt ? new Date(drillHole.updatedAt) : new Date(),
       has3DData: drillHole.azimuth != null && drillHole.dip != null,
       requiresFallbackTo2D: drillHole.azimuth == null || drillHole.dip == null
     };
@@ -232,8 +232,8 @@ export class DrillModelConverter {
       burden: drillPoint.burden || 2.5,
       projectId: drillPoint.projectId || 0,
       siteId: drillPoint.siteId || 0,
-      createdAt: drillPoint.createdAt || new Date(),
-      updatedAt: drillPoint.updatedAt || new Date(),
+      createdAt: drillPoint.createdAt ? new Date(drillPoint.createdAt) : new Date(),
+      updatedAt: drillPoint.updatedAt ? new Date(drillPoint.updatedAt) : new Date(),
       has3DData: false,
       requiresFallbackTo2D: true
     };
