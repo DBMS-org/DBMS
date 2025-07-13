@@ -1,1 +1,1 @@
-Update README.md
+Refactor machine management DTOs and services to support nullable ProjectId. Update validation rules and adjust related API controllers for improved error handling and maintainability. Enhance drill hole service with new DTO-based methods for better frontend-backend mapping.

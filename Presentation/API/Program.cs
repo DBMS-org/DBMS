@@ -56,6 +56,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(Application.Mapping.UserManagementMappingProfile).Assembly);
+builder.Services.AddScoped<IMappingService, Application.Services.Infrastructure.AutoMapperService>();
+
 // Add Infrastructure layer services (DbContext, dispatcher, handlers, misc)
 builder.Services.AddInfrastructure();
 
