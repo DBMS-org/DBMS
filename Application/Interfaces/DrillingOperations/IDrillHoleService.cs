@@ -1,5 +1,6 @@
 using Domain.Entities.DrillingOperations;
 using Application.DTOs.Shared;
+using Application.DTOs.DrillingOperations;
 using System.Threading;
 
 namespace Application.Interfaces.DrillingOperations
@@ -18,5 +19,12 @@ namespace Application.Interfaces.DrillingOperations
         Task<Result<int>> GetDrillHoleCountAsync();
         Task<Result<int>> GetDrillHoleCountByProjectIdAsync(int projectId);
         Task<Result<int>> GetDrillHoleCountBySiteIdAsync(int projectId, int siteId);
+        
+        // DTO-based methods for better frontend-backend mapping
+        Task<Result<IEnumerable<DrillHoleDto>>> GetAllDrillHolesDtoAsync();
+        Task<Result<DrillHoleDto>> GetDrillHoleDtoByIdAsync(string id);
+        Task<Result<DrillHoleDto>> CreateDrillHoleFromDtoAsync(CreateDrillHoleRequest request);
+        Task<Result> UpdateDrillHoleFromDtoAsync(string id, UpdateDrillHoleRequest request);
+        Task<Result<IEnumerable<DrillHoleDto>>> GetDrillHolesDtoBySiteIdAsync(int projectId, int siteId);
     }
 } 

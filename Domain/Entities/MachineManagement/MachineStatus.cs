@@ -2,9 +2,11 @@ namespace Domain.Entities.MachineManagement
 {
     public enum MachineStatus
     {
-        Active,
-        Maintenance,
-        Retired,
-        OutOfService
+        Available,
+        Assigned,
+        InMaintenance,
+        OutOfService,
+        UnderRepair,
+        Retired
     }
 } 

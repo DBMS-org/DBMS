@@ -1093,7 +1093,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       if (this.showLabels) {
         const label = this.showDetailedLabels 
           ? this.createDetailedLabel(hole)
-          : this.createLabel(hole.id);
+          : this.createLabel(hole.name ?? hole.id ?? '');
         label.position.set(0, 2, 0); // Positioned above the hole
         this.labelObjects.push(label);
         drillGroup.add(label); // Add to group instead of scene
@@ -1302,8 +1302,8 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     // Add text stroke
     context.strokeStyle = 'rgba(0, 0, 0, 0.5)';
     context.lineWidth = 3;
-    context.strokeText(hole.id, canvas.width/2, 8);
-    context.fillText(hole.id, canvas.width/2, 8);
+    context.strokeText(hole.name || hole.id, canvas.width/2, 8);
+    context.fillText(hole.name || hole.id, canvas.width/2, 8);
     
     // Subtitle with depth and azimuth
     context.font = 'normal 14px "Segoe UI", Arial, sans-serif';

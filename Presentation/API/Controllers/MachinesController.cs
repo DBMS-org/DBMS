@@ -56,7 +56,7 @@ namespace API.Controllers
 
         // POST: api/machines
         [HttpPost]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageMachines")]
         public async Task<IActionResult> CreateMachine(CreateMachineRequest request)
         {
                 var existingMachine = await _context.Machines
@@ -66,10 +66,14 @@ namespace API.Controllers
                 return Conflict($"A machine with serial number '{request.SerialNumber}' already exists");
                 }
 
-                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
+                // Project validation (optional)
+                if (request.ProjectId.HasValue)
+                {
+                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId.Value);
                 if (!projectExists)
                 {
-                    return BadRequest($"Project with ID {request.ProjectId} not found");
+                        return BadRequest($"Project with ID {request.ProjectId.Value} not found");
+                    }
                 }
 
                 if (request.OperatorId.HasValue)
@@ -113,8 +117,11 @@ namespace API.Controllers
                 machine.RegionId = request.RegionId;
                 machine.SpecificationsJson = request.Specifications != null ? JsonSerializer.Serialize(request.Specifications) : null;
 
-                var project = await _context.Projects.FindAsync(request.ProjectId);
+                if (request.ProjectId.HasValue)
+                {
+                    var project = await _context.Projects.FindAsync(request.ProjectId.Value);
                 machine.AssignedToProject = project?.Name;
+                }
 
                 if (request.OperatorId.HasValue)
                 {
@@ -130,7 +137,7 @@ namespace API.Controllers
 
         // PUT: api/machines/5
         [HttpPut("{id}")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageMachines")]
         public async Task<IActionResult> UpdateMachine(int id, UpdateMachineRequest request)
         {
                 var machine = await _context.Machines.FindAsync(id);
@@ -146,10 +153,13 @@ namespace API.Controllers
                 return Conflict($"A machine with serial number '{request.SerialNumber}' already exists");
                 }
 
-                var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
+                if (request.ProjectId.HasValue)
+                {
+                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId.Value);
                 if (!projectExists)
                 {
-                    return BadRequest($"Project with ID {request.ProjectId} not found");
+                        return BadRequest($"Project with ID {request.ProjectId.Value} not found");
+                    }
                 }
 
                 if (request.OperatorId.HasValue)
@@ -183,8 +193,15 @@ namespace API.Controllers
                 machine.SpecificationsJson = request.Specifications != null ? 
                     JsonSerializer.Serialize(request.Specifications) : null;
 
-                var project = await _context.Projects.FindAsync(request.ProjectId);
+                if (request.ProjectId.HasValue)
+                {
+                    var project = await _context.Projects.FindAsync(request.ProjectId.Value);
                 machine.AssignedToProject = project?.Name;
+                }
+                else
+                {
+                    machine.AssignedToProject = null;
+                }
 
                 if (request.OperatorId.HasValue)
                 {
@@ -217,7 +234,7 @@ namespace API.Controllers
 
         // DELETE: api/machines/5
         [HttpDelete("{id}")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageMachines")]
         public async Task<IActionResult> DeleteMachine(int id)
             {
                 var machine = await _context.Machines.FindAsync(id);
@@ -233,7 +250,7 @@ namespace API.Controllers
             }
 
         [HttpPatch("{id}/status")]
-        [Authorize(Policy = "RequireAdminRole")]
+        [Authorize(Policy = "ManageMachines")]
         public async Task<IActionResult> UpdateMachineStatus(int id, [FromBody] UpdateMachineStatusRequest request)
         {
                 var machine = await _context.Machines.FindAsync(id);
@@ -301,23 +318,79 @@ namespace API.Controllers
         public async Task<IActionResult> GetMachineStatistics()
             {
                 var totalMachines = await _context.Machines.CountAsync();
-            var machinesByStatus = await _context.Machines
-                .GroupBy(m => m.Status)
-                .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
-                .ToListAsync();
-            var machinesByType = await _context.Machines
-                .GroupBy(m => m.Type)
-                .Select(g => new { Type = g.Key, Count = g.Count() })
-                .ToListAsync();
+            var availableMachines = await _context.Machines.CountAsync(m => m.Status == MachineStatus.Available);
+            var assignedMachines = await _context.Machines.CountAsync(m => m.Status == MachineStatus.Assigned);
+            var maintenanceMachines = await _context.Machines.CountAsync(m => m.Status == MachineStatus.InMaintenance);
+            var outOfServiceMachines = await _context.Machines.CountAsync(m => 
+                m.Status == MachineStatus.OutOfService || m.Status == MachineStatus.UnderRepair);
 
-            var stats = new
+            var statistics = new
                 {
                     TotalMachines = totalMachines,
-                MachinesByStatus = machinesByStatus,
-                MachinesByType = machinesByType
-                };
+                AvailableMachines = availableMachines,
+                AssignedMachines = assignedMachines,
+                MaintenanceMachines = maintenanceMachines,
+                OutOfServiceMachines = outOfServiceMachines
+            };
 
-            return Ok(stats);
+            return Ok(statistics);
+        }
+
+        // Machine Assignment Endpoints (Placeholder implementations)
+        [HttpGet("assignment-requests")]
+        [Authorize(Policy = "ManageMachines")]
+        public async Task<IActionResult> GetAssignmentRequests()
+        {
+            // TODO: Implement assignment requests functionality
+            return Ok(new List<object>());
+        }
+
+        [HttpPost("assignment-requests")]
+        [Authorize(Policy = "ManageMachines")]
+        public async Task<IActionResult> SubmitAssignmentRequest([FromBody] object request)
+        {
+            // TODO: Implement assignment request submission
+            return Ok(new { message = "Assignment request submitted successfully" });
+        }
+
+        [HttpPatch("assignment-requests/{id}/approve")]
+        [Authorize(Policy = "ManageMachines")]
+        public async Task<IActionResult> ApproveAssignmentRequest(string id, [FromBody] object request)
+        {
+            // TODO: Implement assignment request approval
+            return Ok(new { message = "Assignment request approved successfully" });
+        }
+
+        [HttpPatch("assignment-requests/{id}/reject")]
+        [Authorize(Policy = "ManageMachines")]
+        public async Task<IActionResult> RejectAssignmentRequest(string id, [FromBody] object request)
+        {
+            // TODO: Implement assignment request rejection
+            return Ok(new { message = "Assignment request rejected successfully" });
+        }
+
+        [HttpGet("assignments/active")]
+        [Authorize(Policy = "ManageMachines")]
+        public async Task<IActionResult> GetActiveAssignments()
+        {
+            // TODO: Implement active assignments retrieval
+            return Ok(new List<object>());
+        }
+
+        [HttpPost("assignments")]
+        [Authorize(Policy = "ManageMachines")]
+        public async Task<IActionResult> AssignMachine([FromBody] object assignment)
+        {
+            // TODO: Implement machine assignment
+            return Ok(new { message = "Machine assigned successfully" });
+        }
+
+        [HttpPatch("assignments/{id}/return")]
+        [Authorize(Policy = "ManageMachines")]
+        public async Task<IActionResult> ReturnMachine(string id)
+        {
+            // TODO: Implement machine return
+            return Ok(new { message = "Machine returned successfully" });
         }
 
         private bool MachineExists(int id)
