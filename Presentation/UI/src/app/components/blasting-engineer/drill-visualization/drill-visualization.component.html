@@ -264,7 +264,7 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Name/ID</th>
             <th>Easting</th>
             <th>Northing</th>
             <th>Elevation</th>
@@ -276,7 +276,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let hole of drillData; let i = index" [class.even]="i % 2 === 0">
-              <td><span class="hole-id">{{hole.id}}</span></td>
+              <td><span class="hole-id">{{hole.name || hole.id}}</span></td>
             <td>{{hole.easting | number:'1.2-2'}}</td>
             <td>{{hole.northing | number:'1.2-2'}}</td>
             <td>{{hole.elevation | number:'1.2-2'}}</td>

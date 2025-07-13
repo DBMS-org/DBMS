@@ -52,7 +52,7 @@ export class AddMachineComponent implements OnInit {
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
       region: [''],
-      projectId: ['', Validators.required],
+      projectId: [''],
       status: [MachineStatus.AVAILABLE, Validators.required]
     });
   }
@@ -152,7 +152,7 @@ export class AddMachineComponent implements OnInit {
         manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
         chassisDetails: formValue.chassisDetails || undefined,
         currentLocation: this.getLocationValue(),
-        projectId: parseInt(formValue.projectId),
+        projectId: formValue.projectId ? parseInt(formValue.projectId) : undefined,
         regionId: this.getRegionId(),
         status: formValue.status
       };
