@@ -17,6 +17,7 @@ namespace Application.Services.UserManagement
         private readonly IPasswordService _passwordService;
         private readonly IValidationService _validationService;
         private readonly ICacheService _cacheService;
+        private readonly IMappingService _mappingService;
         private readonly IStructuredLogger<UserApplicationService> _logger;
 
         private const string AllUsersCacheKey = "all_users";
@@ -27,12 +28,14 @@ namespace Application.Services.UserManagement
             IPasswordService passwordService,
             IValidationService validationService,
             ICacheService cacheService,
+            IMappingService mappingService,
             IStructuredLogger<UserApplicationService> logger)
         {
             _userRepository = userRepository;
             _passwordService = passwordService;
             _validationService = validationService;
             _cacheService = cacheService;
+            _mappingService = mappingService;
             _logger = logger;
         }
 
@@ -44,7 +47,7 @@ namespace Application.Services.UserManagement
                 var userDtos = await _cacheService.GetOrCreateAsync(AllUsersCacheKey, async () =>
                 {
                     var users = await _userRepository.GetAllAsync();
-                    return users.Select(MapToDto);
+                    return _mappingService.Map<IEnumerable<UserDto>>(users);
                 }, TimeSpan.FromMinutes(10));
 
                 _logger.LogOperationSuccess("GetAllUsers", new { UserCount = userDtos.Count() });
@@ -70,7 +73,7 @@ namespace Application.Services.UserManagement
                 var userDto = await _cacheService.GetOrCreateAsync(UserByIdCacheKey(id), async () =>
                 {
                     var user = await _userRepository.GetByIdAsync(id);
-                    return user == null ? null : MapToDto(user);
+                    return user == null ? null : _mappingService.Map<UserDto>(user);
                 }, TimeSpan.FromMinutes(10));
 
                 if (userDto == null)
@@ -118,21 +121,9 @@ namespace Application.Services.UserManagement
                 // Hash password
                 var hashedPassword = _passwordService.HashPassword(request.Password);
 
-                // Create user entity
-                var user = new User
-                {
-                    Name = request.Name,
-                    Email = request.Email,
-                    PasswordHash = hashedPassword,
-                    Role = request.Role,
-                    Status = UserStatus.Active,
-                    Region = request.Region,
-                    Country = request.Country,
-                    OmanPhone = request.OmanPhone,
-                    CountryPhone = request.CountryPhone,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
+                // Create user entity using AutoMapper
+                var user = _mappingService.Map<User>(request);
+                user.PasswordHash = hashedPassword; // Set password hash separately for security
 
                 var createdUser = await _userRepository.CreateAsync(user);
 
@@ -140,7 +131,7 @@ namespace Application.Services.UserManagement
                 _cacheService.Remove(AllUsersCacheKey);
 
                 _logger.LogOperationSuccess("CreateUser", new { UserId = createdUser.Id, Email = createdUser.Email });
-                return Result.Success(MapToDto(createdUser));
+                return Result.Success(_mappingService.Map<UserDto>(createdUser));
             }
             catch (ValidationException ex)
             {
@@ -179,16 +170,8 @@ namespace Application.Services.UserManagement
                     return Result.Failure(ErrorCodes.Messages.UserNotFound(id));
                 }
 
-                // Update user properties
-                user.Name = request.Name;
-                user.Email = request.Email;
-                user.Role = request.Role;
-                user.Status = SafeDataConverter.ParseEnumWithDefault<UserStatus>(request.Status, user.Status, "Status");
-                user.Region = request.Region;
-                user.Country = request.Country;
-                user.OmanPhone = request.OmanPhone;
-                user.CountryPhone = request.CountryPhone;
-                user.UpdatedAt = DateTime.UtcNow;
+                // Update user properties using AutoMapper
+                _mappingService.Map(request, user);
 
                 var updateResult = await _userRepository.UpdateAsync(user);
                 
@@ -287,22 +270,6 @@ namespace Application.Services.UserManagement
             }
         }
 
-        private static UserDto MapToDto(User user)
-        {
-            return new UserDto
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Role = user.Role,
-                Status = user.Status.ToString(),
-                Region = user.Region,
-                Country = user.Country,
-                OmanPhone = user.OmanPhone,
-                CountryPhone = user.CountryPhone,
-                CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc),
-                UpdatedAt = DateTime.SpecifyKind(user.UpdatedAt, DateTimeKind.Utc)
-            };
-        }
+
     }
 } 

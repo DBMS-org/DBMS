@@ -7,34 +7,40 @@ namespace Application.Validators.ProjectManagement
     {
         public UpdateProjectRequestValidator()
         {
+            RuleFor(x => x.Id)
+                .NotEmpty()
+                .WithMessage("Project ID is required");
+
             RuleFor(x => x.Name)
-                .RequiredString("Project name", 1, 100);
-
-            RuleFor(x => x.Region)
-                .RequiredString("Region", 1, 100);
-
-            RuleFor(x => x.Status)
-                .RequiredString("Status", 1, 20);
+                .NotEmpty()
+                .MaximumLength(100)
+                .WithMessage("Project name is required and must not exceed 100 characters");
 
             RuleFor(x => x.Description)
-                .MaximumLength(1000)
-                .WithMessage("Description cannot exceed 1000 characters")
+                .MaximumLength(500)
+                .WithMessage("Description must not exceed 500 characters")
                 .When(x => !string.IsNullOrEmpty(x.Description));
 
+            RuleFor(x => x.Status)
+                .IsInEnum()
+                .WithMessage("Valid project status is required");
+
             RuleFor(x => x.StartDate)
-                .LessThanOrEqualTo(x => x.EndDate)
-                .WithMessage("Start date must be before or equal to end date")
-                .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
+                .NotEmpty()
+                .WithMessage("Start date is required");
 
             RuleFor(x => x.EndDate)
-                .GreaterThanOrEqualTo(x => x.StartDate)
-                .WithMessage("End date must be after or equal to start date")
-                .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
+                .NotEmpty()
+                .GreaterThan(x => x.StartDate)
+                .WithMessage("End date must be after start date");
+
+            RuleFor(x => x.RegionId)
+                .NotEmpty()
+                .WithMessage("Region ID is required");
 
             RuleFor(x => x.AssignedUserId)
-                .GreaterThan(0)
-                .WithMessage("Assigned User ID must be greater than 0")
-                .When(x => x.AssignedUserId.HasValue);
+                .NotEmpty()
+                .WithMessage("Assigned user ID is required");
         }
     }
 } 
