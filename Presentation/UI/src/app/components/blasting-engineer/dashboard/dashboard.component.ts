@@ -176,8 +176,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       stemming: loc.stemming || 0,
       projectId: loc.projectId,
       siteId: loc.siteId,
-      createdAt: loc.createdAt.toISOString(),
-      updatedAt: loc.updatedAt.toISOString()
+      createdAt: (loc.createdAt instanceof Date ? loc.createdAt : new Date(loc.createdAt)).toISOString(),
+      updatedAt: (loc.updatedAt instanceof Date ? loc.updatedAt : new Date(loc.updatedAt)).toISOString()
     } as DrillHole));
     this.calculateQuickStats();
     this.loadRecentUploads();

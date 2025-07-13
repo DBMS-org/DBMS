@@ -54,7 +54,7 @@ export class EditMachineComponent implements OnInit {
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
       region: [''],
-      projectId: ['', Validators.required],
+      projectId: [''],
       status: [MachineStatus.AVAILABLE, Validators.required]
     });
   }
@@ -98,7 +98,7 @@ export class EditMachineComponent implements OnInit {
             // Set the region based on the project
             this.machineForm.patchValue({ 
               region: machineProject.region,
-              projectId: this.machine.projectId.toString()
+              projectId: this.machine.projectId?.toString() || ''
             });
             
             // Load all projects for this region
@@ -243,7 +243,7 @@ export class EditMachineComponent implements OnInit {
       
       // Check if project has changed
       const originalProjectId = this.machine.projectId;
-      const newProjectId = parseInt(formValue.projectId);
+      const newProjectId = formValue.projectId ? parseInt(formValue.projectId) : undefined;
       const projectChanged = originalProjectId !== newProjectId;
       
       if (projectChanged) {
@@ -270,7 +270,7 @@ export class EditMachineComponent implements OnInit {
       manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
       chassisDetails: formValue.chassisDetails || undefined,
       currentLocation: this.getLocationValue(),
-      projectId: parseInt(formValue.projectId),
+      projectId: formValue.projectId ? parseInt(formValue.projectId) : undefined,
       regionId: this.getRegionId(),
       status: formValue.status,
       lastMaintenanceDate: this.machine.lastMaintenanceDate,
@@ -306,7 +306,7 @@ export class EditMachineComponent implements OnInit {
           manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
           chassisDetails: formValue.chassisDetails || undefined,
           currentLocation: this.getLocationValue(),
-          projectId: parseInt(formValue.projectId),
+          projectId: formValue.projectId ? parseInt(formValue.projectId) : undefined,
           regionId: this.getRegionId(),
           status: formValue.status
         };

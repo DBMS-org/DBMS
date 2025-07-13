@@ -26,7 +26,7 @@ namespace API.Controllers
         [Authorize(Policy = "ReadDrillData")]
         public async Task<IActionResult> GetAllDrillHoles()
         {
-            var result = await _drillHoleService.GetAllDrillHolesAsync();
+            var result = await _drillHoleService.GetAllDrillHolesDtoAsync();
             return Ok(result.Value);
         }
 
@@ -34,7 +34,7 @@ namespace API.Controllers
         [Authorize(Policy = "ReadDrillData")]
         public async Task<IActionResult> GetDrillHole(string id)
         {
-            var result = await _drillHoleService.GetDrillHoleByIdAsync(id);
+            var result = await _drillHoleService.GetDrillHoleDtoByIdAsync(id);
             if (result.IsFailure)
             {
                 return NotFound();
@@ -81,32 +81,35 @@ namespace API.Controllers
 
         [HttpPost]
         [Authorize(Policy = "ManageDrillData")]
-        public async Task<IActionResult> CreateDrillHole(DrillHole drillHole)
+        public async Task<IActionResult> CreateDrillHole(CreateDrillHoleRequest request)
         {
-            var result = await _drillHoleService.CreateDrillHoleAsync(drillHole);
+            var result = await _drillHoleService.CreateDrillHoleFromDtoAsync(request);
             if (result.IsFailure)
             {
                 return Conflict(result.Error);
-                }
+            }
             return CreatedAtAction(nameof(GetDrillHole), new { id = result.Value.Id }, result.Value);
         }
 
         [HttpPut("{id}")]
         [Authorize(Policy = "ManageDrillData")]
-        public async Task<IActionResult> UpdateDrillHole(string id, DrillHole drillHole)
+        public async Task<IActionResult> UpdateDrillHole(string id, UpdateDrillHoleRequest request)
         {
-            if (id != drillHole.Id)
-            {
-                return BadRequest("ID mismatch");
-            }
-
-            var result = await _drillHoleService.UpdateDrillHoleAsync(drillHole);
+            var result = await _drillHoleService.UpdateDrillHoleFromDtoAsync(id, request);
             if (result.IsFailure)
             {
                 return NotFound();
             }
 
             return Ok();
+        }
+
+        [HttpDelete("site/{projectId:int}/{siteId:int}")]
+        [Authorize(Policy = "ManageDrillData")]
+        public async Task<IActionResult> DeleteDrillHolesBySite(int projectId, int siteId)
+        {
+            var result = await _drillHoleService.DeleteDrillHolesBySiteIdAsync(projectId, siteId);
+            return result.IsSuccess ? NoContent() : NotFound(result.Error);
         }
 
         [HttpDelete("{id}")]
@@ -114,11 +117,7 @@ namespace API.Controllers
         public async Task<IActionResult> DeleteDrillHole(string id)
         {
             var result = await _drillHoleService.DeleteDrillHoleAsync(id);
-            if (result.IsFailure)
-            {
-                return NotFound();
-                }
-            return Ok();
+            return result.IsSuccess ? NoContent() : BadRequest(result.Error);
         }
     }
-} 
+}
