@@ -91,6 +91,65 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetDrillHole), new { id = result.Value.Id }, result.Value);
         }
 
+        [HttpPost("projects/{projectId:int}/sites/{siteId:int}")]
+        [Authorize(Policy = "ManageDrillData")]
+        public async Task<IActionResult> CreateDrillHoleForSite(int projectId, int siteId, CreateDrillHoleRequest request)
+        {
+            // Set the project and site IDs from the route parameters
+            request.ProjectId = projectId;
+            request.SiteId = siteId;
+            
+            var result = await _drillHoleService.CreateDrillHoleFromDtoAsync(request);
+            if (result.IsFailure)
+            {
+                return Conflict(result.Error);
+            }
+            return CreatedAtAction(nameof(GetDrillHole), new { id = result.Value.Id }, result.Value);
+        }
+
+        [HttpPost("projects/{projectId:int}/sites/{siteId:int}/batch")]
+        [Authorize(Policy = "ManageDrillData")]
+        public async Task<IActionResult> CreateMultipleDrillHolesForSite(int projectId, int siteId, List<CreateDrillHoleRequest> requests)
+        {
+            // Set the project and site IDs for all requests
+            foreach (var request in requests)
+            {
+                request.ProjectId = projectId;
+                request.SiteId = siteId;
+            }
+            
+            var results = new List<object>();
+            var errors = new List<string>();
+            
+            foreach (var request in requests)
+            {
+                var result = await _drillHoleService.CreateDrillHoleFromDtoAsync(request);
+                if (result.IsFailure)
+                {
+                    errors.Add($"Failed to create drill hole '{request.Name}': {result.Error}");
+                }
+                else
+                {
+                    results.Add(result.Value);
+                }
+            }
+            
+            if (errors.Any())
+            {
+                return BadRequest(new { 
+                    message = "Some drill holes failed to create", 
+                    errors = errors,
+                    successful = results.Count,
+                    failed = errors.Count
+                });
+            }
+            
+            return Ok(new { 
+                message = $"Successfully created {results.Count} drill holes",
+                data = results 
+            });
+        }
+
         [HttpPut("{id}")]
         [Authorize(Policy = "ManageDrillData")]
         public async Task<IActionResult> UpdateDrillHole(string id, UpdateDrillHoleRequest request)

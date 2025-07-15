@@ -4,6 +4,8 @@ namespace Application.DTOs.MachineManagement
 {
     public class UpdateMachineRequest
     {
+        public string Id { get; set; } = string.Empty;
+        
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
@@ -43,13 +45,16 @@ namespace Application.DTOs.MachineManagement
         [MaxLength(200)]
         public string? CurrentLocation { get; set; }
         
-        public int? ProjectId { get; set; }
+        public string Location { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int ProjectId { get; set; }
+        public int SiteId { get; set; }
         public int? OperatorId { get; set; }
         public int? RegionId { get; set; }
         
         public DateTime? LastMaintenanceDate { get; set; }
         public DateTime? NextMaintenanceDate { get; set; }
         
-            public MachineSpecificationsDto? Specifications { get; set; }
+        public MachineSpecificationsDto? Specifications { get; set; }
+    }
 }
-} 

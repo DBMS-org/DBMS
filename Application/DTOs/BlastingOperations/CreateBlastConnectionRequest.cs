@@ -4,7 +4,6 @@ namespace Application.DTOs.BlastingOperations
 {
     public class CreateBlastConnectionRequest
     {
-        public string Id { get; set; } = string.Empty;
         public string Point1DrillPointId { get; set; } = string.Empty;
         public string Point2DrillPointId { get; set; } = string.Empty;
         public ConnectorType ConnectorType { get; set; }
@@ -13,4 +12,4 @@ namespace Application.DTOs.BlastingOperations
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
     }
-} 
+}
