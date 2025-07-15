@@ -13,4 +13,4 @@ namespace Application.DTOs.BlastingOperations
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
     }
-} 
+}

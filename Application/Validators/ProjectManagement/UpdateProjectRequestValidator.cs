@@ -22,8 +22,9 @@ namespace Application.Validators.ProjectManagement
                 .When(x => !string.IsNullOrEmpty(x.Description));
 
             RuleFor(x => x.Status)
-                .IsInEnum()
-                .WithMessage("Valid project status is required");
+                .NotEmpty()
+                .MaximumLength(20)
+                .WithMessage("Status is required and must not exceed 20 characters");
 
             RuleFor(x => x.StartDate)
                 .NotEmpty()
@@ -34,9 +35,10 @@ namespace Application.Validators.ProjectManagement
                 .GreaterThan(x => x.StartDate)
                 .WithMessage("End date must be after start date");
 
-            RuleFor(x => x.RegionId)
+            RuleFor(x => x.Region)
                 .NotEmpty()
-                .WithMessage("Region ID is required");
+                .MaximumLength(100)
+                .WithMessage("Region is required and must not exceed 100 characters");
 
             RuleFor(x => x.AssignedUserId)
                 .NotEmpty()
