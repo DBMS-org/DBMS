@@ -66,8 +66,20 @@ export class DrillHoleService {
 
   // Create a new drill hole
   createDrillHole(drillHole: DrillHole): Observable<DrillHole> {
+    console.log('🔧 createDrillHole called with:', { 
+      name: drillHole.name, 
+      projectId: drillHole.projectId, 
+      siteId: drillHole.siteId 
+    });
+    
     // Validate and clean single drill hole
     const cleanedHole = this.validateAndCleanDrillHole(drillHole);
+    
+    console.log('🧹 After cleaning:', { 
+      name: cleanedHole.name, 
+      projectId: cleanedHole.projectId, 
+      siteId: cleanedHole.siteId 
+    });
     
     // Convert to CreateDrillHoleRequest format
     const request: CreateDrillHoleRequest = {
@@ -85,10 +97,37 @@ export class DrillHoleService {
       siteId: cleanedHole.siteId || 0
     };
     
-    return this.http.post<DrillHole>(this.apiUrl, request).pipe(
+    // Ensure ProjectId and SiteId are valid for validation
+    if (request.projectId <= 0 || request.siteId <= 0) {
+      console.error('❌ Invalid ProjectId or SiteId in request:', { projectId: request.projectId, siteId: request.siteId });
+      return throwError(() => new Error(`Invalid project/site context: ProjectId=${request.projectId}, SiteId=${request.siteId}`));
+    }
+    
+    console.log('📤 Request being sent:', { 
+      name: request.name, 
+      projectId: request.projectId, 
+      siteId: request.siteId 
+    });
+    
+    // Use the appropriate endpoint based on whether we have project/site context
+    const projectId = cleanedHole.projectId;
+    const siteId = cleanedHole.siteId;
+    
+    let endpoint = this.apiUrl;
+    if (projectId && siteId && projectId > 0 && siteId > 0) {
+      // Use the new endpoint that properly handles project/site context
+      endpoint = `${this.apiUrl}/projects/${projectId}/sites/${siteId}`;
+      console.log('✅ Using project/site specific endpoint:', endpoint);
+    } else {
+      console.log('❌ Using generic endpoint (no project/site context):', endpoint);
+      console.log('❌ ProjectId:', projectId, 'SiteId:', siteId);
+    }
+    
+    return this.http.post<DrillHole>(endpoint, request).pipe(
       catchError((error) => {
-        console.error('Error creating drill hole:', error);
-        console.error('Drill hole data:', request);
+        console.error('❌ Error creating drill hole:', error);
+        console.error('❌ Drill hole data:', request);
+        console.error('❌ Endpoint used:', endpoint);
         return this.handleError(error);
       })
     );
@@ -96,28 +135,45 @@ export class DrillHoleService {
 
   // Create or update multiple drill holes (replaces existing data)
   saveMultipleDrillHoles(drillHoles: DrillHole[], projectId?: number, siteId?: number): Observable<DrillHole[]> {
-    console.log('Saving drill holes - clearing existing data first...', { projectId, siteId });
-    
-    // Add project/site context to all drill holes
-    const holesWithContext = drillHoles.map(hole => ({
-      ...hole,
-      projectId: projectId || hole.projectId || 0,
-      siteId: siteId || hole.siteId || 0
-    }));
+    console.log('🚀 saveMultipleDrillHoles called with:', { 
+      drillHolesCount: drillHoles.length, 
+      projectId, 
+      siteId,
+      firstHoleOriginal: drillHoles[0] ? { 
+        name: drillHoles[0].name, 
+        projectId: drillHoles[0].projectId, 
+        siteId: drillHoles[0].siteId 
+      } : null
+    });
     
     // Validate that we have valid project and site IDs
-    const validProjectId = projectId || holesWithContext[0]?.projectId;
-    const validSiteId = siteId || holesWithContext[0]?.siteId;
-    
-    if (!validProjectId || !validSiteId) {
-      console.error('Cannot save drill holes without valid projectId and siteId', { projectId: validProjectId, siteId: validSiteId });
-      return throwError(() => new Error('Project ID and Site ID are required to save drill holes'));
+    if (!projectId || !siteId || projectId <= 0 || siteId <= 0) {
+      console.error('❌ Cannot save drill holes without valid projectId and siteId', { 
+        providedProjectId: projectId, 
+        providedSiteId: siteId
+      });
+      return throwError(() => new Error(`Project ID (${projectId}) and Site ID (${siteId}) must be greater than 0`));
     }
     
+    // Force set the correct project/site IDs on all holes
+    const holesWithContext = drillHoles.map(hole => ({
+      ...hole,
+      projectId: projectId,
+      siteId: siteId
+    }));
+    
+    console.log('🔄 After adding context:', {
+      firstHoleWithContext: holesWithContext[0] ? {
+        name: holesWithContext[0].name,
+        projectId: holesWithContext[0].projectId,
+        siteId: holesWithContext[0].siteId
+      } : null
+    });
+    
     // First delete existing drill holes for this specific project/site, then create new ones
-    return this.deleteDrillHolesBySite(validProjectId, validSiteId).pipe(
+    return this.deleteDrillHolesBySite(projectId, siteId).pipe(
       switchMap(() => {
-        console.log('Existing data cleared for project/site, now creating new drill holes...', { projectId: validProjectId, siteId: validSiteId });
+        console.log('Existing data cleared for project/site, now creating new drill holes...', { projectId, siteId });
         
         // Validate and clean the drill holes before sending
         const cleanedHoles = holesWithContext.map(hole => this.validateAndCleanDrillHole(hole));
@@ -260,14 +316,14 @@ export class DrillHoleService {
       easting: safeNumber(hole.easting, 0),
       northing: safeNumber(hole.northing, 0),
       elevation: safeNumber(hole.elevation, 0),
-      length: Math.max(0, safeNumber(hole.length, 0)),
-      depth: Math.max(0, safeNumber(hole.depth, 0)),
+      length: Math.max(0.1, safeNumber(hole.length, 1)), // Ensure minimum length of 0.1
+      depth: Math.max(0.1, safeNumber(hole.depth, 1)), // Ensure minimum depth of 0.1
       azimuth: Math.max(0, Math.min(360, safeNumber(hole.azimuth, 0))),
       dip: Math.max(-90, Math.min(90, safeNumber(hole.dip, 0))),
-      actualDepth: Math.max(0, safeNumber(hole.actualDepth, 0)),
+      actualDepth: Math.max(0.1, safeNumber(hole.actualDepth, hole.depth || 1)), // Use depth as fallback, ensure > 0
       stemming: Math.max(0, safeNumber(hole.stemming, 0)),
-      projectId: hole.projectId || 0,
-      siteId: hole.siteId || 0,
+      projectId: safeInt(hole.projectId, 0),
+      siteId: safeInt(hole.siteId, 0),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
