@@ -85,7 +85,6 @@ namespace Presentation.API.Controllers
             
             var blastConnection = new BlastConnection
             {
-                Id = request.Id,
                 Point1DrillPointId = request.Point1DrillPointId,
                 Point2DrillPointId = request.Point2DrillPointId,
                 ConnectorType = request.ConnectorType,

@@ -153,12 +153,12 @@ namespace API.Controllers
                 return Conflict($"A machine with serial number '{request.SerialNumber}' already exists");
                 }
 
-                if (request.ProjectId.HasValue)
+                if (request.ProjectId > 0)
                 {
-                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId.Value);
+                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
                 if (!projectExists)
                 {
-                        return BadRequest($"Project with ID {request.ProjectId.Value} not found");
+                        return BadRequest($"Project with ID {request.ProjectId} not found");
                     }
                 }
 
@@ -193,9 +193,9 @@ namespace API.Controllers
                 machine.SpecificationsJson = request.Specifications != null ? 
                     JsonSerializer.Serialize(request.Specifications) : null;
 
-                if (request.ProjectId.HasValue)
+                if (request.ProjectId > 0)
                 {
-                    var project = await _context.Projects.FindAsync(request.ProjectId.Value);
+                    var project = await _context.Projects.FindAsync(request.ProjectId);
                 machine.AssignedToProject = project?.Name;
                 }
                 else

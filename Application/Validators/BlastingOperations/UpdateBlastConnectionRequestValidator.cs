@@ -11,15 +11,33 @@ namespace Application.Validators.BlastingOperations
                 .NotEmpty()
                 .WithMessage("Blast connection ID is required");
 
-            RuleFor(x => x.ConnectionType)
+            RuleFor(x => x.Point1DrillPointId)
                 .NotEmpty()
-                .MaximumLength(50)
-                .WithMessage("Connection type is required and must not exceed 50 characters");
+                .WithMessage("Point 1 drill point ID is required");
 
-            RuleFor(x => x.Description)
-                .MaximumLength(500)
-                .WithMessage("Description must not exceed 500 characters")
-                .When(x => !string.IsNullOrEmpty(x.Description));
+            RuleFor(x => x.Point2DrillPointId)
+                .NotEmpty()
+                .WithMessage("Point 2 drill point ID is required");
+
+            RuleFor(x => x.ConnectorType)
+                .IsInEnum()
+                .WithMessage("Valid connector type is required");
+
+            RuleFor(x => x.Delay)
+                .GreaterThanOrEqualTo(0)
+                .WithMessage("Delay must be greater than or equal to 0");
+
+            RuleFor(x => x.Sequence)
+                .GreaterThan(0)
+                .WithMessage("Sequence must be greater than 0");
+
+            RuleFor(x => x.ProjectId)
+                .NotEmpty()
+                .WithMessage("Project ID is required");
+
+            RuleFor(x => x.SiteId)
+                .NotEmpty()
+                .WithMessage("Site ID is required");
         }
     }
 } 
