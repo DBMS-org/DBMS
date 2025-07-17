@@ -863,11 +863,19 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   private createConnection(): void {
     if (!this.selectedFromHole || !this.selectedToHole) {
       console.warn('Both from and to holes must be selected');
+      this.notification.showError('Please select both drill points to create a connection');
+      return;
+    }
+
+    if (!this.selectedFromHole.id || !this.selectedToHole.id) {
+      console.warn('Selected holes do not have valid IDs');
+      this.notification.showError('Selected drill points are invalid');
       return;
     }
 
     if (this.selectedFromHole.id === this.selectedToHole.id) {
       console.warn('Cannot create connection to the same hole');
+      this.notification.showError('Cannot create connection to the same drill point');
       return;
     }
 
@@ -916,7 +924,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.cancelConnection();
 
     console.log('✅ Created connection:', newConnection);
-    this.notification.showSuccess(`Connection created between points ${this.selectedFromHole.id} and ${this.selectedToHole.id}`);
+    this.notification.showSuccess(`Connection created between points ${this.selectedFromHole?.id} and ${this.selectedToHole?.id}`);
   }
 
   private saveConnectionToBackend(connection: BlastConnection): void {
@@ -931,6 +939,8 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       sequence: connection.sequence
     };
 
+    console.log('🔗 Sending connection request to backend:', createRequest);
+
     this.siteBlastingService.createBlastConnection(createRequest)
       .subscribe({
         next: (savedConnection) => {
@@ -940,6 +950,11 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
         },
         error: (error) => {
           console.error('❌ Failed to save connection to backend:', error);
+          console.error('❌ Error details:', {
+            status: error.status,
+            message: error.message,
+            error: error.error
+          });
           this.notification.showError('Failed to save connection to database');
           // Remove from local connections on failure
           this.connections = this.connections.filter(c => c.id !== connection.id);
