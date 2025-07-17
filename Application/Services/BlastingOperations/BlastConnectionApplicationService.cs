@@ -98,6 +98,12 @@ namespace Application.Services.BlastingOperations
                     return Result.Failure<BlastConnection>("Blast connection already exists");
                 }
                 
+                // Ensure ID is set
+                if (string.IsNullOrEmpty(blastConnection.Id))
+                {
+                    blastConnection.Id = Guid.NewGuid().ToString();
+                }
+                
                 var createdConnection = await _blastConnectionRepository.CreateAsync(blastConnection);
                 
                 _logger.LogInformation("Successfully created blast connection {Id}", blastConnection.Id);
