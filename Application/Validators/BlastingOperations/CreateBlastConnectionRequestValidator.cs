@@ -28,11 +28,11 @@ namespace Application.Validators.BlastingOperations
                 .WithMessage("Sequence must be greater than 0");
 
             RuleFor(x => x.ProjectId)
-                .NotEmpty()
+                .GreaterThan(0)
                 .WithMessage("Project ID is required");
 
             RuleFor(x => x.SiteId)
-                .NotEmpty()
+                .GreaterThan(0)
                 .WithMessage("Site ID is required");
         }
     }
