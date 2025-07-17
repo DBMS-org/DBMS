@@ -1,1 +1,1 @@
-Integrate AutoMapper into the application for entity-DTO conversions, enhancing the UserApplicationService to utilize IMappingService for mapping operations. Update APPLICATION_GUIDELINES.md to include AutoMapper usage guidelines and improve validation rules in UpdateProjectRequestValidator and UpdateUserRequestValidator for better data integrity. Adjust Program.cs to register AutoMapper services and update related services for consistency.
+drill hole data properly associated with the correct project and site in the database

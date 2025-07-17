@@ -4,6 +4,7 @@ using Application.Interfaces.BlastingOperations;
 using Application.DTOs.BlastingOperations;
 using Domain.Entities.BlastingOperations;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace Presentation.API.Controllers
 {
@@ -14,13 +15,16 @@ namespace Presentation.API.Controllers
     {
         private readonly ISiteBlastingService _siteBlastingService;
         private readonly IBlastConnectionService _blastConnectionService;
+        private readonly ILogger<SiteBlastingController> _logger;
 
         public SiteBlastingController(
             ISiteBlastingService siteBlastingService,
-            IBlastConnectionService blastConnectionService)
+            IBlastConnectionService blastConnectionService,
+            ILogger<SiteBlastingController> logger)
         {
             _siteBlastingService = siteBlastingService;
             _blastConnectionService = blastConnectionService;
+            _logger = logger;
         }
 
         private int GetCurrentUserId()
@@ -80,31 +84,48 @@ namespace Presentation.API.Controllers
         [HttpPost("projects/{projectId}/sites/{siteId}/connections")]
         public async Task<IActionResult> CreateBlastConnection(int projectId, int siteId, [FromBody] CreateBlastConnectionRequest request)
         {
-            request.ProjectId = projectId;
-            request.SiteId = siteId;
-            
-            var blastConnection = new BlastConnection
+            try
             {
-                Point1DrillPointId = request.Point1DrillPointId,
-                Point2DrillPointId = request.Point2DrillPointId,
-                ConnectorType = request.ConnectorType,
-                Delay = request.Delay,
-                Sequence = request.Sequence,
-                ProjectId = request.ProjectId,
-                SiteId = request.SiteId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-            
-            var result = await _blastConnectionService.CreateConnectionAsync(blastConnection);
-            
-            if (!result.IsSuccess)
-                return BadRequest(result.Error);
-            
-            var connectionDto = MapToDto(result.Value);
-            return CreatedAtAction(nameof(GetBlastConnection), 
-                new { id = result.Value.Id, projectId = projectId, siteId = siteId }, 
-                connectionDto);
+                _logger.LogInformation("Creating blast connection for project {ProjectId} and site {SiteId}", projectId, siteId);
+                _logger.LogInformation("Request data: {@Request}", request);
+                
+                request.ProjectId = projectId;
+                request.SiteId = siteId;
+                
+                var blastConnection = new BlastConnection
+                {
+                    Id = request.Id ?? Guid.NewGuid().ToString(), // Use provided ID or generate new one
+                    Point1DrillPointId = request.Point1DrillPointId,
+                    Point2DrillPointId = request.Point2DrillPointId,
+                    ConnectorType = request.ConnectorType,
+                    Delay = request.Delay,
+                    Sequence = request.Sequence,
+                    ProjectId = request.ProjectId,
+                    SiteId = request.SiteId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                _logger.LogInformation("Created blast connection entity: {@BlastConnection}", blastConnection);
+                
+                var result = await _blastConnectionService.CreateConnectionAsync(blastConnection);
+                
+                if (!result.IsSuccess)
+                {
+                    _logger.LogError("Failed to create blast connection: {Error}", result.Error);
+                    return BadRequest(result.Error);
+                }
+                
+                var connectionDto = MapToDto(result.Value);
+                _logger.LogInformation("Successfully created blast connection: {@ConnectionDto}", connectionDto);
+                
+                return Ok(connectionDto); // Return OK instead of CreatedAtAction to avoid route issues
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error creating blast connection");
+                return StatusCode(500, "An unexpected error occurred while creating the blast connection");
+            }
         }
 
         [HttpPut("projects/{projectId}/sites/{siteId}/connections/{id}")]
