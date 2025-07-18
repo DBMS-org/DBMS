@@ -1373,7 +1373,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
   backToPatternCreator(): void {
     console.log('🔄 Navigating back to pattern creator');
-    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'drilling-pattern-creator']);
+    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'pattern-creator']);
   }
 
   onSaveSequence(): void {
