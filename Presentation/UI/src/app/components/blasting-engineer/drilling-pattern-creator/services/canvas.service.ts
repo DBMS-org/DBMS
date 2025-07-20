@@ -72,9 +72,10 @@ export class CanvasService {
     offsetX: number,
     offsetY: number,
     isHolePlacementMode: boolean,
-    isSelected: boolean
+    isSelected: boolean,
+    globalDepth?: number
   ): Konva.Group {
-    return this.drillPointCanvasService.createDrillPointObject(point, scale, offsetX, offsetY, isHolePlacementMode, isSelected);
+    return this.drillPointCanvasService.createDrillPointObject(point, scale, offsetX, offsetY, isHolePlacementMode, isSelected, globalDepth);
   }
 
   calculateGridCoordinates(
@@ -94,5 +95,14 @@ export class CanvasService {
 
   updatePointSelectability(drillPointObjects: Map<string, Konva.Group>, isHolePlacementMode: boolean): void {
     this.drillPointCanvasService.updatePointSelectability(drillPointObjects, isHolePlacementMode);
+  }
+
+  // Custom depth detection methods (delegated to DrillPointCanvasService)
+  hasCustomDepth(point: DrillPoint, globalDepth: number): boolean {
+    return this.drillPointCanvasService.hasCustomDepth(point, globalDepth);
+  }
+
+  getPointsWithCustomDepths(points: DrillPoint[], globalDepth: number): DrillPoint[] {
+    return this.drillPointCanvasService.getPointsWithCustomDepths(points, globalDepth);
   }
 } 

@@ -155,4 +155,39 @@ export class DrillPointService {
     const dy = a.y - b.y;
     return Math.sqrt(dx * dx + dy * dy);
   }
+
+  /**
+   * Check if a drill point has a custom depth (different from global depth)
+   */
+  hasCustomDepth(point: DrillPoint, globalDepth: number): boolean {
+    return Math.abs(point.depth - globalDepth) > 0.01;
+  }
+
+  /**
+   * Get all drill points that have custom depths (different from global depth)
+   */
+  getPointsWithCustomDepths(points: DrillPoint[], globalDepth: number): DrillPoint[] {
+    return points.filter(p => this.hasCustomDepth(p, globalDepth));
+  }
+
+  /**
+   * Apply global depth to all drill points (override all custom depths)
+   */
+  applyGlobalDepthToAll(points: DrillPoint[], globalDepth: number): void {
+    points.forEach(p => p.depth = globalDepth);
+  }
+
+  /**
+   * Validate depth value is within acceptable range (1-50m)
+   */
+  validateDepthRange(depth: number): boolean {
+    return depth >= 1 && depth <= 50;
+  }
+
+  /**
+   * Format depth value for display (round to 2 decimal places)
+   */
+  formatDepth(depth: number): number {
+    return Math.round(depth * 100) / 100;
+  }
 } 
