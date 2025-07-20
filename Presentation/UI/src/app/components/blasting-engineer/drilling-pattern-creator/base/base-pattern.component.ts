@@ -18,17 +18,17 @@ export abstract class BasePatternComponentClass implements BasePatternComponent,
   protected readonly errorHandler = inject(ErrorHandlingService);
   // Note: eventBus is optional since we don't have a concrete implementation yet
   protected readonly eventBus: any = null;
-  
+
   /**
    * Component name for logging and debugging
    */
   protected abstract readonly componentName: string;
-  
+
   /**
    * Whether the component should automatically subscribe to state changes
    */
   protected readonly autoSubscribeToState: boolean = true;
-  
+
   /**
    * Whether the component should emit lifecycle events
    */
@@ -37,13 +37,13 @@ export abstract class BasePatternComponentClass implements BasePatternComponent,
   ngOnInit(): void {
     try {
       this.onComponentInit();
-      
+
       if (this.autoSubscribeToState) {
         this.subscribeToStateChanges();
       }
-      
+
       this.subscribeToEvents();
-      
+
       if (this.emitLifecycleEvents && this.eventBus) {
         this.eventBus.emit({
           type: 'COMPONENT_INITIALIZED',
@@ -60,7 +60,7 @@ export abstract class BasePatternComponentClass implements BasePatternComponent,
   ngOnDestroy(): void {
     try {
       this.onComponentDestroy();
-      
+
       if (this.emitLifecycleEvents && this.eventBus) {
         this.eventBus.emit({
           type: 'COMPONENT_DESTROYED',
@@ -69,7 +69,7 @@ export abstract class BasePatternComponentClass implements BasePatternComponent,
           payload: { component: this.componentName }
         });
       }
-      
+
       this.destroy$.next();
       this.destroy$.complete();
     } catch (error) {
@@ -132,13 +132,13 @@ export abstract class BasePatternComponentClass implements BasePatternComponent,
     if (!this.eventBus) {
       return; // No event bus available, skip event emission
     }
-    
+
     const fullEvent: PatternCreatorEvent = {
       timestamp: new Date().toISOString(),
       source: this.componentName,
       ...event
     };
-    
+
     this.eventBus.emit(fullEvent);
   }
 
