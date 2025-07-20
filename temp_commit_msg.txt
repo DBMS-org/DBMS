@@ -1,1 +1,7 @@
-Update navigation route in BlastSequenceDesignerComponent to reflect correct path for pattern creator
+Enhance drilling pattern creator with custom depth features and UI improvements
+
+- Updated the drilling pattern creator to support custom depths for drill points, including visual indicators for custom and global depths.
+- Refactored canvas and drill point services to handle custom depth logic and improve rendering.
+- Introduced tooltip functionality for drill points to display depth information dynamically.
+- Improved overall UI design with a modern glass-style interface and responsive elements.
+- Cleaned up component structure for better maintainability and readability.
