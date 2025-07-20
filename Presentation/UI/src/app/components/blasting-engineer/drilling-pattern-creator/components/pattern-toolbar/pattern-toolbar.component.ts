@@ -1,30 +1,33 @@
-import { 
-  Component, 
-  Input, 
-  Output, 
-  EventEmitter, 
-  OnInit, 
-  OnDestroy, 
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
   OnChanges,
   ChangeDetectionStrategy,
   inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, catchError } from 'rxjs';
 
 import { PatternToolbarContract } from '../../contracts/component.contracts';
 import { DrillPoint, PatternSettings } from '../../models/drill-point.model';
-import { 
-  ModeToggleEvent, 
-  PointActionEvent, 
-  PatternActionEvent 
+import {
+  ModeToggleEvent,
+  PointActionEvent,
+  PatternActionEvent
 } from '../../models/pattern-state.model';
+import { PatternEventBusService } from '../../services/pattern-event-bus.service';
+import { UnifiedDrillDataService } from '../../../../../core/services/unified-drill-data.service';
+import { NotificationService } from '../../../../../core/services/notification.service';
 
 /**
  * Standalone toolbar component for drilling pattern creator
@@ -47,8 +50,15 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, PatternToolbarContract {
+  private readonly eventBus = inject(PatternEventBusService);
   private readonly fb = inject(FormBuilder);
+  private readonly unifiedDrillDataService = inject(UnifiedDrillDataService);
+  private readonly notificationService = inject(NotificationService);
   private readonly destroy$ = new Subject<void>();
+
+  // Current context
+  private currentProjectId: number = 0;
+  private currentSiteId: number = 0;
 
   // Inputs
   @Input() settings: PatternSettings = { spacing: 3, burden: 2.5, depth: 10 };
@@ -75,6 +85,16 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
   ngOnInit(): void {
     this.initializeForms();
     this.setupFormSubscriptions();
+    this.getCurrentContext();
+  }
+
+  /**
+   * Get current project and site context
+   */
+  private getCurrentContext(): void {
+    const context = this.unifiedDrillDataService.getCurrentContext();
+    this.currentProjectId = context.projectId;
+    this.currentSiteId = context.siteId;
   }
 
   ngOnDestroy(): void {
@@ -140,7 +160,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
       .pipe(
         takeUntil(this.destroy$),
         debounceTime(300),
-        distinctUntilChanged((prev, curr) => 
+        distinctUntilChanged((prev, curr) =>
           JSON.stringify(prev) === JSON.stringify(curr)
         )
       )
@@ -172,17 +192,17 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
       if (control.value === null || control.value === undefined || control.value === '') {
         return null;
       }
-      
+
       const value = control.value.toString();
       const decimalIndex = value.indexOf('.');
-      
+
       if (decimalIndex !== -1) {
         const decimalPlaces = value.length - decimalIndex - 1;
         if (decimalPlaces > maxDecimalPlaces) {
           return { maxDecimalPlaces: { actual: decimalPlaces, max: maxDecimalPlaces } };
         }
       }
-      
+
       return null;
     };
   }
@@ -193,7 +213,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
   ngOnChanges(): void {
     if (this.settingsForm) {
       this.settingsForm.patchValue(this.settings, { emitEvent: false });
-      
+
       // Handle disabled state through FormControl instead of HTML attribute
       if (this.disabled) {
         this.settingsForm.disable({ emitEvent: false });
@@ -206,7 +226,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
       this.selectedHoleDepthForm.patchValue({
         selectedHoleDepth: this.selectedPoint.depth
       }, { emitEvent: false });
-      
+
       // Handle disabled state for selected hole form
       if (this.disabled) {
         this.selectedHoleDepthForm.disable({ emitEvent: false });
@@ -220,62 +240,81 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
    * Emit settings change event
    */
   private emitSettingsChange(settings: PatternSettings): void {
-    this.settingsChange.emit(settings);
+    this.eventBus.emit({ type: 'SETTINGS_CHANGE', payload: settings });
   }
 
-  /**
-   * Handle mode toggle events
-   */
   public toggleHolePlacementMode(): void {
     if (this.disabled) return;
-    
-    this.modeToggle.emit({
-      mode: 'HOLE_PLACEMENT',
-      enabled: !this.isHolePlacementMode
-    });
+    this.eventBus.emit({ type: 'MODE_TOGGLE', payload: { mode: 'HOLE_PLACEMENT', enabled: !this.isHolePlacementMode } });
   }
 
   public togglePreciseMode(): void {
     if (this.disabled) return;
-    
-    this.modeToggle.emit({
-      mode: 'PRECISE',
-      enabled: !this.isPreciseMode
-    });
+    this.eventBus.emit({ type: 'MODE_TOGGLE', payload: { mode: 'PRECISE', enabled: !this.isPreciseMode } });
   }
 
   public toggleFullscreen(): void {
     if (this.disabled) return;
-    
-    this.modeToggle.emit({
-      mode: 'FULLSCREEN',
-      enabled: true // Let parent handle the toggle logic
-    });
+    this.eventBus.emit({ type: 'MODE_TOGGLE', payload: { mode: 'FULLSCREEN', enabled: true } });
   }
-
+  // Update other action methods similarly to use eventBus.emit instead of this.xxx.emit
   /**
    * Handle point actions
    */
   public onDeletePoint(): void {
     if (this.disabled || !this.selectedPoint) return;
-    
+
     this.pointAction.emit({
       action: 'DELETE',
       pointId: this.selectedPoint.id
     });
   }
 
+  /**
+   * Clear all drill points from both UI and database
+   */
   public onClearAll(): void {
     if (this.disabled) return;
-    
-    this.pointAction.emit({
-      action: 'CLEAR_ALL'
-    });
+
+    // First check if we have a valid context
+    if (!this.currentProjectId || !this.currentSiteId) {
+      this.getCurrentContext();
+
+      if (!this.currentProjectId || !this.currentSiteId) {
+        this.notificationService.showError('Cannot clear points: Missing project or site context');
+        return;
+      }
+    }
+
+    // Confirm with the user before proceeding
+    if (confirm('Are you sure you want to clear all drill points? This will delete them from the database.')) {
+      // Clear points from database
+      this.unifiedDrillDataService.clearAllDrillPoints(this.currentProjectId, this.currentSiteId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (success) => {
+            if (success) {
+              // Clear points from UI state
+              this.pointAction.emit({
+                action: 'CLEAR_ALL'
+              });
+
+              this.notificationService.showSuccess('All drill points have been cleared from the database');
+            } else {
+              this.notificationService.showError('Failed to clear drill points from the database');
+            }
+          },
+          error: (error) => {
+            console.error('Error clearing drill points:', error);
+            this.notificationService.showError('An error occurred while clearing drill points');
+          }
+        });
+    }
   }
 
   public openDepthEditor(): void {
     if (this.disabled || this.drillPointsCount === 0) return;
-    
+
     this.pointAction.emit({
       action: 'OPEN_DEPTH_EDITOR'
     });
@@ -286,7 +325,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
    */
   public onSavePattern(): void {
     if (this.disabled || this.drillPointsCount === 0) return;
-    
+
     this.patternAction.emit({
       action: 'SAVE'
     });
@@ -294,7 +333,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
 
   public onExportToBlastDesigner(): void {
     if (this.disabled || this.drillPointsCount === 0) return;
-    
+
     this.patternAction.emit({
       action: 'EXPORT_TO_BLAST_DESIGNER'
     });
@@ -310,7 +349,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
     // This maintains the existing pattern of updating through settings
     const updatedSettings = { ...this.settings };
     this.settingsChange.emit(updatedSettings);
-    
+
     // Also emit a specific point action for individual depth change
     this.pointAction.emit({
       action: 'UPDATE_POINT_DEPTH',
@@ -338,7 +377,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
       burden: 2.5,
       depth: 10
     };
-    
+
     this.settingsForm.patchValue(defaultSettings);
     this.emitSettingsChange(defaultSettings);
   }
@@ -348,15 +387,15 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
    */
   public validateSettings(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     if (this.settingsForm.invalid) {
       const controls = this.settingsForm.controls;
-      
+
       Object.keys(controls).forEach(key => {
         const control = controls[key];
         if (control.invalid) {
           const fieldName = key.charAt(0).toUpperCase() + key.slice(1);
-          
+
           if (control.errors?.['required']) {
             errors.push(`${fieldName} is required`);
           }
@@ -372,7 +411,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
         }
       });
     }
-    
+
     this.validationErrors = errors;
     return {
       isValid: errors.length === 0,
@@ -383,15 +422,23 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
   /**
    * Get form control for template access
    */
-  public getFormControl(controlName: string) {
-    return this.settingsForm.get(controlName);
+  public getFormControl(controlName: string): FormControl<any> {
+    const control = this.settingsForm.get(controlName);
+    if (!control) {
+      throw new Error(`Form control ${controlName} not found`);
+    }
+    return control as FormControl<any>;
   }
 
   /**
    * Get selected hole form control
    */
-  public getSelectedHoleControl() {
-    return this.selectedHoleDepthForm.get('selectedHoleDepth');
+  public getSelectedHoleControl(): FormControl<any> {
+    const control = this.selectedHoleDepthForm.get('selectedHoleDepth');
+    if (!control) {
+      throw new Error('Selected hole depth control not found');
+    }
+    return control as FormControl<any>;
   }
 
   /**

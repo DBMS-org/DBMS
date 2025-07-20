@@ -39,6 +39,7 @@ import {
 import { CanvasConfig } from '../../tokens/injection.tokens';
 import { CanvasManager } from '../../managers/canvas.manager';
 import { Logger } from '../../utils/logger.util';
+import { PatternEventBusService } from '../../services/pattern-event-bus.service';
 
 /**
  * PatternCanvasComponent - Main canvas coordinator component
@@ -210,25 +211,20 @@ export class PatternCanvasComponent
    */
   public onPointSelected(point: DrillPoint): void {
     Logger.info('Point selected in canvas', point);
-    this.pointSelected.emit(point);
+    this.eventBus.emit({ type: 'POINT_SELECTED', payload: point });
   }
 
-  /**
-   * Handle point movement from drill point canvas
-   */
   public onPointMoved(event: MovePointEvent): void {
     Logger.info('Point moved in canvas', event);
-    this.pointMoved.emit(event);
+    this.eventBus.emit({ type: 'POINT_MOVED', payload: event });
   }
 
-  /**
-   * Handle point placement from drill point canvas
-   */
   public onPointPlaced(event: PlacePointEvent): void {
     Logger.info('Point placed in canvas', event);
-    this.pointPlaced.emit(event);
+    this.eventBus.emit({ type: 'POINT_PLACED', payload: event });
   }
 
+  // Add similar for canvasStateChange if needed
   override ngOnDestroy(): void {
     this.destroyCanvas();
     super.ngOnDestroy();

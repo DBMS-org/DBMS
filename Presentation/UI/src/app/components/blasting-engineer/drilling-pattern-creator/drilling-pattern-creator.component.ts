@@ -1,8 +1,8 @@
-import { 
-  Component, 
-  OnInit, 
-  OnDestroy, 
-  ChangeDetectionStrategy, 
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   inject
 } from '@angular/core';
@@ -19,18 +19,18 @@ import { PatternInstructionsComponent } from './components/pattern-instructions/
 
 // Models and Events
 import { DrillPoint, PatternSettings } from './models/drill-point.model';
-import { 
-  ModeToggleEvent, 
-  PointActionEvent, 
+import {
+  ModeToggleEvent,
+  PointActionEvent,
   PatternActionEvent,
   PlacePointEvent,
   MovePointEvent,
   CanvasState,
   UIState
 } from './models/pattern-state.model';
-import { 
-  DrillLocation, 
-  PatternSettings as UnifiedPatternSettings 
+import {
+  DrillLocation,
+  PatternSettings as UnifiedPatternSettings
 } from '../../../core/models/drilling.model';
 
 // Services
@@ -39,13 +39,14 @@ import { DrillPointService } from './services/drill-point.service';
 import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ErrorHandlingService } from './services/error-handling.service';
+import { PatternEventBusService } from './services/pattern-event-bus.service';
 
 // Components for dialogs
-import { 
-  DepthEditorTableComponent, 
-  DepthChangeEvent, 
-  BulkDepthChangeEvent, 
-  ApplyGlobalDepthEvent 
+import {
+  DepthEditorTableComponent,
+  DepthChangeEvent,
+  BulkDepthChangeEvent,
+  ApplyGlobalDepthEvent
 } from './components/depth-editor-table/depth-editor-table.component';
 
 // Utils
@@ -79,7 +80,8 @@ import { Logger } from './utils/logger.util';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
-  
+  private readonly eventBus = inject(PatternEventBusService);
+
   // Injected services
   private readonly patternState = inject(PatternStateService);
   private readonly drillPointService = inject(DrillPointService);
@@ -146,10 +148,10 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
     const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
     this.currentProjectId = routeMatch ? +routeMatch[1] : 4; // Default for testing
     this.currentSiteId = routeMatch ? +routeMatch[2] : 3;    // Default for testing
-    
-    Logger.info('Site context initialized', { 
-      projectId: this.currentProjectId, 
-      siteId: this.currentSiteId 
+
+    Logger.info('Site context initialized', {
+      projectId: this.currentProjectId,
+      siteId: this.currentSiteId
     });
   }
 
@@ -166,7 +168,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(([state, drillPoints, settings]) => {
       this.currentState = state;
-      
+
       // Update UI state for child components
       this.uiState = {
         isHolePlacementMode: state.isHolePlacementMode,
@@ -177,7 +179,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
         duplicateMessage: state.duplicateAttemptMessage,
         cursorPosition: state.cursorPosition
       };
-      
+
       this.cdr.markForCheck();
     });
   }
@@ -204,7 +206,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
    */
   private handlePatternDataLoaded(pattern: any): void {
     const drillData = pattern?.drillLocations || pattern?.drillPoints || [];
-    
+
     if (pattern && drillData && drillData.length > 0) {
       // Convert backend data to local format
       const drillPoints = drillData.map((location: any) => ({
@@ -215,7 +217,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
         spacing: location.spacing,
         burden: location.burden
       }));
-      
+
       const settings = {
         spacing: pattern.settings?.spacing || 3.0,
         burden: pattern.settings?.burden || 2.5,
@@ -225,7 +227,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
       // Update state through service
       this.patternState.updateSettings(settings);
       drillPoints.forEach((point: DrillPoint) => this.patternState.addDrillPoint(point));
-      
+
       // Update drill point service ID counter
       if (drillPoints.length > 0) {
         const highestId = Math.max(...drillPoints.map((point: DrillPoint) => {
@@ -234,10 +236,10 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
         }));
         this.drillPointService.setCurrentId(highestId + 1);
       }
-      
-      Logger.info('Pattern data loaded successfully', { 
-        pointCount: drillPoints.length, 
-        settings 
+
+      Logger.info('Pattern data loaded successfully', {
+        pointCount: drillPoints.length,
+        settings
       });
     }
   }
@@ -255,7 +257,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
 
   public onToolbarModeToggle(event: ModeToggleEvent): void {
     Logger.info('Mode toggle event', event);
-    
+
     switch (event.mode) {
       case 'HOLE_PLACEMENT':
         this.patternState.toggleHolePlacementMode();
@@ -309,15 +311,15 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
    */
   public onCanvasPointPlaced(event: PlacePointEvent): void {
     Logger.info('Point placement event received', event);
-    
+
     const point = this.drillPointService.createDrillPoint(
-      event.x, 
-      event.y, 
+      event.x,
+      event.y,
       event.settings
     );
-    
+
     Logger.info('Created drill point', point);
-    
+
     if (this.validatePointPlacement(point)) {
       this.patternState.addDrillPoint(point);
       Logger.info('Point added to state');
@@ -333,7 +335,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
 
   public onCanvasPointMoved(event: MovePointEvent): void {
     Logger.info('Point moved', event);
-    
+
     // Create a temporary point for validation
     const tempPoint: DrillPoint = {
       id: event.point.id,
@@ -343,7 +345,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
       spacing: event.point.spacing,
       burden: event.point.burden
     };
-    
+
     if (this.validatePointPlacement(tempPoint)) {
       // Update the point with new coordinates
       const updatedPoint = { ...event.point, x: event.newX, y: event.newY };
@@ -365,7 +367,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
    */
   private validatePointPlacement(point: DrillPoint): boolean {
     const currentPoints = this.patternState.drillPoints;
-    
+
     if (!this.drillPointService.validateCoordinates(point.x, point.y)) {
       return false;
     }
@@ -385,7 +387,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
   private showDuplicateMessage(x: number, y: number): void {
     const message = `Hole already exists at (${this.formatValue(x)}, ${this.formatValue(y)})`;
     this.patternState.setDuplicateMessage(message);
-    
+
     // Clear message after 3 seconds
     setTimeout(() => {
       this.patternState.setDuplicateMessage(null);
@@ -398,7 +400,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
   private updatePointDepth(pointId: string, depth: number): void {
     const currentPoints = this.patternState.drillPoints;
     const point = currentPoints.find(p => p.id === pointId);
-    
+
     if (point && this.drillPointService.validateDepthRange(depth)) {
       const updatedPoint = { ...point, depth: this.drillPointService.formatDepth(depth) };
       this.patternState.updateDrillPoint(updatedPoint);
@@ -463,7 +465,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
         if (result.success) {
           this.patternState.setSaved(true);
           this.notificationService.showSuccess('Pattern saved successfully');
-          
+
           // Reset save state after 3 seconds
           setTimeout(() => {
             this.patternState.setSaved(false);
@@ -484,14 +486,14 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
    */
   private exportToBlastDesigner(): void {
     const currentState = this.patternState.currentState;
-    
+
     if (currentState.drillPoints.length === 0) {
       this.notificationService.showError('No drill points to export');
       return;
     }
-    
+
     const targetRoute = `/blasting-engineer/project-management/${this.currentProjectId}/sites/${this.currentSiteId}/sequence-designer`;
-    
+
     this.router.navigate([targetRoute]).then(success => {
       if (success) {
         Logger.info('Successfully navigated to blast designer');
@@ -508,7 +510,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
    */
   private openDepthEditorDialog(): void {
     const currentState = this.patternState.currentState;
-    
+
     const dialogRef = this.dialog.open(DepthEditorTableComponent, {
       width: '90vw',
       maxWidth: '1200px',
@@ -526,7 +528,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
 
     // Handle depth change events
     const componentInstance = dialogRef.componentInstance;
-    
+
     componentInstance.depthChange.pipe(
       takeUntil(this.destroy$)
     ).subscribe((event: DepthChangeEvent) => {
@@ -545,7 +547,7 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe((event: ApplyGlobalDepthEvent) => {
       const currentSettings = this.patternState.currentState.settings;
-      
+
       if (event.pointIds) {
         event.pointIds.forEach(pointId => {
           this.updatePointDepth(pointId, currentSettings.depth);
