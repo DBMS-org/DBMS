@@ -114,7 +114,7 @@ export class PatternStatusBarComponent implements OnInit, OnDestroy, OnChanges {
   // Component lifecycle
   private destroy$ = new Subject<void>();
 
-  constructor(private patternStateService: PatternStateService) {}
+  constructor(private patternStateService: PatternStateService) { }
 
   ngOnInit(): void {
     Logger.info('PatternStatusBarComponent initialized');

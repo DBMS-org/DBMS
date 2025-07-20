@@ -1,267 +1,178 @@
-<div class="pattern-toolbar" role="toolbar" aria-label="Pattern Creator Tools">
-  <!-- Placement Controls Section -->
-  <div class="toolbar-section" role="group" aria-label="Placement Controls">
-    <button 
-      mat-button
-      type="button"
-      class="toolbar-button"
-      [class.active]="isHolePlacementMode"
-      [disabled]="disabled"
-      (click)="toggleHolePlacementMode()"
-      matTooltip="Toggle hole placement mode"
-      [attr.aria-pressed]="isHolePlacementMode"
-      [attr.aria-label]="isHolePlacementMode ? 'Exit hole placement mode' : 'Enter hole placement mode'"
-      (keydown.enter)="toggleHolePlacementMode()"
-      (keydown.space)="toggleHolePlacementMode()">
-      <mat-icon aria-hidden="true">
-        {{ isHolePlacementMode ? 'edit_off' : 'edit' }}
-      </mat-icon>
-      <span class="button-text">{{ isHolePlacementMode ? 'Exit Placement' : 'Place Holes' }}</span>
-    </button>
+<div class="pattern-toolbar" role="toolbar" aria-label="Drilling Pattern Creator">
+  <div class="toolbar-content">
+    <!-- Left Section: Mode Controls -->
+    <div class="toolbar-section left-section">
+      <div class="mode-controls">
+        <button 
+          type="button"
+          mat-icon-button
+          class="mode-btn"
+          [class.active]="isHolePlacementMode"
+          [disabled]="disabled"
+          (click)="toggleHolePlacementMode()"
+          matTooltip="Place Holes"
+          [attr.aria-pressed]="isHolePlacementMode"
+          aria-label="Toggle hole placement mode">
+          <mat-icon>{{ isHolePlacementMode ? 'edit_off' : 'edit' }}</mat-icon>
+        </button>
 
-    <button 
-      mat-button
-      type="button"
-      class="toolbar-button"
-      [class.active]="isPreciseMode"
-      [class.precise-mode-active]="isPreciseMode"
-      [disabled]="disabled"
-      (click)="togglePreciseMode()"
-      matTooltip="Toggle precise grid snapping"
-      [attr.aria-pressed]="isPreciseMode"
-      [attr.aria-label]="isPreciseMode ? 'Exit precise mode' : 'Enter precise mode'"
-      (keydown.enter)="togglePreciseMode()"
-      (keydown.space)="togglePreciseMode()">
-      <mat-icon aria-hidden="true">
-        {{ isPreciseMode ? 'grid_on' : 'grid_off' }}
-      </mat-icon>
-      <span class="button-text">{{ isPreciseMode ? 'Exit Precise Mode' : 'Precise Mode' }}</span>
-    </button>
+        <button 
+          type="button"
+          mat-icon-button
+          class="mode-btn precise-btn"
+          [class.active]="isPreciseMode"
+          [disabled]="disabled"
+          (click)="togglePreciseMode()"
+          matTooltip="Precise Mode"
+          [attr.aria-pressed]="isPreciseMode"
+          aria-label="Toggle precise mode">
+          <mat-icon>{{ isPreciseMode ? 'grid_on' : 'grid_off' }}</mat-icon>
+        </button>
 
-    <button 
-      mat-button
-      type="button"
-      class="toolbar-button fullscreen-button"
-      [disabled]="disabled"
-      (click)="toggleFullscreen()"
-      matTooltip="Toggle Full Screen Mode"
-      aria-label="Toggle Full Screen Mode">
-      <mat-icon aria-hidden="true">fullscreen</mat-icon>
-      <span class="button-text">Full Screen</span>
-    </button>
-  </div>
-
-  <!-- Pattern Settings Section -->
-  <div class="toolbar-section" role="group" aria-label="Pattern Settings">
-    <form [formGroup]="settingsForm" class="settings-form">
-      <mat-form-field appearance="outline" class="setting-field">
-        <mat-label>
-          <mat-icon>straighten</mat-icon>
-          Spacing (m)
-        </mat-label>
-        <input 
-          matInput
-          id="spacing-input"
-          type="number"
-          formControlName="spacing"
-          min="0.5"
-          max="10"
-          step="0.1"
-          placeholder="Enter spacing value"
-          title="Hole spacing in meters (0.5-10m)"
-          [attr.aria-label]="'Hole spacing in meters, current value: ' + formatValue(getFormControl('spacing')?.value)">
-        <mat-error *ngIf="hasError('spacing', 'required')">
-          Spacing is required
-        </mat-error>
-        <mat-error *ngIf="hasError('spacing', 'min')">
-          Spacing must be at least 0.5m
-        </mat-error>
-        <mat-error *ngIf="hasError('spacing', 'max')">
-          Spacing must not exceed 10m
-        </mat-error>
-        <mat-error *ngIf="hasError('spacing', 'maxDecimalPlaces')">
-          Maximum 2 decimal places allowed
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="setting-field">
-        <mat-label>
-          <mat-icon>height</mat-icon>
-          Burden (m)
-        </mat-label>
-        <input 
-          matInput
-          id="burden-input"
-          type="number"
-          formControlName="burden"
-          min="0.5"
-          max="10"
-          step="0.1"
-          placeholder="Enter burden value"
-          title="Hole burden in meters (0.5-10m)"
-          [attr.aria-label]="'Hole burden in meters, current value: ' + formatValue(getFormControl('burden')?.value)">
-        <mat-error *ngIf="hasError('burden', 'required')">
-          Burden is required
-        </mat-error>
-        <mat-error *ngIf="hasError('burden', 'min')">
-          Burden must be at least 0.5m
-        </mat-error>
-        <mat-error *ngIf="hasError('burden', 'max')">
-          Burden must not exceed 10m
-        </mat-error>
-        <mat-error *ngIf="hasError('burden', 'maxDecimalPlaces')">
-          Maximum 2 decimal places allowed
-        </mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="setting-field">
-        <mat-label>
-          <mat-icon>vertical_align_bottom</mat-icon>
-          Depth (m)
-        </mat-label>
-        <input 
-          matInput
-          id="depth-input"
-          type="number"
-          formControlName="depth"
-          min="1"
-          max="50"
-          step="0.5"
-          placeholder="Enter depth value"
-          title="Hole depth in meters (1-50m)"
-          [attr.aria-label]="'Hole depth in meters, current value: ' + formatValue(getFormControl('depth')?.value)">
-        <mat-error *ngIf="hasError('depth', 'required')">
-          Depth is required
-        </mat-error>
-        <mat-error *ngIf="hasError('depth', 'min')">
-          Depth must be at least 1m
-        </mat-error>
-        <mat-error *ngIf="hasError('depth', 'max')">
-          Depth must not exceed 50m
-        </mat-error>
-        <mat-error *ngIf="hasError('depth', 'maxDecimalPlaces')">
-          Maximum 2 decimal places allowed
-        </mat-error>
-      </mat-form-field>
-    </form>
-  </div>
-
-  <!-- Selected Hole Settings Section -->
-  <div 
-    class="toolbar-section selected-hole-section" 
-    role="group" 
-    aria-label="Selected Hole Settings" 
-    *ngIf="selectedPoint">
-    <form [formGroup]="selectedHoleDepthForm" class="selected-hole-form">
-      <mat-form-field appearance="outline" class="setting-field selected-hole-field">
-        <mat-label>
-          <mat-icon>vertical_align_bottom</mat-icon>
-          {{ selectedPoint.id }} Depth (m)
-        </mat-label>
-        <input 
-          matInput
-          id="selected-hole-depth-input"
-          type="number"
-          formControlName="selectedHoleDepth"
-          min="1"
-          max="50"
-          step="0.5"
-          placeholder="Enter individual depth"
-          [title]="'Individual depth for hole ' + selectedPoint.id + ' in meters (1-50m)'"
-          [attr.aria-label]="'Depth for selected hole ' + selectedPoint.id + ' in meters, current value: ' + formatValue(getSelectedHoleControl()?.value)"
-          [attr.aria-describedby]="'selected-hole-depth-help'">
-        <mat-hint id="selected-hole-depth-help">
-          Set individual depth for the selected drill hole
-        </mat-hint>
-        <mat-error *ngIf="getSelectedHoleControl()?.hasError('required') && getSelectedHoleControl()?.touched">
-          Depth is required
-        </mat-error>
-        <mat-error *ngIf="getSelectedHoleControl()?.hasError('min') && getSelectedHoleControl()?.touched">
-          Depth must be at least 1m
-        </mat-error>
-        <mat-error *ngIf="getSelectedHoleControl()?.hasError('max') && getSelectedHoleControl()?.touched">
-          Depth must not exceed 50m
-        </mat-error>
-      </mat-form-field>
-    </form>
-  </div>
-
-  <!-- Point Management Section -->
-  <div class="toolbar-section" role="group" aria-label="Point Management">
-    <button 
-      mat-button
-      type="button"
-      class="toolbar-button depth-editor-button"
-      [disabled]="disabled || drillPointsCount === 0"
-      (click)="openDepthEditor()"
-      matTooltip="Open depth editor table for batch editing"
-      aria-label="Open depth editor table">
-      <mat-icon aria-hidden="true">table_view</mat-icon>
-      <span class="button-text">Depth Editor</span>
-    </button>
-
-    <button 
-      mat-button
-      type="button"
-      class="toolbar-button delete-button"
-      [disabled]="disabled || !selectedPoint"
-      (click)="onDeletePoint()"
-      matTooltip="Delete selected point"
-      [attr.aria-label]="selectedPoint ? 'Delete selected point ' + selectedPoint.id : 'Delete point (disabled)'"
-      (keydown.enter)="onDeletePoint()"
-      (keydown.space)="onDeletePoint()">
-      <mat-icon aria-hidden="true">delete</mat-icon>
-      <span class="button-text">Delete Point</span>
-    </button>
-
-    <button 
-      mat-button
-      type="button"
-      class="toolbar-button clear-button"
-      [disabled]="disabled || drillPointsCount === 0"
-      (click)="onClearAll()"
-      matTooltip="Clear all points"
-      aria-label="Clear all points">
-      <mat-icon aria-hidden="true">clear_all</mat-icon>
-      <span class="button-text">Clear All</span>
-    </button>
-  </div>
-
-  <!-- Pattern Actions Section -->
-  <div class="toolbar-section" role="group" aria-label="Pattern Actions">
-    <button 
-      mat-button
-      type="button"
-      class="toolbar-button save-button"
-      [disabled]="disabled || drillPointsCount === 0"
-      [class.saved]="isSaved"
-      (click)="onSavePattern()"
-      matTooltip="Save pattern progress"
-      aria-label="Save pattern progress">
-      <mat-icon aria-hidden="true">{{ isSaved ? 'check_circle' : 'save' }}</mat-icon>
-      <span class="button-text">{{ isSaved ? 'Saved' : 'Save Pattern' }}</span>
-    </button>
-
-    <button 
-      mat-button
-      type="button"
-      class="toolbar-button blast-designer-button"
-      [disabled]="disabled || drillPointsCount === 0"
-      (click)="onExportToBlastDesigner()"
-      matTooltip="Send pattern to Blast Sequence Designer"
-      aria-label="Send pattern to Blast Sequence Designer">
-      <mat-icon aria-hidden="true">timeline</mat-icon>
-      <span class="button-text">To Blast Designer</span>
-    </button>
-  </div>
-
-  <!-- Validation Errors Display -->
-  <div class="validation-errors" *ngIf="validationErrors.length > 0" role="alert" aria-live="polite">
-    <mat-icon class="error-icon">error</mat-icon>
-    <div class="error-messages">
-      <div *ngFor="let error of validationErrors" class="error-message">
-        {{ error }}
+        <button 
+          type="button"
+          mat-icon-button
+          class="mode-btn"
+          [disabled]="disabled"
+          (click)="toggleFullscreen()"
+          matTooltip="Full Screen"
+          aria-label="Toggle fullscreen">
+          <mat-icon>fullscreen</mat-icon>
+        </button>
       </div>
     </div>
+
+    <!-- Center Section: Pattern Parameters -->
+    <div class="toolbar-section center-section">
+      <div class="param-group">
+        <div class="param-control">
+          <mat-icon class="param-icon">straighten</mat-icon>
+          <input 
+            type="number"
+            class="param-input"
+            [formControl]="getFormControl('spacing')"
+            placeholder="3.0"
+            min="0.5"
+            max="10"
+            step="0.1"
+            matTooltip="Spacing (m)"
+            [attr.aria-label]="'Spacing in meters'">
+          <span class="param-unit">m</span>
+        </div>
+
+        <div class="param-control">
+          <mat-icon class="param-icon">height</mat-icon>
+          <input 
+            type="number"
+            class="param-input"
+            [formControl]="getFormControl('burden')"
+            placeholder="2.5"
+            min="0.5"
+            max="10"
+            step="0.1"
+            matTooltip="Burden (m)"
+            [attr.aria-label]="'Burden in meters'">
+          <span class="param-unit">m</span>
+        </div>
+
+        <div class="param-control">
+          <mat-icon class="param-icon">vertical_align_bottom</mat-icon>
+          <input 
+            type="number"
+            class="param-input"
+            [formControl]="getFormControl('depth')"
+            placeholder="10.0"
+            min="1"
+            max="50"
+            step="0.5"
+            matTooltip="Depth (m)"
+            [attr.aria-label]="'Depth in meters'">
+          <span class="param-unit">m</span>
+        </div>
+
+        <!-- Selected Hole Depth -->
+        <div class="param-control selected-hole" *ngIf="selectedPoint">
+          <mat-icon class="param-icon selected">vertical_align_bottom</mat-icon>
+          <input 
+            type="number"
+            class="param-input selected"
+            [formControl]="getSelectedHoleControl()"
+            [placeholder]="(selectedPoint.depth !== null && selectedPoint.depth !== undefined) ? selectedPoint.depth.toString() : '10.0'"
+            min="1"
+            max="50"
+            step="0.5"
+            [matTooltip]="'Depth for hole ' + selectedPoint.id + ' (m)'"
+            [attr.aria-label]="'Depth for selected hole ' + selectedPoint.id + ' in meters'">
+          <span class="param-unit selected">{{ selectedPoint.id }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Section: Actions -->
+    <div class="toolbar-section right-section">
+      <div class="action-controls">
+        <button 
+          type="button"
+          mat-icon-button
+          class="action-btn depth-editor"
+          [disabled]="disabled || drillPointsCount === 0"
+          (click)="openDepthEditor()"
+          matTooltip="Depth Editor"
+          aria-label="Open depth editor">
+          <mat-icon>table_view</mat-icon>
+        </button>
+
+        <button 
+          type="button"
+          mat-icon-button
+          class="action-btn delete"
+          [disabled]="disabled || !selectedPoint"
+          (click)="onDeletePoint()"
+          matTooltip="Delete Point"
+          aria-label="Delete selected point">
+          <mat-icon>delete</mat-icon>
+        </button>
+
+        <button 
+          type="button"
+          mat-icon-button
+          class="action-btn clear"
+          [disabled]="disabled || drillPointsCount === 0"
+          (click)="onClearAll()"
+          matTooltip="Clear All"
+          aria-label="Clear all points">
+          <mat-icon>clear_all</mat-icon>
+        </button>
+
+        <button 
+          type="button"
+          mat-icon-button
+          class="action-btn save"
+          [class.saved]="isSaved"
+          [disabled]="disabled || drillPointsCount === 0"
+          (click)="onSavePattern()"
+          matTooltip="Save Pattern"
+          aria-label="Save pattern">
+          <mat-icon>{{ isSaved ? 'check_circle' : 'save' }}</mat-icon>
+        </button>
+
+        <button 
+          type="button"
+          mat-icon-button
+          class="action-btn export"
+          [disabled]="disabled || drillPointsCount === 0"
+          (click)="onExportToBlastDesigner()"
+          matTooltip="To Blast Designer"
+          aria-label="Export to blast designer">
+          <mat-icon>timeline</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Display -->
+  <div class="error-bar" *ngIf="validationErrors.length > 0" role="alert">
+    <mat-icon class="error-icon">error</mat-icon>
+    <span class="error-text">{{ validationErrors[0] }}</span>
   </div>
 </div>
