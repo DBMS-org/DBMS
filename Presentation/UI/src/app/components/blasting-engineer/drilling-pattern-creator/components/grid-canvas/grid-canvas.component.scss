@@ -1,0 +1,130 @@
+/**
+ * GridCanvasComponent Styles
+ * 
+ * This component renders directly to Konva canvas layers,
+ * so there are minimal CSS styles needed.
+ */
+
+:host {
+  display: block;
+  position: relative;
+  
+  // Ensure the component doesn't interfere with canvas rendering
+  pointer-events: none;
+  
+  // Hidden by default since rendering happens on canvas
+  visibility: hidden;
+  
+  &.visible {
+    visibility: visible;
+  }
+}
+
+// Debug styles (only active in development)
+:host.debug {
+  &::before {
+    content: 'Grid Canvas Component';
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(0, 255, 0, 0.1);
+    color: #00ff00;
+    font-size: 10px;
+    padding: 2px 4px;
+    border: 1px solid #00ff00;
+    z-index: 1000;
+    pointer-events: none;
+  }
+}
+
+// Performance indicator styles
+.grid-performance-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  z-index: 1000;
+  pointer-events: none;
+  
+  &.hidden {
+    display: none;
+  }
+  
+  .metric {
+    display: block;
+    margin: 1px 0;
+    
+    .label {
+      color: #ccc;
+    }
+    
+    .value {
+      color: #fff;
+      font-weight: bold;
+    }
+    
+    &.warning .value {
+      color: #ff9800;
+    }
+    
+    &.error .value {
+      color: #f44336;
+    }
+  }
+}
+
+// Grid-specific accessibility styles
+.grid-accessibility {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  
+  // Screen reader content for grid information
+  .grid-info {
+    speak: normal;
+  }
+}
+
+// Animation for grid updates (subtle)
+@keyframes grid-update {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+// Grid transition effects (applied via JavaScript)
+.grid-transition {
+  animation: grid-update 0.2s ease-in-out;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  :host {
+    // Grid colors will be adjusted via JavaScript for high contrast
+    // This is a placeholder for any additional high contrast styles
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .grid-transition {
+    animation: none;
+  }
+}
+
+// Print styles (hide grid component in print)
+@media print {
+  :host {
+    display: none;
+  }
+}

@@ -1,0 +1,241 @@
+// Pattern Canvas Component Styles - Canvas-Focused Design
+
+.pattern-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 100px);
+  background: transparent;
+
+  // Ensure Konva canvas has proper background
+  canvas {
+    background-color: transparent !important;
+  }
+
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  cursor: default;
+
+  // Fullscreen mode
+  &.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    border: none;
+    border-radius: 0;
+  }
+
+  // Hole placement mode cursor
+  &.hole-placement-mode {
+    cursor: crosshair;
+  }
+
+  // Precise mode styling
+  &.precise-mode {
+    .pattern-canvas-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+      z-index: 1;
+    }
+  }
+
+  // Disable context menu
+  &:focus {
+    outline: 2px solid #2196f3;
+    outline-offset: -2px;
+  }
+}
+
+// Loading overlay
+.canvas-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e0e0e0;
+    border-top: 4px solid #2196f3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+
+  span {
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+// Error overlay
+.canvas-error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+
+  .error-message {
+    text-align: center;
+    padding: 24px;
+    background-color: #fff;
+    border: 1px solid #f44336;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-width: 400px;
+
+    h4 {
+      color: #f44336;
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    p {
+      color: #666;
+      margin: 0 0 20px 0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .retry-button {
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #1976d2;
+      }
+
+      &:focus {
+        outline: 2px solid #2196f3;
+        outline-offset: 2px;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .pattern-canvas-container {
+    min-height: 300px;
+  }
+
+  .canvas-error-overlay .error-message {
+    margin: 16px;
+    padding: 20px;
+    max-width: calc(100vw - 32px);
+  }
+}
+
+// High DPI displays
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+  .pattern-canvas-container {
+    // Ensure crisp rendering on high DPI displays
+    image-rendering: -webkit-optimize-contrast;
+    /* Safari and Edge 79+ */
+    image-rendering: pixelated;
+    /* Standard property - should be last */
+  }
+}
+
+// Print styles
+@media print {
+  .pattern-canvas-container {
+    border: none;
+    background-color: transparent;
+  }
+
+  .canvas-loading-overlay,
+  .canvas-error-overlay {
+    display: none;
+  }
+}
+
+// Accessibility improvements
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+
+  .retry-button {
+    transition: none;
+  }
+}
+
+// Dark mode support (if needed in the future)
+@media (prefers-color-scheme: dark) {
+  .pattern-canvas-container {
+    background-color: #1e1e1e;
+    border-color: #333;
+    color: #fff;
+  }
+
+  .canvas-loading-overlay {
+    background-color: rgba(30, 30, 30, 0.9);
+
+    span {
+      color: #ccc;
+    }
+  }
+
+  .canvas-error-overlay {
+    background-color: rgba(30, 30, 30, 0.95);
+
+    .error-message {
+      background-color: #2d2d2d;
+      border-color: #f44336;
+      color: #fff;
+
+      p {
+        color: #ccc;
+      }
+    }
+  }
+}

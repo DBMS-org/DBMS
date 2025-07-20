@@ -1,0 +1,91 @@
+<!-- Pattern Canvas Component Template -->
+<div 
+  #canvasContainer 
+  class="pattern-canvas-container"
+  [class.fullscreen]="uiState.isFullscreen"
+  [class.hole-placement-mode]="uiState.isHolePlacementMode"
+  [class.precise-mode]="uiState.isPreciseMode"
+  [attr.aria-label]="'Drilling pattern canvas with ' + drillPoints.length + ' drill points'"
+  [attr.tabindex]="0"
+  role="application"
+  (contextmenu)="onContextMenu($event)"
+  (keydown)="onKeyDown($event)"
+  (focus)="onCanvasFocus()"
+  (blur)="onCanvasBlur()">
+  
+  <!-- Canvas will be initialized here by Konva -->
+  <!-- Sub-components will be integrated once they're properly set up -->
+  <div id="konva-canvas-container"></div>
+  
+  <!-- Loading overlay -->
+  <div 
+    *ngIf="isInitializing" 
+    class="canvas-loading-overlay"
+    role="status"
+    aria-live="polite">
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <span>Initializing canvas...</span>
+  </div>
+  
+  <!-- Error overlay -->
+  <div 
+    *ngIf="hasError" 
+    class="canvas-error-overlay"
+    role="alert"
+    aria-live="assertive">
+    <div class="error-message">
+      <h4>Canvas Error</h4>
+      <p>{{ errorMessage }}</p>
+      <button 
+        type="button" 
+        class="retry-button"
+        (click)="retryInitialization()"
+        [attr.aria-label]="'Retry canvas initialization'">
+        Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen reader announcements -->
+  <div 
+    class="sr-only" 
+    aria-live="polite" 
+    aria-atomic="true">
+    <span *ngIf="canvasState?.isInitialized">
+      Canvas ready. {{ drillPoints.length }} drill points loaded.
+    </span>
+    <span *ngIf="uiState.isHolePlacementMode">
+      Hole placement mode active. Click to place drill points.
+    </span>
+    <span *ngIf="uiState.isPreciseMode">
+      Precise mode active. Grid snapping enabled.
+    </span>
+  </div>
+
+  <!-- Canvas instructions for screen readers -->
+  <div class="sr-only">
+    <h3>Canvas Instructions</h3>
+    <ul>
+      <li>Use mouse wheel or pinch to zoom</li>
+      <li>Click and drag to pan the view</li>
+      <li *ngIf="uiState.isHolePlacementMode">Click to place new drill points</li>
+      <li>Right-click for context menu options</li>
+      <li>Press Escape to exit fullscreen mode</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Hidden styles for screen reader only content -->
+<style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

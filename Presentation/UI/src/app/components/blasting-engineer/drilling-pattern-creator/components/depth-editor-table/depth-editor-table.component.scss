@@ -1,0 +1,386 @@
+.depth-editor-table-container {
+  padding: 16px;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  
+  h3 {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+  }
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    
+    &.global-depth {
+      background-color: #e3f2fd;
+      border: 1px solid #2196f3;
+    }
+    
+    &.custom-depth {
+      background-color: #fff3e0;
+      border: 1px solid #ff9800;
+    }
+  }
+}
+
+.filter-controls {
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  
+  .filter-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 12px;
+    
+    .search-field {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .depth-filter {
+      min-width: 180px;
+    }
+  }
+  
+  .filter-summary {
+    mat-chip-set {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    mat-chip {
+      font-size: 12px;
+      
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+
+.bulk-operations {
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #f0f8ff;
+  border-radius: 8px;
+  border: 1px solid #b3d9ff;
+  
+  .bulk-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    
+    .selection-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1976d2;
+      font-weight: 500;
+      
+      mat-icon {
+        font-size: 20px;
+        color: #1976d2;
+      }
+    }
+    
+    .bulk-actions {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      
+      .bulk-depth-input {
+        width: 120px;
+      }
+      
+      button {
+        white-space: nowrap;
+        
+        mat-icon {
+          margin-right: 4px;
+        }
+      }
+    }
+  }
+}
+
+.table-wrapper {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.depth-table {
+  width: 100%;
+  
+  .mat-mdc-header-cell {
+    font-weight: 600;
+    color: #333;
+    background-color: #f5f5f5;
+  }
+  
+  .mat-mdc-cell {
+    padding: 8px 16px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .select-cell {
+    width: 48px;
+    padding: 8px 12px;
+    text-align: center;
+    
+    .mat-mdc-checkbox {
+      margin: 0;
+    }
+  }
+  
+  .mat-mdc-row {
+    &:hover {
+      background-color: #f9f9f9;
+    }
+    
+    &.editing-row {
+      background-color: #e8f5e8;
+    }
+    
+    &.custom-depth-row {
+      .depth-cell {
+        background-color: #fff8e1;
+      }
+    }
+    
+    &.selected-row {
+      background-color: #e3f2fd;
+      
+      &:hover {
+        background-color: #bbdefb;
+      }
+    }
+  }
+}
+
+.id-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.coordinate-cell {
+  font-family: 'Courier New', monospace;
+  text-align: right;
+  color: #666;
+}
+
+.depth-cell {
+  &.global-depth {
+    background-color: #e3f2fd;
+  }
+  
+  &.custom-depth {
+    background-color: #fff3e0;
+  }
+  
+  .depth-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .depth-value {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+    }
+    
+    .custom-indicator {
+      font-size: 16px;
+      color: #ff9800;
+    }
+  }
+  
+  .depth-input {
+    width: 100px;
+    
+    .mat-mdc-form-field-wrapper {
+      padding-bottom: 0;
+    }
+    
+    input {
+      font-family: 'Courier New', monospace;
+      text-align: right;
+    }
+  }
+}
+
+.actions-cell {
+  width: 120px;
+  
+  .action-buttons {
+    display: flex;
+    gap: 4px;
+  }
+  
+  .edit-actions {
+    display: flex;
+    gap: 4px;
+  }
+  
+  .view-actions {
+    display: flex;
+    gap: 4px;
+  }
+  
+  .readonly-indicator {
+    display: flex;
+    justify-content: center;
+    
+    mat-icon {
+      color: #999;
+      font-size: 18px;
+    }
+  }
+}
+
+.no-data, .no-filtered-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #666;
+  
+  mat-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #ccc;
+  }
+  
+  p {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+  }
+  
+  button {
+    margin-top: 8px;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .depth-editor-table-container {
+    padding: 8px;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .legend {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .filter-controls {
+    padding: 12px;
+    
+    .filter-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      
+      .search-field, .depth-filter {
+        min-width: unset;
+      }
+    }
+  }
+  
+  .bulk-operations {
+    padding: 12px;
+    
+    .bulk-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      
+      .bulk-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        
+        .bulk-depth-input {
+          width: 100%;
+        }
+        
+        button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+  }
+  
+  .depth-table {
+    .mat-mdc-cell {
+      padding: 4px 8px;
+    }
+    
+    .select-cell {
+      width: 40px;
+      padding: 4px 8px;
+    }
+  }
+  
+  .actions-cell {
+    width: 80px;
+  }
+}
+
+// Accessibility improvements
+.depth-table {
+  .mat-mdc-row {
+    &:focus {
+      outline: 2px solid #2196f3;
+      outline-offset: -2px;
+    }
+  }
+}
+
+// Animation for editing state
+.editing-row {
+  transition: background-color 0.2s ease-in-out;
+}
+
+.custom-depth-row .depth-cell {
+  transition: background-color 0.2s ease-in-out;
+}
