@@ -1,7 +1,1 @@
-Add optional ID to CreateBlastConnectionRequest and enhance validation rules
-
-- Introduced an optional Id property in CreateBlastConnectionRequest for frontend-generated IDs.
-- Updated BlastConnectionApplicationService to ensure an ID is set when creating a blast connection.
-- Modified CreateBlastConnectionRequestValidator to enforce greater-than-zero validation for ProjectId and SiteId.
-- Enhanced SiteBlastingController to log detailed information during the creation of blast connections.
-- Improved error handling and user feedback in the UI component for better user experience.
+Update navigation route in BlastSequenceDesignerComponent to reflect correct path for pattern creator
