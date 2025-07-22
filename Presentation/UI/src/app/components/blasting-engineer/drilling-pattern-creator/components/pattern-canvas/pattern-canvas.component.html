@@ -1,21 +1,80 @@
 <!-- Pattern Canvas Component Template -->
-<div 
-  #canvasContainer 
-  class="pattern-canvas-container"
-  [class.fullscreen]="uiState.isFullscreen"
-  [class.hole-placement-mode]="uiState.isHolePlacementMode"
-  [class.precise-mode]="uiState.isPreciseMode"
-  [attr.aria-label]="'Drilling pattern canvas with ' + drillPoints.length + ' drill points'"
-  [attr.tabindex]="0"
-  role="application"
-  (contextmenu)="onContextMenu($event)"
-  (keydown)="onKeyDown($event)"
-  (focus)="onCanvasFocus()"
-  (blur)="onCanvasBlur()">
+<div class="canvas-wrapper">
+  <!-- Ruler Corner -->
+  <div class="ruler-corner"></div>
   
-  <!-- Canvas will be initialized here by Konva -->
-  <!-- Sub-components will be integrated once they're properly set up -->
-  <div id="konva-canvas-container"></div>
+  <!-- Horizontal Ruler -->
+  <div class="ruler-horizontal">
+    <!-- Ruler ticks and labels will be generated dynamically -->
+  </div>
+  
+  <!-- Vertical Ruler -->
+  <div class="ruler-vertical">
+    <!-- Ruler ticks and labels will be generated dynamically -->
+  </div>
+  
+  <div 
+    #canvasContainer 
+    class="pattern-canvas-container"
+    [class.fullscreen]="uiState.isFullscreen"
+    [class.hole-placement-mode]="uiState.isHolePlacementMode"
+    [class.precise-mode]="uiState.isPreciseMode"
+    [attr.aria-label]="'Drilling pattern canvas with ' + drillPoints.length + ' drill points'"
+    [attr.tabindex]="0"
+    role="application"
+    (contextmenu)="onContextMenu($event)"
+    (keydown)="onKeyDown($event)"
+    (focus)="onCanvasFocus()"
+    (blur)="onCanvasBlur()">
+    
+    <!-- Canvas will be initialized here by Konva -->
+    <div id="konva-canvas-container"></div>
+  
+  <!-- Coordinates display -->
+  <div class="coordinates-display" *ngIf="uiState.cursorPosition">
+    <span class="coords-label">X:</span> {{ formatValue(uiState.cursorPosition.x) }}
+    <span class="coords-label">Y:</span> {{ formatValue(uiState.cursorPosition.y) }}
+  </div>
+  
+  <!-- Zoom controls -->
+  <div class="zoom-controls">
+    <button 
+      type="button" 
+      class="zoom-button zoom-in" 
+      (click)="zoomIn()"
+      aria-label="Zoom in">
+      +
+    </button>
+    <button 
+      type="button" 
+      class="zoom-button zoom-out" 
+      (click)="zoomOut()"
+      aria-label="Zoom out">
+      -
+    </button>
+    <button 
+      type="button" 
+      class="zoom-button zoom-reset" 
+      (click)="resetView()"
+      aria-label="Reset view">
+      ↺
+    </button>
+    <button 
+      type="button" 
+      class="zoom-button zoom-fit" 
+      (click)="fitToScreen()"
+      aria-label="Fit to screen">
+      ⤢
+    </button>
+  </div>
+  
+  <!-- Mini-map (optional) -->
+  <div class="mini-map" *ngIf="drillPoints.length > 0">
+    <div class="mini-map-content">
+      <!-- Mini-map will be rendered by Konva -->
+      <div class="viewport-indicator"></div>
+    </div>
+  </div>
   
   <!-- Loading overlay -->
   <div 
@@ -46,6 +105,15 @@
     </div>
   </div>
 
+  <!-- Tooltip for drill points -->
+  <div class="canvas-tooltip" *ngIf="hoveredPoint" [style.left.px]="tooltipPosition.x" [style.top.px]="tooltipPosition.y">
+    <div class="tooltip-content">
+      <strong>{{ hoveredPoint.id }}</strong>
+      <div>X: {{ formatValue(hoveredPoint.x) }}, Y: {{ formatValue(hoveredPoint.y) }}</div>
+      <div>Depth: {{ formatValue(hoveredPoint.depth) }}m</div>
+    </div>
+  </div>
+
   <!-- Screen reader announcements -->
   <div 
     class="sr-only" 
@@ -72,6 +140,7 @@
       <li>Right-click for context menu options</li>
       <li>Press Escape to exit fullscreen mode</li>
     </ul>
+  </div>
   </div>
 </div>
 

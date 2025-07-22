@@ -1,12 +1,19 @@
 .pattern-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 1rem;
   padding: 1rem;
   background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
-  align-items: flex-start;
   min-height: 80px;
+}
+
+.toolbar-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  width: 100%;
 
   @media (max-width: 1200px) {
     flex-direction: column;
@@ -35,6 +42,34 @@
   @media (max-width: 768px) {
     width: 100%;
     justify-content: flex-start;
+  }
+}
+
+.mode-controls,
+.action-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mode-btn,
+.action-btn {
+  &.active {
+    background-color: #1976d2;
+    color: white;
+  }
+  
+  &.precise-btn.active {
+    background-color: #ff9800;
+    color: white;
+  }
+  
+  &.save.saved {
+    color: #4caf50;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
   }
 }
 
@@ -114,7 +149,8 @@
 }
 
 .settings-form,
-.selected-hole-form {
+.selected-hole-form,
+.param-group {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
@@ -123,6 +159,60 @@
     flex-direction: column;
     gap: 0.5rem;
     width: 100%;
+  }
+}
+
+.param-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: white;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e0e0e0;
+  
+  &.selected-hole {
+    background-color: #e3f2fd;
+    border-color: #bbdefb;
+  }
+  
+  .param-icon {
+    color: #666;
+    font-size: 1.25rem;
+    
+    &.selected {
+      color: #1976d2;
+    }
+  }
+  
+  .param-input {
+    width: 60px;
+    border: none;
+    outline: none;
+    padding: 0.25rem;
+    font-size: 0.875rem;
+    text-align: right;
+    background: transparent;
+    
+    &.selected {
+      color: #1976d2;
+      font-weight: 500;
+    }
+    
+    &:focus {
+      background-color: #f5f5f5;
+    }
+  }
+  
+  .param-unit {
+    color: #666;
+    font-size: 0.75rem;
+    width: 16px;
+    
+    &.selected {
+      color: #1976d2;
+      font-weight: 500;
+    }
   }
 }
 
@@ -187,9 +277,10 @@
   }
 }
 
-.validation-errors {
+.validation-errors,
+.error-bar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
   background-color: #ffebee;
@@ -204,11 +295,14 @@
     width: 1.25rem;
     height: 1.25rem;
     flex-shrink: 0;
-    margin-top: 0.125rem;
   }
 
-  .error-messages {
+  .error-messages,
+  .error-text {
     flex: 1;
+    font-size: 0.875rem;
+    color: #d32f2f;
+    line-height: 1.4;
   }
 
   .error-message {
@@ -281,6 +375,19 @@
   .toolbar-button {
     transition: none;
   }
+}
+
+// Accessibility
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
 }
 
 // Print styles
