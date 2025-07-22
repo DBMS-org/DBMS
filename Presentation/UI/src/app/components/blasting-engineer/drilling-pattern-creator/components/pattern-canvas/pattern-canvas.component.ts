@@ -19,7 +19,7 @@ import { takeUntil, debounceTime } from 'rxjs/operators';
 import { fromEvent, merge } from 'rxjs';
 import Konva from 'konva';
 
-// Import specialized canvas components (will be added gradually)
+// Import specialized canvas components
 // import { GridCanvasComponent } from '../grid-canvas/grid-canvas.component';
 // import { RulerCanvasComponent } from '../ruler-canvas/ruler-canvas.component';
 // import { DrillPointCanvasComponent } from '../drill-point-canvas/drill-point-canvas.component';
@@ -61,8 +61,8 @@ import { PatternEventBusService } from '../../services/pattern-event-bus.service
   imports: [
     CommonModule
     // Sub-components will be added when they're ready
-    // GridCanvasComponent,
     // RulerCanvasComponent,
+    // GridCanvasComponent,
     // DrillPointCanvasComponent
   ],
   templateUrl: './pattern-canvas.component.html',
@@ -99,7 +99,7 @@ export class PatternCanvasComponent
   @ViewChild('canvasContainer', { static: true })
   canvasContainer!: ElementRef<HTMLDivElement>;
 
-  // Sub-component references (will be added when components are ready)
+  // Sub-component references
   // @ViewChild(GridCanvasComponent) gridCanvas!: GridCanvasComponent;
   // @ViewChild(RulerCanvasComponent) rulerCanvas!: RulerCanvasComponent;
   // @ViewChild(DrillPointCanvasComponent) drillPointCanvas!: DrillPointCanvasComponent;
@@ -121,6 +121,8 @@ export class PatternCanvasComponent
   public isInitializing = false;
   public hasError = false;
   public errorMessage = '';
+  public hoveredPoint: DrillPoint | null = null;
+  public tooltipPosition = { x: 0, y: 0 };
 
   // Konva layers for sub-components
   public gridLayer: Konva.Layer | null = null;
@@ -283,6 +285,15 @@ export class PatternCanvasComponent
 
       // Set up resize observer
       this.setupResizeObserver();
+      
+      // Position the stage so that (0,0) is at the top-left corner
+      // This ensures the grid grows from left and bottom
+      const containerWidth = this.canvasContainer.nativeElement.clientWidth;
+      const containerHeight = this.canvasContainer.nativeElement.clientHeight;
+      
+      // Set initial position to place origin at top-left with a small margin
+      this.stage.position({ x: 50, y: 50 });
+      this.stage.batchDraw();
 
       // Render initial content (will be replaced by sub-components later)
       this.renderBasicGrid();
@@ -291,7 +302,9 @@ export class PatternCanvasComponent
       // Update canvas state
       this.updateCanvasState({
         isInitialized: true,
-        scale: 1
+        scale: 1,
+        panOffsetX: 50,
+        panOffsetY: 50
       });
 
       Logger.info('Canvas initialized successfully');
@@ -381,7 +394,7 @@ export class PatternCanvasComponent
   }
 
   /**
-   * Fit canvas content to screen
+   * Fit canvas content to screen while maintaining origin at top-left
    */
   public fitToScreen(): void {
     try {
@@ -407,28 +420,38 @@ export class PatternCanvasComponent
       const scaleY = (containerRect.height - padding * 2) / bounds.height;
       const scale = Math.min(scaleX, scaleY, this.canvasConfig.maxZoom);
 
-      // Calculate center position
-      const centerX = bounds.x + bounds.width / 2;
-      const centerY = bounds.y + bounds.height / 2;
-
-      // Apply transformation to stage
+      // Apply transformation to stage - position to keep origin visible
       if (this.stage) {
         this.stage.scale({ x: scale, y: scale });
-        this.stage.position({ x: centerX, y: centerY });
+        
+        // Position the stage to keep the origin (0,0) at the top-left with padding
+        // and ensure all content is visible
+        const stagePos = {
+          x: Math.min(padding, padding - bounds.x * scale),
+          y: Math.min(padding, padding - bounds.y * scale)
+        };
+        
+        this.stage.position(stagePos);
         this.stage.batchDraw();
       }
 
       this.updateCanvasState({
         scale,
-        panOffsetX: centerX,
-        panOffsetY: centerY
+        panOffsetX: this.stage?.x() || 0,
+        panOffsetY: this.stage?.y() || 0
       });
+      
+      // Re-render grid with new view
+      this.renderBasicGrid();
 
       if (timerId && this.performanceMonitor) {
         this.performanceMonitor.endTimer(timerId);
       }
 
-      Logger.info('Canvas fitted to screen', { scale, centerX, centerY });
+      Logger.info('Canvas fitted to screen', { 
+        scale, 
+        position: { x: this.stage?.x(), y: this.stage?.y() } 
+      });
 
     } catch (error) {
       this.handleError(error as Error, 'fitToScreen');
@@ -447,15 +470,19 @@ export class PatternCanvasComponent
 
       if (this.stage) {
         this.stage.scale({ x: 1, y: 1 });
-        this.stage.position({ x: 0, y: 0 });
+        // Position the stage so that (0,0) is at the top-left corner with a small margin
+        this.stage.position({ x: 50, y: 50 });
         this.stage.batchDraw();
       }
 
       this.updateCanvasState({
         scale: 1,
-        panOffsetX: 0,
-        panOffsetY: 0
+        panOffsetX: 50,
+        panOffsetY: 50
       });
+      
+      // Re-render grid with default view
+      this.renderBasicGrid();
 
       Logger.info('Canvas view reset');
 
@@ -641,10 +668,13 @@ export class PatternCanvasComponent
    */
   private onDragEnd(_event: any): void {
     this.updateCanvasState({ isDragging: false });
+    
+    // Re-render grid after panning to ensure it covers the visible area
+    this.renderBasicGrid();
   }
 
   /**
-   * Handle mouse wheel events for zooming
+   * Handle mouse wheel events for zooming while maintaining origin at top-left
    */
   private onWheel(event: any): void {
     event.evt.preventDefault();
@@ -652,6 +682,8 @@ export class PatternCanvasComponent
     const scaleBy = 1.1;
     const stage = event.target.getStage();
     const pointer = stage.getPointerPosition();
+    
+    // Get the point under the mouse in world coordinates
     const mousePointTo = {
       x: (pointer.x - stage.x()) / stage.scaleX(),
       y: (pointer.y - stage.y()) / stage.scaleY()
@@ -663,21 +695,39 @@ export class PatternCanvasComponent
       Math.min(this.canvasConfig.maxZoom, stage.scaleX() * Math.pow(scaleBy, direction))
     );
 
+    // Apply new scale
     stage.scale({ x: newScale, y: newScale });
 
+    // Calculate new position to zoom toward mouse point
     const newPos = {
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale
     };
+    
+    // Ensure the origin stays visible - don't let it go too far off screen
+    // This ensures the grid grows from left and bottom
+    const minX = -newScale * 1000; // Allow some negative space
+    const minY = -newScale * 1000; // Allow some negative space
+    
+    newPos.x = Math.max(newPos.x, 50); // Keep origin with some padding
+    newPos.y = Math.max(newPos.y, 50); // Keep origin with some padding
 
+    // Apply new position
     stage.position(newPos);
     stage.batchDraw();
 
+    // Update canvas state
     this.updateCanvasState({
       scale: newScale,
       panOffsetX: newPos.x,
       panOffsetY: newPos.y
     });
+    
+    // Re-render grid when zoom level changes significantly
+    const scaleChange = Math.abs(this.canvasState.scale - newScale) / this.canvasState.scale;
+    if (scaleChange > 0.1) {
+      this.renderBasicGrid();
+    }
   }
 
   /**
@@ -818,6 +868,85 @@ export class PatternCanvasComponent
       } : null
     };
   }
+  
+  /**
+   * Format numeric values for display
+   */
+  public formatValue(value: number | undefined | null): string {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0.00';
+    }
+    return value % 1 === 0 ? value.toString() : value.toFixed(2);
+  }
+  
+  /**
+   * Zoom in on the canvas
+   */
+  public zoomIn(): void {
+    if (!this.stage) return;
+    
+    const currentScale = this.stage.scaleX();
+    const newScale = Math.min(currentScale * 1.2, this.canvasConfig.maxZoom);
+    
+    // Get center of stage
+    const centerX = this.stage.width() / 2;
+    const centerY = this.stage.height() / 2;
+    
+    // Zoom toward center
+    this.zoomToPoint(centerX, centerY, newScale);
+  }
+  
+  /**
+   * Zoom out on the canvas
+   */
+  public zoomOut(): void {
+    if (!this.stage) return;
+    
+    const currentScale = this.stage.scaleX();
+    const newScale = Math.max(currentScale / 1.2, this.canvasConfig.minZoom);
+    
+    // Get center of stage
+    const centerX = this.stage.width() / 2;
+    const centerY = this.stage.height() / 2;
+    
+    // Zoom toward center
+    this.zoomToPoint(centerX, centerY, newScale);
+  }
+  
+  /**
+   * Zoom to a specific point with a given scale
+   */
+  private zoomToPoint(x: number, y: number, scale: number): void {
+    if (!this.stage) return;
+    
+    const oldScale = this.stage.scaleX();
+    
+    // Calculate new position
+    const mousePointTo = {
+      x: (x - this.stage.x()) / oldScale,
+      y: (y - this.stage.y()) / oldScale
+    };
+    
+    const newPos = {
+      x: x - mousePointTo.x * scale,
+      y: y - mousePointTo.y * scale
+    };
+    
+    // Apply new scale and position
+    this.stage.scale({ x: scale, y: scale });
+    this.stage.position(newPos);
+    this.stage.batchDraw();
+    
+    // Update canvas state
+    this.updateCanvasState({
+      scale,
+      panOffsetX: newPos.x,
+      panOffsetY: newPos.y
+    });
+    
+    // Re-render grid with new scale
+    this.renderBasicGrid();
+  }
 
 
 
@@ -826,7 +955,8 @@ export class PatternCanvasComponent
 
 
   /**
-   * Render a basic grid to make the canvas visible
+   * Render a professional grid with axes and measurements that adjusts with zoom
+   * Ensures the origin (0,0) is at the top-left corner
    */
   private renderBasicGrid(): void {
     if (!this.stage) {
@@ -846,63 +976,226 @@ export class PatternCanvasComponent
       // Clear existing grid
       gridLayer.destroyChildren();
 
-      // Get canvas dimensions
-      const width = this.stage.width();
-      const height = this.stage.height();
+      // Get canvas dimensions and scale
+      const stageWidth = this.stage.width();
+      const stageHeight = this.stage.height();
+      const scale = this.stage.scaleX();
+      
+      // Calculate the visible area in world coordinates
+      const viewportTopLeft = this.transformScreenToCanvas({ x: 0, y: 0 });
+      const viewportBottomRight = this.transformScreenToCanvas({ 
+        x: stageWidth, 
+        y: stageHeight 
+      });
+      
+      // Ensure we always include the origin (0,0) in our grid
+      const gridLeft = Math.min(0, Math.floor(viewportTopLeft.x / 100) * 100);
+      const gridTop = Math.min(0, Math.floor(viewportTopLeft.y / 100) * 100);
+      
+      // Calculate grid dimensions to cover the entire viewport plus buffer
+      const gridRight = Math.max(2000, Math.ceil(viewportBottomRight.x / 100) * 100 + 500);
+      const gridBottom = Math.max(2000, Math.ceil(viewportBottomRight.y / 100) * 100 + 500);
+      const gridWidth = gridRight - gridLeft;
+      const gridHeight = gridBottom - gridTop;
 
-      if (width === 0 || height === 0) {
-        Logger.warn('Canvas has zero dimensions', { width, height });
+      if (gridWidth <= 0 || gridHeight <= 0) {
+        Logger.warn('Invalid grid dimensions', { gridWidth, gridHeight });
         return;
       }
 
-      // Grid spacing based on settings or default
-      const spacing = this.settings?.spacing || 1;
-      const gridSpacing = Math.max(spacing * 50, 50);
+      // Adjust grid spacing based on zoom level
+      const baseSpacing = this.settings?.spacing || 1;
+      let gridSpacing = Math.max(baseSpacing * 20, 20);
+      let majorGridSpacing = gridSpacing * 5;
+      
+      // Adjust grid density based on zoom level
+      if (scale < 0.5) {
+        gridSpacing = majorGridSpacing;
+        majorGridSpacing = gridSpacing * 5;
+      } else if (scale > 2) {
+        gridSpacing = Math.max(baseSpacing * 10, 10);
+        majorGridSpacing = gridSpacing * 5;
+      }
 
-      // Create grid lines
-      const gridGroup = new Konva.Group();
-
-      // Add a background rectangle
-      const background = new Konva.Rect({
-        x: 0,
-        y: 0,
-        width: width,
-        height: height,
-        fill: 'transparent',
-        stroke: '#e0e0e0',
-        strokeWidth: 1
+      // Create grid container positioned at the grid origin
+      const gridGroup = new Konva.Group({
+        name: 'grid-group',
+        x: gridLeft,
+        y: gridTop
       });
-      gridGroup.add(background);
 
-      // Vertical lines
-      for (let x = 0; x <= width; x += gridSpacing) {
-        const line = new Konva.Line({
-          points: [x, 0, x, height],
-          stroke: '#e0e0e0',
-          strokeWidth: 1,
-          opacity: 0.5
-        });
-        gridGroup.add(line);
+      // Create minor grid lines
+      const minorGridGroup = new Konva.Group({
+        name: 'minor-grid-lines'
+      });
+
+      // Vertical minor lines - cover the entire grid area
+      for (let x = 0; x <= gridWidth; x += gridSpacing) {
+        const worldX = gridLeft + x;
+        const isMajor = worldX % majorGridSpacing === 0;
+        if (!isMajor) {
+          const line = new Konva.Line({
+            points: [x, 0, x, gridHeight],
+            stroke: '#e2e8f0',
+            strokeWidth: 1,
+            opacity: 0.4,
+            name: `grid-line-v-${worldX}`,
+            listening: false
+          });
+          minorGridGroup.add(line);
+        }
       }
 
-      // Horizontal lines
-      for (let y = 0; y <= height; y += gridSpacing) {
-        const line = new Konva.Line({
-          points: [0, y, width, y],
-          stroke: '#e0e0e0',
-          strokeWidth: 1,
-          opacity: 0.5
-        });
-        gridGroup.add(line);
+      // Horizontal minor lines - cover the entire grid area
+      for (let y = 0; y <= gridHeight; y += gridSpacing) {
+        const worldY = gridTop + y;
+        const isMajor = worldY % majorGridSpacing === 0;
+        if (!isMajor) {
+          const line = new Konva.Line({
+            points: [0, y, gridWidth, y],
+            stroke: '#e2e8f0',
+            strokeWidth: 1,
+            opacity: 0.4,
+            name: `grid-line-h-${worldY}`,
+            listening: false
+          });
+          minorGridGroup.add(line);
+        }
       }
 
+      // Create major grid lines
+      const majorGridGroup = new Konva.Group({
+        name: 'major-grid-lines'
+      });
+
+      // Calculate starting points for major grid lines to ensure they align with world coordinates
+      const startX = Math.ceil(gridLeft / majorGridSpacing) * majorGridSpacing - gridLeft;
+      const startY = Math.ceil(gridTop / majorGridSpacing) * majorGridSpacing - gridTop;
+
+      // Vertical major lines
+      for (let x = startX; x <= gridWidth; x += majorGridSpacing) {
+        const worldX = gridLeft + x;
+        const line = new Konva.Line({
+          points: [x, 0, x, gridHeight],
+          stroke: '#cbd5e1',
+          strokeWidth: 1,
+          opacity: 0.6,
+          name: `grid-line-major-v-${worldX}`,
+          listening: false
+        });
+        majorGridGroup.add(line);
+        
+        // Add measurement labels - only if they would be visible
+        if (scale > 0.3) {
+          const label = new Konva.Text({
+            x: x - 10,
+            y: 10,
+            text: `${Math.round(worldX / 20)}m`,
+            fontSize: 10,
+            fontFamily: 'Arial, sans-serif',
+            fill: '#64748b',
+            align: 'center',
+            width: 20,
+            listening: false
+          });
+          majorGridGroup.add(label);
+        }
+      }
+
+      // Horizontal major lines
+      for (let y = startY; y <= gridHeight; y += majorGridSpacing) {
+        const worldY = gridTop + y;
+        const line = new Konva.Line({
+          points: [0, y, gridWidth, y],
+          stroke: '#cbd5e1',
+          strokeWidth: 1,
+          opacity: 0.6,
+          name: `grid-line-major-h-${worldY}`,
+          listening: false
+        });
+        majorGridGroup.add(line);
+        
+        // Add measurement labels - only if they would be visible
+        if (scale > 0.3) {
+          const label = new Konva.Text({
+            x: 10,
+            y: y - 8,
+            text: `${Math.round(worldY / 20)}m`,
+            fontSize: 10,
+            fontFamily: 'Arial, sans-serif',
+            fill: '#64748b',
+            listening: false
+          });
+          majorGridGroup.add(label);
+        }
+      }
+
+      // Add axes
+      const axesGroup = new Konva.Group({
+        name: 'axes'
+      });
+      
+      // Calculate axes positions - ensure they're at 0,0 if visible
+      const xAxisY = -gridTop;
+      const yAxisX = -gridLeft;
+      
+      // Only draw axes if they're in the visible area
+      if (xAxisY >= 0 && xAxisY <= gridHeight) {
+        // X-axis
+        const xAxis = new Konva.Line({
+          points: [0, xAxisY, gridWidth, xAxisY],
+          stroke: '#94a3b8',
+          strokeWidth: 2,
+          name: 'x-axis',
+          listening: false
+        });
+        axesGroup.add(xAxis);
+      }
+      
+      if (yAxisX >= 0 && yAxisX <= gridWidth) {
+        // Y-axis
+        const yAxis = new Konva.Line({
+          points: [yAxisX, 0, yAxisX, gridHeight],
+          stroke: '#94a3b8',
+          strokeWidth: 2,
+          name: 'y-axis',
+          listening: false
+        });
+        axesGroup.add(yAxis);
+      }
+      
+      // Origin label - only show if origin is visible
+      if (yAxisX >= 0 && xAxisY >= 0 && yAxisX <= gridWidth && xAxisY <= gridHeight) {
+        const originLabel = new Konva.Text({
+          x: yAxisX + 5,
+          y: xAxisY + 5,
+          text: '0,0',
+          fontSize: 10,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#475569',
+          padding: 2,
+          listening: false
+        });
+        axesGroup.add(originLabel);
+      }
+
+      // Add all groups to the main grid group
+      gridGroup.add(minorGridGroup);
+      gridGroup.add(majorGridGroup);
+      gridGroup.add(axesGroup);
+      
+      // Add the grid to the layer
       gridLayer.add(gridGroup);
       gridLayer.batchDraw();
 
-      Logger.info('Basic grid rendered successfully');
+      Logger.info('Enhanced grid rendered successfully', {
+        gridDimensions: { left: gridLeft, top: gridTop, width: gridWidth, height: gridHeight },
+        scale,
+        spacing: { grid: gridSpacing, major: majorGridSpacing }
+      });
 
     } catch (error) {
-      Logger.error('Failed to render basic grid', error);
+      Logger.error('Failed to render grid', error);
     }
   }
 
@@ -927,44 +1220,115 @@ export class PatternCanvasComponent
 
       // Render each drill point
       this.drillPoints.forEach((point) => {
-        const circle = new Konva.Circle({
-          x: point.x,
-          y: point.y,
-          radius: 8,
-          fill: point.id === this.selectedPoint?.id ? '#ff6b35' : '#4a90e2',
-          stroke: '#2c3e50',
-          strokeWidth: 2,
+        // Create a group for the point and its label
+        const pointGroup = new Konva.Group({
+          name: `drill-point-group-${point.id}`,
           draggable: true,
-          name: `drill-point-${point.id}`
+          x: point.x,
+          y: point.y
+        });
+        
+        // Create the point circle
+        const circle = new Konva.Circle({
+          x: 0,
+          y: 0,
+          radius: 8,
+          fill: point.id === this.selectedPoint?.id ? '#ef4444' : '#3b82f6',
+          stroke: point.id === this.selectedPoint?.id ? '#b91c1c' : '#1d4ed8',
+          strokeWidth: 2,
+          name: `drill-point-${point.id}`,
+          shadowColor: 'rgba(0,0,0,0.3)',
+          shadowBlur: 4,
+          shadowOffset: { x: 0, y: 2 },
+          shadowOpacity: 0.3
         });
 
         // Add point label
         const label = new Konva.Text({
-          x: point.x - 10,
-          y: point.y - 25,
+          x: -12,
+          y: -30,
           text: point.id,
           fontSize: 12,
-          fontFamily: 'Arial',
-          fill: '#2c3e50',
-          align: 'center'
+          fontFamily: 'Arial, sans-serif',
+          fill: '#1e293b',
+          align: 'center',
+          width: 24,
+          padding: 2,
+          name: `drill-point-label-${point.id}`
+        });
+        
+        // Add depth indicator
+        const depthIndicator = new Konva.Text({
+          x: 10,
+          y: -8,
+          text: `${this.formatValue(point.depth)}m`,
+          fontSize: 10,
+          fontFamily: 'Arial, sans-serif',
+          fill: '#64748b',
+          padding: 2,
+          name: `drill-point-depth-${point.id}`
         });
 
+        // Add all elements to the group
+        pointGroup.add(circle);
+        pointGroup.add(label);
+        pointGroup.add(depthIndicator);
+        
         // Add event handlers
-        circle.on('click', () => {
+        pointGroup.on('click', () => {
           this.pointSelected.emit(point);
         });
 
-        circle.on('dragmove', () => {
-          const pos = circle.position();
+        pointGroup.on('dragmove', () => {
+          const pos = pointGroup.position();
           this.pointMoved.emit({
             point: point,
             newX: pos.x,
             newY: pos.y
           });
+          
+          // Update label position
+          label.position({
+            x: -12,
+            y: -30
+          });
+        });
+        
+        // Add hover effects and tooltip
+        pointGroup.on('mouseenter', () => {
+          document.body.style.cursor = 'pointer';
+          circle.to({
+            duration: 0.2,
+            scaleX: 1.2,
+            scaleY: 1.2,
+            shadowBlur: 8
+          });
+          
+          // Show tooltip
+          this.hoveredPoint = point;
+          const stagePos = this.stage!.getPointerPosition();
+          if (stagePos) {
+            this.tooltipPosition = {
+              x: stagePos.x,
+              y: stagePos.y - 10
+            };
+          }
+        });
+        
+        pointGroup.on('mouseleave', () => {
+          document.body.style.cursor = 'default';
+          circle.to({
+            duration: 0.2,
+            scaleX: 1,
+            scaleY: 1,
+            shadowBlur: 4
+          });
+          
+          // Hide tooltip
+          this.hoveredPoint = null;
         });
 
-        pointsLayer.add(circle);
-        pointsLayer.add(label);
+        pointsLayer.add(pointGroup);
       });
 
       pointsLayer.batchDraw();

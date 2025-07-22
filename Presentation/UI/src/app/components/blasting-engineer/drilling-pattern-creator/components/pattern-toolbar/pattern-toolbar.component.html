@@ -3,40 +3,20 @@
     <!-- Left Section: Mode Controls -->
     <div class="toolbar-section left-section">
       <div class="mode-controls">
-        <button 
-          type="button"
-          mat-icon-button
-          class="mode-btn"
-          [class.active]="isHolePlacementMode"
-          [disabled]="disabled"
-          (click)="toggleHolePlacementMode()"
-          matTooltip="Place Holes"
-          [attr.aria-pressed]="isHolePlacementMode"
-          aria-label="Toggle hole placement mode">
-          <mat-icon>{{ isHolePlacementMode ? 'edit_off' : 'edit' }}</mat-icon>
+        <button type="button" mat-icon-button class="mode-btn" [class.active]="getIsHolePlacementMode()"
+          [disabled]="getDisabled()" (click)="toggleHolePlacementMode()" matTooltip="Place Holes"
+          [attr.aria-pressed]="getIsHolePlacementMode()" aria-label="Toggle hole placement mode">
+          <mat-icon>{{ getIsHolePlacementMode() ? 'edit_off' : 'edit' }}</mat-icon>
         </button>
 
-        <button 
-          type="button"
-          mat-icon-button
-          class="mode-btn precise-btn"
-          [class.active]="isPreciseMode"
-          [disabled]="disabled"
-          (click)="togglePreciseMode()"
-          matTooltip="Precise Mode"
-          [attr.aria-pressed]="isPreciseMode"
-          aria-label="Toggle precise mode">
-          <mat-icon>{{ isPreciseMode ? 'grid_on' : 'grid_off' }}</mat-icon>
+        <button type="button" mat-icon-button class="mode-btn precise-btn" [class.active]="getIsPreciseMode()"
+          [disabled]="getDisabled()" (click)="togglePreciseMode()" matTooltip="Precise Mode"
+          [attr.aria-pressed]="getIsPreciseMode()" aria-label="Toggle precise mode">
+          <mat-icon>{{ getIsPreciseMode() ? 'grid_on' : 'grid_off' }}</mat-icon>
         </button>
 
-        <button 
-          type="button"
-          mat-icon-button
-          class="mode-btn"
-          [disabled]="disabled"
-          (click)="toggleFullscreen()"
-          matTooltip="Full Screen"
-          aria-label="Toggle fullscreen">
+        <button type="button" mat-icon-button class="mode-btn" [disabled]="getDisabled()" (click)="toggleFullscreen()"
+          matTooltip="Full Screen" aria-label="Toggle fullscreen">
           <mat-icon>fullscreen</mat-icon>
         </button>
       </div>
@@ -46,124 +26,78 @@
     <div class="toolbar-section center-section">
       <div class="param-group">
         <div class="param-control">
-          <mat-icon class="param-icon">straighten</mat-icon>
-          <input 
-            type="number"
-            class="param-input"
-            [formControl]="getFormControl('spacing')"
-            placeholder="3.0"
-            min="0.5"
-            max="10"
-            step="0.1"
-            matTooltip="Spacing (m)"
-            [attr.aria-label]="'Spacing in meters'">
+          <label for="spacing-input" class="visually-hidden">Spacing in meters</label>
+          <mat-icon class="param-icon" aria-hidden="true">straighten</mat-icon>
+          <input id="spacing-input" type="number" class="param-input" [formControl]="getFormControl('spacing')"
+            placeholder="3.0" min="0.5" max="10" step="0.1" matTooltip="Spacing (m)">
           <span class="param-unit">m</span>
         </div>
 
         <div class="param-control">
-          <mat-icon class="param-icon">height</mat-icon>
-          <input 
-            type="number"
-            class="param-input"
-            [formControl]="getFormControl('burden')"
-            placeholder="2.5"
-            min="0.5"
-            max="10"
-            step="0.1"
-            matTooltip="Burden (m)"
-            [attr.aria-label]="'Burden in meters'">
+          <label for="burden-input" class="visually-hidden">Burden in meters</label>
+          <mat-icon class="param-icon" aria-hidden="true">height</mat-icon>
+          <input id="burden-input" type="number" class="param-input" [formControl]="getFormControl('burden')"
+            placeholder="2.5" min="0.5" max="10" step="0.1" matTooltip="Burden (m)">
           <span class="param-unit">m</span>
         </div>
 
         <div class="param-control">
-          <mat-icon class="param-icon">vertical_align_bottom</mat-icon>
-          <input 
-            type="number"
-            class="param-input"
-            [formControl]="getFormControl('depth')"
-            placeholder="10.0"
-            min="1"
-            max="50"
-            step="0.5"
-            matTooltip="Depth (m)"
-            [attr.aria-label]="'Depth in meters'">
+          <label for="depth-input" class="visually-hidden">Depth in meters</label>
+          <mat-icon class="param-icon" aria-hidden="true">vertical_align_bottom</mat-icon>
+          <input id="depth-input" type="number" class="param-input" [formControl]="getFormControl('depth')"
+            placeholder="10.0" min="1" max="50" step="0.5" matTooltip="Depth (m)">
           <span class="param-unit">m</span>
         </div>
 
         <!-- Selected Hole Depth -->
-        <div class="param-control selected-hole" *ngIf="selectedPoint">
-          <mat-icon class="param-icon selected">vertical_align_bottom</mat-icon>
-          <input 
-            type="number"
-            class="param-input selected"
-            [formControl]="getSelectedHoleControl()"
-            [placeholder]="(selectedPoint.depth !== null && selectedPoint.depth !== undefined) ? selectedPoint.depth.toString() : '10.0'"
-            min="1"
-            max="50"
-            step="0.5"
-            [matTooltip]="'Depth for hole ' + selectedPoint.id + ' (m)'"
-            [attr.aria-label]="'Depth for selected hole ' + selectedPoint.id + ' in meters'">
-          <span class="param-unit selected">{{ selectedPoint.id }}</span>
+        @if (getSelectedPoint()) {
+        <div class="param-control selected-hole">
+          <label [for]="'selected-hole-' + getSelectedPoint()!.id" class="visually-hidden">
+            Depth for selected hole {{ getSelectedPoint()!.id }} in meters
+          </label>
+          <mat-icon class="param-icon selected" aria-hidden="true">vertical_align_bottom</mat-icon>
+          <input [id]="'selected-hole-' + getSelectedPoint()!.id" type="number" class="param-input selected"
+            [formControl]="getSelectedHoleControl()" [placeholder]="(getSelectedPoint()!.depth !== null && getSelectedPoint()!.depth !== undefined) ? 
+                getSelectedPoint()!.depth.toString() : '10.0'" min="1" max="50" step="0.5"
+            [attr.aria-label]="'Depth for hole ' + getSelectedPoint()!.id + ' in meters'"
+            [title]="'Depth for hole ' + getSelectedPoint()!.id + ' in meters'"
+            [matTooltip]="'Depth for hole ' + getSelectedPoint()!.id + ' (m)'">
+          <span class="param-unit selected">{{ getSelectedPoint()!.id }}</span>
         </div>
+        }
       </div>
     </div>
 
     <!-- Right Section: Actions -->
     <div class="toolbar-section right-section">
       <div class="action-controls">
-        <button 
-          type="button"
-          mat-icon-button
-          class="action-btn depth-editor"
-          [disabled]="disabled || drillPointsCount === 0"
-          (click)="openDepthEditor()"
-          matTooltip="Depth Editor"
-          aria-label="Open depth editor">
+        <button type="button" mat-icon-button class="action-btn depth-editor"
+          [disabled]="getDisabled() || getDrillPointsCount() === 0" (click)="openDepthEditor()"
+          matTooltip="Depth Editor" aria-label="Open depth editor">
           <mat-icon>table_view</mat-icon>
         </button>
 
-        <button 
-          type="button"
-          mat-icon-button
-          class="action-btn delete"
-          [disabled]="disabled || !selectedPoint"
-          (click)="onDeletePoint()"
-          matTooltip="Delete Point"
+        <button type="button" mat-icon-button class="action-btn delete"
+          [disabled]="getDisabled() || !getSelectedPoint()" (click)="onDeletePoint()" matTooltip="Delete Point"
           aria-label="Delete selected point">
           <mat-icon>delete</mat-icon>
         </button>
 
-        <button 
-          type="button"
-          mat-icon-button
-          class="action-btn clear"
-          [disabled]="disabled || drillPointsCount === 0"
-          (click)="onClearAll()"
-          matTooltip="Clear All"
+        <button type="button" mat-icon-button class="action-btn clear"
+          [disabled]="getDisabled() || getDrillPointsCount() === 0" (click)="onClearAll()" matTooltip="Clear All"
           aria-label="Clear all points">
           <mat-icon>clear_all</mat-icon>
         </button>
 
-        <button 
-          type="button"
-          mat-icon-button
-          class="action-btn save"
-          [class.saved]="isSaved"
-          [disabled]="disabled || drillPointsCount === 0"
-          (click)="onSavePattern()"
-          matTooltip="Save Pattern"
+        <button type="button" mat-icon-button class="action-btn save" [class.saved]="getIsSaved()"
+          [disabled]="getDisabled() || getDrillPointsCount() === 0" (click)="onSavePattern()" matTooltip="Save Pattern"
           aria-label="Save pattern">
-          <mat-icon>{{ isSaved ? 'check_circle' : 'save' }}</mat-icon>
+          <mat-icon>{{ getIsSaved() ? 'check_circle' : 'save' }}</mat-icon>
         </button>
 
-        <button 
-          type="button"
-          mat-icon-button
-          class="action-btn export"
-          [disabled]="disabled || drillPointsCount === 0"
-          (click)="onExportToBlastDesigner()"
-          matTooltip="To Blast Designer"
-          aria-label="Export to blast designer">
+        <button type="button" mat-icon-button class="action-btn export"
+          [disabled]="getDisabled() || getDrillPointsCount() === 0" (click)="onExportToBlastDesigner()"
+          matTooltip="To Blast Designer" aria-label="Export to blast designer">
           <mat-icon>timeline</mat-icon>
         </button>
       </div>
@@ -171,8 +105,10 @@
   </div>
 
   <!-- Error Display -->
-  <div class="error-bar" *ngIf="validationErrors.length > 0" role="alert">
+  @if (hasValidationErrors()) {
+  <div class="error-bar" role="alert">
     <mat-icon class="error-icon">error</mat-icon>
-    <span class="error-text">{{ validationErrors[0] }}</span>
+    <span class="error-text">{{ validationErrors()[0] }}</span>
   </div>
+  }
 </div>
