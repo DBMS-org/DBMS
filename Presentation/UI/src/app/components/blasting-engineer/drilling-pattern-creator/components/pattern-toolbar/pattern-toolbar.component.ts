@@ -7,7 +7,9 @@ import {
   OnDestroy,
   OnChanges,
   ChangeDetectionStrategy,
-  inject
+  inject,
+  signal,
+  computed
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
@@ -16,7 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged, catchError } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PatternToolbarContract } from '../../contracts/component.contracts';
 import { DrillPoint, PatternSettings } from '../../models/drill-point.model';
@@ -67,20 +69,39 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
   @Input() isHolePlacementMode: boolean = false;
   @Input() isPreciseMode: boolean = false;
   @Input() isSaved: boolean = true;
-  @Input() disabled: boolean = false;
+  @Input() disabled?: boolean = false;
 
   // Outputs
   @Output() settingsChange = new EventEmitter<PatternSettings>();
   @Output() modeToggle = new EventEmitter<ModeToggleEvent>();
   @Output() pointAction = new EventEmitter<PointActionEvent>();
   @Output() patternAction = new EventEmitter<PatternActionEvent>();
+  
+  // Reactive state
+  private _settings = signal<PatternSettings>({ spacing: 3, burden: 2.5, depth: 10 });
+  private _selectedPoint = signal<DrillPoint | null>(null);
+  private _drillPointsCount = signal<number>(0);
+  private _isHolePlacementMode = signal<boolean>(false);
+  private _isPreciseMode = signal<boolean>(false);
+  private _isSaved = signal<boolean>(true);
+  private _disabled = signal<boolean>(false);
+  validationErrors = signal<string[]>([]);
 
   // Form controls
   public settingsForm!: FormGroup;
   public selectedHoleDepthForm!: FormGroup;
 
-  // Validation state
-  public validationErrors: string[] = [];
+  // Computed properties
+  hasValidationErrors = computed(() => this.validationErrors().length > 0);
+  
+  // Signal getters for template use
+  getSettings = () => this._settings();
+  getSelectedPoint = () => this._selectedPoint();
+  getDrillPointsCount = () => this._drillPointsCount();
+  getIsHolePlacementMode = () => this._isHolePlacementMode();
+  getIsPreciseMode = () => this._isPreciseMode();
+  getIsSaved = () => this._isSaved();
+  getDisabled = () => this._disabled();
 
   ngOnInit(): void {
     this.initializeForms();
@@ -149,6 +170,15 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
         ]
       ]
     });
+    
+    // Initialize signals with input values
+    this._settings.set(this.settings);
+    this._selectedPoint.set(this.selectedPoint);
+    this._drillPointsCount.set(this.drillPointsCount);
+    this._isHolePlacementMode.set(this.isHolePlacementMode);
+    this._isPreciseMode.set(this.isPreciseMode);
+    this._isSaved.set(this.isSaved);
+    this._disabled.set(this.disabled || false);
   }
 
   /**
@@ -178,7 +208,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
         distinctUntilChanged()
       )
       .subscribe(depth => {
-        if (this.selectedPoint && this.selectedHoleDepthForm.valid) {
+        if (this._selectedPoint() && this.selectedHoleDepthForm.valid) {
           this.onSelectedHoleDepthChange(depth);
         }
       });
@@ -211,6 +241,15 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
    * Update forms when inputs change
    */
   ngOnChanges(): void {
+    // Update signals with the latest input values
+    this._settings.set(this.settings);
+    this._selectedPoint.set(this.selectedPoint);
+    this._drillPointsCount.set(this.drillPointsCount);
+    this._isHolePlacementMode.set(this.isHolePlacementMode);
+    this._isPreciseMode.set(this.isPreciseMode);
+    this._isSaved.set(this.isSaved);
+    this._disabled.set(this.disabled || false);
+
     if (this.settingsForm) {
       this.settingsForm.patchValue(this.settings, { emitEvent: false });
 
@@ -224,7 +263,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
 
     if (this.selectedHoleDepthForm && this.selectedPoint) {
       this.selectedHoleDepthForm.patchValue({
-        selectedHoleDepth: this.selectedPoint.depth
+        selectedHoleDepth: this.selectedPoint?.depth
       }, { emitEvent: false });
 
       // Handle disabled state for selected hole form
@@ -241,32 +280,48 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
    */
   private emitSettingsChange(settings: PatternSettings): void {
     this.eventBus.emit({ type: 'SETTINGS_CHANGE', payload: settings });
+    this.settingsChange.emit(settings);
   }
 
   public toggleHolePlacementMode(): void {
-    if (this.disabled) return;
-    this.eventBus.emit({ type: 'MODE_TOGGLE', payload: { mode: 'HOLE_PLACEMENT', enabled: !this.isHolePlacementMode } });
+    if (this._disabled()) return;
+    const payload: ModeToggleEvent = { 
+      mode: 'HOLE_PLACEMENT', 
+      enabled: !this._isHolePlacementMode() 
+    };
+    this.eventBus.emit({ type: 'MODE_TOGGLE', payload });
+    this.modeToggle.emit(payload);
   }
 
   public togglePreciseMode(): void {
-    if (this.disabled) return;
-    this.eventBus.emit({ type: 'MODE_TOGGLE', payload: { mode: 'PRECISE', enabled: !this.isPreciseMode } });
+    if (this._disabled()) return;
+    const payload: ModeToggleEvent = { 
+      mode: 'PRECISE', 
+      enabled: !this._isPreciseMode() 
+    };
+    this.eventBus.emit({ type: 'MODE_TOGGLE', payload });
+    this.modeToggle.emit(payload);
   }
 
   public toggleFullscreen(): void {
-    if (this.disabled) return;
-    this.eventBus.emit({ type: 'MODE_TOGGLE', payload: { mode: 'FULLSCREEN', enabled: true } });
+    if (this._disabled()) return;
+    const payload: ModeToggleEvent = { 
+      mode: 'FULLSCREEN', 
+      enabled: true 
+    };
+    this.eventBus.emit({ type: 'MODE_TOGGLE', payload });
+    this.modeToggle.emit(payload);
   }
   // Update other action methods similarly to use eventBus.emit instead of this.xxx.emit
   /**
    * Handle point actions
    */
   public onDeletePoint(): void {
-    if (this.disabled || !this.selectedPoint) return;
+    if (this._disabled() || !this._selectedPoint()) return;
 
     this.pointAction.emit({
       action: 'DELETE',
-      pointId: this.selectedPoint.id
+      pointId: this._selectedPoint()!.id
     });
   }
 
@@ -274,7 +329,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
    * Clear all drill points from both UI and database
    */
   public onClearAll(): void {
-    if (this.disabled) return;
+    if (this._disabled()) return;
 
     // First check if we have a valid context
     if (!this.currentProjectId || !this.currentSiteId) {
@@ -313,7 +368,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
   }
 
   public openDepthEditor(): void {
-    if (this.disabled || this.drillPointsCount === 0) return;
+    if (this._disabled() || this._drillPointsCount() === 0) return;
 
     this.pointAction.emit({
       action: 'OPEN_DEPTH_EDITOR'
@@ -324,7 +379,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
    * Handle pattern actions
    */
   public onSavePattern(): void {
-    if (this.disabled || this.drillPointsCount === 0) return;
+    if (this._disabled() || this._drillPointsCount() === 0) return;
 
     this.patternAction.emit({
       action: 'SAVE'
@@ -332,7 +387,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
   }
 
   public onExportToBlastDesigner(): void {
-    if (this.disabled || this.drillPointsCount === 0) return;
+    if (this._disabled() || this._drillPointsCount() === 0) return;
 
     this.patternAction.emit({
       action: 'EXPORT_TO_BLAST_DESIGNER'
@@ -343,17 +398,17 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
    * Handle selected hole depth change
    */
   private onSelectedHoleDepthChange(depth: number): void {
-    if (!this.selectedPoint) return;
+    if (!this._selectedPoint()) return;
 
     // Emit a point update through settings change
     // This maintains the existing pattern of updating through settings
-    const updatedSettings = { ...this.settings };
+    const updatedSettings = { ...this._settings() };
     this.settingsChange.emit(updatedSettings);
 
     // Also emit a specific point action for individual depth change
     this.pointAction.emit({
       action: 'UPDATE_POINT_DEPTH',
-      pointId: this.selectedPoint.id,
+      pointId: this._selectedPoint()!.id,
       depth
     });
   }
@@ -412,7 +467,7 @@ export class PatternToolbarComponent implements OnInit, OnDestroy, OnChanges, Pa
       });
     }
 
-    this.validationErrors = errors;
+    this.validationErrors.set(errors);
     return {
       isValid: errors.length === 0,
       errors
