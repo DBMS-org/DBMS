@@ -113,7 +113,7 @@ export class PatternCanvasComponent
 
   // Outputs
   @Output() pointPlaced = new EventEmitter<PlacePointEvent>();
-  @Output() pointSelected = new EventEmitter<DrillPoint>();
+  @Output() pointSelected = new EventEmitter<DrillPoint | null>();
   @Output() pointMoved = new EventEmitter<MovePointEvent>();
   @Output() canvasStateChange = new EventEmitter<CanvasState>();
 
@@ -649,18 +649,18 @@ export class PatternCanvasComponent
   }
 
   /**
-   * Handle drag move events
+   * Handle drag move events - allow free 2D panning
    */
   private onDragMove(_event: any): void {
-    if (!this.canvasState?.isDragging) return;
+    if (!this.canvasState?.isDragging || !this.stage) return;
 
-    const pos = this.canvasManager.getPointerPosition();
-    if (pos) {
-      this.updateCanvasState({
-        panOffsetX: pos.x,
-        panOffsetY: pos.y
-      });
-    }
+    const currentPos = this.stage.position();
+
+    // Update canvas state with current position - no constraints during panning
+    this.updateCanvasState({
+      panOffsetX: currentPos.x,
+      panOffsetY: currentPos.y
+    });
   }
 
   /**
@@ -674,7 +674,7 @@ export class PatternCanvasComponent
   }
 
   /**
-   * Handle mouse wheel events for zooming while maintaining origin at top-left
+   * Handle mouse wheel events for zooming - zoom toward mouse cursor
    */
   private onWheel(event: any): void {
     event.evt.preventDefault();
@@ -683,17 +683,21 @@ export class PatternCanvasComponent
     const stage = event.target.getStage();
     const pointer = stage.getPointerPosition();
     
-    // Get the point under the mouse in world coordinates
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / stage.scaleX(),
-      y: (pointer.y - stage.y()) / stage.scaleY()
-    };
-
     const direction = event.evt.deltaY > 0 ? -1 : 1;
+    const oldScale = stage.scaleX();
     const newScale = Math.max(
       this.canvasConfig.minZoom,
-      Math.min(this.canvasConfig.maxZoom, stage.scaleX() * Math.pow(scaleBy, direction))
+      Math.min(this.canvasConfig.maxZoom, oldScale * Math.pow(scaleBy, direction))
     );
+
+    // If scale didn't change, don't do anything
+    if (newScale === oldScale) return;
+
+    // Get the point under the mouse in world coordinates before scaling
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale
+    };
 
     // Apply new scale
     stage.scale({ x: newScale, y: newScale });
@@ -703,16 +707,8 @@ export class PatternCanvasComponent
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale
     };
-    
-    // Ensure the origin stays visible - don't let it go too far off screen
-    // This ensures the grid grows from left and bottom
-    const minX = -newScale * 1000; // Allow some negative space
-    const minY = -newScale * 1000; // Allow some negative space
-    
-    newPos.x = Math.max(newPos.x, 50); // Keep origin with some padding
-    newPos.y = Math.max(newPos.y, 50); // Keep origin with some padding
 
-    // Apply new position
+    // Apply new position - no constraints, allow free panning
     stage.position(newPos);
     stage.batchDraw();
 
@@ -921,18 +917,19 @@ export class PatternCanvasComponent
     
     const oldScale = this.stage.scaleX();
     
-    // Calculate new position
-    const mousePointTo = {
+    // Calculate the point in world coordinates
+    const worldPoint = {
       x: (x - this.stage.x()) / oldScale,
       y: (y - this.stage.y()) / oldScale
     };
     
+    // Calculate new position to zoom toward the specified point
     const newPos = {
-      x: x - mousePointTo.x * scale,
-      y: y - mousePointTo.y * scale
+      x: x - worldPoint.x * scale,
+      y: y - worldPoint.y * scale
     };
     
-    // Apply new scale and position
+    // Apply new scale and position - no constraints, allow free positioning
     this.stage.scale({ x: scale, y: scale });
     this.stage.position(newPos);
     this.stage.batchDraw();
@@ -1276,7 +1273,12 @@ export class PatternCanvasComponent
         
         // Add event handlers
         pointGroup.on('click', () => {
-          this.pointSelected.emit(point);
+          // Toggle selection: if clicking on already selected point, deselect it
+          if (this.selectedPoint && this.selectedPoint.id === point.id) {
+            this.pointSelected.emit(null); // Deselect
+          } else {
+            this.pointSelected.emit(point); // Select
+          }
         });
 
         pointGroup.on('dragmove', () => {
