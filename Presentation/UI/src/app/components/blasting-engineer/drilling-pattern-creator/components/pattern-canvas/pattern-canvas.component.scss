@@ -4,7 +4,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  max-height: 50vh; // Reduced from 70vh to 50vh
+  max-height: 63vh; // Increased from 50vh to 80vh
+  max-width: 78vw;
   background: #f3f4f6; // Light gray background around canvas
   border-radius: 4px;
   overflow: visible; // Allow rulers to show outside
@@ -14,7 +15,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  max-height: 50vh; // Canvas height set to 50% of viewport
+  max-height: 63vh; // Increased from 50vh to 80vh
+  max-width: 75vw;
   flex: 1;
   background: #ffffff; // Clean white background
   border: 2px solid #d1d5db;
@@ -514,8 +516,8 @@
   &::after {
     content: '0,0';
     position: absolute;
-    bottom: 4px;
-    right: 4px;
+    top: 2px;
+    left: 2px;
     font-size: 7px;
     font-weight: 700;
     color: #1f2937;
@@ -525,13 +527,12 @@
     border: 1px solid #d1d5db;
   }
 
-  // Pattern origin indicator
+  // Pattern origin indicator - moved to upper left corner
   &::before {
     content: '⊕';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
     font-size: 16px;
     color: #059669;
     font-weight: bold;
@@ -586,11 +587,12 @@
 // Responsive design
 @media (max-width: 768px) {
   .canvas-wrapper {
-    max-height: 50vh; // Mobile height set to match desktop (50vh)
+    max-height: 80vh; // Increased from 50vh to 80vh for mobile
   }
 
   .pattern-canvas-container {
     margin: 30px 0 0 30px; // Smaller ruler space on mobile
+    max-height: 80vh; // Increased from 50vh to 80vh for mobile
   }
 
   .ruler-horizontal {
@@ -631,12 +633,14 @@
 
     &::after {
       font-size: 6px;
-      bottom: 2px;
-      right: 2px;
+      top: 2px;
+      left: 2px;
     }
 
     &::before {
       font-size: 12px;
+      top: 0;
+      left: 0;
     }
   }
 

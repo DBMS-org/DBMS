@@ -41,6 +41,7 @@
           <span class="param-unit">m</span>
         </div>
 
+        @if (!getSelectedPoint()) {
         <div class="param-control">
           <label for="depth-input" class="visually-hidden">Depth in meters</label>
           <mat-icon class="param-icon" aria-hidden="true">vertical_align_bottom</mat-icon>
@@ -48,6 +49,7 @@
             placeholder="10.0" min="1" max="50" step="0.5" matTooltip="Depth (m)">
           <span class="param-unit">m</span>
         </div>
+        }
 
         <!-- Selected Hole Depth -->
         @if (getSelectedPoint()) {
