@@ -328,8 +328,8 @@ export class DrillingPatternCreatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  public onCanvasPointSelected(point: DrillPoint): void {
-    Logger.info('Point selected', point);
+  public onCanvasPointSelected(point: DrillPoint | null): void {
+    Logger.info('Point selected or deselected', point);
     this.patternState.selectPoint(point);
   }
 
