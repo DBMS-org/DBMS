@@ -68,7 +68,7 @@ export interface PatternCanvasContract {
 
     // Outputs
     pointPlaced: EventEmitter<PlacePointEvent>;
-    pointSelected: EventEmitter<DrillPoint>;
+    pointSelected: EventEmitter<DrillPoint | null>;
     pointMoved: EventEmitter<MovePointEvent>;
     canvasStateChange: EventEmitter<CanvasState>;
 
