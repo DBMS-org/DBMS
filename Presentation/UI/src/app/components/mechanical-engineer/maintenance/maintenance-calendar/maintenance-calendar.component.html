@@ -1,0 +1,72 @@
+<div class="calendar-container">
+  <div class="calendar-header">
+    <div class="header-content">
+      <h2>Maintenance Calendar</h2>
+      <p class="header-subtitle">View and manage scheduled maintenance activities</p>
+    </div>
+    
+    <div class="view-toggle">
+      <mat-tab-group 
+        [selectedIndex]="currentView() === 'calendar' ? 0 : 1"
+        (selectedTabChange)="currentView.set($event.index === 0 ? 'calendar' : 'timeline')"
+        class="view-tabs">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>calendar_month</mat-icon>
+            Calendar View
+          </ng-template>
+        </mat-tab>
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>timeline</mat-icon>
+            Timeline View
+          </ng-template>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </div>
+
+  <div class="calendar-content">
+    @if (isLoading()) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading maintenance schedule...</p>
+      </div>
+    } @else if (error()) {
+      <div class="error-container">
+        <div class="error-content">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <h3>Unable to Load Calendar Data</h3>
+          <p>{{ error()?.message }}</p>
+          @if (errorHandler.isRetryableError(error()!)) {
+            <button 
+              type="button"
+              mat-raised-button 
+              color="primary" 
+              (click)="retryLoadData()">
+              <mat-icon>refresh</mat-icon>
+              Try Again
+            </button>
+          }
+        </div>
+      </div>
+    } @else if (isDataReady()) {
+      <div class="view-content">
+        @if (currentView() === 'calendar') {
+          <app-calendar-view
+            [jobs]="filteredJobs()"
+            [selectedDate]="selectedDate()"
+            (dateSelected)="onDateSelected($event)"
+            (monthChanged)="onMonthChanged($event)"
+            (jobSelected)="onJobSelected($event)">
+          </app-calendar-view>
+        } @else {
+          <app-timeline-view
+            [jobs]="maintenanceJobs() || []"
+            (jobSelected)="onJobSelected($event)">
+          </app-timeline-view>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,93 @@
+<div class="maintenance-alerts">
+  @if (getSortedServiceDueAlerts().length > 0 || getSortedOverdueAlerts().length > 0) {
+    <div class="alerts-container">
+      <!-- Overdue Alerts (shown first with higher urgency) -->
+      @if (getSortedOverdueAlerts().length > 0) {
+        <div class="alert-group overdue-group">
+          <div class="alert-group-header">
+            <i class="material-icons alert-group-icon">warning</i>
+            <h3>Overdue Maintenance</h3>
+            <span class="alert-count">{{ getSortedOverdueAlerts().length }}</span>
+          </div>
+          
+          <div class="alert-list">
+            @for (alert of getSortedOverdueAlerts(); track alert.id) {
+              <div class="alert-card" [class]="getAlertTypeClass(alert.alertType) + ' ' + getPriorityClass(alert.priority)">
+                <div class="alert-urgency-indicator"></div>
+                
+                <div class="alert-icon">
+                  <i class="material-icons">{{ getAlertIcon(alert.alertType) }}</i>
+                </div>
+                
+                <div class="alert-content">
+                  <div class="alert-machine">{{ alert.machineName }}</div>
+                  <div class="alert-message">{{ alert.message }}</div>
+                  <div class="alert-time">{{ formatDaysMessage(alert) }}</div>
+                </div>
+                
+                <div class="alert-priority-badge" [class]="getPriorityClass(alert.priority)">
+                  <i class="material-icons priority-icon">
+                    @switch (alert.priority) {
+                      @case (Priority.HIGH) { priority_high }
+                      @case (Priority.MEDIUM) { remove }
+                      @case (Priority.LOW) { expand_more }
+                    }
+                  </i>
+                  <span>{{ alert.priority }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Service Due Alerts -->
+      @if (getSortedServiceDueAlerts().length > 0) {
+        <div class="alert-group service-due-group">
+          <div class="alert-group-header">
+            <i class="material-icons alert-group-icon">schedule</i>
+            <h3>Service Due Soon</h3>
+            <span class="alert-count">{{ getSortedServiceDueAlerts().length }}</span>
+          </div>
+          
+          <div class="alert-list">
+            @for (alert of getSortedServiceDueAlerts(); track alert.id) {
+              <div class="alert-card" [class]="getAlertTypeClass(alert.alertType) + ' ' + getPriorityClass(alert.priority)">
+                <div class="alert-urgency-indicator"></div>
+                
+                <div class="alert-icon">
+                  <i class="material-icons">{{ getAlertIcon(alert.alertType) }}</i>
+                </div>
+                
+                <div class="alert-content">
+                  <div class="alert-machine">{{ alert.machineName }}</div>
+                  <div class="alert-message">{{ alert.message }}</div>
+                  <div class="alert-time">{{ formatDaysMessage(alert) }}</div>
+                </div>
+                
+                <div class="alert-priority-badge" [class]="getPriorityClass(alert.priority)">
+                  <i class="material-icons priority-icon">
+                    @switch (alert.priority) {
+                      @case (Priority.HIGH) { priority_high }
+                      @case (Priority.MEDIUM) { remove }
+                      @case (Priority.LOW) { expand_more }
+                    }
+                  </i>
+                  <span>{{ alert.priority }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="no-alerts">
+      <div class="no-alerts-icon">
+        <i class="material-icons">check_circle_outline</i>
+      </div>
+      <h3>All Clear!</h3>
+      <p>No maintenance alerts at this time. All machines are up to date with their maintenance schedules.</p>
+    </div>
+  }
+</div>

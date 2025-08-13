@@ -1,11 +1,13 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter, map } from 'rxjs/operators';
 
 interface NavItem {
   icon: string;
   label: string;
   route: string;
+  matchPattern?: string; // For matching nested routes
 }
 
 @Component({
@@ -17,15 +19,55 @@ interface NavItem {
 })
 export class SidebarComponent {
   @Input() isCollapsed = false;
+  
+  private router = inject(Router);
 
   navItems: NavItem[] = [
-    { icon: 'dashboard', label: 'Dashboard', route: '/mechanical-engineer/dashboard' },
-    { icon: 'build_circle', label: 'Maintenance Management', route: '/mechanical-engineer/maintenance' },
-    { icon: 'schedule', label: 'Schedule Maintenance', route: '/mechanical-engineer/schedule' },
-    { icon: 'inventory_2', label: 'Machine Inventory', route: '/mechanical-engineer/inventory' },
-    { icon: 'notifications_active', label: 'Maintenance Alerts', route: '/mechanical-engineer/alerts' },
-    { icon: 'analytics', label: 'Operational Status', route: '/mechanical-engineer/status' },
-    { icon: 'assessment', label: 'Reports', route: '/mechanical-engineer/reports' },
-    { icon: 'settings', label: 'Settings', route: '/mechanical-engineer/settings' }
+    { 
+      icon: 'dashboard', 
+      label: 'Dashboard', 
+      route: '/mechanical-engineer/dashboard' 
+    },
+    { 
+      icon: 'build_circle', 
+      label: 'Maintenance Dashboard', 
+      route: '/mechanical-engineer/maintenance/dashboard',
+      matchPattern: '/mechanical-engineer/maintenance/dashboard'
+    },
+    { 
+      icon: 'calendar_month', 
+      label: 'Maintenance Calendar', 
+      route: '/mechanical-engineer/maintenance/calendar',
+      matchPattern: '/mechanical-engineer/maintenance/calendar'
+    },
+    { 
+      icon: 'assignment', 
+      label: 'Maintenance Jobs', 
+      route: '/mechanical-engineer/maintenance/jobs',
+      matchPattern: '/mechanical-engineer/maintenance/jobs'
+    },
+    { 
+      icon: 'analytics', 
+      label: 'Maintenance Analytics', 
+      route: '/mechanical-engineer/maintenance/analytics',
+      matchPattern: '/mechanical-engineer/maintenance/analytics'
+    },
+    { 
+      icon: 'settings', 
+      label: 'Maintenance Settings', 
+      route: '/mechanical-engineer/maintenance/settings',
+      matchPattern: '/mechanical-engineer/maintenance/settings'
+    }
   ];
+
+  // Check if a nav item should be active based on current route
+  isNavItemActive(item: NavItem): boolean {
+    const currentUrl = this.router.url;
+    
+    if (item.matchPattern) {
+      return currentUrl.startsWith(item.matchPattern);
+    }
+    
+    return currentUrl === item.route;
+  }
 }

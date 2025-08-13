@@ -1,1 +1,1 @@
-improved PatternCreator UI
+some ui changes

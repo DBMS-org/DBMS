@@ -1,0 +1,153 @@
+<div class="parts-usage-container">
+  <!-- Enhanced Controls Section -->
+  <div class="controls-section">
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search parts</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput 
+               [value]="searchTerm()" 
+               (input)="setSearchTerm($any($event.target).value || '')"
+               placeholder="Filter by part name or machine type">
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" class="sort-field">
+        <mat-label>Sort by</mat-label>
+        <mat-select [value]="sortBy()" (selectionChange)="setSortBy($event.value)">
+          <mat-option value="usage">Usage Count</mat-option>
+          <mat-option value="cost">Total Cost</mat-option>
+          <mat-option value="name">Part Name</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <button mat-icon-button 
+              (click)="toggleSortOrder()" 
+              matTooltip="{{ sortOrder() === 'asc' ? 'Sort Descending' : 'Sort Ascending' }}">
+        <mat-icon>{{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+      </button>
+    </div>
+
+    <!-- Machine Type Filter Chips -->
+    @if (availableMachineTypes().length > 0) {
+      <div class="machine-filter-chips">
+        <span class="filter-label">Filter by machine type:</span>
+        <div class="chips-container">
+          @for (machineType of availableMachineTypes(); track machineType) {
+            <mat-chip-option 
+              [selected]="selectedMachineTypes().includes(machineType)"
+              (click)="toggleMachineTypeFilter(machineType)">
+              {{ machineType }}
+            </mat-chip-option>
+          }
+          @if (selectedMachineTypes().length > 0) {
+            <button mat-icon-button 
+                    class="clear-filters-btn"
+                    (click)="clearMachineTypeFilters()"
+                    matTooltip="Clear all filters">
+              <mat-icon>clear</mat-icon>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Usage Metrics Summary -->
+  @if (usageMetrics() && usageMetrics()!.length > 0) {
+    <div class="usage-metrics-summary">
+      <h4 class="metrics-title">
+        <mat-icon>schedule</mat-icon>
+        Fleet Usage Overview
+      </h4>
+      <div class="metrics-grid">
+        <div class="metric-card engine-hours">
+          <div class="metric-icon">
+            <mat-icon>speed</mat-icon>
+          </div>
+          <div class="metric-content">
+            <span class="metric-value">{{ totalEngineHours() | number }}</span>
+            <span class="metric-label">Total Engine Hours</span>
+          </div>
+        </div>
+        <div class="metric-card service-hours">
+          <div class="metric-icon">
+            <mat-icon>build</mat-icon>
+          </div>
+          <div class="metric-content">
+            <span class="metric-value">{{ totalServiceHours() | number }}</span>
+            <span class="metric-label">Total Service Hours</span>
+          </div>
+        </div>
+        <div class="metric-card idle-hours">
+          <div class="metric-icon">
+            <mat-icon>pause</mat-icon>
+          </div>
+          <div class="metric-content">
+            <span class="metric-value">{{ totalIdleHours() | number }}</span>
+            <span class="metric-label">Total Idle Hours</span>
+          </div>
+        </div>
+        <div class="metric-card efficiency">
+          <div class="metric-icon">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <div class="metric-content">
+            <span class="metric-value">{{ utilizationRate() | number:'1.1-1' }}%</span>
+            <span class="metric-label">Utilization Rate</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Chart Container -->
+  <div class="chart-container">
+    <div class="chart-header">
+      <h4>Top {{ Math.min(10, filteredAndSortedData().length) }} Most Used Parts</h4>
+      <span class="chart-subtitle">Showing usage frequency and cost impact</span>
+    </div>
+    <canvas #chartCanvas></canvas>
+  </div>
+
+  <!-- Parts List with Enhanced Display -->
+  <div class="parts-list">
+    <div class="list-header">
+      <h4>Parts Usage Details</h4>
+      <span class="results-count">{{ filteredAndSortedData().length }} parts found</span>
+    </div>
+    
+    @if (filteredAndSortedData().length === 0) {
+      <div class="no-results">
+        <mat-icon>search_off</mat-icon>
+        <p>No parts found matching your criteria</p>
+        <button mat-button (click)="clearAllFilters()">Clear Filters</button>
+      </div>
+    } @else {
+      @for (part of filteredAndSortedData(); track part.partName; let i = $index) {
+        <div class="part-item" [class.highlighted]="i < 5">
+          <div class="part-info">
+            <div class="part-name">{{ part.partName }}</div>
+            <div class="machine-types">
+              <mat-icon class="machine-icon">precision_manufacturing</mat-icon>
+              Used in: {{ part.machineTypes.join(', ') }}
+            </div>
+          </div>
+          <div class="part-metrics">
+            <div class="usage-count">
+              <span class="value">{{ part.usageCount }}</span>
+              <span class="label">times used</span>
+            </div>
+            <div class="total-cost">
+              <span class="value">${{ part.totalCost | number:'1.2-2' }}</span>
+              <span class="label">total cost</span>
+            </div>
+            <div class="avg-cost">
+              <span class="value">${{ (part.totalCost / part.usageCount) | number:'1.2-2' }}</span>
+              <span class="label">avg cost</span>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

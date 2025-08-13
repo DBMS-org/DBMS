@@ -1,0 +1,80 @@
+<div class="maintenance-container">
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading maintenance data...</p>
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="error-container">
+      <div class="error-content">
+        <i class="material-icons error-icon">error_outline</i>
+        <h3>Unable to Load Maintenance Data</h3>
+        <p>{{ error()?.message }}</p>
+        @if (errorHandler.isRetryableError(error()!)) {
+          <button class="retry-button" (click)="retryLoadData()" aria-label="Retry loading maintenance data">
+            <i class="material-icons" aria-hidden="true">refresh</i>
+            Try Again
+          </button>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="page">
+      <app-breadcrumb class="breadcrumb"></app-breadcrumb>
+
+      <header class="page-header" role="banner">
+        <h1 class="page-title">Maintenance</h1>
+        <p class="page-subtitle">Monitor and manage machine maintenance operations</p>
+      </header>
+
+      <nav class="subnav" role="navigation" aria-label="Maintenance sections">
+        <a 
+          routerLink="dashboard" 
+          routerLinkActive="active"
+          class="subnav-link"
+          aria-label="Go to maintenance dashboard">
+          <i class="material-icons" aria-hidden="true">dashboard</i>
+          <span>Dashboard</span>
+        </a>
+        <a 
+          routerLink="calendar" 
+          routerLinkActive="active"
+          class="subnav-link"
+          aria-label="Go to maintenance calendar">
+          <i class="material-icons" aria-hidden="true">calendar_month</i>
+          <span>Calendar</span>
+        </a>
+        <a 
+          routerLink="jobs" 
+          routerLinkActive="active"
+          class="subnav-link"
+          aria-label="Go to maintenance jobs">
+          <i class="material-icons" aria-hidden="true">assignment</i>
+          <span>Jobs</span>
+        </a>
+        <a 
+          routerLink="analytics" 
+          routerLinkActive="active"
+          class="subnav-link"
+          aria-label="Go to maintenance analytics">
+          <i class="material-icons" aria-hidden="true">analytics</i>
+          <span>Analytics</span>
+        </a>
+        <a 
+          routerLink="settings" 
+          routerLinkActive="active"
+          class="subnav-link"
+          aria-label="Go to maintenance settings">
+          <i class="material-icons" aria-hidden="true">settings</i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <section class="card content" role="region" aria-label="Maintenance content">
+        <router-outlet></router-outlet>
+      </section>
+    </div>
+  }
+</div>
