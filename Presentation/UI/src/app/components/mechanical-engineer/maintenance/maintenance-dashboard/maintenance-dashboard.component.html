@@ -1,0 +1,166 @@
+<div class="maintenance-dashboard">
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1>Maintenance Dashboard</h1>
+        <p>Monitor and manage all maintenance activities</p>
+      </div>
+      
+      <div class="header-actions">
+        @if (hasAlerts()) {
+          <div class="alert-summary">
+            <i class="material-icons">warning</i>
+            <span>{{ totalAlerts() }} alerts</span>
+            @if (criticalAlertsCount() > 0) {
+              <span class="critical-count">{{ criticalAlertsCount() }} critical</span>
+            }
+          </div>
+        }
+        
+        <button 
+          type="button"
+          class="refresh-btn" 
+          (click)="refreshDashboard()" 
+          [disabled]="isLoading()"
+          title="Refresh dashboard data"
+          aria-label="Refresh maintenance dashboard data"
+        >
+          <i class="material-icons" [class.spinning]="isLoading()">refresh</i>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Offline Status Indicator -->
+    <div class="offline-indicator-container">
+      <app-offline-indicator></app-offline-indicator>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="dashboard-loading">
+      <app-loading-spinner 
+        size="large" 
+        message="Loading maintenance dashboard..."
+        type="circular">
+      </app-loading-spinner>
+      
+      <div class="loading-skeleton">
+        <div class="skeleton-stats">
+          @for (item of [1,2,3,4]; track item) {
+            <app-skeleton-loader type="card" width="250px" height="120px"></app-skeleton-loader>
+          }
+        </div>
+        <div class="skeleton-alerts">
+          <app-skeleton-loader type="list" [rows]="3" width="100%" height="200px"></app-skeleton-loader>
+        </div>
+        <div class="skeleton-actions">
+          <div class="skeleton-action-grid">
+            @for (item of [1,2,3,4,5,6]; track item) {
+              <app-skeleton-loader type="button" width="150px" height="40px"></app-skeleton-loader>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="dashboard-error">
+      <div class="error-icon">
+        <i class="material-icons">error_outline</i>
+      </div>
+      <h3>Unable to Load Dashboard</h3>
+      <p>{{ error()?.message || 'An unexpected error occurred while loading the maintenance dashboard.' }}</p>
+      <button type="button" (click)="loadDashboardData()" class="retry-btn" aria-label="Retry loading dashboard data">
+        <i class="material-icons" aria-hidden="true">refresh</i>
+        Try Again
+      </button>
+    </div>
+  } @else {
+    <div class="dashboard-content">
+      <!-- Quick Stats Section -->
+      @if (maintenanceStats()) {
+        <section class="stats-section">
+          <div class="section-header">
+            <h2>
+              <i class="material-icons">dashboard</i>
+              Overview
+            </h2>
+          </div>
+          
+          <div class="stats-grid">
+            <div class="stat-card total" role="region" [attr.aria-label]="'Total machines statistics'">
+              <div class="stat-icon">
+                <i class="material-icons" aria-hidden="true">precision_manufacturing</i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Total Machines</div>
+                <div class="stat-value" [attr.aria-label]="maintenanceStats()!.totalMachines + ' total machines'">{{ maintenanceStats()!.totalMachines }}</div>
+              </div>
+            </div>
+            
+            <div class="stat-card scheduled" role="region" [attr.aria-label]="'Scheduled jobs statistics'">
+              <div class="stat-icon">
+                <i class="material-icons" aria-hidden="true">schedule</i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Scheduled Jobs</div>
+                <div class="stat-value" [attr.aria-label]="maintenanceStats()!.scheduledJobs + ' scheduled jobs'">{{ maintenanceStats()!.scheduledJobs }}</div>
+              </div>
+            </div>
+            
+            <div class="stat-card in-progress" role="region" [attr.aria-label]="'In progress jobs statistics'">
+              <div class="stat-icon">
+                <i class="material-icons" aria-hidden="true">build</i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">In Progress</div>
+                <div class="stat-value" [attr.aria-label]="maintenanceStats()!.inProgressJobs + ' jobs in progress'">{{ maintenanceStats()!.inProgressJobs }}</div>
+              </div>
+            </div>
+            
+            <div class="stat-card completed" role="region" [attr.aria-label]="'Completed jobs statistics'">
+              <div class="stat-icon">
+                <i class="material-icons" aria-hidden="true">check_circle</i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value" [attr.aria-label]="maintenanceStats()!.completedJobs + ' completed jobs'">{{ maintenanceStats()!.completedJobs }}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- Alerts Section -->
+      <section class="alerts-section">
+        <div class="section-header">
+          <h2>
+            <i class="material-icons">notifications_active</i>
+            Maintenance Alerts
+          </h2>
+          @if (hasAlerts()) {
+            <span class="section-badge">{{ totalAlerts() }}</span>
+          }
+        </div>
+        
+        <app-maintenance-alerts 
+          [serviceDueAlerts]="serviceDueAlerts()"
+          [overdueAlerts]="overdueAlerts()"
+        ></app-maintenance-alerts>
+      </section>
+
+      <!-- Quick Actions Section -->
+      <section class="actions-section">
+        <div class="section-header">
+          <h2>
+            <i class="material-icons">flash_on</i>
+            Quick Actions
+          </h2>
+        </div>
+        
+        <app-maintenance-quick-actions></app-maintenance-quick-actions>
+      </section>
+    </div>
+  }
+</div>

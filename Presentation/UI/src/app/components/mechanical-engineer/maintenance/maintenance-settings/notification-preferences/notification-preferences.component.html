@@ -1,0 +1,283 @@
+<div class="notification-preferences">
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading notification preferences...</p>
+    </div>
+  } @else {
+    <form [formGroup]="notificationForm" class="preferences-form">
+      <!-- Master Notification Controls -->
+      <mat-card class="preferences-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>notifications</mat-icon>
+            General Notification Settings
+          </mat-card-title>
+          <mat-card-subtitle>
+            Configure your primary notification channels
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="master-toggles">
+            <div class="toggle-group">
+              <mat-slide-toggle 
+                formControlName="emailNotifications"
+                (change)="onMasterToggleChange('emailNotifications', $event.checked)">
+                Email Notifications
+              </mat-slide-toggle>
+              <p class="toggle-description">
+                Receive maintenance alerts via email
+              </p>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="toggle-group">
+              <mat-slide-toggle 
+                formControlName="inAppNotifications"
+                (change)="onMasterToggleChange('inAppNotifications', $event.checked)">
+                In-App Notifications
+              </mat-slide-toggle>
+              <p class="toggle-description">
+                Show maintenance alerts within the application
+              </p>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="toggle-group">
+              <mat-slide-toggle formControlName="overdueNotifications">
+                Overdue Notifications
+              </mat-slide-toggle>
+              <p class="toggle-description">
+                Receive immediate alerts for overdue maintenance
+              </p>
+            </div>
+          </div>
+
+          <div class="timing-settings">
+            <mat-form-field appearance="outline" class="alert-window-field">
+              <mat-label>Alert Window</mat-label>
+              <mat-select formControlName="alertWindowDays" required>
+                @for (option of alertWindowOptions; track option.value) {
+                  <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>When to start showing maintenance due alerts</mat-hint>
+              @if (getFieldError('alertWindowDays')) {
+                <mat-error>{{ getFieldError('alertWindowDays') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="frequency-field">
+              <mat-label>Email Frequency</mat-label>
+              <mat-select formControlName="emailFrequency">
+                @for (freq of notificationFrequencies; track freq.value) {
+                  <mat-option [value]="freq.value">{{ freq.label }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>How often to send email notifications</mat-hint>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Notification Type Preferences -->
+      <mat-card class="preferences-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>tune</mat-icon>
+            Notification Types
+          </mat-card-title>
+          <mat-card-subtitle>
+            Customize notifications for different types of events
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="notification-types">
+            @for (type of notificationTypes; track type.key) {
+              <div class="notification-type-group">
+                <div class="type-header">
+                  <div class="type-info">
+                    <mat-icon [color]="'primary'">{{ type.icon }}</mat-icon>
+                    <div class="type-details">
+                      <h4>{{ type.label }}</h4>
+                      <p>{{ type.description }}</p>
+                    </div>
+                  </div>
+                  <button 
+                    type="button" 
+                    mat-stroked-button 
+                    size="small"
+                    (click)="testNotification(type.label)"
+                    matTooltip="Send test notification">
+                    <mat-icon>send</mat-icon>
+                    Test
+                  </button>
+                </div>
+
+                <div class="type-toggles">
+                  <mat-slide-toggle 
+                    [formControlName]="type.key + 'Email'"
+                    [disabled]="!notificationForm.get('emailNotifications')?.value">
+                    Email
+                  </mat-slide-toggle>
+                  
+                  <mat-slide-toggle 
+                    [formControlName]="type.key + 'InApp'"
+                    [disabled]="!notificationForm.get('inAppNotifications')?.value">
+                    In-App
+                  </mat-slide-toggle>
+                </div>
+              </div>
+              
+              @if ($index < notificationTypes.length - 1) {
+                <mat-divider></mat-divider>
+              }
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Advanced Settings -->
+      <mat-card class="preferences-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>settings</mat-icon>
+            Advanced Settings
+          </mat-card-title>
+          <mat-card-subtitle>
+            Configure quiet hours, weekend notifications, and escalation
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="advanced-settings">
+            <!-- Quiet Hours -->
+            <div class="setting-group">
+              <div class="setting-header">
+                <mat-slide-toggle formControlName="quietHoursEnabled">
+                  Quiet Hours
+                </mat-slide-toggle>
+                <p class="setting-description">
+                  Suppress non-urgent notifications during specified hours
+                </p>
+              </div>
+
+              @if (notificationForm.get('quietHoursEnabled')?.value) {
+                <div class="quiet-hours-config">
+                  <mat-form-field appearance="outline" class="time-field">
+                    <mat-label>Start Time</mat-label>
+                    <input 
+                      matInput 
+                      type="time" 
+                      formControlName="quietHoursStart">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="time-field">
+                    <mat-label>End Time</mat-label>
+                    <input 
+                      matInput 
+                      type="time" 
+                      formControlName="quietHoursEnd">
+                  </mat-form-field>
+                </div>
+              }
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Weekend Notifications -->
+            <div class="setting-group">
+              <mat-slide-toggle formControlName="weekendNotifications">
+                Weekend Notifications
+              </mat-slide-toggle>
+              <p class="setting-description">
+                Receive notifications on weekends (Saturday and Sunday)
+              </p>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Escalation Settings -->
+            <div class="setting-group">
+              <div class="setting-header">
+                <mat-slide-toggle formControlName="escalationEnabled">
+                  Escalation Notifications
+                </mat-slide-toggle>
+                <p class="setting-description">
+                  Automatically escalate overdue maintenance to supervisors
+                </p>
+              </div>
+
+              @if (notificationForm.get('escalationEnabled')?.value) {
+                <div class="escalation-config">
+                  <mat-form-field appearance="outline" class="delay-field">
+                    <mat-label>Escalation Delay (Hours)</mat-label>
+                    <input 
+                      matInput 
+                      type="number" 
+                      formControlName="escalationDelayHours"
+                      min="1"
+                      max="168"
+                      placeholder="24">
+                    <mat-hint>Hours after due date to escalate</mat-hint>
+                    @if (getFieldError('escalationDelayHours')) {
+                      <mat-error>{{ getFieldError('escalationDelayHours') }}</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="recipients-field">
+                    <mat-label>Escalation Recipients</mat-label>
+                    <mat-chip-grid #chipGrid>
+                      @for (recipient of notificationForm.get('escalationRecipients')?.value || []; track recipient; let i = $index) {
+                        <mat-chip-row (removed)="removeRecipient(i)">
+                          {{ recipient }}
+                          <button matChipRemove>
+                            <mat-icon>cancel</mat-icon>
+                          </button>
+                        </mat-chip-row>
+                      }
+                    </mat-chip-grid>
+                    <input 
+                      placeholder="Enter email address..."
+                      [matChipInputFor]="chipGrid"
+                      (matChipInputTokenEnd)="addRecipient($event)">
+                    <mat-hint>Email addresses to notify when escalating</mat-hint>
+                  </mat-form-field>
+                </div>
+              }
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <div class="action-buttons">
+          <button 
+            type="button" 
+            mat-button 
+            (click)="resetPreferences()"
+            [disabled]="isSaving() || !hasUnsavedChanges()">
+            Reset
+          </button>
+          
+          <button 
+            type="button" 
+            mat-raised-button 
+            color="primary"
+            (click)="savePreferences()"
+            [disabled]="isSaving() || !isFormValid()">
+            @if (isSaving()) {
+              <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+            }
+            Save Preferences
+          </button>
+        </div>
+      </div>
+    </form>
+  }
+</div>

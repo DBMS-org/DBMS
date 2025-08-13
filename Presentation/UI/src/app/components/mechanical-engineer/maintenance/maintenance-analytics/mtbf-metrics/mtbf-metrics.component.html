@@ -1,0 +1,51 @@
+<div class="mtbf-container">
+  @if (data() && data()!.length > 0) {
+    <div class="mtbf-summary">
+      <div class="summary-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ averageMTBF() }}h</span>
+          <span class="stat-label">Average MTBF</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ bestPerformer()?.machineType || 'N/A' }}</span>
+          <span class="stat-label">Best Performer</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ totalFailures() }}</span>
+          <span class="stat-label">Total Failures</span>
+        </div>
+      </div>
+      
+      <div class="mtbf-trends">
+        <h4>MTBF Trends by Machine Type</h4>
+        <div class="trend-list">
+          @for (metric of sortedData(); track metric.machineType) {
+            <div class="trend-item" [class.high-mtbf]="metric.mtbfHours > averageMTBF()" [class.low-mtbf]="metric.mtbfHours < averageMTBF()">
+              <div class="machine-info">
+                <span class="machine-type">{{ metric.machineType }}</span>
+                <span class="period">{{ metric.periodMonths }} months</span>
+              </div>
+              <div class="mtbf-bar">
+                <div class="bar-fill" [style.width.%]="getBarWidth(metric.mtbfHours)"></div>
+                <span class="mtbf-value">{{ metric.mtbfHours }}h</span>
+              </div>
+              <div class="failure-info">
+                <mat-icon [class.warning]="metric.failureCount > 5">{{ metric.failureCount > 5 ? 'warning' : 'check_circle' }}</mat-icon>
+                <span class="failure-count">{{ metric.failureCount }} failures</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    
+    <div class="chart-container">
+      <canvas #chartCanvas></canvas>
+    </div>
+  } @else {
+    <div class="no-data">
+      <mat-icon>info</mat-icon>
+      <p>No MTBF data available for the selected period</p>
+    </div>
+  }
+</div>

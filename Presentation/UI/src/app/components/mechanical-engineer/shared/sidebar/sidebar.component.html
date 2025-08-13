@@ -1,8 +1,14 @@
 <aside class="sidebar" [class.collapsed]="isCollapsed">
-  <nav class="nav-menu">
+  <nav class="nav-menu" role="navigation" aria-label="Main navigation">
     @for (item of navItems; track item.route) {
-      <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
-        <i class="material-icons">{{item.icon}}</i>
+      <a 
+        [routerLink]="item.route" 
+        [class.active]="isNavItemActive(item)"
+        class="nav-item"
+        [attr.aria-label]="item.label"
+        [attr.title]="isCollapsed ? item.label : null"
+      >
+        <i class="material-icons" aria-hidden="true">{{item.icon}}</i>
         @if (!isCollapsed) {
           <span>{{item.label}}</span>
         }

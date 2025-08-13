@@ -1,0 +1,35 @@
+<div class="maintenance-quick-actions">
+  <div class="actions-grid">
+    @for (action of quickActions; track action.id) {
+      <div 
+        class="action-card" 
+        [class]="action.colorClass"
+        (click)="onActionClick(action)"
+        (keydown)="onActionKeydown($event, action)"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="action.title + ': ' + action.description"
+      >
+        <div class="action-icon">
+          <i class="material-icons">{{ action.icon }}</i>
+        </div>
+        
+        <div class="action-content">
+          <h3>{{ action.title }}</h3>
+          <p>{{ action.description }}</p>
+          
+          @if (action.statusText && action.statusCount !== undefined) {
+            <div class="action-status">
+              <span class="status-count">{{ action.statusCount }}</span>
+              <span class="status-text">{{ action.statusText }}</span>
+            </div>
+          }
+        </div>
+        
+        <div class="action-arrow">
+          <i class="material-icons">arrow_forward</i>
+        </div>
+      </div>
+    }
+  </div>
+</div>
