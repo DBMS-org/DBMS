@@ -1,0 +1,348 @@
+.parts-usage-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Enhanced Controls Section */
+.controls-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+}
+
+.filters-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.search-field {
+    flex: 1;
+    min-width: 200px;
+}
+
+.sort-field {
+    min-width: 150px;
+}
+
+.machine-filter-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.chips-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.clear-filters-btn {
+    margin-left: 8px;
+}
+
+/* Usage Metrics Summary */
+.usage-metrics-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.metrics-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.metric-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metric-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-value {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: 12px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Chart Container */
+.chart-container {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 16px;
+}
+
+.chart-header {
+    margin-bottom: 16px;
+}
+
+.chart-header h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+.chart-subtitle {
+    font-size: 12px;
+    color: #666;
+}
+
+canvas {
+    max-height: 300px;
+    max-width: 100%;
+}
+
+/* Parts List */
+.parts-list {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.list-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+.results-count {
+    font-size: 12px;
+    color: #666;
+    background: #e3f2fd;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.no-results mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.part-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.2s ease;
+}
+
+.part-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+}
+
+.part-item.highlighted {
+    background: linear-gradient(90deg, #e3f2fd 0%, #ffffff 100%);
+    border-left: 4px solid #2196f3;
+}
+
+.part-item:last-child {
+    border-bottom: none;
+}
+
+.part-info {
+    flex: 1;
+}
+
+.part-name {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.machine-types {
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.machine-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+
+.part-metrics {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.usage-count,
+.total-cost,
+.avg-cost {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 80px;
+}
+
+.usage-count .value {
+    font-weight: bold;
+    color: #2196f3;
+    font-size: 18px;
+}
+
+.total-cost .value {
+    font-weight: bold;
+    color: #4caf50;
+    font-size: 18px;
+}
+
+.avg-cost .value {
+    font-weight: bold;
+    color: #ff9800;
+    font-size: 18px;
+}
+
+.label {
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .search-field,
+    .sort-field {
+        min-width: unset;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .part-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .part-metrics {
+        width: 100%;
+        justify-content: space-around;
+        gap: 12px;
+    }
+
+    .machine-filter-chips {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .chips-container {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .controls-section {
+        padding: 12px;
+    }
+
+    .usage-metrics-summary {
+        padding: 16px;
+    }
+
+    .chart-container {
+        padding: 16px;
+    }
+
+    .part-metrics {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .usage-count,
+    .total-cost,
+    .avg-cost {
+        min-width: unset;
+        width: 100%;
+    }
+}
