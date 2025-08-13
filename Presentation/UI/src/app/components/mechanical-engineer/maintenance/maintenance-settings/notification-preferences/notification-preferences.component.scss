@@ -1,0 +1,346 @@
+.notification-preferences {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 0;
+    gap: 16px;
+
+    p {
+      margin: 0;
+      color: #666;
+    }
+  }
+
+  .preferences-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .preferences-card {
+    .mat-mdc-card-header {
+      .mat-mdc-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 500;
+
+        mat-icon {
+          color: #1976d2;
+        }
+      }
+
+      .mat-mdc-card-subtitle {
+        margin-top: 4px;
+        color: #666;
+        font-size: 14px;
+      }
+    }
+
+    .mat-mdc-card-content {
+      padding-top: 16px;
+    }
+  }
+
+  // Master toggles styles
+  .master-toggles {
+    .toggle-group {
+      padding: 16px 0;
+
+      .mat-mdc-slide-toggle {
+        margin-bottom: 8px;
+      }
+
+      .toggle-description {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+        padding-left: 52px; // Align with toggle text
+      }
+    }
+
+    mat-divider {
+      margin: 8px 0;
+    }
+  }
+
+  .timing-settings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+
+    .alert-window-field,
+    .frequency-field {
+      min-width: 0;
+    }
+  }
+
+  // Notification types styles
+  .notification-types {
+    .notification-type-group {
+      padding: 16px 0;
+
+      .type-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+        gap: 16px;
+
+        .type-info {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          flex: 1;
+
+          mat-icon {
+            margin-top: 2px;
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+
+          .type-details {
+            h4 {
+              margin: 0 0 4px 0;
+              font-size: 16px;
+              font-weight: 500;
+              color: #333;
+            }
+
+            p {
+              margin: 0;
+              font-size: 14px;
+              color: #666;
+              line-height: 1.4;
+            }
+          }
+        }
+
+        button {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          min-width: auto;
+          padding: 4px 12px;
+
+          mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+          }
+        }
+      }
+
+      .type-toggles {
+        display: flex;
+        gap: 24px;
+        padding-left: 32px;
+
+        @media (max-width: 480px) {
+          flex-direction: column;
+          gap: 8px;
+        }
+      }
+    }
+
+    mat-divider {
+      margin: 8px 0;
+    }
+  }
+
+  // Advanced settings styles
+  .advanced-settings {
+    .setting-group {
+      padding: 16px 0;
+
+      .setting-header {
+        .mat-mdc-slide-toggle {
+          margin-bottom: 8px;
+        }
+
+        .setting-description {
+          margin: 0;
+          color: #666;
+          font-size: 14px;
+          padding-left: 52px; // Align with toggle text
+        }
+      }
+
+      .quiet-hours-config {
+        display: flex;
+        gap: 16px;
+        margin-top: 16px;
+        padding-left: 52px;
+
+        @media (max-width: 480px) {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .time-field {
+          flex: 1;
+          min-width: 0;
+        }
+      }
+
+      .escalation-config {
+        margin-top: 16px;
+        padding-left: 52px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        .delay-field {
+          max-width: 300px;
+        }
+
+        .recipients-field {
+          max-width: 500px;
+
+          .mat-mdc-chip-grid {
+            min-height: 40px;
+          }
+
+          .mat-mdc-chip-row {
+            background-color: #e3f2fd;
+            color: #1976d2;
+
+            button[matChipRemove] {
+              color: #1976d2;
+            }
+          }
+        }
+      }
+    }
+
+    mat-divider {
+      margin: 8px 0;
+    }
+  }
+
+  // Form actions
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 24px;
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+
+      @media (max-width: 768px) {
+        width: 100%;
+        
+        button {
+          flex: 1;
+        }
+      }
+    }
+  }
+
+  // Button spinner
+  .button-spinner {
+    margin-right: 8px;
+  }
+
+  // Disabled state styles
+  .mat-mdc-slide-toggle.mat-disabled {
+    opacity: 0.6;
+  }
+
+  // Error styles
+  .mat-mdc-form-field.mat-form-field-invalid {
+    .mat-mdc-text-field-wrapper {
+      .mat-mdc-form-field-flex {
+        .mat-mdc-form-field-outline {
+          .mat-mdc-form-field-outline-thick {
+            color: #f44336;
+          }
+        }
+      }
+    }
+  }
+
+  // Snackbar styles
+  :host ::ng-deep {
+    .success-snackbar {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .error-snackbar {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .info-snackbar {
+      background-color: #2196f3;
+      color: white;
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .preferences-card {
+      .mat-mdc-card-content {
+        padding: 12px;
+      }
+    }
+
+    .notification-type-group {
+      .type-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        button {
+          align-self: flex-end;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px;
+
+    .timing-settings {
+      gap: 12px;
+    }
+
+    .notification-type-group {
+      .type-toggles {
+        padding-left: 0;
+      }
+    }
+
+    .advanced-settings {
+      .setting-group {
+        .setting-header .setting-description,
+        .quiet-hours-config,
+        .escalation-config {
+          padding-left: 0;
+        }
+      }
+    }
+  }
+}

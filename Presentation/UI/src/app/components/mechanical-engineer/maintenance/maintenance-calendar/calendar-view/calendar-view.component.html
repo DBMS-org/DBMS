@@ -1,0 +1,200 @@
+<div class="calendar-view">
+  <!-- Enhanced Calendar Header -->
+  <div class="calendar-header">
+    <div class="header-left">
+      <div class="month-navigation">
+        <button 
+          type="button"
+          mat-icon-button 
+          class="nav-button"
+          (click)="previousMonth()"
+          matTooltip="Previous month"
+          aria-label="Previous month">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        
+        <div class="month-display">
+          <h2 class="month-title">{{ monthName() }}</h2>
+          <div class="month-subtitle">Maintenance Schedule</div>
+        </div>
+        
+        <button 
+          type="button"
+          mat-icon-button 
+          class="nav-button"
+          (click)="nextMonth()"
+          matTooltip="Next month"
+          aria-label="Next month">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <button 
+        type="button"
+        mat-stroked-button 
+        class="today-button"
+        (click)="goToToday()"
+        matTooltip="Go to today">
+        <mat-icon>today</mat-icon>
+        <span>Today</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Enhanced Calendar Grid -->
+  <div class="calendar-grid">
+    <!-- Enhanced Day Headers -->
+    <div class="day-headers">
+      <div class="day-header">
+        <span class="day-name">Sun</span>
+        <span class="day-short">S</span>
+      </div>
+      <div class="day-header">
+        <span class="day-name">Mon</span>
+        <span class="day-short">M</span>
+      </div>
+      <div class="day-header">
+        <span class="day-name">Tue</span>
+        <span class="day-short">T</span>
+      </div>
+      <div class="day-header">
+        <span class="day-name">Wed</span>
+        <span class="day-short">W</span>
+      </div>
+      <div class="day-header">
+        <span class="day-name">Thu</span>
+        <span class="day-short">T</span>
+      </div>
+      <div class="day-header">
+        <span class="day-name">Fri</span>
+        <span class="day-short">F</span>
+      </div>
+      <div class="day-header">
+        <span class="day-name">Sat</span>
+        <span class="day-short">S</span>
+      </div>
+    </div>
+
+    <!-- Calendar Weeks -->
+    <div class="calendar-weeks">
+      @for (week of calendarWeeks(); track $index) {
+        <div class="calendar-week">
+          @for (day of week.days; track day.date.getTime()) {
+            <div 
+              class="calendar-day"
+              [class.other-month]="!day.isCurrentMonth"
+              [class.today]="day.isToday"
+              [class.selected]="day.isSelected"
+              [class.has-jobs]="day.jobs.length > 0"
+              [class.weekend]="day.date.getDay() === 0 || day.date.getDay() === 6"
+              (click)="onDayClick(day)"
+              (keydown)="onKeyDown($event, day)"
+              tabindex="0"
+              [attr.aria-label]="'Day ' + day.date.getDate() + ', ' + day.jobs.length + ' maintenance jobs'"
+              role="button">
+              
+              <div class="day-header">
+                <div class="day-number">
+                  {{ day.date.getDate() }}
+                </div>
+                @if (day.jobs.length > 0) {
+                  <div class="job-count-badge">
+                    {{ day.jobs.length }}
+                  </div>
+                }
+              </div>
+              
+              @if (day.jobs.length > 0) {
+                <div class="day-jobs">
+                  @for (job of day.visibleJobs; track job.id) {
+                    <div 
+                      class="job-indicator"
+                      [style.background-color]="getStatusColor(job.status)"
+                      [matTooltip]="getJobTooltip(job)"
+                      (click)="onJobClick($event, job)"
+                      (keydown)="onJobKeyDown($event, job)"
+                      tabindex="0"
+                      [attr.aria-label]="'Maintenance job for ' + job.machineName + ', status: ' + job.status"
+                      role="button">
+                      <div class="job-content">
+                        <mat-icon class="job-icon">{{ getStatusIcon(job.status) }}</mat-icon>
+                        <span class="job-text">{{ job.machineName }}</span>
+                      </div>
+                      <div class="job-status-dot" [style.background-color]="getStatusColor(job.status)"></div>
+                    </div>
+                  }
+                  @if (day.hasMoreJobs) {
+                    <div 
+                      class="more-jobs clickable"
+                      (click)="onMoreJobsClick($event, day)"
+                      [matTooltip]="'Click to view all ' + day.jobs.length + ' jobs for this day'">
+                      <mat-icon>more_horiz</mat-icon>
+                      <span>+{{ day.jobs.length - day.visibleJobs.length }} more</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Enhanced Legend -->
+  <div class="calendar-legend">
+    <div class="legend-header">
+      <mat-icon class="legend-icon">info</mat-icon>
+      <h3 class="legend-title">Maintenance Status</h3>
+    </div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #2196f3;">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="legend-text">
+          <span class="legend-label">Scheduled</span>
+          <span class="legend-description">Planned maintenance</span>
+        </div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #ff9800;">
+          <mat-icon>build</mat-icon>
+        </div>
+        <div class="legend-text">
+          <span class="legend-label">In Progress</span>
+          <span class="legend-description">Currently being worked on</span>
+        </div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #4caf50;">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="legend-text">
+          <span class="legend-label">Completed</span>
+          <span class="legend-description">Successfully finished</span>
+        </div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #f44336;">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="legend-text">
+          <span class="legend-label">Overdue</span>
+          <span class="legend-description">Past due date</span>
+        </div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #9e9e9e;">
+          <mat-icon>cancel</mat-icon>
+        </div>
+        <div class="legend-text">
+          <span class="legend-label">Cancelled</span>
+          <span class="legend-description">No longer required</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

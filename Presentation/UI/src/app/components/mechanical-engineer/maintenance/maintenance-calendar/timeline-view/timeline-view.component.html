@@ -1,0 +1,269 @@
+<div class="timeline-view">
+  <!-- Enhanced Header -->
+  <div class="timeline-header">
+    <div class="header-content">
+      <div class="header-title">
+        <mat-icon class="header-icon">timeline</mat-icon>
+        <h2>Maintenance Timeline</h2>
+      </div>
+      <p class="header-subtitle">View and filter maintenance jobs chronologically</p>
+    </div>
+  </div>
+
+  <!-- Enhanced Filters and Controls -->
+  <div class="timeline-controls">
+    <div class="controls-header">
+      <div class="controls-title">
+        <mat-icon>filter_list</mat-icon>
+        <span>Filters & Search</span>
+      </div>
+      <div class="results-summary">
+        <mat-icon>info</mat-icon>
+        <span>{{ filteredAndSortedJobs().length }} jobs found</span>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-row">
+        <!-- Enhanced Search -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>
+            <mat-icon>search</mat-icon>
+            Search maintenance jobs...
+          </mat-label>
+          <input 
+            matInput 
+            [value]="filters().searchTerm"
+            (input)="updateSearchTerm($any($event.target).value)"
+            placeholder="Machine name, serial number, project...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <!-- Enhanced Status Filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>
+            <mat-icon>flag</mat-icon>
+            Status
+          </mat-label>
+          <mat-select 
+            multiple
+            [value]="filters().status"
+            (selectionChange)="updateStatusFilter($event.value)">
+            @for (status of statusOptions; track status) {
+              <mat-option [value]="status">
+                <div class="option-content">
+                  <mat-icon [style.color]="getStatusColor(status)">{{ getStatusIcon(status) }}</mat-icon>
+                  <span>{{ status }}</span>
+                </div>
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Enhanced Type Filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>
+            <mat-icon>category</mat-icon>
+            Type
+          </mat-label>
+          <mat-select 
+            multiple
+            [value]="filters().type"
+            (selectionChange)="updateTypeFilter($event.value)">
+            @for (type of typeOptions; track type) {
+              <mat-option [value]="type">
+                <div class="option-content">
+                  <mat-icon>{{ getTypeIcon(type) }}</mat-icon>
+                  <span>{{ type }}</span>
+                </div>
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-row">
+        <!-- Enhanced Sort Controls -->
+        <div class="sort-controls">
+          <div class="sort-label">
+            <mat-icon>sort</mat-icon>
+            <span>Sort by:</span>
+          </div>
+          <div class="sort-buttons">
+            <button 
+              type="button"
+              mat-stroked-button 
+              [class.active]="filters().sortBy === 'date'"
+              (click)="updateSorting('date', filters().sortOrder)"
+              class="sort-button">
+              <mat-icon>schedule</mat-icon>
+              <span>Date</span>
+            </button>
+            <button 
+              type="button"
+              mat-stroked-button 
+              [class.active]="filters().sortBy === 'machine'"
+              (click)="updateSorting('machine', filters().sortOrder)"
+              class="sort-button">
+              <mat-icon>precision_manufacturing</mat-icon>
+              <span>Machine</span>
+            </button>
+            <button 
+              type="button"
+              mat-stroked-button 
+              [class.active]="filters().sortBy === 'status'"
+              (click)="updateSorting('status', filters().sortOrder)"
+              class="sort-button">
+              <mat-icon>flag</mat-icon>
+              <span>Status</span>
+            </button>
+            
+            <button 
+              type="button"
+              mat-icon-button 
+              class="sort-direction-button"
+              (click)="updateSorting(filters().sortBy, filters().sortOrder === 'asc' ? 'desc' : 'asc')"
+              [matTooltip]="filters().sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'">
+              <mat-icon>{{ filters().sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Enhanced Clear Filters -->
+        <button 
+          type="button"
+          mat-stroked-button 
+          (click)="clearFilters()"
+          class="clear-filters">
+          <mat-icon>clear_all</mat-icon>
+          <span>Clear All Filters</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="results-summary">
+      <span>{{ filteredAndSortedJobs().length }} jobs found</span>
+    </div>
+  </div>
+
+  <!-- Timeline Content -->
+  <div class="timeline-content">
+    @if (timelineGroups().length === 0) {
+      <div class="no-results">
+        <mat-icon>event_busy</mat-icon>
+        <h3>No maintenance jobs found</h3>
+        <p>Try adjusting your filters or search criteria.</p>
+      </div>
+    } @else {
+      <!-- Virtual Scrolling Container -->
+      <cdk-virtual-scroll-viewport 
+        itemSize="120" 
+        class="timeline-viewport">
+        
+        @for (group of timelineGroups(); track group.date) {
+          <div class="timeline-group">
+            <!-- Date Header -->
+            <div class="date-header">
+              <div class="date-line"></div>
+              <div class="date-badge">
+                <mat-icon>calendar_today</mat-icon>
+                <span>{{ group.displayDate }}</span>
+              </div>
+              <div class="date-line"></div>
+            </div>
+
+            <!-- Jobs for this date -->
+            <div class="jobs-container">
+              @for (job of group.jobs; track job.id) {
+                <mat-card 
+                  class="job-card"
+                  [class]="getPriorityClass(job)"
+                  (click)="onJobClick(job)">
+                  
+                  <div class="job-timeline-indicator">
+                    <div 
+                      class="status-dot"
+                      [style.background-color]="getStatusColor(job.status)">
+                      <mat-icon>{{ getStatusIcon(job.status) }}</mat-icon>
+                    </div>
+                    <div class="timeline-line"></div>
+                  </div>
+
+                  <div class="job-content">
+                    <div class="job-header">
+                      <div class="job-time">
+                        <mat-icon>access_time</mat-icon>
+                        <span>{{ formatTime(job.scheduledDate) }}</span>
+                      </div>
+                      
+                      <div class="job-badges">
+                        <div class="status-badge" [style.background-color]="getStatusColor(job.status)">
+                          <mat-icon>{{ getStatusIcon(job.status) }}</mat-icon>
+                          <span>{{ job.status }}</span>
+                        </div>
+                        <div class="type-badge">
+                          <mat-icon>{{ getTypeIcon(job.type) }}</mat-icon>
+                          <span>{{ job.type }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="job-details">
+                      <div class="machine-info">
+                        <h4 class="machine-name">
+                          <mat-icon>precision_manufacturing</mat-icon>
+                          <span>{{ job.machineName }}</span>
+                        </h4>
+                        <p class="serial-number">
+                          <mat-icon>qr_code</mat-icon>
+                          <span>S/N: {{ job.serialNumber }}</span>
+                        </p>
+                      </div>
+
+                      <div class="job-info">
+                        <div class="info-item">
+                          <mat-icon>{{ getTypeIcon(job.type) }}</mat-icon>
+                          <span>{{ job.type }}</span>
+                        </div>
+                        <div class="info-item">
+                          <mat-icon>folder</mat-icon>
+                          <span>{{ job.project }}</span>
+                        </div>
+                        <div class="info-item">
+                          <mat-icon>schedule</mat-icon>
+                          <span>{{ job.estimatedHours }}h estimated</span>
+                        </div>
+                      </div>
+
+                      <div class="job-reason">
+                        <p>{{ job.reason }}</p>
+                      </div>
+
+                      @if (job.assignedTo.length > 0) {
+                        <div class="assigned-to">
+                          <mat-icon>person</mat-icon>
+                          <span>{{ job.assignedTo.join(', ') }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="job-actions">
+                    <button 
+                      type="button"
+                      mat-icon-button 
+                      matTooltip="View details"
+                      (click)="$event.stopPropagation(); onJobClick(job)">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                  </div>
+                </mat-card>
+              }
+            </div>
+          </div>
+        }
+      </cdk-virtual-scroll-viewport>
+    }
+  </div>
+</div>

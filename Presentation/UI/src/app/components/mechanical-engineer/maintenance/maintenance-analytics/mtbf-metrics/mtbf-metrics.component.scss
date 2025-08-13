@@ -1,0 +1,230 @@
+// Variables
+$primary-blue: #2196f3;
+$success-green: #4caf50;
+$warning-orange: #ff9800;
+$error-red: #f44336;
+$text-primary: #333;
+$text-secondary: #666;
+$bg-light: rgba(0, 0, 0, 0.02);
+$bg-hover: rgba(0, 0, 0, 0.05);
+
+// Mixins
+@mixin scrollbar-style($width: 6px) {
+  &::-webkit-scrollbar {
+    width: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: calc($width / 2);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: calc($width / 2);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.5);
+    }
+  }
+}
+
+.mtbf-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mtbf-summary {
+  margin-bottom: 16px;
+}
+
+.summary-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: $primary-blue;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: $text-secondary;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+.mtbf-trends {
+  h4 {
+    margin: 0 0 12px 0;
+    color: $text-primary;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .trend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .trend-item {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      transition: all 0.2s ease;
+
+      &:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      &.high-mtbf {
+        border-left: 4px solid $success-green;
+        background: #f1f8e9;
+      }
+
+      &.low-mtbf {
+        border-left: 4px solid $warning-orange;
+        background: #fff3e0;
+      }
+
+      .machine-info {
+        display: flex;
+        flex-direction: column;
+
+        .machine-type {
+          font-weight: 500;
+          color: $text-primary;
+          font-size: 13px;
+        }
+
+        .period {
+          font-size: 11px;
+          color: $text-secondary;
+        }
+      }
+
+      .mtbf-bar {
+        position: relative;
+        height: 20px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+
+        .bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, $primary-blue, #42a5f5);
+          border-radius: 10px;
+          transition: width 0.3s ease;
+        }
+
+        .mtbf-value {
+          position: absolute;
+          right: 8px;
+          font-size: 11px;
+          font-weight: bold;
+          color: $text-primary;
+          z-index: 1;
+        }
+      }
+
+      .failure-info {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          color: $success-green;
+
+          &.warning {
+            color: $warning-orange;
+          }
+        }
+
+        .failure-count {
+          font-size: 11px;
+          color: $text-secondary;
+        }
+      }
+    }
+  }
+}
+
+.chart-container {
+  position: relative;
+  min-height: 200px;
+  max-height: 300px;
+  margin-top: 16px;
+  width: 100%;
+
+  canvas {
+    max-height: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: $text-secondary;
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #999;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .summary-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .trend-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+
+    .mtbf-bar {
+      order: 2;
+    }
+
+    .failure-info {
+      order: 3;
+      justify-content: center;
+    }
+  }
+}

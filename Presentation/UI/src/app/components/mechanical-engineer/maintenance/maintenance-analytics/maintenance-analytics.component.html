@@ -1,0 +1,303 @@
+<div class="maintenance-analytics">
+  <!-- Enhanced Header with Glassmorphism -->
+  <div class="analytics-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="main-title">
+          <mat-icon class="title-icon">analytics</mat-icon>
+          Maintenance Analytics Dashboard
+        </h1>
+        <p class="subtitle">Comprehensive insights into equipment performance and maintenance efficiency</p>
+      </div>
+      <div class="header-actions">
+        <button type="button"
+                mat-raised-button 
+                class="refresh-btn" 
+                (click)="refreshData()" 
+                [disabled]="isLoading()">
+          <mat-icon>refresh</mat-icon>
+          Refresh Data
+        </button>
+        <div class="last-updated">
+          <mat-icon>schedule</mat-icon>
+          <span>Last updated: {{ lastUpdated() | date:'short' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State with Enhanced Design -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="loading-card">
+        <div class="loading-spinner">
+          <mat-spinner diameter="60"></mat-spinner>
+        </div>
+        <h3>Loading Analytics Data</h3>
+        <p>Gathering comprehensive maintenance insights...</p>
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  } 
+  
+  <!-- Error State with Enhanced Design -->
+  @else if (hasError()) {
+    <div class="error-container">
+      <div class="error-card">
+        <div class="error-icon">
+          <mat-icon>error_outline</mat-icon>
+        </div>
+        <h3>Unable to Load Analytics</h3>
+        <p>{{ errorMessage() }}</p>
+        <button type="button"
+                mat-raised-button 
+                class="retry-btn" 
+                (click)="refreshData()">
+          <mat-icon>refresh</mat-icon>
+          Try Again
+        </button>
+      </div>
+    </div>
+  } 
+  
+  <!-- Main Analytics Grid -->
+  @else {
+    <div class="analytics-grid">
+      <!-- Service Compliance Card with Enhanced Design -->
+      <mat-card class="analytics-card compliance-card">
+        <div class="card-header">
+          <div class="card-title-section">
+            <div class="title-icon-wrapper compliance-icon">
+              <mat-icon>assessment</mat-icon>
+            </div>
+            <div class="title-content">
+              <h3>Service Compliance</h3>
+              <p>On-time vs overdue maintenance performance</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button type="button" mat-icon-button matTooltip="View Details">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </div>
+        </div>
+        
+        <div class="card-content">
+          @if (serviceComplianceData()) {
+            <div class="compliance-overview">
+              <div class="compliance-metric">
+                <div class="metric-circle">
+                  <span class="metric-value">{{ serviceComplianceData()?.percentage }}%</span>
+                </div>
+                <span class="metric-label">On-Time Rate</span>
+              </div>
+              
+              <div class="compliance-breakdown">
+                <div class="breakdown-item on-time">
+                  <div class="breakdown-icon">
+                    <mat-icon>check_circle</mat-icon>
+                  </div>
+                  <div class="breakdown-content">
+                    <span class="count">{{ serviceComplianceData()?.onTime }}</span>
+                    <span class="label">On Time</span>
+                  </div>
+                </div>
+                <div class="breakdown-item overdue">
+                  <div class="breakdown-icon">
+                    <mat-icon>warning</mat-icon>
+                  </div>
+                  <div class="breakdown-content">
+                    <span class="count">{{ serviceComplianceData()?.overdue }}</span>
+                    <span class="label">Overdue</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="chart-container">
+              <app-service-compliance-chart [data]="serviceComplianceData()"></app-service-compliance-chart>
+            </div>
+          } @else {
+            <div class="no-data">
+              <mat-icon>info_outline</mat-icon>
+              <p>Insufficient data for service compliance analysis</p>
+            </div>
+          }
+        </div>
+      </mat-card>
+
+      <!-- MTBF Metrics Card with Enhanced Design -->
+      <mat-card class="analytics-card mtbf-card">
+        <div class="card-header">
+          <div class="card-title-section">
+            <div class="title-icon-wrapper mtbf-icon">
+              <mat-icon>timeline</mat-icon>
+            </div>
+            <div class="title-content">
+              <h3>MTBF Analysis</h3>
+              <p>Mean Time Between Failures by machine type</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button type="button" mat-icon-button matTooltip="Export Data">
+              <mat-icon>download</mat-icon>
+            </button>
+          </div>
+        </div>
+        
+        <div class="card-content">
+          @if (mtbfMetrics() && mtbfMetrics()!.length > 0) {
+            <div class="mtbf-overview">
+              <div class="mtbf-summary">
+                @for (metric of mtbfMetrics(); track metric.machineType) {
+                  <div class="mtbf-item">
+                    <div class="machine-info">
+                      <div class="machine-type">{{ metric.machineType }}</div>
+                      <div class="failure-count">{{ metric.failureCount }} failures</div>
+                    </div>
+                    <div class="mtbf-value">
+                      <span class="hours">{{ metric.mtbfHours }}h</span>
+                      <div class="reliability-indicator" 
+                           [class.high]="metric.mtbfHours > 250"
+                           [class.medium]="metric.mtbfHours > 150 && metric.mtbfHours <= 250"
+                           [class.low]="metric.mtbfHours <= 150">
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+              
+              <div class="chart-container">
+                <app-mtbf-metrics [data]="mtbfMetrics()"></app-mtbf-metrics>
+              </div>
+            </div>
+          } @else {
+            <div class="no-data">
+              <mat-icon>info_outline</mat-icon>
+              <p>Insufficient data for MTBF analysis</p>
+            </div>
+          }
+        </div>
+      </mat-card>
+
+      <!-- Parts Usage Card with Enhanced Design -->
+      <mat-card class="analytics-card parts-usage-card">
+        <div class="card-header">
+          <div class="card-title-section">
+            <div class="title-icon-wrapper parts-icon">
+              <mat-icon>build</mat-icon>
+            </div>
+            <div class="title-content">
+              <h3>Parts Usage</h3>
+              <p>Most frequently replaced components</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button type="button" mat-icon-button matTooltip="Inventory Status">
+              <mat-icon>inventory</mat-icon>
+            </button>
+          </div>
+        </div>
+        
+        <div class="card-content">
+          @if (partsUsageData() && partsUsageData()!.length > 0) {
+            <div class="parts-overview">
+              <div class="parts-summary">
+                @for (part of topPartsUsage(); track part.partName) {
+                  <div class="parts-item">
+                    <div class="part-info">
+                      <div class="part-name">{{ part.partName }}</div>
+                      <div class="part-machines">{{ part.machineTypes.join(', ') }}</div>
+                    </div>
+                    <div class="part-stats">
+                      <div class="usage-count">{{ part.usageCount }} times</div>
+                      <div class="total-cost">${{ part.totalCost | number:'1.2-2' }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+              
+              <div class="chart-container">
+                <app-parts-usage-summary [data]="partsUsageData()"></app-parts-usage-summary>
+              </div>
+            </div>
+          } @else {
+            <div class="no-data">
+              <mat-icon>info_outline</mat-icon>
+              <p>No parts usage data available</p>
+            </div>
+          }
+        </div>
+      </mat-card>
+
+      <!-- Usage Metrics Card with Enhanced Design -->
+      <mat-card class="analytics-card usage-metrics-card">
+        <div class="card-header">
+          <div class="card-title-section">
+            <div class="title-icon-wrapper usage-icon">
+              <mat-icon>schedule</mat-icon>
+            </div>
+            <div class="title-content">
+              <h3>Usage Metrics</h3>
+              <p>Equipment utilization and service hours</p>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button type="button" mat-icon-button matTooltip="Detailed Report">
+              <mat-icon>description</mat-icon>
+            </button>
+          </div>
+        </div>
+        
+        <div class="card-content">
+          @if (usageMetrics() && usageMetrics()!.length > 0) {
+            <div class="usage-overview">
+              <div class="usage-totals">
+                <div class="usage-total engine-hours">
+                  <div class="total-icon">
+                    <mat-icon>speed</mat-icon>
+                  </div>
+                  <div class="total-content">
+                    <span class="total-value">{{ totalEngineHours() | number }}</span>
+                    <span class="total-label">Engine Hours</span>
+                  </div>
+                </div>
+                <div class="usage-total service-hours">
+                  <div class="total-icon">
+                    <mat-icon>build</mat-icon>
+                  </div>
+                  <div class="total-content">
+                    <span class="total-value">{{ totalServiceHours() | number }}</span>
+                    <span class="total-label">Service Hours</span>
+                  </div>
+                </div>
+                <div class="usage-total idle-hours">
+                  <div class="total-icon">
+                    <mat-icon>pause</mat-icon>
+                  </div>
+                  <div class="total-content">
+                    <span class="total-value">{{ totalIdleHours() | number }}</span>
+                    <span class="total-label">Idle Hours</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="chart-container">
+                <app-usage-metrics-chart [data]="usageMetrics()"></app-usage-metrics-chart>
+              </div>
+            </div>
+          } @else {
+            <div class="no-data">
+              <mat-icon>info_outline</mat-icon>
+              <p>No usage metrics data available</p>
+            </div>
+          }
+        </div>
+      </mat-card>
+    </div>
+  }
+</div>

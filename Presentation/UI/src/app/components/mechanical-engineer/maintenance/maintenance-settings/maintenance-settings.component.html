@@ -1,0 +1,166 @@
+<div class="maintenance-settings">
+  <div class="settings-header">
+    <h2>Maintenance Settings</h2>
+    <p class="settings-description">
+      Configure service intervals and notification preferences for maintenance management
+    </p>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading settings...</p>
+    </div>
+  } @else {
+    <mat-tab-group class="settings-tabs">
+      <!-- Service Intervals Tab -->
+      <mat-tab label="Service Intervals">
+        <div class="tab-content">
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>schedule</mat-icon>
+                Service Interval Configuration
+              </mat-card-title>
+              <mat-card-subtitle>
+                Define maintenance intervals for each machine type
+              </mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content>
+              <form [formGroup]="serviceIntervalsForm" class="service-intervals-form">
+                <div formArrayName="intervals" class="intervals-container">
+                  @for (intervalGroup of serviceIntervalsArray.controls; track $index; let i = $index) {
+                    <div [formGroupName]="i" class="interval-config-card">
+                      <div class="interval-header">
+                        <mat-form-field appearance="outline" class="machine-type-field">
+                          <mat-label>Machine Type</mat-label>
+                          <mat-select formControlName="machineType" required>
+                            @for (machineType of machineTypes; track machineType) {
+                              <mat-option [value]="machineType">{{ machineType }}</mat-option>
+                            }
+                          </mat-select>
+                          @if (getIntervalError(i, 'machineType')) {
+                            <mat-error>{{ getIntervalError(i, 'machineType') }}</mat-error>
+                          }
+                        </mat-form-field>
+
+                        @if (serviceIntervalsArray.length > 1) {
+                          <button 
+                            type="button" 
+                            mat-icon-button 
+                            color="warn"
+                            (click)="removeServiceInterval(i)"
+                            matTooltip="Remove this configuration">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        }
+                      </div>
+
+                      <div class="interval-fields">
+                        <mat-form-field appearance="outline" class="interval-field">
+                          <mat-label>Interval (Hours)</mat-label>
+                          <input 
+                            matInput 
+                            type="number" 
+                            formControlName="intervalHours"
+                            placeholder="e.g., 250"
+                            min="1">
+                          <mat-hint>Leave empty if using months-based interval</mat-hint>
+                          @if (getIntervalError(i, 'intervalHours')) {
+                            <mat-error>{{ getIntervalError(i, 'intervalHours') }}</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <div class="or-divider">
+                          <span>OR</span>
+                        </div>
+
+                        <mat-form-field appearance="outline" class="interval-field">
+                          <mat-label>Interval (Months)</mat-label>
+                          <input 
+                            matInput 
+                            type="number" 
+                            formControlName="intervalMonths"
+                            placeholder="e.g., 6"
+                            min="1">
+                          <mat-hint>Leave empty if using hours-based interval</mat-hint>
+                          @if (getIntervalError(i, 'intervalMonths')) {
+                            <mat-error>{{ getIntervalError(i, 'intervalMonths') }}</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="alert-window-field">
+                          <mat-label>Alert Window (Days)</mat-label>
+                          <input 
+                            matInput 
+                            type="number" 
+                            formControlName="alertWindowDays"
+                            placeholder="30"
+                            min="1"
+                            max="365"
+                            required>
+                          <mat-hint>Days before due date to show alerts</mat-hint>
+                          @if (getIntervalError(i, 'alertWindowDays')) {
+                            <mat-error>{{ getIntervalError(i, 'alertWindowDays') }}</mat-error>
+                          }
+                        </mat-form-field>
+                      </div>
+
+                      @if (serviceIntervalsArray.at(i).errors?.['noInterval']) {
+                        <div class="form-group-error">
+                          <mat-icon color="warn">warning</mat-icon>
+                          <span>Either hours or months interval must be specified</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="form-actions">
+                  <button 
+                    type="button" 
+                    mat-stroked-button 
+                    (click)="addServiceInterval()"
+                    class="add-interval-btn">
+                    <mat-icon>add</mat-icon>
+                    Add Machine Type
+                  </button>
+
+                  <div class="action-buttons">
+                    <button 
+                      type="button" 
+                      mat-button 
+                      (click)="resetServiceIntervals()"
+                      [disabled]="isSaving() || !hasUnsavedChanges()">
+                      Reset
+                    </button>
+                    
+                    <button 
+                      type="button" 
+                      mat-raised-button 
+                      color="primary"
+                      (click)="saveServiceIntervals()"
+                      [disabled]="isSaving() || serviceIntervalsForm.invalid">
+                      @if (isSaving()) {
+                        <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+                      }
+                      Save Intervals
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Notification Preferences Tab -->
+      <mat-tab label="Notifications">
+        <div class="tab-content">
+          <app-notification-preferences></app-notification-preferences>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  }
+</div>
