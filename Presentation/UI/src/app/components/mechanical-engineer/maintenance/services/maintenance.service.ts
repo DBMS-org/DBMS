@@ -119,15 +119,13 @@ export class MaintenanceService {
     // Check if offline and return cached data
     if (this.offlineStorage.isOffline()) {
       const cachedJobs = this.offlineStorage.getCachedMaintenanceJobs();
-      this.loadingService.stopLoading(operationId);
-
       if (cachedJobs.length > 0) {
+        this.loadingService.stopLoading(operationId);
         // Create search index for performance optimization
         this.performanceService.createSearchIndex('maintenance-jobs', cachedJobs);
         return of(cachedJobs);
-      } else {
-        return throwError(() => new Error('No cached maintenance jobs available offline'));
       }
+      // Fallback to mock data even when offline (dev mode)
     }
 
     // TODO: Replace with actual API call when backend is ready
