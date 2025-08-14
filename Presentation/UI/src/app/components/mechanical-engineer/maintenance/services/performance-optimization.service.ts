@@ -135,8 +135,9 @@ export class PerformanceOptimizationService {
   filterItems(datasetId: string, items: MaintenanceJob[], filters: JobFilters): MaintenanceJob[] {
     const startTime = performance.now();
     
-    // Create cache key from filters
-    const cacheKey = this.createFilterCacheKey(datasetId, filters);
+    // Create cache key from filters and current dataset version
+    const datasetVersion = this.computeDatasetVersion(items);
+    const cacheKey = this.createFilterCacheKey(datasetId, filters, datasetVersion);
     
     // Check cache first
     const cachedResult = this.filterCache.get(cacheKey);
@@ -261,9 +262,9 @@ export class PerformanceOptimizationService {
     ].join(' ').toLowerCase();
   }
 
-  private createFilterCacheKey(datasetId: string, filters: JobFilters): string {
+  private createFilterCacheKey(datasetId: string, filters: JobFilters, datasetVersion: string): string {
     const filterParts = [
-      datasetId,
+      `${datasetId}:${datasetVersion}`,
       filters.dateRange ? `${filters.dateRange.start.getTime()}-${filters.dateRange.end.getTime()}` : '',
       filters.status ? filters.status.sort().join(',') : '',
       filters.machineType ? filters.machineType.sort().join(',') : '',
@@ -271,6 +272,15 @@ export class PerformanceOptimizationService {
       filters.assignedTo ? filters.assignedTo.sort().join(',') : ''
     ];
     return filterParts.join('|');
+  }
+
+  private computeDatasetVersion(items: MaintenanceJob[]): string {
+    if (!items || items.length === 0) {
+      return 'len:0';
+    }
+    const firstId = items[0]?.id ?? 'na';
+    const lastId = items[items.length - 1]?.id ?? 'na';
+    return `len:${items.length};first:${firstId};last:${lastId}`;
   }
 
   private extractMachineType(machineName: string): string {

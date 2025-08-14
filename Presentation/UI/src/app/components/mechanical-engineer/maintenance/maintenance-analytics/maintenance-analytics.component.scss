@@ -167,6 +167,48 @@ $accent-gold: #ffd700;
   }
 }
 
+// Section filter buttons removed per requirement
+
+// Compact section switch row
+.section-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 8px 16px 8px;
+
+  .label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    margin-right: 4px;
+  }
+
+  button {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    &.active { background: #3f51b5; color: #fff; }
+    &:focus-visible {
+      outline: 3px solid rgba(63, 81, 181, 0.6);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Improve focus visibility for icon buttons
+.analytics-card .card-actions button:focus-visible,
+.analytics-header .header-actions .refresh-btn:focus-visible {
+  outline: 3px solid rgba(63, 81, 181, 0.6);
+  outline-offset: 3px;
+}
+
+// Respect reduced motion preferences
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 // Loading state
 .loading-container {
   display: flex;
@@ -277,7 +319,7 @@ $accent-gold: #ffd700;
 // Analytics grid
 .analytics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 24px;
   padding: 0 8px;
   margin-bottom: 24px;
@@ -290,8 +332,8 @@ $accent-gold: #ffd700;
   border-radius: 16px;
   box-shadow: 0 4px 20px $shadow-light;
   overflow: hidden;
-  min-height: 500px;
-  max-height: 700px;
+  min-height: 420px;
+  max-height: none;
   display: flex;
   flex-direction: column;
 
@@ -376,16 +418,13 @@ $accent-gold: #ffd700;
   }
 
   .card-content {
-    padding: 20px 24px;
+    padding: 16px 20px;
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
     min-height: 0;
     position: relative;
-
-    @include scrollbar-style(6px, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.2));
   }
 }
 
@@ -487,13 +526,10 @@ $accent-gold: #ffd700;
   flex-direction: column;
   gap: 16px;
 
-  .mtbf-summary {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 8px;
-
-    @include scrollbar-style();
+.mtbf-summary {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
 
     .mtbf-item {
       display: flex;
@@ -566,13 +602,10 @@ $accent-gold: #ffd700;
   flex-direction: column;
   gap: 16px;
 
-  .parts-summary {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 8px;
-
-    @include scrollbar-style();
+.parts-summary {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
 
     .parts-item {
       display: flex;
@@ -705,14 +738,14 @@ $accent-gold: #ffd700;
 
 // Chart container
 .chart-container {
-  min-height: 200px;
-  max-height: 300px;
-  background: rgba(0, 0, 0, 0.02);
+  min-height: 240px;
+  max-height: none;
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed rgba(0, 0, 0, 0.1);
+  border: none;
   overflow: hidden;
   position: relative;
 

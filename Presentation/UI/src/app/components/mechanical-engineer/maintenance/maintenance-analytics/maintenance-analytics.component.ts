@@ -67,6 +67,13 @@ export class MaintenanceAnalyticsComponent implements OnInit {
     return metrics ? metrics.reduce((sum, m) => sum + m.idleHours, 0) : 0;
   });
 
+  // View filter for separating sections (default to Service Compliance)
+  viewFilter = signal<'all' | 'compliance' | 'mtbf' | 'parts' | 'usage'>('compliance');
+
+  setView(view: 'all' | 'compliance' | 'mtbf' | 'parts' | 'usage') {
+    this.viewFilter.set(view);
+  }
+
   ngOnInit() {
     this.loadAnalyticsData();
   }

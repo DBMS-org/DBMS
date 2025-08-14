@@ -1,10 +1,10 @@
-<div class="maintenance-analytics">
+<div class="maintenance-analytics" role="main" [attr.aria-busy]="isLoading()">
   <!-- Enhanced Header with Glassmorphism -->
   <div class="analytics-header">
     <div class="header-content">
       <div class="title-section">
         <h1 class="main-title">
-          <mat-icon class="title-icon">analytics</mat-icon>
+          <mat-icon class="title-icon" aria-hidden="true">analytics</mat-icon>
           Maintenance Analytics Dashboard
         </h1>
         <p class="subtitle">Comprehensive insights into equipment performance and maintenance efficiency</p>
@@ -14,11 +14,12 @@
                 mat-raised-button 
                 class="refresh-btn" 
                 (click)="refreshData()" 
+                aria-label="Refresh analytics data"
                 [disabled]="isLoading()">
           <mat-icon>refresh</mat-icon>
           Refresh Data
         </button>
-        <div class="last-updated">
+        <div class="last-updated" aria-live="polite">
           <mat-icon>schedule</mat-icon>
           <span>Last updated: {{ lastUpdated() | date:'short' }}</span>
         </div>
@@ -66,21 +67,43 @@
   
   <!-- Main Analytics Grid -->
   @else {
+     <!-- Quick buttons to open other sections -->
+     <div class="section-switch">
+       <span class="label">Open:</span>
+       <button type="button" mat-stroked-button (click)="setView('compliance')" [class.active]="viewFilter() === 'compliance'" [attr.aria-pressed]="viewFilter() === 'compliance'">
+         <mat-icon>assessment</mat-icon>
+         Service Compliance
+       </button>
+       <button type="button" mat-stroked-button (click)="setView('mtbf')" [class.active]="viewFilter() === 'mtbf'" [attr.aria-pressed]="viewFilter() === 'mtbf'">
+         <mat-icon>timeline</mat-icon>
+         MTBF
+       </button>
+       <button type="button" mat-stroked-button (click)="setView('parts')" [class.active]="viewFilter() === 'parts'" [attr.aria-pressed]="viewFilter() === 'parts'">
+         <mat-icon>build</mat-icon>
+         Parts Usage
+       </button>
+       <button type="button" mat-stroked-button (click)="setView('usage')" [class.active]="viewFilter() === 'usage'" [attr.aria-pressed]="viewFilter() === 'usage'">
+         <mat-icon>schedule</mat-icon>
+         Usage Metrics
+       </button>
+     </div>
+
     <div class="analytics-grid">
       <!-- Service Compliance Card with Enhanced Design -->
-      <mat-card class="analytics-card compliance-card">
+      @if (viewFilter() === 'all' || viewFilter() === 'compliance') {
+      <mat-card class="analytics-card compliance-card" role="region" [attr.aria-labelledby]="'service-compliance-title'">
         <div class="card-header">
           <div class="card-title-section">
             <div class="title-icon-wrapper compliance-icon">
-              <mat-icon>assessment</mat-icon>
+              <mat-icon aria-hidden="true">assessment</mat-icon>
             </div>
             <div class="title-content">
-              <h3>Service Compliance</h3>
+              <h3 id="service-compliance-title">Service Compliance</h3>
               <p>On-time vs overdue maintenance performance</p>
             </div>
           </div>
           <div class="card-actions">
-            <button type="button" mat-icon-button matTooltip="View Details">
+            <button type="button" mat-icon-button matTooltip="View Details" aria-label="View details">
               <mat-icon>more_vert</mat-icon>
             </button>
           </div>
@@ -98,8 +121,8 @@
               
               <div class="compliance-breakdown">
                 <div class="breakdown-item on-time">
-                  <div class="breakdown-icon">
-                    <mat-icon>check_circle</mat-icon>
+                   <div class="breakdown-icon">
+                    <mat-icon aria-hidden="true">check_circle</mat-icon>
                   </div>
                   <div class="breakdown-content">
                     <span class="count">{{ serviceComplianceData()?.onTime }}</span>
@@ -107,8 +130,8 @@
                   </div>
                 </div>
                 <div class="breakdown-item overdue">
-                  <div class="breakdown-icon">
-                    <mat-icon>warning</mat-icon>
+                   <div class="breakdown-icon">
+                    <mat-icon aria-hidden="true">warning</mat-icon>
                   </div>
                   <div class="breakdown-content">
                     <span class="count">{{ serviceComplianceData()?.overdue }}</span>
@@ -129,21 +152,23 @@
           }
         </div>
       </mat-card>
+      }
 
       <!-- MTBF Metrics Card with Enhanced Design -->
-      <mat-card class="analytics-card mtbf-card">
+      @if (viewFilter() === 'all' || viewFilter() === 'mtbf') {
+      <mat-card class="analytics-card mtbf-card" role="region" [attr.aria-labelledby]="'mtbf-title'">
         <div class="card-header">
           <div class="card-title-section">
             <div class="title-icon-wrapper mtbf-icon">
-              <mat-icon>timeline</mat-icon>
+              <mat-icon aria-hidden="true">timeline</mat-icon>
             </div>
             <div class="title-content">
-              <h3>MTBF Analysis</h3>
+              <h3 id="mtbf-title">MTBF Analysis</h3>
               <p>Mean Time Between Failures by machine type</p>
             </div>
           </div>
           <div class="card-actions">
-            <button type="button" mat-icon-button matTooltip="Export Data">
+            <button type="button" mat-icon-button matTooltip="Export Data" aria-label="Export data">
               <mat-icon>download</mat-icon>
             </button>
           </div>
@@ -183,21 +208,23 @@
           }
         </div>
       </mat-card>
+      }
 
       <!-- Parts Usage Card with Enhanced Design -->
-      <mat-card class="analytics-card parts-usage-card">
+      @if (viewFilter() === 'all' || viewFilter() === 'parts') {
+      <mat-card class="analytics-card parts-usage-card" role="region" [attr.aria-labelledby]="'parts-usage-title'">
         <div class="card-header">
           <div class="card-title-section">
             <div class="title-icon-wrapper parts-icon">
-              <mat-icon>build</mat-icon>
+              <mat-icon aria-hidden="true">build</mat-icon>
             </div>
             <div class="title-content">
-              <h3>Parts Usage</h3>
+              <h3 id="parts-usage-title">Parts Usage</h3>
               <p>Most frequently replaced components</p>
             </div>
           </div>
           <div class="card-actions">
-            <button type="button" mat-icon-button matTooltip="Inventory Status">
+            <button type="button" mat-icon-button matTooltip="Inventory Status" aria-label="Inventory status">
               <mat-icon>inventory</mat-icon>
             </button>
           </div>
@@ -233,21 +260,23 @@
           }
         </div>
       </mat-card>
+      }
 
       <!-- Usage Metrics Card with Enhanced Design -->
-      <mat-card class="analytics-card usage-metrics-card">
+      @if (viewFilter() === 'all' || viewFilter() === 'usage') {
+      <mat-card class="analytics-card usage-metrics-card" role="region" [attr.aria-labelledby]="'usage-metrics-title'">
         <div class="card-header">
           <div class="card-title-section">
             <div class="title-icon-wrapper usage-icon">
-              <mat-icon>schedule</mat-icon>
+              <mat-icon aria-hidden="true">schedule</mat-icon>
             </div>
             <div class="title-content">
-              <h3>Usage Metrics</h3>
+              <h3 id="usage-metrics-title">Usage Metrics</h3>
               <p>Equipment utilization and service hours</p>
             </div>
           </div>
           <div class="card-actions">
-            <button type="button" mat-icon-button matTooltip="Detailed Report">
+            <button type="button" mat-icon-button matTooltip="Detailed Report" aria-label="Open detailed report">
               <mat-icon>description</mat-icon>
             </button>
           </div>
@@ -259,7 +288,7 @@
               <div class="usage-totals">
                 <div class="usage-total engine-hours">
                   <div class="total-icon">
-                    <mat-icon>speed</mat-icon>
+                    <mat-icon aria-hidden="true">speed</mat-icon>
                   </div>
                   <div class="total-content">
                     <span class="total-value">{{ totalEngineHours() | number }}</span>
@@ -268,7 +297,7 @@
                 </div>
                 <div class="usage-total service-hours">
                   <div class="total-icon">
-                    <mat-icon>build</mat-icon>
+                    <mat-icon aria-hidden="true">build</mat-icon>
                   </div>
                   <div class="total-content">
                     <span class="total-value">{{ totalServiceHours() | number }}</span>
@@ -277,7 +306,7 @@
                 </div>
                 <div class="usage-total idle-hours">
                   <div class="total-icon">
-                    <mat-icon>pause</mat-icon>
+                    <mat-icon aria-hidden="true">pause</mat-icon>
                   </div>
                   <div class="total-content">
                     <span class="total-value">{{ totalIdleHours() | number }}</span>
@@ -298,6 +327,7 @@
           }
         </div>
       </mat-card>
+      }
     </div>
   }
 </div>
