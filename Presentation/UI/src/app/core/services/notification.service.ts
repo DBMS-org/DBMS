@@ -28,4 +28,12 @@ export class NotificationService {
       ...config
     });
   }
+
+  showWarning(message: string, action: string = 'OK', config?: MatSnackBarConfig): void {
+    this.snackBar.open(message, action, {
+      ...this.defaultConfig,
+      panelClass: ['snackbar-warning'],
+      ...config
+    });
+  }
 } 

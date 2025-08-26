@@ -43,6 +43,19 @@ export class MachineService {
   }
 
   updateMachine(id: number, request: UpdateMachineRequest): Observable<Machine> {
+    // Ensure regionId is set if missing
+    if (!request.regionId && request.currentLocation) {
+      // Try to find a matching region
+      const regions = environment.regions as Record<string, number>;
+      const regionMatch = Object.entries(regions).find(
+        ([key]) => request.currentLocation?.toLowerCase().includes(key.toLowerCase())
+      );
+      if (regionMatch) {
+        request.regionId = regionMatch[1];
+      }
+    }
+    
+    console.log('Sending update machine request:', request);
     return this.http.put<Machine>(`${this.apiUrl}/${id}`, request).pipe(
       map(machine => this.mapMachine(machine))
     );

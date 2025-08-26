@@ -209,6 +209,8 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
               id: conn.id,
               point1DrillPointId: conn.point1DrillPointId,
               point2DrillPointId: conn.point2DrillPointId,
+              fromHoleId: conn.point1DrillPointId,
+              toHoleId: conn.point2DrillPointId,
               connectorType: this.mapConnectorTypeFromApi(conn.connectorType),
               delay: conn.delay,
               sequence: conn.sequence,
@@ -216,6 +218,21 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
               siteId: conn.siteId,
               createdAt: conn.createdAt,
               updatedAt: conn.updatedAt,
+              // Default values for required properties
+              startPoint: {
+                id: `SP${conn.id}`,
+                label: "1",
+                x: 0,
+                y: 0,
+                isHidden: true
+              },
+              endPoint: {
+                id: `EP${conn.id}`,
+                label: "2",
+                x: 0,
+                y: 0,
+                isHidden: true
+              },
               // Navigation properties for UI
               point1DrillPoint: this.patternData?.drillLocations.find((p: DrillLocation) => p.id === conn.point1DrillPointId),
               point2DrillPoint: this.patternData?.drillLocations.find((p: DrillLocation) => p.id === conn.point2DrillPointId)
@@ -897,11 +914,29 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       point1DrillPointId: this.selectedFromHole.id,
       point2DrillPointId: this.selectedToHole.id,
+      // Add fromHoleId and toHoleId for compatibility
+      fromHoleId: this.selectedFromHole.id,
+      toHoleId: this.selectedToHole.id,
       connectorType: this.selectedConnectorType,
       delay: this.currentDelay || this.getDefaultDelay(),
       sequence: this.currentSequence,
       projectId: this.currentProjectId,
       siteId: this.currentSiteId,
+      // Add required startPoint and endPoint properties
+      startPoint: {
+        id: `SP-${this.selectedFromHole.id}`,
+        label: "1",
+        x: this.selectedFromHole.x,
+        y: this.selectedFromHole.y,
+        isHidden: true
+      },
+      endPoint: {
+        id: `EP-${this.selectedToHole.id}`,
+        label: "2",
+        x: this.selectedToHole.x,
+        y: this.selectedToHole.y,
+        isHidden: true
+      },
       // Navigation properties for UI
       point1DrillPoint: this.selectedFromHole,
       point2DrillPoint: this.selectedToHole

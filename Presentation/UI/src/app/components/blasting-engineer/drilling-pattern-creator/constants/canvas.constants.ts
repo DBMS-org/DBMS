@@ -1,22 +1,8 @@
 export const CANVAS_CONSTANTS = {
-  GRID_SIZE: 50, // Base grid size in pixels
+  GRID_SIZE: 10, // Base grid size in pixels (reduced from 50 to fix scaling issues)
   RULER_WIDTH: 50,
   RULER_HEIGHT: 50,
   POINT_RADIUS: 5,
-  // Visual indicators for custom depths
-  CUSTOM_DEPTH_COLORS: {
-    FILL: '#ff9800',        // Orange for custom depth holes
-    STROKE: '#f57c00',      // Darker orange stroke
-    INDICATOR: '#ff5722'    // Red-orange for depth indicator symbol
-  },
-  GLOBAL_DEPTH_COLORS: {
-    FILL: '#2196f3',        // Blue for global depth holes
-    STROKE: '#ffffff'       // White stroke
-  },
-  SELECTED_COLORS: {
-    FILL: '#ff4444',        // Red for selected holes
-    STROKE: '#ffff00'       // Yellow stroke
-  },
   MAX_GRID_LINES: 1000,
   MAX_DRILL_POINTS: 500,
   MAX_CACHE_SIZE: 10,

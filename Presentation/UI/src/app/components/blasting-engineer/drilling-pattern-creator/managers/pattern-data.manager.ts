@@ -9,9 +9,9 @@ import { DrillPointService } from '../services/drill-point.service';
 import { SiteBlastingService } from '../../../../core/services/site-blasting.service';
 import { BlastSequenceDataService } from '../../shared/services/blast-sequence-data.service';
 import { NavigationController } from '../../shared/services/navigation-controller.service';
-import { UnifiedDrillDataService } from '../../../../core/services/unified-drill-data.service';
-import { DrillLocation, DrillModelConverter } from '../../../../core/models/drilling.model';
-import { DrillHole } from '../../../../core/services/drill-hole.service';
+import { DrillDataService } from '../../csv-upload/drill-data.service';
+// Using DrillHoleData from local model instead of core model
+// import { DrillHole } from '../../../../core/models/drill-hole.model';
 
 export interface SaveResult {
   success: boolean;
@@ -33,7 +33,7 @@ export class PatternDataManager {
     private siteBlastingService: SiteBlastingService,
     private blastSequenceDataService: BlastSequenceDataService,
     private navigationController: NavigationController,
-    private unifiedDrillDataService: UnifiedDrillDataService
+    private drillDataService: DrillDataService
   ) {}
 
   initializeContext(projectId: number, siteId: number): void {
@@ -163,15 +163,15 @@ export class PatternDataManager {
           
           try {
             if (latestPattern.drillPointsJson) {
-              // Handle both string and array formats
-              const parsedPoints = typeof latestPattern.drillPointsJson === 'string' 
-                ? JSON.parse(latestPattern.drillPointsJson)
-                : latestPattern.drillPointsJson;
-              this.drillPoints = parsedPoints;
+              const parsedPoints = JSON.parse(latestPattern.drillPointsJson);
               
-              Logger.info('Pattern loaded from backend', {
+              // Align loaded points to ensure coordinates match spacing/burden values
+              this.drillPoints = this.drillPointService.alignExistingPointsToGrid(parsedPoints);
+              
+              Logger.info('Pattern loaded from backend and aligned', {
                 patternName: latestPattern.name,
-                pointsCount: this.drillPoints.length
+                pointsCount: this.drillPoints.length,
+                alignmentApplied: true
               });
               return true;
             }
@@ -189,8 +189,8 @@ export class PatternDataManager {
   }
 
   processUploadedCSVData(): Observable<boolean> {
-    const uploadedDrillLocations = this.unifiedDrillDataService.getDrillLocations();
-    if (!uploadedDrillLocations || uploadedDrillLocations.length === 0) {
+    const uploadedDrillData = this.drillDataService.getDrillData();
+    if (!uploadedDrillData || uploadedDrillData.length === 0) {
       return of(false);
     }
 
@@ -209,8 +209,8 @@ export class PatternDataManager {
         // Clear existing pattern
         this.clearAllPoints();
 
-        // Convert uploaded drill locations to drill points
-        const convertedPoints = this.convertDrillLocationsToPoints(uploadedDrillLocations);
+        // Convert uploaded data to drill points
+        const convertedPoints = this.convertCSVDataToPoints(uploadedDrillData);
         
         // Auto-detect spacing and burden
         const { spacing: autoSpacing, burden: autoBurden } = 
@@ -231,7 +231,7 @@ export class PatternDataManager {
         }));
 
         Logger.info('CSV data processed', {
-          originalCount: uploadedDrillLocations.length,
+          originalCount: uploadedDrillData.length,
           convertedCount: this.drillPoints.length,
           autoSpacing,
           autoBurden
@@ -240,22 +240,6 @@ export class PatternDataManager {
         return true;
       })
     );
-  }
-
-  private convertDrillLocationsToPoints(locations: DrillLocation[]): DrillPoint[] {
-    const defaultDepthSetting = this.settings.depth ?? CANVAS_CONSTANTS.DEFAULT_SETTINGS.depth;
-
-    return locations.map((location, index) => {
-      const depthValue = location.depth ?? defaultDepthSetting;
-      return {
-        x: Number((location.x?.toFixed(2) ?? 0)),
-        y: Number((location.y?.toFixed(2) ?? 0)),
-        id: location.id ? location.id.toString() : `DH${index + 1}`,
-        depth: depthValue,
-        spacing: this.settings.spacing,
-        burden: this.settings.burden
-      };
-    });
   }
 
   private convertCSVDataToPoints(csvData: DrillHoleData[]): DrillPoint[] {
@@ -299,22 +283,33 @@ export class PatternDataManager {
     const patternData = this.getPatternData();
     const patternName = `Pattern_${new Date().toISOString().slice(0, 16).replace(/:/g, '-')}`;
 
-    return this.siteBlastingService.createDrillPattern({
+    return this.siteBlastingService.saveDrillPattern({
       projectId: this.currentProjectId,
       siteId: this.currentSiteId,
       name: patternName,
-      description: `Pattern with ${this.drillPoints.length} drill points`,
-      spacing: this.settings.spacing,
-      burden: this.settings.burden,
-      depth: this.settings.depth,
-      drillPointsJson: JSON.stringify(this.drillPoints)
+      drillPointsJson: JSON.stringify(this.drillPoints),
+      createdAt: new Date().toISOString()
     }).pipe(
       map(savedPattern => {
-        // Save to local storage and workflow state
-        this.saveToLocalStorage(patternData);
-        this.saveWorkflowState(patternData);
+            // Save to local storage and workflow state
+    this.saveToLocalStorage(patternData);
+    
+    // Update pattern data in blast sequence data service
+    this.blastSequenceDataService.setPatternData(patternData, true);
+    
+    // Save workflow state if context exists
+    if (this.currentProjectId && this.currentSiteId) {
+      this.navigationController.updateWorkflowStep('pattern-creator', {
+        drillPoints: this.drillPoints,
+        settings: this.settings,
+        completedAt: new Date().toISOString()
+      }).subscribe({
+        next: () => Logger.info('Workflow state saved successfully'),
+        error: (error) => Logger.error('Error saving workflow state', error)
+      });
+    }
 
-        Logger.info('Pattern saved successfully', savedPattern);
+    Logger.info('Pattern saved successfully', savedPattern);
         return {
           success: true,
           message: 'Pattern saved successfully',
@@ -344,11 +339,7 @@ export class PatternDataManager {
     }
   }
 
-  private saveWorkflowState(patternData: PatternData): void {
-    this.blastSequenceDataService.setPatternData(patternData, true);
-    // Workflow step update functionality needs to be implemented
-    Logger.info('Workflow state saved successfully');
-  }
+  // Method has been inlined in savePattern() method
 
   getPatternData(): PatternData {
     return this.drillPointService.getPatternData(this.drillPoints, this.settings);

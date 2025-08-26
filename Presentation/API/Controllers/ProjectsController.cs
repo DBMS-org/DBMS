@@ -4,6 +4,7 @@ using Application.DTOs.Shared;
 using Domain.Entities.ProjectManagement;
 using Application.Interfaces.ProjectManagement;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace API.Controllers
@@ -14,13 +15,16 @@ namespace API.Controllers
     public class ProjectsController : BaseApiController
     {
         private readonly IProjectService _projectService;
+        private readonly ILogger<ProjectsController> _logger;
 
-        public ProjectsController(IProjectService projectService)
+        public ProjectsController(IProjectService projectService, ILogger<ProjectsController> logger)
         {
             _projectService = projectService;
+            _logger = logger;
         }
 
         [HttpGet]
+        [Authorize(Policy = "ReadProjectData")]
         public async Task<IActionResult> GetProjects()
         {
             var result = await _projectService.GetAllProjectsAsync();
@@ -28,6 +32,7 @@ namespace API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "ReadProjectData")]
         public async Task<IActionResult> GetProject(int id)
         {
             var result = await _projectService.GetProjectByIdAsync(id);
@@ -118,12 +123,21 @@ namespace API.Controllers
         }
 
         [HttpGet("by-operator/{operatorId}")]
+        [Authorize(Policy = "ReadProjectData")]
         public async Task<IActionResult> GetProjectByOperator(int operatorId)
         {
+            // Verify the user has permission to access this operator's data
+            var userId = int.Parse(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            if (userId != operatorId && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
             var result = await _projectService.GetProjectByOperatorAsync(operatorId);
             if (result.IsFailure)
             {
-                return NotFound();
+                _logger.LogWarning("No project found for operator {OperatorId}", operatorId);
+                return NotFound($"No project found for operator {operatorId}");
             }
             return Ok(result.Value);
         }

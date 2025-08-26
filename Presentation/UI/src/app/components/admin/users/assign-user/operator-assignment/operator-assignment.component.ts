@@ -146,24 +146,29 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
   private filterAvailableOptions(): void {
     if (!this.selectedOperator) return;
 
-    // Filter projects by operator's region (excluding current project)
+    // Filter projects by operator's region (including current project)
     this.availableProjects = this.allProjects.filter(p => 
       p.region === this.selectedOperator!.region && 
-      p.id !== this.currentProject?.id &&
       (p.status === 'Active' || p.status === 'Planning' || p.status === 'In Progress')
     );
+    
+    // If there's a current project, make sure it's included in the available projects
+    if (this.currentProject && !this.availableProjects.some(p => p.id === this.currentProject!.id)) {
+      const currentProjectFull = this.allProjects.find(p => p.id === this.currentProject!.id);
+      if (currentProjectFull) {
+        this.availableProjects.unshift(currentProjectFull); // Add to beginning of the list
+      }
+    }
 
-    // Filter machines - since machines now require projectId, we need to filter based on 
-    // projects in the operator's region and machine availability
-    const regionProjectIds = this.allProjects
-      .filter(p => p.region === this.selectedOperator!.region)
-      .map(p => p.id);
-
+    // Filter machines that are available in the operator's region
     this.availableMachines = this.allMachines.filter(m => 
-      m.projectId && regionProjectIds.includes(m.projectId) &&
-      (m.status === MachineStatus.AVAILABLE || m.status === MachineStatus.IN_MAINTENANCE) &&
-      !m.operatorId // Not currently assigned to an operator
+      (m.status === MachineStatus.AVAILABLE) && // Only show available machines
+      !m.operatorId && // Not currently assigned to an operator
+      (!m.currentLocation || // No location specified OR
+       m.currentLocation.toLowerCase().includes(this.selectedOperator!.region.toLowerCase())) // Location matches operator's region
     );
+    
+    console.log('Available machines:', this.availableMachines);
   }
 
 
@@ -173,13 +178,20 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
     this.selectedMachineId = null;
     this.error = null;
     
-    // Filter machines for the selected project
+    // Filter machines for the selected project's region
     if (this.selectedProjectId) {
-      this.availableMachines = this.allMachines.filter(m => 
-        m.projectId && m.projectId === this.selectedProjectId &&
-        (m.status === MachineStatus.AVAILABLE || m.status === MachineStatus.IN_MAINTENANCE) &&
-        !m.operatorId // Not currently assigned to an operator
-      );
+      const selectedProject = this.availableProjects.find(p => p.id === this.selectedProjectId);
+      if (selectedProject) {
+        // Show all available machines in the project's region
+        this.availableMachines = this.allMachines.filter(m => 
+          (m.status === MachineStatus.AVAILABLE) && // Only show available machines
+          !m.operatorId && // Not currently assigned to an operator
+          (!m.currentLocation || // No location specified OR
+           m.currentLocation.toLowerCase().includes(selectedProject.region.toLowerCase())) // Location matches project's region
+        );
+        
+        console.log('Available machines for project:', this.availableMachines);
+      }
     } else {
       // Show all available machines in the region if no specific project selected
       this.filterAvailableOptions();
@@ -225,35 +237,47 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
     console.log('Selected project ID:', this.selectedProjectId);
     console.log('Selected machine ID:', this.selectedMachineId);
     
+    // Clear any previous errors
+    this.error = null;
+    
     const operations: Observable<any>[] = [];
 
-    // 1. Update project assignment
-    const projectUpdate = this.projectService.getProject(this.selectedProjectId!).pipe(
-      switchMap(project => {
-        if (!project) {
-          console.error('Project not found for ID:', this.selectedProjectId);
-          throw new Error('Project not found');
-        }
-        
-        console.log('Updating project:', project);
-        const updateRequest: UpdateProjectRequest = {
-          id: project.id,
-          name: project.name,
-          region: project.region,
-          status: project.status,
-          description: project.description || '',
-          startDate: project.startDate || undefined,
-          endDate: project.endDate || undefined,
-          assignedUserId: this.selectedOperator!.id
-        };
-        return this.projectService.updateProject(this.selectedProjectId!, updateRequest);
-      }),
-      catchError((error: any) => {
-        console.error('Error updating project:', error);
-        throw error;
-      })
-    );
-    operations.push(projectUpdate);
+    // Check if we're reassigning to the same project
+    const isSameProject = this.currentProject && this.currentProject.id === this.selectedProjectId;
+    console.log('Is same project:', isSameProject);
+
+    // 1. Update project assignment (skip if it's the same project to avoid bad request)
+    if (!isSameProject) {
+      const projectUpdate = this.projectService.getProject(this.selectedProjectId!).pipe(
+        switchMap(project => {
+          if (!project) {
+            console.error('Project not found for ID:', this.selectedProjectId);
+            throw new Error('Project not found');
+          }
+          
+          console.log('Updating project:', project);
+          const updateRequest: UpdateProjectRequest = {
+            id: project.id,
+            name: project.name,
+            region: project.region,
+            status: project.status,
+            description: project.description || '',
+            startDate: project.startDate || undefined,
+            endDate: project.endDate || undefined,
+            assignedUserId: this.selectedOperator!.id
+          };
+          return this.projectService.updateProject(this.selectedProjectId!, updateRequest);
+        }),
+        catchError((error: any) => {
+          console.error('Error updating project:', error);
+          // Continue with other operations even if project update fails
+          return of(null);
+        })
+      );
+      operations.push(projectUpdate);
+    } else {
+      console.log('Skipping project update as operator is already assigned to this project');
+    }
 
     // 2. If machine is selected, assign it to the operator
     if (this.selectedMachineId) {
@@ -265,52 +289,89 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
       }
       
       console.log('Selected machine:', selectedMachine);
-      const machineUpdate: UpdateMachineRequest = {
-        name: selectedMachine.name,
-        type: selectedMachine.type,
-        manufacturer: selectedMachine.manufacturer,
-        model: selectedMachine.model,
-        serialNumber: selectedMachine.serialNumber,
-        rigNo: selectedMachine.rigNo,
-        plateNo: selectedMachine.plateNo,
-        manufacturingYear: selectedMachine.manufacturingYear,
-        chassisDetails: selectedMachine.chassisDetails,
-        currentLocation: selectedMachine.currentLocation,
-        projectId: this.selectedProjectId!,
-        operatorId: this.selectedOperator!.id,
-        status: MachineStatus.ASSIGNED,
-        lastMaintenanceDate: selectedMachine.lastMaintenanceDate,
-        nextMaintenanceDate: selectedMachine.nextMaintenanceDate
-      };
-
-      const machineUpdateOp = this.machineService.updateMachine(selectedMachine.id, machineUpdate);
+      
+      // First get the latest machine data from the server to avoid validation errors
+      const machineUpdateOp = this.machineService.getMachineById(selectedMachine.id).pipe(
+        switchMap(latestMachine => {
+          console.log('Latest machine data:', latestMachine);
+          
+          const machineUpdate: UpdateMachineRequest = {
+            name: latestMachine.name,
+            type: latestMachine.type,
+            manufacturer: latestMachine.manufacturer,
+            model: latestMachine.model,
+            serialNumber: latestMachine.serialNumber,
+            rigNo: latestMachine.rigNo,
+            plateNo: latestMachine.plateNo,
+            manufacturingYear: latestMachine.manufacturingYear,
+            chassisDetails: latestMachine.chassisDetails,
+            currentLocation: latestMachine.currentLocation,
+            location: latestMachine.currentLocation || this.selectedOperator?.region || '',
+            description: latestMachine.description || '',
+            projectId: this.selectedProjectId!,
+            operatorId: this.selectedOperator!.id,
+            status: 'Assigned', // Use string value that matches backend enum
+            regionId: latestMachine.regionId,
+            lastMaintenanceDate: latestMachine.lastMaintenanceDate,
+            nextMaintenanceDate: latestMachine.nextMaintenanceDate
+          };
+          
+          return this.machineService.updateMachine(latestMachine.id, machineUpdate);
+        }),
+        catchError(error => {
+          console.error('Error updating machine:', error);
+          const errorMsg = error?.error?.error || error?.message || 'Unknown error occurred';
+          this.error = `Failed to assign machine: ${errorMsg}`;
+          
+          // Re-throw the error to stop the chain
+          throw new Error(errorMsg);
+        })
+      );
+      
       operations.push(machineUpdateOp);
     }
 
     // 3. If operator had a previous machine, unassign it
-    if (this.currentProject?.assignedMachine?.operatorId === this.selectedOperator!.id) {
+    if (this.currentProject?.assignedMachine?.operatorId === this.selectedOperator!.id && 
+        this.currentProject?.assignedMachine?.id !== this.selectedMachineId) { // Don't unassign if it's the same machine
       console.log('Unassigning current machine from operator...');
       const currentMachine = this.currentProject.assignedMachine;
       console.log('Current machine to unassign:', currentMachine);
-      const unassignUpdate: UpdateMachineRequest = {
-        name: currentMachine.name,
-        type: currentMachine.type,
-        manufacturer: currentMachine.manufacturer,
-        model: currentMachine.model,
-        serialNumber: currentMachine.serialNumber,
-        rigNo: currentMachine.rigNo,
-        plateNo: currentMachine.plateNo,
-        manufacturingYear: currentMachine.manufacturingYear,
-        chassisDetails: currentMachine.chassisDetails,
-        currentLocation: currentMachine.currentLocation,
-        projectId: currentMachine.projectId || undefined,
-        operatorId: undefined, // Unassign operator
-        status: MachineStatus.AVAILABLE,
-        lastMaintenanceDate: currentMachine.lastMaintenanceDate,
-        nextMaintenanceDate: currentMachine.nextMaintenanceDate
-      };
-
-      const unassignOp = this.machineService.updateMachine(currentMachine.id, unassignUpdate);
+      
+      // First get the latest machine data from the server to avoid validation errors
+      const unassignOp = this.machineService.getMachineById(currentMachine.id).pipe(
+        switchMap(latestMachine => {
+          console.log('Latest machine data for unassignment:', latestMachine);
+          
+          const unassignUpdate: UpdateMachineRequest = {
+            name: latestMachine.name,
+            type: latestMachine.type,
+            manufacturer: latestMachine.manufacturer,
+            model: latestMachine.model,
+            serialNumber: latestMachine.serialNumber,
+            rigNo: latestMachine.rigNo,
+            plateNo: latestMachine.plateNo,
+            manufacturingYear: latestMachine.manufacturingYear,
+            chassisDetails: latestMachine.chassisDetails,
+            currentLocation: latestMachine.currentLocation,
+            location: latestMachine.currentLocation || '',
+            description: latestMachine.description || '',
+            projectId: latestMachine.projectId,
+            operatorId: undefined, // Unassign operator
+            status: 'Available', // Use string value that matches backend enum
+            regionId: latestMachine.regionId,
+            lastMaintenanceDate: latestMachine.lastMaintenanceDate,
+            nextMaintenanceDate: latestMachine.nextMaintenanceDate
+          };
+          
+          return this.machineService.updateMachine(latestMachine.id, unassignUpdate);
+        }),
+        catchError(error => {
+          console.error('Error unassigning machine:', error);
+          return of(null);
+        })
+      );
+      
       operations.push(unassignOp);
     }
 

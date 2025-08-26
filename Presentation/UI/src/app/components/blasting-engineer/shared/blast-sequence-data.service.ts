@@ -169,13 +169,15 @@ export class BlastSequenceDataService {
           id: `start_${connection.id}`,
           label: "1",
           x: fromHole.x - Math.cos(angle) * offsetDistance,
-          y: fromHole.y - Math.sin(angle) * offsetDistance
+          y: fromHole.y - Math.sin(angle) * offsetDistance,
+          isHidden: true
         },
         endPoint: {
           id: `end_${connection.id}`,
           label: "2",
           x: toHole.x + Math.cos(angle) * offsetDistance,
-          y: toHole.y + Math.sin(angle) * offsetDistance
+          y: toHole.y + Math.sin(angle) * offsetDistance,
+          isHidden: true
         }
       };
     });

@@ -21,26 +21,34 @@ export interface PatternData {
 // New interfaces for blast sequence design
 export interface BlastConnection {
   id: string;
+  // Support both naming conventions for compatibility
   point1DrillPointId: string;
   point2DrillPointId: string;
+  fromHoleId: string; // Legacy property - same as point1DrillPointId
+  toHoleId: string;   // Legacy property - same as point2DrillPointId
   connectorType: ConnectorType;
   delay: number; // milliseconds
   sequence: number;
-  projectId: number;
-  siteId: number;
-  // UI helper properties for visualization
-  startPoint?: {
+  // Hidden starting and ending points for connectors
+  startPoint: {
     id: string;
     label: string; // "1" for starting point
     x: number;
     y: number;
+    isHidden: boolean;
   };
-  endPoint?: {
+  endPoint: {
     id: string;
     label: string; // "2" for ending point
     x: number;
     y: number;
+    isHidden: boolean;
   };
+  // Optional properties for API compatibility
+  projectId?: number;
+  siteId?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
   // Navigation properties for UI
   point1DrillPoint?: DrillPoint;
   point2DrillPoint?: DrillPoint;
@@ -48,12 +56,10 @@ export interface BlastConnection {
 
 export interface DetonatorInfo {
   id: string;
-  drillPointId: string;
+  holeId: string;
   type: DetonatorType;
   delay: number; // milliseconds
   sequence: number;
-  projectId: number;
-  siteId: number;
 }
 
 export interface BlastSequenceData {
