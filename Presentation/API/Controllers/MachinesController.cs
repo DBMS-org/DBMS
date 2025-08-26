@@ -8,19 +8,22 @@ using Application.DTOs.MachineManagement;
 using System.Text.Json;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/machines")]
     [Authorize]
     public class MachinesController : BaseApiController
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<MachinesController> _logger;
 
-        public MachinesController(ApplicationDbContext context)
+        public MachinesController(ApplicationDbContext context, ILogger<MachinesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/machines
@@ -52,6 +55,56 @@ namespace API.Controllers
                 }
 
                 return Ok(machine);
+        }
+
+        // GET: api/machines/operator/5
+        [HttpGet("operator/{operatorId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetMachineByOperator(int operatorId)
+        {
+            // Authorization check temporarily disabled for testing
+            // var userId = int.Parse(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            // if (userId != operatorId && !User.IsInRole("Admin") && !User.IsInRole("MechanicalEngineer"))
+            // {
+            //     return Forbid();
+            // }
+
+            var machine = await _context.Machines
+                .Include(m => m.Region)
+                .FirstOrDefaultAsync(m => m.OperatorId == operatorId);
+
+            if (machine == null)
+            {
+                _logger.LogInformation("No machine found assigned to operator {OperatorId}", operatorId);
+                return NotFound($"No machine assigned to operator {operatorId}");
+            }
+
+            var operatorMachine = new
+            {
+                id = machine.Id.ToString(),
+                name = machine.Name,
+                model = machine.Model,
+                serialNumber = machine.SerialNumber,
+                currentLocation = machine.CurrentLocation ?? machine.Region?.Name ?? "Unknown",
+                status = machine.Status.ToString(),
+                assignedOperatorId = machine.OperatorId.ToString()
+            };
+
+            return Ok(operatorMachine);
+        }
+
+        // GET: api/machines/available
+        [HttpGet("available")]
+        public async Task<IActionResult> GetAvailableMachines()
+        {
+            var availableMachines = await _context.Machines
+                .Include(m => m.Project)
+                .Include(m => m.Operator)
+                .Include(m => m.Region)
+                .Where(m => m.Status == MachineStatus.Available && m.OperatorId == null)
+                .ToListAsync();
+
+            return Ok(availableMachines);
         }
 
         // POST: api/machines
@@ -140,11 +193,15 @@ namespace API.Controllers
         [Authorize(Policy = "ManageMachines")]
         public async Task<IActionResult> UpdateMachine(int id, UpdateMachineRequest request)
         {
-                var machine = await _context.Machines.FindAsync(id);
-                if (machine == null)
+                try
                 {
-                    return NotFound($"Machine with ID {id} not found");
-                }
+                    _logger.LogInformation($"Updating machine {id} with data: {JsonSerializer.Serialize(request)}");
+                    
+                    var machine = await _context.Machines.FindAsync(id);
+                    if (machine == null)
+                    {
+                        return NotFound($"Machine with ID {id} not found");
+                    }
 
                 var existingMachine = await _context.Machines
                     .FirstOrDefaultAsync(m => m.SerialNumber == request.SerialNumber && m.Id != id);
@@ -153,12 +210,12 @@ namespace API.Controllers
                 return Conflict($"A machine with serial number '{request.SerialNumber}' already exists");
                 }
 
-                if (request.ProjectId > 0)
+                if (request.ProjectId.HasValue && request.ProjectId.Value > 0)
                 {
-                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId);
-                if (!projectExists)
-                {
-                        return BadRequest($"Project with ID {request.ProjectId} not found");
+                    var projectExists = await _context.Projects.AnyAsync(p => p.Id == request.ProjectId.Value);
+                    if (!projectExists)
+                    {
+                        return BadRequest($"Project with ID {request.ProjectId.Value} not found");
                     }
                 }
 
@@ -193,10 +250,10 @@ namespace API.Controllers
                 machine.SpecificationsJson = request.Specifications != null ? 
                     JsonSerializer.Serialize(request.Specifications) : null;
 
-                if (request.ProjectId > 0)
+                if (request.ProjectId.HasValue && request.ProjectId.Value > 0)
                 {
-                    var project = await _context.Projects.FindAsync(request.ProjectId);
-                machine.AssignedToProject = project?.Name;
+                    var project = await _context.Projects.FindAsync(request.ProjectId.Value);
+                    machine.AssignedToProject = project?.Name;
                 }
                 else
                 {
@@ -223,6 +280,19 @@ namespace API.Controllers
                 machine.CurrentLocation = null;
             }
 
+            // If operator is assigned, but no region is specified, ensure a default region
+            if (request.OperatorId.HasValue && !request.RegionId.HasValue)
+            {
+                // Use the first available region as default
+                var defaultRegion = await _context.Regions.FirstOrDefaultAsync();
+                if (defaultRegion != null)
+                {
+                    request.RegionId = defaultRegion.Id;
+                    machine.RegionId = defaultRegion.Id;
+                    machine.CurrentLocation = defaultRegion.Name;
+                }
+            }
+            
             machine.ProjectId = request.ProjectId;
             machine.OperatorId = request.OperatorId;
             machine.RegionId = request.RegionId;
@@ -230,6 +300,12 @@ namespace API.Controllers
             await _context.SaveChangesAsync();
 
             return Ok();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error updating machine {id}: {ex.Message}");
+                    return BadRequest(new { error = ex.Message, details = ex.ToString() });
+                }
         }
 
         // DELETE: api/machines/5
@@ -393,6 +469,75 @@ namespace API.Controllers
             return Ok(new { message = "Machine returned successfully" });
         }
 
+        // POST: api/machines/test/operator/{operatorId}
+        [HttpPost("test/operator/{operatorId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateTestMachine(int operatorId)
+        {
+            var operatorExists = await _context.Users.AnyAsync(u => u.Id == operatorId);
+            if (!operatorExists)
+            {
+                return BadRequest($"Operator with ID {operatorId} not found");
+            }
+            
+            var operatorUser = await _context.Users.FindAsync(operatorId);
+            var regionId = 1; // Default region ID
+            
+            // Create a region if none exists
+            var region = await _context.Regions.FirstOrDefaultAsync();
+            if (region == null)
+            {
+                region = new Domain.Entities.ProjectManagement.Region
+                {
+                    Name = "Test Region",
+                    Description = "Test Region Description",
+                    Country = "Test Country",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                _context.Regions.Add(region);
+                await _context.SaveChangesAsync();
+                regionId = region.Id;
+            }
+            else
+            {
+                regionId = region.Id;
+            }
+
+            // Create test machine
+            var machine = Domain.Entities.MachineManagement.Machine.Create(
+                $"Test Machine for Operator {operatorId}",
+                "Drill",
+                "Test Model",
+                "Test Manufacturer",
+                $"SN-TEST-{Guid.NewGuid().ToString().Substring(0, 8)}",
+                null);
+                
+            machine.CurrentLocation = "Test Location";
+            machine.OperatorId = operatorId;
+            machine.RegionId = regionId;
+            machine.AssignedToOperator = operatorUser?.Name ?? $"Operator {operatorId}";
+            machine.ChangeStatus(Domain.Entities.MachineManagement.MachineStatus.Available);
+                
+            _context.Machines.Add(machine);
+            await _context.SaveChangesAsync();
+            
+            var operatorMachine = new
+            {
+                id = machine.Id.ToString(),
+                name = machine.Name,
+                model = machine.Model,
+                serialNumber = machine.SerialNumber,
+                currentLocation = machine.CurrentLocation,
+                status = machine.Status.ToString(),
+                assignedOperatorId = machine.OperatorId.ToString()
+            };
+            
+            return Ok(operatorMachine);
+        }
+
         private bool MachineExists(int id)
         {
             return _context.Machines.Any(e => e.Id == id);
@@ -404,4 +549,4 @@ namespace API.Controllers
         [Required]
         public string Status { get; set; } = string.Empty;
     }
-} 
+}

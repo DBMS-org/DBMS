@@ -87,7 +87,10 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
         if (project) {
           this.loadProjectDetails(project.id);
         } else {
+          console.log('No project assigned to this operator');
           this.isLoading = false;
+          // Set a more informative message for the user
+          this.error = 'No project is currently assigned to you. Please contact your administrator.';
         }
       },
       error: (err) => {

@@ -385,13 +385,31 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
               id: conn.id,
               point1DrillPointId: conn.point1DrillPointId,
               point2DrillPointId: conn.point2DrillPointId,
+              // Add fromHoleId and toHoleId for compatibility
+              fromHoleId: conn.point1DrillPointId,
+              toHoleId: conn.point2DrillPointId,
               connectorType: this.mapConnectorTypeFromApi(conn.connectorType),
               delay: conn.delay,
               sequence: conn.sequence,
               projectId: conn.projectId,
               siteId: conn.siteId,
               createdAt: conn.createdAt,
-              updatedAt: conn.updatedAt
+              updatedAt: conn.updatedAt,
+              // Add required startPoint and endPoint properties
+              startPoint: {
+                id: `SP-${conn.id}`,
+                label: "1",
+                x: 0,
+                y: 0,
+                isHidden: true
+              },
+              endPoint: {
+                id: `EP-${conn.id}`,
+                label: "2",
+                x: 0,
+                y: 0,
+                isHidden: true
+              }
             }));
             
             console.log('✅ Simulator loaded', connections.length, 'blast connections');

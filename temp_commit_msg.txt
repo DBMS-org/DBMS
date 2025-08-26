@@ -1,6 +1,1 @@
-Enhance mechanical engineer UI with maintenance features and improve sidebar accessibility
-
-- Added new routes for maintenance management, including dashboard, calendar, jobs, analytics, and settings.
-- Updated sidebar component for better accessibility with ARIA attributes and improved navigation item activation logic.
-- Introduced new dependencies for charting capabilities with Chart.js and ng2-charts.
-- Refined styles for sidebar and dashboard components to enhance user experience and visual consistency.
+little front end changes

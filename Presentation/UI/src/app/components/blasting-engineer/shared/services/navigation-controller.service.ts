@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BlastSequenceDataService, WorkflowStep } from '../blast-sequence-data.service';
+import { SiteBlastingService } from '../../../../core/services/site-blasting.service';
 
 export enum WorkflowStepId {
   PATTERN = 'pattern',
@@ -29,6 +30,21 @@ export interface RouteConfig {
   providedIn: 'root'
 })
 export class NavigationController {
+  // Add missing methods needed by pattern-data.manager.ts
+  updateWorkflowStep(stepId: string, stepData: any): Observable<any> {
+    // Get the site context
+    const context = this.getSiteContext();
+    if (!context) {
+      console.warn('No site context available for updating workflow step');
+      return new Observable(observer => {
+        observer.next(null);
+        observer.complete();
+      });
+    }
+    
+    // Use the injected SiteBlastingService instance
+    return this.siteBlastingService.updateWorkflowStep(context.projectId, context.siteId, stepId, stepData);
+  }
   
   private readonly routes: RouteConfig[] = [
     {
@@ -84,7 +100,8 @@ export class NavigationController {
 
   constructor(
     private router: Router,
-    private dataService: BlastSequenceDataService
+    private dataService: BlastSequenceDataService,
+    private siteBlastingService: SiteBlastingService
   ) {
     // Subscribe to workflow steps to update navigation state
     this.dataService.workflowSteps$.subscribe(steps => {

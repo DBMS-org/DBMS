@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Project, CreateProjectRequest, UpdateProjectRequest, ProjectSite } from '../models/project.model';
@@ -130,7 +130,15 @@ export class ProjectService {
         }
         return null;
       }),
-      catchError(this.handleError)
+      catchError((error: HttpErrorResponse) => {
+        // For 404 errors, we just return null as it means no project is assigned
+        if (error.status === 404) {
+          console.log('No project assigned to this operator');
+          return of(null);
+        }
+        // For other errors, use the general error handler
+        return this.handleError(error);
+      })
     );
   }
 

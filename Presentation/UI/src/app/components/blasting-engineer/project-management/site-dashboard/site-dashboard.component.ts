@@ -5,6 +5,8 @@ import { Project } from '../../../../core/models/project.model';
 import { ProjectService } from '../../../../core/services/project.service';
 import { SiteService, ProjectSite } from '../../../../core/services/site.service';
 import { BlastSequenceDataService } from '../../shared/services/blast-sequence-data.service';
+import { SiteBlastingService } from '../../../../core/services/site-blasting.service';
+import { UnifiedDrillDataService } from '../../../../core/services/unified-drill-data.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { StateService } from '../../../../core/services/state.service';
 import { Observable } from 'rxjs';
@@ -79,6 +81,8 @@ export class SiteDashboardComponent implements OnInit {
     private projectService: ProjectService,
     private siteService: SiteService,
     private blastSequenceDataService: BlastSequenceDataService,
+    private siteBlastingService: SiteBlastingService,
+    private unifiedDrillDataService: UnifiedDrillDataService,
     private authService: AuthService,
     private stateService: StateService,
     private dialog: MatDialog,
@@ -231,21 +235,55 @@ export class SiteDashboardComponent implements OnInit {
     if (projectId && siteId) {
       console.log('🧹 Starting complete cleanup for site:', projectId, siteId);
       
-      // Clear all site data
-      this.blastSequenceDataService.cleanupSiteData(projectId, siteId);
+      // Disable cleanup button to prevent multiple clicks
+      const cleanupButton = document.querySelector('.cleanup-btn') as HTMLButtonElement;
+      if (cleanupButton) {
+        cleanupButton.disabled = true;
+        cleanupButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Cleaning...</span>';
+      }
       
-      // Reset workflow steps to initial state
-      this.workflowSteps.forEach(step => {
-        step.completed = false;
-        step.progress = 0;
-        step.enabled = step.id === 'pattern-creator'; // Only first step enabled
+      // Clear all site data using Promise-based method
+      this.blastSequenceDataService.cleanupSiteData(projectId, siteId).then((success) => {
+        // Reset workflow steps to initial state
+        this.workflowSteps.forEach(step => {
+          step.completed = false;
+          step.progress = 0;
+          step.enabled = step.id === 'pattern-creator'; // Only first step enabled
+        });
+        
+        // Show result to user
+        if (success) {
+          console.log('🎉 ✅ COMPLETE SUCCESS: All data deleted from database and frontend');
+          this.notification.showSuccess('All site data successfully deleted from database');
+        } else {
+          console.error('⚠️ ❌ PARTIAL FAILURE: Some database operations failed');
+          this.notification.showWarning('Some data may not have been deleted from database. Check console for details.');
+        }
+        
+        // Reload progress after cleanup to confirm everything is reset
+        setTimeout(() => {
+          this.loadWorkflowProgress();
+          console.log('✅ Site cleanup completed - all progress reset to 0%');
+        }, 500);
+        
+        // Re-enable cleanup button
+        if (cleanupButton) {
+          cleanupButton.disabled = false;
+          cleanupButton.innerHTML = '<i class="fas fa-broom"></i> <span>Cleanup Data</span>';
+        }
+      }).catch((error) => {
+        console.error('💥 CLEANUP ERROR:', error);
+        this.notification.showError('Failed to cleanup site data: ' + error.message);
+        
+        // Re-enable cleanup button
+        if (cleanupButton) {
+          cleanupButton.disabled = false;
+          cleanupButton.innerHTML = '<i class="fas fa-broom"></i> <span>Cleanup Data</span>';
+        }
       });
-      
-      // Reload progress after cleanup to confirm everything is reset
-      setTimeout(() => {
-        this.loadWorkflowProgress();
-        console.log('✅ Site cleanup completed - all progress reset to 0%');
-      }, 300);
+    } else {
+      console.error('❌ Cannot cleanup: Missing project ID or site ID');
+      this.notification.showError('Cannot cleanup: Missing project or site information');
     }
   }
 
@@ -380,6 +418,398 @@ export class SiteDashboardComponent implements OnInit {
   revokeSimulationConfirmation() {
     this.siteService.revokeSimulation(this.stateService.currentState.activeSiteId!).subscribe(() => {
       if(this.site) this.site.isSimulationConfirmed = false;
+    });
+  }
+
+  /**
+   * Test all backend connectivity and CRUD operations
+   * Call this method from browser console to verify backend connections
+   */
+  testBackendConnectivity(): void {
+    console.log('🔍 TESTING BACKEND CONNECTIVITY FOR SITE DASHBOARD');
+    console.log('API Base URL:', 'http://localhost:5019');
+    
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
+    
+    if (!projectId || !siteId) {
+      console.error('❌ No project or site ID available for testing');
+      return;
+    }
+
+    console.log(`Testing with Project ID: ${projectId}, Site ID: ${siteId}`);
+    
+    // Test 1: Project Service - Read Operations
+    console.log('\n1️⃣ Testing Project Service READ operations...');
+    this.projectService.getProject(projectId).subscribe({
+      next: (project) => {
+        console.log('✅ ProjectService.getProject() - SUCCESS:', project);
+      },
+      error: (error) => {
+        console.error('❌ ProjectService.getProject() - FAILED:', error);
+      }
+    });
+
+    // Test 2: Site Service - Read Operations
+    console.log('\n2️⃣ Testing Site Service READ operations...');
+    this.siteService.getSite(siteId).subscribe({
+      next: (site) => {
+        console.log('✅ SiteService.getSite() - SUCCESS:', site);
+      },
+      error: (error) => {
+        console.error('❌ SiteService.getSite() - FAILED:', error);
+      }
+    });
+
+    // Test 3: Site Service - Approval Operations
+    console.log('\n3️⃣ Testing Site Service APPROVAL operations...');
+    // Note: These will make actual changes, so we just test the HTTP call structure
+    console.log('Approval endpoints available:');
+    console.log('- POST /api/projectsites/{siteId}/approve');
+    console.log('- POST /api/projectsites/{siteId}/revoke');
+    console.log('- POST /api/projectsites/{siteId}/confirm-simulation');
+    console.log('- POST /api/projectsites/{siteId}/revoke-simulation');
+
+    // Test 4: BlastSequenceDataService - Site Context
+    console.log('\n4️⃣ Testing BlastSequenceDataService...');
+    this.blastSequenceDataService.setSiteContext(projectId, siteId);
+    const context = this.blastSequenceDataService.getCurrentSiteContext();
+    console.log('✅ Site context set:', context);
+
+    // Test 5: Workflow Progress
+    console.log('\n5️⃣ Testing Workflow Progress...');
+    this.blastSequenceDataService.getSiteWorkflowProgress(siteId).subscribe({
+      next: (progress) => {
+        console.log('✅ Workflow progress loaded:', progress);
+      },
+      error: (error) => {
+        console.error('❌ Workflow progress failed:', error);
+      }
+    });
+
+    // Test 6: SiteBlastingService - Backend API calls
+    console.log('\n6️⃣ Testing SiteBlastingService backend APIs...');
+    
+    // Test getting all site data
+    this.siteBlastingService.getAllSiteData(projectId, siteId).subscribe({
+      next: (data) => {
+        console.log('✅ SiteBlastingService.getAllSiteData() - SUCCESS:', data);
+      },
+      error: (error) => {
+        console.log('ℹ️ SiteBlastingService.getAllSiteData() - No data or connection issue:', error.status === 404 ? 'No data found (normal)' : error);
+      }
+    });
+
+    // Test getting blast connections
+    this.siteBlastingService.getBlastConnections(projectId, siteId).subscribe({
+      next: (connections) => {
+        console.log('✅ SiteBlastingService.getBlastConnections() - SUCCESS:', connections);
+      },
+      error: (error) => {
+        console.log('ℹ️ SiteBlastingService.getBlastConnections() - No data or connection issue:', error.status === 404 ? 'No connections found (normal)' : error);
+      }
+    });
+
+    console.log('\n🔍 Backend connectivity test completed. Check the results above.');
+    console.log('✅ = Success, ❌ = Error, ℹ️ = Info/Expected behavior');
+  }
+
+  /**
+   * Test specific CRUD operations with safe test data
+   */
+  testCrudOperations(): void {
+    console.log('🔍 TESTING CRUD OPERATIONS');
+    
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
+    
+    if (!projectId || !siteId) {
+      console.error('❌ No project or site ID available for CRUD testing');
+      return;
+    }
+
+    // Test CREATE operation - Save test workflow data
+    console.log('\n📝 Testing CREATE operation...');
+    const testWorkflowData = {
+      stepId: 'test-step',
+      stepData: {
+        testField: 'test-value',
+        timestamp: new Date().toISOString(),
+        description: 'Test data for CRUD verification'
+      }
+    };
+
+    this.siteBlastingService.updateWorkflowStep(projectId, siteId, 'test-step', testWorkflowData).subscribe({
+      next: (result) => {
+        console.log('✅ CREATE operation - SUCCESS:', result);
+        
+        // Test READ operation
+        console.log('\n📖 Testing READ operation...');
+        this.siteBlastingService.getSiteData(projectId, siteId, 'test-step').subscribe({
+          next: (data) => {
+            console.log('✅ READ operation - SUCCESS:', data);
+            
+            // Test UPDATE operation
+            console.log('\n📝 Testing UPDATE operation...');
+            const updatedData = {
+              ...testWorkflowData.stepData,
+              testField: 'updated-test-value',
+              updatedAt: new Date().toISOString()
+            };
+
+            this.siteBlastingService.updateSiteData(projectId, siteId, 'test-step', {
+              jsonData: updatedData
+            }).subscribe({
+              next: (updateResult) => {
+                console.log('✅ UPDATE operation - SUCCESS:', updateResult);
+                
+                // Test DELETE operation
+                console.log('\n🗑️ Testing DELETE operation...');
+                this.siteBlastingService.deleteSiteData(projectId, siteId, 'test-step').subscribe({
+                  next: (deleteResult) => {
+                    console.log('✅ DELETE operation - SUCCESS:', deleteResult);
+                    console.log('\n🎉 All CRUD operations completed successfully!');
+                  },
+                  error: (error) => {
+                    console.error('❌ DELETE operation - FAILED:', error);
+                  }
+                });
+              },
+              error: (error) => {
+                console.error('❌ UPDATE operation - FAILED:', error);
+              }
+            });
+          },
+          error: (error) => {
+            console.error('❌ READ operation - FAILED:', error);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('❌ CREATE operation - FAILED:', error);
+      }
+    });
+  }
+
+  /**
+   * Quick method to test if backend is reachable
+   */
+  testBackendHealth(): void {
+    console.log('🏥 Testing backend health...');
+    
+    const projectId = this.stateService.currentState.activeProjectId;
+    
+    if (!projectId) {
+      console.error('❌ No project ID available');
+      return;
+    }
+
+    // Simple health check using project service
+    this.projectService.getProject(projectId).subscribe({
+      next: (project) => {
+        console.log('✅ Backend is HEALTHY - API responding correctly');
+        console.log('🔗 Connected to:', 'http://localhost:5019');
+        console.log('📊 Sample response:', { id: project.id, name: project.name });
+      },
+      error: (error) => {
+        console.error('❌ Backend health check FAILED');
+        console.error('🔗 Attempted connection to:', 'http://localhost:5019');
+        console.error('📋 Error details:', {
+          status: error.status,
+          message: error.message,
+          url: error.url
+        });
+        
+        if (error.status === 0) {
+          console.error('💡 Suggestion: Check if backend server is running on http://localhost:5019');
+        }
+      }
+    });
+  }
+
+  /**
+   * Test specifically if drill points are deleted
+   */
+  testDrillPointDeletion(): void {
+    console.log('🎯 TESTING DRILL POINT DELETION SPECIFICALLY');
+    
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
+    
+    if (!projectId || !siteId) {
+      console.error('❌ No project or site ID available');
+      return;
+    }
+
+    console.log(`🎯 Testing drill point deletion for Project ${projectId}, Site ${siteId}`);
+    
+    // Step 1: Check current drill points
+    console.log('\n📋 Step 1: Checking current drill points...');
+    this.unifiedDrillDataService.getDrillPoints(projectId, siteId).subscribe({
+      next: (points) => {
+        console.log(`📊 Found ${points.length} drill points before deletion`);
+        
+        if (points.length === 0) {
+          console.log('ℹ️ No drill points to delete');
+          return;
+        }
+        
+        // Step 2: Delete drill points
+        console.log('\n🗑️ Step 2: Deleting drill points...');
+        this.unifiedDrillDataService.clearAllDrillPoints(projectId, siteId).subscribe({
+          next: (success) => {
+            console.log('🔍 Deletion result:', success);
+            
+            // Step 3: Verify deletion
+            console.log('\n🔍 Step 3: Verifying deletion...');
+            setTimeout(() => {
+              this.unifiedDrillDataService.getDrillPoints(projectId, siteId).subscribe({
+                next: (remainingPoints) => {
+                  console.log(`📊 Found ${remainingPoints.length} drill points after deletion`);
+                  
+                  if (remainingPoints.length === 0) {
+                    console.log('✅ SUCCESS: All drill points were deleted from database');
+                  } else {
+                    console.log('❌ FAILED: Some drill points still exist in database');
+                    console.log('🔍 Remaining points:', remainingPoints);
+                  }
+                },
+                error: (error) => {
+                  if (error.status === 404) {
+                    console.log('✅ SUCCESS: No drill points found (404 = properly deleted)');
+                  } else {
+                    console.log('❌ ERROR: Failed to verify deletion:', error);
+                  }
+                }
+              });
+            }, 1000);
+          },
+          error: (error) => {
+            console.error('❌ DELETION FAILED:', error);
+            console.error('🔗 Failed endpoint: DELETE /api/DrillPointPattern/drill-points');
+          }
+        });
+      },
+      error: (error) => {
+        console.log('ℹ️ No drill points found initially:', error.status);
+      }
+    });
+  }
+
+  /**
+   * Test the cleanup functionality by verifying data is actually deleted
+   */
+  testCleanupFunctionality(): void {
+    console.log('🧪 TESTING CLEANUP FUNCTIONALITY');
+    
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
+    
+    if (!projectId || !siteId) {
+      console.error('❌ No project or site ID available for cleanup testing');
+      return;
+    }
+
+    console.log(`🎯 Testing cleanup for Project ${projectId}, Site ${siteId}`);
+    
+    // Step 1: Check what data exists before cleanup
+    console.log('\n📋 Step 1: Checking existing data...');
+    
+    Promise.all([
+      // Check workflow data
+      new Promise((resolve) => {
+        this.siteBlastingService.getAllSiteData(projectId, siteId).subscribe({
+          next: (data) => resolve({ type: 'workflow', exists: true, count: data.length }),
+          error: () => resolve({ type: 'workflow', exists: false, count: 0 })
+        });
+      }),
+      
+      // Check drill points
+      new Promise((resolve) => {
+        this.unifiedDrillDataService.getDrillPoints(projectId, siteId).subscribe({
+          next: (points) => resolve({ type: 'drill-points', exists: true, count: points.length }),
+          error: () => resolve({ type: 'drill-points', exists: false, count: 0 })
+        });
+      }),
+      
+      // Check blast connections
+      new Promise((resolve) => {
+        this.siteBlastingService.getBlastConnections(projectId, siteId).subscribe({
+          next: (connections) => resolve({ type: 'connections', exists: true, count: connections.length }),
+          error: () => resolve({ type: 'connections', exists: false, count: 0 })
+        });
+      })
+    ]).then((beforeResults: any[]) => {
+      console.log('📊 Data before cleanup:');
+      beforeResults.forEach(result => {
+        console.log(`   ${result.type}: ${result.exists ? `${result.count} items` : 'No data'}`);
+      });
+      
+      // Step 2: Perform cleanup
+      console.log('\n🧹 Step 2: Performing cleanup...');
+      this.blastSequenceDataService.cleanupSiteData(projectId, siteId).then((cleanupSuccess) => {
+        
+        console.log('🔍 Cleanup result:', cleanupSuccess ? 'SUCCESS' : 'FAILED');
+        
+        // Step 3: Verify data is actually deleted
+        console.log('\n🔍 Step 3: Verifying data deletion...');
+        
+        setTimeout(() => {
+          Promise.all([
+            // Check workflow data again
+            new Promise((resolve) => {
+              this.siteBlastingService.getAllSiteData(projectId, siteId).subscribe({
+                next: (data) => resolve({ type: 'workflow', exists: true, count: data.length }),
+                error: () => resolve({ type: 'workflow', exists: false, count: 0 })
+              });
+            }),
+            
+            // Check drill points again
+            new Promise((resolve) => {
+              this.unifiedDrillDataService.getDrillPoints(projectId, siteId).subscribe({
+                next: (points) => resolve({ type: 'drill-points', exists: true, count: points.length }),
+                error: () => resolve({ type: 'drill-points', exists: false, count: 0 })
+              });
+            }),
+            
+            // Check blast connections again
+            new Promise((resolve) => {
+              this.siteBlastingService.getBlastConnections(projectId, siteId).subscribe({
+                next: (connections) => resolve({ type: 'connections', exists: true, count: connections.length }),
+                error: () => resolve({ type: 'connections', exists: false, count: 0 })
+              });
+            })
+          ]).then((afterResults: any[]) => {
+            console.log('📊 Data after cleanup:');
+            afterResults.forEach(result => {
+              console.log(`   ${result.type}: ${result.exists ? `${result.count} items` : 'No data'}`);
+            });
+            
+            // Step 4: Compare results
+            console.log('\n📈 Step 4: Cleanup verification:');
+            let allDataDeleted = true;
+            
+            afterResults.forEach((after, index) => {
+              const before = beforeResults[index];
+              const wasDeleted = (before.count > 0 && after.count === 0) || (before.count === 0 && after.count === 0);
+              
+              console.log(`   ${after.type}: ${before.count} → ${after.count} ${wasDeleted ? '✅' : '❌'}`);
+              
+              if (!wasDeleted && before.count > 0) {
+                allDataDeleted = false;
+              }
+            });
+            
+            console.log('\n🎯 ======= CLEANUP TEST RESULT =======');
+            if (allDataDeleted) {
+              console.log('✅ SUCCESS: All data was properly deleted from database');
+            } else {
+              console.log('❌ FAILED: Some data still exists in database');
+            }
+            console.log('====================================');
+          });
+        }, 1000); // Wait 1 second for cleanup to complete
+      });
     });
   }
 } 

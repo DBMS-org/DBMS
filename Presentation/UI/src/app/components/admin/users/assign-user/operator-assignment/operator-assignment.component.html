@@ -158,8 +158,8 @@
                   name="projectId"
                   (change)="onProjectChange()">
                   <option [ngValue]="null">-- Select Project --</option>
-                  <option *ngFor="let project of availableProjects" [ngValue]="project.id">
-                    {{ project.name }} ({{ project.status }})
+                  <option *ngFor="let project of availableProjects" [ngValue]="project.id" [selected]="currentProject && project.id === currentProject.id">
+                    {{ project.name }} ({{ project.status }}){{ currentProject && project.id === currentProject.id ? ' - Current' : '' }}
                   </option>
                 </select>
                 <small class="form-help">Available projects in {{ selectedOperator?.region }} region</small>

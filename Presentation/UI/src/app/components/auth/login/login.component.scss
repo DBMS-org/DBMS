@@ -8,7 +8,7 @@
   align-items: center;
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: var(--space-lg);
+  padding: var(--space-md);
   position: relative;
   overflow: hidden;
 }
@@ -73,11 +73,11 @@
 
 .login-card {
   background: var(--bg-primary);
-  padding: var(--space-2xl);
+  padding: var(--space-xl);
   border-radius: var(--radius-xl);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   width: 100%;
-  max-width: 420px;
+  max-width: 380px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(20px);
   position: relative;
@@ -113,12 +113,12 @@
 
 .brand-section {
   text-align: center;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-lg);
   
   .brand-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto var(--space-lg);
+    width: 60px;
+    height: 60px;
+    margin: 0 auto var(--space-md);
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     border-radius: var(--radius-xl);
     display: flex;
@@ -137,15 +137,15 @@
     }
     
     i {
-      font-size: 32px;
+      font-size: 24px;
       color: var(--text-light);
     }
   }
   
   .brand-title {
-    margin: 0 0 var(--space-sm) 0;
+    margin: 0 0 var(--space-xs) 0;
     color: var(--text-primary);
-    font-size: var(--font-size-3xl);
+    font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-bold);
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     background-clip: text;
@@ -169,13 +169,13 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
 }
 
 label {
@@ -197,7 +197,7 @@ label {
   
   input {
     width: 100%;
-    padding: var(--space-lg) var(--space-lg) var(--space-lg) 48px;
+    padding: var(--space-md) var(--space-md) var(--space-md) 42px;
     border: 2px solid var(--border-light);
     border-radius: var(--radius-md);
     font-size: var(--font-size-base);
@@ -224,7 +224,7 @@ label {
   
   .input-icon {
     position: absolute;
-    left: var(--space-lg);
+    left: var(--space-md);
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
@@ -283,14 +283,14 @@ label {
 .login-button {
   background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: var(--text-light);
-  padding: var(--space-lg) var(--space-xl);
+  padding: var(--space-md) var(--space-lg);
   border: none;
   border-radius: var(--radius-md);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: var(--transition-base);
-  margin-top: var(--space-md);
+  margin-top: var(--space-sm);
   position: relative;
   overflow: hidden;
   
@@ -360,7 +360,7 @@ label {
 .form-actions {
   display: flex;
   justify-content: center;
-  margin-top: var(--space-lg);
+  margin-top: var(--space-sm);
   
   .forgot-password-link {
     color: var(--primary-color);
@@ -389,8 +389,8 @@ label {
 // ==========================================
 
 .login-footer {
-  margin-top: var(--space-2xl);
-  padding-top: var(--space-lg);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
   border-top: 1px solid var(--border-light);
   text-align: center;
   
@@ -407,12 +407,12 @@ label {
 
 @media (max-width: 768px) {
   .login-container {
-    padding: var(--space-md);
+    padding: var(--space-sm);
   }
   
   .login-card {
-    padding: var(--space-xl);
-    margin: var(--space-md);
+    padding: var(--space-lg);
+    margin: var(--space-sm);
   }
   
   .brand-section {
@@ -452,14 +452,35 @@ label {
 
 @media (max-width: 480px) {
   .login-card {
-    padding: var(--space-lg);
+    padding: var(--space-md);
+    max-height: 95vh;
+    overflow-y: auto;
   }
   
   .input-wrapper input {
-    padding: var(--space-md) var(--space-md) var(--space-md) 40px;
+    padding: var(--space-sm) var(--space-sm) var(--space-sm) 36px;
   }
   
   .input-wrapper .input-icon {
-    left: var(--space-md);
+    left: var(--space-sm);
+  }
+
+  .brand-section {
+    margin-bottom: var(--space-md);
+    
+    .brand-icon {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto var(--space-sm);
+      
+      i {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .login-footer {
+    margin-top: var(--space-md);
+    padding-top: var(--space-sm);
   }
 }

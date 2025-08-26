@@ -4,6 +4,7 @@
   },
   "dependencies": {
     "@types/three": "^0.176.0",
+    "axios": "^1.11.0",
     "chart.js": "^4.4.9",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",

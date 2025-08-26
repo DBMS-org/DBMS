@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { DrillPoint, PatternData, PatternSettings, BlastSequenceData } from '../models/drill-point.model';
+import { CANVAS_CONSTANTS } from '../constants/canvas.constants';
 
 @Injectable({
   providedIn: 'root'
@@ -39,14 +40,124 @@ export class DrillPointService {
   }
 
   createDrillPoint(x: number, y: number, settings: PatternSettings): DrillPoint {
+    // Safety check: ensure settings have valid values
+    const safeSpacing = settings.spacing || CANVAS_CONSTANTS.DEFAULT_SETTINGS.spacing;
+    const safeBurden = settings.burden || CANVAS_CONSTANTS.DEFAULT_SETTINGS.burden;
+    const safeDepth = settings.depth || CANVAS_CONSTANTS.DEFAULT_SETTINGS.depth;
+    
+    console.log('createDrillPoint safety check:', {
+      originalSettings: settings,
+      safeValues: { spacing: safeSpacing, burden: safeBurden, depth: safeDepth }
+    });
+    
+    // Ensure coordinates align with spacing and burden grid
+    const alignedCoords = this.alignCoordinatesToGrid(x, y, safeSpacing, safeBurden);
+    
     return {
-      x: Number(x.toFixed(2)),
-      y: Number(y.toFixed(2)),
+      x: Number(alignedCoords.x.toFixed(2)),
+      y: Number(alignedCoords.y.toFixed(2)),
       id: `DH${this.currentId++}`,
-      depth: settings.depth,
-      spacing: settings.spacing,
-      burden: settings.burden
+      depth: safeDepth,
+      spacing: safeSpacing,
+      burden: safeBurden
     };
+  }
+
+  /**
+   * Aligns coordinates to the nearest grid intersection based on spacing and burden
+   * For spacing=3, burden=3: valid coordinates are (0,0), (3,0), (6,0), (0,3), (3,3), (6,3), etc.
+   */
+  private alignCoordinatesToGrid(x: number, y: number, spacing: number, burden: number): { x: number, y: number } {
+    // Safety check: ensure spacing and burden are valid numbers
+    if (!spacing || spacing <= 0 || isNaN(spacing)) {
+      console.error('Invalid spacing value:', spacing, 'using default:', CANVAS_CONSTANTS.DEFAULT_SETTINGS.spacing);
+      spacing = CANVAS_CONSTANTS.DEFAULT_SETTINGS.spacing;
+    }
+    if (!burden || burden <= 0 || isNaN(burden)) {
+      console.error('Invalid burden value:', burden, 'using default:', CANVAS_CONSTANTS.DEFAULT_SETTINGS.burden);
+      burden = CANVAS_CONSTANTS.DEFAULT_SETTINGS.burden;
+    }
+    
+    const alignedX = Math.round(x / spacing) * spacing;
+    const alignedY = Math.round(y / burden) * burden;
+    
+    console.log(`Aligning coordinates: (${x.toFixed(2)}, ${y.toFixed(2)}) -> (${alignedX}, ${alignedY}) with spacing=${spacing}, burden=${burden}`);
+    
+    return { x: alignedX, y: alignedY };
+  }
+
+  /**
+   * Corrects existing drill points to align with their spacing and burden values
+   */
+  alignExistingPointsToGrid(drillPoints: DrillPoint[]): DrillPoint[] {
+    return drillPoints.map(point => {
+      // Safety check: ensure point has valid spacing and burden values
+      const safeSpacing = point.spacing || CANVAS_CONSTANTS.DEFAULT_SETTINGS.spacing;
+      const safeBurden = point.burden || CANVAS_CONSTANTS.DEFAULT_SETTINGS.burden;
+      
+      const alignedCoords = this.alignCoordinatesToGrid(point.x, point.y, safeSpacing, safeBurden);
+      
+      return {
+        ...point,
+        x: Number(alignedCoords.x.toFixed(2)),
+        y: Number(alignedCoords.y.toFixed(2)),
+        spacing: safeSpacing,
+        burden: safeBurden
+      };
+    });
+  }
+
+  /**
+   * Validates if a drill point's coordinates align with its spacing and burden values
+   */
+  validatePointAlignment(point: DrillPoint): boolean {
+    const tolerance = 0.01; // Small tolerance for floating point precision
+    const expectedX = Math.round(point.x / point.spacing) * point.spacing;
+    const expectedY = Math.round(point.y / point.burden) * point.burden;
+    
+    return Math.abs(point.x - expectedX) < tolerance && Math.abs(point.y - expectedY) < tolerance;
+  }
+
+  /**
+   * Generates a regular grid pattern of drill points
+   * Option 1: Standard grid starting at (0,0): (0,0), (3,0), (6,0), (0,2.5), (3,2.5), (6,2.5)...
+   * Option 2: Grid starting at (spacing,burden): (3,2.5), (6,2.5), (9,2.5), (3,5), (6,5), (9,5)...
+   */
+  generateGridPattern(
+    rows: number, 
+    columns: number, 
+    spacing: number, 
+    burden: number, 
+    depth: number,
+    startX: number = 0,
+    startY: number = 0,
+    startAtSpacingBurden: boolean = false
+  ): DrillPoint[] {
+    const points: DrillPoint[] = [];
+    
+    // If startAtSpacingBurden is true, adjust the starting position
+    const actualStartX = startAtSpacingBurden ? spacing : startX;
+    const actualStartY = startAtSpacingBurden ? burden : startY;
+    
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < columns; col++) {
+        const x = actualStartX + (col * spacing);
+        const y = actualStartY + (row * burden);
+        
+        points.push({
+          x: Number(x.toFixed(2)),
+          y: Number(y.toFixed(2)),
+          id: `DH${this.currentId++}`,
+          depth: depth,
+          spacing: spacing,
+          burden: burden
+        });
+      }
+    }
+    
+    console.log(`Generated ${points.length} drill points in ${rows}x${columns} grid`);
+    console.log(`Starting at (${actualStartX}, ${actualStartY}) with spacing=${spacing}, burden=${burden}`);
+    return points;
   }
 
   selectPoint(point: DrillPoint | null, points: DrillPoint[]): DrillPoint | null {
@@ -154,40 +265,5 @@ export class DrillPointService {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
     return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  /**
-   * Check if a drill point has a custom depth (different from global depth)
-   */
-  hasCustomDepth(point: DrillPoint, globalDepth: number): boolean {
-    return Math.abs(point.depth - globalDepth) > 0.01;
-  }
-
-  /**
-   * Get all drill points that have custom depths (different from global depth)
-   */
-  getPointsWithCustomDepths(points: DrillPoint[], globalDepth: number): DrillPoint[] {
-    return points.filter(p => this.hasCustomDepth(p, globalDepth));
-  }
-
-  /**
-   * Apply global depth to all drill points (override all custom depths)
-   */
-  applyGlobalDepthToAll(points: DrillPoint[], globalDepth: number): void {
-    points.forEach(p => p.depth = globalDepth);
-  }
-
-  /**
-   * Validate depth value is within acceptable range (1-50m)
-   */
-  validateDepthRange(depth: number): boolean {
-    return depth >= 1 && depth <= 50;
-  }
-
-  /**
-   * Format depth value for display (round to 2 decimal places)
-   */
-  formatDepth(depth: number): number {
-    return Math.round(depth * 100) / 100;
   }
 } 

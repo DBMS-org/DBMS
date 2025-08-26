@@ -47,8 +47,8 @@ namespace Application.DTOs.MachineManagement
         
         public string Location { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public int ProjectId { get; set; }
-        public int SiteId { get; set; }
+        public int? ProjectId { get; set; }
+        public int? SiteId { get; set; }
         public int? OperatorId { get; set; }
         public int? RegionId { get; set; }
         

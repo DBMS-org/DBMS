@@ -13,6 +13,14 @@ export class DrillPointPatternService {
 
   // Fetch pattern data
   getPattern(projectId: number, siteId: number): Observable<any> {
+    // Ensure we always include query parameters to avoid duplicate calls
+    if (!projectId || !siteId) {
+      console.warn('getPattern called without valid projectId or siteId');
+      return new Observable(observer => {
+        observer.next(null);
+        observer.complete();
+      });
+    }
     return this.http.get<any>(`${this.apiUrl}/pattern-data`, { params: { projectId, siteId } });
   }
 

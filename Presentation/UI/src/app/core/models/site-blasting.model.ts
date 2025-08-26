@@ -35,8 +35,11 @@ export interface DrillPoint {
 
 export interface BlastConnection {
   id: string;
+  // Support both naming conventions for compatibility
   point1DrillPointId: string;
   point2DrillPointId: string;
+  fromHoleId: string;
+  toHoleId: string;
   connectorType: ConnectorType;
   delay: number;
   sequence: number;
@@ -47,12 +50,28 @@ export interface BlastConnection {
   // Navigation properties for UI
   point1DrillPoint?: DrillPoint;
   point2DrillPoint?: DrillPoint;
+  startPoint?: {
+    id: string;
+    label: string;
+    x: number;
+    y: number;
+    isHidden: boolean;
+  };
+  endPoint?: {
+    id: string;
+    label: string;
+    x: number;
+    y: number;
+    isHidden: boolean;
+  };
 }
 
 export interface CreateBlastConnectionRequest {
   id: string;
   point1DrillPointId: string;
   point2DrillPointId: string;
+  fromHoleId?: string;
+  toHoleId?: string;
   connectorType: ConnectorType;
   delay: number;
   sequence: number;
@@ -64,6 +83,8 @@ export interface UpdateBlastConnectionRequest {
   id: string;
   point1DrillPointId: string;
   point2DrillPointId: string;
+  fromHoleId?: string;
+  toHoleId?: string;
   connectorType: ConnectorType;
   delay: number;
   sequence: number;
