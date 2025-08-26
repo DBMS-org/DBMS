@@ -34,7 +34,7 @@ export class AddMachineComponent {
   private createForm(): FormGroup {
     return this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      operatorName: ['', [Validators.required, Validators.minLength(2)]],
+      operatorName: ['', [Validators.minLength(2)]], // Made optional
       model: ['', [Validators.required]],
       serialNumber: ['', [Validators.required]],
       rigNo: ['', [Validators.required]],

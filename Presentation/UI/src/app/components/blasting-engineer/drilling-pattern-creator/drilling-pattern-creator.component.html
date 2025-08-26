@@ -1,52 +1,388 @@
-<div class="pattern-creator-container" 
-     role="main" 
-     aria-label="Drilling Pattern Creator" 
-     [class.fullscreen]="(isFullscreen$ | async)">
+<div class="pattern-creator-container" role="main" aria-label="Drilling Pattern Creator">
+  <div class="toolbar" role="toolbar" aria-label="Pattern Creator Tools">
+    <div class="toolbar-section" role="group" aria-label="Placement Controls">
+      <button mat-button
+              class="toolbar-button"
+              [class.active]="isHolePlacementMode"
+              (click)="toggleHolePlacementMode()"
+              matTooltip="Toggle hole placement mode"
+              [attr.aria-pressed]="isHolePlacementMode"
+              [attr.aria-label]="isHolePlacementMode ? 'Exit hole placement mode' : 'Enter hole placement mode'"
+              (keydown.enter)="toggleHolePlacementMode()"
+              (keydown.space)="toggleHolePlacementMode()">
+        <span class="material-icons" aria-hidden="true">
+          {{ isHolePlacementMode ? 'edit_off' : 'edit' }}
+        </span>
+        {{ isHolePlacementMode ? 'Exit Placement' : 'Place Holes' }}
+      </button>
 
-  <!-- Toolbar Component -->
-  <app-pattern-toolbar
-    [settings]="(settings$ | async)!"
-    [selectedPoint]="(selectedPoint$ | async)"
-    [drillPointsCount]="(drillPoints$ | async)?.length || 0"
-    [isHolePlacementMode]="(isHolePlacementMode$ | async)!"
-    [isPreciseMode]="(isPreciseMode$ | async)!"
-    [isSaved]="(isSaved$ | async)!"
-    [disabled]="currentState.isReadOnly"
-    (settingsChange)="onToolbarSettingsChange($event)"
-    (modeToggle)="onToolbarModeToggle($event)"
-    (pointAction)="onToolbarPointAction($event)"
-    (patternAction)="onToolbarPatternAction($event)">
-  </app-pattern-toolbar>
+      <button mat-button
+              class="toolbar-button"
+              [class.active]="isPreciseMode"
+              [class.precise-mode-active]="isPreciseMode"
+              (click)="togglePreciseMode()"
+              matTooltip="Toggle precise grid snapping"
+              [attr.aria-pressed]="isPreciseMode"
+              [attr.aria-label]="isPreciseMode ? 'Exit precise mode' : 'Enter precise mode'"
+              (keydown.enter)="togglePreciseMode()"
+              (keydown.space)="togglePreciseMode()">
+        <span class="material-icons" aria-hidden="true">
+          {{ isPreciseMode ? 'grid_on' : 'grid_off' }}
+        </span>
+        {{ isPreciseMode ? 'Exit Precise Mode' : 'Precise Mode' }}
+      </button>
+    </div>
 
-  <!-- Instructions Component -->
-  <app-pattern-instructions
-    [showInstructions]="currentState.showInstructions">
-  </app-pattern-instructions>
+    <div class="toolbar-section" role="group" aria-label="Pattern Settings">
+      <div class="input-group">
+        <label for="spacing-input" class="input-label">
+          <span class="material-icons" aria-hidden="true">straighten</span>
+          Spacing (m)
+        </label>
+        <input 
+          id="spacing-input"
+          type="number" 
+          class="pattern-input"
+          [(ngModel)]="settings.spacing"
+          (ngModelChange)="onSpacingChange($event)"
+          min="0.5" 
+          max="10" 
+          step="0.1"
+          [attr.aria-label]="'Hole spacing in meters, current value: ' + settings.spacing">
+      </div>
+      
+      <div class="input-group">
+        <label for="burden-input" class="input-label">
+          <span class="material-icons" aria-hidden="true">height</span>
+          Burden (m)
+        </label>
+        <input 
+          id="burden-input"
+          type="number" 
+          class="pattern-input"
+          [(ngModel)]="settings.burden"
+          (ngModelChange)="onBurdenChange($event)"
+          min="0.5" 
+          max="10" 
+          step="0.1"
+          [attr.aria-label]="'Hole burden in meters, current value: ' + settings.burden">
+      </div>
+      
+      <div class="input-group">
+        <label for="depth-input" class="input-label">
+          <span class="material-icons" aria-hidden="true">vertical_align_bottom</span>
+          Depth (m)
+        </label>
+        <input 
+          id="depth-input"
+          type="number" 
+          class="pattern-input"
+          [(ngModel)]="settings.depth"
+          (ngModelChange)="onDepthChange($event)"
+          min="1" 
+          max="50" 
+          step="0.5"
+          [attr.aria-label]="'Hole depth in meters, current value: ' + settings.depth">
+      </div>
+    </div>
 
-  <!-- Canvas Component -->
-  <app-pattern-canvas
-    [settings]="(settings$ | async)!"
-    [drillPoints]="(drillPoints$ | async)!"
-    [selectedPoint]="(selectedPoint$ | async)"
-    [canvasState]="canvasState"
-    [uiState]="uiState"
-    (pointPlaced)="onCanvasPointPlaced($event)"
-    (pointSelected)="onCanvasPointSelected($event)"
-    (pointMoved)="onCanvasPointMoved($event)"
-    (canvasStateChange)="onCanvasStateChange($event)">
-  </app-pattern-canvas>
+    <!-- Selected Point Details Panel -->
+    <div class="toolbar-section selected-point-section" 
+         role="group" 
+         aria-label="Selected Point Details"
+         *ngIf="selectedPoint">
+      <h4 class="section-title">
+        <span class="material-icons">gps_fixed</span>
+        Selected Point: {{ selectedPoint.id }}
+      </h4>
+      
+      <div class="point-details">
+        <div class="detail-row">
+          <label>Position:</label>
+          <span>({{ formatValue(selectedPoint.x) }}, {{ formatValue(selectedPoint.y) }})</span>
+        </div>
+        
+        <div class="detail-row depth-control-row">
+          <label for="selected-point-depth">Depth (m):</label>
+          <div class="depth-input-group">
+            <button 
+              type="button" 
+              class="depth-btn decrease"
+              (click)="adjustSelectedPointDepth(-0.5)"
+              [disabled]="selectedPoint.depth <= 1"
+              title="Decrease depth by 0.5m">
+              <span class="material-icons">remove</span>
+            </button>
+            <input 
+              id="selected-point-depth"
+              type="number" 
+              class="point-depth-input"
+              [(ngModel)]="selectedPoint.depth"
+              (ngModelChange)="onSelectedPointDepthChange($event)"
+              (blur)="validateAndCorrectDepth()"
+              (keydown.enter)="validateAndCorrectDepth()"
+              min="1" 
+              max="50" 
+              step="0.1"
+              placeholder="10.0"
+              [attr.aria-label]="'Depth for point ' + selectedPoint.id + ' in meters'">
+            <button 
+              type="button" 
+              class="depth-btn increase"
+              (click)="adjustSelectedPointDepth(0.5)"
+              [disabled]="selectedPoint.depth >= 50"
+              title="Increase depth by 0.5m">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Depth Presets -->
+        <div class="detail-row preset-row">
+          <label>Quick Set:</label>
+          <div class="depth-presets">
+            <button 
+              *ngFor="let preset of depthPresets" 
+              type="button"
+              class="preset-btn"
+              [class.active]="selectedPoint.depth === preset"
+              (click)="setSelectedPointDepth(preset)"
+              [title]="'Set depth to ' + preset + 'm'">
+              {{preset}}m
+            </button>
+          </div>
+        </div>
+        
+        <div class="detail-row">
+          <label>Spacing:</label>
+          <span>{{ formatValue(selectedPoint.spacing) }}m</span>
+        </div>
+        
+        <div class="detail-row">
+          <label>Burden:</label>
+          <span>{{ formatValue(selectedPoint.burden) }}m</span>
+        </div>
+      </div>
+    </div>
 
-  <!-- Status Bar Component -->
-  <app-pattern-status-bar
-    [settings]="(settings$ | async)!"
-    [cursorPosition]="currentState.cursorPosition"
-    [scale]="canvasState.scale"
-    [isHolePlacementMode]="(isHolePlacementMode$ | async)!"
-    [isPreciseMode]="(isPreciseMode$ | async)!"
-    [isFullscreen]="(isFullscreen$ | async)!"
-    [drillPoints]="(drillPoints$ | async)!"
-    [selectedPoint]="(selectedPoint$ | async)"
-    [isSaved]="(isSaved$ | async)!">
-  </app-pattern-status-bar>
+    <!-- Bulk Depth Operations Panel -->
+    <div class="toolbar-section bulk-operations-section" 
+         role="group" 
+         aria-label="Bulk Depth Operations"
+         *ngIf="drillPoints.length > 1">
+      <h4 class="section-title">
+        <span class="material-icons">format_list_bulleted</span>
+        Bulk Operations ({{drillPoints.length}} points)
+      </h4>
+      
+      <div class="bulk-controls">
+        <div class="bulk-row">
+          <label>Apply to All:</label>
+          <div class="bulk-depth-group">
+            <input 
+              type="number" 
+              class="bulk-depth-input"
+              [(ngModel)]="bulkDepthValue"
+              min="1" 
+              max="50" 
+              step="0.1"
+              placeholder="12.0">
+            <button 
+              type="button"
+              class="apply-bulk-btn"
+              (click)="applyBulkDepth()"
+              [disabled]="!bulkDepthValue || bulkDepthValue < 1 || bulkDepthValue > 50">
+              Apply
+            </button>
+          </div>
+        </div>
+        
+        <div class="bulk-row">
+          <label>Statistics:</label>
+          <div class="depth-stats" *ngIf="depthStats">
+            <span class="stat-item">Min: {{depthStats.min}}m</span>
+            <span class="stat-item">Max: {{depthStats.max}}m</span>
+            <span class="stat-item">Avg: {{depthStats.average}}m</span>
+          </div>
+        </div>
+        
+        <div class="bulk-row">
+          <label>Quick Actions:</label>
+          <div class="quick-actions">
+            <button 
+              type="button"
+              class="quick-action-btn"
+              (click)="adjustAllPointsDepth(0.5)"
+              title="Increase all depths by 0.5m">
+              +0.5m All
+            </button>
+            <button 
+              type="button"
+              class="quick-action-btn"
+              (click)="adjustAllPointsDepth(-0.5)"
+              title="Decrease all depths by 0.5m">
+              -0.5m All
+            </button>
+            <button 
+              type="button"
+              class="quick-action-btn reset"
+              (click)="resetAllDepthsToDefault()"
+              title="Reset all depths to global setting">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <div class="toolbar-section" role="group" aria-label="Point Management">
+      <button mat-button
+              class="toolbar-button"
+              (click)="onDeletePoint()"
+              [disabled]="!selectedPoint"
+              matTooltip="Delete selected point"
+              [attr.aria-label]="selectedPoint ? 'Delete selected point ' + selectedPoint.id : 'Delete point (disabled)'"
+              (keydown.enter)="onDeletePoint()"
+              (keydown.space)="onDeletePoint()">
+        <span class="material-icons" aria-hidden="true">delete</span>
+        Delete Point
+      </button>
+
+      <button mat-button
+              class="toolbar-button"
+              (click)="onClearAll()"
+              matTooltip="Clear all points">
+        <span class="material-icons" aria-hidden="true">clear_all</span>
+        Clear All
+      </button>
+    </div>
+
+    <div class="toolbar-section" role="group" aria-label="Pattern Actions">
+      <button mat-button
+              class="toolbar-button save-button"
+              (click)="onSavePattern()"
+              [disabled]="drillPoints.length === 0"
+              matTooltip="Save pattern progress"
+              aria-label="Save pattern progress"
+              [class.saved]="isSaved">
+        <span class="material-icons" aria-hidden="true">{{ isSaved ? 'check_circle' : 'save' }}</span>
+        {{ isSaved ? 'Saved' : 'Save Pattern' }}
+      </button>
+
+      <button mat-button
+              class="toolbar-button blast-designer-button"
+              (click)="onExportToBlastDesigner()"
+              [disabled]="drillPoints.length === 0"
+              matTooltip="Send pattern to Blast Sequence Designer"
+              aria-label="Send pattern to Blast Sequence Designer">
+        <span class="material-icons" aria-hidden="true">timeline</span>
+        To Blast Designer
+      </button>
+
+      <button mat-button
+              class="toolbar-button help-button"
+              (mouseenter)="showInstructions = true"
+              (mouseleave)="showInstructions = false"
+              matTooltip="Show help"
+              [attr.aria-expanded]="showInstructions">
+        <span class="material-icons" aria-hidden="true">help_outline</span>
+        Help
+      </button>
+    </div>
+  </div>
+
+  <div class="instructions-panel" *ngIf="showInstructions">
+    <div class="instructions-content">
+      <h3>How to Use</h3>
+      <ul>
+        <li>
+          <span class="material-icons">edit</span>
+          <span>Click "Place Holes" to start placing drill points</span>
+        </li>
+        <li>
+          <span class="material-icons">grid_on</span>
+          <span>Use "Precise Mode" to snap holes exactly to grid intersections</span>
+        </li>
+        <li>
+          <span class="material-icons">my_location</span>
+          <span>Orange dots appear at grid intersections in Precise Mode</span>
+        </li>
+        <li>
+          <span class="material-icons">straighten</span>
+          <span>Adjust Spacing and Burden values to change grid pattern</span>
+        </li>
+        <li>
+          <span class="material-icons">vertical_align_bottom</span>
+          <span>Set Depth value for all drill holes</span>
+        </li>
+        <li>
+          <span class="material-icons">pan_tool</span>
+          <span>Right-click and drag to pan the grid and rulers (limited to origin boundary)</span>
+        </li>
+        <li>
+          <span class="material-icons">zoom_in</span>
+          <span>Use mouse wheel to zoom</span>
+        </li>
+        <li>
+          <span class="material-icons">keyboard_arrow_up</span>
+          <span>Use arrow keys to move selected point</span>
+        </li>
+        <li>
+          <span class="material-icons">drag_handle</span>
+          <span>Drag points to reposition (snaps to grid in Precise Mode)</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="canvas-container" 
+       #container
+       [class.precise-mode]="isPreciseMode"
+       [class.hole-placement-mode]="isHolePlacementMode"
+       [class.hole-placement-active]="isPreciseMode && isHolePlacementMode">
+    
+    <!-- Duplicate placement warning -->
+    <div class="duplicate-warning" *ngIf="duplicateAttemptMessage">
+      <span class="material-icons">warning</span>
+      {{ duplicateAttemptMessage }}
+    </div>
+    
+    <div class="cursor-position" 
+         *ngIf="cursorPosition"
+         [class.precise-mode]="isPreciseMode">
+      <span *ngIf="isPreciseMode">Grid Position: </span>
+      <span *ngIf="!isPreciseMode">Position: </span>
+      X: {{ formatValue(cursorPosition.x) }}m, Y: {{ formatValue(cursorPosition.y) }}m
+    </div>
+  </div>
+
+  <div class="status-bar" 
+       role="status" 
+       aria-live="polite"
+       [class.precise-mode]="isPreciseMode">
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">place</span>
+      <span *ngIf="cursorPosition">
+        <span *ngIf="isPreciseMode">Grid: </span>
+        <span *ngIf="!isPreciseMode">Position: </span>
+        ({{ formatValue(cursorPosition.x) }}, {{ formatValue(cursorPosition.y) }})
+      </span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">straighten</span>
+      <span>Spacing: {{ settings && formatValue(settings.spacing) }}m</span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">height</span>
+      <span>Burden: {{ settings && formatValue(settings.burden) }}m</span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">settings</span>
+      <span>Scale: {{ scale.toFixed(2) }}x</span>
+      <span *ngIf="isPreciseMode" style="margin-left: 1rem;">
+        <span class="material-icons" aria-hidden="true" style="font-size: 1rem; vertical-align: middle;">grid_on</span>
+        Precise Mode Active
+      </span>
+    </div>
+  </div>
 </div>

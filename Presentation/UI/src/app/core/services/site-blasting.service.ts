@@ -88,6 +88,15 @@ export class SiteBlastingService {
     return this.http.post<WorkflowState>(`${this.apiUrl}/data`, request);
   }
 
+  // Drill Pattern Methods
+  getDrillPatterns(projectId: number, siteId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/patterns`);
+  }
+
+  saveDrillPattern(request: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/projects/${request.projectId}/sites/${request.siteId}/patterns`, request);
+  }
+
   // Utility Methods
   deleteAllWorkflowData(projectId: number, siteId: number): Observable<boolean> {
     return this.http.delete<boolean>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/data`);
@@ -95,5 +104,16 @@ export class SiteBlastingService {
 
   hasWorkflowData(projectId: number, siteId: number): Observable<boolean> {
     return this.http.get<boolean>(`${this.apiUrl}/projects/${projectId}/sites/${siteId}/has-data`);
+  }
+
+  // Method to update workflow step
+  updateWorkflowStep(projectId: number, siteId: number, stepId: string, stepData: any): Observable<any> {
+    const request = {
+      projectId,
+      siteId,
+      dataType: stepId,
+      jsonData: stepData
+    };
+    return this.http.post<any>(`${this.apiUrl}/data`, request);
   }
 } 

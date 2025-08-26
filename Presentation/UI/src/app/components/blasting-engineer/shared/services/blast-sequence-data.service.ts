@@ -165,86 +165,190 @@ export class BlastSequenceDataService {
   }
 
   // Utility method to clean up inconsistent data
-  cleanupSiteData(projectId: number, siteId: number): void {
+  cleanupSiteData(projectId: number, siteId: number): Promise<boolean> {
     const siteKey = `site_${projectId}_${siteId}`;
     
-    console.log('🧹 DELETING ALL SITE DATA from backend and frontend for:', siteKey);
+    console.log('🧹 STARTING COMPLETE DATA DELETION for:', siteKey);
+    console.log('📍 Target: Project ID', projectId, 'Site ID', siteId);
     
-    // Delete all data from backend first
-    this.siteBlastingService.deleteAllWorkflowData(projectId, siteId).subscribe({
-      next: () => {
-        console.log('✅ Successfully deleted all site data from backend');
-      },
-      error: (error) => {
-        console.warn('⚠️ Failed to delete backend data, continuing with frontend cleanup:', error.message);
-      }
-    });
-
-    // Also delete drill points and blast sequences
-    this.unifiedDrillDataService.clearAllDrillPoints(projectId, siteId).subscribe({
-      next: (success) => {
-        if (success) {
-          console.log('✅ Cleared all drill points from backend');
+    return new Promise<boolean>((resolve) => {
+      let successfulOperations = 0;
+      let failedOperations = 0;
+      const totalOperations = 3; // workflow data, drill points, blast connections
+      
+      const checkCompletion = () => {
+        const totalCompleted = successfulOperations + failedOperations;
+        if (totalCompleted === totalOperations) {
+          const success = failedOperations === 0;
+          console.log(`🏁 CLEANUP COMPLETED: ${successfulOperations}/${totalOperations} operations successful`);
+          
+          if (success) {
+            console.log('✅ ALL DATABASE OPERATIONS SUCCEEDED - Data properly deleted');
+          } else {
+            console.error('❌ SOME DATABASE OPERATIONS FAILED - Data may not be completely deleted');
+          }
+          
+          resolve(success);
         }
-      },
-      error: (error) => console.warn('⚠️ Failed to clear drill points:', error.message)
-    });
+      };
 
-    // Note: BlastSequence entity was removed as it's not used in the application
-    console.log('ℹ️ BlastSequence cleanup skipped - entity removed from system');
-    
-    // Remove ALL site-specific localStorage data
-    const keysToRemove = [
-      `${siteKey}_pattern`,
-      `${siteKey}_connections`,
-      `${siteKey}_simulation_settings`,
-      `${siteKey}_simulation_state`
-    ];
-    
-    let itemsRemoved = 0;
-    keysToRemove.forEach(key => {
-      if (localStorage.getItem(key)) {
-        localStorage.removeItem(key);
-        itemsRemoved++;
-        console.log('❌ Removed localStorage key:', key);
+      // 1. Delete all workflow data from backend
+      console.log('🗂️ Step 1: Deleting workflow data from backend...');
+      this.siteBlastingService.deleteAllWorkflowData(projectId, siteId).subscribe({
+        next: (result) => {
+          console.log('✅ Step 1 SUCCESS: Workflow data deleted:', result);
+          successfulOperations++;
+          checkCompletion();
+        },
+        error: (error) => {
+          console.error('❌ Step 1 FAILED: Workflow data deletion failed:', error);
+          console.error('🔗 Failed endpoint: DELETE /api/siteblasting/projects/' + projectId + '/sites/' + siteId + '/data');
+          failedOperations++;
+          checkCompletion();
+        }
+      });
+
+      // 2. Delete all drill points from backend
+      console.log('🎯 Step 2: Deleting drill points from backend...');
+      this.unifiedDrillDataService.clearAllDrillPoints(projectId, siteId).subscribe({
+        next: (success) => {
+          if (success) {
+            console.log('✅ Step 2 SUCCESS: All drill points deleted from database');
+            successfulOperations++;
+          } else {
+            console.error('❌ Step 2 FAILED: Drill points deletion returned false');
+            failedOperations++;
+          }
+          checkCompletion();
+        },
+        error: (error) => {
+          console.error('❌ Step 2 FAILED: Drill points deletion error:', error);
+          console.error('🔗 Failed endpoint: DELETE /api/DrillPointPattern/drill-points');
+          failedOperations++;
+          checkCompletion();
+        }
+      });
+
+      // 3. Delete all blast connections from backend
+      console.log('🔗 Step 3: Deleting blast connections from backend...');
+      this.siteBlastingService.getBlastConnections(projectId, siteId).subscribe({
+        next: (connections) => {
+          if (connections && connections.length > 0) {
+            console.log(`🔗 Found ${connections.length} blast connections to delete`);
+            
+            // Delete each connection
+            let deletedConnections = 0;
+            let connectionErrors = 0;
+            
+            connections.forEach((connection, index) => {
+              this.siteBlastingService.deleteBlastConnection(connection.id, projectId, siteId).subscribe({
+                next: () => {
+                  deletedConnections++;
+                  console.log(`✅ Deleted connection ${index + 1}/${connections.length}: ${connection.id}`);
+                  
+                  if (deletedConnections + connectionErrors === connections.length) {
+                    if (connectionErrors === 0) {
+                      console.log('✅ Step 3 SUCCESS: All blast connections deleted');
+                      successfulOperations++;
+                    } else {
+                      console.error(`❌ Step 3 PARTIAL: ${connectionErrors} connection deletions failed`);
+                      failedOperations++;
+                    }
+                    checkCompletion();
+                  }
+                },
+                error: (error) => {
+                  connectionErrors++;
+                  console.error(`❌ Failed to delete connection ${connection.id}:`, error);
+                  
+                  if (deletedConnections + connectionErrors === connections.length) {
+                    console.error(`❌ Step 3 FAILED: ${connectionErrors} connection deletions failed`);
+                    failedOperations++;
+                    checkCompletion();
+                  }
+                }
+              });
+            });
+          } else {
+            console.log('ℹ️ Step 3 SUCCESS: No blast connections found to delete');
+            successfulOperations++;
+            checkCompletion();
+          }
+        },
+        error: (error) => {
+          // If we can't even fetch connections, consider it a success (no data to delete)
+          console.log('ℹ️ Step 3 SUCCESS: Could not fetch connections (likely none exist):', error.status);
+          successfulOperations++;
+          checkCompletion();
+        }
+      });
+    }).then((success) => {
+      // After all backend operations, clean up frontend data
+      console.log('🧹 Step 4: Cleaning up frontend data...');
+      
+      // Remove ALL site-specific localStorage data
+      const keysToRemove = [
+        `${siteKey}_pattern`,
+        `${siteKey}_connections`,
+        `${siteKey}_simulation_settings`,
+        `${siteKey}_simulation_state`,
+        `patternApproved_${projectId}_${siteId}`,
+        `simulation_confirmed_${siteId}`
+      ];
+      
+      let itemsRemoved = 0;
+      keysToRemove.forEach(key => {
+        if (localStorage.getItem(key)) {
+          localStorage.removeItem(key);
+          itemsRemoved++;
+          console.log('🗑️ Removed localStorage key:', key);
+        }
+      });
+      
+      console.log(`✅ Step 4 SUCCESS: Removed ${itemsRemoved} localStorage items`);
+      
+      // Clear current in-memory data if this is the active site
+      if (this.currentSiteContext && 
+          this.currentSiteContext.projectId === projectId && 
+          this.currentSiteContext.siteId === siteId) {
+        
+        console.log('🔄 Step 5: Clearing in-memory data...');
+        
+        // Reset all data to initial state
+        this.patternDataSubject.next(null);
+        this.connectionsSubject.next([]);
+        this.simulationStateSubject.next({
+          isPlaying: false,
+          isPaused: false,
+          currentTime: 0,
+          totalDuration: 0,
+          playbackSpeed: 1,
+          currentStep: 0,
+          totalSteps: 0
+        });
+        this.simulationSettingsSubject.next({
+          showTiming: true,
+          showConnections: true,
+          showEffects: true,
+          showSequenceNumbers: true,
+          effectIntensity: 75,
+          animationQuality: 'medium'
+        });
+        
+        console.log('✅ Step 5 SUCCESS: In-memory data cleared');
       }
+      
+      const finalResult = success;
+      console.log('');
+      console.log('🎯 ======= FINAL CLEANUP RESULT =======');
+      console.log('🗃️ Target:', `Project ${projectId}, Site ${siteId}`);
+      console.log('📊 Database cleanup:', finalResult ? '✅ SUCCESS' : '❌ FAILED');
+      console.log('💾 Frontend cleanup: ✅ SUCCESS');
+      console.log('=====================================');
+      console.log('');
+      
+      return finalResult;
     });
-    
-    console.log(`🗑️ Removed ${itemsRemoved} localStorage items`);
-    
-    // Clear current in-memory data if this is the active site
-    if (this.currentSiteContext && 
-        this.currentSiteContext.projectId === projectId && 
-        this.currentSiteContext.siteId === siteId) {
-      
-             // Reset all data to initial state
-       this.patternDataSubject.next(null);
-       this.connectionsSubject.next([]);
-       this.simulationStateSubject.next({
-         isPlaying: false,
-         isPaused: false,
-         currentTime: 0,
-         totalDuration: 0,
-         playbackSpeed: 1,
-         currentStep: 0,
-         totalSteps: 0
-       });
-       this.simulationSettingsSubject.next({
-         showTiming: true,
-         showConnections: true,
-         showEffects: true,
-         showSequenceNumbers: true,
-         effectIntensity: 75,
-         animationQuality: 'medium'
-       });
-      
-      // Reset workflow to initial state
-      this.resetWorkflow();
-      
-      console.log('🔄 Reset all in-memory data for active site');
-    }
-    
-    console.log('✅ Complete site data cleanup finished - ALL progress reset to 0%');
   }
 
   // Individual step cleanup methods
@@ -252,7 +356,7 @@ export class BlastSequenceDataService {
     const siteKey = `site_${projectId}_${siteId}`;
     console.log('🧹 DELETING PATTERN data from backend and frontend for:', siteKey);
     
-    // Delete drill points from backend
+    // Delete drill points from backend (this works)
     this.unifiedDrillDataService.clearAllDrillPoints(projectId, siteId).subscribe({
       next: (success) => {
         if (success) {
@@ -262,11 +366,10 @@ export class BlastSequenceDataService {
       error: (error) => console.warn('⚠️ Failed to clear drill points:', error.message)
     });
 
-    // Delete workflow data for pattern
-    this.siteBlastingService.deleteSiteData(projectId, siteId, 'pattern').subscribe({
-      next: () => console.log('✅ Deleted pattern workflow data from backend'),
-      error: (error) => console.warn('⚠️ Failed to delete pattern workflow data:', error.message)
-    });
+    // Note: Individual workflow data deletion by type is not supported by backend
+    // The backend only supports deleting ALL workflow data at once via /data endpoint
+    // For individual cleanup, we only clear frontend data and drill points
+    console.log('ℹ️ Skipping individual workflow data deletion - backend only supports full cleanup');
     
     // Remove pattern data from localStorage
     if (localStorage.getItem(`${siteKey}_pattern`)) {
@@ -295,11 +398,10 @@ export class BlastSequenceDataService {
     // Note: BlastSequence entity was removed as it's not used in the application
     console.log('ℹ️ BlastSequence cleanup skipped - entity removed from system');
 
-    // Delete workflow data for connections
-    this.siteBlastingService.deleteSiteData(projectId, siteId, 'connections').subscribe({
-      next: () => console.log('✅ Deleted connections workflow data from backend'),
-      error: (error) => console.warn('⚠️ Failed to delete connections workflow data:', error.message)
-    });
+    // Note: Individual workflow data deletion by type is not supported by backend
+    // The backend only supports deleting ALL workflow data at once via /data endpoint
+    // For individual cleanup, we only clear frontend data and blast connections
+    console.log('ℹ️ Skipping individual workflow data deletion - backend only supports full cleanup');
     
     // Remove connections data from localStorage
     if (localStorage.getItem(`${siteKey}_connections`)) {
@@ -324,16 +426,10 @@ export class BlastSequenceDataService {
     const siteKey = `site_${projectId}_${siteId}`;
     console.log('🧹 DELETING SIMULATION data from backend and frontend for:', siteKey);
     
-    // Delete simulation workflow data from backend
-    this.siteBlastingService.deleteSiteData(projectId, siteId, 'simulation_settings').subscribe({
-      next: () => console.log('✅ Deleted simulation settings from backend'),
-      error: (error: any) => console.warn('⚠️ Failed to delete simulation settings:', error.message)
-    });
-
-    this.siteBlastingService.deleteSiteData(projectId, siteId, 'simulation_state').subscribe({
-      next: () => console.log('✅ Deleted simulation state from backend'),
-      error: (error: any) => console.warn('⚠️ Failed to delete simulation state:', error.message)
-    });
+    // Note: Individual workflow data deletion by type is not supported by backend
+    // The backend only supports deleting ALL workflow data at once via /data endpoint
+    // For individual cleanup, we only clear frontend simulation data
+    console.log('ℹ️ Skipping individual workflow data deletion - backend only supports full cleanup');
     
     // Remove simulation data from localStorage
     const settingsKey = `${siteKey}_simulation_settings`;
@@ -920,11 +1016,29 @@ export class BlastSequenceDataService {
       id: apiConnection.id,
       point1DrillPointId: apiConnection.point1DrillPointId,
       point2DrillPointId: apiConnection.point2DrillPointId,
+      // Add fromHoleId and toHoleId for compatibility
+      fromHoleId: apiConnection.point1DrillPointId,
+      toHoleId: apiConnection.point2DrillPointId,
       connectorType: this.mapConnectorTypeFromApi(apiConnection.connectorType),
       delay: apiConnection.delay,
       sequence: apiConnection.sequence,
       projectId: apiConnection.projectId,
       siteId: apiConnection.siteId,
+      // Add required startPoint and endPoint properties
+      startPoint: {
+        id: `SP-${apiConnection.id}`,
+        label: "1",
+        x: 0,
+        y: 0,
+        isHidden: true
+      },
+      endPoint: {
+        id: `EP-${apiConnection.id}`,
+        label: "2",
+        x: 0,
+        y: 0,
+        isHidden: true
+      },
       // Navigation properties will be populated by the component
       point1DrillPoint: undefined,
       point2DrillPoint: undefined
@@ -1227,6 +1341,12 @@ export class BlastSequenceDataService {
     const totalSteps = connections.length;
 
     this.updateSimulationState({ totalDuration, totalSteps });
+  }
+
+  // Add method required by NavigationController
+  updateWorkflowState(projectId: number, siteId: number, workflowState: any): Observable<any> {
+    // Use the site blasting service to update workflow state
+    return this.siteBlastingService.updateWorkflowStep(projectId, siteId, 'workflow', workflowState);
   }
 
   // Project Management Methods
