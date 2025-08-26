@@ -51,7 +51,7 @@ export class CanvasManager {
       container: this.containerElement,
       width,
       height,
-      draggable: true
+      draggable: false
     });
 
     Logger.info('Konva stage created', { width, height });

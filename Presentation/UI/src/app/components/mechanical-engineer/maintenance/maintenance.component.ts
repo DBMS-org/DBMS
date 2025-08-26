@@ -3,15 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MaintenanceMockService } from './services/maintenance-mock.service';
 import { MaintenanceErrorHandlerService, MaintenanceError } from './services/maintenance-error-handler.service';
-import { BreadcrumbComponent } from './shared/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-maintenance',
   standalone: true,
   imports: [
     CommonModule, 
-    RouterModule,
-    BreadcrumbComponent
+    RouterModule
   ],
   templateUrl: './maintenance.component.html',
   styleUrl: './maintenance.component.scss',

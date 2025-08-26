@@ -21,6 +21,8 @@ export class OperatorSidebarComponent {
   navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/operator/dashboard' },
     { icon: 'assignment', label: 'My Project', route: '/operator/my-project' },
-    { icon: 'location_city', label: 'Project Sites', route: '/operator/my-project/sites' }
+    { icon: 'location_city', label: 'Project Sites', route: '/operator/my-project/sites' },
+    { icon: 'precision_manufacturing', label: 'My Machines', route: '/operator/my-machines' },
+    { icon: 'report_problem', label: 'Maintenance Reports', route: '/operator/maintenance-reports' }
   ];
 } 

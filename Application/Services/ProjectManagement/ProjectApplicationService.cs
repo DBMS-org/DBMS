@@ -32,6 +32,14 @@ namespace Application.Services.ProjectManagement
             try
             {
                 var projects = await _projectRepository.GetAllAsync();
+                if (!projects.Any())
+                {
+                    _logger.LogInformation("No projects found in the system");
+                }
+                else
+                {
+                    _logger.LogInformation("Successfully retrieved {Count} projects", projects.Count());
+                }
                 return Result.Success(projects);
             }
             catch (Exception ex)
@@ -48,8 +56,12 @@ namespace Application.Services.ProjectManagement
                 var project = await _projectRepository.GetByIdWithDetailsAsync(id);
                 if (project == null)
                 {
+                    _logger.LogWarning("Project not found with ID {ProjectId}", id);
                     return Result.Failure<Project>(ErrorCodes.Messages.ProjectNotFound(id));
                 }
+
+                // Log successful project retrieval
+                _logger.LogInformation("Successfully retrieved project {ProjectId}", id);
                 return Result.Success(project);
             }
             catch (Exception ex)
@@ -239,11 +251,22 @@ namespace Application.Services.ProjectManagement
         {
             try
             {
+                // First verify the operator exists
+                var userExists = await _projectRepository.UserExistsAsync(operatorId);
+                if (!userExists)
+                {
+                    _logger.LogWarning("Operator with ID {OperatorId} not found", operatorId);
+                    return Result.Failure<Project>($"Operator with ID {operatorId} not found");
+                }
+
                 var project = await _projectRepository.GetByOperatorIdAsync(operatorId);
                 if (project == null)
                 {
-                    return Result.Failure<Project>(ErrorCodes.Messages.ProjectNotFound(operatorId));
+                    _logger.LogWarning("No project assigned to operator {OperatorId}", operatorId);
+                    return Result.Failure<Project>($"No project assigned to operator {operatorId}");
                 }
+
+                _logger.LogInformation("Successfully retrieved project for operator {OperatorId}", operatorId);
                 return Result.Success(project);
             }
             catch (Exception ex)

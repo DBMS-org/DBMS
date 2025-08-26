@@ -20,8 +20,10 @@ export interface Machine {
   updatedAt: Date;
   projectId?: number;
   operatorId?: number;
+  regionId?: number;
   projectName?: string;
   operatorName?: string;
+  description?: string;
 }
 
 export interface MachineSpecifications {
@@ -66,6 +68,8 @@ export interface UpdateMachineRequest {
   manufacturingYear?: number;
   status: string;
   currentLocation?: string;
+  location?: string;
+  description?: string;
   projectId?: number;
   operatorId?: number;
   regionId?: number;
