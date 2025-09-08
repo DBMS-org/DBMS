@@ -14,6 +14,7 @@ export class SidebarComponent {
 
   menuItems = [
     { path: '/blasting-engineer/dashboard', icon: 'dashboard', label: 'Dashboard' },
-    { path: '/blasting-engineer/project-management', icon: 'work', label: 'Project Management' }
+    { path: '/blasting-engineer/project-management', icon: 'work', label: 'Project Management' },
+    { path: '/blasting-engineer/proposal-history', icon: 'history', label: 'Proposal History' }
   ];
 }

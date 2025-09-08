@@ -1,1 +1,10 @@
-little front end changes
+Enhance project management features and improve UI components
+
+- Added optional properties for location and description in the Machine model to provide more context.
+- Updated the SiteBlasting model to include optional fromHoleId and toHoleId for better drill point tracking.
+- Improved the OperatorDashboardComponent to display informative messages when no project is assigned.
+- Enhanced the navigation sidebar for operators with new routes for 'My Machines' and 'Maintenance Reports'.
+- Refined the maintenance component's template and style for better user experience.
+- Updated the ProjectService to handle errors more effectively and log relevant information.
+- Improved the SiteBlastingService to support additional data handling for workflow states.
+- Added new environment variables for better configuration management.

@@ -222,5 +222,8 @@ namespace Infrastructure.Repositories.ProjectManagement
                 throw;
             }
         }
+
+        // Note: Explosive approval methods have been moved to ExplosiveApprovalRequestRepository
+        // as part of the new ExplosiveApprovalRequest entity implementation
     }
-} 
+}

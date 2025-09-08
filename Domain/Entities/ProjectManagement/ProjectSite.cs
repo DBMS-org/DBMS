@@ -25,5 +25,6 @@ namespace Domain.Entities.ProjectManagement
         
         // Navigation properties
         public virtual Project Project { get; set; } = null!;
+        public virtual ICollection<ExplosiveApprovalRequest> ExplosiveApprovalRequests { get; set; } = new List<ExplosiveApprovalRequest>();
     }
-} 
+}

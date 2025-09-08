@@ -39,12 +39,12 @@ namespace Infrastructure.Configurations.BlastingOperations
                 
             entity.HasOne(e => e.Point1DrillPoint)
                 .WithMany()
-                .HasForeignKey(e => e.Point1DrillPointId)
+                .HasForeignKey(e => new { e.Point1DrillPointId, e.ProjectId, e.SiteId })
                 .OnDelete(DeleteBehavior.Restrict);
                 
             entity.HasOne(e => e.Point2DrillPoint)
                 .WithMany()
-                .HasForeignKey(e => e.Point2DrillPointId)
+                .HasForeignKey(e => new { e.Point2DrillPointId, e.ProjectId, e.SiteId })
                 .OnDelete(DeleteBehavior.Restrict);
             
             // Indexes for performance
@@ -82,7 +82,7 @@ namespace Infrastructure.Configurations.BlastingOperations
                   
             entity.HasOne(e => e.DrillPoint)
                   .WithMany()
-                  .HasForeignKey(e => e.DrillPointId)
+                  .HasForeignKey(e => new { e.DrillPointId, e.ProjectId, e.SiteId })
                   .OnDelete(DeleteBehavior.Restrict);
                   
             // Indexes for performance
@@ -90,4 +90,4 @@ namespace Infrastructure.Configurations.BlastingOperations
             entity.HasIndex(e => e.DrillPointId);
         }
     }
-} 
+}
