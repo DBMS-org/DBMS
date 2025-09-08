@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface ProjectSite {
@@ -18,6 +18,10 @@ export interface ProjectSite {
   isPatternApproved: boolean;
   isSimulationConfirmed: boolean;
   isOperatorCompleted: boolean;
+  isExplosiveApprovalRequested: boolean;
+  explosiveApprovalRequestDate?: Date;
+  expectedExplosiveUsageDate?: Date;
+  explosiveApprovalComments?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -127,6 +131,37 @@ export class SiteService {
     return this.http.post(url, {}, this.getHttpOptions());
   }
 
+  // Request explosive approval from store manager
+  requestExplosiveApproval(siteId: number, expectedUsageDate: string, comments?: string) {
+    const url = `${environment.apiUrl}/api/explosive-approval-requests`;
+    return this.http.post(url, { 
+      ProjectSiteId: siteId, 
+      ExpectedUsageDate: expectedUsageDate, 
+      Comments: comments 
+    }, this.getHttpOptions());
+  }
+
+  // Check if there's a pending explosive approval request for a site
+  hasPendingExplosiveApprovalRequest(siteId: number) {
+    const url = `${environment.apiUrl}/api/explosive-approval-requests/project-site/${siteId}/has-pending`;
+    return this.http.get<{hasPendingRequest: boolean}>(url, this.getHttpOptions());
+  }
+
+  // Revoke explosive approval request
+  revokeExplosiveApprovalRequest(siteId: number) {
+    // First get the latest request for this site, then cancel it
+    const getLatestUrl = `${environment.apiUrl}/api/explosive-approval-requests/project-site/${siteId}/latest`;
+    return this.http.get<any>(getLatestUrl, this.getHttpOptions())
+      .pipe(
+        catchError(() => throwError(() => new Error('No explosive approval request found'))),
+        // If we get a request, cancel it
+        switchMap((request: any) => {
+          const cancelUrl = `${environment.apiUrl}/api/explosive-approval-requests/${request.id}/cancel`;
+          return this.http.post(cancelUrl, {}, this.getHttpOptions());
+        })
+      );
+  }
+
   private handleError(error: any) {
     console.error('An error occurred:', error);
     
@@ -140,4 +175,4 @@ export class SiteService {
     
     return throwError(() => error);
   }
-} 
+}

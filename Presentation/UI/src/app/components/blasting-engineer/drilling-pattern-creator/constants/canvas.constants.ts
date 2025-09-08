@@ -7,9 +7,11 @@ export const CANVAS_CONSTANTS = {
   MAX_DRILL_POINTS: 500,
   MAX_CACHE_SIZE: 10,
   DEFAULT_SETTINGS: {
-    spacing: 3,
-    burden: 2.5,
-    depth: 10
+    spacing: 2.5,
+    burden: 3.0,
+    depth: 0,
+    diameter: 0,
+    stemming: 0
   },
   ARIA_LABELS: {
     patternCreator: 'Drilling pattern creator canvas',
@@ -47,4 +49,4 @@ export const CANVAS_CONSTANTS = {
     SAVE_FEEDBACK: 2000, // ms
     RESIZE_DEBOUNCE: 150 // ms
   }
-} as const; 
+} as const;

@@ -131,7 +131,10 @@ export class PatternDataManager {
       this.drillPoints = [...existingPatternData.drillPoints];
       
       if (existingPatternData.settings) {
-        this.settings = { ...existingPatternData.settings };
+        this.settings = {
+          ...CANVAS_CONSTANTS.DEFAULT_SETTINGS,
+          ...existingPatternData.settings
+        };
       }
 
       // Update the currentId to continue from the highest existing ID
@@ -348,4 +351,4 @@ export class PatternDataManager {
   exportForBlastDesigner(): PatternData {
     return this.drillPointService.exportPatternForBlastDesign(this.drillPoints, this.settings);
   }
-} 
+}

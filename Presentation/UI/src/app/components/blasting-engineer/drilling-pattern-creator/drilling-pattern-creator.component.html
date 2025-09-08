@@ -1,5 +1,37 @@
 <div class="pattern-creator-container" role="main" aria-label="Drilling Pattern Creator">
-  <div class="toolbar" role="toolbar" aria-label="Pattern Creator Tools">
+  <!-- Status bar moved to top -->
+  <div class="status-bar" 
+       role="status" 
+       aria-live="polite"
+       [class.precise-mode]="isPreciseMode">
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">place</span>
+      <span *ngIf="cursorPosition">
+        <span *ngIf="isPreciseMode">Grid: </span>
+        <span *ngIf="!isPreciseMode">Position: </span>
+        ({{ formatValue(cursorPosition.x) }}, {{ formatValue(cursorPosition.y) }})
+      </span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">straighten</span>
+      <span>Spacing: {{ settings && formatValue(settings.spacing) }}m</span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">height</span>
+      <span>Burden: {{ settings && formatValue(settings.burden) }}m</span>
+    </div>
+    <div class="status-item">
+      <span class="material-icons" aria-hidden="true">settings</span>
+      <span>Scale: {{ scale.toFixed(2) }}x</span>
+      <span *ngIf="isPreciseMode" style="margin-left: 1rem;">
+        <span class="material-icons" aria-hidden="true" style="font-size: 1rem; vertical-align: middle;">grid_on</span>
+        Precise Mode Active
+      </span>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="toolbar" role="toolbar" aria-label="Pattern Creator Tools">
     <div class="toolbar-section" role="group" aria-label="Placement Controls">
       <button mat-button
               class="toolbar-button"
@@ -83,6 +115,48 @@
           max="50" 
           step="0.5"
           [attr.aria-label]="'Hole depth in meters, current value: ' + settings.depth">
+      </div>
+      
+      <div class="input-group">
+        <label for="diameter-input" class="input-label">
+          <span class="material-icons" aria-hidden="true">radio_button_unchecked</span>
+          Diameter (m)
+        </label>
+        <input 
+          id="diameter-input"
+          type="number" 
+          class="pattern-input"
+          [(ngModel)]="settings.diameter"
+          (ngModelChange)="onDiameterChange($event)"
+          min="0.05" 
+          max="1" 
+          step="0.01"
+          [attr.aria-label]="'Hole diameter in meters, current value: ' + settings.diameter">
+        <div class="global-setting-indicator">
+          <span class="material-icons" aria-hidden="true">public</span>
+          <span class="indicator-text">Global setting for all holes</span>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="stemming-input" class="input-label">
+          <span class="material-icons" aria-hidden="true">layers</span>
+          Stemming (m)
+        </label>
+        <input 
+          id="stemming-input"
+          type="number" 
+          class="pattern-input"
+          [(ngModel)]="settings.stemming"
+          (ngModelChange)="onStemmingChange($event)"
+          min="0.5" 
+          max="10" 
+          step="0.1"
+          [attr.aria-label]="'Hole stemming length in meters, current value: ' + settings.stemming">
+        <div class="global-setting-indicator">
+          <span class="material-icons" aria-hidden="true">public</span>
+          <span class="indicator-text">Global setting for all holes</span>
+        </div>
       </div>
     </div>
 
@@ -270,6 +344,16 @@
       </button>
 
       <button mat-button
+              class="toolbar-button explosive-calculations-button"
+              (click)="onNavigateToExplosiveCalculations()"
+              [disabled]="drillPoints.length === 0"
+              matTooltip="Calculate explosive requirements for this pattern"
+              aria-label="Navigate to explosive calculations">
+        <span class="material-icons" aria-hidden="true">calculate</span>
+        Explosive Calculations
+      </button>
+
+      <button mat-button
               class="toolbar-button blast-designer-button"
               (click)="onExportToBlastDesigner()"
               [disabled]="drillPoints.length === 0"
@@ -355,34 +439,5 @@
       X: {{ formatValue(cursorPosition.x) }}m, Y: {{ formatValue(cursorPosition.y) }}m
     </div>
   </div>
-
-  <div class="status-bar" 
-       role="status" 
-       aria-live="polite"
-       [class.precise-mode]="isPreciseMode">
-    <div class="status-item">
-      <span class="material-icons" aria-hidden="true">place</span>
-      <span *ngIf="cursorPosition">
-        <span *ngIf="isPreciseMode">Grid: </span>
-        <span *ngIf="!isPreciseMode">Position: </span>
-        ({{ formatValue(cursorPosition.x) }}, {{ formatValue(cursorPosition.y) }})
-      </span>
-    </div>
-    <div class="status-item">
-      <span class="material-icons" aria-hidden="true">straighten</span>
-      <span>Spacing: {{ settings && formatValue(settings.spacing) }}m</span>
-    </div>
-    <div class="status-item">
-      <span class="material-icons" aria-hidden="true">height</span>
-      <span>Burden: {{ settings && formatValue(settings.burden) }}m</span>
-    </div>
-    <div class="status-item">
-      <span class="material-icons" aria-hidden="true">settings</span>
-      <span>Scale: {{ scale.toFixed(2) }}x</span>
-      <span *ngIf="isPreciseMode" style="margin-left: 1rem;">
-        <span class="material-icons" aria-hidden="true" style="font-size: 1rem; vertical-align: middle;">grid_on</span>
-        Precise Mode Active
-      </span>
-    </div>
   </div>
 </div>

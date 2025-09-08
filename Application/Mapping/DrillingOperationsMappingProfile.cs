@@ -48,6 +48,33 @@ namespace Application.Mapping
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => "Default"))
                 .ForMember(dest => dest.Project, opt => opt.Ignore())
                 .ForMember(dest => dest.Site, opt => opt.Ignore());
+
+            // ExplosiveCalculationResult mappings
+            CreateMap<ExplosiveCalculationResult, ExplosiveCalculationResultDto>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)));
+
+            CreateMap<CreateExplosiveCalculationResultRequest, ExplosiveCalculationResult>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Project, opt => opt.Ignore())
+                .ForMember(dest => dest.Site, opt => opt.Ignore())
+                .ForMember(dest => dest.PatternSettings, opt => opt.Ignore())
+                .ForMember(dest => dest.OwningUser, opt => opt.Ignore());
+
+            CreateMap<UpdateExplosiveCalculationResultRequest, ExplosiveCalculationResult>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore()) // Don't update ID
+                .ForMember(dest => dest.ProjectId, opt => opt.Ignore()) // Don't update project context
+                .ForMember(dest => dest.SiteId, opt => opt.Ignore()) // Don't update site context
+                .ForMember(dest => dest.OwningUserId, opt => opt.Ignore()) // Don't update owner
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Don't update creation time
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Project, opt => opt.Ignore())
+                .ForMember(dest => dest.Site, opt => opt.Ignore())
+                .ForMember(dest => dest.PatternSettings, opt => opt.Ignore())
+                .ForMember(dest => dest.OwningUser, opt => opt.Ignore())
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null)); // Only map non-null values
         }
     }
-} 
+}

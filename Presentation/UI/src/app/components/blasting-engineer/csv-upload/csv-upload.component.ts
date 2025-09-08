@@ -165,7 +165,9 @@ export class CsvUploadComponent implements OnInit {
                 siteId: Number(this.siteId) || 0,
                 spacing: 3.0,
                 burden: 2.5,
-                depth: 10.0
+                depth: 10.0,
+                diameter: 0.15,
+                stemming: 2.0
               },
               projectId: Number(this.projectId) || 0,
               siteId: Number(this.siteId) || 0

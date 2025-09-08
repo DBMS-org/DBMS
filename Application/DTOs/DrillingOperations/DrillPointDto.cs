@@ -10,6 +10,8 @@ namespace Application.DTOs.DrillingOperations
         public double Depth { get; set; }
         public double Spacing { get; set; }
         public double Burden { get; set; }
+        public double Diameter { get; set; } = 0.15;
+        public double Stemming { get; set; } = 2.0;
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -32,6 +34,12 @@ namespace Application.DTOs.DrillingOperations
         
         [Range(0.1, 50.0)]
         public double Burden { get; set; } = 2.5;
+        
+        [Range(0.05, 1.0)]
+        public double Diameter { get; set; } = 0.89;
+        
+        [Range(0.5, 10.0)]
+        public double Stemming { get; set; } = 3.0;
         
         [Required]
         public int ProjectId { get; set; }
@@ -68,6 +76,12 @@ namespace Application.DTOs.DrillingOperations
         
         [Range(0.1, 100.0)]
         public double Depth { get; set; } = 10.0;
+        
+        [Range(0.05, 1.0)]
+        public double Diameter { get; set; } = 0.89;
+        
+        [Range(0.5, 10.0)]
+        public double Stemming { get; set; } = 3.0;
     }
     
     public class PatternDataDto
@@ -130,6 +144,12 @@ namespace Application.DTOs.DrillingOperations
         
         [Range(0.1, 100.0)]
         public double Depth { get; set; } = 10.0;
+        
+        [Range(0.05, 1.0)]
+        public double Diameter { get; set; } = 0.89;
+        
+        [Range(0.5, 10.0)]
+        public double Stemming { get; set; } = 3.0;
     }
     
     public class SavePatternResult
@@ -138,4 +158,4 @@ namespace Application.DTOs.DrillingOperations
         public string Message { get; set; } = string.Empty;
         public int? PatternId { get; set; }
     }
-} 
+}

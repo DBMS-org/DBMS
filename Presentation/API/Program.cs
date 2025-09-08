@@ -1,4 +1,5 @@
 using Application.Interfaces.Infrastructure;
+using Application.Interfaces.Infrastructure.Repositories;
 using Application.Interfaces.UserManagement;
 using Application.Interfaces.ProjectManagement;
 using Application.Interfaces.DrillingOperations;
@@ -81,7 +82,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
-        policy.WithOrigins("http://localhost:4200") // Angular default port
+        policy.WithOrigins("http://localhost:4200", "http://localhost:4201") // Angular ports
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -137,6 +138,10 @@ builder.Services.AddScoped<IDrillPointRepository, DrillPointRepository>();
 builder.Services.AddScoped<IDrillPointPatternService, DrillPointPatternApplicationService>();
 builder.Services.AddScoped<DrillPointDomainService>();
 
+// Register Explosive Calculation services
+builder.Services.AddScoped<IExplosiveCalculationResultRepository, ExplosiveCalculationResultRepository>();
+builder.Services.AddScoped<IExplosiveCalculationResultService, ExplosiveCalculationResultApplicationService>();
+
 // Register Site Blasting services
 builder.Services.AddScoped<ISiteBlastingRepository, SiteBlastingRepository>();
 
@@ -155,6 +160,10 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectService, ProjectApplicationService>();
 builder.Services.AddScoped<IProjectSiteRepository, ProjectSiteRepository>();
 builder.Services.AddScoped<IProjectSiteService, ProjectSiteApplicationService>();
+
+// Register Explosive Approval Request services
+builder.Services.AddScoped<IExplosiveApprovalRequestRepository, ExplosiveApprovalRequestRepository>();
+builder.Services.AddScoped<IExplosiveApprovalRequestService, ExplosiveApprovalRequestApplicationService>();
 
 // Register User/Auth services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
