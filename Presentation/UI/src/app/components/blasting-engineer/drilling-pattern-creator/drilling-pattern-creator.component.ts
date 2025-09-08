@@ -159,6 +159,12 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     // This fixes the issue where grid doesn't show on initial navigation
     setTimeout(() => {
       this.initializeCanvas();
+      
+      // Initialize spacing and burden defaults after canvas initialization
+      // This ensures values are set immediately upon page load
+      if (!this.isReadOnly) {
+        this.initializeSpacingAndBurdenDefaults();
+      }
     }, 0);
   }
 
@@ -211,7 +217,10 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       
       // Load existing settings
       if (existingPatternData.settings) {
-        this.settings = { ...existingPatternData.settings };
+        this.settings = {
+          ...CANVAS_CONSTANTS.DEFAULT_SETTINGS,
+          ...existingPatternData.settings
+        };
       }
       
       Logger.info('Loaded existing pattern data', {
@@ -250,8 +259,23 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
             this.settings = {
               spacing: pattern.spacing,
               burden: pattern.burden,
-              depth: pattern.depth
+              depth: pattern.depth,
+              diameter: pattern.diameter || CANVAS_CONSTANTS.DEFAULT_SETTINGS.diameter,
+              stemming: pattern.stemming || CANVAS_CONSTANTS.DEFAULT_SETTINGS.stemming
             };
+            
+            // Update hole numbering in drillPointService so it continues after loaded IDs
+            if (this.drillPoints.length > 0) {
+              const highestId = Math.max(
+                ...this.drillPoints.map(dp => {
+                  const numericPart = parseInt(dp.id.replace(/\D/g, ''));
+                  return isNaN(numericPart) ? 0 : numericPart;
+                })
+              );
+              this.drillPointService.setCurrentId(highestId + 1);
+            } else {
+              this.drillPointService.setCurrentId(1);
+            }
             
             // Ensure pattern has a name property to avoid undefined in logs
             const patternName = pattern.name || `Pattern-${this.currentProjectId}-${this.currentSiteId}`;
@@ -268,6 +292,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
           } else {
             // No explicit drill-pattern record – fall back to generic workflow state
             this.loadWorkflowStateFromBackend();
+            // Initialize default spacing and burden values if no pattern exists
+            this.initializeSpacingAndBurdenDefaults();
           }
           // After attempting to load backend pattern, process any uploaded CSV data
           this.processIncomingDrillData();
@@ -276,6 +302,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
           console.log('Error loading drill patterns:', error.message);
           // Attempt workflow state as secondary source if drill patterns failed/404
           this.loadWorkflowStateFromBackend();
+          // Initialize default spacing and burden values if no pattern exists
+          this.initializeSpacingAndBurdenDefaults();
           // Even if error, still process incoming CSV data
           this.processIncomingDrillData();
         }
@@ -317,7 +345,24 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
                 
               if (patternData.drillPoints) {
                 this.drillPoints = patternData.drillPoints;
-                this.settings = patternData.settings || this.settings;
+                this.settings = {
+                  ...this.settings,
+                  ...patternData.settings,
+                  diameter: patternData.settings?.diameter || CANVAS_CONSTANTS.DEFAULT_SETTINGS.diameter
+                };
+
+                // Update hole numbering in drillPointService so it continues after loaded IDs
+                if (this.drillPoints.length > 0) {
+                  const highestId = Math.max(
+                    ...this.drillPoints.map(dp => {
+                      const numericPart = parseInt(dp.id.replace(/\D/g, ''));
+                      return isNaN(numericPart) ? 0 : numericPart;
+                    })
+                  );
+                  this.drillPointService.setCurrentId(highestId + 1);
+                } else {
+                  this.drillPointService.setCurrentId(1);
+                }
 
                 console.log('Loaded workflow pattern state from backend with', this.drillPoints.length, 'points');
 
@@ -539,6 +584,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
             this.drawGrid();
             this.drawRulers();
             this.drawDrillPoints();
+            // Force grid layer redraw to prevent disappearing lines
+            setTimeout(() => this.gridLayer?.batchDraw(), 0);
           }
           
           return;
@@ -719,7 +766,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       isPreciseMode: this.isPreciseMode
     });
 
-    const cacheKey = `${this.scale}-${this.offsetX + this.panOffsetX}-${this.offsetY + this.panOffsetY}-${this.isPreciseMode}`;
+    const cacheKey = `${this.scale}-${this.offsetX + this.panOffsetX}-${this.offsetY + this.panOffsetY}-${this.isPreciseMode}-${this.stage.width()}-${this.stage.height()}`;
     console.log('Grid cache key:', cacheKey);
     
     // Always destroy intersection group to ensure proper precise mode handling
@@ -1396,6 +1443,31 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     });
   }
 
+  onNavigateToExplosiveCalculations(): void {
+    if (this.drillPoints.length === 0) {
+      console.warn('No drill points available for explosive calculations');
+      return;
+    }
+
+    if (!this.currentProjectId || !this.currentSiteId) {
+      console.error('Missing project or site context for navigation');
+      return;
+    }
+
+    // Save current pattern data before navigation
+    this.onSavePattern();
+
+    // Navigate to explosive calculations page with project and site context
+    const targetRoute = `/blasting-engineer/project-management/${this.currentProjectId}/sites/${this.currentSiteId}/explosive-calculations`;
+    console.log('Navigating to explosive calculations with context:', targetRoute);
+    
+    this.router.navigate([targetRoute]).then(success => {
+      console.log('Navigation to explosive calculations success:', success);
+    }).catch(error => {
+      console.error('Navigation to explosive calculations error:', error);
+    });
+  }
+
   onDeletePoint(): void {
     if (this.isReadOnly) return;
     if (this.selectedPoint) {
@@ -1425,6 +1497,20 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     });
   }
 
+  onDiameterChange(value: number): void {
+    if (this.isReadOnly) return;
+    this.settings.diameter = value;
+    // Diameter is a global setting that applies to all holes
+    // No visual update needed as this is just a data property
+  }
+
+  onStemmingChange(value: number): void {
+    if (this.isReadOnly) return;
+    this.settings.stemming = value;
+    // Stemming is a global setting that applies to all holes
+    // No visual update needed as this is just a data property
+  }
+
   private updatePattern(): void {
     // Clear grid cache since grid spacing has changed
     this.gridService.clearGridCache();
@@ -1450,14 +1536,35 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     if (this.resizeTimeout) {
       clearTimeout(this.resizeTimeout);
     }
+    
     this.resizeTimeout = setTimeout(() => {
+      console.log('🔄 Window resize detected - clearing grid cache and redrawing');
+      
+      // Clear grid cache to force redraw with new dimensions
+      this.gridService.clearGridCache();
+      
+      // Update stage dimensions
       const container = this.containerRef.nativeElement;
-      this.stage.width(container.offsetWidth);
-      this.stage.height(container.offsetHeight);
+      const newWidth = container.offsetWidth;
+      const newHeight = container.offsetHeight;
+      
+      console.log('Resizing canvas:', {
+        oldWidth: this.stage.width(),
+        oldHeight: this.stage.height(),
+        newWidth,
+        newHeight
+      });
+      
+      this.stage.width(newWidth);
+      this.stage.height(newHeight);
+      
+      // Redraw all elements with new dimensions
       this.drawGrid();
       this.drawRulers();
       this.drawDrillPoints();
-    }, 250);
+      
+      console.log('✅ Canvas resize complete - grid redrawn with new dimensions');
+    }, CANVAS_CONSTANTS.TIMEOUTS.RESIZE_DEBOUNCE);
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -1613,13 +1720,17 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       burden: autoBurden
     });
     // Reset hole numbering in drillPointService so it continues after imported IDs
-    const highestId = Math.max(
-      ...this.drillPoints.map(dp => {
-        const numericPart = parseInt(dp.id.replace(/\D/g, ''));
-        return isNaN(numericPart) ? 0 : numericPart;
-      })
-    );
-    this.drillPointService.setCurrentId(highestId + 1);
+    if (this.drillPoints.length > 0) {
+      const highestId = Math.max(
+        ...this.drillPoints.map(dp => {
+          const numericPart = parseInt(dp.id.replace(/\D/g, ''));
+          return isNaN(numericPart) ? 0 : numericPart;
+        })
+      );
+      this.drillPointService.setCurrentId(highestId + 1);
+    } else {
+      this.drillPointService.setCurrentId(1);
+    }
 
     // Update settings depth to average of holes if available
     if (convertedPoints.length > 0) {
@@ -1809,5 +1920,105 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private triggerUIUpdate(): void {
     this.cdr.markForCheck();
     this.drawDrillPoints();
+  }
+
+  /**
+   * Testing method to verify grid behavior after resize
+   */
+  testGridAfterResize(): void {
+    if (!this.isInitialized) {
+      console.error('❌ Canvas not initialized');
+      return;
+    }
+
+    console.log('🧪 Testing grid behavior after resize simulation');
+    
+    const originalDimensions = {
+      width: this.stage.width(),
+      height: this.stage.height()
+    };
+    
+    console.log('Original dimensions:', originalDimensions);
+    
+    // Simulate different canvas sizes
+    const testSizes = [
+      { width: 800, height: 600 },
+      { width: 1200, height: 800 },
+      { width: 1600, height: 900 },
+      originalDimensions // Return to original
+    ];
+    
+    testSizes.forEach((size, index) => {
+      setTimeout(() => {
+        console.log(`🔄 Test ${index + 1}: Resizing to ${size.width}x${size.height}`);
+        
+        // Clear cache and resize
+        this.gridService.clearGridCache();
+        this.stage.width(size.width);
+        this.stage.height(size.height);
+        
+        // Redraw grid
+        this.drawGrid();
+        this.drawRulers();
+        this.drawDrillPoints();
+        
+        console.log(`✅ Test ${index + 1} complete - Grid should be visible`);
+        
+        if (index === testSizes.length - 1) {
+          console.log('🎉 All grid resize tests completed');
+        }
+      }, index * 1000);
+    });
+  }
+
+  /**
+   * Initialize spacing and burden values based on previously saved hole parameters
+   * or set default values if no saved values exist
+   */
+  private initializeSpacingAndBurdenDefaults(): void {
+    // Check if spacing and burden are already set (from loaded pattern or workflow state)
+    if (this.settings.spacing > 0 && this.settings.burden > 0) {
+      console.log('Spacing and burden already initialized from saved data:', {
+        spacing: this.settings.spacing,
+        burden: this.settings.burden
+      });
+      return;
+    }
+
+    // Try to get the most recently created hole parameters from the service
+    this.drillPointPatternService.getPattern(this.currentProjectId, this.currentSiteId)
+      .subscribe({
+        next: (recentPattern) => {
+          if (recentPattern && recentPattern.spacing && recentPattern.burden) {
+            // Use values from most recently created hole
+            this.settings.spacing = recentPattern.spacing;
+            this.settings.burden = recentPattern.burden;
+            console.log('Initialized spacing and burden from recent hole parameters:', {
+              spacing: this.settings.spacing,
+              burden: this.settings.burden
+            });
+          } else {
+            // Set default values if no saved values exist
+            this.settings.spacing = 2.5;
+            this.settings.burden = 3.0;
+            console.log('Initialized spacing and burden with default values:', {
+              spacing: this.settings.spacing,
+              burden: this.settings.burden
+            });
+          }
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.log('Error loading recent hole parameters, using defaults:', error.message);
+          // Set default values if service call fails
+          this.settings.spacing = 2.5;
+          this.settings.burden = 3.0;
+          console.log('Initialized spacing and burden with default values after error:', {
+            spacing: this.settings.spacing,
+            burden: this.settings.burden
+          });
+          this.cdr.markForCheck();
+        }
+      });
   }
 }

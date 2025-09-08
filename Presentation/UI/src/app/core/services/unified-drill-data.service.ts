@@ -70,9 +70,11 @@ export class UnifiedDrillDataService {
             name: 'Default Pattern',
             projectId,
             siteId,
-            spacing: 3.0,
-            burden: 2.5,
-            depth: 10.0
+            spacing: 0,
+            burden: 0,
+            depth: 0,
+            diameter: 0,
+            stemming: 0
           },
           projectId,
           siteId
@@ -174,9 +176,11 @@ export class UnifiedDrillDataService {
           name: 'Default Pattern',
           projectId,
           siteId,
-          spacing: 3.0,
-          burden: 2.5,
-          depth: 10.0
+          spacing: 0,
+          burden: 0,
+          depth: 0,
+          diameter: 0,
+          stemming: 0
         });
       })
     );
@@ -332,4 +336,4 @@ export class UnifiedDrillDataService {
     this.currentProjectId = 0;
     this.currentSiteId = 0;
   }
-} 
+}

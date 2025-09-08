@@ -1,0 +1,229 @@
+.duplicate-dialog-container {
+  max-width: 600px;
+  min-width: 500px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  
+  .warning-icon {
+    color: #ff9800;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+  
+  h2 {
+    margin: 0;
+    color: #333;
+    font-weight: 600;
+  }
+}
+
+.dialog-content {
+  padding: 0 24px;
+}
+
+.alert-section {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  
+  .alert-message {
+    .primary-message {
+      font-size: 16px;
+      font-weight: 500;
+      color: #856404;
+      margin: 0 0 16px 0;
+    }
+  }
+  
+  .existing-calculation-info {
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #6c757d;
+      font-size: 14px;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #6c757d;
+      }
+      
+      strong {
+        color: #495057;
+      }
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+.options-section {
+  h3 {
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+  }
+  
+  .option-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .option-card {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      border-color: #007bff;
+      box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+    }
+    
+    .option-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+      
+      h4 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+    
+    p {
+      margin: 0 0 12px 0;
+      color: #6c757d;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    
+    .option-warning {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 4px;
+      padding: 8px 12px;
+      
+      mat-icon {
+        color: #721c24;
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+      
+      span {
+        color: #721c24;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+    
+    &.replace-option {
+      .option-header {
+        mat-icon {
+          color: #dc3545;
+        }
+      }
+    }
+    
+    &.view-option {
+      .option-header {
+        mat-icon {
+          color: #007bff;
+        }
+      }
+    }
+  }
+}
+
+.dialog-actions {
+  padding: 16px 24px;
+  gap: 12px;
+  
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+  
+  .cancel-btn {
+    color: #6c757d;
+    
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+  
+  .view-btn {
+    color: #007bff;
+    
+    &:hover {
+      background-color: #e3f2fd;
+    }
+  }
+  
+  .replace-btn {
+    background-color: #dc3545;
+    color: white;
+    
+    &:hover {
+      background-color: #c82333;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .duplicate-dialog-container {
+    min-width: 90vw;
+    max-width: 90vw;
+  }
+  
+  .dialog-content {
+    padding: 0 16px;
+  }
+  
+  .dialog-actions {
+    padding: 16px;
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

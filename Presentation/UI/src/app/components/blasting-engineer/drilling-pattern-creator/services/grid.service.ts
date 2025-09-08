@@ -38,10 +38,33 @@ export class GridService {
   }
 
   clearGridCache(): void {
-    this.gridCache.forEach(group => {
+    console.log(`🗑️ Clearing grid cache (${this.gridCache.size} entries)`);
+    this.gridCache.forEach((group, key) => {
+      console.log(`  Destroying cached grid: ${key}`);
       group.destroy();
     });
     this.gridCache.clear();
+    console.log('✅ Grid cache cleared');
+  }
+
+  /**
+   * Clear cache entries that match a specific pattern (e.g., all entries for a specific canvas size)
+   */
+  clearCacheByPattern(pattern: RegExp): void {
+    const keysToDelete: string[] = [];
+    
+    this.gridCache.forEach((group, key) => {
+      if (pattern.test(key)) {
+        keysToDelete.push(key);
+        group.destroy();
+      }
+    });
+    
+    keysToDelete.forEach(key => {
+      this.gridCache.delete(key);
+    });
+    
+    console.log(`🗑️ Cleared ${keysToDelete.length} cache entries matching pattern: ${pattern}`);
   }
 
   drawGrid(

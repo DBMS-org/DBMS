@@ -146,6 +146,10 @@
             <span>Design Sequence</span>
           </button>
           <button class="action-btn" *ngIf="workflowSteps[2].enabled" (click)="navigateToStep(workflowSteps[2])">
+            <i class="fas fa-calculator"></i>
+            <span>Calculate Explosives</span>
+          </button>
+          <button class="action-btn" *ngIf="workflowSteps[3].enabled" (click)="navigateToStep(workflowSteps[3])">
             <i class="fas fa-play-circle"></i>
             <span>Run Simulation</span>
           </button>
@@ -181,6 +185,15 @@
             <span>{{ formatDate(site.createdAt) }}</span>
           </div>
         </div>
+      </div>
+
+      <!-- Debug Info -->
+      <div class="debug-info" style="background: #f0f0f0; padding: 10px; margin: 10px 0; border: 1px solid #ccc;">
+        <h5>Debug Information:</h5>
+        <p>Is Blasting Engineer: {{ isBlastingEngineer }}</p>
+        <p>User Role: {{ authService.getUserRole() }}</p>
+        <p>Is Authenticated: {{ authService.isAuthenticated() }}</p>
+        <p>Current User: {{ authService.getCurrentUser()?.name || 'No user' }}</p>
       </div>
 
       <!-- Enhanced Approval Sections -->
@@ -288,7 +301,109 @@
     </div>
   </div>
 
+  <!-- Explosive Approval Section -->
+  <div class="approval-section">
+    <div class="section-header">
+      <div class="section-icon">
+        <i class="material-icons">warning</i>
+      </div>
+      <div class="section-title">
+        <h4>Explosive Approval</h4>
+        <p>Request approval for explosive usage with expected date and comments</p>
+      </div>
+    </div>
+
+    <div class="section-content">
+      <div class="status-info">
+        <div class="status-indicator" [class]="isExplosiveApprovalRequested ? '' : 'status-pending'">
+          <div class="status-icon">
+            <i class="material-icons" *ngIf="isExplosiveApprovalRequested">check_circle</i>
+            <i class="material-icons" *ngIf="!isExplosiveApprovalRequested">schedule</i>
+          </div>
+          <div class="status-content">
+            <div class="status-title">
+              {{ isExplosiveApprovalRequested ? 'Approval Requested' : 'Awaiting Request' }}
+            </div>
+            <div class="status-description">
+              {{ isExplosiveApprovalRequested ? 'Explosive approval request submitted' : 'Click to request explosive approval' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <ng-container *ngIf="!isExplosiveApprovalRequested; else requestedState">
+          <button class="btn btn-gradient" (click)="requestExplosiveApproval()">
+            <i class="material-icons">warning</i>
+            <span>Request Explosive Approval</span>
+          </button>
+        </ng-container>
+        <ng-template #requestedState>
+          <span class="badge approved">
+            <i class="material-icons check-icon">verified</i>
+            <span>Request Submitted</span>
+          </span>
+          <button class="btn btn-outline-danger" (click)="revokeExplosiveApprovalRequest()">
+            <i class="material-icons">cancel</i>
+            <span>Revoke Request</span>
+          </button>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<!-- Explosive Approval Modal -->
+@if (showExplosiveApprovalModal) {
+  <div class="modal-overlay">
+    <div class="enhanced-modal-content">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <i class="material-icons">warning</i>
+        </div>
+        <h3>Request Explosive Approval</h3>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="expectedUsageDate">Expected Usage Date *</label>
+          <input 
+            type="date" 
+            id="expectedUsageDate"
+            class="form-control"
+            [(ngModel)]="explosiveApprovalForm.expectedUsageDate"
+            required>
+        </div>
+        
+        <div class="form-group">
+          <label for="comments">Comments (Optional)</label>
+          <textarea 
+            id="comments"
+            class="form-control"
+            rows="3"
+            placeholder="Additional comments or requirements..."
+            [(ngModel)]="explosiveApprovalForm.comments">
+          </textarea>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button 
+          class="btn btn-gradient" 
+          (click)="confirmExplosiveApprovalRequest()"
+          [disabled]="!explosiveApprovalForm.expectedUsageDate">
+          <i class="material-icons">check</i>
+          <span>Submit Request</span>
+        </button>
+        <button class="btn btn-secondary" (click)="cancelExplosiveApprovalRequest()">
+          <i class="material-icons">close</i>
+          <span>Cancel</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- Enhanced Approval Modal -->
 @if (showApproveModal) {
@@ -322,4 +437,4 @@
     </div>
   </div>
 }
-</div> 
+</div>

@@ -7,6 +7,7 @@ import { SiteBlastingService } from '../../../../core/services/site-blasting.ser
 export enum WorkflowStepId {
   PATTERN = 'pattern',
   SEQUENCE = 'sequence',
+  EXPLOSIVE_CALCULATIONS = 'explosive-calculations',
   SIMULATE = 'simulate'
 }
 
@@ -60,6 +61,12 @@ export class NavigationController {
       title: 'Design Blast Sequence'
     },
     {
+      stepId: WorkflowStepId.EXPLOSIVE_CALCULATIONS,
+      route: '/blasting-engineer/explosive-calculations',
+      component: 'ExplosiveCalculationsDisplayComponent',
+      title: 'Calculate Explosives'
+    },
+    {
       stepId: WorkflowStepId.SIMULATE,
       route: '/blasting-engineer/blast-sequence-simulator',
       component: 'BlastSequenceSimulatorComponent',
@@ -80,6 +87,12 @@ export class NavigationController {
       route: '/blasting-engineer/project-management/:projectId/sites/:siteId/sequence-designer',
       component: 'BlastSequenceDesignerComponent',
       title: 'Design Blast Sequence'
+    },
+    {
+      stepId: WorkflowStepId.EXPLOSIVE_CALCULATIONS,
+      route: '/blasting-engineer/project-management/:projectId/sites/:siteId/explosive-calculations',
+      component: 'ExplosiveCalculationsDisplayComponent',
+      title: 'Calculate Explosives'
     },
     {
       stepId: WorkflowStepId.SIMULATE,
@@ -178,6 +191,10 @@ export class NavigationController {
 
   navigateToSequenceDesigner(projectId?: number, siteId?: number): Promise<boolean> {
     return this.navigateToStepWithContext(WorkflowStepId.SEQUENCE, projectId, siteId);
+  }
+
+  navigateToExplosiveCalculations(projectId?: number, siteId?: number): Promise<boolean> {
+    return this.navigateToStepWithContext(WorkflowStepId.EXPLOSIVE_CALCULATIONS, projectId, siteId);
   }
 
   navigateToSimulator(projectId?: number, siteId?: number): Promise<boolean> {
@@ -292,6 +309,10 @@ export class NavigationController {
         if (connections.length === 0) {
           return { isValid: false, message: 'Please create at least one blast connection' };
         }
+        return { isValid: true };
+
+      case WorkflowStepId.EXPLOSIVE_CALCULATIONS:
+        // Explosive calculations step validation can be added here if needed
         return { isValid: true };
 
       case WorkflowStepId.SIMULATE:
@@ -431,4 +452,4 @@ export class NavigationController {
       completionPercentage: progress.percentage
     };
   }
-} 
+}

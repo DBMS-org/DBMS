@@ -10,7 +10,7 @@ namespace Infrastructure.Configurations.DrillingOperations
         {
             entity.ToTable("DrillPoints");
             
-            entity.HasKey(e => e.Id);
+            entity.HasKey(e => new { e.Id, e.ProjectId, e.SiteId });
             
             entity.Property(e => e.Id)
                 .HasMaxLength(450)
@@ -35,6 +35,16 @@ namespace Infrastructure.Configurations.DrillingOperations
             entity.Property(e => e.Burden)
                 .HasPrecision(18, 6)
                 .IsRequired();
+                
+            entity.Property(e => e.Diameter)
+                .HasPrecision(18, 6)
+                .IsRequired()
+                .HasDefaultValue(0.89);
+                
+            entity.Property(e => e.Stemming)
+                .HasPrecision(18, 6)
+                .IsRequired()
+                .HasDefaultValue(3.0);
 
             // Configure relationships to Project and Site
             entity.HasOne(e => e.Project)
@@ -52,4 +62,4 @@ namespace Infrastructure.Configurations.DrillingOperations
             entity.HasIndex(e => new { e.X, e.Y, e.ProjectId, e.SiteId });
         }
     }
-} 
+}

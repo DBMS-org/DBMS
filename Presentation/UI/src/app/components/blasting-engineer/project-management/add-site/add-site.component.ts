@@ -10,8 +10,6 @@ interface SiteFormData {
   name: string;
   location: string;
   description: string;
-  templateType: string;
-  numberOfHoles: number | null;
 }
 
 @Component({
@@ -32,8 +30,6 @@ export class AddSiteComponent implements OnInit {
     name: '',
     location: '',
     description: '',
-    templateType: '',
-    numberOfHoles: null,
   };
 
   constructor(
@@ -69,9 +65,7 @@ export class AddSiteComponent implements OnInit {
     });
   }
 
-  selectTemplate(templateType: string) {
-    this.siteData.templateType = templateType;
-  }
+
 
   onSubmit(form: NgForm) {
     if (form.invalid) {
@@ -123,8 +117,6 @@ export class AddSiteComponent implements OnInit {
       name: '',
       location: '',
       description: '',
-      templateType: '',
-      numberOfHoles: null,
     };
   }
 

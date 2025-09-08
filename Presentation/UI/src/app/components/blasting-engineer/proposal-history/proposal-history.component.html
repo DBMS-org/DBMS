@@ -1,0 +1,91 @@
+<div class="proposal-history-container">
+  <div class="header">
+    <h2>Proposal History</h2>
+    <p class="subtitle">View and track all explosive approval requests</p>
+  </div>
+
+  <div class="filters">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Search by project, site, or submitter..." 
+        (input)="onSearchChange($event)"
+        class="search-input">
+    </div>
+    
+    <div class="status-filters">
+      <button 
+        *ngFor="let status of ['all', 'pending', 'approved', 'rejected', 'cancelled']" 
+        [class.active]="selectedStatus === status"
+        (click)="filterByStatus(status)"
+        class="filter-btn">
+        {{ status | titlecase }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading proposal history...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !isLoading" class="error-container">
+    <div class="error-message">
+      <p>{{ errorMessage }}</p>
+      <button (click)="loadProposalHistory()" class="retry-btn">Retry</button>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div *ngIf="!isLoading && !errorMessage" class="table-container">
+    <table class="proposal-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Project</th>
+          <th>Site</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Submitted Date</th>
+          <th>Submitted By</th>
+          <th>Reviewed Date</th>
+          <th>Reviewed By</th>
+          <th>Comments</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredHistory" class="proposal-row">
+          <td>{{ item.id }}</td>
+          <td>{{ item.projectName }}</td>
+          <td>{{ item.siteName }}</td>
+          <td>{{ item.proposalType }}</td>
+          <td>
+            <span [class]="getStatusClass(item.status)" class="status-badge">
+              {{ item.status | titlecase }}
+            </span>
+          </td>
+          <td>{{ item.submittedDate | date:'short' }}</td>
+          <td>{{ item.submittedBy }}</td>
+          <td>{{ item.reviewedDate ? (item.reviewedDate | date:'short') : '-' }}</td>
+          <td>{{ item.reviewedBy || '-' }}</td>
+          <td class="comments-cell">
+            <span *ngIf="item.comments" [title]="item.comments">
+              {{ item.comments.length > 50 ? (item.comments | slice:0:50) + '...' : item.comments }}
+            </span>
+            <span *ngIf="!item.comments">-</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="filteredHistory.length === 0 && proposalHistory.length === 0" class="no-data">
+      <p>No proposal history found. You haven't submitted any explosive approval requests yet.</p>
+    </div>
+    
+    <div *ngIf="filteredHistory.length === 0 && proposalHistory.length > 0" class="no-data">
+      <p>No proposals match your current filter criteria.</p>
+    </div>
+  </div>
+</div>

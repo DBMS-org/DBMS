@@ -101,9 +101,33 @@ namespace Application.Services.DrillingOperations
                     Depth = request.Depth,
                     Spacing = request.Spacing,
                     Burden = request.Burden,
+                    Diameter = request.Diameter,
+                    Stemming = request.Stemming,
                     ProjectId = request.ProjectId,
                     SiteId = request.SiteId
                 };
+                
+                // Calculate optimal values if not provided
+                if (drillPoint.Diameter <= 0)
+                {
+                    drillPoint.Diameter = _domainService.CalculateOptimalDiameter(drillPoint.Burden, drillPoint.Spacing);
+                }
+                
+                if (drillPoint.Stemming <= 0)
+                {
+                    drillPoint.Stemming = _domainService.CalculateOptimalStemming(drillPoint.Depth, drillPoint.Burden);
+                }
+                
+                // Validate stemming and diameter
+                if (!_domainService.ValidateStemming(drillPoint.Stemming, drillPoint.Depth, drillPoint.Burden))
+                {
+                    throw new ArgumentException($"Invalid stemming value: {drillPoint.Stemming}m for depth: {drillPoint.Depth}m and burden: {drillPoint.Burden}m");
+                }
+                
+                if (!_domainService.ValidateDiameter(drillPoint.Diameter, drillPoint.Burden, drillPoint.Spacing))
+                {
+                    throw new ArgumentException($"Invalid diameter value: {drillPoint.Diameter}m for burden: {drillPoint.Burden}m and spacing: {drillPoint.Spacing}m");
+                }
                 
                 var savedPoint = await _drillPointRepository.AddAsync(drillPoint);
                 
@@ -386,6 +410,8 @@ namespace Application.Services.DrillingOperations
                     Depth = dp.Depth,
                     Spacing = dp.Spacing,
                     Burden = dp.Burden,
+                    Diameter = dp.Diameter,
+                    Stemming = dp.Stemming,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 }).ToList();
@@ -433,16 +459,38 @@ namespace Application.Services.DrillingOperations
                 await ClearAllDrillPointsAsync(request.ProjectId, request.SiteId);
                 
                 // Convert CSV data to drill points
-                var drillPoints = ConvertCsvDataToDrillPoints(request.CsvData, request.ProjectId, request.SiteId);
-                
-                // Use domain service to anchor points to origin
-                var anchoredPoints = _domainService.AnchorPointsToOrigin(drillPoints);
-                
-                // Calculate grid pitch using domain service
-                var (spacing, burden) = _domainService.CalculateGridPitch(anchoredPoints);
+        var drillPoints = ConvertCsvDataToDrillPoints(request.CsvData, request.ProjectId, request.SiteId);
+        
+        // Use domain service to anchor points to origin
+        var anchoredPoints = _domainService.AnchorPointsToOrigin(drillPoints);
+        
+        // Calculate grid pitch using domain service
+        var (spacing, burden) = _domainService.CalculateGridPitch(anchoredPoints);
+        
+        // Calculate stemming and diameter for points that don't have them
+        var enhancedPoints = anchoredPoints.Select(point => 
+        {
+            var enhancedPoint = new DrillPoint
+            {
+                Id = point.Id,
+                X = point.X,
+                Y = point.Y,
+                Depth = point.Depth,
+                Spacing = point.Spacing,
+                Burden = point.Burden,
+                Diameter = point.Diameter > 0 ? point.Diameter : _domainService.CalculateOptimalDiameter(point.Burden, point.Spacing),
+                Stemming = point.Stemming > 0 ? point.Stemming : _domainService.CalculateOptimalStemming(point.Depth, point.Burden),
+                ProjectId = point.ProjectId,
+                SiteId = point.SiteId,
+                CreatedAt = point.CreatedAt,
+                UpdatedAt = point.UpdatedAt
+            };
+            
+            return enhancedPoint;
+        }).ToList();
                 
                 // Save drill points
-                var savedPoints = await _drillPointRepository.AddRangeAsync(anchoredPoints);
+        var savedPoints = await _drillPointRepository.AddRangeAsync(enhancedPoints);
                 
                 // Update pattern settings with calculated values
                 var settings = new PatternSettingsDto
@@ -458,10 +506,10 @@ namespace Application.Services.DrillingOperations
                     savedPoints.Count, spacing, burden);
                 
                 return new PatternDataDto
-                {
-                    DrillPoints = savedPoints.Select(ConvertToDto).ToList(),
-                    Settings = settings
-                };
+        {
+            DrillPoints = savedPoints.Select(ConvertToDto).ToList(),
+            Settings = settings
+        };
             }
             catch (Exception ex)
             {
@@ -607,6 +655,8 @@ namespace Application.Services.DrillingOperations
                 Depth = hole.Depth ?? hole.Length ?? 10.0,
                 Spacing = 3.0, // Default, will be updated after calculation
                 Burden = 2.5,  // Default, will be updated after calculation
+                Diameter = 0.0, // Will be calculated if not provided
+                Stemming = 0.0, // Will be calculated
                 ProjectId = projectId,
                 SiteId = siteId
             }).ToList();
@@ -622,6 +672,8 @@ namespace Application.Services.DrillingOperations
                 Depth = drillPoint.Depth,
                 Spacing = drillPoint.Spacing,
                 Burden = drillPoint.Burden,
+                Diameter = drillPoint.Diameter,
+                Stemming = drillPoint.Stemming,
                 ProjectId = drillPoint.ProjectId,
                 SiteId = drillPoint.SiteId,
                 CreatedAt = drillPoint.CreatedAt,
@@ -635,7 +687,9 @@ namespace Application.Services.DrillingOperations
             {
                 Spacing = settings.Spacing,
                 Burden = settings.Burden,
-                Depth = settings.Depth
+                Depth = settings.Depth,
+                Diameter = settings.Diameter,
+                Stemming = settings.Stemming
             };
         }
         
@@ -646,4 +700,4 @@ namespace Application.Services.DrillingOperations
             return Guid.NewGuid(); // Placeholder return, actual implementation needed
         }
     }
-} 
+}

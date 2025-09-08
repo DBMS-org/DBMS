@@ -104,17 +104,30 @@ export class CanvasManager {
     if (groups.intersections) this.intersectionGroup = groups.intersections;
   }
 
-  resize(): void {
+  resize(onResizeCallback?: () => void): void {
     if (!this.isInitialized || !this.stage) return;
 
     const rect = this.containerElement.getBoundingClientRect();
     const width = rect.width || 800;
     const height = rect.height || 600;
 
+    const oldDimensions = {
+      width: this.stage.width(),
+      height: this.stage.height()
+    };
+
     this.stage.width(width);
     this.stage.height(height);
     
-    Logger.info('Canvas resized', { width, height });
+    Logger.info('Canvas resized', { 
+      from: oldDimensions,
+      to: { width, height }
+    });
+
+    // Execute callback after resize (e.g., to clear cache and redraw)
+    if (onResizeCallback) {
+      onResizeCallback();
+    }
   }
 
   setCursor(cursor: string): void {
