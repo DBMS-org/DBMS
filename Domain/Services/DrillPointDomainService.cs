@@ -109,11 +109,125 @@ namespace Domain.Services
                 Depth = p.Depth,
                 Spacing = p.Spacing,
                 Burden = p.Burden,
+                Diameter = p.Diameter,
+                Stemming = p.Stemming,
                 ProjectId = p.ProjectId,
                 SiteId = p.SiteId,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt
             });
         }
+        
+        /// <summary>
+        /// Calculates optimal stemming length based on hole depth and burden.
+        /// Uses industry standard of 20-30% of hole depth, with minimum safety requirements.
+        /// </summary>
+        public double CalculateOptimalStemming(double depth, double burden)
+        {
+            // Industry standard: stemming should be 20-30% of hole depth
+            var stemmingByDepth = depth * 0.25; // 25% as middle ground
+            
+            // Alternative calculation: stemming should be at least equal to burden
+            var stemmingByBurden = burden;
+            
+            // Use the larger of the two calculations for safety
+            var optimalStemming = Math.Max(stemmingByDepth, stemmingByBurden);
+            
+            // Apply practical constraints
+            var minStemming = Math.Max(1.0, burden * 0.8); // Minimum 1m or 80% of burden
+            var maxStemming = Math.Min(depth * 0.4, 8.0); // Maximum 40% of depth or 8m
+            
+            return Math.Round(Math.Max(minStemming, Math.Min(optimalStemming, maxStemming)), 1);
+        }
+        
+        /// <summary>
+        /// Calculates optimal hole diameter based on burden, spacing, and explosive requirements.
+        /// Uses industry standards for blast hole diameter selection.
+        /// </summary>
+        public double CalculateOptimalDiameter(double burden, double spacing)
+        {
+            // Calculate pattern area per hole
+            var patternArea = burden * spacing;
+            
+            // Industry rule: diameter should be approximately 1/30 to 1/40 of burden
+            var diameterByBurden = burden / 35.0; // Use middle value
+            
+            // Alternative calculation based on pattern density
+            var diameterByArea = Math.Sqrt(patternArea) / 20.0;
+            
+            // Use the larger of the two for adequate fragmentation
+            var calculatedDiameter = Math.Max(diameterByBurden, diameterByArea);
+            
+            // Round to standard drill bit sizes (in meters)
+            var standardSizes = new[] { 0.089, 0.102, 0.115, 0.127, 0.140, 0.152, 0.165, 0.178, 0.191, 0.203, 0.216, 0.229, 0.254, 0.279, 0.305 };
+            
+            // Find the closest standard size
+            var optimalDiameter = standardSizes.OrderBy(size => Math.Abs(size - calculatedDiameter)).First();
+            
+            return optimalDiameter;
+        }
+        
+        /// <summary>
+        /// Calculates powder factor (kg of explosive per cubic meter of rock) based on pattern parameters.
+        /// </summary>
+        public double CalculatePowderFactor(double diameter, double depth, double stemming, double burden, double spacing, double explosiveDensity = 1.2)
+        {
+            // Calculate hole volume (cylindrical)
+            var holeRadius = diameter / 2.0;
+            var holeVolume = Math.PI * holeRadius * holeRadius * depth;
+            
+            // Calculate explosive column length (depth minus stemming)
+            var explosiveLength = Math.Max(0, depth - stemming);
+            
+            // Calculate explosive volume
+            var explosiveVolume = Math.PI * holeRadius * holeRadius * explosiveLength;
+            
+            // Calculate explosive weight (kg)
+            var explosiveWeight = explosiveVolume * explosiveDensity;
+            
+            // Calculate rock volume per hole (burden × spacing × depth)
+            var rockVolume = burden * spacing * depth;
+            
+            // Calculate powder factor (kg/m³)
+            return rockVolume > 0 ? explosiveWeight / rockVolume : 0;
+        }
+        
+        /// <summary>
+        /// Validates that stemming length is appropriate for the given hole parameters.
+        /// </summary>
+        public bool ValidateStemming(double stemming, double depth, double burden)
+        {
+            if (stemming < 0 || depth <= 0 || burden <= 0) return false;
+            
+            // Stemming should not exceed 50% of hole depth
+            if (stemming > depth * 0.5) return false;
+            
+            // Stemming should be at least 0.5m for safety
+            if (stemming < 0.5) return false;
+            
+            // Stemming should not be less than 60% of burden for proper confinement
+            if (stemming < burden * 0.6) return false;
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Validates that diameter is appropriate for the given pattern parameters.
+        /// </summary>
+        public bool ValidateDiameter(double diameter, double burden, double spacing)
+        {
+            if (diameter <= 0 || burden <= 0 || spacing <= 0) return false;
+            
+            // Diameter should not exceed 1/15 of burden (too large)
+            if (diameter > burden / 15.0) return false;
+            
+            // Diameter should not be less than 1/50 of burden (too small)
+            if (diameter < burden / 50.0) return false;
+            
+            // Practical limits: 50mm to 500mm
+            if (diameter < 0.05 || diameter > 0.5) return false;
+            
+            return true;
+        }
     }
-} 
+}

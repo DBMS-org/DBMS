@@ -50,6 +50,8 @@ export interface PatternSettings {
   spacing: number;
   burden: number;
   depth: number;
+  diameter: number;
+  stemming: number;
   
   // Additional settings
   gridSize?: number;
@@ -253,4 +255,4 @@ export class DrillModelConverter {
       updatedAt: location.updatedAt.toISOString()
     };
   }
-} 
+}

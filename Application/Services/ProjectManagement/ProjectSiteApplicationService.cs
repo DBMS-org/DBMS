@@ -268,6 +268,9 @@ namespace Application.Services.ProjectManagement
             }
         }
 
+        // Note: Explosive approval methods have been moved to ExplosiveApprovalRequestApplicationService
+        // as part of the new ExplosiveApprovalRequest entity implementation
+
         private static string SerializeCoordinates(CoordinatesDto? coordinates)
         {
             if (coordinates == null)
@@ -283,4 +286,4 @@ namespace Application.Services.ProjectManagement
             }
         }
     }
-} 
+}

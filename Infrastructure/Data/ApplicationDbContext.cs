@@ -36,8 +36,10 @@ namespace Infrastructure.Data
         public DbSet<Region> Regions { get; set; }
         public DbSet<DrillPoint> DrillPoints { get; set; }
         public DbSet<PatternSettings> PatternSettings { get; set; }
+        public DbSet<ExplosiveCalculationResult> ExplosiveCalculationResults { get; set; }
         public DbSet<BlastConnection> BlastConnections { get; set; }
         public DbSet<DetonatorInfo> DetonatorInfos { get; set; }
+        public DbSet<ExplosiveApprovalRequest> ExplosiveApprovalRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

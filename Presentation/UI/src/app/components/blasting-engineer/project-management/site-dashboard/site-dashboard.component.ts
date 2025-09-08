@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Project } from '../../../../core/models/project.model';
 import { ProjectService } from '../../../../core/services/project.service';
@@ -28,7 +29,7 @@ interface WorkflowStep {
 @Component({
   selector: 'app-site-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './site-dashboard.component.html',
   styleUrls: ['./site-dashboard.component.scss']
 })
@@ -41,6 +42,14 @@ export class SiteDashboardComponent implements OnInit {
   loading = false;
   error: string | null = null;
   showApproveModal = false;
+  showExplosiveApprovalModal: boolean = false;
+  
+  explosiveApprovalForm = {
+    expectedUsageDate: '',
+    comments: ''
+  };
+  
+  minDate: string = new Date().toISOString().split('T')[0];
 
   workflowSteps: WorkflowStep[] = [
     {
@@ -59,6 +68,16 @@ export class SiteDashboardComponent implements OnInit {
       description: 'Design the blast sequence and connections',
       icon: 'fas fa-project-diagram',
       route: 'sequence-designer',
+      completed: false,
+      enabled: false,
+      progress: 0
+    },
+    {
+      id: 'explosive-calculations',
+      name: 'Explosive Calculations',
+      description: 'Calculate explosive requirements and parameters',
+      icon: 'fas fa-calculator',
+      route: 'explosive-calculations',
       completed: false,
       enabled: false,
       progress: 0
@@ -83,7 +102,7 @@ export class SiteDashboardComponent implements OnInit {
     private blastSequenceDataService: BlastSequenceDataService,
     private siteBlastingService: SiteBlastingService,
     private unifiedDrillDataService: UnifiedDrillDataService,
-    private authService: AuthService,
+    public authService: AuthService, // Made public for template access
     private stateService: StateService,
     private dialog: MatDialog,
     private notification: NotificationService
@@ -97,6 +116,13 @@ export class SiteDashboardComponent implements OnInit {
     
     this.stateService.setProjectId(projectId);
     this.stateService.setSiteId(siteId);
+
+    // Debug: Check user role and authentication
+    const currentUser = this.authService.getCurrentUser();
+    console.log('Current user:', currentUser);
+    console.log('User role:', this.authService.getUserRole());
+    console.log('Is blasting engineer:', this.authService.isBlastingEngineer());
+    console.log('Is authenticated:', this.authService.isAuthenticated());
 
     if (projectId && siteId) {
       this.loadProject();
@@ -303,6 +329,10 @@ export class SiteDashboardComponent implements OnInit {
       case 'sequence-designer':
         this.blastSequenceDataService.cleanupSequenceData(projectId, siteId);
         break;
+      case 'explosive-calculations':
+        // Cleanup explosive calculations data
+        this.blastSequenceDataService.cleanupExplosiveCalculationsData(projectId, siteId);
+        break;
       case 'simulator':
         this.blastSequenceDataService.cleanupSimulationData(projectId, siteId);
         break;
@@ -406,7 +436,11 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   get isSimulationConfirmed(): boolean {
-    return this.site?.isSimulationConfirmed ?? false;
+    return this.site?.isSimulationConfirmed || false;
+  }
+
+  get isExplosiveApprovalRequested(): boolean {
+    return this.site?.isExplosiveApprovalRequested || false;
   }
 
   confirmSimulationForAdmin() {
@@ -419,6 +453,98 @@ export class SiteDashboardComponent implements OnInit {
     this.siteService.revokeSimulation(this.stateService.currentState.activeSiteId!).subscribe(() => {
       if(this.site) this.site.isSimulationConfirmed = false;
     });
+  }
+
+  requestExplosiveApproval(): void {
+    if (this.site) {
+      // First check if there's already a pending request
+      this.siteService.hasPendingExplosiveApprovalRequest(this.site.id).subscribe({
+        next: (response) => {
+          if (response.hasPendingRequest) {
+            alert('There is already a pending explosive approval request for this project site. Please wait for the current request to be processed or cancel it first.');
+          } else {
+            // No pending request, show the modal
+            this.explosiveApprovalForm = {
+              expectedUsageDate: '',
+              comments: ''
+            };
+            this.showExplosiveApprovalModal = true;
+          }
+        },
+        error: (error) => {
+          console.error('Error checking for pending explosive approval request:', error);
+          // If check fails, still allow the user to try (they'll get proper error handling in confirmExplosiveApprovalRequest)
+          this.explosiveApprovalForm = {
+            expectedUsageDate: '',
+            comments: ''
+          };
+          this.showExplosiveApprovalModal = true;
+        }
+      });
+    }
+  }
+
+  confirmExplosiveApprovalRequest(): void {
+    if (this.site && this.explosiveApprovalForm.expectedUsageDate) {
+      this.siteService.requestExplosiveApproval(
+        this.site.id,
+        this.explosiveApprovalForm.expectedUsageDate,
+        this.explosiveApprovalForm.comments
+      ).subscribe({
+        next: () => {
+           console.log('Explosive approval request sent successfully');
+           this.loadSite();
+           this.showExplosiveApprovalModal = false;
+         },
+        error: (error) => {
+          console.error('Error sending explosive approval request:', error);
+          
+          // Handle specific error cases
+          if (error.status === 409) {
+            alert('There is already a pending explosive approval request for this project site. Please wait for the current request to be processed or cancel it first.');
+          } else if (error.status === 400) {
+            alert('Invalid request data. Please check your input and try again.');
+          } else if (error.status === 401) {
+            alert('You are not authorized to make this request. Please log in again.');
+          } else {
+            alert('An error occurred while sending the explosive approval request. Please try again later.');
+          }
+        }
+      });
+    }
+  }
+
+  cancelExplosiveApprovalRequest(): void {
+    this.showExplosiveApprovalModal = false;
+    this.explosiveApprovalForm = {
+      expectedUsageDate: '',
+      comments: ''
+    };
+  }
+
+  revokeExplosiveApprovalRequest(): void {
+    if (this.site) {
+      this.siteService.revokeExplosiveApprovalRequest(this.site.id).subscribe({
+        next: () => {
+           console.log('Explosive approval request revoked successfully');
+           this.loadSite();
+         },
+        error: (error) => {
+          console.error('Error revoking explosive approval request:', error);
+          
+          // Handle specific error cases
+          if (error.status === 404) {
+            alert('No explosive approval request found to revoke for this project site.');
+          } else if (error.status === 401) {
+            alert('You are not authorized to revoke this request. Please log in again.');
+          } else if (error.message && error.message.includes('No explosive approval request found')) {
+            alert('No explosive approval request found to revoke for this project site.');
+          } else {
+            alert('An error occurred while revoking the explosive approval request. Please try again later.');
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -812,4 +938,4 @@ export class SiteDashboardComponent implements OnInit {
       });
     });
   }
-} 
+}

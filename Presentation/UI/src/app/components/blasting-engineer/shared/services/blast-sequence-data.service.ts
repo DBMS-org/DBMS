@@ -473,11 +473,46 @@ export class BlastSequenceDataService {
     console.log('✅ Simulation data deletion completed');
   }
 
+  cleanupExplosiveCalculationsData(projectId: number, siteId: number): void {
+    const siteKey = `site_${projectId}_${siteId}`;
+    console.log('🧹 DELETING EXPLOSIVE CALCULATIONS data from backend and frontend for:', siteKey);
+    
+    // Note: Individual workflow data deletion by type is not supported by backend
+    // The backend only supports deleting ALL workflow data at once via /data endpoint
+    // For individual cleanup, we only clear frontend explosive calculations data
+    console.log('ℹ️ Skipping individual workflow data deletion - backend only supports full cleanup');
+    
+    // Remove explosive calculations data from localStorage
+    const calculationsKey = `${siteKey}_explosive_calculations`;
+    const resultsKey = `${siteKey}_calculation_results`;
+    
+    if (localStorage.getItem(calculationsKey)) {
+      localStorage.removeItem(calculationsKey);
+      console.log('❌ Removed explosive calculations from localStorage');
+    }
+    
+    if (localStorage.getItem(resultsKey)) {
+      localStorage.removeItem(resultsKey);
+      console.log('❌ Removed calculation results from localStorage');
+    }
+    
+    // Reset workflow step if this is the active site
+    if (this.currentSiteContext && 
+        this.currentSiteContext.projectId === projectId && 
+        this.currentSiteContext.siteId === siteId) {
+      this.updateWorkflowStep('explosive-calculations', false);
+      console.log('🔄 Reset explosive calculations workflow step');
+    }
+    
+    console.log('✅ Explosive calculations data deletion completed');
+  }
+
   getSiteWorkflowProgress(siteId: number): Observable<any> {
     if (!this.currentSiteContext) {
       return of({
         'pattern-creator': { completed: false, progress: 0 },
         'sequence-designer': { completed: false, progress: 0 },
+        'explosive-calculations': { completed: false, progress: 0 },
         'simulator': { completed: false, progress: 0 }
       });
     }
@@ -497,15 +532,21 @@ export class BlastSequenceDataService {
       const hasConnections = hasPattern && currentConnections && currentConnections.length > 0;
       const sequenceProgress = hasConnections ? 100 : 0;
       
-      // Simulator is complete if settings exist and sequence exists
-      const hasSimulationData = hasConnections && !!currentSimulationSettings;
+      // Explosive calculations is complete if sequence exists (basic check)
+      // In a real implementation, you might check for actual calculation data
+      const hasExplosiveCalculations = hasConnections; // Placeholder logic
+      const explosiveCalculationsProgress = hasExplosiveCalculations ? 100 : 0;
+      
+      // Simulator is complete if settings exist and explosive calculations exist
+      const hasSimulationData = hasExplosiveCalculations && !!currentSimulationSettings;
       const simulatorProgress = hasSimulationData ? 100 : 0;
 
       console.log('Site workflow progress (from loaded data):', {
         pattern: hasPattern,
-        sequence: hasConnections,  
+        sequence: hasConnections,
+        explosiveCalculations: hasExplosiveCalculations,
         simulator: hasSimulationData,
-        progressValues: { patternProgress, sequenceProgress, simulatorProgress }
+        progressValues: { patternProgress, sequenceProgress, explosiveCalculationsProgress, simulatorProgress }
       });
 
       const progressData = {
@@ -516,6 +557,10 @@ export class BlastSequenceDataService {
         'sequence-designer': { 
           completed: hasConnections, 
           progress: sequenceProgress 
+        },
+        'explosive-calculations': {
+          completed: hasExplosiveCalculations,
+          progress: explosiveCalculationsProgress
         },
         'simulator': { 
           completed: hasSimulationData, 
@@ -560,7 +605,9 @@ export class BlastSequenceDataService {
             settings: {
               spacing: patternData.settings.spacing,
               burden: patternData.settings.burden,
-              depth: patternData.settings.depth
+              depth: patternData.settings.depth,
+              diameter: patternData.settings?.diameter || 0.15,
+              stemming: patternData.settings?.stemming || 2.0
             }
           };
           
@@ -1788,4 +1835,4 @@ export class BlastSequenceDataService {
   updateValidation(validation: SimulationValidation): void {
     this.validationSubject.next(validation);
   }
-} 
+}

@@ -134,5 +134,13 @@ namespace API.Controllers
                 }
             return Ok();
         }
+
+        // Explosive approval endpoints have been moved to ExplosiveApprovalRequestController
     }
-} 
+
+    public class RequestExplosiveApprovalRequest
+    {
+        public DateTime ExpectedUsageDate { get; set; }
+        public string? Comments { get; set; }
+    }
+}

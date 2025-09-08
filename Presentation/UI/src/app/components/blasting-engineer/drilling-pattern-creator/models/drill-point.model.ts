@@ -11,6 +11,8 @@ export interface PatternSettings {
   spacing: number;
   burden: number;
   depth: number;
+  diameter: number;
+  stemming: number;
 }
 
 export interface PatternData {
@@ -117,4 +119,4 @@ export interface ViewportSettings {
   scale: number;
   panOffsetX: number;
   panOffsetY: number;
-} 
+}
