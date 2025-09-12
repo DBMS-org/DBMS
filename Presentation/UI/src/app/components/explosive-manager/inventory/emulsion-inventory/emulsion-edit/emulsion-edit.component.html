@@ -1,0 +1,199 @@
+<div class="emulsion-edit-container">
+  <div class="form-header">
+    <h3>Edit Emulsion Inventory</h3>
+    <p>Update the details of the selected emulsion explosive item</p>
+  </div>
+
+  <form [formGroup]="emulsionForm" (ngSubmit)="onSubmit()" class="emulsion-form">
+    <div class="form-grid">
+      <!-- Batch Information Section -->
+      <div class="form-section">
+        <h4>Batch Information</h4>
+        
+        <div class="form-group">
+          <label for="batchId">Batch ID *</label>
+          <input 
+            type="text" 
+            id="batchId" 
+            formControlName="batchId" 
+            class="form-control"
+            [class.error]="emulsionForm.get('batchId')?.invalid && emulsionForm.get('batchId')?.touched"
+            placeholder="Enter batch ID">
+          <span class="error-message" 
+                *ngIf="emulsionForm.get('batchId')?.invalid && emulsionForm.get('batchId')?.touched">
+            Batch ID is required
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="manufacturingDate">Manufacturing Date *</label>
+          <input 
+            type="date" 
+            id="manufacturingDate" 
+            formControlName="manufacturingDate" 
+            class="form-control"
+            [class.error]="emulsionForm.get('manufacturingDate')?.invalid && emulsionForm.get('manufacturingDate')?.touched">
+          <span class="error-message" 
+                *ngIf="emulsionForm.get('manufacturingDate')?.invalid && emulsionForm.get('manufacturingDate')?.touched">
+            Manufacturing date is required
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="expiryDate">Expiry Date *</label>
+          <input 
+            type="date" 
+            id="expiryDate" 
+            formControlName="expiryDate" 
+            class="form-control"
+            [class.error]="emulsionForm.get('expiryDate')?.invalid && emulsionForm.get('expiryDate')?.touched">
+          <span class="error-message" 
+                *ngIf="emulsionForm.get('expiryDate')?.invalid && emulsionForm.get('expiryDate')?.touched">
+            Expiry date is required
+          </span>
+        </div>
+      </div>
+
+      <!-- Storage Information Section -->
+      <div class="form-section">
+        <h4>Storage Information</h4>
+        
+        <div class="form-group">
+          <label for="location">Storage Location *</label>
+          <select 
+            id="location" 
+            formControlName="location" 
+            class="form-control"
+            [class.error]="emulsionForm.get('location')?.invalid && emulsionForm.get('location')?.touched">
+            <option value="">Select storage location</option>
+            <option value="warehouse-a">Warehouse A</option>
+            <option value="warehouse-b">Warehouse B</option>
+            <option value="warehouse-c">Warehouse C</option>
+            <option value="secure-storage">Secure Storage</option>
+            <option value="temporary-storage">Temporary Storage</option>
+          </select>
+          <span class="error-message" 
+                *ngIf="emulsionForm.get('location')?.invalid && emulsionForm.get('location')?.touched">
+            Storage location is required
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="quantity">Quantity (tons) *</label>
+          <input 
+            type="number" 
+            id="quantity" 
+            formControlName="quantity" 
+            class="form-control"
+            [class.error]="emulsionForm.get('quantity')?.invalid && emulsionForm.get('quantity')?.touched"
+            placeholder="Enter quantity in tons"
+            min="1">
+          <span class="error-message" 
+                *ngIf="emulsionForm.get('quantity')?.invalid && emulsionForm.get('quantity')?.touched">
+            <span *ngIf="emulsionForm.get('quantity')?.errors?.['required']">Quantity is required</span>
+            <span *ngIf="emulsionForm.get('quantity')?.errors?.['min']">Quantity must be at least 0.001 tons</span>
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="storageTemperature">Storage Temperature (°C)</label>
+          <input 
+            type="number" 
+            id="storageTemperature" 
+            formControlName="storageTemperature" 
+            class="form-control"
+            placeholder="Enter storage temperature">
+        </div>
+      </div>
+
+      <!-- Technical Specifications Section -->
+      <div class="form-section">
+        <h4>Technical Specifications</h4>
+        
+        <div class="form-group">
+          <label for="density">Density (g/cm³) *</label>
+          <input 
+            type="number" 
+            id="density" 
+            formControlName="density" 
+            class="form-control"
+            [class.error]="emulsionForm.get('density')?.invalid && emulsionForm.get('density')?.touched"
+            placeholder="Enter density"
+            step="0.01"
+            min="0.8"
+            max="1.5">
+          <span class="error-message" 
+                *ngIf="emulsionForm.get('density')?.invalid && emulsionForm.get('density')?.touched">
+            <span *ngIf="emulsionForm.get('density')?.errors?.['required']">Density is required</span>
+            <span *ngIf="emulsionForm.get('density')?.errors?.['min'] || emulsionForm.get('density')?.errors?.['max']">
+              Density must be between 0.8 and 1.5 g/cm³
+            </span>
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="viscosity">Viscosity (cP)</label>
+          <input 
+            type="number" 
+            id="viscosity" 
+            formControlName="viscosity" 
+            class="form-control"
+            placeholder="Enter viscosity">
+        </div>
+
+        <div class="form-group">
+          <label for="waterContent">Water Content (%)</label>
+          <input 
+            type="number" 
+            id="waterContent" 
+            formControlName="waterContent" 
+            class="form-control"
+            placeholder="Enter water content percentage"
+            min="0"
+            max="100">
+        </div>
+
+        <div class="form-group">
+          <label for="grade">Grade</label>
+          <select 
+            id="grade" 
+            formControlName="grade" 
+            class="form-control">
+            <option value="">Select grade</option>
+            <option value="standard">Standard</option>
+            <option value="premium">Premium</option>
+            <option value="heavy-duty">Heavy Duty</option>
+            <option value="water-resistant">Water Resistant</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="form-section">
+        <h4>Additional Information</h4>
+        
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea 
+            id="notes" 
+            formControlName="notes" 
+            class="form-control"
+            placeholder="Enter any additional notes or comments"
+            rows="4">
+          </textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        <span class="material-icons">cancel</span>
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+        <span class="material-icons">{{ isSubmitting ? 'hourglass_empty' : 'save' }}</span>
+        {{ isSubmitting ? 'Updating...' : 'Update Emulsion' }}
+      </button>
+    </div>
+  </form>
+</div>

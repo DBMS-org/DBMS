@@ -364,6 +364,16 @@
       </button>
 
       <button mat-button
+              class="toolbar-button data-table-button"
+              (click)="openDrillDataTable()"
+              [disabled]="drillPoints.length === 0"
+              matTooltip="View drill hole data in Excel-like table"
+              aria-label="Open drill hole data table">
+        <span class="material-icons" aria-hidden="true">table_chart</span>
+        Data Table
+      </button>
+
+      <button mat-button
               class="toolbar-button help-button"
               (mouseenter)="showInstructions = true"
               (mouseleave)="showInstructions = false"
@@ -439,5 +449,17 @@
       X: {{ formatValue(cursorPosition.x) }}m, Y: {{ formatValue(cursorPosition.y) }}m
     </div>
   </div>
+  </div>
+
+  <!-- Drill Data Table Popup -->
+  <div class="popup-overlay" *ngIf="showDrillDataTable" (click)="closeDrillDataTable()">
+    <div class="popup-content" (click)="$event.stopPropagation()">
+      <app-drill-data-table
+        [drillPoints]="drillPoints"
+        [settings]="settings"
+        (close)="closeDrillDataTable()"
+        (save)="onSaveDrillData($event)">
+      </app-drill-data-table>
+    </div>
   </div>
 </div>

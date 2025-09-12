@@ -57,21 +57,7 @@
                   </div>
                 </div>
                 
-                <div class="form-group">
-                  <label>Priority *</label>
-                  <select 
-                    class="form-select"
-                    formControlName="priority"
-                    [class.is-invalid]="isFieldInvalid(stockRequestForm, 'priority')">
-                    <option value="">Select priority</option>
-                    <option *ngFor="let priority of priorities" [value]="priority">
-                      {{ priority }}
-                    </option>
-                  </select>
-                  <div *ngIf="isFieldInvalid(stockRequestForm, 'priority')" class="error-message">
-                    {{ getFieldError(stockRequestForm, 'priority') }}
-                  </div>
-                </div>
+
               </div>
             </div>
 
@@ -108,7 +94,8 @@
                   <div class="form-row">
                     <div class="form-group">
                       <label>Explosive Type *</label>
-                      <select 
+                      <select
+                        title="Select explosive type"
                         class="form-select"
                         formControlName="explosiveType"
                         [class.is-invalid]="isArrayFieldInvalid(i, 'explosiveType')"
@@ -139,7 +126,8 @@
 
                     <div class="form-group">
                       <label>Unit *</label>
-                      <select 
+                      <select
+                        title="Select unit of measurement"
                         class="form-select"
                         formControlName="unit"
                         [class.is-invalid]="isArrayFieldInvalid(i, 'unit')">
@@ -274,9 +262,7 @@
                 <p class="request-items">
                   {{ request.requestedItems.length }} item(s) requested
                 </p>
-                <p class="request-priority" [ngClass]="getPriorityClass(request.priority)">
-                  Priority: {{ request.priority }}
-                </p>
+
               </div>
 
               <div class="request-items-summary">
@@ -291,4 +277,4 @@
       </div>
     </div>
   </div>
-</div> 
+</div>

@@ -39,7 +39,7 @@ export class DrillPointService {
     return true;
   }
 
-  createDrillPoint(x: number, y: number, settings: PatternSettings): DrillPoint {
+  createDrillPoint(x: number, y: number, settings: PatternSettings, isPreciseMode: boolean = true): DrillPoint {
     // Safety check: ensure settings have valid values
     const safeSpacing = settings.spacing || CANVAS_CONSTANTS.DEFAULT_SETTINGS.spacing;
     const safeBurden = settings.burden || CANVAS_CONSTANTS.DEFAULT_SETTINGS.burden;
@@ -47,19 +47,32 @@ export class DrillPointService {
     
     console.log('createDrillPoint safety check:', {
       originalSettings: settings,
-      safeValues: { spacing: safeSpacing, burden: safeBurden, depth: safeDepth }
+      safeValues: { spacing: safeSpacing, burden: safeBurden, depth: safeDepth },
+      isPreciseMode: isPreciseMode
     });
     
-    // Ensure coordinates align with spacing and burden grid
-    const alignedCoords = this.alignCoordinatesToGrid(x, y, safeSpacing, safeBurden);
+    // Only align coordinates to grid if in precise mode
+    let finalX = x;
+    let finalY = y;
+    
+    if (isPreciseMode) {
+      const alignedCoords = this.alignCoordinatesToGrid(x, y, safeSpacing, safeBurden);
+      finalX = alignedCoords.x;
+      finalY = alignedCoords.y;
+      console.log(`Precise mode: aligned (${x.toFixed(2)}, ${y.toFixed(2)}) -> (${finalX}, ${finalY})`);
+    } else {
+      console.log(`Free mode: using exact coordinates (${x.toFixed(2)}, ${y.toFixed(2)})`);
+    }
     
     return {
-      x: Number(alignedCoords.x.toFixed(2)),
-      y: Number(alignedCoords.y.toFixed(2)),
+      x: Number(finalX.toFixed(2)),
+      y: Number(finalY.toFixed(2)),
       id: `DH${this.currentId++}`,
       depth: safeDepth,
       spacing: safeSpacing,
-      burden: safeBurden
+      burden: safeBurden,
+      stemming: settings.stemming,
+      subDrill: settings.subDrill
     };
   }
 
@@ -150,7 +163,9 @@ export class DrillPointService {
           id: `DH${this.currentId++}`,
           depth: depth,
           spacing: spacing,
-          burden: burden
+          burden: burden,
+          stemming: CANVAS_CONSTANTS.DEFAULT_SETTINGS.stemming,
+          subDrill: CANVAS_CONSTANTS.DEFAULT_SETTINGS.subDrill
         });
       }
     }
@@ -266,4 +281,4 @@ export class DrillPointService {
     const dy = a.y - b.y;
     return Math.sqrt(dx * dx + dy * dy);
   }
-} 
+}

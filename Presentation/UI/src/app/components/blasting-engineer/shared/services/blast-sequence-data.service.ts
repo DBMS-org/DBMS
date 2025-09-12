@@ -25,6 +25,7 @@ import { BlastTimeCalculatorService } from '../../blast-sequence-simulator/servi
 import { ProjectService } from '../../../../core/services/project.service';
 import { Project } from '../../../../core/models/project.model';
 import { UnifiedDrillDataService } from '../../../../core/services/unified-drill-data.service';
+import { ExplosiveCalculationsService } from '../../../../core/services/explosive-calculations.service';
 
 export interface WorkflowStep {
   id: string;
@@ -129,7 +130,8 @@ export class BlastSequenceDataService {
     private siteBlastingService: SiteBlastingService,
     private blastTimeCalculator: BlastTimeCalculatorService,
     private projectService: ProjectService,
-    private unifiedDrillDataService: UnifiedDrillDataService
+    private unifiedDrillDataService: UnifiedDrillDataService,
+    private explosiveCalculationsService: ExplosiveCalculationsService
   ) {}
 
   // Site Context Methods
@@ -174,7 +176,7 @@ export class BlastSequenceDataService {
     return new Promise<boolean>((resolve) => {
       let successfulOperations = 0;
       let failedOperations = 0;
-      const totalOperations = 3; // workflow data, drill points, blast connections
+      const totalOperations = 4; // workflow data, drill points, blast connections, explosive calculations
       
       const checkCompletion = () => {
         const totalCompleted = successfulOperations + failedOperations;
@@ -282,9 +284,25 @@ export class BlastSequenceDataService {
           checkCompletion();
         }
       });
+
+      // 4. Delete all explosive calculations from backend
+      console.log('💥 Step 4: Deleting explosive calculations from backend...');
+      this.explosiveCalculationsService.deleteBySite(projectId, siteId).subscribe({
+        next: (result) => {
+          console.log('✅ Step 4 SUCCESS: Explosive calculations deleted:', result);
+          successfulOperations++;
+          checkCompletion();
+        },
+        error: (error) => {
+          console.error('❌ Step 4 FAILED: Explosive calculations deletion failed:', error);
+          console.error('🔗 Failed endpoint: DELETE /api/explosive-calculations/site');
+          failedOperations++;
+          checkCompletion();
+        }
+      });
     }).then((success) => {
       // After all backend operations, clean up frontend data
-      console.log('🧹 Step 4: Cleaning up frontend data...');
+      console.log('🧹 Step 5: Cleaning up frontend data...');
       
       // Remove ALL site-specific localStorage data
       const keysToRemove = [
@@ -305,14 +323,14 @@ export class BlastSequenceDataService {
         }
       });
       
-      console.log(`✅ Step 4 SUCCESS: Removed ${itemsRemoved} localStorage items`);
+      console.log(`✅ Step 5 SUCCESS: Removed ${itemsRemoved} localStorage items`);
       
       // Clear current in-memory data if this is the active site
       if (this.currentSiteContext && 
           this.currentSiteContext.projectId === projectId && 
           this.currentSiteContext.siteId === siteId) {
         
-        console.log('🔄 Step 5: Clearing in-memory data...');
+        console.log('🔄 Step 6: Clearing in-memory data...');
         
         // Reset all data to initial state
         this.patternDataSubject.next(null);
@@ -335,7 +353,7 @@ export class BlastSequenceDataService {
           animationQuality: 'medium'
         });
         
-        console.log('✅ Step 5 SUCCESS: In-memory data cleared');
+        console.log('✅ Step 6 SUCCESS: In-memory data cleared');
       }
       
       const finalResult = success;
@@ -597,7 +615,9 @@ export class BlastSequenceDataService {
             y: location.y,
             depth: location.depth,
             spacing: location.spacing,
-            burden: location.burden
+            burden: location.burden,
+            stemming: location.stemming || 2.0,
+            subDrill: location.subDrill || 0.5
           }));
           
           const convertedPatternData: PatternData = {
@@ -607,7 +627,8 @@ export class BlastSequenceDataService {
               burden: patternData.settings.burden,
               depth: patternData.settings.depth,
               diameter: patternData.settings?.diameter || 0.15,
-              stemming: patternData.settings?.stemming || 2.0
+              stemming: patternData.settings?.stemming || 2.0,
+              subDrill: patternData.settings?.subDrill || 0.5
             }
           };
           

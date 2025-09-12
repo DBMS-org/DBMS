@@ -1,0 +1,68 @@
+<div class="drill-data-table-container">
+  <div class="excel-table-wrapper">
+    <table class="excel-table">
+      <thead>
+        <tr>
+          <th class="excel-header">Hole ID</th>
+          <th class="excel-header">Depth (m)</th>
+          <th class="excel-header">Stemming (m)</th>
+          <th class="excel-header">Spacing (m)</th>
+          <th class="excel-header">Burden (m)</th>
+          <th class="excel-header">Sub Drill (m)</th>
+          <th class="excel-header">Volume (m³)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let element of dataSource" class="excel-row">
+          <td class="excel-cell id-cell">{{ element.holeId }}</td>
+          <td class="excel-cell editable-cell">
+            <input type="number" 
+                   [(ngModel)]="element.depth"
+                   (blur)="onCellEdit(element, 'depth', element.depth)"
+                   (keydown)="onKeyDown($event)"
+                   min="0"
+                   step="0.1"
+                   class="excel-input">
+          </td>
+          <td class="excel-cell editable-cell">
+            <input type="number" 
+                   [(ngModel)]="element.stemming"
+                   (blur)="onCellEdit(element, 'stemming', element.stemming)"
+                   (keydown)="onKeyDown($event)"
+                   min="0"
+                   step="0.1"
+                   class="excel-input">
+          </td>
+          <td class="excel-cell editable-cell">
+            <input type="number" 
+                   [(ngModel)]="element.spacing"
+                   (blur)="onCellEdit(element, 'spacing', element.spacing)"
+                   (keydown)="onKeyDown($event)"
+                   min="0"
+                   step="0.1"
+                   class="excel-input">
+          </td>
+          <td class="excel-cell editable-cell">
+            <input type="number" 
+                   [(ngModel)]="element.burden"
+                   (blur)="onCellEdit(element, 'burden', element.burden)"
+                   (keydown)="onKeyDown($event)"
+                   min="0"
+                   step="0.1"
+                   class="excel-input">
+          </td>
+          <td class="excel-cell editable-cell">
+            <input type="number" 
+                   [(ngModel)]="element.subDrill"
+                   (blur)="onCellEdit(element, 'subDrill', element.subDrill)"
+                   (keydown)="onKeyDown($event)"
+                   min="0"
+                   step="0.1"
+                   class="excel-input">
+          </td>
+          <td class="excel-cell calculated-cell">{{ element.volume }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

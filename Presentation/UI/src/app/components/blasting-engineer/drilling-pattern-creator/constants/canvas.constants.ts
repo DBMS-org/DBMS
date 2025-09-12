@@ -11,7 +11,8 @@ export const CANVAS_CONSTANTS = {
     burden: 3.0,
     depth: 0,
     diameter: 0,
-    stemming: 0
+    stemming: 0,
+    subDrill: 0.5
   },
   ARIA_LABELS: {
     patternCreator: 'Drilling pattern creator canvas',

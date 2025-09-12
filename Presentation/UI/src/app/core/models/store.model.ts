@@ -5,10 +5,8 @@ export interface Store {
   storeManagerName: string;
   storeManagerContact: string;
   storeManagerEmail?: string;
-  storeType: StoreType;
   explosiveTypesAvailable: ExplosiveType[];
   storageCapacity: number;
-  storageCapacityUnit: StorageCapacityUnit;
   currentOccupancy?: number;
   status: StoreStatus;
   isActive: boolean;
@@ -25,7 +23,6 @@ export interface Store {
 export interface StoreLocation {
   city: string;
   region: string;
-  country: string;
   coordinates?: {
     latitude: number;
     longitude: number;
@@ -72,13 +69,6 @@ export enum StoreStatus {
   DECOMMISSIONED = 'Decommissioned'
 }
 
-export enum StorageCapacityUnit {
-  TONS = 'Tons',
-  KILOGRAMS = 'Kilograms',
-  CUBIC_METERS = 'Cubic Meters',
-  PALLETS = 'Pallets'
-}
-
 export enum SecurityLevel {
   LEVEL_1 = 'Level 1 - Basic',
   LEVEL_2 = 'Level 2 - Standard',
@@ -95,13 +85,11 @@ export interface StoreStatistics {
   totalCapacity: number;
   totalOccupancy: number;
   utilizationRate: number;
-  storesByType: { [key: string]: number };
   storesByRegion: { [key: string]: number };
 }
 
 export interface StoreFilters {
   status?: StoreStatus | 'ALL';
-  storeType?: StoreType | 'ALL';
   location?: string | 'ALL';
   storeManager?: string | 'ALL';
   isActive?: boolean | null;
@@ -114,14 +102,12 @@ export interface CreateStoreRequest {
   storeManagerName: string;
   storeManagerContact: string;
   storeManagerEmail?: string;
-  storeType: StoreType;
   explosiveTypesAvailable: ExplosiveType[];
   storageCapacity: number;
-  storageCapacityUnit: StorageCapacityUnit;
   location: StoreLocation;
   securityLevel: SecurityLevel;
 }
 
 export interface UpdateStoreRequest extends Partial<CreateStoreRequest> {
   id: string;
-} 
+}

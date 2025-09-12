@@ -1,25 +1,34 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
-import { StoreService } from '../../../core/services/store.service';
+import { StoreStatisticsComponent } from './store-statistics/store-statistics.component';
+import { StoreFiltersComponent } from './store-filters/store-filters.component';
+import { StoreListComponent } from './store-list/store-list.component';
+import { StoreFormComponent } from './store-form/store-form.component';
+import { Subject } from 'rxjs';
 import { 
   Store, 
   StoreStatistics, 
   StoreFilters, 
   CreateStoreRequest, 
   UpdateStoreRequest,
-  StoreType,
   ExplosiveType,
   StoreStatus,
-  StorageCapacityUnit,
   SecurityLevel
 } from '../../../core/models/store.model';
 
 @Component({
   selector: 'app-stores',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    ReactiveFormsModule,
+    StoreStatisticsComponent,
+    StoreFiltersComponent,
+    StoreListComponent,
+    StoreFormComponent
+  ],
   templateUrl: './stores.component.html',
   styleUrls: ['./stores.component.scss']
 })
@@ -47,7 +56,6 @@ export class StoresComponent implements OnInit, OnDestroy {
   // Filters and search
   filters: StoreFilters = {
     status: 'ALL',
-    storeType: 'ALL',
     location: 'ALL',
     storeManager: 'ALL',
     isActive: null,
@@ -55,17 +63,13 @@ export class StoresComponent implements OnInit, OnDestroy {
   };
 
   // Enums for templates
-  StoreType = StoreType;
   ExplosiveType = ExplosiveType;
   StoreStatus = StoreStatus;
-  StorageCapacityUnit = StorageCapacityUnit;
   SecurityLevel = SecurityLevel;
 
   // Enum arrays for dropdowns
-  storeTypes = Object.values(StoreType);
   explosiveTypes = Object.values(ExplosiveType);
   storeStatuses = Object.values(StoreStatus);
-  storageCapacityUnits = Object.values(StorageCapacityUnit);
   securityLevels = Object.values(SecurityLevel);
 
   // Unique values for filters
@@ -79,11 +83,25 @@ export class StoresComponent implements OnInit, OnDestroy {
   // Additional properties for project consistency
   error: string | null = null;
 
+  // Mock data
+  private mockStores: Store[] = [];
+  private mockStatistics: StoreStatistics = {
+    totalStores: 0,
+    activeStores: 0,
+    inactiveStores: 0,
+    operationalStores: 0,
+    maintenanceStores: 0,
+    totalCapacity: 0,
+    totalOccupancy: 0,
+    utilizationRate: 0,
+    storesByRegion: {}
+  };
+
   constructor(
-    private storeService: StoreService,
     private fb: FormBuilder
   ) {
     this.initializeForms();
+    this.initializeMockData();
   }
 
   ngOnInit(): void {
@@ -97,21 +115,192 @@ export class StoresComponent implements OnInit, OnDestroy {
   }
 
   // Initialization methods
-  private initializeForms(): void {
+  private initializeMockData(): void {
+    this.mockStores = [
+      {
+        id: '1',
+        storeName: 'Central Explosives Depot',
+        storeAddress: '123 Industrial Ave, Mining District',
+        storeManagerName: 'John Smith',
+        storeManagerContact: '+1-555-0101',
+        storeManagerEmail: 'john.smith@company.com',
+        explosiveTypesAvailable: [ExplosiveType.ANFO, ExplosiveType.EMULSION, ExplosiveType.BLASTING_CAPS],
+        storageCapacity: 500,
+        currentOccupancy: 350,
+        location: {
+          city: 'Denver',
+          region: 'Colorado',
+          coordinates: { latitude: 39.7392, longitude: -104.9903 }
+        },
+        securityLevel: SecurityLevel.LEVEL_3,
+        status: StoreStatus.OPERATIONAL,
+        isActive: true,
+        createdAt: new Date('2023-01-15'),
+        updatedAt: new Date('2024-01-10'),
+        createdBy: 'admin',
+        updatedBy: 'admin'
+      },
+      {
+        id: '2',
+        storeName: 'North Site Storage',
+        storeAddress: '456 Mining Road, North Sector',
+        storeManagerName: 'Sarah Johnson',
+        storeManagerContact: '+1-555-0102',
+        storeManagerEmail: 'sarah.johnson@company.com',
+        explosiveTypesAvailable: [ExplosiveType.ANFO, ExplosiveType.BOOSTER],
+        storageCapacity: 200,
+        currentOccupancy: 120,
+        location: {
+          city: 'Boulder',
+          region: 'Colorado',
+          coordinates: { latitude: 40.0150, longitude: -105.2705 }
+        },
+        securityLevel: SecurityLevel.LEVEL_2,
+        status: StoreStatus.OPERATIONAL,
+        isActive: true,
+        createdAt: new Date('2023-03-20'),
+        updatedAt: new Date('2024-01-08'),
+        createdBy: 'admin',
+        updatedBy: 'manager'
+      },
+      {
+        id: '3',
+        storeName: 'Emergency Storage Unit',
+        storeAddress: '789 Safety Blvd, Emergency Zone',
+        storeManagerName: 'Mike Wilson',
+        storeManagerContact: '+1-555-0103',
+        storeManagerEmail: 'mike.wilson@company.com',
+        explosiveTypesAvailable: [ExplosiveType.BLASTING_CAPS, ExplosiveType.SHAPED_CHARGES],
+        storageCapacity: 50,
+        currentOccupancy: 25,
+        location: {
+          city: 'Aurora',
+          region: 'Colorado',
+          coordinates: { latitude: 39.7294, longitude: -104.8319 }
+        },
+        securityLevel: SecurityLevel.LEVEL_4,
+        status: StoreStatus.OPERATIONAL,
+        isActive: true,
+        createdAt: new Date('2023-06-10'),
+        updatedAt: new Date('2024-01-05'),
+        createdBy: 'admin',
+        updatedBy: 'supervisor'
+      },
+      {
+        id: '4',
+        storeName: 'West Wing Depot',
+        storeAddress: '321 West Mining St, Industrial Park',
+        storeManagerName: 'Lisa Brown',
+        storeManagerContact: '+1-555-0104',
+        storeManagerEmail: 'lisa.brown@company.com',
+        explosiveTypesAvailable: [ExplosiveType.EMULSION, ExplosiveType.ANFO],
+        storageCapacity: 300,
+        currentOccupancy: 180,
+        location: {
+          city: 'Lakewood',
+          region: 'Colorado',
+          coordinates: { latitude: 39.7047, longitude: -105.0814 }
+        },
+        securityLevel: SecurityLevel.LEVEL_3,
+        status: StoreStatus.UNDER_MAINTENANCE,
+        isActive: true,
+        createdAt: new Date('2023-02-28'),
+        updatedAt: new Date('2024-01-12'),
+        createdBy: 'admin',
+        updatedBy: 'inspector'
+      },
+      {
+        id: '5',
+        storeName: 'Temporary Field Store',
+        storeAddress: '654 Temporary Access Road, Field Site',
+        storeManagerName: 'David Garcia',
+        storeManagerContact: '+1-555-0105',
+        storeManagerEmail: 'david.garcia@company.com',
+        explosiveTypesAvailable: [ExplosiveType.ANFO],
+        storageCapacity: 100,
+        currentOccupancy: 0,
+        location: {
+          city: 'Westminster',
+          region: 'Colorado',
+          coordinates: { latitude: 39.8367, longitude: -105.0372 }
+        },
+        securityLevel: SecurityLevel.LEVEL_1,
+        status: StoreStatus.TEMPORARILY_CLOSED,
+        isActive: false,
+        createdAt: new Date('2023-09-15'),
+        updatedAt: new Date('2024-01-01'),
+        createdBy: 'admin',
+        updatedBy: 'manager'
+      }
+    ];
+
+    // Calculate mock statistics
+    this.mockStatistics = {
+      totalStores: this.mockStores.length,
+      activeStores: this.mockStores.filter(s => s.isActive).length,
+      inactiveStores: this.mockStores.filter(s => !s.isActive).length,
+      operationalStores: this.mockStores.filter(s => s.status === StoreStatus.OPERATIONAL).length,
+      maintenanceStores: this.mockStores.filter(s => s.status === StoreStatus.UNDER_MAINTENANCE).length,
+      totalCapacity: this.mockStores.reduce((sum, s) => sum + s.storageCapacity, 0),
+      totalOccupancy: this.mockStores.reduce((sum, s) => sum + (s.currentOccupancy || 0), 0),
+      utilizationRate: 0,
+      storesByRegion: {}
+    };
+
+    // Calculate utilization rate
+    this.mockStatistics.utilizationRate = this.mockStatistics.totalCapacity > 0 
+      ? (this.mockStatistics.totalOccupancy / this.mockStatistics.totalCapacity) * 100 
+      : 0;
+
+    // Store type statistics removed
+
+    // Calculate stores by region
+    this.mockStores.forEach(store => {
+      this.mockStatistics.storesByRegion[store.location.city] = 
+        (this.mockStatistics.storesByRegion[store.location.city] || 0) + 1;
+    });
+   }
+
+   private updateMockStatistics(): void {
+     // Recalculate mock statistics
+     this.mockStatistics = {
+       totalStores: this.mockStores.length,
+       activeStores: this.mockStores.filter(s => s.isActive).length,
+       inactiveStores: this.mockStores.filter(s => !s.isActive).length,
+       operationalStores: this.mockStores.filter(s => s.status === StoreStatus.OPERATIONAL).length,
+       maintenanceStores: this.mockStores.filter(s => s.status === StoreStatus.UNDER_MAINTENANCE).length,
+       totalCapacity: this.mockStores.reduce((sum, s) => sum + s.storageCapacity, 0),
+       totalOccupancy: this.mockStores.reduce((sum, s) => sum + (s.currentOccupancy || 0), 0),
+       utilizationRate: 0,
+       storesByRegion: {}
+     };
+
+     // Calculate utilization rate
+     this.mockStatistics.utilizationRate = this.mockStatistics.totalCapacity > 0 
+       ? (this.mockStatistics.totalOccupancy / this.mockStatistics.totalCapacity) * 100 
+       : 0;
+
+     // Store type statistics removed
+
+     // Calculate stores by region
+     this.mockStores.forEach(store => {
+       this.mockStatistics.storesByRegion[store.location.city] = 
+         (this.mockStatistics.storesByRegion[store.location.city] || 0) + 1;
+     });
+   }
+
+   private initializeForms(): void {
     this.addStoreForm = this.fb.group({
       storeName: ['', [Validators.required, Validators.minLength(3)]],
       storeAddress: ['', [Validators.required, Validators.minLength(10)]],
       storeManagerName: ['', [Validators.required, Validators.minLength(2)]],
       storeManagerContact: ['', [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]{10,}$/)]],
       storeManagerEmail: ['', [Validators.email]],
-      storeType: ['', Validators.required],
       explosiveTypesAvailable: this.fb.array([], Validators.required),
       storageCapacity: ['', [Validators.required, Validators.min(1)]],
-      storageCapacityUnit: ['', Validators.required],
       location: this.fb.group({
         city: ['', Validators.required],
-        region: ['', Validators.required],
-        country: ['Oman', Validators.required]
+        region: ['', Validators.required]
       }),
       securityLevel: ['', Validators.required]
     });
@@ -123,14 +312,11 @@ export class StoresComponent implements OnInit, OnDestroy {
       storeManagerName: ['', [Validators.required, Validators.minLength(2)]],
       storeManagerContact: ['', [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]{10,}$/)]],
       storeManagerEmail: ['', [Validators.email]],
-      storeType: ['', Validators.required],
       explosiveTypesAvailable: this.fb.array([], Validators.required),
       storageCapacity: ['', [Validators.required, Validators.min(1)]],
-      storageCapacityUnit: ['', Validators.required],
       location: this.fb.group({
         city: ['', Validators.required],
-        region: ['', Validators.required],
-        country: ['Oman', Validators.required]
+        region: ['', Validators.required]
       }),
       securityLevel: ['', Validators.required]
     });
@@ -139,33 +325,18 @@ export class StoresComponent implements OnInit, OnDestroy {
   // Data loading methods
   private loadStores(): void {
     this.isLoading = true;
-    this.storeService.getAllStores()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (stores) => {
-          this.stores = stores;
-          this.applyFilters();
-          this.updateUniqueValues();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.showError('Failed to load stores');
-          this.isLoading = false;
-        }
-      });
+    // Simulate loading delay
+    setTimeout(() => {
+      this.stores = [...this.mockStores];
+      this.applyFilters();
+      this.updateUniqueValues();
+      this.isLoading = false;
+    }, 500);
   }
 
   private loadStatistics(): void {
-    this.storeService.getStoreStatistics()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (statistics) => {
-          this.statistics = statistics;
-        },
-        error: (error) => {
-          console.error('Failed to load statistics', error);
-        }
-      });
+    // Use mock statistics
+    this.statistics = { ...this.mockStatistics };
   }
 
   private updateUniqueValues(): void {
@@ -175,16 +346,47 @@ export class StoresComponent implements OnInit, OnDestroy {
 
   // Filter and search methods
   applyFilters(): void {
-    this.storeService.filterStores(this.filters)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (filteredStores) => {
-          this.filteredStores = filteredStores;
-        },
-        error: (error) => {
-          this.showError('Failed to apply filters');
+    this.filteredStores = this.stores.filter(store => {
+      // Status filter
+      if (this.filters.status && this.filters.status !== 'ALL' && store.status !== this.filters.status) {
+        return false;
+      }
+
+      // Store type filter removed
+
+      // Location filter
+      if (this.filters.location && this.filters.location !== 'ALL' && store.location.city !== this.filters.location) {
+        return false;
+      }
+
+      // Store manager filter
+      if (this.filters.storeManager && this.filters.storeManager !== 'ALL' && store.storeManagerName !== this.filters.storeManager) {
+        return false;
+      }
+
+      // Active status filter
+      if (this.filters.isActive !== null && store.isActive !== this.filters.isActive) {
+        return false;
+      }
+
+      // Search term filter
+      if (this.filters.searchTerm && this.filters.searchTerm.trim()) {
+        const searchTerm = this.filters.searchTerm.toLowerCase();
+        const searchableText = [
+          store.storeName,
+          store.storeManagerName,
+          store.location.city,
+          store.storeAddress,
+          store.status
+        ].join(' ').toLowerCase();
+        
+        if (!searchableText.includes(searchTerm)) {
+          return false;
         }
-      });
+      }
+
+      return true;
+    });
   }
 
   onFilterChange(): void {
@@ -198,7 +400,6 @@ export class StoresComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.filters = {
       status: 'ALL',
-      storeType: 'ALL',
       location: 'ALL',
       storeManager: 'ALL',
       isActive: null,
@@ -254,13 +455,12 @@ export class StoresComponent implements OnInit, OnDestroy {
       storeManagerName: store.storeManagerName,
       storeManagerContact: store.storeManagerContact,
       storeManagerEmail: store.storeManagerEmail,
-      storeType: store.storeType,
+
       storageCapacity: store.storageCapacity,
-      storageCapacityUnit: store.storageCapacityUnit,
       location: {
         city: store.location.city,
         region: store.location.region,
-        country: store.location.country
+
       },
       securityLevel: store.securityLevel
     });
@@ -317,83 +517,102 @@ export class StoresComponent implements OnInit, OnDestroy {
   }
 
   // CRUD operations
-  onAddStore(): void {
-    if (this.addStoreForm.valid) {
-      const request: CreateStoreRequest = this.addStoreForm.value;
-      
-      this.storeService.createStore(request)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (store) => {
-            this.showSuccess('Store added successfully');
-            this.loadStores();
-            this.loadStatistics();
-            setTimeout(() => this.closeAllModals(), 2000);
-          },
-          error: (error) => {
-            this.showError('Failed to add store');
-          }
-        });
-    } else {
-      this.markFormGroupTouched(this.addStoreForm);
-    }
+  onAddStore(formData?: any): void {
+    const request: CreateStoreRequest = formData || this.addStoreForm.value;
+    
+    // Create new store with mock data
+    const newStore: Store = {
+      ...request,
+      id: (this.mockStores.length + 1).toString(),
+      status: StoreStatus.OPERATIONAL,
+      currentOccupancy: 0,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: 'current-user',
+      updatedBy: 'current-user'
+    };
+    
+    // Add to mock stores
+    this.mockStores.push(newStore);
+    
+    // Update statistics
+    this.updateMockStatistics();
+    
+    this.showSuccess('Store added successfully');
+    this.loadStores();
+    this.loadStatistics();
+    setTimeout(() => this.closeAllModals(), 2000);
   }
 
-  onEditStore(): void {
-    if (this.editStoreForm.valid) {
-      const request: UpdateStoreRequest = this.editStoreForm.value;
+  onEditStore(formData?: any): void {
+    if (this.selectedStore) {
+      const request: UpdateStoreRequest = formData || this.editStoreForm.value;
       
-      this.storeService.updateStore(request)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (store) => {
-            this.showSuccess('Store updated successfully');
-            this.loadStores();
-            this.loadStatistics();
-            setTimeout(() => this.closeAllModals(), 2000);
-          },
-          error: (error) => {
-            this.showError('Failed to update store');
-          }
-        });
-    } else {
-      this.markFormGroupTouched(this.editStoreForm);
+      // Find and update store in mock data
+      const storeIndex = this.mockStores.findIndex(s => s.id === this.selectedStore!.id);
+      if (storeIndex !== -1) {
+        this.mockStores[storeIndex] = {
+          ...this.mockStores[storeIndex],
+          ...request,
+          updatedAt: new Date()
+        };
+        
+        // Update statistics
+        this.updateMockStatistics();
+        
+        this.showSuccess('Store updated successfully');
+        this.loadStores();
+        this.loadStatistics();
+        setTimeout(() => this.closeAllModals(), 2000);
+      } else {
+        this.showError('Store not found');
+      }
     }
   }
 
   onDeleteStore(): void {
     if (this.selectedStore) {
-      this.storeService.deleteStore(this.selectedStore.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.showSuccess('Store deleted successfully');
-            this.loadStores();
-            this.loadStatistics();
-            this.closeAllModals();
-          },
-          error: (error) => {
-            this.showError('Failed to delete store');
-          }
-        });
+      // Remove store from mock data
+      const storeIndex = this.mockStores.findIndex(s => s.id === this.selectedStore!.id);
+      if (storeIndex !== -1) {
+        this.mockStores.splice(storeIndex, 1);
+        
+        // Update statistics
+        this.updateMockStatistics();
+        
+        this.showSuccess('Store deleted successfully');
+        this.loadStores();
+        this.loadStatistics();
+        this.closeAllModals();
+      } else {
+        this.showError('Store not found');
+      }
     }
   }
 
   onDeactivateStore(): void {
     if (this.selectedStore) {
-      this.storeService.deactivateStore(this.selectedStore.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.showSuccess('Store deactivated successfully');
-            this.loadStores();
-            this.loadStatistics();
-            this.closeAllModals();
-          },
-          error: (error) => {
-            this.showError('Failed to deactivate store');
-          }
-        });
+      // Deactivate store in mock data
+      const storeIndex = this.mockStores.findIndex(s => s.id === this.selectedStore!.id);
+      if (storeIndex !== -1) {
+        this.mockStores[storeIndex] = {
+          ...this.mockStores[storeIndex],
+          isActive: false,
+          status: StoreStatus.TEMPORARILY_CLOSED,
+          updatedAt: new Date()
+        };
+        
+        // Update statistics
+        this.updateMockStatistics();
+        
+        this.showSuccess('Store deactivated successfully');
+        this.loadStores();
+        this.loadStatistics();
+        this.closeAllModals();
+      } else {
+        this.showError('Store not found');
+      }
     }
   }
 
@@ -440,14 +659,11 @@ export class StoresComponent implements OnInit, OnDestroy {
       storeManagerName: 'Store Manager Name',
       storeManagerContact: 'Store Manager Contact',
       storeManagerEmail: 'Store Manager Email',
-      storeType: 'Store Type',
       explosiveTypesAvailable: 'Explosive Types',
       storageCapacity: 'Storage Capacity',
-      storageCapacityUnit: 'Storage Capacity Unit',
       securityLevel: 'Security Level',
       city: 'City',
-      region: 'Region',
-      country: 'Country'
+      region: 'Region'
     };
     return displayNames[fieldName] || fieldName;
   }

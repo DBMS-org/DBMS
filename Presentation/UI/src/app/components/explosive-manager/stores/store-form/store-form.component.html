@@ -1,0 +1,189 @@
+<div *ngIf="isVisible" class="modal-overlay" (click)="onClose()">
+  <div class="modal-content" (click)="onModalClick($event)">
+    <div class="modal-header">
+      <h3>
+        <i class="fas fa-plus-circle" *ngIf="!isEditMode"></i>
+        <i class="fas fa-edit" *ngIf="isEditMode"></i>
+        {{ isEditMode ? 'Edit Store' : 'Add New Store' }}
+      </h3>
+      <button class="btn-close" (click)="onClose()" title="Close modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Success/Error Messages -->
+      <div *ngIf="successMessage" class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        {{ successMessage }}
+      </div>
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ errorMessage }}
+      </div>
+      
+      <form [formGroup]="storeForm" (ngSubmit)="onSubmit()">
+        <!-- Basic Information -->
+        <div class="form-section">
+          <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-store"></i> Store Name *</label>
+              <input 
+                type="text" 
+                class="form-control"
+                formControlName="storeName"
+                [class.is-invalid]="isFieldInvalid('storeName')"
+                placeholder="Enter store name">
+              <div *ngIf="isFieldInvalid('storeName')" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> Store name is required (minimum 2 characters)
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label><i class="fas fa-map-marker-alt"></i> Store Address *</label>
+            <textarea 
+              class="form-control"
+              formControlName="storeAddress"
+              [class.is-invalid]="isFieldInvalid('storeAddress')"
+              placeholder="Enter complete store address"
+              rows="3"></textarea>
+            <div *ngIf="isFieldInvalid('storeAddress')" class="error-message">
+              <i class="fas fa-exclamation-circle"></i> Store address is required
+            </div>
+          </div>
+        </div>
+        
+
+        
+        <!-- Location Information -->
+        <div class="form-section">
+          <h4><i class="fas fa-map-marked-alt"></i> Location Information</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-city"></i> City *</label>
+              <input 
+                type="text" 
+                class="form-control"
+                formControlName="locationCity"
+                [class.is-invalid]="isFieldInvalid('locationCity')"
+                placeholder="Enter city name">
+              <div *ngIf="isFieldInvalid('locationCity')" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> City is required
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label><i class="fas fa-globe-americas"></i> Region *</label>
+              <select
+                title="Region"
+                class="form-select"
+                formControlName="locationRegion"
+                [class.is-invalid]="isFieldInvalid('locationRegion')">
+                <option value="" disabled selected>Select a region</option>
+                <option value="Muscat">Muscat</option>
+                <option value="Dhofar">Dhofar</option>
+                <option value="Musandam">Musandam</option>
+                <option value="Al Buraimi">Al Buraimi</option>
+                <option value="Al Dakhiliyah">Al Dakhiliyah</option>
+                <option value="Al Dhahirah">Al Dhahirah</option>
+                <option value="Al Wusta">Al Wusta</option>
+                <option value="Al Batinah North">Al Batinah North</option>
+                <option value="Al Batinah South">Al Batinah South</option>
+                <option value="Ash Sharqiyah North">Ash Sharqiyah North</option>
+                <option value="Ash Sharqiyah South">Ash Sharqiyah South</option>
+              </select>
+              <div *ngIf="isFieldInvalid('locationRegion')" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> Region is required
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Storage Information -->
+        <div class="form-section">
+          <h4><i class="fas fa-warehouse"></i> Storage Information</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-weight-hanging"></i> Storage Capacity (tons) *</label>
+              <input 
+                type="number" 
+                class="form-control"
+                formControlName="storageCapacity"
+                [class.is-invalid]="isFieldInvalid('storageCapacity')"
+                placeholder="Enter storage capacity in tons"
+                min="1">
+              <div *ngIf="isFieldInvalid('storageCapacity')" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> Storage capacity is required (minimum 1 ton)
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Explosive Types -->
+        <div class="form-section">
+          <h4><i class="fas fa-bomb"></i> Explosive Types Available *</h4>
+          <div class="explosive-types-grid">
+            <div *ngFor="let type of explosiveTypes" class="form-check">
+              <input 
+                type="checkbox"
+                class="form-check-input"
+                [checked]="isExplosiveTypeSelected(type)"
+                (change)="onExplosiveTypeChange($event, type)"
+                [id]="'explosive-' + type">
+              <label class="form-check-label" [for]="'explosive-' + type">
+                <i class="fas fa-fire"></i> {{ type }}
+              </label>
+            </div>
+          </div>
+          <div *ngIf="isFieldInvalid('explosiveTypes')" class="error-message">
+            <i class="fas fa-exclamation-circle"></i> Please select at least one explosive type
+          </div>
+        </div>
+        
+        <!-- Status (only for edit mode) -->
+        <div class="form-section" *ngIf="isEditMode">
+          <h4><i class="fas fa-toggle-on"></i> Store Status</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label><i class="fas fa-info-circle"></i> Current Status *</label>
+              <select
+                title="Store Status"
+                class="form-select"
+                formControlName="status"
+                [class.is-invalid]="isFieldInvalid('status')">
+                <option value="" disabled>Select current status</option>
+                <option value="Operational">🟢 Operational</option>
+                <option value="Under Maintenance">🟡 Under Maintenance</option>
+                <option value="Temporarily Closed">🔴 Temporarily Closed</option>
+                <option value="Inspection Required">🟠 Inspection Required</option>
+                <option value="Decommissioned">⚫ Decommissioned</option>
+              </select>
+              <div *ngIf="isFieldInvalid('status')" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> Status is required
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    
+    <div class="modal-footer">
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        (click)="onClose()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button 
+        type="submit" 
+        class="btn btn-primary"
+        (click)="onSubmit()"
+        [disabled]="storeForm.invalid || isSubmitting">
+        <i class="fas {{ isSubmitting ? 'fa-spinner fa-spin' : (isEditMode ? 'fa-edit' : 'fa-plus') }}"></i>
+        {{ isSubmitting ? 'Saving...' : (isEditMode ? 'Update Store' : 'Create Store') }}
+      </button>
+    </div>
+  </div>
+</div>
