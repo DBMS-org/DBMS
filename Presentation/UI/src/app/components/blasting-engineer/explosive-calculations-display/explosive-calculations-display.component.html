@@ -256,7 +256,7 @@
             </div>
 
             <div class="form-group">
-              <label for="emulsionPerHole" class="form-label">Emulsion per Hole (kg)</label>
+              <label for="emulsionPerHole" class="form-label">Emulsion per Hole (tons)</label>
               <input 
                 type="number" 
                 id="emulsionPerHole" 
@@ -271,10 +271,10 @@
                 Emulsion amount is required
               </div>
               <div class="form-error" *ngIf="hasFormError('emulsionPerHole', 'min')">
-                Minimum amount is 0 kg
+                Minimum amount is 0 tons
               </div>
               <div class="form-error" *ngIf="hasFormError('emulsionPerHole', 'max')">
-                Maximum amount is 200 kg
+                Maximum amount is 0.2 tons
               </div>
             </div>
           </div>
@@ -400,7 +400,7 @@
             </div>
             <div class="input-card-compact">
               <span class="input-label">Emulsion</span>
-              <span class="input-value">{{ formatNumber(calculationInputs.emulsionPerHole, 1) }}kg</span>
+              <span class="input-value">{{ formatNumber(calculationInputs.emulsionPerHole, 1) }}tons</span>
             </div>
           </div>
         </div>
@@ -437,22 +437,22 @@
             <div class="input-card-compact">
               <span class="input-label">Total ANFO</span>
               <span class="input-value">{{ formatNumber(calculationResults.totalAnfo, 2) }}</span>
-              <span class="input-unit">kg</span>
+              <span class="input-unit">tons</span>
             </div>
             <div class="input-card-compact">
               <span class="input-label">Total Emulsion</span>
               <span class="input-value">{{ formatNumber(calculationResults.totalEmulsion, 2) }}</span>
-              <span class="input-unit">kg</span>
+              <span class="input-unit">tons</span>
             </div>
             <div class="input-card-compact">
               <span class="input-label">ANFO/Meter</span>
               <span class="input-value">{{ formatNumber(calculationResults.anfoPerMeter, 3) }}</span>
-              <span class="input-unit">kg/m</span>
+              <span class="input-unit">tons/m</span>
             </div>
             <div class="input-card-compact">
               <span class="input-label">Emulsion/Meter</span>
               <span class="input-value">{{ formatNumber(calculationResults.emulsionPerMeter, 3) }}</span>
-              <span class="input-unit">kg/m</span>
+              <span class="input-unit">tons/m</span>
             </div>
             <div class="input-card-compact">
               <span class="input-label">Remaining Space</span>
@@ -477,7 +477,7 @@
             <div class="input-card-compact">
                 <span class="input-label">ANFO Coverage</span>
                 <span class="input-value">{{ formatNumber(calculationResults.anfoCoveringSpace, 2) }}</span>
-                <span class="input-unit">kg</span>
+                <span class="input-unit">tons</span>
               </div>
               <div class="input-card-compact">
                 <span class="input-label">Emulsion Coverage</span>
@@ -573,7 +573,7 @@
               </span>
               <span class="summary-item">
                 <span class="material-icons" aria-hidden="true">science</span>
-                {{ calculation.totalEmulsion | number:'1.2-2' }}kg emulsion
+                {{ calculation.totalEmulsion | number:'1.2-2' }}tons emulsion
               </span>
             </div>
           </div>

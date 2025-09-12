@@ -5,6 +5,8 @@ export interface DrillPoint {
   depth: number;
   spacing: number;
   burden: number;
+  stemming: number;
+  subDrill: number;
 }
 
 export interface PatternSettings {
@@ -13,6 +15,7 @@ export interface PatternSettings {
   depth: number;
   diameter: number;
   stemming: number;
+  subDrill: number;
 }
 
 export interface PatternData {

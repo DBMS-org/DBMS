@@ -1,0 +1,33 @@
+<!-- Search and Filter Section -->
+<div class="search-filter-section">
+  <div class="search-box">
+    <input 
+      type="text" 
+      class="form-control" 
+      placeholder="Search stores, managers, locations..." 
+      [(ngModel)]="filters.searchTerm"
+      (input)="onSearchChange()"
+    />
+  </div>
+  
+  <div class="filter-section">
+    <select class="form-select" [(ngModel)]="filters.status" (change)="onFilterChange()" title="Filter by status" aria-label="Filter by status">
+      <option value="ALL">All Status</option>
+      <option *ngFor="let status of storeStatuses" [value]="status">{{ status }}</option>
+    </select>
+    
+    <select class="form-select" [(ngModel)]="filters.location" (change)="onFilterChange()" title="Filter by location" aria-label="Filter by location">
+      <option value="ALL">All Locations</option>
+      <option *ngFor="let location of uniqueLocations" [value]="location">{{ location }}</option>
+    </select>
+    
+    <select class="form-select" [(ngModel)]="filters.storeManager" (change)="onFilterChange()" title="Filter by store manager" aria-label="Filter by store manager">
+      <option value="ALL">All Managers</option>
+      <option *ngFor="let manager of uniqueManagers" [value]="manager">{{ manager }}</option>
+    </select>
+    
+    <button class="btn btn-secondary filter-btn" (click)="onClearFilters()">
+      <i class="material-icons">clear</i> Clear
+    </button>
+  </div>
+</div>

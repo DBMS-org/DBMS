@@ -1,0 +1,336 @@
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.stat-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+
+    .material-icons {
+      font-size: 20px;
+      color: #ffffff;
+      font-weight: 500;
+    }
+  }
+
+  .stat-content {
+    flex: 1;
+    min-width: 0;
+
+    h3 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 2px 0;
+      color: #1f2937;
+      line-height: 1.2;
+    }
+
+    p {
+      font-size: 12px;
+      color: #6b7280;
+      margin: 0;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+  }
+
+  // Individual card styling
+  &.total {
+    &::before {
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-icon {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    &:hover {
+      .stat-icon {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+      }
+    }
+  }
+
+  &.active {
+    &::before {
+      background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    }
+
+    .stat-icon {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    &:hover {
+      .stat-icon {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      }
+    }
+  }
+
+  &.operational {
+    &::before {
+      background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .stat-icon {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    &:hover {
+      .stat-icon {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+      }
+    }
+  }
+
+  &.capacity {
+    &::before {
+      background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .stat-icon {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    &:hover {
+      .stat-icon {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+      }
+    }
+  }
+
+  &.utilization {
+    &::before {
+      background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+
+    .stat-icon {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+    &:hover {
+      .stat-icon {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+      }
+    }
+  }
+}
+
+// Animation for stat cards
+.stat-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive design
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .stat-card {
+    padding: 20px;
+
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+
+      .material-icons {
+        font-size: 24px;
+      }
+    }
+
+    .stat-content {
+      h3 {
+        font-size: 28px;
+      }
+
+      p {
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    gap: 12px;
+
+    .stat-icon {
+      width: 45px;
+      height: 45px;
+
+      .material-icons {
+        font-size: 22px;
+      }
+    }
+
+    .stat-content {
+      h3 {
+        font-size: 24px;
+      }
+
+      p {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+
+      .material-icons {
+        font-size: 20px;
+      }
+    }
+
+    .stat-content {
+      h3 {
+        font-size: 20px;
+      }
+
+      p {
+        font-size: 11px;
+      }
+    }
+  }
+}
+
+// Loading state
+.stats-grid.loading {
+  .stat-card {
+    opacity: 0.6;
+    pointer-events: none;
+
+    .stat-content h3 {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 4px;
+      color: transparent;
+    }
+  }
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Accessibility improvements
+.stat-card {
+  &:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  &[aria-pressed="true"] {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Print styles
+@media print {
+  .stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .stat-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+    
+    &::before {
+      display: none;
+    }
+
+    .stat-icon {
+      background: #f5f5f5 !important;
+      
+      .material-icons {
+        color: #000 !important;
+      }
+    }
+  }
+}

@@ -35,7 +35,7 @@ namespace Infrastructure.Services
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.Role, user.Role.Replace(" ", "")), // Remove spaces to match authorization policy
                 new Claim("region", user.Region ?? string.Empty)
             };
             
@@ -131,4 +131,4 @@ namespace Infrastructure.Services
             await Task.CompletedTask;
         }
     }
-} 
+}

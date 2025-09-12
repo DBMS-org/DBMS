@@ -1,0 +1,266 @@
+<div class="requests-container">
+  <!-- Header -->
+  <div class="requests-header">
+    <h2>Request Management History</h2>
+    <p class="subtitle">Detailed history log of requests from store managers for explosives</p>
+  </div>
+
+  <!-- View Tabs -->
+  <div class="view-tabs">
+    <button 
+      class="tab-button" 
+      [class.active]="currentView === 'all'"
+      (click)="onViewChange('all')">
+      All Requests
+    </button>
+    <button 
+      class="tab-button" 
+      [class.active]="currentView === 'anfo'"
+      (click)="onViewChange('anfo')">
+      ANFO Requests
+    </button>
+    <button 
+      class="tab-button" 
+      [class.active]="currentView === 'emulsion'"
+      (click)="onViewChange('emulsion')">
+      Emulsion Requests
+    </button>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="search-bar">
+      <input 
+        type="text" 
+        placeholder="Search by requester, purpose, or location..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        class="search-input">
+      <i class="material-icons search-icon">search</i>
+    </div>
+
+    <!-- Filter Toggle Button -->
+    <div class="filter-toggle">
+      <button type="button" (click)="toggleFilters()" class="filter-toggle-btn">
+        <i class="material-icons">filter_list</i>
+        {{ filtersExpanded ? 'Hide Filters' : 'Show Filters' }}
+        <i class="material-icons toggle-icon">{{ filtersExpanded ? 'expand_less' : 'expand_more' }}</i>
+      </button>
+    </div>
+
+    <form [formGroup]="filterForm" class="filters-form" [class.expanded]="filtersExpanded">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Explosive Type</label>
+          <select formControlName="explosiveType" class="filter-select" title="Select explosive type" aria-label="Filter by explosive type">
+            <option value="">All Types</option>
+            <option [value]="ExplosiveType.ANFO">ANFO</option>
+            <option [value]="ExplosiveType.EMULSION">Emulsion</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Status</label>
+          <select formControlName="status" class="filter-select" title="Filter by status" aria-label="Filter by request status">
+            <option value="">All Statuses</option>
+            <option [value]="RequestStatus.PENDING">Pending</option>
+            <option [value]="RequestStatus.APPROVED">Approved</option>
+            <option [value]="RequestStatus.REJECTED">Rejected</option>
+            <option [value]="RequestStatus.IN_PROGRESS">In Progress</option>
+            <option [value]="RequestStatus.COMPLETED">Completed</option>
+            <option [value]="RequestStatus.CANCELLED">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Requester</label>
+          <input 
+            type="text" 
+            formControlName="requesterName" 
+            placeholder="Requester name"
+            class="filter-input">
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Store Location</label>
+          <input 
+            type="text" 
+            formControlName="storeLocation" 
+            placeholder="Store location"
+            class="filter-input">
+        </div>
+
+        <div class="filter-group">
+          <label>Date From</label>
+          <input 
+            type="date" 
+            formControlName="dateFrom" 
+            class="filter-input">
+        </div>
+
+        <div class="filter-group">
+          <label>Date To</label>
+          <input 
+            type="date" 
+            formControlName="dateTo" 
+            class="filter-input">
+        </div>
+
+        <div class="filter-actions">
+          <button type="button" (click)="clearFilters()" class="clear-btn">
+            <i class="material-icons">clear</i>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading requests...</p>
+  </div>
+
+  <!-- Requests Table -->
+  <div *ngIf="!loading" class="requests-table-container">
+    <div class="table-header">
+      <span class="results-count">{{filteredRequests.length}} requests found</span>
+    </div>
+
+    <table class="requests-table">
+      <thead>
+        <tr>
+          <th (click)="onSortChange('requestDate')" class="sortable">
+            Request Date
+            <i class="material-icons sort-icon" 
+               [class.active]="sortBy === 'requestDate'"
+               [class.desc]="sortBy === 'requestDate' && sortOrder === 'desc'">
+              arrow_upward
+            </i>
+          </th>
+          <th>Requester</th>
+          <th>Explosive Type</th>
+          <th (click)="onSortChange('quantity')" class="sortable">
+            Quantity
+            <i class="material-icons sort-icon" 
+               [class.active]="sortBy === 'quantity'"
+               [class.desc]="sortBy === 'quantity' && sortOrder === 'desc'">
+              arrow_upward
+            </i>
+          </th>
+          <th (click)="onSortChange('requiredDate')" class="sortable">
+            Required Date
+            <i class="material-icons sort-icon" 
+               [class.active]="sortBy === 'requiredDate'"
+               [class.desc]="sortBy === 'requiredDate' && sortOrder === 'desc'">
+              arrow_upward
+            </i>
+          </th>
+
+          <th (click)="onSortChange('status')" class="sortable">
+            Status
+            <i class="material-icons sort-icon" 
+               [class.active]="sortBy === 'status'"
+               [class.desc]="sortBy === 'status' && sortOrder === 'desc'">
+              arrow_upward
+            </i>
+          </th>
+          <th>Purpose</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let request of paginatedRequests" class="request-row">
+          <td>{{request.requestDate | date:'short'}}</td>
+          <td>
+            <div class="requester-info">
+              <strong>{{request.requesterName}}</strong>
+              <small>{{request.requesterRole}}</small>
+            </div>
+          </td>
+          <td>
+            <span class="explosive-type" [class]="'type-' + request.explosiveType.toLowerCase()">
+              {{request.explosiveType}}
+            </span>
+          </td>
+          <td>{{request.quantity}} {{request.unit}}</td>
+          <td>{{request.requiredDate | date:'short'}}</td>
+
+          <td>
+            <span class="status-badge" [class]="getStatusClass(request.status)">
+              {{request.status}}
+            </span>
+          </td>
+          <td class="purpose-cell">{{request.purpose}}</td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button 
+                *ngIf="request.status === RequestStatus.PENDING"
+                (click)="updateRequestStatus(request.id, RequestStatus.APPROVED)"
+                class="action-btn approve-btn"
+                title="Approve Request">
+                <i class="material-icons">check</i>
+              </button>
+              <button 
+                *ngIf="request.status === RequestStatus.PENDING"
+                (click)="updateRequestStatus(request.id, RequestStatus.REJECTED)"
+                class="action-btn reject-btn"
+                title="Reject Request">
+                <i class="material-icons">close</i>
+              </button>
+              <button 
+                class="action-btn view-btn"
+                title="View Details">
+                <i class="material-icons">visibility</i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredRequests.length === 0" class="empty-state">
+      <i class="material-icons">inbox</i>
+      <h3>No requests found</h3>
+      <p>Try adjusting your search criteria or filters</p>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="pagination">
+      <button 
+        (click)="onPageChange(currentPage - 1)"
+        [disabled]="currentPage === 1"
+        class="page-btn">
+        <i class="material-icons">chevron_left</i>
+      </button>
+      
+      <button 
+        *ngFor="let page of pageNumbers"
+        (click)="onPageChange(page)"
+        [class.active]="page === currentPage"
+        class="page-btn page-number">
+        {{page}}
+      </button>
+      
+      <button 
+        (click)="onPageChange(currentPage + 1)"
+        [disabled]="currentPage === totalPages"
+        class="page-btn">
+        <i class="material-icons">chevron_right</i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sub-components for detailed views -->
+  <div *ngIf="currentView === 'anfo'" class="sub-component">
+    <app-anfo-requests [requests]="filteredRequests"></app-anfo-requests>
+  </div>
+
+  <div *ngIf="currentView === 'emulsion'" class="sub-component">
+    <app-emulsion-requests [requests]="filteredRequests"></app-emulsion-requests>
+  </div>
+</div>

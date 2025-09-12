@@ -543,7 +543,9 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       y: drillLocation.y,
       depth: drillLocation.depth,
       spacing: drillLocation.spacing,
-      burden: drillLocation.burden
+      burden: drillLocation.burden,
+      stemming: drillLocation.stemming || 2.0,
+      subDrill: drillLocation.subDrill || 0.5
     };
   }
 
@@ -1381,7 +1383,9 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
         y: location.y,
         depth: location.depth,
         spacing: location.spacing,
-        burden: location.burden
+        burden: location.burden,
+        stemming: location.stemming || 2.0,
+        subDrill: location.subDrill || 0.5
       })),
       settings: {
         spacing: this.patternData.settings.spacing,

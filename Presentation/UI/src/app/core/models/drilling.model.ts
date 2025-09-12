@@ -28,6 +28,7 @@ export interface DrillLocation {
   name?: string;
   serialNumber?: number;
   stemming?: number;
+  subDrill?: number;
   
   // Context
   projectId: number;
@@ -52,6 +53,7 @@ export interface PatternSettings {
   depth: number;
   diameter: number;
   stemming: number;
+  subDrill?: number;
   
   // Additional settings
   gridSize?: number;

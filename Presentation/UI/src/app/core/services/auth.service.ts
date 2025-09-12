@@ -139,7 +139,13 @@ export class AuthService {
 
   hasRole(role: string): boolean {
     const userRole = this.getUserRole();
-    return userRole?.toLowerCase() === role.toLowerCase();
+    if (!userRole) return false;
+    
+    // Normalize both roles by removing spaces and converting to lowercase
+    const normalizedUserRole = userRole.toLowerCase().replace(/\s+/g, '');
+    const normalizedExpectedRole = role.toLowerCase().replace(/\s+/g, '');
+    
+    return normalizedUserRole === normalizedExpectedRole;
   }
 
   isAdmin(): boolean {
@@ -187,4 +193,4 @@ export class AuthService {
       confirmPassword 
     });
   }
-} 
+}

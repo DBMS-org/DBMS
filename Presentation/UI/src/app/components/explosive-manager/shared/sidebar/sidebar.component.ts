@@ -22,6 +22,7 @@ export class SidebarComponent {
     { icon: 'dashboard', label: 'Dashboard', route: '/explosive-manager/dashboard' },
     { icon: 'store', label: 'Stores', route: '/explosive-manager/stores' },
     { icon: 'inventory', label: 'Inventory', route: '/explosive-manager/inventory' },
+    { icon: 'request_page', label: 'Requests', route: '/explosive-manager/requests' },
     { icon: 'security', label: 'Safety Protocols', route: '/explosive-manager/safety' },
     { icon: 'work', label: 'Operations', route: '/explosive-manager/operations' },
     { icon: 'warning', label: 'Alerts', route: '/explosive-manager/alerts' },

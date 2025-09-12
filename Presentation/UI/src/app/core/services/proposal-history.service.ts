@@ -12,7 +12,7 @@ export interface ProposalHistoryItem {
   requestedByUserName?: string;
   expectedUsageDate: Date;
   comments?: string;
-  priority: RequestPriority;
+
   approvalType: ExplosiveApprovalType;
   status: ExplosiveApprovalStatus;
   createdAt: Date;
@@ -27,12 +27,7 @@ export interface ProposalHistoryItem {
   approvalComments?: string;
 }
 
-export enum RequestPriority {
-  Low = 0,
-  Normal = 1,
-  High = 2,
-  Critical = 3
-}
+
 
 export enum ExplosiveApprovalType {
   Standard = 0,
@@ -51,14 +46,14 @@ export interface CreateProposalRequest {
   projectSiteId: number;
   expectedUsageDate: Date;
   comments?: string;
-  priority: RequestPriority;
+
   approvalType: ExplosiveApprovalType;
 }
 
 export interface UpdateProposalRequest {
   expectedUsageDate: Date;
   comments?: string;
-  priority: RequestPriority;
+
   approvalType: ExplosiveApprovalType;
 }
 
@@ -277,23 +272,7 @@ export class ProposalHistoryService {
     }
   }
 
-  /**
-   * Get priority display text
-   */
-  getPriorityText(priority: RequestPriority): string {
-    switch (priority) {
-      case RequestPriority.Low:
-        return 'Low';
-      case RequestPriority.Normal:
-        return 'Normal';
-      case RequestPriority.High:
-        return 'High';
-      case RequestPriority.Critical:
-        return 'Critical';
-      default:
-        return 'Normal';
-    }
-  }
+
 
   /**
    * Get approval type display text
