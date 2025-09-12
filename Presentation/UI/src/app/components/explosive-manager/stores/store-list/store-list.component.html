@@ -1,0 +1,113 @@
+<!-- Loading State -->
+<div *ngIf="isLoading" class="loading-container">
+  <div class="spinner"></div>
+  <p>Loading stores...</p>
+</div>
+
+<!-- Stores Table -->
+<div class="table-container" *ngIf="!isLoading">
+  <table class="machines-table">
+    <thead>
+      <tr>
+        <th>Store Details</th>
+        <th>Manager</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Capacity</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let store of stores" class="machine-row" [class.inactive]="!store.isActive">
+        <td class="machine-details">
+          <div class="machine-info">
+            <h5>{{ store.storeName }}</h5>
+            <p class="text-muted">{{ store.storeAddress }}</p>
+            <small class="text-secondary">Security: {{ store.securityLevel }}</small>
+          </div>
+        </td>
+        
+        <td class="machine-manager">
+          <div class="manager-info">
+            <strong>{{ store.storeManagerName }}</strong>
+            <p class="text-muted">{{ store.storeManagerContact }}</p>
+            <small *ngIf="store.storeManagerEmail" class="text-secondary">{{ store.storeManagerEmail }}</small>
+          </div>
+        </td>
+        
+        <td class="machine-location">
+          <div class="location-details">
+            <strong>{{ store.location.city }}</strong>
+            <p class="text-muted">{{ store.location.region }}</p>
+          </div>
+        </td>
+        
+
+        
+        <td class="machine-status">
+          <span class="badge" [ngClass]="getStatusClass(store.status)">
+            {{ store.status }}
+          </span>
+        </td>
+        
+        <td class="machine-capacity">
+          <div class="capacity-info">
+            <strong>{{ store.storageCapacity | number:'1.0-0' }} tons</strong>
+            <p class="text-muted">{{ store.currentOccupancy || 0 | number:'1.0-0' }} tons occupied</p>
+            <div class="progress-bar">
+              <div class="progress-fill" 
+                   [style.width.%]="getUtilizationPercentage(store)"
+                   [ngClass]="getUtilizationClass(getUtilizationPercentage(store))">
+              </div>
+            </div>
+          </div>
+        </td>
+        
+        <td class="machine-actions">
+          <div class="action-buttons">
+            <button 
+              class="btn btn-sm btn-info action-btn" 
+              (click)="onViewStore(store)"
+              title="View Details">
+              <i class="material-icons">visibility</i>
+            </button>
+            <button 
+              class="btn btn-sm btn-primary action-btn" 
+              (click)="onEditStore(store)"
+              title="Edit Store">
+              <i class="material-icons">edit</i>
+            </button>
+            <button 
+              *ngIf="store.isActive"
+              class="btn btn-sm btn-warning action-btn" 
+              (click)="onDeactivateStore(store)"
+              title="Deactivate Store">
+              <i class="material-icons">pause</i>
+            </button>
+            <button 
+              class="btn btn-sm btn-danger action-btn" 
+              (click)="onDeleteStore(store)"
+              title="Delete Store">
+              <i class="material-icons">delete</i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- No Stores Message -->
+  <div *ngIf="stores.length === 0" class="no-machines">
+    <div class="empty-state">
+      <i class="material-icons">store</i>
+      <h4>No Stores Found</h4>
+      <p>No stores match your current filters. Try adjusting your search criteria.</p>
+      <button class="btn btn-secondary" (click)="onClearFilters()">
+        <i class="material-icons">clear</i> Clear Filters
+      </button>
+      <button class="btn btn-primary" (click)="onAddNewStore()">
+        <i class="material-icons">add</i> Add New Store
+      </button>
+    </div>
+  </div>
+</div>

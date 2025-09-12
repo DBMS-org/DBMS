@@ -1,0 +1,131 @@
+<div class="emulsion-inventory-container">
+  <!-- Header Section -->
+  <div class="inventory-header">
+    <div class="header-info">
+      <h3>Emulsion Inventory Management</h3>
+      <p>Water-resistant emulsion explosive inventory tracking</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="navigateToAdd()">
+        <i class="material-icons">add</i>
+        Add Inventory
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="material-icons">inventory_2</i>
+      </div>
+      <div class="card-content">
+        <h4>Total Stock</h4>
+        <p class="value">0.85 tons</p>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="material-icons">trending_down</i>
+      </div>
+      <div class="card-content">
+        <h4>Used This Month</h4>
+        <p class="value">0.22 tons</p>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="material-icons">warning</i>
+      </div>
+      <div class="card-content">
+        <h4>Low Stock Items</h4>
+        <p class="value">1</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Table -->
+  <div class="inventory-table-container">
+    <div class="table-header">
+      <h4>Emulsion Stock Details</h4>
+      <div class="table-actions">
+        <button class="btn btn-secondary">
+          <i class="material-icons">file_download</i>
+          Export
+        </button>
+        <button class="btn btn-secondary">
+          <i class="material-icons">refresh</i>
+          Refresh
+        </button>
+      </div>
+    </div>
+    
+    <table class="inventory-table">
+      <thead>
+        <tr>
+          <th>Batch ID</th>
+          <th>Location</th>
+          <th>Quantity (tons)</th>
+          <th>Manufacturing Date</th>
+          <th>Expiry Date</th>
+          <th>Density</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>EMU-2024-001</td>
+          <td>Store C - Section 1</td>
+          <td>0.4</td>
+          <td>2024-01-20</td>
+          <td>2025-01-20</td>
+          <td>1.15 g/cm³</td>
+          <td><span class="status-badge good">Good</span></td>
+          <td>
+            <button class="action-btn" title="Edit" (click)="navigateToEdit('EMU-2024-001')">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="action-btn" title="Use">
+              <i class="material-icons">remove_circle</i>
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td>EMU-2024-002</td>
+          <td>Store D - Section 1</td>
+          <td>0.45</td>
+          <td>2024-02-15</td>
+          <td>2025-02-15</td>
+          <td>1.18 g/cm³</td>
+          <td><span class="status-badge good">Good</span></td>
+          <td>
+            <button class="action-btn" title="Edit" (click)="navigateToEdit('EMU-2024-002')">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="action-btn" title="Use">
+              <i class="material-icons">remove_circle</i>
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td>EMU-2023-050</td>
+          <td>Store C - Section 2</td>
+          <td>0.1</td>
+          <td>2023-12-01</td>
+          <td>2024-12-01</td>
+          <td>1.12 g/cm³</td>
+          <td><span class="status-badge warning">Low Stock</span></td>
+          <td>
+            <button class="action-btn" title="Edit" (click)="navigateToEdit('EMU-2023-050')">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="action-btn" title="Use">
+              <i class="material-icons">remove_circle</i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

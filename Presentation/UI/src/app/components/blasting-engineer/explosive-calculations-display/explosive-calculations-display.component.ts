@@ -282,13 +282,13 @@ export class ExplosiveCalculationsDisplayComponent implements OnInit {
       'totalDepth': 'm',
       'averageDepth': 'm',
       'numberOfFilledHoles': '',
-      'emulsionPerMeter': 'kg/m',
-      'anfoPerMeter': 'kg/m',
+      'emulsionPerMeter': 'tons/m',
+    'anfoPerMeter': 'tons/m',
       'emulsionCoveringSpace': 'm',
       'remainingSpace': 'm',
-      'anfoCoveringSpace': 'kg',
-      'totalAnfo': 'kg',
-      'totalEmulsion': 'kg',
+      'anfoCoveringSpace': 'tons',
+    'totalAnfo': 'tons',
+    'totalEmulsion': 'tons',
       'totalVolume': 'm³'
     };
     return units[key] || '';

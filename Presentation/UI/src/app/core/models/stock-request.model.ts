@@ -12,7 +12,7 @@ export interface StockRequest {
   requestDate: Date;
   requiredDate: Date;
   status: StockRequestStatus;
-  priority: RequestPriority;
+
   justification: string;
   notes?: string;
   approvalDate?: Date;
@@ -41,19 +41,13 @@ export enum StockRequestStatus {
   CANCELLED = 'Cancelled'
 }
 
-export enum RequestPriority {
-  LOW = 'Low',
-  MEDIUM = 'Medium',
-  HIGH = 'High',
-  URGENT = 'Urgent',
-  EMERGENCY = 'Emergency'
-}
+
 
 export interface CreateStockRequestRequest {
   requesterStoreId: string;
   requestedItems: StockRequestItem[];
   requiredDate: Date;
-  priority: RequestPriority;
+
   justification: string;
   notes?: string;
 }
@@ -65,17 +59,17 @@ export interface StockRequestStatistics {
   rejectedRequests: number;
   fulfilledRequests: number;
   averageProcessingTime: number;
-  requestsByPriority: { [key: string]: number };
+
   requestsByStatus: { [key: string]: number };
 }
 
 export interface StockRequestFilters {
   status?: StockRequestStatus | 'ALL';
-  priority?: RequestPriority | 'ALL';
+
   explosiveType?: ExplosiveType | 'ALL';
   dateRange?: {
     startDate: Date;
     endDate: Date;
   };
   searchTerm?: string;
-} 
+}

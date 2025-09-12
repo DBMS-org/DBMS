@@ -1,0 +1,36 @@
+<div class="inventory-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">Explosive Inventory Management</h2>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button 
+      class="nav-tab"
+      [class.active]="currentView === 'overview'"
+      (click)="setCurrentView('overview')">
+      <i class="material-icons">dashboard</i>
+      Overview
+    </button>
+    <button 
+      class="nav-tab"
+      [class.active]="currentView === 'anfo'"
+      (click)="setCurrentView('anfo')">
+      <i class="material-icons">science</i>
+      ANFO Inventory
+    </button>
+    <button 
+      class="nav-tab"
+      [class.active]="currentView === 'emulsion'"
+      (click)="setCurrentView('emulsion')">
+      <i class="material-icons">water_drop</i>
+      Emulsion Inventory
+    </button>
+  </div>
+
+  <!-- Content Area -->
+  <div class="content-area">
+    <app-inventory-overview></app-inventory-overview>
+  </div>
+</div>

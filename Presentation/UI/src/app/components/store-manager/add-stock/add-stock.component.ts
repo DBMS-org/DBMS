@@ -6,7 +6,6 @@ import { StockRequestService } from '../../../core/services/stock-request.servic
 import { 
   StockRequest, 
   CreateStockRequestRequest, 
-  RequestPriority,
   StockRequestStatus
 } from '../../../core/models/stock-request.model';
 import { ExplosiveType } from '../../../core/models/store.model';
@@ -32,11 +31,11 @@ export class AddStockComponent implements OnInit, OnDestroy {
   errorMessage = '';
   
   ExplosiveType = ExplosiveType;
-  RequestPriority = RequestPriority;
+
   StockRequestStatus = StockRequestStatus;
   
   explosiveTypes = Object.values(ExplosiveType);
-  priorities = Object.values(RequestPriority);
+
   
   currentStore = {
     id: 'store1',
@@ -65,7 +64,7 @@ export class AddStockComponent implements OnInit, OnDestroy {
       requesterStoreId: [this.currentStore.id, Validators.required],
       requestedItems: this.fb.array([this.createRequestedItemGroup()], Validators.required),
       requiredDate: ['', [Validators.required]],
-      priority: [RequestPriority.MEDIUM, Validators.required],
+
       justification: ['', [Validators.required, Validators.minLength(20)]],
       notes: ['']
     });
@@ -254,22 +253,7 @@ export class AddStockComponent implements OnInit, OnDestroy {
     }
   }
 
-  getPriorityClass(priority: RequestPriority): string {
-    switch (priority) {
-      case RequestPriority.LOW:
-        return 'text-success';
-      case RequestPriority.MEDIUM:
-        return 'text-primary';
-      case RequestPriority.HIGH:
-        return 'text-warning';
-      case RequestPriority.URGENT:
-        return 'text-danger';
-      default:
-        return 'text-secondary';
-    }
-  }
-
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString();
   }
-} 
+}
