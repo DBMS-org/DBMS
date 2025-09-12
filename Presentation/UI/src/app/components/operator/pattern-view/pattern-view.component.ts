@@ -471,7 +471,9 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
           y: point.y,
           depth: point.depth,
           spacing: point.spacing,
-          burden: point.burden
+          burden: point.burden,
+          stemming: point.stemming || this.settings.stemming,
+          subDrill: point.subDrill || this.settings.subDrill
         }));
         this.cdr.detectChanges();
       },
@@ -585,4 +587,4 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
     }
     window.removeEventListener('resize', this.handleResize);
   }
-} 
+}

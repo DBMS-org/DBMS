@@ -8,7 +8,6 @@ import {
   StockRequestStatistics, 
   StockRequestFilters,
   StockRequestStatus,
-  RequestPriority,
   StockRequestItem
 } from '../models/stock-request.model';
 import { ExplosiveType } from '../models/store.model';
@@ -36,8 +35,8 @@ export class StockRequestService {
         requestedItems: [
           {
             explosiveType: ExplosiveType.ANFO,
-            requestedQuantity: 500,
-            unit: 'kg',
+            requestedQuantity: 0.5,
+            unit: 'tons',
             purpose: 'Mining operations - Phase 2',
             specifications: 'Standard grade ANFO for surface mining'
           },
@@ -52,7 +51,7 @@ export class StockRequestService {
         requestDate: new Date('2024-01-15'),
         requiredDate: new Date('2024-01-25'),
         status: StockRequestStatus.APPROVED,
-        priority: RequestPriority.HIGH,
+
         justification: 'Urgent requirement for upcoming mining phase. Current stock levels are critically low.',
         notes: 'Please ensure delivery before 25th Jan as operations are scheduled to begin.',
         approvalDate: new Date('2024-01-16'),
@@ -68,8 +67,8 @@ export class StockRequestService {
         requestedItems: [
           {
             explosiveType: ExplosiveType.EMULSION,
-            requestedQuantity: 200,
-            unit: 'kg',
+            requestedQuantity: 0.2,
+            unit: 'tons',
             purpose: 'Underground blasting',
             specifications: 'Water-resistant emulsion for wet conditions'
           }
@@ -77,7 +76,7 @@ export class StockRequestService {
         requestDate: new Date('2024-01-20'),
         requiredDate: new Date('2024-02-05'),
         status: StockRequestStatus.PENDING,
-        priority: RequestPriority.MEDIUM,
+
         justification: 'Routine stock replenishment for underground operations.',
         createdAt: new Date('2024-01-20'),
         updatedAt: new Date('2024-01-20')
@@ -101,7 +100,7 @@ export class StockRequestService {
       requestDate: new Date(),
       requiredDate: request.requiredDate,
       status: StockRequestStatus.PENDING,
-      priority: request.priority,
+
       justification: request.justification,
       notes: request.notes,
       createdAt: new Date(),
@@ -122,13 +121,7 @@ export class StockRequestService {
       rejectedRequests: 2,
       fulfilledRequests: 2,
       averageProcessingTime: 2.5,
-      requestsByPriority: {
-        'Low': 3,
-        'Medium': 7,
-        'High': 4,
-        'Urgent': 1,
-        'Emergency': 0
-      },
+
       requestsByStatus: {
         'Pending': 3,
         'Under Review': 1,
@@ -162,16 +155,16 @@ export class StockRequestService {
   // Get common units for different explosive types
   getUnitsForExplosiveType(explosiveType: ExplosiveType): string[] {
     const unitMap: { [key in ExplosiveType]: string[] } = {
-      [ExplosiveType.ANFO]: ['kg', 'tons'],
-      [ExplosiveType.EMULSION]: ['kg', 'tons'],
-      [ExplosiveType.DYNAMITE]: ['kg', 'boxes'],
+      [ExplosiveType.ANFO]: ['tons', 'kg'],
+      [ExplosiveType.EMULSION]: ['tons', 'kg'],
+      [ExplosiveType.DYNAMITE]: ['tons', 'boxes'],
       [ExplosiveType.BLASTING_CAPS]: ['pieces', 'boxes'],
       [ExplosiveType.DETONATING_CORD]: ['meters', 'rolls'],
       [ExplosiveType.PRIMER]: ['pieces', 'boxes'],
-      [ExplosiveType.BOOSTER]: ['pieces', 'kg'],
+      [ExplosiveType.BOOSTER]: ['pieces', 'tons'],
       [ExplosiveType.SHAPED_CHARGES]: ['pieces', 'sets']
     };
 
-    return unitMap[explosiveType] || ['kg', 'pieces'];
+    return unitMap[explosiveType] || ['tons', 'pieces'];
   }
-} 
+}

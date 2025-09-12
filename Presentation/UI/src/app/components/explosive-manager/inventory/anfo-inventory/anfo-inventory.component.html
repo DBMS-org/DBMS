@@ -1,0 +1,127 @@
+<div class="anfo-inventory-container">
+  <!-- Header Section -->
+  <div class="inventory-header">
+    <div class="header-info">
+      <h3>ANFO Inventory Management</h3>
+      <p>Ammonium Nitrate/Fuel Oil explosive inventory tracking</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="navigateToAdd()">
+        <i class="material-icons">add</i>
+        Add Inventory
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="material-icons">inventory_2</i>
+      </div>
+      <div class="card-content">
+        <h4>Total Stock</h4>
+        <p class="value">1.25 tons</p>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="material-icons">trending_down</i>
+      </div>
+      <div class="card-content">
+        <h4>Used This Month</h4>
+        <p class="value">0.34 tons</p>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="material-icons">warning</i>
+      </div>
+      <div class="card-content">
+        <h4>Low Stock Items</h4>
+        <p class="value">2</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Table -->
+  <div class="inventory-table-container">
+    <div class="table-header">
+      <h4>ANFO Stock Details</h4>
+      <div class="table-actions">
+        <button class="btn btn-secondary">
+          <i class="material-icons">file_download</i>
+          Export
+        </button>
+        <button class="btn btn-secondary">
+          <i class="material-icons">refresh</i>
+          Refresh
+        </button>
+      </div>
+    </div>
+    
+    <table class="inventory-table">
+      <thead>
+        <tr>
+          <th>Batch ID</th>
+          <th>Location</th>
+          <th>Quantity (tons)</th>
+          <th>Manufacturing Date</th>
+          <th>Expiry Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ANFO-2024-001</td>
+          <td>Store A - Section 1</td>
+          <td>0.5</td>
+          <td>2024-01-15</td>
+          <td>2025-01-15</td>
+          <td><span class="status-badge good">Good</span></td>
+          <td>
+            <button class="action-btn" title="Edit" (click)="navigateToEdit('ANFO-2024-001')">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="action-btn" title="Use">
+              <i class="material-icons">remove_circle</i>
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td>ANFO-2024-002</td>
+          <td>Store B - Section 2</td>
+          <td>0.75</td>
+          <td>2024-02-10</td>
+          <td>2025-02-10</td>
+          <td><span class="status-badge good">Good</span></td>
+          <td>
+            <button class="action-btn" title="Edit" (click)="navigateToEdit('ANFO-2024-002')">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="action-btn" title="Use">
+              <i class="material-icons">remove_circle</i>
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td>ANFO-2023-045</td>
+          <td>Store A - Section 3</td>
+          <td>0.15</td>
+          <td>2023-11-20</td>
+          <td>2024-11-20</td>
+          <td><span class="status-badge warning">Expiring Soon</span></td>
+          <td>
+            <button class="action-btn" title="Edit" (click)="navigateToEdit('ANFO-2023-045')">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="action-btn" title="Use">
+              <i class="material-icons">remove_circle</i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

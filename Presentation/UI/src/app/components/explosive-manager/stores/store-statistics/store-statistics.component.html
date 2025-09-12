@@ -1,0 +1,48 @@
+<!-- Statistics Grid -->
+<div class="stats-grid" *ngIf="statistics">
+  <div class="stat-card total">
+    <div class="stat-icon">
+      <i class="material-icons">store</i>
+    </div>
+    <div class="stat-content">
+      <h3>{{ statistics.totalStores }}</h3>
+      <p>Total Stores</p>
+    </div>
+  </div>
+  <div class="stat-card active">
+    <div class="stat-icon">
+      <i class="material-icons">check_circle</i>
+    </div>
+    <div class="stat-content">
+      <h3>{{ statistics.activeStores }}</h3>
+      <p>Active Stores</p>
+    </div>
+  </div>
+  <div class="stat-card operational">
+    <div class="stat-icon">
+      <i class="material-icons">settings</i>
+    </div>
+    <div class="stat-content">
+      <h3>{{ statistics.operationalStores }}</h3>
+      <p>Operational</p>
+    </div>
+  </div>
+  <div class="stat-card capacity">
+    <div class="stat-icon">
+      <i class="material-icons">inventory</i>
+    </div>
+    <div class="stat-content">
+      <h3>{{ statistics.totalCapacity | number:'1.0-0' }}</h3>
+      <p>Total Capacity</p>
+    </div>
+  </div>
+  <div class="stat-card utilization">
+    <div class="stat-icon">
+      <i class="material-icons">trending_up</i>
+    </div>
+    <div class="stat-content">
+      <h3>{{ statistics.utilizationRate | number:'1.1-1' }}%</h3>
+      <p>Utilization</p>
+    </div>
+  </div>
+</div>

@@ -27,11 +27,13 @@ import { SiteService } from '../../../core/services/site.service';
 import { NavigationController, WorkflowStepId } from '../shared/services/navigation-controller.service';
 import { DrillDataService } from '../csv-upload/drill-data.service';
 import { DrillPointPatternService } from '../../../core/services/drill-point-pattern.service';
+import { ExplosiveCalculationsService } from '../../../core/services/explosive-calculations.service';
+import { DrillDataTableComponent } from './drill-data-table/drill-data-table.component';
 
 @Component({
   selector: 'app-drilling-pattern-creator',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DrillDataTableComponent],
   templateUrl: './drilling-pattern-creator.component.html',
   styleUrls: ['./drilling-pattern-creator.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -54,6 +56,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   public isHolePlacementMode = false;
   public isPreciseMode = false;
   public showInstructions = false;
+  public showDrillDataTable = false;
   public cursorPosition: { x: number; y: number } | null = null;
   public duplicateAttemptMessage: string | null = null;
   public isSaved = false;
@@ -112,7 +115,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     private siteService: SiteService,
     private navigationController: NavigationController,
     private drillDataService: DrillDataService,
-    private drillPointPatternService: DrillPointPatternService
+    private drillPointPatternService: DrillPointPatternService,
+    private explosiveCalculationsService: ExplosiveCalculationsService
   ) {}
 
   formatValue(value: number | undefined): string {
@@ -261,7 +265,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
               burden: pattern.burden,
               depth: pattern.depth,
               diameter: pattern.diameter || CANVAS_CONSTANTS.DEFAULT_SETTINGS.diameter,
-              stemming: pattern.stemming || CANVAS_CONSTANTS.DEFAULT_SETTINGS.stemming
+              stemming: pattern.stemming || CANVAS_CONSTANTS.DEFAULT_SETTINGS.stemming,
+              subDrill: pattern.subDrill || CANVAS_CONSTANTS.DEFAULT_SETTINGS.subDrill
             };
             
             // Update hole numbering in drillPointService so it continues after loaded IDs
@@ -1050,13 +1055,15 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     console.log('=== Testing Coordinate Alignment ===');
     
     // Test case 1: spacing=3, burden=3
-    const testPoint1 = {
+    const testPoint1: DrillPoint = {
       x: 79.05052185058594,
       y: 70.85436248779297,
       spacing: 3,
       burden: 3,
       id: 'TEST1',
-      depth: 10
+      depth: 10,
+      stemming: this.settings.stemming,
+      subDrill: this.settings.subDrill
     };
     
     console.log('Test Case 1 - Original point:', testPoint1);
@@ -1065,13 +1072,15 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     console.log('Valid positions for spacing=3, burden=3: (0,0), (3,0), (6,0), (0,3), (3,3), (6,3)...');
     
     // Test case 2: spacing=3, burden=2.5
-    const testPoint2 = {
+    const testPoint2: DrillPoint = {
       x: 162,
       y: 162.5,
       spacing: 3,
       burden: 2.5,
       id: 'TEST2',
-      depth: 9
+      depth: 9,
+      stemming: this.settings.stemming,
+      subDrill: this.settings.subDrill
     };
     
     console.log('Test Case 2 - Original point:', testPoint2);
@@ -1140,12 +1149,9 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       console.log('Precise mode - snapped to:', { snapX, snapY });
       this.addDrillPoint(snapX, snapY);
     } else {
-      // Even in free mode, align coordinates to grid to ensure they match spacing/burden values
-      const alignedX = Math.round(worldX / spacing) * spacing;
-      const alignedY = Math.round(worldY / burden) * burden;
-      console.log('Free mode - original:', { worldX, worldY });
-      console.log('Free mode - aligned:', { alignedX, alignedY });
-      this.addDrillPoint(alignedX, alignedY);
+      // In free mode, use exact click coordinates without snapping to grid
+      console.log('Free mode - using exact coordinates:', { worldX, worldY });
+      this.addDrillPoint(worldX, worldY);
     }
   }
 
@@ -1191,7 +1197,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       return;
     }
 
-    const point = this.drillPointService.createDrillPoint(x, y, this.settings);
+    const point = this.drillPointService.createDrillPoint(x, y, this.settings, this.isPreciseMode);
     console.log('Created drill point with aligned coordinates:', point);
     this.drillPoints.push(point);
     console.log('Total drill points:', this.drillPoints.length);
@@ -1321,9 +1327,73 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
 
   onClearAll(): void {
     if (this.isReadOnly) return;
-    this.drillPoints = this.drillPointService.clearPoints();
-    this.selectPoint(null);
-    this.drawDrillPoints();
+    
+    // Show confirmation dialog
+    const confirmed = confirm(
+      'Are you sure you want to clear all data?\n\n' +
+      'This will permanently delete:\n' +
+      '• All drill points\n' +
+      '• All blast connections\n' +
+      '• All explosive calculations\n' +
+      '• All related pattern data\n\n' +
+      'This action cannot be undone.'
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    // Check if we have project and site context
+    if (!this.currentProjectId || !this.currentSiteId) {
+      console.warn('Missing project or site context for clearing data');
+      // Fallback to local clearing only
+      this.drillPoints = this.drillPointService.clearPoints();
+      this.selectPoint(null);
+      this.drawDrillPoints();
+      return;
+    }
+    
+    console.log('🧹 Starting comprehensive data cleanup for project:', this.currentProjectId, 'site:', this.currentSiteId);
+    
+    // Use the comprehensive cleanup method from blastSequenceDataService
+    this.blastSequenceDataService.cleanupSiteData(this.currentProjectId, this.currentSiteId)
+      .then((success) => {
+        if (success) {
+          console.log('✅ All site data cleared successfully');
+          
+          // Clear local UI state
+          this.drillPoints = this.drillPointService.clearPoints();
+          this.selectPoint(null);
+          this.drawDrillPoints();
+          this.isSaved = false;
+          
+          // Trigger UI update
+          this.cdr.markForCheck();
+          
+          console.log('✅ UI state cleared and updated');
+        } else {
+          console.warn('⚠️ Some data cleanup operations failed, but continuing with local cleanup');
+          
+          // Fallback: clear local data even if backend operations failed
+          this.drillPoints = this.drillPointService.clearPoints();
+          this.selectPoint(null);
+          this.drawDrillPoints();
+          this.isSaved = false;
+          this.cdr.markForCheck();
+        }
+      })
+      .catch((error) => {
+        console.error('❌ Error during data cleanup:', error);
+        
+        // Fallback: clear local data even if there was an error
+        this.drillPoints = this.drillPointService.clearPoints();
+        this.selectPoint(null);
+        this.drawDrillPoints();
+        this.isSaved = false;
+        this.cdr.markForCheck();
+        
+        alert('Some data may not have been cleared from the server. Please refresh the page to ensure all data is cleared.');
+      });
   }
 
   onSavePattern(): void {
@@ -1466,6 +1536,44 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     }).catch(error => {
       console.error('Navigation to explosive calculations error:', error);
     });
+  }
+
+  openDrillDataTable(): void {
+    console.log('openDrillDataTable called');
+    console.log('drillPoints.length:', this.drillPoints.length);
+    console.log('showDrillDataTable before:', this.showDrillDataTable);
+    
+    if (this.drillPoints.length === 0) {
+      console.warn('No drill points available to display in data table');
+      return;
+    }
+    
+    this.showDrillDataTable = true;
+    console.log('showDrillDataTable after:', this.showDrillDataTable);
+    this.cdr.detectChanges();
+    console.log('detectChanges called');
+  }
+
+  closeDrillDataTable(): void {
+    this.showDrillDataTable = false;
+    this.cdr.detectChanges();
+  }
+
+  onSaveDrillData(updatedData: any[]): void {
+    console.log('Saving updated drill data:', updatedData);
+    // Update drill points with the modified data from the table
+    updatedData.forEach((data, index) => {
+      if (this.drillPoints[index]) {
+        this.drillPoints[index].depth = data.depth;
+        this.drillPoints[index].stemming = data.stemming;
+        this.drillPoints[index].subDrill = data.subDrill;
+        // Note: spacing, burden, and volume are calculated values
+      }
+    });
+    
+    // Trigger change detection and redraw
+    this.cdr.detectChanges();
+    this.closeDrillDataTable();
   }
 
   onDeletePoint(): void {
