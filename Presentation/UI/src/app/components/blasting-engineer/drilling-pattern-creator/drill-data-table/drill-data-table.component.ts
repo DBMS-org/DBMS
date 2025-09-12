@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DrillPoint } from '../models/drill-point.model';
@@ -34,6 +34,8 @@ export class DrillDataTableComponent implements OnInit {
     stemming: 3,
     subDrill: 0.5
   };
+  @Output() close = new EventEmitter<void>();
+  @Output() save = new EventEmitter<DrillDataRow[]>();
   dataSource: DrillDataRow[] = [];
 
   constructor() {}
@@ -122,5 +124,12 @@ export class DrillDataTableComponent implements OnInit {
     }
   }
 
+  onCancel(): void {
+    this.close.emit();
+  }
+
+  onSave(): void {
+    this.save.emit(this.dataSource);
+  }
 
 }

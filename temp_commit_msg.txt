@@ -1,9 +1,15 @@
-feat(blasting-engineer): add explosive approval workflow and pattern settings
+feat(explosive-manager): add inventory and request management components
 
-- Implement explosive approval request entity and related services
-- Add diameter and stemming fields to pattern settings
-- Create proposal history component for tracking approvals
-- Update drilling pattern creator with new settings
-- Add SQL script for cleaning up duplicate explosive calculations
-- Implement navigation to explosive calculations step
-- Update canvas and grid services with improved resize handling
+refactor(models): remove priority fields from stock and request models
+
+fix(auth): normalize role comparison by removing spaces
+
+style(stores): update store statistics and filter components
+
+perf(drilling): add subDrill property to pattern settings and calculations
+
+docs(ui): update units in explosive calculations display
+
+test(explosive-manager): add spec files for new components
+
+chore: remove unused storage capacity unit enum
