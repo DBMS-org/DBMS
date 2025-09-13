@@ -1,15 +1,4 @@
-feat(explosive-manager): add inventory and request management components
+feat(drill-data-table): add save and cancel buttons with styling
 
-refactor(models): remove priority fields from stock and request models
-
-fix(auth): normalize role comparison by removing spaces
-
-style(stores): update store statistics and filter components
-
-perf(drilling): add subDrill property to pattern settings and calculations
-
-docs(ui): update units in explosive calculations display
-
-test(explosive-manager): add spec files for new components
-
-chore: remove unused storage capacity unit enum
+Implement save and cancel functionality for the drilling pattern table
+Add corresponding event emitters and button styling
