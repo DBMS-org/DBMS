@@ -34,165 +34,178 @@
         <div class="card-header">
           <h2>
             <i class="material-icons">description</i>
-            New Stock Request
+            New Explosive Request
           </h2>
         </div>
 
         <div class="card-body">
           <form [formGroup]="stockRequestForm" (ngSubmit)="onSubmit()">
-            <!-- Request Basic Information -->
+            <!-- Request Information -->
             <div class="form-section-group">
               <h3 class="section-title">Request Information</h3>
               
               <div class="form-row">
                 <div class="form-group">
+                  <label>Request Date</label>
+                  <input 
+                    type="text" 
+                    class="form-control"
+                    [value]="getCurrentDateTime()"
+                    readonly>
+                  <small class="text-muted">Automatically generated</small>
+                </div>
+                
+                <div class="form-group">
                   <label>Required Date *</label>
                   <input 
                     type="date" 
                     class="form-control"
-                                        formControlName="requiredDate"
+                    formControlName="requiredDate"
                     [class.is-invalid]="isFieldInvalid(stockRequestForm, 'requiredDate')">
                   <div *ngIf="isFieldInvalid(stockRequestForm, 'requiredDate')" class="error-message">
                     {{ getFieldError(stockRequestForm, 'requiredDate') }}
                   </div>
                 </div>
                 
-
-              </div>
-            </div>
-
-            <!-- Requested Items Section -->
-            <div class="form-section-group">
-              <div class="section-header">
-                <h3 class="section-title">Requested Items</h3>
-                <button 
-                  type="button" 
-                  class="btn btn-outline-primary btn-sm"
-                  (click)="addRequestedItem()">
-                  <i class="material-icons">add</i>
-                  Add Item
-                </button>
-              </div>
-
-              <div class="requested-items-container">
-                <div 
-                  *ngFor="let item of requestedItemsArray.controls; let i = index" 
-                  class="requested-item-card"
-                  [formGroupName]="i">
-                  
-                  <div class="item-card-header">
-                    <h4>Item {{ i + 1 }}</h4>
-                    <button 
-                      *ngIf="requestedItemsArray.length > 1"
-                      type="button" 
-                      class="btn btn-outline-danger btn-sm"
-                      (click)="removeRequestedItem(i)">
-                      <i class="material-icons">delete</i>
-                    </button>
-                  </div>
-
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label>Explosive Type *</label>
-                      <select
-                        title="Select explosive type"
-                        class="form-select"
-                        formControlName="explosiveType"
-                        [class.is-invalid]="isArrayFieldInvalid(i, 'explosiveType')"
-                        (change)="onExplosiveTypeChange(i)">
-                        <option value="">Select explosive type</option>
-                        <option *ngFor="let type of explosiveTypes" [value]="type">
-                          {{ type }}
-                        </option>
-                      </select>
-                      <div *ngIf="isArrayFieldInvalid(i, 'explosiveType')" class="error-message">
-                        {{ getArrayFieldError(i, 'explosiveType') }}
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label>Quantity *</label>
-                      <input 
-                        type="number" 
-                        class="form-control"
-                        formControlName="requestedQuantity"
-                        [class.is-invalid]="isArrayFieldInvalid(i, 'requestedQuantity')"
-                        placeholder="Enter quantity"
-                        min="1">
-                      <div *ngIf="isArrayFieldInvalid(i, 'requestedQuantity')" class="error-message">
-                        {{ getArrayFieldError(i, 'requestedQuantity') }}
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label>Unit *</label>
-                      <select
-                        title="Select unit of measurement"
-                        class="form-select"
-                        formControlName="unit"
-                        [class.is-invalid]="isArrayFieldInvalid(i, 'unit')">
-                        <option value="">Select unit</option>
-                        <option 
-                          *ngFor="let unit of getUnitsForExplosiveType(item.get('explosiveType')?.value)" 
-                          [value]="unit">
-                          {{ unit }}
-                        </option>
-                      </select>
-                      <div *ngIf="isArrayFieldInvalid(i, 'unit')" class="error-message">
-                        {{ getArrayFieldError(i, 'unit') }}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Purpose/Application *</label>
-                    <input 
-                      type="text" 
-                      class="form-control"
-                      formControlName="purpose"
-                      [class.is-invalid]="isArrayFieldInvalid(i, 'purpose')"
-                      placeholder="Describe the intended use">
-                    <div *ngIf="isArrayFieldInvalid(i, 'purpose')" class="error-message">
-                      {{ getArrayFieldError(i, 'purpose') }}
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Specifications</label>
-                    <textarea 
-                      class="form-control"
-                      formControlName="specifications"
-                      placeholder="Any specific requirements"
-                      rows="2"></textarea>
-                  </div>
+                <div class="form-group">
+                  <label>Status</label>
+                  <span class="badge bg-warning">PENDING</span>
+                  <small class="text-muted d-block">Will be updated after submission</small>
                 </div>
               </div>
             </div>
 
-            <!-- Justification Section -->
+            <!-- Requester Information -->
             <div class="form-section-group">
-              <h3 class="section-title">Request Justification</h3>
+              <h3 class="section-title">Requester Information</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Name</label>
+                  <input 
+                    type="text" 
+                    class="form-control"
+                    [value]="currentUser.name"
+                    readonly>
+                  <small class="text-muted">From user profile</small>
+                </div>
+                
+                <div class="form-group">
+                  <label>Role</label>
+                  <input 
+                    type="text" 
+                    class="form-control"
+                    [value]="currentUser.role"
+                    readonly>
+                  <small class="text-muted">From user profile</small>
+                </div>
+                
+                <div class="form-group">
+                  <label>Store Location</label>
+                  <input 
+                    type="text" 
+                    class="form-control"
+                    [value]="currentStore.name"
+                    readonly>
+                  <small class="text-muted">From store assignment</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Explosive Details Section -->
+            <div class="form-section-group">
+              <h3 class="section-title">Explosive Details</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Type *</label>
+                  <select
+                    title="Select explosive type"
+                    class="form-select"
+                    formControlName="explosiveType"
+                    [class.is-invalid]="isFieldInvalid(stockRequestForm, 'explosiveType')">
+                    <option value="">Select explosive type</option>
+                    <option *ngFor="let type of explosiveTypes" [value]="type">
+                      {{ type }}
+                    </option>
+                  </select>
+                  <div *ngIf="isFieldInvalid(stockRequestForm, 'explosiveType')" class="error-message">
+                    {{ getFieldError(stockRequestForm, 'explosiveType') }}
+                  </div>
+                </div>
+
+                <div class="form-group">
+                   <label>Quantity (tons) *</label>
+                   <input 
+                     type="number" 
+                     class="form-control"
+                     formControlName="quantity"
+                     [class.is-invalid]="isFieldInvalid(stockRequestForm, 'quantity')"
+                     placeholder="Enter quantity in tons"
+                     min="0.1"
+                     step="0.1">
+                   <div *ngIf="isFieldInvalid(stockRequestForm, 'quantity')" class="error-message">
+                     {{ getFieldError(stockRequestForm, 'quantity') }}
+                   </div>
+                 </div>
+              </div>
               
               <div class="form-group">
-                <label>Justification *</label>
-                <textarea 
+                <label>Purpose *</label>
+                <input 
+                  type="text" 
                   class="form-control"
-                  formControlName="justification"
-                  [class.is-invalid]="isFieldInvalid(stockRequestForm, 'justification')"
-                  placeholder="Provide detailed justification for this request"
-                  rows="4"></textarea>
-                <div *ngIf="isFieldInvalid(stockRequestForm, 'justification')" class="error-message">
-                  {{ getFieldError(stockRequestForm, 'justification') }}
+                  formControlName="purpose"
+                  [class.is-invalid]="isFieldInvalid(stockRequestForm, 'purpose')"
+                  placeholder="e.g., Mining operation - Sector 7">
+                <div *ngIf="isFieldInvalid(stockRequestForm, 'purpose')" class="error-message">
+                  {{ getFieldError(stockRequestForm, 'purpose') }}
                 </div>
               </div>
+            </div>
 
+            <!-- Approval Information (Read-only) -->
+            <div class="form-section-group">
+              <h3 class="section-title">Approval Information</h3>
+              
+              <div class="alert alert-info">
+                <i class="material-icons">info</i>
+                This section will be populated after the explosive manager reviews your request.
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Approval Date</label>
+                  <input 
+                    type="text" 
+                    class="form-control"
+                    value="Pending approval"
+                    readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label>Approved By</label>
+                  <input 
+                    type="text" 
+                    class="form-control"
+                    value="Pending approval"
+                    readonly>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="form-section-group">
+              <h3 class="section-title">Notes</h3>
+              
               <div class="form-group">
                 <label>Additional Notes</label>
                 <textarea 
                   class="form-control"
                   formControlName="notes"
-                  placeholder="Any additional information"
+                  placeholder="e.g., Urgent requirement for scheduled blasting"
                   rows="3"></textarea>
+                <small class="text-muted">Provide any additional information or special requirements</small>
               </div>
             </div>
 
@@ -221,60 +234,6 @@
       </div>
     </div>
 
-    <!-- Recent Requests Sidebar -->
-    <div class="sidebar-section">
-      <div class="section-card">
-        <div class="card-header" (click)="toggleRecentRequests()">
-          <h3>
-            <i class="material-icons">history</i>
-            Recent Requests
-          </h3>
-          <button class="toggle-btn">
-            <i class="material-icons">{{ showRecentRequests ? 'expand_less' : 'expand_more' }}</i>
-          </button>
-        </div>
 
-        <div class="card-body" *ngIf="showRecentRequests">
-          <div *ngIf="isLoading" class="loading-state">
-            <div class="spinner"></div>
-            <p>Loading recent requests...</p>
-          </div>
-
-          <div *ngIf="!isLoading && recentRequests.length === 0" class="empty-state">
-            <i class="material-icons">inbox</i>
-            <p>No recent requests found</p>
-          </div>
-
-          <div *ngIf="!isLoading && recentRequests.length > 0" class="recent-requests-list">
-            <div 
-              *ngFor="let request of recentRequests" 
-              class="request-item">
-              
-              <div class="request-header">
-                <span class="request-id">{{ request.id }}</span>
-                <span class="badge" [ngClass]="getStatusClass(request.status)">
-                  {{ request.status }}
-                </span>
-              </div>
-
-              <div class="request-details">
-                <p class="request-date">{{ formatDate(request.requestDate) }}</p>
-                <p class="request-items">
-                  {{ request.requestedItems.length }} item(s) requested
-                </p>
-
-              </div>
-
-              <div class="request-items-summary">
-                <div *ngFor="let item of request.requestedItems" class="item-summary">
-                  <strong>{{ item.explosiveType }}</strong>: 
-                  {{ item.requestedQuantity }} {{ item.unit }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>

@@ -1,0 +1,146 @@
+<div class="modal-overlay" *ngIf="request" (click)="onBackdropClick($event)">
+  <div class="modal-container">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="material-icons">description</i>
+        Request Details
+      </h2>
+      <button class="btn-close" (click)="onClose()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="modal-content" *ngIf="request">
+      
+      <!-- Request Information Section -->
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="material-icons">info</i>
+          Request Information
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Request ID:</label>
+            <span class="value">{{ request?.id }}</span>
+          </div>
+          <div class="info-item">
+            <label>Request Date:</label>
+            <span class="value">{{ formatDate(request?.requestDate) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Required Date:</label>
+            <span class="value">{{ formatDate(request?.requiredDate) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <span class="badge" [class]="getStatusClass(request?.status || '')">
+              {{ request?.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requester Information Section -->
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="material-icons">person</i>
+          Requester Information
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Requester Name:</label>
+            <span class="value">{{ request?.requesterName }}</span>
+          </div>
+          <div class="info-item">
+            <label>Requester ID:</label>
+            <span class="value">{{ request?.requesterId }}</span>
+          </div>
+          <div class="info-item">
+            <label>Store Name:</label>
+            <span class="value">{{ request?.requesterStoreName }}</span>
+          </div>
+          <div class="info-item">
+            <label>Store ID:</label>
+            <span class="value">{{ request?.requesterStoreId }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explosive Details Section -->
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="material-icons">warning</i>
+          Explosive Details
+        </h3>
+        <div class="info-grid">
+          <div *ngFor="let item of request?.requestedItems; let i = index" class="info-grid">
+            <div class="info-item">
+              <label>Explosive Type {{ i + 1 }}:</label>
+              <span class="value explosive-type">{{ item.explosiveType }}</span>
+            </div>
+            
+            <div class="info-item">
+              <label>Quantity:</label>
+              <span class="value quantity">{{ item.requestedQuantity }} {{ item.unit }}</span>
+            </div>
+            
+            <div class="info-item full-width">
+              <label>Purpose:</label>
+              <span class="value purpose">{{ item.purpose }}</span>
+            </div>
+            
+            <div class="info-item full-width" *ngIf="item.specifications">
+              <label>Specifications:</label>
+              <span class="value">{{ item.specifications }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approval Information Section -->
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="material-icons">check_circle</i>
+          Approval Information
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Approval Date:</label>
+            <span class="value">{{ request?.approvalDate ? formatDate(request.approvalDate) : 'Not yet approved' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Fulfillment Date:</label>
+            <span class="value">{{ request?.fulfillmentDate ? formatDate(request.fulfillmentDate) : 'Not yet fulfilled' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes Section -->
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="material-icons">note</i>
+          Notes
+        </h3>
+        <div class="notes-content">
+          <p>{{ request?.notes || 'No additional notes provided.' }}</p>
+        </div>
+        
+        <div class="info-item full-width" style="margin-top: 1rem;">
+          <label>Justification:</label>
+          <span class="value">{{ request?.justification }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="onClose()">
+        <i class="material-icons">close</i>
+        Close
+      </button>
+    </div>
+  </div>
+</div>
