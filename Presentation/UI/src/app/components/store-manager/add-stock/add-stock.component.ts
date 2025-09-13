@@ -21,11 +21,8 @@ export class AddStockComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   stockRequestForm!: FormGroup;
-  recentRequests: StockRequest[] = [];
   
-  isLoading = false;
   isSubmitting = false;
-  showRecentRequests = true;
   
   successMessage = '';
   errorMessage = '';
@@ -36,6 +33,11 @@ export class AddStockComponent implements OnInit, OnDestroy {
   
   explosiveTypes = Object.values(ExplosiveType);
 
+  // User and store information (would typically come from auth service)
+  currentUser = {
+    name: 'John Smith',
+    role: 'Store Manager'
+  };
   
   currentStore = {
     id: 'store1',
@@ -51,7 +53,6 @@ export class AddStockComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadRecentRequests();
   }
 
   ngOnDestroy(): void {
@@ -61,85 +62,63 @@ export class AddStockComponent implements OnInit, OnDestroy {
 
   private initializeForm(): void {
     this.stockRequestForm = this.fb.group({
-      requesterStoreId: [this.currentStore.id, Validators.required],
-      requestedItems: this.fb.array([this.createRequestedItemGroup()], Validators.required),
-      requiredDate: ['', [Validators.required]],
-
-      justification: ['', [Validators.required, Validators.minLength(20)]],
+      explosiveType: ['', Validators.required],
+      quantity: ['', [Validators.required, Validators.min(0.1)]],
+      purpose: ['', [Validators.required, Validators.minLength(5)]],
+      requiredDate: ['', Validators.required],
       notes: ['']
     });
   }
 
-  private createRequestedItemGroup(): FormGroup {
-    return this.fb.group({
-      explosiveType: ['', Validators.required],
-      requestedQuantity: ['', [Validators.required, Validators.min(1)]],
-      unit: ['', Validators.required],
-      purpose: ['', [Validators.required, Validators.minLength(10)]],
-      specifications: ['']
+  getCurrentDateTime(): string {
+    const now = new Date();
+    return now.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
     });
-  }
-
-  get requestedItemsArray(): FormArray {
-    return this.stockRequestForm.get('requestedItems') as FormArray;
-  }
-
-  addRequestedItem(): void {
-    this.requestedItemsArray.push(this.createRequestedItemGroup());
-  }
-
-  removeRequestedItem(index: number): void {
-    if (this.requestedItemsArray.length > 1) {
-      this.requestedItemsArray.removeAt(index);
-    }
-  }
-
-  onExplosiveTypeChange(index: number): void {
-    const item = this.requestedItemsArray.at(index);
-    const explosiveType = item.get('explosiveType')?.value as ExplosiveType;
-    
-    if (explosiveType) {
-      const availableUnits = this.stockRequestService.getUnitsForExplosiveType(explosiveType);
-      item.get('unit')?.setValue(availableUnits[0] || '');
-    }
   }
 
   getUnitsForExplosiveType(explosiveType: ExplosiveType): string[] {
     return this.stockRequestService.getUnitsForExplosiveType(explosiveType);
   }
 
-  private loadRecentRequests(): void {
-    this.isLoading = true;
-    this.stockRequestService.getStockRequests()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (requests) => {
-          this.recentRequests = requests.slice(0, 5);
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.showError('Failed to load recent requests');
-          this.isLoading = false;
-        }
-      });
-  }
+
 
   onSubmit(): void {
     if (this.stockRequestForm.valid) {
       this.isSubmitting = true;
-      const request: CreateStockRequestRequest = this.stockRequestForm.value;
       
+      // Create the request in the expected format
+      const request: CreateStockRequestRequest = {
+         requesterStoreId: this.currentStore.id,
+         requestedItems: [{
+           explosiveType: this.stockRequestForm.value.explosiveType,
+           requestedQuantity: this.stockRequestForm.value.quantity,
+           unit: 'tons', // Always use tons as the unit
+           purpose: this.stockRequestForm.value.purpose,
+           specifications: ''
+         }],
+         requiredDate: this.stockRequestForm.value.requiredDate,
+         justification: this.stockRequestForm.value.purpose, // Use purpose as justification
+         notes: this.stockRequestForm.value.notes || ''
+       };
+
       this.stockRequestService.createStockRequest(request)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
-            this.showSuccess('Stock request submitted successfully! Request ID: ' + response.id);
+            this.showSuccess('Explosive request created successfully! Request ID: ' + response.id);
             this.resetForm();
-            this.loadRecentRequests();
+
             this.isSubmitting = false;
           },
           error: (error) => {
-            this.showError('Failed to submit stock request. Please try again.');
+            this.showError('Error creating explosive request. Please try again.');
             this.isSubmitting = false;
           }
         });
@@ -155,9 +134,7 @@ export class AddStockComponent implements OnInit, OnDestroy {
     this.clearMessages();
   }
 
-  toggleRecentRequests(): void {
-    this.showRecentRequests = !this.showRecentRequests;
-  }
+
 
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
@@ -181,11 +158,7 @@ export class AddStockComponent implements OnInit, OnDestroy {
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
-  isArrayFieldInvalid(arrayIndex: number, fieldName: string): boolean {
-    const arrayControl = this.requestedItemsArray.at(arrayIndex) as FormGroup;
-    const field = arrayControl.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
+
 
   getFieldError(form: FormGroup, fieldName: string): string {
     const field = form.get(fieldName);
@@ -197,16 +170,7 @@ export class AddStockComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  getArrayFieldError(arrayIndex: number, fieldName: string): string {
-    const arrayControl = this.requestedItemsArray.at(arrayIndex) as FormGroup;
-    const field = arrayControl.get(fieldName);
-    if (field?.errors) {
-      if (field.errors['required']) return `${this.getFieldDisplayName(fieldName)} is required`;
-      if (field.errors['minlength']) return `${this.getFieldDisplayName(fieldName)} is too short`;
-      if (field.errors['min']) return 'Quantity must be greater than 0';
-    }
-    return '';
-  }
+
 
   private getFieldDisplayName(fieldName: string): string {
     const displayNames: { [key: string]: string } = {
@@ -240,20 +204,5 @@ export class AddStockComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
   }
 
-  getStatusClass(status: StockRequestStatus): string {
-    switch (status) {
-      case StockRequestStatus.PENDING:
-        return 'bg-warning';
-      case StockRequestStatus.APPROVED:
-        return 'bg-success';
-      case StockRequestStatus.REJECTED:
-        return 'bg-danger';
-      default:
-        return 'bg-secondary';
-    }
-  }
 
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString();
-  }
 }

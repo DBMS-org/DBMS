@@ -1,0 +1,237 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
+import { StockRequestService } from '../../../core/services/stock-request.service';
+import { 
+  StockRequest, 
+  StockRequestStatus
+} from '../../../core/models/stock-request.model';
+import { ExplosiveType } from '../../../core/models/store.model';
+import { ViewDetailsComponent } from './view-details/view-details.component';
+
+@Component({
+  selector: 'app-request-history',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ViewDetailsComponent],
+  templateUrl: './request-history.component.html',
+  styleUrls: ['./request-history.component.scss']
+})
+export class RequestHistoryComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  requests: StockRequest[] = [];
+  filteredRequests: StockRequest[] = [];
+  
+  isLoading = false;
+  
+  successMessage = '';
+  errorMessage = '';
+  
+  ExplosiveType = ExplosiveType;
+  StockRequestStatus = StockRequestStatus;
+  
+  // Filter properties
+  filterStatus = '';
+  filterType = '';
+  filterDateFrom = '';
+  filterDateTo = '';
+  searchTerm = '';
+  
+  // UI state
+  isFiltersCollapsed = true;
+  
+  // View Details Modal
+  showViewDetails = false;
+  selectedRequest: StockRequest | null = null;
+
+  // User and store information (would typically come from auth service)
+  currentUser = {
+    name: 'John Smith',
+    role: 'Store Manager'
+  };
+  
+  currentStore = {
+    id: 'store1',
+    name: 'Muscat Field Storage',
+    manager: 'Ahmed Al-Rashid'
+  };
+
+  // Sample data for demonstration
+  sampleRequests: StockRequest[] = [
+    {
+      id: '1',
+      requesterId: 'user1',
+      requesterName: 'Ahmed Al-Rashid',
+      requesterStoreId: 'store1',
+      requesterStoreName: 'Muscat Field Storage',
+      requestedItems: [
+        {
+          explosiveType: ExplosiveType.ANFO,
+          requestedQuantity: 0.5,
+          unit: 'tons',
+          purpose: 'Mining operations - Phase 2',
+          specifications: 'Standard grade ANFO for surface mining'
+        }
+      ],
+      requestDate: new Date('2024-01-15'),
+      requiredDate: new Date('2024-01-25'),
+      status: StockRequestStatus.APPROVED,
+      justification: 'Urgent requirement for upcoming mining phase',
+      notes: 'Please ensure delivery before 25th Jan',
+      approvalDate: new Date('2024-01-16'),
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-16')
+    },
+    {
+      id: '2',
+      requesterId: 'user2',
+      requesterName: 'Fatima Al-Zahra',
+      requesterStoreId: 'store2',
+      requesterStoreName: 'Sohar Industrial Storage',
+      requestedItems: [
+        {
+          explosiveType: ExplosiveType.EMULSION,
+          requestedQuantity: 0.3,
+          unit: 'tons',
+          purpose: 'Underground blasting operations',
+          specifications: 'Water-resistant emulsion for wet conditions'
+        }
+      ],
+      requestDate: new Date('2024-01-20'),
+      requiredDate: new Date('2024-02-05'),
+      status: StockRequestStatus.PENDING,
+      justification: 'Routine stock replenishment',
+      notes: 'Standard delivery schedule',
+      createdAt: new Date('2024-01-20'),
+      updatedAt: new Date('2024-01-20')
+    },
+    {
+      id: '3',
+      requesterId: 'user1',
+      requesterName: 'Ahmed Al-Rashid',
+      requesterStoreId: 'store1',
+      requesterStoreName: 'Muscat Field Storage',
+      requestedItems: [
+        {
+          explosiveType: ExplosiveType.BLASTING_CAPS,
+          requestedQuantity: 100,
+          unit: 'pieces',
+          purpose: 'Detonation sequence setup',
+          specifications: 'Electric blasting caps, delay 0-9'
+        }
+      ],
+      requestDate: new Date('2024-01-18'),
+      requiredDate: new Date('2024-01-30'),
+      status: StockRequestStatus.FULFILLED,
+      justification: 'Critical component for scheduled blast',
+      notes: 'Handle with extreme care',
+      fulfillmentDate: new Date('2024-01-19'),
+      createdAt: new Date('2024-01-18'),
+      updatedAt: new Date('2024-01-19')
+    }
+  ];
+
+  constructor(
+    private stockRequestService: StockRequestService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadRequests();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadRequests(): void {
+    this.isLoading = true;
+    
+    // For demonstration, using sample data
+    // In real implementation, this would call the service
+    setTimeout(() => {
+      this.requests = [...this.sampleRequests];
+      this.filteredRequests = [...this.requests];
+      this.isLoading = false;
+    }, 1000);
+  }
+
+  applyFilters(): void {
+    this.filteredRequests = this.requests.filter(request => {
+      const matchesStatus = !this.filterStatus || request.status === this.filterStatus;
+      const matchesType = !this.filterType || request.requestedItems.some(item => item.explosiveType === this.filterType);
+      const matchesSearch = !this.searchTerm || 
+        request.id.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.requesterName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.justification.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.requestedItems.some(item => item.purpose.toLowerCase().includes(this.searchTerm.toLowerCase()));
+      
+      let matchesDateRange = true;
+      if (this.filterDateFrom) {
+        matchesDateRange = matchesDateRange && request.requestDate >= new Date(this.filterDateFrom);
+      }
+      if (this.filterDateTo) {
+        matchesDateRange = matchesDateRange && request.requestDate <= new Date(this.filterDateTo);
+      }
+      
+      return matchesStatus && matchesType && matchesSearch && matchesDateRange;
+    });
+  }
+
+  clearFilters(): void {
+    this.filterStatus = '';
+    this.filterType = '';
+    this.filterDateFrom = '';
+    this.filterDateTo = '';
+    this.searchTerm = '';
+    this.filteredRequests = [...this.requests];
+  }
+
+  getStatusClass(status: StockRequestStatus): string {
+    switch (status) {
+      case StockRequestStatus.APPROVED:
+        return 'bg-success';
+      case StockRequestStatus.PENDING:
+        return 'bg-warning';
+      case StockRequestStatus.REJECTED:
+        return 'bg-danger';
+      case StockRequestStatus.FULFILLED:
+        return 'bg-info';
+      case StockRequestStatus.IN_PROGRESS:
+        return 'bg-primary';
+      default:
+        return 'bg-secondary';
+    }
+  }
+
+
+
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  clearMessages(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+  }
+
+  toggleFilters(): void {
+    this.isFiltersCollapsed = !this.isFiltersCollapsed;
+  }
+
+  // View Details Modal Methods
+  openViewDetails(request: StockRequest): void {
+    this.selectedRequest = request;
+    this.showViewDetails = true;
+  }
+
+  closeViewDetails(): void {
+    this.showViewDetails = false;
+    this.selectedRequest = null;
+  }
+}

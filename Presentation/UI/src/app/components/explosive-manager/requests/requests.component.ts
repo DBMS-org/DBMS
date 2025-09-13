@@ -47,6 +47,10 @@ export class RequestsComponent implements OnInit, OnDestroy {
   pageSize = 10;
   totalPages = 0;
   
+  // Modal state
+  showDetailsModal = false;
+  selectedRequest: ExplosiveRequest | null = null;
+  
   constructor(
     private requestService: RequestService,
     private fb: FormBuilder
@@ -198,5 +202,15 @@ export class RequestsComponent implements OnInit, OnDestroy {
   
   get pageNumbers(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+  
+  viewRequestDetails(request: ExplosiveRequest): void {
+    this.selectedRequest = request;
+    this.showDetailsModal = true;
+  }
+  
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.selectedRequest = null;
   }
 }

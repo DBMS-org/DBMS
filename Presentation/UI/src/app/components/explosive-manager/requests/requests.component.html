@@ -212,6 +212,7 @@
                 <i class="material-icons">close</i>
               </button>
               <button 
+                (click)="viewRequestDetails(request)"
                 class="action-btn view-btn"
                 title="View Details">
                 <i class="material-icons">visibility</i>
@@ -262,5 +263,138 @@
 
   <div *ngIf="currentView === 'emulsion'" class="sub-component">
     <app-emulsion-requests [requests]="filteredRequests"></app-emulsion-requests>
+  </div>
+</div>
+
+<!-- Request Details Modal -->
+<div *ngIf="showDetailsModal" class="modal-overlay" (click)="closeDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        <i class="material-icons">description</i>
+        Request Details
+      </h2>
+      <button class="close-btn" (click)="closeDetailsModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="selectedRequest">
+      <!-- Request Information -->
+      <div class="details-section">
+        <h3>Request Information</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <label>Request ID:</label>
+            <span>{{ selectedRequest.id }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Request Date:</label>
+            <span>{{ selectedRequest.requestDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Required Date:</label>
+            <span>{{ selectedRequest.requiredDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Status:</label>
+            <span class="status-badge" [class]="getStatusClass(selectedRequest.status)">
+              {{ selectedRequest.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Requester Information -->
+      <div class="details-section">
+        <h3>Requester Information</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <label>Name:</label>
+            <span>{{ selectedRequest.requesterName }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Role:</label>
+            <span>{{ selectedRequest.requesterRole }}</span>
+          </div>
+          <div class="detail-item">
+            <label>ID:</label>
+            <span>{{ selectedRequest.requesterId }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Store Location:</label>
+            <span>{{ selectedRequest.storeLocation }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Explosive Details -->
+      <div class="details-section">
+        <h3>Explosive Details</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <label>Type:</label>
+            <span class="explosive-type" [class]="'type-' + selectedRequest.explosiveType.toLowerCase()">
+              {{ selectedRequest.explosiveType }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Quantity:</label>
+            <span>{{ selectedRequest.quantity }} {{ selectedRequest.unit }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Purpose:</label>
+            <span>{{ selectedRequest.purpose }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Approval Information -->
+      <div class="details-section" *ngIf="selectedRequest.status !== RequestStatus.PENDING">
+        <h3>Approval Information</h3>
+        <div class="details-grid">
+          <div class="detail-item" *ngIf="selectedRequest.approvalDate">
+            <label>Approval Date:</label>
+            <span>{{ selectedRequest.approvalDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.approvedBy">
+            <label>Approved By:</label>
+            <span>{{ selectedRequest.approvedBy }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.rejectionReason">
+            <label>Rejection Reason:</label>
+            <span class="rejection-reason">{{ selectedRequest.rejectionReason }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Notes -->
+      <div class="details-section" *ngIf="selectedRequest.notes">
+        <h3>Notes</h3>
+        <div class="notes-content">
+          {{ selectedRequest.notes }}
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDetailsModal()">
+        Close
+      </button>
+      <button 
+        *ngIf="selectedRequest?.status === RequestStatus.PENDING"
+        class="btn btn-success"
+        (click)="updateRequestStatus(selectedRequest!.id, RequestStatus.APPROVED); closeDetailsModal()">
+        <i class="material-icons">check</i>
+        Approve
+      </button>
+      <button 
+        *ngIf="selectedRequest?.status === RequestStatus.PENDING"
+        class="btn btn-danger"
+        (click)="updateRequestStatus(selectedRequest!.id, RequestStatus.REJECTED); closeDetailsModal()">
+        <i class="material-icons">close</i>
+        Reject
+      </button>
+    </div>
   </div>
 </div>

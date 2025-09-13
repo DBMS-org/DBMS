@@ -1,0 +1,217 @@
+<div class="request-history-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="page-title-section">
+      <h1 class="page-title">
+        <i class="material-icons">history</i>
+        Request History
+      </h1>
+      <p class="page-subtitle">View and manage your explosive stock request history</p>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <i class="material-icons">check_circle</i>
+    {{ successMessage }}
+    <button class="btn-close" (click)="clearMessages()">
+      <i class="material-icons">close</i>
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    <i class="material-icons">error</i>
+    {{ errorMessage }}
+    <button class="btn-close" (click)="clearMessages()">
+      <i class="material-icons">close</i>
+    </button>
+  </div>
+
+  <div class="content-layout">
+    <!-- Main Content Card -->
+    <div class="main-content-card">
+      <!-- Filters Section -->
+      <div class="filters-header" (click)="toggleFilters()" style="cursor: pointer;">
+        <h3>
+          <i class="material-icons">filter_list</i>
+          Filter Requests
+          <i class="material-icons toggle-icon" [class.rotated]="!isFiltersCollapsed">
+            expand_more
+          </i>
+        </h3>
+      </div>
+
+      <div class="filters-content" [class.collapsed]="isFiltersCollapsed" *ngIf="!isFiltersCollapsed">
+        <div class="form-section-group">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Search</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="searchTerm"
+                (input)="applyFilters()"
+                placeholder="Search by ID or purpose...">
+            </div>
+            
+            <div class="form-group">
+              <label>Status</label>
+              <select
+                class="form-select"
+                [(ngModel)]="filterStatus"
+                (change)="applyFilters()">
+                <option value="">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="DISPATCHED">Dispatched</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>Explosive Type</label>
+              <select
+                class="form-select"
+                [(ngModel)]="filterType"
+                (change)="applyFilters()">
+                <option value="">All Types</option>
+                <option value="ANFO">ANFO</option>
+                <option value="EMULSION">Emulsion</option>
+                <option value="DYNAMITE">Dynamite</option>
+                <option value="SLURRY">Slurry</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date From</label>
+              <input 
+                type="date" 
+                class="form-control"
+                [(ngModel)]="filterDateFrom"
+                (change)="applyFilters()">
+            </div>
+            
+            <div class="form-group">
+              <label>Date To</label>
+              <input 
+                type="date" 
+                class="form-control"
+                [(ngModel)]="filterDateTo"
+                (change)="applyFilters()">
+            </div>
+            
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button 
+                type="button" 
+                class="btn btn-secondary"
+                (click)="clearFilters()">
+                <i class="material-icons">clear</i>
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request History Section -->
+      <div class="history-section">
+        <div class="history-header">
+          <h3>
+            <i class="material-icons">list</i>
+            Request History ({{ filteredRequests.length }} requests)
+          </h3>
+        </div>
+
+        <div class="history-content">
+          <!-- Loading State -->
+          <div *ngIf="isLoading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading request history...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="!isLoading && filteredRequests.length === 0" class="empty-state">
+            <i class="material-icons">inbox</i>
+            <h3>No requests found</h3>
+            <p>No requests match your current filters. Try adjusting your search criteria.</p>
+          </div>
+
+          <!-- Requests Table -->
+          <div *ngIf="!isLoading && filteredRequests.length > 0" class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Date</th>
+                  <th>Required Date</th>
+                  <th>Status</th>
+                  <th>Requested Items</th>
+                <th>Total Items</th>
+                <th>Justification</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let request of filteredRequests">
+                  <td>
+                    <strong>{{ request.id }}</strong>
+                  </td>
+                  <td>{{ formatDate(request.requestDate) }}</td>
+                  <td>{{ formatDate(request.requiredDate) }}</td>
+                  <td>
+                    <span class="badge" [class]="getStatusClass(request.status)">
+                      {{ request.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <div *ngFor="let item of request.requestedItems; let i = index">
+                      <small class="text-muted">{{ i + 1 }}.</small> {{ item.explosiveType }} 
+                      <span class="text-muted">({{ item.requestedQuantity }} {{ item.unit }})</span>
+                      <div *ngIf="request.requestedItems.length > 1" class="mt-1"></div>
+                    </div>
+                  </td>
+                  <td>{{ request.requestedItems.length }} item(s)</td>
+                <td class="purpose-cell">{{ request.justification }}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <button 
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="openViewDetails(request)"
+                        title="View Details">
+                        <i class="material-icons">visibility</i>
+                      </button>
+                      <button 
+                        *ngIf="request.status === StockRequestStatus.PENDING"
+                        class="btn btn-sm btn-outline-warning"
+                        title="Edit Request">
+                        <i class="material-icons">edit</i>
+                      </button>
+                      <button 
+                        *ngIf="request.status === StockRequestStatus.PENDING"
+                        class="btn btn-sm btn-outline-danger"
+                        title="Cancel Request">
+                        <i class="material-icons">cancel</i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Details Modal -->
+<app-view-details
+  *ngIf="showViewDetails && selectedRequest"
+  [request]="selectedRequest"
+  (close)="closeViewDetails()">
+</app-view-details>
