@@ -1,4 +1,7 @@
-feat(drill-data-table): add save and cancel buttons with styling
+feat(store-manager): add request history feature with view details modal
 
-Implement save and cancel functionality for the drilling pattern table
-Add corresponding event emitters and button styling
+refactor(explosive-manager): remove safety protocols from sidebar and add request details modal
+
+style(store-manager): update add-stock component styles and layout
+
+docs(store-manager): update routing for new request-history component
