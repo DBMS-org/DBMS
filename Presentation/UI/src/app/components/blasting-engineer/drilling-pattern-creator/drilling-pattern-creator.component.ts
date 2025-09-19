@@ -40,6 +40,7 @@ import { DrillDataTableComponent } from './drill-data-table/drill-data-table.com
 })
 export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy {
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
+  @ViewChild(DrillDataTableComponent) drillDataTableComponent!: DrillDataTableComponent;
   
   // Canvas objects
   private stage!: Konva.Stage;
@@ -84,8 +85,8 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private saveTimeout: number | null = null;
 
   // Site context
-  private currentProjectId!: number;
-  private currentSiteId!: number;
+  public currentProjectId!: number;
+  public currentSiteId!: number;
 
   // Component lifecycle
   private destroy$ = new Subject<void>();
@@ -861,6 +862,23 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private drawDrillPoints(): void {
     console.log('drawDrillPoints called, points count:', this.drillPoints.length);
     
+    // Safety check: Ensure pointsLayer is initialized
+    if (!this.pointsLayer) {
+      console.warn('pointsLayer is not initialized, attempting to initialize canvas...');
+      if (!this.isInitialized) {
+        this.initializeCanvas();
+      } else {
+        // If canvas was supposed to be initialized but pointsLayer is missing, reinitialize stage
+        this.initializeStage();
+      }
+      
+      // If still not initialized, return early to prevent error
+      if (!this.pointsLayer) {
+        console.error('Failed to initialize pointsLayer, cannot draw drill points');
+        return;
+      }
+    }
+    
     this.drillPointObjects.forEach(group => {
       group.destroy();
     });
@@ -1421,6 +1439,9 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       spacing: this.settings.spacing,
       burden: this.settings.burden,
       depth: this.settings.depth,
+      diameter: this.settings.diameter,
+      stemming: this.settings.stemming,
+      subDrill: this.settings.subDrill,
       drillPoints: this.drillPoints
     };
 
@@ -1453,6 +1474,138 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
     // Also update local data service for immediate use
     this.blastSequenceDataService.setPatternData(patternData, false);
     this.blastSequenceDataService.savePatternData();
+  }
+
+  /**
+   * Save explosive calculation parameters to database after drill data table changes
+   */
+  private saveExplosiveParametersToDatabase(updatedData: any[]): void {
+    if (this.isReadOnly) return;
+    if (!this.currentProjectId || !this.currentSiteId) {
+      console.error('Missing project or site context for saving explosive parameters');
+      return;
+    }
+
+    // Extract explosive parameters from the first row (they should be the same for all rows)
+    if (updatedData.length === 0) {
+      console.warn('No data to extract explosive parameters from');
+      return;
+    }
+
+    // Get the explosive parameters from the drill data table component
+    let emulsionDensity = 1.2; // Default values
+    let anfoDensity = 0.8;
+    let emulsionPerHole = 50;
+    let holeDiameter = 89;
+
+    // Try to get actual values from the drill data table component if available
+    if (this.drillDataTableComponent) {
+      emulsionDensity = this.drillDataTableComponent.emulsionDensity;
+      anfoDensity = this.drillDataTableComponent.anfoeDensity;
+      emulsionPerHole = this.drillDataTableComponent.emulsionPerHole;
+      holeDiameter = this.drillDataTableComponent.holeDiameter;
+      console.log('Extracted explosive parameters from drill data table:', {
+        emulsionDensity,
+        anfoDensity,
+        emulsionPerHole,
+        holeDiameter
+      });
+    } else {
+      console.warn('Drill data table component not available, using default values');
+    }
+
+    // Calculate totals based on the current drill points
+    const totalDepth = this.drillPoints.reduce((sum, point) => sum + point.depth, 0);
+    const averageDepth = this.drillPoints.length > 0 ? totalDepth / this.drillPoints.length : 0;
+    const numberOfFilledHoles = this.drillPoints.length;
+    
+    // Calculate total volumes and explosive amounts from updated data
+    const totalVolume = updatedData.reduce((sum, row) => sum + (row.volume || 0), 0);
+    const totalAnfo = updatedData.reduce((sum, row) => sum + (row.anfo || 0), 0);
+    const totalEmulsion = updatedData.reduce((sum, row) => sum + (row.emulsion || 0), 0);
+
+    // Get current user for ownership
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
+      console.error('User not authenticated for saving explosive parameters');
+      return;
+    }
+
+    // First, check if there are existing explosive calculations for this project/site
+    this.explosiveCalculationsService.getLatestByProjectAndSite(this.currentProjectId, this.currentSiteId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (existingCalculation) => {
+          if (existingCalculation) {
+            // Update existing calculation
+            const updateRequest = {
+              emulsionDensity: emulsionDensity,
+              anfoDensity: anfoDensity,
+              emulsionPerHole: emulsionPerHole,
+              totalDepth: totalDepth,
+              averageDepth: averageDepth,
+              numberOfFilledHoles: numberOfFilledHoles,
+              totalAnfo: totalAnfo,
+              totalEmulsion: totalEmulsion,
+              totalVolume: totalVolume,
+              // Calculate per-meter values
+              emulsionPerMeter: totalDepth > 0 ? totalEmulsion / totalDepth : 0,
+              anfoPerMeter: totalDepth > 0 ? totalAnfo / totalDepth : 0,
+              emulsionCoveringSpace: totalEmulsion,
+              remainingSpace: Math.max(0, totalVolume - totalEmulsion),
+              anfoCoveringSpace: totalAnfo
+            };
+
+            this.explosiveCalculationsService.update(existingCalculation.id, updateRequest)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (updatedCalculation) => {
+                  console.log('Explosive calculation parameters updated successfully:', updatedCalculation);
+                },
+                error: (error) => {
+                  console.error('Error updating explosive calculation parameters:', error);
+                }
+              });
+          } else {
+            // Create new calculation
+            const createRequest = {
+              calculationId: `calc_${Date.now()}`,
+              projectId: this.currentProjectId,
+              siteId: this.currentSiteId,
+              emulsionDensity: emulsionDensity,
+              anfoDensity: anfoDensity,
+              emulsionPerHole: emulsionPerHole,
+              totalDepth: totalDepth,
+              averageDepth: averageDepth,
+              numberOfFilledHoles: numberOfFilledHoles,
+              totalAnfo: totalAnfo,
+              totalEmulsion: totalEmulsion,
+              totalVolume: totalVolume,
+              // Calculate per-meter values
+              emulsionPerMeter: totalDepth > 0 ? totalEmulsion / totalDepth : 0,
+              anfoPerMeter: totalDepth > 0 ? totalAnfo / totalDepth : 0,
+              emulsionCoveringSpace: totalEmulsion,
+              remainingSpace: Math.max(0, totalVolume - totalEmulsion),
+              anfoCoveringSpace: totalAnfo,
+              owningUserId: currentUser.id
+            };
+
+            this.explosiveCalculationsService.create(createRequest)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (newCalculation) => {
+                  console.log('Explosive calculation parameters created successfully:', newCalculation);
+                },
+                error: (error) => {
+                  console.error('Error creating explosive calculation parameters:', error);
+                }
+              });
+          }
+        },
+        error: (error) => {
+          console.error('Error checking existing explosive calculations:', error);
+        }
+      });
   }
 
   private saveToLocalStorage(patternData: any): void {
@@ -1560,23 +1713,46 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   onSaveDrillData(updatedData: any[]): void {
-    console.log('Saving updated drill data:', updatedData);
+    console.log('Saving updated drill data with explosive properties:', updatedData);
     
-    // Update drill points with the modified data from the table
+    // Update drill points with the modified data from the table including explosive properties
     updatedData.forEach((data, index) => {
       if (this.drillPoints[index]) {
         this.drillPoints[index].depth = data.depth;
         this.drillPoints[index].stemming = data.stemming;
         this.drillPoints[index].subDrill = data.subDrill;
+        
+        // Include explosive calculation properties
+        this.drillPoints[index].volume = data.volume || 0;
+        this.drillPoints[index].anfo = data.anfo || 0;
+        this.drillPoints[index].emulsion = data.emulsion || 0;
+        
         // Note: spacing, burden, and volume are calculated values
       }
     });
+    
+    // Update hole diameter in pattern settings from drill data table component
+    if (this.drillDataTableComponent && this.drillDataTableComponent.holeDiameter) {
+      // Convert from mm to meters for pattern settings
+      const diameterInMeters = this.drillDataTableComponent.holeDiameter / 1000;
+      this.settings.diameter = diameterInMeters;
+      console.log('Updated pattern settings diameter from drill data table:', {
+        holeDiameterMm: this.drillDataTableComponent.holeDiameter,
+        diameterMeters: diameterInMeters
+      });
+    }
+    
+    console.log('Updated drill points with explosive data:', this.drillPoints);
+    console.log('Updated pattern settings:', this.settings);
     
     // Update depth statistics after changes
     this.updateDepthStatistics();
     
     // Save the updated pattern to database immediately
     this.saveUpdatedPatternToDatabase();
+    
+    // Save the explosive calculation parameters to database
+    this.saveExplosiveParametersToDatabase(updatedData);
     
     // Trigger change detection and redraw
     this.cdr.detectChanges();
@@ -1612,6 +1788,9 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       spacing: this.settings.spacing,
       burden: this.settings.burden,
       depth: this.settings.depth,
+      diameter: this.settings.diameter,
+      stemming: this.settings.stemming,
+      subDrill: this.settings.subDrill,
       drillPoints: this.drillPoints
     };
 
@@ -1680,6 +1859,16 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   onDiameterChange(value: number): void {
     if (this.isReadOnly) return;
     this.settings.diameter = value;
+    
+    // Synchronize with drill data table component if it's open
+    if (this.drillDataTableComponent) {
+      this.drillDataTableComponent.holeDiameter = value * 1000; // Convert meters to mm
+      console.log('Synchronized diameter change with drill data table:', {
+        settingsDiameterMeters: value,
+        holeDiameterMm: this.drillDataTableComponent.holeDiameter
+      });
+    }
+    
     // Diameter is a global setting that applies to all holes
     // No visual update needed as this is just a data property
   }
