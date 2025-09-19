@@ -1,1 +1,6 @@
-fix(config): update database connection string to use localhost for development environment
+feat(store-manager): add blasting engineer requests module
+
+feat(drilling-pattern): add explosives calculations and totals to drill data table
+style(modal): improve modal styling with backdrop filters
+refactor(sidebar): streamline store manager navigation
+feat(drill-point): add explosive properties to entity and configuration
