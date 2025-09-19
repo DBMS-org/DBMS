@@ -1,7 +1,1 @@
-feat(store-manager): add request history feature with view details modal
-
-refactor(explosive-manager): remove safety protocols from sidebar and add request details modal
-
-style(store-manager): update add-stock component styles and layout
-
-docs(store-manager): update routing for new request-history component
+fix(config): update database connection string to use localhost for development environment

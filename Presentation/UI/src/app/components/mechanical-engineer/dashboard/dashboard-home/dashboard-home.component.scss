@@ -1,4 +1,3 @@
-/* Dashboard header */
 .dashboard-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -8,7 +7,6 @@
   box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
 }
 
-/*  Header content */
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -23,7 +21,6 @@
   }
 }
 
-/*  User info */
 .user-info {
   display: flex;
   align-items: center;
@@ -31,7 +28,6 @@
   flex-wrap: wrap;
 }
 
-/*  User details */
 .user-details {
   text-align: right;
 
@@ -55,7 +51,6 @@
   }
 }
 
-/*  Refresh and logout buttons */
 .refresh-btn,
 .logout-btn {
   background: rgba(255, 255, 255, 0.2);
@@ -80,7 +75,6 @@
   }
 }
 
-/*  Loading container */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -105,7 +99,6 @@
   }
 }
 
-/*  Loading animation */
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -116,21 +109,18 @@
   }
 }
 
-/*  Dashboard content */
 .dashboard-content {
   padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/*  Stats grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
 }
 
-/*  Stat card */
 .stat-card {
   background: white;
   padding: 1.5rem;
@@ -183,7 +173,6 @@
     }
   }
 
-/*  Machines stat card */
   &.machines {
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     box-shadow: 0 8px 32px rgba(99, 102, 241, 0.25);
@@ -200,7 +189,6 @@
     }
   }
 
-/*  Operational stat card */
   &.operational {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     box-shadow: 0 8px 32px rgba(16, 185, 129, 0.25);
@@ -217,7 +205,6 @@
     }
   }
 
-/*  Maintenance stat card */
   &.maintenance {
     background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     box-shadow: 0 8px 32px rgba(59, 130, 246, 0.25);
@@ -234,7 +221,6 @@
     }
   }
 
-/*  Breakdown stat card */
   &.breakdown {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     box-shadow: 0 8px 32px rgba(239, 68, 68, 0.25);
@@ -252,7 +238,6 @@
   }
 }
 
-/*  Analysis and actions panels */
 .analysis-panel,
 .actions-panel {
   background: white;
@@ -276,14 +261,12 @@
   }
 }
 
-/*  Metrics grid */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
 }
 
-/*  Metric item */
 .metric-item {
   display: flex;
   justify-content: space-between;
@@ -332,14 +315,12 @@
   }
 }
 
-/*  Action cards */
 .action-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
-/*  Action card */
 .action-card {
   background: #f8f9fa;
   border: 2px solid #e9ecef;
@@ -355,7 +336,6 @@
     box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
   }
 
-  /*  Action icon */
   .action-icon {
     width: 70px;
     height: 70px;
@@ -369,7 +349,6 @@
     font-size: 28px;
   }
 
-  /*  Action title */
   h4 {
     margin: 0 0 0.5rem 0;
     color: #2c3e50;
@@ -377,14 +356,12 @@
     font-weight: 600;
   }
 
-  /*  Action description */
   p {
     margin: 0 0 1rem 0;
     color: #666;
     line-height: 1.5;
   }
 
-  /*  Action status */
   .action-status {
     font-size: 0.85rem;
     color: #667eea;
@@ -393,7 +370,6 @@
     letter-spacing: 0.5px;
   }
 
-  /*  Maintenance action */
   &.maintenance-action {
     border-left: 4px solid #3b82f6;
 
@@ -409,7 +385,6 @@
     }
   }
 
-  /*  Schedule action */
   &.schedule-action {
     border-left: 4px solid #f59e0b;
 
@@ -425,7 +400,6 @@
     }
   }
 
-  /*  Inventory action */
   &.inventory-action {
     border-left: 4px solid #8b5cf6;
 
@@ -441,7 +415,6 @@
     }
   }
 
-  /*  Alerts action */
   &.alerts-action {
     border-left: 4px solid #ef4444;
 
@@ -458,16 +431,13 @@
   }
 }
 
-/*  Content grid */
 .content-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 2rem;
 }
 
-/*  User profile summary */
 .user-profile-summary,
-/*  Recent activities */
 .recent-activities {
   background: white;
   border-radius: 12px;
@@ -483,7 +453,6 @@
   }
 }
 
-/*  Profile card */
 .profile-card {
   .profile-header {
     display: flex;
@@ -517,7 +486,6 @@
     }
   }
 
-  /*  Profile details */
   .profile-details {
     .detail-item {
       padding: 0.75rem 0;
@@ -535,7 +503,6 @@
   }
 }
 
-/*  Activity list */
 .activity-list {
   .activity-item {
     display: flex;
@@ -548,7 +515,6 @@
       border-bottom: none;
     }
 
-    /*  Activity icon */
     .activity-icon {
       width: 40px;
       height: 40px;
@@ -561,7 +527,6 @@
       font-size: 18px;
     }
 
-    /*  Activity content */
     .activity-content {
       flex: 1;
 
@@ -578,7 +543,6 @@
         font-size: 0.9rem;
       }
 
-      /*  Activity time */
       .activity-time {
         font-size: 0.8rem;
         color: #667eea;
@@ -588,7 +552,6 @@
   }
 }
 
-/*  Media queries */
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
@@ -616,7 +579,7 @@
   }
 }
 
-/*  Critical Maintenance Alerts Section */
+// Critical Maintenance Alerts Section
 .alerts-section {
   margin-bottom: 2rem;
 
@@ -634,14 +597,12 @@
     }
   }
 
-  /*  Alert cards */
   .alert-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 1rem;
   }
 
-  /*  Alert card */
   .alert-card {
     background: white;
     border-radius: 12px;
@@ -673,7 +634,6 @@
       background: linear-gradient(135deg, #e8f5e8 0%, #ffffff 100%);
     }
 
-    /*  Alert icon */
     .alert-icon {
       width: 40px;
       height: 40px;
@@ -691,22 +651,19 @@
     &.alert-high .alert-icon {
       background: #d32f2f;
     }
-    
+
     &.alert-medium .alert-icon {
       background: #ff9800;
     }
 
-    
     &.alert-low .alert-icon {
       background: #4caf50;
     }
 
-    /*  Alert content */
     .alert-content {
       flex: 1;
 
-      /*  Alert title */
-        h4 {
+      h4 {
         margin: 0 0 0.25rem 0;
         font-size: 1rem;
         font-weight: 600;
@@ -750,7 +707,7 @@
   }
 }
 
-/*  Pulse animation for alert icon */
+// Pulse animation for alert icon
 @keyframes pulse {
 
   0%,
@@ -763,7 +720,7 @@
   }
 }
 
-/*  User Profile Section */
+// User Profile Section
 .user-profile-section {
   background: white;
   border-radius: 12px;
@@ -772,7 +729,6 @@
   border: 1px solid #e9ecef;
   margin-bottom: 2rem;
 
-  /*  Profile title */
   h3 {
     display: flex;
     align-items: center;
@@ -788,7 +744,6 @@
     }
   }
 
-  /*  Profile card */
   .profile-card {
     .profile-header {
       display: flex;
@@ -798,7 +753,6 @@
       padding-bottom: 1.5rem;
       border-bottom: 1px solid #e9ecef;
 
-      /*  Profile avatar */
       .profile-avatar {
         width: 80px;
         height: 80px;
@@ -818,7 +772,6 @@
         }
       }
 
-      /*  Profile main info */
       .profile-main-info {
         flex: 1;
 
@@ -849,7 +802,6 @@
       }
     }
 
-    /*  Profile details grid */
     .profile-details-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -907,7 +859,7 @@
   }
 }
 
-/*  Responsive design */
+// Responsive design
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;

@@ -1,9 +1,7 @@
-<!-- Dashboard Header: title, current user info, and global actions -->
 <header class="dashboard-header">
   <div class="header-content">
     <h1>Maintenance Management Dashboard</h1>
     <div class="user-info">
-      <!-- Show user details only when a user is loaded -->
       <div class="user-details" *ngIf="currentUser">
         <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
         <div class="user-metadata">
@@ -12,33 +10,28 @@
           <span class="last-login">{{ getLastLoginInfo() }}</span>
         </div>
       </div>
-      <!-- Manual refresh to reload dashboard data from services -->
       <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
         <i class="material-icons">refresh</i>
         Refresh
       </button>
-      <!-- End session for the current user -->
       <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>
 </header>
 
-<!-- Global loading indicator while data is fetched -->
 <div class="loading-container" *ngIf="isLoading">
   <div class="spinner"></div>
   <p>Loading maintenance dashboard...</p>
 </div>
 
-<!-- Main dashboard content (visible when not loading) -->
 <div class="dashboard-content" *ngIf="!isLoading">
-  <!-- Critical Maintenance Alerts. Show alerts only if any exist -->
+  <!-- Critical Maintenance Alerts -->
   <div class="alerts-section" *ngIf="maintenanceAlerts.length > 0">
     <h3>
       <i class="material-icons alert-icon">warning</i>
       Critical Maintenance Alerts
     </h3>
     <div class="alert-cards">
-      <!-- Render one card per alert; class set by priority for styling -->
       <div class="alert-card" *ngFor="let alert of maintenanceAlerts" [class]="'alert-' + alert.priority.toLowerCase()">
         <div class="alert-icon">
           <i class="material-icons">{{ alert.icon }}</i>
@@ -54,7 +47,6 @@
   </div>
 
   <div class="stats-grid">
-    <!-- High-level machine counts summary -->
     <div class="stat-card machines">
       <div class="stat-icon">
         <i class="material-icons">precision_manufacturing</i>
@@ -99,7 +91,6 @@
       <i class="material-icons">analytics</i>
       Machine Operational Status Overview
     </h3>
-    <!-- Distribution of machines by real-time status -->
     <div class="metrics-grid">
       <div class="metric-item">
         <span class="metric-label">
@@ -146,7 +137,6 @@
       Maintenance Quick Actions
     </h3>
     <div class="action-cards">
-      <!-- Navigate to maintenance management module -->
       <div class="action-card maintenance-action" (click)="navigateToMaintenanceManagement()">
         <div class="action-icon">
           <i class="material-icons">build_circle</i>
@@ -156,7 +146,6 @@
         <div class="action-status">{{ maintenanceStats.pendingTasks }} pending tasks</div>
       </div>
       
-      <!-- Create and view maintenance schedules -->
       <div class="action-card schedule-action" (click)="navigateToSchedule()">
         <div class="action-icon">
           <i class="material-icons">schedule</i>
@@ -166,7 +155,6 @@
         <div class="action-status">{{ maintenanceStats.scheduledToday }} scheduled today</div>
       </div>
 
-      <!-- Go to machine inventory list and status -->
       <div class="action-card inventory-action" (click)="navigateToInventory()">
         <div class="action-icon">
           <i class="material-icons">inventory_2</i>
@@ -176,7 +164,6 @@
         <div class="action-status">{{ maintenanceStats.totalMachines }} machines</div>
       </div>
 
-      <!-- View and manage maintenance alerts -->
       <div class="action-card alerts-action" (click)="navigateToAlerts()">
         <div class="action-icon">
           <i class="material-icons">notifications_active</i>
@@ -194,7 +181,6 @@
       <i class="material-icons">account_circle</i>
       Mechanical Engineer Profile
     </h3>
-    <!-- Show profile only when user data is available -->
     <div class="profile-card" *ngIf="currentUser">
       <div class="profile-header">
         <div class="profile-avatar">
@@ -209,7 +195,6 @@
         </div>
       </div>
       
-      <!-- Key profile attributes for quick reference -->
       <div class="profile-details-grid">
         <div class="profile-detail-item">
           <div class="detail-label">Specialization:</div>
@@ -230,7 +215,6 @@
         <div class="profile-detail-item">
           <div class="detail-label">Status:</div>
           <div class="detail-value">
-            <!-- Badge color depends on user status -->
             <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
               {{ currentUser.status || 'ACTIVE' }}
             </span>
