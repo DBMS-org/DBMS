@@ -1,0 +1,181 @@
+<div class="blasting-requests-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="page-title-section">
+      <h2 class="page-title">
+        <i class="material-icons">engineering</i>
+        Blasting Engineer Requests
+      </h2>
+      <p class="page-subtitle">Manage explosive material requests from blasting engineers</p>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="search-container">
+      <div class="search-box">
+        <i class="material-icons">search</i>
+        <input 
+          type="text" 
+          placeholder="Search by Request ID, Engineer, Explosive Type, or Purpose..." 
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+          class="search-input">
+        @if (searchTerm) {
+          <button class="clear-search" (click)="searchTerm = ''; onSearch()" title="Clear search">
+            <i class="material-icons">clear</i>
+          </button>
+        }
+      </div>
+    </div>
+    
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label for="statusFilter">Status:</label>
+        <select 
+          id="statusFilter" 
+          [(ngModel)]="statusFilter" 
+          (change)="onStatusFilterChange()"
+          class="filter-select">
+          <option value="ALL">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="APPROVED">Approved</option>
+          <option value="REJECTED">Rejected</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="COMPLETED">Completed</option>
+        </select>
+      </div>
+      
+      <button class="btn btn-secondary" (click)="clearFilters()" title="Clear all filters">
+        <i class="material-icons">filter_list_off</i>
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Section -->
+  <div class="table-section">
+    @if (isLoading) {
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading requests...</p>
+      </div>
+    } @else {
+      <div class="table-container">
+        <table class="requests-table">
+          <thead>
+            <tr>
+              <th>Request ID</th>
+              <th>Engineer</th>
+              <th>Explosive Type</th>
+              <th>Quantity</th>
+              <th>Request Date</th>
+              <th>Required Date</th>
+              <th>Status</th>
+              <th>Purpose</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of filteredRequests; track request.requestId) {
+              <tr class="request-row">
+                <td class="request-id">
+                  <span class="id-badge">{{ request.requestId }}</span>
+                </td>
+                <td class="engineer-info">
+                  <div class="engineer-details">
+                    <span class="engineer-name">{{ request.engineer.name }}</span>
+                    <span class="engineer-title">{{ request.engineer.title }}</span>
+                  </div>
+                </td>
+                <td class="explosive-type">
+                  <span class="type-badge" [class]="'type-' + request.explosiveType.toLowerCase()">
+                    {{ request.explosiveType }}
+                  </span>
+                </td>
+                <td class="quantity">
+                  <div class="quantity-info">
+                    <span class="amount">{{ request.quantity.amount }}</span>
+                    <span class="unit">{{ request.quantity.unit }}</span>
+                  </div>
+                </td>
+                <td class="request-date">{{ request.requestDate }}</td>
+                <td class="required-date">{{ request.requiredDate }}</td>
+                <td class="status">
+                  <span class="status-badge" [class]="getStatusClass(request.status)">
+                    {{ request.status }}
+                  </span>
+                </td>
+                <td class="purpose">
+                  <span class="purpose-text" [title]="request.purpose">
+                    {{ request.purpose.length > 50 ? request.purpose.substring(0, 50) + '...' : request.purpose }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <div class="action-buttons">
+                    <button 
+                      class="btn btn-sm btn-info" 
+                      (click)="onViewDetails(request)"
+                      title="View Details">
+                      <i class="material-icons">visibility</i>
+                    </button>
+                    @if (request.status === 'PENDING') {
+                      <button 
+                        class="btn btn-sm btn-success" 
+                        (click)="onApprove(request)"
+                        title="Approve Request">
+                        <i class="material-icons">check</i>
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-danger" 
+                        (click)="onReject(request)"
+                        title="Reject Request">
+                        <i class="material-icons">close</i>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9" class="no-data">
+                  <div class="empty-state">
+                    <i class="material-icons">inbox</i>
+                    <h4>No Requests Found</h4>
+                    <p>No blasting engineer requests match your current filters.</p>
+                    @if (searchTerm || statusFilter !== 'ALL') {
+                      <button class="btn btn-secondary" (click)="clearFilters()">
+                        <i class="material-icons">filter_list_off</i>
+                        Clear Filters
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- Summary Section -->
+  @if (!isLoading && filteredRequests.length > 0) {
+    <div class="summary-section">
+      <div class="summary-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total Requests:</span>
+          <span class="stat-value">{{ filteredRequests.length }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Pending:</span>
+          <span class="stat-value pending">{{ getPendingCount() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Approved:</span>
+          <span class="stat-value approved">{{ getApprovedCount() }}</span>
+        </div>
+      </div>
+    </div>
+  }
+</div>

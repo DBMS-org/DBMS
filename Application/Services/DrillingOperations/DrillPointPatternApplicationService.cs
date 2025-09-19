@@ -103,6 +103,10 @@ namespace Application.Services.DrillingOperations
                     Burden = request.Burden,
                     Diameter = request.Diameter,
                     Stemming = request.Stemming,
+                    Subdrill = request.Subdrill,
+                    Volume = request.Volume,
+                    ANFO = request.ANFO,
+                    Emulsion = request.Emulsion,
                     ProjectId = request.ProjectId,
                     SiteId = request.SiteId
                 };
@@ -388,18 +392,18 @@ namespace Application.Services.DrillingOperations
                 _logger.LogInformation("Starting SavePatternAsync for project {ProjectId}, site {SiteId} with {Count} drill points", 
                     projectId, siteId, drillPoints.Count);
 
-                // Log the drill points being saved
+                // Log the drill points being saved including explosive properties
                 foreach (var dp in drillPoints)
                 {
-                    _logger.LogInformation("Drill Point: Id={Id}, X={X}, Y={Y}, Depth={Depth}, Spacing={Spacing}, Burden={Burden}", 
-                        dp.Id, dp.X, dp.Y, dp.Depth, dp.Spacing, dp.Burden);
+                    _logger.LogInformation("Drill Point: Id={Id}, X={X}, Y={Y}, Depth={Depth}, Spacing={Spacing}, Burden={Burden}, Volume={Volume}, ANFO={ANFO}, Emulsion={Emulsion}", 
+                        dp.Id, dp.X, dp.Y, dp.Depth, dp.Spacing, dp.Burden, dp.Volume, dp.ANFO, dp.Emulsion);
                 }
 
                 // Clear existing drill points for this project/site
                 await _drillPointRepository.DeleteByProjectSiteAsync(projectId, siteId);
                 _logger.LogInformation("Cleared existing drill points for project {ProjectId}, site {SiteId}", projectId, siteId);
 
-                // Convert DTOs to entities and save
+                // Convert DTOs to entities and save including explosive properties
                 var drillPointEntities = drillPoints.Select(dp => new DrillPoint
                 {
                     Id = dp.Id,
@@ -412,6 +416,11 @@ namespace Application.Services.DrillingOperations
                     Burden = dp.Burden,
                     Diameter = dp.Diameter,
                     Stemming = dp.Stemming,
+                    Subdrill = dp.Subdrill,
+                    // Include explosive calculation properties
+                    Volume = dp.Volume,
+                    ANFO = dp.ANFO,
+                    Emulsion = dp.Emulsion,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 }).ToList();
@@ -674,6 +683,10 @@ namespace Application.Services.DrillingOperations
                 Burden = drillPoint.Burden,
                 Diameter = drillPoint.Diameter,
                 Stemming = drillPoint.Stemming,
+                Subdrill = drillPoint.Subdrill,
+                Volume = drillPoint.Volume,
+                ANFO = drillPoint.ANFO,
+                Emulsion = drillPoint.Emulsion,
                 ProjectId = drillPoint.ProjectId,
                 SiteId = drillPoint.SiteId,
                 CreatedAt = drillPoint.CreatedAt,

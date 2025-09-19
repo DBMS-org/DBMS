@@ -31,6 +31,11 @@ export interface DrillPoint {
   depth: number;
   spacing: number;
   burden: number;
+  
+  // Explosive Properties
+  volume?: number;
+  anfo?: number;
+  emulsion?: number;
 }
 
 export interface BlastConnection {
