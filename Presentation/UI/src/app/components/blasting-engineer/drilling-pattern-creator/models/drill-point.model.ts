@@ -7,6 +7,11 @@ export interface DrillPoint {
   burden: number;
   stemming: number;
   subDrill: number;
+  
+  // Explosive Properties
+  volume?: number;
+  anfo?: number;
+  emulsion?: number;
 }
 
 export interface PatternSettings {

@@ -12,6 +12,10 @@ namespace Application.DTOs.DrillingOperations
         public double Burden { get; set; }
         public double Diameter { get; set; } = 0.15;
         public double Stemming { get; set; } = 2.0;
+        public double Subdrill { get; set; } = 0.0;
+        public double Volume { get; set; } = 0.0;
+        public double ANFO { get; set; } = 0.0;
+        public double Emulsion { get; set; } = 0.0;
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -40,6 +44,18 @@ namespace Application.DTOs.DrillingOperations
         
         [Range(0.5, 10.0)]
         public double Stemming { get; set; } = 3.0;
+        
+        [Range(0.0, 5.0)]
+        public double Subdrill { get; set; } = 0.0;
+        
+        [Range(0.0, 1000.0)]
+        public double Volume { get; set; } = 0.0;
+        
+        [Range(0.0, 500.0)]
+        public double ANFO { get; set; } = 0.0;
+        
+        [Range(0.0, 500.0)]
+        public double Emulsion { get; set; } = 0.0;
         
         [Required]
         public int ProjectId { get; set; }
@@ -82,6 +98,18 @@ namespace Application.DTOs.DrillingOperations
         
         [Range(0.5, 10.0)]
         public double Stemming { get; set; } = 3.0;
+        
+        [Range(0.0, 5.0)]
+        public double Subdrill { get; set; } = 0.0;
+        
+        [Range(0.0, 1000.0)]
+        public double Volume { get; set; } = 0.0;
+        
+        [Range(0.0, 500.0)]
+        public double ANFO { get; set; } = 0.0;
+        
+        [Range(0.0, 500.0)]
+        public double Emulsion { get; set; } = 0.0;
     }
     
     public class PatternDataDto
@@ -150,6 +178,18 @@ namespace Application.DTOs.DrillingOperations
         
         [Range(0.5, 10.0)]
         public double Stemming { get; set; } = 3.0;
+        
+        [Range(0.0, 5.0)]
+        public double Subdrill { get; set; } = 0.0;
+        
+        [Range(0.0, 1000.0)]
+        public double Volume { get; set; } = 0.0;
+        
+        [Range(0.0, 500.0)]
+        public double ANFO { get; set; } = 0.0;
+        
+        [Range(0.0, 500.0)]
+        public double Emulsion { get; set; } = 0.0;
     }
     
     public class SavePatternResult
