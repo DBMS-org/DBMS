@@ -1,7 +1,1 @@
-feat(operator-dashboard): add machine usage, status and operations panels
-
-- Update database connection strings to use localhost
-- Implement machine usage logging with service threshold alerts
-- Add real-time machine status control with visual indicators
-- Create compliance, safety, sequence and drilling execution panels
-- Include responsive grid layouts for all new dashboard sections
+Merge branch 'master' into master
