@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DrillPoint } from '../models/drill-point.model';
 import { PatternSettings } from '../models/drill-point.model';
+import { ExplosiveCalculationsService, ExplosiveCalculationResultDto } from '../../../../core/services/explosive-calculations.service';
 
 export interface DrillDataRow {
   holeId: string;
@@ -28,6 +29,8 @@ export interface DrillDataRow {
 })
 export class DrillDataTableComponent implements OnInit {
   @Input() drillPoints: DrillPoint[] = [];
+  @Input() projectId!: number;
+  @Input() siteId!: number;
   @Input() settings: PatternSettings = {
     spacing: 3,
     burden: 2.5,
@@ -58,14 +61,70 @@ export class DrillDataTableComponent implements OnInit {
     emulsion: 0
   };
 
-  constructor() {}
+  constructor(private explosiveCalculationsService: ExplosiveCalculationsService) {}
 
   ngOnInit(): void {
     console.log('DrillDataTableComponent ngOnInit called');
     console.log('drillPoints:', this.drillPoints);
     console.log('settings:', this.settings);
-    this.generateTableData();
+    
+    // Initialize hole diameter from pattern settings (convert from meters to mm)
+    if (this.settings && this.settings.diameter) {
+      this.holeDiameter = this.settings.diameter * 1000; // Convert meters to mm
+      console.log('Initialized hole diameter from pattern settings:', {
+        settingsDiameterMeters: this.settings.diameter,
+        holeDiameterMm: this.holeDiameter
+      });
+    }
+    
+    // Load explosive parameters from database if projectId and siteId are available
+    if (this.projectId && this.siteId) {
+      this.loadExplosiveParametersFromDatabase();
+    } else {
+      this.generateTableData();
+    }
+    
     console.log('dataSource after generation:', this.dataSource);
+  }
+
+  /**
+   * Load explosive parameters from database based on project and site IDs
+   */
+  private loadExplosiveParametersFromDatabase(): void {
+    console.log('Loading explosive parameters from database for project:', this.projectId, 'site:', this.siteId);
+    
+    this.explosiveCalculationsService.getLatestByProjectAndSite(this.projectId, this.siteId).subscribe({
+      next: (latestCalculation: ExplosiveCalculationResultDto | null) => {
+        if (latestCalculation) {
+          console.log('Found latest explosive calculation:', latestCalculation);
+          
+          // Update explosive parameters with database values
+          this.emulsionDensity = latestCalculation.emulsionDensity;
+          this.anfoeDensity = latestCalculation.anfoDensity;
+          this.emulsionPerHole = latestCalculation.emulsionPerHole;
+          
+          // Update hole diameter from settings if available, otherwise keep default
+          // Note: holeDiameter might come from pattern settings rather than explosive calculations
+          
+          console.log('Updated explosive parameters from database:', {
+            emulsionDensity: this.emulsionDensity,
+            anfoeDensity: this.anfoeDensity,
+            emulsionPerHole: this.emulsionPerHole,
+            holeDiameter: this.holeDiameter
+          });
+        } else {
+          console.log('No previous explosive calculations found, using default values');
+        }
+        
+        // Generate table data after loading parameters
+        this.generateTableData();
+      },
+      error: (error) => {
+        console.error('Error loading explosive parameters from database:', error);
+        // Fall back to default values and generate table data
+        this.generateTableData();
+      }
+    });
   }
 
   generateTableData(): void {
@@ -173,6 +232,20 @@ export class DrillDataTableComponent implements OnInit {
     this.calculateTotals();
   }
 
+  onHoleDiameterChange(): void {
+    console.log('Hole diameter changed to:', this.holeDiameter);
+    
+    // Recalculate ANFO and Emulsion for all rows when hole diameter changes
+    this.dataSource.forEach(element => {
+      const { anfo, emulsion } = this.calculateExplosives(element.depth, element.stemming);
+      element.anfo = anfo;
+      element.emulsion = emulsion;
+    });
+    
+    // Recalculate totals after diameter changes
+    this.calculateTotals();
+  }
+
   onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       // Prevent default behavior to stop increment/decrement on number inputs
@@ -222,7 +295,17 @@ export class DrillDataTableComponent implements OnInit {
   }
 
   onSave(): void {
-    this.save.emit(this.dataSource);
+    // Emit the data source with all calculated explosive properties
+    const drillDataWithExplosives = this.dataSource.map(row => ({
+      ...row,
+      // Ensure explosive calculation properties are included
+      volume: row.volume || 0,
+      anfo: row.anfo || 0,
+      emulsion: row.emulsion || 0
+    }));
+    
+    console.log('Saving drill data with explosive properties:', drillDataWithExplosives);
+    this.save.emit(drillDataWithExplosives);
   }
 
 }
