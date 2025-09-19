@@ -1561,6 +1561,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
 
   onSaveDrillData(updatedData: any[]): void {
     console.log('Saving updated drill data:', updatedData);
+    
     // Update drill points with the modified data from the table
     updatedData.forEach((data, index) => {
       if (this.drillPoints[index]) {
@@ -1571,9 +1572,80 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       }
     });
     
+    // Update depth statistics after changes
+    this.updateDepthStatistics();
+    
+    // Save the updated pattern to database immediately
+    this.saveUpdatedPatternToDatabase();
+    
     // Trigger change detection and redraw
     this.cdr.detectChanges();
+    this.drawDrillPoints();
     this.closeDrillDataTable();
+  }
+
+  /**
+   * Save updated pattern data to database after drill data table changes
+   */
+  private saveUpdatedPatternToDatabase(): void {
+    if (this.isReadOnly) return;
+    if (this.drillPoints.length === 0) {
+      console.warn('No drill points to save');
+      return;
+    }
+
+    if (!this.currentProjectId || !this.currentSiteId) {
+      console.error('Missing project or site context for saving');
+      return;
+    }
+
+    const patternData = this.drillPointService.getPatternData(this.drillPoints, this.settings);
+    const currentDate = new Date();
+    const patternName = `Drill Pattern ${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}`;
+
+    // Save to backend as a drill pattern
+    const saveRequest = {
+      projectId: this.currentProjectId,
+      siteId: this.currentSiteId,
+      name: patternName,
+      description: `Drill pattern updated with ${this.drillPoints.length} holes`,
+      spacing: this.settings.spacing,
+      burden: this.settings.burden,
+      depth: this.settings.depth,
+      drillPoints: this.drillPoints
+    };
+
+    console.log('Saving updated drill data to database:', saveRequest);
+
+    this.drillPointPatternService.savePattern(saveRequest).subscribe({
+      next: (savedPattern) => {
+        console.log('Updated pattern saved to backend successfully:', savedPattern);
+        
+        // Update local state to show save confirmation
+        this.isSaved = true;
+        this.cdr.markForCheck();
+
+        // Clear save timeout if it exists
+        if (this.saveTimeout) {
+          clearTimeout(this.saveTimeout);
+        }
+
+        // Reset save state after 2 seconds
+        this.saveTimeout = setTimeout(() => {
+          this.isSaved = false;
+          this.cdr.markForCheck();
+        }, 2000);
+      },
+      error: (error) => {
+        console.error('Error saving updated pattern to backend:', error);
+        // Fallback to local storage
+        this.saveToLocalStorage(patternData);
+      }
+    });
+
+    // Also update local data service for immediate use
+    this.blastSequenceDataService.setPatternData(patternData, false);
+    this.blastSequenceDataService.savePatternData();
   }
 
   onDeletePoint(): void {
