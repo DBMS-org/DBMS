@@ -30,6 +30,11 @@ export interface DrillLocation {
   stemming?: number;
   subDrill?: number;
   
+  // Explosive Properties
+  volume?: number;
+  anfo?: number;
+  emulsion?: number;
+  
   // Context
   projectId: number;
   siteId: number;
@@ -54,6 +59,11 @@ export interface PatternSettings {
   diameter: number;
   stemming: number;
   subDrill?: number;
+  
+  // Explosive Properties
+  volume?: number;
+  anfo?: number;
+  emulsion?: number;
   
   // Additional settings
   gridSize?: number;
@@ -163,6 +173,12 @@ export interface CreateDrillLocationRequest {
   burden: number;
   projectId: number;
   siteId: number;
+  
+  // Explosive Properties
+  subdrill?: number;
+  volume?: number;
+  anfo?: number;
+  emulsion?: number;
   
   // Optional 3D data
   easting?: number;

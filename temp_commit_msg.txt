@@ -1,6 +1,7 @@
-feat(drilling-pattern): add explosive properties to drill points and calculations
+feat(operator-dashboard): add machine usage, status and operations panels
 
-Add volume, ANFO and emulsion properties to drill point models across frontend and backend
-Implement explosive calculations service and integrate with drill data table
-Synchronize hole diameter changes between pattern settings and drill data table
-Save explosive parameters to database with project/site context
+- Update database connection strings to use localhost
+- Implement machine usage logging with service threshold alerts
+- Add real-time machine status control with visual indicators
+- Create compliance, safety, sequence and drilling execution panels
+- Include responsive grid layouts for all new dashboard sections
