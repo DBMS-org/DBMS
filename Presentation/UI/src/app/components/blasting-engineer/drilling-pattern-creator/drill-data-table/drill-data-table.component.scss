@@ -2,70 +2,16 @@
   width: 100%;
   max-width: 1200px;
   min-width: 600px;
-  max-height: 90vh;
   background: white;
   border: 1px solid #d0d7de;
   border-radius: 6px;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
-}
-
-.density-inputs-section {
-  background: #f8f9fa;
-  border-bottom: 1px solid #d0d7de;
-  padding: 16px 20px;
-  
-  .section-title {
-    margin: 0 0 12px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #24292f;
-  }
-  
-  .inputs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      
-      label {
-        font-size: 12px;
-        font-weight: 500;
-        color: #656d76;
-      }
-      
-      .density-input {
-        padding: 6px 8px;
-        border: 1px solid #d0d7de;
-        border-radius: 4px;
-        font-size: 13px;
-        background: white;
-        transition: border-color 0.2s ease;
-        
-        &:focus {
-          outline: none;
-          border-color: #0969da;
-          box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
-        }
-        
-        &:hover {
-          border-color: #8c959f;
-        }
-      }
-    }
-  }
 }
 
 .excel-table-wrapper {
   overflow: auto;
-  flex: 1;
-  min-height: 0;
+  max-height: 70vh;
 }
 
 .excel-table {
@@ -266,7 +212,6 @@
   padding: 16px 20px;
   background: #f6f8fa;
   border-top: 1px solid #d0d7de;
-  flex-shrink: 0;
 
   .cancel-btn, .save-btn {
     padding: 8px 16px;
@@ -306,34 +251,5 @@
       background: #2c974b;
       border-color: #2c974b;
     }
-  }
-}
-
-// Totals row styling
-.totals-row {
-  background-color: #e6f3ff !important;
-  border-top: 2px solid #0969da;
-  font-weight: 700;
-
-  &:hover {
-    background-color: #e6f3ff !important;
-  }
-
-  .totals-label {
-    background-color: #0969da !important;
-    color: white !important;
-    font-weight: 700;
-    text-align: center;
-    padding: 8px 12px;
-    border-right: 2px solid #0969da;
-  }
-
-  .totals-cell {
-    background-color: #e6f3ff !important;
-    color: #0969da !important;
-    font-weight: 700;
-    padding: 8px 12px;
-    text-align: center;
-    border-top: 2px solid #0969da;
   }
 }

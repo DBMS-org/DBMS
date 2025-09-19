@@ -45,26 +45,6 @@ namespace Infrastructure.Configurations.DrillingOperations
                 .HasPrecision(18, 6)
                 .IsRequired()
                 .HasDefaultValue(3.0);
-                
-            entity.Property(e => e.Subdrill)
-                .HasPrecision(18, 6)
-                .IsRequired()
-                .HasDefaultValue(0.0);
-                
-            entity.Property(e => e.Volume)
-                .HasPrecision(18, 6)
-                .IsRequired()
-                .HasDefaultValue(0.0);
-                
-            entity.Property(e => e.ANFO)
-                .HasPrecision(18, 6)
-                .IsRequired()
-                .HasDefaultValue(0.0);
-                
-            entity.Property(e => e.Emulsion)
-                .HasPrecision(18, 6)
-                .IsRequired()
-                .HasDefaultValue(0.0);
 
             // Configure relationships to Project and Site
             entity.HasOne(e => e.Project)

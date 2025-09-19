@@ -1,1 +1,6 @@
-Merge branch 'master' of https://github.com/DBMS-org/DBMS
+feat(drilling-pattern): add explosive properties to drill points and calculations
+
+Add volume, ANFO and emulsion properties to drill point models across frontend and backend
+Implement explosive calculations service and integrate with drill data table
+Synchronize hole diameter changes between pattern settings and drill data table
+Save explosive parameters to database with project/site context

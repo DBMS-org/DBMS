@@ -3,7 +3,6 @@ import { StoreManagerLayoutComponent } from './shared/store-manager-layout/store
 import { DashboardComponent as StoreManagerDashboardComponent } from './dashboard/dashboard.component';
 import { AddStockComponent } from './add-stock/add-stock.component';
 import { RequestHistoryComponent } from './request-history/request-history.component';
-import { BlastingEngineerRequestsComponent } from './blasting-engineer-requests/blasting-engineer-requests.component';
 
 export const STORE_MANAGER_ROUTES: Routes = [
     {
@@ -14,7 +13,9 @@ export const STORE_MANAGER_ROUTES: Routes = [
             { path: 'dashboard', component: StoreManagerDashboardComponent },
             { path: 'add-stock', component: AddStockComponent },
             { path: 'request-history', component: RequestHistoryComponent },
-            { path: 'blasting-engineer-requests', component: BlastingEngineerRequestsComponent },
+            { path: 'edit-stock', component: StoreManagerDashboardComponent }, // Placeholder for Edit Stock Request
+            { path: 'delete-stock', component: StoreManagerDashboardComponent }, // Placeholder for Delete Stock Request
+            { path: 'notifications', component: StoreManagerDashboardComponent }, // Placeholder for Notifications
             { path: 'dispatch', component: StoreManagerDashboardComponent } // Placeholder for Dispatch Preparation
         ]
     }
