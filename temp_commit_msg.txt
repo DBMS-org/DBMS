@@ -1,7 +1,1 @@
-feat(operator): add daily log tracking and usage metrics
-
-- Implement daily log form with engine/idle/service hours tracking
-- Add past logs table view with local storage persistence
-- Include usage metrics display in machine details
-- Add mobile backdrop for sidebar navigation
-- Improve responsive layout and table styling
+Merge branch 'master' of https://github.com/SaadDev-01/DBMS
