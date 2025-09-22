@@ -15,7 +15,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 
 import { MaintenanceReportService } from './services/maintenance-report.service';
-import { ProblemReport, OperatorMachine } from './models/maintenance-report.models';
+import { 
+  ProblemReport, 
+  OperatorMachine, 
+  CreateProblemReportRequest 
+} from './models/maintenance-report.models';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -42,154 +46,209 @@ import { AuthService } from '../../../core/services/auth.service';
   template: `
     <div class="maintenance-reports-container">
       <header class="page-header">
-        <h1>Maintenance Reports</h1>
+        <h1>My Reports</h1>
         <button 
           mat-raised-button 
-          color="warn" 
-          class="report-problem-btn" 
-          (click)="openReportForm()"
-          [disabled]="isLoading()">
-          <mat-icon>report_problem</mat-icon>
-          Report Problem
+          color="primary" 
+          class="submit-report-btn" 
+          (click)="toggleReportForm()"
+          [attr.aria-expanded]="showReportForm()"
+          aria-controls="report-form">
+          <mat-icon>{{ showReportForm() ? 'close' : 'add' }}</mat-icon>
+          {{ showReportForm() ? 'Cancel' : 'Submit Report' }}
         </button>
       </header>
-      
-      <div class="reports-content">
-        @if (isLoading()) {
-          <div class="loading-container">
-            <mat-spinner></mat-spinner>
-            <p>Loading maintenance reports...</p>
-          </div>
-        } @else {
-          <div class="reports-grid">
-            <mat-card class="summary-card">
-              <mat-card-header>
-                <mat-card-title>Quick Actions</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <p>Report problems with your assigned machine and track resolution status.</p>
-                @if (operatorMachine()) {
-                  <div class="machine-info">
-                    <h4>Assigned Machine</h4>
-                    <p><strong>{{ operatorMachine()?.name }}</strong></p>
-                    <p>Model: {{ operatorMachine()?.model }}</p>
-                    <p>Location: {{ operatorMachine()?.currentLocation }}</p>
-                  </div>
-                }
-              </mat-card-content>
-            </mat-card>
-            
-            <mat-card class="reports-summary-card">
-              <mat-card-header>
-                <mat-card-title>My Reports Summary</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="summary-stats">
-                  <div class="stat-item">
-                    <span class="stat-number">{{ reports().length }}</span>
-                    <span class="stat-label">Total Reports</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-number">{{ inProgressCount() }}</span>
-                    <span class="stat-label">In Progress</span>
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
-            
-            <mat-card class="daily-log-card">
-              <mat-card-header>
-                <mat-card-title>Daily Log</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <form class="daily-log-form" (ngSubmit)="submitDailyLog()" #dailyLogForm="ngForm">
-                  <div class="form-row">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Date</mat-label>
-                      <input matInput [matDatepicker]="picker" [(ngModel)]="dailyLog.date" name="date" required>
-                      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                      <mat-datepicker #picker></mat-datepicker>
-                    </mat-form-field>
-                  </div>
-                  <div class="form-row">
-                    <mat-form-field appearance="outline" class="form-col">
-                      <mat-label>Engine Hours (today)</mat-label>
-                      <input matInput type="number" min="0" [(ngModel)]="dailyLog.engineHours" name="engineHours" required>
-                    </mat-form-field>
-                    <mat-form-field appearance="outline" class="form-col">
-                      <mat-label>Idle Hours (today)</mat-label>
-                      <input matInput type="number" min="0" [(ngModel)]="dailyLog.idleHours" name="idleHours" required>
-                    </mat-form-field>
-                    <mat-form-field appearance="outline" class="form-col">
-                      <mat-label>Service Hours (today)</mat-label>
-                      <input matInput type="number" min="0" [(ngModel)]="dailyLog.serviceHours" name="serviceHours" required>
-                    </mat-form-field>
-                  </div>
-                  <div class="form-row">
-                    <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>Drilling Progress Summary</mat-label>
-                      <input matInput [(ngModel)]="dailyLog.drillingSummary" name="drillingSummary" placeholder="e.g., 45/60 holes drilled, avg depth 7.5m">
-                    </mat-form-field>
-                  </div>
-                  <div class="form-row">
-                    <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>Issues / Notes</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="dailyLog.notes" name="notes"></textarea>
-                    </mat-form-field>
-                  </div>
-                  <div class="actions-row">
-                    <button mat-stroked-button type="button" (click)="resetDailyLog()">Reset</button>
-                    <button mat-flat-button color="primary" type="submit" [disabled]="!dailyLogForm.form.valid || !operatorMachine()">Submit</button>
-                  </div>
-                </form>
-              </mat-card-content>
-            </mat-card>
 
-            <mat-card class="past-logs-card">
-              <mat-card-header>
-                <mat-card-title>Past Daily Logs</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                @if (pastLogs().length === 0) {
-                  <p class="no-logs">No logs submitted yet.</p>
-                } @else {
-                  <div class="table-wrapper">
-                    <table mat-table [dataSource]="pastLogs()" class="mat-elevation-z1 dense-table">
-                      <ng-container matColumnDef="date">
-                        <th mat-header-cell *matHeaderCellDef>Date</th>
-                        <td mat-cell *matCellDef="let log">{{ log.date | date:'mediumDate' }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="engine">
-                        <th mat-header-cell *matHeaderCellDef>Engine</th>
-                        <td mat-cell *matCellDef="let log">{{ log.engineHours }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="idle">
-                        <th mat-header-cell *matHeaderCellDef>Idle</th>
-                        <td mat-cell *matCellDef="let log">{{ log.idleHours }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="service">
-                        <th mat-header-cell *matHeaderCellDef>Service</th>
-                        <td mat-cell *matCellDef="let log">{{ log.serviceHours }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="drilling">
-                        <th mat-header-cell *matHeaderCellDef>Drilling</th>
-                        <td mat-cell *matCellDef="let log">{{ log.drillingSummary || '—' }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="notes">
-                        <th mat-header-cell *matHeaderCellDef>Notes</th>
-                        <td mat-cell *matCellDef="let log">{{ log.notes || '—' }}</td>
-                      </ng-container>
+      @if (isLoading()) {
+        <div class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading reports...</p>
+        </div>
+      }
 
-                      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                    </table>
-                  </div>
-                }
-              </mat-card-content>
-            </mat-card>
-          </div>
-        }
+      <!-- Submit Report Form -->
+      @if (showReportForm()) {
+        <mat-card class="submit-form-card" id="report-form">
+          <mat-card-header>
+            <mat-card-title>Submit Maintenance Report</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <form (ngSubmit)="submitReport()" #reportForm="ngForm">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Problem Description</mat-label>
+                  <textarea matInput [(ngModel)]="newReport.customDescription" name="description" required rows="3"></textarea>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Affected Part</mat-label>
+                  <select matNativeControl [(ngModel)]="newReport.affectedPart" name="affectedPart" required>
+                    <option value="DRILL_BIT">Drill Bit</option>
+                    <option value="DRILL_ROD">Drill Rod</option>
+                    <option value="SHANK">Shank</option>
+                    <option value="ENGINE">Engine</option>
+                    <option value="HYDRAULIC_SYSTEM">Hydraulic System</option>
+                    <option value="ELECTRICAL_SYSTEM">Electrical System</option>
+                    <option value="MECHANICAL_COMPONENTS">Mechanical Components</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Problem Category</mat-label>
+                  <select matNativeControl [(ngModel)]="newReport.problemCategory" name="problemCategory" required>
+                    <option value="ENGINE_ISSUES">Engine Issues</option>
+                    <option value="HYDRAULIC_PROBLEMS">Hydraulic Problems</option>
+                    <option value="ELECTRICAL_FAULTS">Electrical Faults</option>
+                    <option value="MECHANICAL_BREAKDOWN">Mechanical Breakdown</option>
+                    <option value="DRILL_BIT_ISSUES">Drill Bit Issues</option>
+                    <option value="DRILL_ROD_PROBLEMS">Drill Rod Problems</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Severity Level</mat-label>
+                  <select matNativeControl [(ngModel)]="newReport.severity" name="severity" required>
+                    <option value="LOW">Low - Maintenance Needed</option>
+                    <option value="MEDIUM">Medium - Minor Issues</option>
+                    <option value="HIGH">High - Performance Issues</option>
+                    <option value="CRITICAL">Critical - Machine Down</option>
+                  </select>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" mat-button (click)="toggleReportForm()">Cancel</button>
+                <button type="submit" mat-raised-button color="primary" 
+                       [disabled]="!reportForm.form.valid">Submit Report</button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Reports Summary -->
+      <div class="reports-summary">
+        <div class="stat-cards">
+          <mat-card class="stat-card pending">
+            <mat-card-content>
+              <div class="stat-item">
+                <span class="stat-number">{{ pendingCount() }}</span>
+                <span class="stat-label">Pending</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          
+          <mat-card class="stat-card in-progress">
+            <mat-card-content>
+              <div class="stat-item">
+                <span class="stat-number">{{ inProgressCount() }}</span>
+                <span class="stat-label">In Progress</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          
+          <mat-card class="stat-card completed">
+            <mat-card-content>
+              <div class="stat-item">
+                <span class="stat-number">{{ completedCount() }}</span>
+                <span class="stat-label">Completed</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
       </div>
+
+      <!-- Report History -->
+      <mat-card class="report-history-card">
+        <mat-card-header>
+          <mat-card-title>Report History</mat-card-title>
+          <mat-card-subtitle>{{ reports().length }} total reports</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (reports().length === 0) {
+            <div class="empty-state">
+              <mat-icon>assignment</mat-icon>
+              <p>No reports submitted yet</p>
+              <small>Click "Submit Report" to create your first maintenance report</small>
+            </div>
+          } @else {
+            <div class="table-container">
+              <table mat-table [dataSource]="reports()" class="reports-table">
+                  <ng-container matColumnDef="title">
+                    <th mat-header-cell *matHeaderCellDef>Problem Description</th>
+                    <td mat-cell *matCellDef="let report">
+                      <div class="description-cell">
+                        <span class="description-text">{{ report.customDescription | slice:0:50 }}{{ report.customDescription.length > 50 ? '...' : '' }}</span>
+                        <small class="ticket-id">{{ report.ticketId }}</small>
+                      </div>
+                    </td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="affectedPart">
+                    <th mat-header-cell *matHeaderCellDef>Affected Part</th>
+                    <td mat-cell *matCellDef="let report">
+                      <div class="part-cell">
+                        <mat-icon class="part-icon">{{ getPartIcon(report.affectedPart) }}</mat-icon>
+                        <span>{{ getPartDisplay(report.affectedPart) }}</span>
+                      </div>
+                    </td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="severity">
+                    <th mat-header-cell *matHeaderCellDef>Severity</th>
+                    <td mat-cell *matCellDef="let report">
+                      <span class="severity-badge" [ngClass]="getSeverityClass(report.severity)">
+                        <mat-icon class="severity-icon">{{ getSeverityIcon(report.severity) }}</mat-icon>
+                        {{ getSeverityDisplay(report.severity) }}
+                      </span>
+                    </td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let report">
+                      <span class="status-badge" [ngClass]="getStatusClass(report.status)">
+                        <mat-icon class="status-icon">{{ getStatusIcon(report.status) }}</mat-icon>
+                        {{ getStatusDisplay(report.status) }}
+                      </span>
+                    </td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="reportedAt">
+                    <th mat-header-cell *matHeaderCellDef>Reported</th>
+                    <td mat-cell *matCellDef="let report">
+                      <div class="date-cell">
+                        <span class="date">{{ report.reportedAt | date:'MMM d, y' }}</span>
+                        <small class="time">{{ report.reportedAt | date:'h:mm a' }}</small>
+                      </div>
+                    </td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Actions</th>
+                    <td mat-cell *matCellDef="let report">
+                      <button mat-icon-button 
+                              (click)="viewReportDetails(report)"
+                              matTooltip="View Details"
+                              class="action-button">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                    </td>
+                  </ng-container>
+                  
+                  <tr mat-header-row *matHeaderRowDef="reportColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: reportColumns;" class="report-row"></tr>
+                </table>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
     </div>
   `,
   styles: [`
@@ -203,117 +262,80 @@ import { AuthService } from '../../../core/services/auth.service';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .page-header h1 {
       margin: 0;
       color: #333;
+      font-weight: 500;
     }
 
-    .report-problem-btn {
+    .submit-report-btn {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .reports-content { margin-top: 0.5rem; padding-bottom: 2rem; }
-
     .loading-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       padding: 2rem;
-      text-align: center;
+      gap: 1rem;
     }
 
-    .reports-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.25rem;
-      align-items: start;
+    .submit-form-card {
+      margin-bottom: 1.5rem;
+      border-left: 4px solid #2196f3;
     }
 
-    .summary-card, .reports-summary-card, .daily-log-card, .past-logs-card {
-      overflow: hidden;
-      border-radius: 10px;
-      transition: transform 0.15s ease, box-shadow 0.2s ease;
-    }
-    .summary-card:hover, .reports-summary-card:hover, .daily-log-card:hover, .past-logs-card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-    }
-
-    .daily-log-form .form-row {
+    .form-row {
       display: flex;
       gap: 1rem;
-      flex-wrap: wrap;
       margin-bottom: 1rem;
     }
 
-    .daily-log-form .form-col {
-      flex: 1 1 200px;
+    .full-width {
+      width: 100%;
     }
 
-    .full-width { width: 100%; }
+    .half-width {
+      flex: 1;
+    }
 
-    .actions-row {
+    .form-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 0.75rem;
-      margin-top: 0.5rem;
+      gap: 1rem;
+      margin-top: 1.5rem;
     }
 
-    .table-wrapper {
-      overflow: auto;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      max-height: 420px;
-      background: #fff;
-      box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);
+    .reports-summary {
+      margin-bottom: 1.5rem;
     }
 
-    /* Densify and improve table readability */
-    table { width: 100%; }
-    .dense-table .mat-mdc-header-cell, .dense-table .mat-mdc-cell {
-      padding: 8px 12px;
-      font-size: 0.9rem;
-    }
-    .dense-table .mat-mdc-header-cell {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      background: #fafafa;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    .dense-table .mat-mdc-row:nth-child(even) .mat-mdc-cell { background: #fcfcfc; }
-    .dense-table .mat-mdc-row:hover .mat-mdc-cell { background: #f5faff; }
-
-    .no-logs { color: #777; font-style: italic; }
-    .summary-card, .reports-summary-card {
-      height: fit-content;
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
     }
 
-    .machine-info {
-      margin-top: 1rem;
-      padding: 1rem;
-      background-color: #f5f5f5;
-      border-radius: 4px;
+    .stat-card {
+      text-align: center;
+      border-left: 4px solid;
     }
 
-    .machine-info h4 {
-      margin: 0 0 0.5rem 0;
-      color: #666;
+    .stat-card.pending {
+      border-left-color: #ff9800;
     }
 
-    .machine-info p {
-      margin: 0.25rem 0;
+    .stat-card.in-progress {
+      border-left-color: #2196f3;
     }
 
-    .summary-stats {
-      display: flex;
-      gap: 2rem;
+    .stat-card.completed {
+      border-left-color: #4caf50;
     }
 
     .stat-item {
@@ -325,81 +347,299 @@ import { AuthService } from '../../../core/services/auth.service';
     .stat-number {
       font-size: 2rem;
       font-weight: bold;
-      color: #1976d2;
+      color: #333;
     }
 
     .stat-label {
       font-size: 0.875rem;
       color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .report-history-card {
+      border-left: 4px solid #4caf50;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #666;
+    }
+
+    .empty-state mat-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      color: #ccc;
+      margin-bottom: 1rem;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .reports-table {
+      width: 100%;
+    }
+
+    .category-badge,
+    .priority-badge,
+    .status-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .category-badge {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .severity-low {
+      background-color: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #4caf50;
+    }
+
+    .severity-medium {
+      background-color: #fffde7;
+      color: #f57f17;
+      border: 1px solid #ffeb3b;
+    }
+
+    .severity-high {
+      background-color: #fff3e0;
+      color: #ef6c00;
+      border: 1px solid #ff9800;
+    }
+
+    .severity-critical {
+      background-color: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef5350;
+    }
+
+    /* Enhanced table styling */
+    .reports-table {
+      width: 100%;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .mat-mdc-header-cell {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .report-row {
+      transition: background-color 0.2s ease;
+    }
+
+    .report-row:hover {
+      background-color: #f8f9fa;
+    }
+
+    .description-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .description-text {
+      font-weight: 500;
+      color: #212529;
+    }
+
+    .ticket-id {
+      color: #6c757d;
+      font-size: 0.75rem;
+      font-weight: 400;
+    }
+
+    .part-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .part-icon {
+      color: #6c757d;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .date-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .date {
+      font-weight: 500;
+      color: #212529;
+    }
+
+    .time {
+      color: #6c757d;
+      font-size: 0.75rem;
+    }
+
+    .action-button {
+      color: #007bff;
+      transition: all 0.2s ease;
+    }
+
+    .action-button:hover {
+      background-color: rgba(0, 123, 255, 0.1);
+      transform: scale(1.05);
+    }
+
+    /* Enhanced badge styling */
+    .severity-badge, .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .severity-icon, .status-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Severity badge colors */
+    .severity-critical {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .severity-high {
+      background-color: #fd7e14;
+      color: white;
+    }
+
+    .severity-medium {
+      background-color: #ffc107;
+      color: #212529;
+    }
+
+    .severity-low {
+      background-color: #28a745;
+      color: white;
+    }
+
+    /* Status badge colors */
+    .status-reported {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .status-acknowledged {
+      background-color: #17a2b8;
+      color: white;
+    }
+
+    .status-in_progress {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .status-resolved {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .status-closed {
+      background-color: #6f42c1;
+      color: white;
     }
 
     @media (max-width: 768px) {
-      .page-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
+      .maintenance-reports-container {
+        padding: 0.75rem;
       }
 
-      .reports-grid {
+      .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .half-width {
+        width: 100%;
+      }
+
+      .stat-cards {
         grid-template-columns: 1fr;
       }
 
-      .summary-stats {
-        justify-content: space-around;
+      .submit-report-btn { 
+        width: 100%; 
       }
-
-      .report-problem-btn { width: 100%; }
-      .dense-table .mat-mdc-header-cell, .dense-table .mat-mdc-cell {
-        padding: 8px;
-        font-size: 0.85rem;
-      }
-      .maintenance-reports-container { padding: 0.75rem; }
     }
   `]
+
 })
 export class MaintenanceReportsComponent implements OnInit {
   showReportForm = signal(false);
   operatorMachine = signal<OperatorMachine | null>(null);
   reports = signal<ProblemReport[]>([]);
   isLoading = signal(false);
-  pastLogs = signal<{ date: Date; engineHours: number; idleHours: number; serviceHours: number; drillingSummary?: string; notes?: string; }[]>([]);
-  displayedColumns = ['date','engine','idle','service','drilling','notes'];
-  dailyLog = {
-    date: new Date(),
-    engineHours: 0,
-    idleHours: 0,
-    serviceHours: 0,
-    drillingSummary: '',
-    notes: ''
+  reportColumns = ['title', 'affectedPart', 'severity', 'status', 'reportedAt', 'actions'];
+  
+  newReport = {
+    affectedPart: 'OTHER' as any,
+    problemCategory: 'OTHER' as any,
+    customDescription: '',
+    symptoms: [] as string[],
+    severity: 'MEDIUM' as any
   };
   
   private maintenanceReportService = inject(MaintenanceReportService);
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
 
+  // Status tracking computed properties
+  pendingCount = computed(() => 
+    this.reports().filter(report => 
+      report.status === 'REPORTED'
+    ).length
+  );
+
   inProgressCount = computed(() => 
     this.reports().filter(report => 
-      report.status === 'IN_PROGRESS' || report.status === 'ACKNOWLEDGED'
+      report.status === 'ACKNOWLEDGED' || report.status === 'IN_PROGRESS'
+    ).length
+  );
+
+  completedCount = computed(() => 
+    this.reports().filter(report => 
+      report.status === 'RESOLVED' || report.status === 'CLOSED'
     ).length
   );
   
   ngOnInit() {
     this.loadOperatorMachine();
     this.loadReports();
-    this.loadPastLogs();
-  }
-  
-  private loadPastLogs() {
-    const user = this.authService.getCurrentUser();
-    const machineId = this.operatorMachine()?.id || 'unknown';
-    try {
-      const key = `operator_daily_logs_${user?.id}_${machineId}`;
-      const stored = localStorage.getItem(key);
-      const arr = stored ? JSON.parse(stored) : [];
-      this.pastLogs.set(arr.map((x: any) => ({ ...x, date: new Date(x.date) })));
-    } catch {
-      this.pastLogs.set([]);
-    }
   }
   
   private async loadOperatorMachine() {
@@ -433,46 +673,150 @@ export class MaintenanceReportsComponent implements OnInit {
     }
   }
   
-  openReportForm() {
-    this.showReportForm.set(true);
+  toggleReportForm() {
+    this.showReportForm.update(show => !show);
   }
   
-  closeReportForm() {
-    this.showReportForm.set(false);
-  }
-  
-  onReportSubmitted(report: ProblemReport) {
-    this.reports.update(reports => [report, ...reports]);
-    this.closeReportForm();
-  }
+  async submitReport() {
+    const currentUser = this.authService.getCurrentUser();
+    const machine = this.operatorMachine();
+    
+    if (!currentUser || !machine) {
+      this.snackBar.open('Unable to submit report. Please try again.', 'Dismiss', { duration: 3000 });
+      return;
+    }
 
-  submitDailyLog() {
-    const user = this.authService.getCurrentUser();
-    const machineId = this.operatorMachine()?.id || 'unknown';
-    const key = `operator_daily_logs_${user?.id}_${machineId}`;
-    const newLog = { ...this.dailyLog };
+    const reportData: CreateProblemReportRequest = {
+      machineId: machine.id,
+      machineName: machine.name,
+      machineModel: machine.model,
+      serialNumber: machine.serialNumber,
+      location: machine.currentLocation,
+      affectedPart: this.newReport.affectedPart,
+      problemCategory: this.newReport.problemCategory,
+      customDescription: this.newReport.customDescription,
+      symptoms: this.newReport.symptoms,
+      severity: this.newReport.severity
+    };
+
     try {
-      const stored = localStorage.getItem(key);
-      const arr = stored ? JSON.parse(stored) : [];
-      arr.unshift(newLog);
-      localStorage.setItem(key, JSON.stringify(arr));
-      this.pastLogs.set([{ ...newLog }, ...this.pastLogs() ]);
-      this.snackBar.open('Daily log submitted', 'OK', { duration: 2500 });
-      this.resetDailyLog();
-    } catch (e) {
-      console.error(e);
-      this.snackBar.open('Failed to save log locally', 'Dismiss', { duration: 3000 });
+      const report = await this.maintenanceReportService.submitProblemReport(reportData);
+      this.reports.update(reports => [report, ...reports]);
+      this.snackBar.open('Report submitted successfully', 'OK', { duration: 2500 });
+      this.resetReportForm();
+      this.showReportForm.set(false);
+    } catch (error: any) {
+      console.error('Failed to submit report:', error);
+      this.snackBar.open('Failed to submit report. Please try again.', 'Dismiss', { duration: 3000 });
     }
   }
 
-  resetDailyLog() {
-    this.dailyLog = {
-      date: new Date(),
-      engineHours: 0,
-      idleHours: 0,
-      serviceHours: 0,
-      drillingSummary: '',
-      notes: ''
+  resetReportForm() {
+    this.newReport = {
+      affectedPart: 'OTHER' as any,
+      problemCategory: 'OTHER' as any,
+      customDescription: '',
+      symptoms: [] as string[],
+      severity: 'MEDIUM' as any
     };
+  }
+
+  getPartDisplay(part: string): string {
+    const partMap: { [key: string]: string } = {
+      'DRILL_BIT': 'Drill Bit',
+      'DRILL_ROD': 'Drill Rod',
+      'SHANK': 'Shank',
+      'ENGINE': 'Engine',
+      'HYDRAULIC_SYSTEM': 'Hydraulic System',
+      'ELECTRICAL_SYSTEM': 'Electrical System',
+      'MECHANICAL_COMPONENTS': 'Mechanical Components',
+      'OTHER': 'Other'
+    };
+    return partMap[part] || part;
+  }
+
+  getPartIcon(part: string): string {
+    const iconMap: { [key: string]: string } = {
+      'DRILL_BIT': 'build',
+      'DRILL_ROD': 'construction',
+      'SHANK': 'hardware',
+      'ENGINE': 'settings',
+      'HYDRAULIC_SYSTEM': 'water_drop',
+      'ELECTRICAL_SYSTEM': 'electrical_services',
+      'MECHANICAL_COMPONENTS': 'precision_manufacturing',
+      'OTHER': 'help_outline'
+    };
+    return iconMap[part] || 'help_outline';
+  }
+
+  getSeverityDisplay(severity: string): string {
+    const severityMap: { [key: string]: string } = {
+      'LOW': 'Low',
+      'MEDIUM': 'Medium',
+      'HIGH': 'High',
+      'CRITICAL': 'Critical'
+    };
+    return severityMap[severity] || severity;
+  }
+
+  getSeverityClass(severity: string): string {
+    return `severity-${severity.toLowerCase()}`;
+  }
+
+  getSeverityIcon(severity: string): string {
+    const iconMap: { [key: string]: string } = {
+      'LOW': 'info',
+      'MEDIUM': 'warning',
+      'HIGH': 'error',
+      'CRITICAL': 'dangerous'
+    };
+    return iconMap[severity] || 'info';
+  }
+
+  getStatusIcon(status: string): string {
+    const iconMap: { [key: string]: string } = {
+      'REPORTED': 'send',
+      'ACKNOWLEDGED': 'visibility',
+      'IN_PROGRESS': 'build',
+      'RESOLVED': 'check_circle',
+      'CLOSED': 'done_all'
+    };
+    return iconMap[status] || 'help_outline';
+  }
+
+  getStatusDisplay(status: string): string {
+    switch (status) {
+      case 'REPORTED':
+        return 'Pending';
+      case 'ACKNOWLEDGED':
+      case 'IN_PROGRESS':
+        return 'In Progress';
+      case 'RESOLVED':
+      case 'CLOSED':
+        return 'Completed';
+      default:
+        return status;
+    }
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'REPORTED':
+        return 'pending';
+      case 'ACKNOWLEDGED':
+      case 'IN_PROGRESS':
+        return 'in-progress';
+      case 'RESOLVED':
+      case 'CLOSED':
+        return 'completed';
+      default:
+        return 'pending';
+    }
+  }
+
+  viewReportDetails(report: ProblemReport) {
+    // This could open a dialog or navigate to a details page
+    console.log('View report details:', report);
+    this.snackBar.open(`Viewing details for: ${report.customDescription}`, 'OK', { duration: 2000 });
   }
 }
