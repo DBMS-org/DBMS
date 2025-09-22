@@ -79,72 +79,6 @@
     </div>
   </div>
 
-  <!-- Smart Hints System -->
-  <div class="smart-hint-container" *ngIf="currentHint && showSmartHint">
-    <div class="smart-hint" [class]="'priority-' + currentHint.priority">
-      <div class="hint-icon">
-        <span class="material-icons">{{ currentHint.icon }}</span>
-      </div>
-      <div class="hint-content">
-        <h4 class="hint-title">{{ currentHint.title }}</h4>
-        <p class="hint-message">{{ currentHint.message }}</p>
-        <div class="hint-actions" *ngIf="currentHint.actionText">
-          <button class="hint-action-btn" (click)="executeHintAction()">
-            {{ currentHint.actionText }}
-          </button>
-        </div>
-      </div>
-      <button class="hint-dismiss-btn" 
-              *ngIf="currentHint.dismissible"
-              (click)="dismissHint(currentHint.id)"
-              title="Dismiss hint">
-        <span class="material-icons">close</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Onboarding Wizard -->
-  <div class="wizard-overlay" *ngIf="showWizard">
-    <div class="wizard-container">
-      <div class="wizard-header">
-        <h3>Welcome to Blast Sequence Designer</h3>
-        <p>Let's get you started with creating your first blast sequence</p>
-      </div>
-      
-      <div class="wizard-content">
-        <div class="wizard-step" *ngIf="getCurrentWizardStep() as step">
-          <div class="step-indicator">
-            <span class="step-number">{{ wizardStep }}</span>
-            <span class="step-total">/ {{ wizardSteps.length }}</span>
-          </div>
-          
-          <div class="step-icon">
-            <span class="material-icons">{{ step.icon }}</span>
-          </div>
-          
-          <h4 class="step-title">{{ step.title }}</h4>
-          <p class="step-description">{{ step.description }}</p>
-        </div>
-      </div>
-      
-      <div class="wizard-actions">
-        <button class="wizard-btn secondary" (click)="skipWizard()">
-          Skip Tutorial
-        </button>
-        <div class="wizard-navigation">
-          <button class="wizard-btn" 
-                  (click)="previousWizardStep()"
-                  [disabled]="wizardStep === 1">
-            Previous
-          </button>
-          <button class="wizard-btn primary" (click)="nextWizardStep()">
-            {{ wizardStep === wizardSteps.length ? 'Get Started' : 'Next' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- No Pattern Data Warning -->
   <div class="no-pattern-warning" *ngIf="!patternData">
     <div class="warning-content">
@@ -354,17 +288,9 @@
       </div>
     </div>
 
-        <!-- Enhanced Status Bar -->
+        <!-- Connection Status -->
     <div class="status-bar">
       <div class="status-left">
-        <!-- Progress Section -->
-        <div class="progress-section">
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width.%]="completionPercentage"></div>
-          </div>
-          <span class="progress-text">{{ completionPercentage }}% Complete</span>
-        </div>
-        
         <div class="status-badge primary">
           <span class="material-icons">location_on</span>
           <span class="badge-text">{{ patternData.drillLocations.length }} holes</span>
@@ -386,12 +312,6 @@
       </div>
 
       <div class="status-center">
-        <!-- Next Action Guidance -->
-        <div class="next-action-section">
-          <span class="material-icons">{{ nextActionIcon }}</span>
-          <span class="action-text">{{ nextActionText }}</span>
-        </div>
-        
         <div class="mode-indicator" [class.active]="isConnectionMode">
           <span class="material-icons">{{ isConnectionMode ? 'link' : 'touch_app' }}</span>
           <span class="mode-text">{{ isConnectionMode ? 'Connection Mode' : 'Selection Mode' }}</span>

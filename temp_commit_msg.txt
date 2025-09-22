@@ -1,3 +1,7 @@
-Merge pull request #8 from SaadDev-01/master
+feat(blast-sequence-designer): add smart hints system and onboarding wizard
 
-latest pull request
+- Implement smart hints system to guide users through workflow
+- Add interactive onboarding wizard for first-time users
+- Enhance status bar with progress tracking and next action guidance
+- Improve canvas styling and connection mode visuals
+- Add connection preview and intelligent sequence suggestions

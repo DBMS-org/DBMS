@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Project } from '../../../core/models/project.model';
+import { Project, ProjectSite } from '../../../core/models/project.model';
+import { SiteService } from '../../../core/services/site.service';
 
 @Component({
   selector: 'app-operator-my-project',
@@ -17,10 +18,18 @@ export class MyProjectComponent implements OnInit {
   error: string | null = null;
   project: Project | null = null;
 
+  // Added: sites state to combine Project + Sites in one page
+  sites: ProjectSite[] = [];
+  sitesLoading = false;
+  sitesError: string | null = null;
+  showSites = false;
+
   constructor(
     private projectService: ProjectService, 
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private siteService: SiteService
   ) {}
 
   ngOnInit(): void {
@@ -31,10 +40,22 @@ export class MyProjectComponent implements OnInit {
       return;
     }
 
+    // Listen for query param to auto-show sites (from dashboard quick action)
+    this.route.queryParams.subscribe(params => {
+      if (params['showSites'] === 'true' || params['showSites'] === true) {
+        this.showSites = true;
+        // If project and sites already loaded, scroll to section
+        setTimeout(() => this.scrollToSitesSection(), 0);
+      }
+    });
+
     this.projectService.getProjectByOperator(currentUser.id).subscribe({
       next: (proj: Project | null) => {
         this.project = proj;
         this.isLoading = false;
+        if (proj) {
+          this.loadSites(proj.id);
+        }
       },
       error: (err: any) => {
         this.error = err.message;
@@ -43,11 +64,87 @@ export class MyProjectComponent implements OnInit {
     });
   }
 
+  private loadSites(projectId: number): void {
+    this.sitesLoading = true;
+    this.sitesError = null;
+    this.siteService.getProjectSites(projectId).subscribe({
+      next: (sites) => {
+        this.sites = sites;
+        this.sitesLoading = false;
+        // If user came with showSites flag, ensure we scroll after sites load
+        if (this.showSites) {
+          setTimeout(() => this.scrollToSitesSection(), 0);
+        }
+      },
+      error: (err) => {
+        this.sitesError = 'Failed to load project sites';
+        this.sitesLoading = false;
+      }
+    });
+  }
+
   formatDate(date?: Date): string {
     return date ? new Date(date).toLocaleDateString() : '-';
   }
 
-  navigateToSites(): void {
-    this.router.navigate(['/operator/my-project/sites']);
+  calculateDuration(): string {
+    if (!this.project?.startDate || !this.project?.endDate) {
+      return '-';
+    }
+    const start = new Date(this.project.startDate);
+    const end = new Date(this.project.endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 30) {
+      return `${diffDays} days`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      const remainingDays = diffDays % 30;
+      return remainingDays > 0 ? `${months} months, ${remainingDays} days` : `${months} months`;
+    } else {
+      const years = Math.floor(diffDays / 365);
+      const remainingDays = diffDays % 365;
+      const months = Math.floor(remainingDays / 30);
+      return `${years} year${years > 1 ? 's' : ''}${months > 0 ? `, ${months} months` : ''}`;
+    }
   }
-} 
+
+  calculateOverallProgress(): number {
+    if (!this.sites || this.sites.length === 0) {
+      return 0;
+    }
+    const completedSites = this.sites.filter(site => site.isOperatorCompleted).length;
+    return Math.round((completedSites / this.sites.length) * 100);
+  }
+
+  getCompletedSitesCount(): number {
+    return this.sites ? this.sites.filter(site => site.isOperatorCompleted).length : 0;
+  }
+
+  // Replaced: Instead of navigating to separate page, reveal sites section on the same page
+  navigateToSites(): void {
+    this.showSites = true;
+    setTimeout(() => this.scrollToSitesSection(), 0);
+  }
+
+  toggleSites(): void {
+    this.showSites = !this.showSites;
+    if (this.showSites) {
+      setTimeout(() => this.scrollToSitesSection(), 0);
+    }
+  }
+
+  private scrollToSitesSection(): void {
+    const el = document.getElementById('sites-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  viewPattern(site: ProjectSite): void {
+    this.router.navigate(['/operator/my-project/sites', site.id, 'pattern-view']);
+  }
+
+  viewSiteDetails(site: ProjectSite): void {
+    this.router.navigate(['/operator/my-project/sites', site.id, 'details']);
+  }
+}

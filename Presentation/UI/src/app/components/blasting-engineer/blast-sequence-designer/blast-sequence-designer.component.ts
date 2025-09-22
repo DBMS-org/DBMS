@@ -33,17 +33,6 @@ interface BlastSequenceData {
   };
 }
 
-interface SmartHint {
-  id: string;
-  title: string;
-  message: string;
-  icon: string;
-  actionText?: string;
-  actionCallback?: () => void;
-  priority: 'high' | 'medium' | 'low';
-  dismissible: boolean;
-}
-
 @Component({
   selector: 'app-blast-sequence-designer',
   standalone: true,
@@ -125,55 +114,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   public contextMenuHole: any = null;
   public startingHoleId: string | null = null;
 
-  // Smart Hints System
-  public showSmartHint = true;
-  public currentHint: SmartHint | null = null;
-  public dismissedHints: Set<string> = new Set();
-
-  // Progressive Workflow
-  public showWizard = false;
-  public wizardStep = 1;
-  public isFirstTimeUser = true;
-  public wizardSteps = [
-    { 
-      id: 1, 
-      title: 'Select Starting Hole', 
-      description: 'Right-click on a hole to set as starting point',
-      icon: 'play_arrow',
-      target: '.canvas-container'
-    },
-    { 
-      id: 2, 
-      title: 'Choose Connector Type', 
-      description: 'Select detonating cord or connectors',
-      icon: 'cable',
-      target: '.connector-type-selector'
-    },
-    { 
-      id: 3, 
-      title: 'Set Delay Time', 
-      description: 'Choose the delay timing for connections',
-      icon: 'schedule',
-      target: '.delay-selector'
-    },
-    { 
-      id: 4, 
-      title: 'Create Connections', 
-      description: 'Click holes to create blast sequence',
-      icon: 'link',
-      target: '.mode-button'
-    }
-  ];
-
-  // Enhanced Status
-  public completionPercentage = 0;
-  public nextActionText = '';
-  public nextActionIcon = '';
-
-  // Connection Preview
-  public previewConnection: { from: DrillPoint, to: DrillPoint } | null = null;
-  public hoveredHole: DrillPoint | null = null;
-
   constructor(
     private cdr: ChangeDetectorRef,
     private unifiedDrillDataService: UnifiedDrillDataService,
@@ -183,24 +123,11 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   ) {}
 
   ngAfterViewInit(): void {
-    // Check if user has completed wizard before
-    const wizardCompleted = localStorage.getItem('blast-sequence-wizard-completed');
-    if (!wizardCompleted) {
-      this.isFirstTimeUser = true;
-      setTimeout(() => this.startWizard(), 1000);
-    }
-
-    // Apply intelligent defaults
-    this.applyIntelligentDefaults();
-
     // Initialize site context from route parameters
     this.initializeSiteContext();
     
     // Load pattern data first, then initialize canvas when data is available
     this.loadPatternData();
-    
-    // Initialize smart hints
-    this.updateSmartHints();
   }
 
   private initializeSiteContext(): void {
@@ -328,9 +255,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
               this.ensureConnectionHasHiddenPoints(conn)
             );
             
-            // Update currentSequence to continue from the highest existing sequence number
-            this.updateCurrentSequenceFromExistingConnections();
-            
             this.updateFilteredConnections();
             
             // Redraw if canvas is ready
@@ -404,9 +328,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     
     // Save to backend
     this.saveStartingHoleToBackend(hole.id);
-    
-    // Update smart hints
-    this.updateSmartHints();
     
     this.notification.showSuccess(`Hole ${hole.id} set as starting hole for blast simulation`);
     this.hideContextMenu();
@@ -1041,7 +962,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   setConnectorType(type: ConnectorType): void {
     this.selectedConnectorType = type;
     this.onConnectorTypeChange();
-    this.saveUserPreferences();
     this.cdr.detectChanges();
   }
 
@@ -1151,14 +1071,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       return;
     }
 
-    // Check if this is the first connection and ensure it starts from the starting hole
-    if (this.connections.length === 0 && this.selectedFromHole.id !== this.startingHoleId) {
-      console.warn('First connection must start from the starting hole');
-      this.notification.showError('The first connection must start from the selected starting hole. Please select the starting hole first, then connect to another hole.');
-      this.cancelConnection();
-      return;
-    }
-
     // Create the connection
     const newConnection: BlastConnection = {
       id: `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -1218,9 +1130,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       // Reset both selections (traditional behavior)
       this.cancelConnection();
     }
-
-    // Update smart hints
-    this.updateSmartHints();
 
     console.log('✅ Created connection:', newConnection);
     this.notification.showSuccess(`Connection created between points ${this.selectedFromHole?.id} and ${this.selectedToHole?.id}`);
@@ -1572,20 +1481,11 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
   // Public methods for UI interaction
   toggleConnectionMode(): void {
-    // If trying to enable connection mode, check if starting hole is selected
-    if (!this.isConnectionMode && this.startingHoleId === null) {
-      this.notification.showError('Please select a starting hole before creating connections. Right-click on a hole and select "Set as Starting Hole".');
-      return;
-    }
-    
     this.isConnectionMode = !this.isConnectionMode;
     if (!this.isConnectionMode) {
       this.cancelConnection();
     }
     this.clearHighlights();
-    
-    // Update smart hints
-    this.updateSmartHints();
     
     // Ensure canvas remains visible in all modes and resize if needed
     if (this.stage) {
@@ -1855,13 +1755,11 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   // Set delay from predefined options
   setDelayFromOption(delay: number): void {
     this.currentDelay = delay;
-    this.updateSmartHints();
-    this.saveUserPreferences();
   }
 
   // Check if user can create connections
   canCreateConnections(): boolean {
-    return this.currentDelay !== null && this.startingHoleId !== null;
+    return this.currentDelay !== null;
   }
 
   // Get drill points that are not connected to any blast sequence
@@ -1935,20 +1833,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     
     // Redraw connections with new sequence numbers
     this.redrawConnections();
-  }
-
-  private updateCurrentSequenceFromExistingConnections(): void {
-    if (this.connections && this.connections.length > 0) {
-      // Find the highest sequence number from existing connections
-      const maxSequence = Math.max(...this.connections.map(conn => conn.sequence || 0));
-      // Set currentSequence to be the next number after the highest existing sequence
-      this.currentSequence = maxSequence + 1;
-      console.log(`🔢 Updated currentSequence to ${this.currentSequence} based on ${this.connections.length} existing connections (max sequence: ${maxSequence})`);
-    } else {
-      // No existing connections, start from 1
-      this.currentSequence = 1;
-      console.log('🔢 No existing connections, currentSequence set to 1');
-    }
   }
 
   private redrawConnections(): void {
@@ -2133,395 +2017,5 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.redrawAll();
     
     this.notification.showSuccess('Canvas refreshed - zoom: ' + Math.round(this.scale * 100) + '%');
-  }
-
-  // Smart Hints System
-  updateSmartHints(): void {
-    const hint = this.getCurrentSmartHint();
-    if (hint && !this.dismissedHints.has(hint.id)) {
-      this.currentHint = hint;
-    } else {
-      this.currentHint = null;
-    }
-    this.updateProgressStatus();
-    this.cdr.detectChanges();
-  }
-
-  getCurrentSmartHint(): SmartHint | null {
-    // Priority-based hint system
-    if (!this.startingHoleId) {
-      return {
-        id: 'select-starting-hole',
-        title: 'Select Starting Hole',
-        message: 'Right-click on any hole to set it as your starting point for the blast sequence.',
-        icon: 'play_arrow',
-        actionText: 'Show Me How',
-        actionCallback: () => this.highlightCanvasArea(),
-        priority: 'high',
-        dismissible: true
-      };
-    }
-
-    if (!this.currentDelay) {
-      return {
-        id: 'select-delay',
-        title: 'Choose Delay Time',
-        message: 'Select a delay time for your connections. This determines the timing between blasts.',
-        icon: 'schedule',
-        actionText: 'Set Default',
-        actionCallback: () => this.setDefaultDelay(),
-        priority: 'high',
-        dismissible: true
-      };
-    }
-
-    if (!this.isConnectionMode && this.canCreateConnections()) {
-      return {
-        id: 'enter-connection-mode',
-        title: 'Ready to Connect',
-        message: 'You\'re all set! Click "Connect" to start creating blast connections.',
-        icon: 'link',
-        actionText: 'Start Connecting',
-        actionCallback: () => this.toggleConnectionMode(),
-        priority: 'medium',
-        dismissible: true
-      };
-    }
-
-    if (this.isConnectionMode && this.connections.length === 0) {
-      return {
-        id: 'create-first-connection',
-        title: 'Create Your First Connection',
-        message: 'Click on the starting hole, then click on another hole to create your first connection.',
-        icon: 'touch_app',
-        priority: 'medium',
-        dismissible: true
-      };
-    }
-
-    if (this.connections.length > 0 && this.connections.length < 3) {
-      return {
-        id: 'continue-sequence',
-        title: 'Build Your Sequence',
-        message: 'Great start! Continue connecting holes to build your blast sequence.',
-        icon: 'timeline',
-        priority: 'low',
-        dismissible: true
-      };
-    }
-
-    return null;
-  }
-
-  dismissHint(hintId: string): void {
-    this.dismissedHints.add(hintId);
-    this.currentHint = null;
-    this.updateSmartHints();
-  }
-
-  executeHintAction(): void {
-    if (this.currentHint?.actionCallback) {
-      this.currentHint.actionCallback();
-    }
-  }
-
-  // Enhanced Status Methods
-  updateProgressStatus(): void {
-    this.completionPercentage = this.calculateCompletionPercentage();
-    const nextAction = this.getNextAction();
-    this.nextActionText = nextAction.text;
-    this.nextActionIcon = nextAction.icon;
-  }
-
-  calculateCompletionPercentage(): number {
-    let progress = 0;
-    
-    // Starting hole selected (25%)
-    if (this.startingHoleId) progress += 25;
-    
-    // Delay selected (25%)
-    if (this.currentDelay) progress += 25;
-    
-    // At least one connection (25%)
-    if (this.connections.length > 0) progress += 25;
-    
-    // Multiple connections (25%)
-    if (this.connections.length >= 3) progress += 25;
-    
-    return Math.min(progress, 100);
-  }
-
-  getNextAction(): { text: string, icon: string } {
-    if (!this.startingHoleId) {
-      return { text: 'Select a starting hole', icon: 'play_arrow' };
-    }
-    if (!this.currentDelay) {
-      return { text: 'Choose delay time', icon: 'schedule' };
-    }
-    if (!this.isConnectionMode) {
-      return { text: 'Enter connection mode', icon: 'link' };
-    }
-    if (this.connections.length === 0) {
-      return { text: 'Create first connection', icon: 'touch_app' };
-    }
-    return { text: 'Continue building sequence', icon: 'timeline' };
-  }
-
-  // Helper Methods
-  highlightCanvasArea(): void {
-    // Add visual highlight to canvas
-    const canvas = document.querySelector('.canvas-container');
-    if (canvas) {
-      canvas.classList.add('highlight-hint');
-      setTimeout(() => canvas.classList.remove('highlight-hint'), 3000);
-    }
-  }
-
-  setDefaultDelay(): void {
-    const defaultDelays = this.getAvailableDelays();
-    if (defaultDelays.length > 0) {
-      this.currentDelay = defaultDelays[0];
-      this.updateSmartHints();
-    }
-  }
-
-  // Intelligent Defaults and Automation
-  applyIntelligentDefaults(): void {
-    // Load user preferences
-    this.loadUserPreferences();
-    
-    // Set default connector type based on most common usage
-    this.selectedConnectorType = ConnectorType.DetonatingCord;
-    
-    // Auto-set default delay if none selected
-    if (!this.currentDelay) {
-      const savedDelay = localStorage.getItem('preferred-delay');
-      if (savedDelay) {
-        this.currentDelay = parseInt(savedDelay);
-      } else {
-        // Use most common delay (25ms)
-        this.currentDelay = 25;
-      }
-    }
-    
-    // Auto-enable helpful features for new users
-    if (this.isFirstTimeUser) {
-      this.showSmartHint = true;
-      this.showConnectionsPanel = true;
-    }
-  }
-
-  loadUserPreferences(): void {
-    try {
-      const preferences = localStorage.getItem('blast-sequence-preferences');
-      if (preferences) {
-        const prefs = JSON.parse(preferences);
-        
-        // Apply saved preferences
-        if (prefs.connectorType) {
-          this.selectedConnectorType = prefs.connectorType;
-        }
-        if (prefs.defaultDelay) {
-          this.currentDelay = prefs.defaultDelay;
-        }
-        if (prefs.showHints !== undefined) {
-          this.showSmartHint = prefs.showHints;
-        }
-        if (prefs.showConnectionsPanel !== undefined) {
-          this.showConnectionsPanel = prefs.showConnectionsPanel;
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to load user preferences:', error);
-    }
-  }
-
-  saveUserPreferences(): void {
-    try {
-      const preferences = {
-        connectorType: this.selectedConnectorType,
-        defaultDelay: this.currentDelay,
-        showHints: this.showSmartHint,
-        showConnectionsPanel: this.showConnectionsPanel,
-        lastUsed: Date.now()
-      };
-      
-      localStorage.setItem('blast-sequence-preferences', JSON.stringify(preferences));
-      localStorage.setItem('preferred-delay', this.currentDelay?.toString() || '25');
-    } catch (error) {
-      console.warn('Failed to save user preferences:', error);
-    }
-  }
-
-  // Auto-optimization features
-  optimizeSequence(): void {
-    if (this.connections.length < 2) return;
-    
-    // Auto-suggest optimal delays based on connection pattern
-    const suggestedDelay = this.calculateOptimalDelay();
-    if (suggestedDelay && suggestedDelay !== this.currentDelay) {
-      this.notification.showSuccess(`Suggested delay: ${suggestedDelay}ms for better timing`);
-    }
-  }
-
-  calculateOptimalDelay(): number | null {
-    if (this.connections.length === 0) return null;
-    
-    // Simple optimization: suggest shorter delays for dense patterns
-    const avgDistance = this.calculateAverageConnectionDistance();
-    
-    if (avgDistance < 5) {
-      return 17; // Short delay for close connections
-    } else if (avgDistance < 10) {
-      return 25; // Medium delay
-    } else {
-      return 42; // Longer delay for spread out connections
-    }
-  }
-
-  calculateAverageConnectionDistance(): number {
-    if (this.connections.length === 0) return 0;
-    
-    let totalDistance = 0;
-    for (const connection of this.connections) {
-      const point1 = this.patternData?.drillLocations.find(p => p.id === connection.point1DrillPointId);
-      const point2 = this.patternData?.drillLocations.find(p => p.id === connection.point2DrillPointId);
-      
-      if (point1 && point2) {
-        const distance = Math.sqrt(
-          Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)
-        );
-        totalDistance += distance;
-      }
-    }
-    
-    return totalDistance / this.connections.length;
-  }
-
-  // Smart suggestions
-  suggestNextConnection(): DrillPoint | null {
-    if (!this.selectedFromHole || this.connections.length === 0) return null;
-    
-    // Find the closest unconnected hole
-    const connectedHoleIds = new Set();
-    this.connections.forEach(conn => {
-      connectedHoleIds.add(conn.point1DrillPointId);
-      connectedHoleIds.add(conn.point2DrillPointId);
-    });
-    
-    const unconnectedHoles = this.patternData?.drillLocations.filter(
-      hole => !connectedHoleIds.has(hole.id)
-    ) || [];
-    
-    if (unconnectedHoles.length === 0) return null;
-    
-    // Find closest hole to current selection
-    let closestHole: DrillPoint | null = null;
-    let minDistance = Infinity;
-    
-    for (const hole of unconnectedHoles) {
-      const distance = Math.sqrt(
-        Math.pow(hole.x - this.selectedFromHole.x, 2) + 
-        Math.pow(hole.y - this.selectedFromHole.y, 2)
-      );
-      
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestHole = {
-          id: hole.id,
-          x: hole.x,
-          y: hole.y,
-          depth: hole.depth,
-          spacing: hole.spacing,
-          burden: hole.burden,
-          stemming: hole.stemming ?? 2.0, // Provide default value for required stemming property
-          subDrill: hole.subDrill ?? 0.5
-        };
-      }
-    }
-    
-    return closestHole;
-  }
-
-  // Wizard Methods
-  startWizard(): void {
-    this.showWizard = true;
-    this.wizardStep = 1;
-  }
-
-  nextWizardStep(): void {
-    if (this.wizardStep < this.wizardSteps.length) {
-      this.wizardStep++;
-    } else {
-      this.completeWizard();
-    }
-  }
-
-  previousWizardStep(): void {
-    if (this.wizardStep > 1) {
-      this.wizardStep--;
-    }
-  }
-
-  completeWizard(): void {
-    this.showWizard = false;
-    this.isFirstTimeUser = false;
-    localStorage.setItem('blast-sequence-wizard-completed', 'true');
-  }
-
-  skipWizard(): void {
-    this.showWizard = false;
-    this.isFirstTimeUser = false;
-    localStorage.setItem('blast-sequence-wizard-completed', 'true');
-  }
-
-  getCurrentWizardStep() {
-    return this.wizardSteps.find(step => step.id === this.wizardStep);
-  }
-
-  // Connection Preview Methods
-  showConnectionPreview(from: DrillPoint, to: DrillPoint): void {
-    this.previewConnection = { from, to };
-    this.drawConnectionPreview();
-  }
-
-  hideConnectionPreview(): void {
-    this.previewConnection = null;
-    this.clearConnectionPreview();
-  }
-
-  private drawConnectionPreview(): void {
-    if (!this.previewConnection || !this.connectionsLayer) return;
-    
-    this.clearConnectionPreview();
-    
-    const fromCoords = this.convertToCanvasCoords(
-      this.previewConnection.from.x, 
-      this.previewConnection.from.y
-    );
-    const toCoords = this.convertToCanvasCoords(
-      this.previewConnection.to.x, 
-      this.previewConnection.to.y
-    );
-
-    const previewLine = new Konva.Line({
-      points: [fromCoords.x, fromCoords.y, toCoords.x, toCoords.y],
-      stroke: '#667eea',
-      strokeWidth: 3,
-      dash: [10, 5],
-      opacity: 0.7,
-      name: 'connection-preview'
-    });
-
-    this.connectionsLayer.add(previewLine);
-    this.connectionsLayer.batchDraw();
-  }
-
-  private clearConnectionPreview(): void {
-    if (!this.connectionsLayer) return;
-    
-    const previewLines = this.connectionsLayer.find('.connection-preview');
-    previewLines.forEach(line => line.destroy());
-    this.connectionsLayer.batchDraw();
   }
 }
