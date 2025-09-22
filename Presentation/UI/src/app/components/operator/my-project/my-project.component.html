@@ -1,7 +1,7 @@
 <!-- Consistent Dashboard Header -->
 <header class="dashboard-header">
   <div class="header-content">
-    <h1>My Project</h1>
+    <h1>My Assigned Projects</h1>
     <div class="user-info">
       <div class="user-details">
         <span class="welcome-message">Project Assignment</span>
@@ -21,109 +21,218 @@
 </div>
 
 <!-- Main Content -->
-<div class="my-project-content" *ngIf="!isLoading">
-  <ng-container *ngIf="project; else noProject">
-    <!-- Project Overview Card -->
-    <section class="project-overview">
-      <div class="project-card">
-        <div class="project-header">
-          <div class="project-icon">
-            <i class="material-icons">work</i>
-          </div>
-          <div class="project-info">
-            <h2>{{ project.name }}</h2>
-            <p class="project-subtitle">Project Overview & Details</p>
-          </div>
-          <div class="project-status">
-            <span class="status-badge" [class]="'status-' + project.status.toLowerCase()">
-              {{ project.status }}
-            </span>
-          </div>
-        </div>
-        
-        <!-- Project Stats Grid -->
-        <div class="project-stats">
-          <div class="stat-item">
-            <div class="stat-icon region">
-              <i class="material-icons">place</i>
+<ng-container *ngIf="!isLoading">
+  <div class="my-project-content">
+    <ng-container *ngIf="project; else noProject">
+      <!-- Project Overview Card -->
+      <section class="project-overview">
+        <div class="project-card">
+          <div class="project-header">
+            <div class="project-icon">
+              <i class="material-icons">work</i>
             </div>
-            <div class="stat-content">
+            <div class="project-info">
+              <h2>{{ project.name }}</h2>
+              <p class="project-subtitle">Project Overview & Details</p>
+            </div>
+            <div class="project-status">
+              <span class="status-badge" [class]="'status-' + project.status.toLowerCase()">
+                {{ project.status }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Project Description -->
+          <div class="project-description" *ngIf="project?.description">
+            <h4>Project Description</h4>
+            <p>{{ project.description }}</p>
+          </div>
+
+          <!-- Project Stats Grid -->
+          <div class="project-stats">
+            <div class="stat-item">
+              <span class="stat-value">{{ project?.region || '-' }}</span>
               <span class="stat-label">Region</span>
-              <span class="stat-value">{{ project.region }}</span>
             </div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-icon dates">
-              <i class="material-icons">date_range</i>
+            <div class="stat-item">
+              <span class="stat-value">{{ project?.status || '-' }}</span>
+              <span class="stat-label">Status</span>
             </div>
-            <div class="stat-content">
+            <div class="stat-item">
+              <span class="stat-value">{{ formatDate(project?.startDate) }}</span>
               <span class="stat-label">Start Date</span>
-              <span class="stat-value">{{ formatDate(project.startDate) }}</span>
             </div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-icon dates">
-              <i class="material-icons">event</i>
-            </div>
-            <div class="stat-content">
+            <div class="stat-item">
+              <span class="stat-value">{{ formatDate(project?.endDate) }}</span>
               <span class="stat-label">End Date</span>
-              <span class="stat-value">{{ formatDate(project.endDate) }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ calculateDuration() }}</span>
+              <span class="stat-label">Duration</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ calculateOverallProgress() }}%</span>
+              <span class="stat-label">Overall Progress</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-section">
+            <div class="progress-header">
+              <h4>Project Progress</h4>
+              <span class="progress-text">{{ getCompletedSitesCount() }} of {{ sites?.length || 0 }} sites completed</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="calculateOverallProgress()"></div>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Project Description -->
-        <div class="project-description" *ngIf="project.description">
-          <h3>Project Description</h3>
-          <p>{{ project.description }}</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Quick Actions Section -->
-    <section class="quick-actions">
-      <h2>Project Actions</h2>
-      <div class="action-cards">
-        <div class="action-card sites" (click)="navigateToSites()">
-          <div class="action-icon sites">
-            <i class="material-icons">location_city</i>
-          </div>
-          <div class="action-content">
-            <h3>View Sites</h3>
-            <p>Access all project sites and their drilling patterns</p>
-            <div class="action-meta">
-              <span class="action-status">Available</span>
+      <!-- Quick Actions Section -->
+      <section class="quick-actions">
+        <h2>Project Actions</h2>
+        <div class="action-cards">
+          <div class="action-card sites" (click)="navigateToSites()">
+            <div class="action-icon sites">
+              <i class="material-icons">location_city</i>
+            </div>
+            <div class="action-content">
+              <h3>View Sites</h3>
+              <p>Access all project sites and their drilling patterns</p>
+              <div class="action-meta">
+                <span class="action-status">Available</span>
+              </div>
+            </div>
+            <div class="action-arrow">
+              <i class="material-icons">arrow_forward</i>
             </div>
           </div>
-          <div class="action-arrow">
-            <i class="material-icons">arrow_forward</i>
+        </div>
+      </section>
+
+      <!-- Combined Sites Section (Collapsible) -->
+      <section id="sites-section" class="project-sites-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="material-icons">map</i>
+            <h2>Project Sites</h2>
+            <span class="count-badge" *ngIf="!sitesLoading">{{ sites.length }}</span>
+          </div>
+          <button class="toggle-btn" (click)="toggleSites()">
+            <i class="material-icons">{{ showSites ? 'expand_less' : 'expand_more' }}</i>
+            {{ showSites ? 'Hide Sites' : 'View Sites' }}
+          </button>
+        </div>
+
+        <div class="sites-container" [class.collapsed]="!showSites">
+          <!-- Loading State -->
+          <div class="loading" *ngIf="sitesLoading">
+            <div class="spinner"></div>
+            <p>Loading project sites...</p>
+          </div>
+
+          <!-- Error State -->
+          <div class="error" *ngIf="sitesError">
+            <i class="material-icons">error_outline</i>
+            <p>{{ sitesError }}</p>
+          </div>
+
+          <!-- Sites Grid -->
+          <div class="sites-grid" *ngIf="!sitesLoading && !sitesError && sites.length">
+            <div class="site-card" *ngFor="let site of sites">
+              <div class="site-header">
+                <div class="site-icon">
+                  <i class="material-icons">terrain</i>
+                </div>
+                <div class="site-info">
+                  <h3>{{ site.name }}</h3>
+                  <p class="site-description" *ngIf="site.description">{{ site.description }}</p>
+                  <p class="site-location">
+                    <i class="material-icons">location_on</i>
+                    {{ site.location }}
+                  </p>
+                </div>
+                <div class="site-status">
+                  <span class="status-badge" [class.approved]="site.isPatternApproved" [class.pending]="!site.isPatternApproved">
+                    <i class="material-icons">{{ site.isPatternApproved ? 'check_circle' : 'schedule' }}</i>
+                    {{ site.isPatternApproved ? 'Pattern Approved ✅' : 'Pending ⏳' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="site-details">
+                <div class="detail-row">
+                  <div class="detail">
+                    <span class="label">Status:</span>
+                    <span class="value" [class.approved]="site.isPatternApproved" [class.pending]="!site.isPatternApproved">
+                      {{ site.isPatternApproved ? 'Pattern Approved ✅' : 'Pending ⏳' }}
+                    </span>
+                  </div>
+                  <div class="detail">
+                    <span class="label">Last Updated:</span>
+                    <span class="value">{{ site.updatedAt | date: 'medium' }}</span>
+                  </div>
+                </div>
+                <div class="detail-row">
+                  <div class="detail">
+                    <span class="label">Simulation:</span>
+                    <span class="value" [class.confirmed]="site.isSimulationConfirmed" [class.pending]="!site.isSimulationConfirmed">
+                      {{ site.isSimulationConfirmed ? 'Confirmed ✅' : 'Pending ⏳' }}
+                    </span>
+                  </div>
+                  <div class="detail">
+                    <span class="label">Operator Status:</span>
+                    <span class="value" [class.completed]="site.isOperatorCompleted" [class.pending]="!site.isOperatorCompleted">
+                      {{ site.isOperatorCompleted ? 'Completed ✅' : 'In Progress 🔄' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="site-actions">
+                <button class="btn btn-primary" (click)="viewSiteDetails(site)" [disabled]="!site.isPatternApproved">
+                  <i class="material-icons">visibility</i>
+                  View Site Details
+                </button>
+                <button class="btn btn-secondary" (click)="viewPattern(site)" [disabled]="!site.isPatternApproved">
+                  <i class="material-icons">grid_on</i>
+                  View Pattern
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty" *ngIf="!sitesLoading && !sitesError && !sites.length">
+            <i class="material-icons">info</i>
+            <p>No sites available for this project yet.</p>
           </div>
         </div>
-      </div>
-    </section>
-  </ng-container>
+      </section>
+    </ng-container>
 
-  <!-- No Project Template -->
-  <ng-template #noProject>
-    <section class="no-project-section">
-      <div class="empty-state">
-        <div class="empty-icon">
-          <i class="material-icons">work_off</i>
+    <!-- No Project Assigned State -->
+    <ng-template #noProject>
+      <section class="no-project">
+        <div class="no-project-card">
+          <i class="material-icons empty-icon">assignment_late</i>
+          <h2>No Project Assigned</h2>
+          <p>You currently don't have any project assigned. Please contact your administrator.</p>
+          <a routerLink="/operator/dashboard" class="btn btn-secondary">
+            <i class="material-icons">arrow_back</i>
+            Back to Dashboard
+          </a>
         </div>
-        <h2>No Project Assigned</h2>
-        <p>You are not currently assigned to any project. Please contact your administrator for project assignment.</p>
-        <div class="empty-actions">
-          <button class="btn btn-outline-primary">Contact Administrator</button>
-        </div>
-      </div>
-    </section>
-  </ng-template>
+      </section>
+    </ng-template>
 
-  <!-- Error Message -->
-  <div *ngIf="error" class="error-message">
-    <div class="alert alert-danger">
-      <i class="material-icons">error</i>
-      <span>{{ error }}</span>
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-message">
+      <div class="alert alert-danger">
+        <i class="material-icons">error</i>
+        <span>{{ error }}</span>
+      </div>
     </div>
   </div>
-</div> 
+</ng-container>
