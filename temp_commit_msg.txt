@@ -1,6 +1,7 @@
-feat(drill-visualization): improve 3D visualization loading experience
+feat(my-machines): enhance machine usage logging with detailed form
 
-- Add loading overlay with spinner while drill data loads
-- Implement retry mechanism for Three.js initialization
-- Add webkit prefixes for better cross-browser compatibility
-- Update connection string for development environment
+Add comprehensive usage logging functionality with:
+- New usage log models and utilities
+- Enhanced form with validation for hours tracking
+- Support for downtime reporting and attachments
+- Improved UI with responsive layout and file upload
