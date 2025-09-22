@@ -1,8 +1,1 @@
-feat(operator): restructure project sites into single page view
-
-- Add site details component with drill plan, blast sequence, and safety checklist
-- Combine project and sites views in my-project component with collapsible sections
-- Update routing to remove separate sites list route
-- Extend project model with additional site status fields
-- Add progress tracking and duration calculation for projects
-- Improve mobile responsiveness and user experience
+Merge branch 'DBMS-org:master' into master
