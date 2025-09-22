@@ -44,8 +44,11 @@ export interface ProjectSite {
     longitude: number;
   };
   description?: string;
+  status?: string;
   createdAt: Date;
   updatedAt: Date;
+  lastUpdated?: Date;
   isPatternApproved?: boolean;
   isSimulationConfirmed?: boolean;
-} 
+  isOperatorCompleted?: boolean;
+}
