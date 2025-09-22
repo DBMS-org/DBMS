@@ -14,13 +14,17 @@
 
 .main-content {
   flex: 1;
-  padding: 2rem;
+  padding: 1.25rem 1.5rem;
   margin-left: 250px;
+
+  transition: margin-left 0.3s ease, padding 0.2s ease;
+  overscroll-behavior: contain; // improve mobile scroll UX
   width: calc(100vw - 250px);
   max-width: calc(100vw - 250px);
   overflow-x: hidden;
   box-sizing: border-box;
   transition: margin-left 0.3s ease, width 0.3s ease, max-width 0.3s ease;
+
 }
 
 .sidebar-collapsed {
@@ -29,4 +33,35 @@
     width: calc(100vw - 70px);
     max-width: calc(100vw - 70px);
   }
+}
+
+/* Backdrop for mobile when sidebar overlays content */
+.backdrop {
+  position: fixed;
+  inset: 64px 0 0 0;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 800; // below navbar(1000) and sidebar(900)
+  display: none; // hidden by default (desktop)
+
+  &.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Responsive tweaks */
+@media (max-width: 1024px) {
+  .main-content { padding: 1rem; }
+}
+
+@media (max-width: 768px) {
+  .operator-content { margin-top: 64px; } // keep in sync with navbar height
+  .main-content {
+    padding: 0.75rem;
+    margin-left: 0; // sidebar overlays content on mobile
+  }
+  .backdrop { display: block; } // enable backdrop on mobile only
 }
