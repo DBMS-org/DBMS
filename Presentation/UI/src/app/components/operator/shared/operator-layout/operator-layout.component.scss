@@ -16,11 +16,17 @@
   flex: 1;
   padding: 2rem;
   margin-left: 250px;
-  transition: margin-left 0.3s ease;
+  width: calc(100vw - 250px);
+  max-width: calc(100vw - 250px);
+  overflow-x: hidden;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease, width 0.3s ease, max-width 0.3s ease;
 }
 
 .sidebar-collapsed {
   .main-content {
     margin-left: 70px;
+    width: calc(100vw - 70px);
+    max-width: calc(100vw - 70px);
   }
 }
