@@ -1,7 +1,8 @@
-feat(blast-sequence-designer): add smart hints system and onboarding wizard
+feat(operator): restructure project sites into single page view
 
-- Implement smart hints system to guide users through workflow
-- Add interactive onboarding wizard for first-time users
-- Enhance status bar with progress tracking and next action guidance
-- Improve canvas styling and connection mode visuals
-- Add connection preview and intelligent sequence suggestions
+- Add site details component with drill plan, blast sequence, and safety checklist
+- Combine project and sites views in my-project component with collapsible sections
+- Update routing to remove separate sites list route
+- Extend project model with additional site status fields
+- Add progress tracking and duration calculation for projects
+- Improve mobile responsiveness and user experience
