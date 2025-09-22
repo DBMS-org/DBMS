@@ -22,6 +22,7 @@
 
   .view-tabs {
     display: flex;
+    align-items: center;
     gap: 8px;
     margin-bottom: 24px;
     border-bottom: 1px solid #e2e8f0;
@@ -47,6 +48,30 @@
         background: #f1f5f9;
       }
     }
+    
+    .filter-toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      margin-left: auto; // Push to the right side
+      
+      &:hover {
+        background: #2563eb;
+      }
+      
+      .toggle-icon {
+        margin-left: auto;
+        transition: transform 0.2s ease;
+      }
+    }
   }
 
   .filters-section {
@@ -59,6 +84,7 @@
     .search-bar {
       position: relative;
       margin-bottom: 24px;
+      display: none; // Hide the search bar
       
       .search-input {
         width: 100%;
@@ -84,32 +110,7 @@
       }
     }
     
-    .filter-toggle {
-      margin-bottom: 16px;
-      
-      .filter-toggle-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 16px;
-        background: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        
-        &:hover {
-          background: #2563eb;
-        }
-        
-        .toggle-icon {
-          margin-left: auto;
-          transition: transform 0.2s ease;
-        }
-      }
-    }
+
     
     .filters-form {
       max-height: 0;
