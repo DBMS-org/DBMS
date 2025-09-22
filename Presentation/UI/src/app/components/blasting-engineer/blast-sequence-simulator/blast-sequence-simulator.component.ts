@@ -395,6 +395,8 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
               siteId: conn.siteId,
               createdAt: conn.createdAt,
               updatedAt: conn.updatedAt,
+              // Include IsStartingHole property for simulation
+              isStartingHole: (conn as any).isStartingHole || false,
               // Add required startPoint and endPoint properties
               startPoint: {
                 id: `SP-${conn.id}`,
@@ -450,7 +452,7 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     this.simulationState.isPlaying = true;
     this.simulationState.isPaused = false;
     this.simulationState.currentTime = 0;
-    this.animationService.startAnimation(this.simulationState, this.connections);
+    this.animationService.startAnimation(this.simulationState, this.connections, this.patternData.drillPoints);
   }
 
   pause(): void {
@@ -705,6 +707,6 @@ export class BlastSequenceSimulatorComponent implements OnInit, OnDestroy {
     this.simulationState.totalDuration = (this.patternData.drillPoints?.length || 0) * this.simulationSettings.effectIntensity;
     
     this.animationService.resetAnimation();
-    this.animationService.startAnimation(this.simulationState, this.connections);
+    this.animationService.startAnimation(this.simulationState, this.connections, this.patternData.drillPoints);
   }
-} 
+}

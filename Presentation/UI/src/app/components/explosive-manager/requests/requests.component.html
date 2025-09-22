@@ -25,6 +25,13 @@
       (click)="onViewChange('emulsion')">
       Emulsion Requests
     </button>
+    
+    <!-- Filter Toggle Button -->
+    <button type="button" (click)="toggleFilters()" class="filter-toggle-btn">
+      <i class="material-icons">filter_list</i>
+      {{ filtersExpanded ? 'Hide Filters' : 'Show Filters' }}
+      <i class="material-icons toggle-icon">{{ filtersExpanded ? 'expand_less' : 'expand_more' }}</i>
+    </button>
   </div>
 
   <!-- Search and Filters -->
@@ -39,14 +46,7 @@
       <i class="material-icons search-icon">search</i>
     </div>
 
-    <!-- Filter Toggle Button -->
-    <div class="filter-toggle">
-      <button type="button" (click)="toggleFilters()" class="filter-toggle-btn">
-        <i class="material-icons">filter_list</i>
-        {{ filtersExpanded ? 'Hide Filters' : 'Show Filters' }}
-        <i class="material-icons toggle-icon">{{ filtersExpanded ? 'expand_less' : 'expand_more' }}</i>
-      </button>
-    </div>
+
 
     <form [formGroup]="filterForm" class="filters-form" [class.expanded]="filtersExpanded">
       <div class="filter-row">
