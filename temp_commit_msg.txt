@@ -1,7 +1,7 @@
-feat(blast-sequence): add starting hole functionality and UI improvements
+feat(operator): add daily log tracking and usage metrics
 
-- Implement starting hole selection for blast simulation with context menu
-- Add visual indicators for starting holes in sequence designer
-- Improve connection creation with hover-based chain connections
-- Enhance UI layout with better responsive behavior
-- Update backend models and services to support starting hole feature
+- Implement daily log form with engine/idle/service hours tracking
+- Add past logs table view with local storage persistence
+- Include usage metrics display in machine details
+- Add mobile backdrop for sidebar navigation
+- Improve responsive layout and table styling

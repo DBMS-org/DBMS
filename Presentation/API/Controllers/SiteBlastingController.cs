@@ -100,6 +100,7 @@ namespace Presentation.API.Controllers
                     ConnectorType = request.ConnectorType,
                     Delay = request.Delay,
                     Sequence = request.Sequence,
+                    IsStartingHole = request.IsStartingHole,
                     ProjectId = request.ProjectId,
                     SiteId = request.SiteId,
                     CreatedAt = DateTime.UtcNow,
@@ -148,6 +149,7 @@ namespace Presentation.API.Controllers
             entity.ConnectorType = request.ConnectorType;
             entity.Delay = request.Delay;
             entity.Sequence = request.Sequence;
+            entity.IsStartingHole = request.IsStartingHole;
             entity.ProjectId = request.ProjectId;
             entity.SiteId = request.SiteId;
             entity.UpdatedAt = DateTime.UtcNow;
@@ -186,6 +188,7 @@ namespace Presentation.API.Controllers
                 ConnectorType = entity.ConnectorType,
                 Delay = entity.Delay,
                 Sequence = entity.Sequence,
+                IsStartingHole = entity.IsStartingHole,
                 ProjectId = entity.ProjectId,
                 SiteId = entity.SiteId,
                 CreatedAt = entity.CreatedAt,
@@ -217,4 +220,4 @@ namespace Presentation.API.Controllers
 
         #endregion
     }
-} 
+}
