@@ -6,7 +6,7 @@ import { SimulationEvent, SimulationEventType, BlastEffectType } from '../../sha
   providedIn: 'root'
 })
 export class SimulationEventService {
-  generateSimulationEvents(connections: BlastConnection[]): SimulationEvent[] {
+  generateSimulationEvents(connections: BlastConnection[], drillPoints?: any[]): SimulationEvent[] {
     const events: SimulationEvent[] = [];
     const processedConnections = new Set<string>();
     const connectionsByFromHole = new Map<string, BlastConnection[]>();
@@ -18,9 +18,28 @@ export class SimulationEventService {
       connectionsByFromHole.set(conn.fromHoleId, fromConnections);
     });
 
-    // Find initial connections
-    const targetHoles = new Set(connections.map(c => c.toHoleId));
-    const initialConnections = connections.filter(c => !targetHoles.has(c.fromHoleId));
+    // Find initial connections - prioritize starting holes based on actual hole coordinates
+    const startingConnections = connections.filter(conn => (conn as any).isStartingHole === true);
+    
+    let initialConnections: BlastConnection[];
+    if (startingConnections.length > 0) {
+      // Use connections marked as starting holes - these represent the actual starting hole location
+      initialConnections = startingConnections;
+      
+      // Log starting hole coordinates for debugging
+      if (drillPoints) {
+        startingConnections.forEach(conn => {
+          const startingPoint = drillPoints.find(p => p.id === conn.point1DrillPointId);
+          if (startingPoint) {
+            console.log(`Simulation events starting from hole ${conn.point1DrillPointId} at coordinates (${startingPoint.x}, ${startingPoint.y})`);
+          }
+        });
+      }
+    } else {
+      // Fallback: use connections where fromHole is not a target of any other connection
+      const targetHoles = new Set(connections.map(c => c.toHoleId));
+      initialConnections = connections.filter(c => !targetHoles.has(c.fromHoleId));
+    }
 
     // Process waves
     const processWave = (connectionsToProcess: BlastConnection[], waveStartTime: number) => {
@@ -139,4 +158,4 @@ export class SimulationEventService {
 
     return conflicts;
   }
-} 
+}

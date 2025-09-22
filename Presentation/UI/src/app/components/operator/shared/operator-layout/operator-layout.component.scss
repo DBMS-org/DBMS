@@ -16,13 +16,22 @@
   flex: 1;
   padding: 1.25rem 1.5rem;
   margin-left: 250px;
+
   transition: margin-left 0.3s ease, padding 0.2s ease;
   overscroll-behavior: contain; // improve mobile scroll UX
+  width: calc(100vw - 250px);
+  max-width: calc(100vw - 250px);
+  overflow-x: hidden;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease, width 0.3s ease, max-width 0.3s ease;
+
 }
 
 .sidebar-collapsed {
   .main-content {
     margin-left: 70px;
+    width: calc(100vw - 70px);
+    max-width: calc(100vw - 70px);
   }
 }
 
