@@ -114,34 +114,15 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     if (this.show3DView) {
       // Small delay to ensure DOM is ready
       setTimeout(() => {
-        this.initializeThreeJSWithRetry();
+        this.initThreeJS();
+        this.createScene();
+        this.animate();
+
+        // Load drill holes in 3D if data is available
+        if (this.isDataLoaded) {
+          this.create3DDrillHoles();
+        }
       }, 100);
-    }
-  }
-
-  private initializeThreeJSWithRetry(retryCount: number = 0): void {
-    const maxRetries = 5;
-    const retryDelay = 200;
-
-    this.initThreeJS();
-    
-    // Check if initialization was successful
-    if (this.scene) {
-      this.createScene();
-      this.animate();
-
-      // Load drill holes in 3D if data is available
-      if (this.isDataLoaded) {
-        this.create3DDrillHoles();
-      }
-    } else if (retryCount < maxRetries) {
-      // Retry initialization after a delay
-      console.log(`Three.js initialization failed, retrying... (${retryCount + 1}/${maxRetries})`);
-      setTimeout(() => {
-        this.initializeThreeJSWithRetry(retryCount + 1);
-      }, retryDelay);
-    } else {
-      console.error('Failed to initialize Three.js after maximum retries. The .threejs-container element may not be available.');
     }
   }
 
@@ -644,10 +625,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   // Three.js Methods
   private initThreeJS(): void {
     const container = this.el.nativeElement.querySelector('.threejs-container');
-    if (!container) {
-      console.error('Three.js container not found. Make sure the .threejs-container element exists in the DOM.');
-      return;
-    }
+    if (!container) return;
 
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 600;
@@ -742,12 +720,6 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
   private groundPlane?: THREE.Mesh;
 
   private createScene(): void {
-    // Check if scene is initialized
-    if (!this.scene) {
-      console.error('Scene is not initialized. Cannot create scene objects.');
-      return;
-    }
-
     // Add initial grid (will be updated when drill data loads)
     this.gridHelper = new THREE.GridHelper(50, 50, 0x444444, 0x888888);
     this.scene.add(this.gridHelper);

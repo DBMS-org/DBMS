@@ -11,8 +11,12 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { MaintenanceReportService } from '../maintenance-reports/services/maintenance-report.service';
@@ -20,6 +24,13 @@ import { OperatorMachine, ProblemReport } from '../maintenance-reports/models/ma
 import { MachineReportDialogComponent } from './machine-report-dialog/machine-report-dialog.component';
 import { MaintenanceService } from '../../mechanical-engineer/maintenance/services/maintenance.service';
 import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maintenance.models';
+import { 
+  MachineUsageLog, 
+  CreateUsageLogRequest, 
+  UsageLogFormData, 
+  UsageLogUtils,
+  UsageLogValidation 
+} from './models/usage-log.models';
 
 @Component({
   selector: 'app-my-machines',
@@ -38,7 +49,12 @@ import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maint
     MatFormFieldModule,
     MatInputModule,
     FormsModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    ReactiveFormsModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -182,44 +198,164 @@ import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maint
                 </div>
 
                 <ng-template #logUsageDialog>
-                  <h2 mat-dialog-title>Log Usage</h2>
+                  <h2 mat-dialog-title>Log Machine Usage</h2>
                   <mat-dialog-content class="log-usage-content">
-                    @if (usageMetrics()) {
-                      <div class="current-metrics">
-                        <p><strong>Current Engine Hours:</strong> {{ usageMetrics()?.engineHours | number }}</p>
-                        <p><strong>Current Idle Hours:</strong> {{ usageMetrics()?.idleHours | number }}</p>
-                        <p><strong>Current Service Hours:</strong> {{ usageMetrics()?.serviceHours | number }}</p>
-                      </div>
-                    }
-                    <form class="log-usage-form" (ngSubmit)="submitLogUsage()">
-                      <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Engine hours to add</mat-label>
-                        <input matInput type="number" [(ngModel)]="engineDelta" name="engineDelta" min="0" step="0.1" />
-                      </mat-form-field>
-                      <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Idle hours to add</mat-label>
-                        <input matInput type="number" [(ngModel)]="idleDelta" name="idleDelta" min="0" step="0.1" />
-                      </mat-form-field>
-                      <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Service hours to add</mat-label>
-                        <input matInput type="number" [(ngModel)]="serviceDelta" name="serviceDelta" min="0" step="0.1" />
-                      </mat-form-field>
-
-                      <!-- Remaining-to-service and progress (UI-only) -->
-                      <div class="current-metrics" *ngIf="usageMetrics() as um">
-                        <p><strong>Projected Engine Hours:</strong> {{ (um.engineHours + (engineDelta||0)) | number }} h</p>
-                        <p><strong>Projected Service Hours:</strong> {{ (um.serviceHours + (serviceDelta||0)) | number }} h</p>
-                        <p><strong>Remaining to Next Service:</strong>
-                          {{ (serviceIntervalHours() - ((um.engineHours % serviceIntervalHours()) + (engineDelta||0) + (serviceDelta||0)) % serviceIntervalHours()) | number }} h
-                        </p>
+                    <form [formGroup]="usageLogForm" class="usage-log-form">
+                      
+                      <!-- Machine Selection -->
+                      <div class="form-section">
+                        <h4>Machine Information</h4>
+                        <mat-form-field class="full-width">
+                          <mat-label>Select Machine</mat-label>
+                          <mat-select formControlName="selectedMachineId" required>
+                            <mat-option [value]="assignedMachine()?.id">
+                              {{ assignedMachine()?.name }} ({{ assignedMachine()?.serialNumber }})
+                            </mat-option>
+                          </mat-select>
+                          <mat-error *ngIf="usageLogForm.get('selectedMachineId')?.hasError('required')">
+                            Machine selection is required
+                          </mat-error>
+                        </mat-form-field>
                       </div>
 
-                      <div mat-dialog-actions align="end">
-                        <button mat-button mat-dialog-close type="button">Cancel</button>
-                        <button mat-flat-button color="primary" type="button" (click)="submitLogUsage()">Save</button>
+                      <!-- Date of Log -->
+                      <div class="form-section">
+                        <h4>Log Date</h4>
+                        <mat-form-field class="full-width">
+                          <mat-label>Date of Log</mat-label>
+                          <input matInput [matDatepicker]="picker" formControlName="logDate" required>
+                          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                          <mat-datepicker #picker></mat-datepicker>
+                          <mat-error *ngIf="usageLogForm.get('logDate')?.hasError('required')">
+                            Log date is required
+                          </mat-error>
+                        </mat-form-field>
                       </div>
+
+                      <!-- Hours Section -->
+                      <div class="form-section">
+                        <h4>Operating Hours</h4>
+                        <div class="hours-grid">
+                          <mat-form-field>
+                            <mat-label>Engine Hours (HH:MM)</mat-label>
+                            <input matInput formControlName="engineHours" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required>
+                            <mat-hint>Total hours machine was running</mat-hint>
+                            <mat-error *ngIf="usageLogForm.get('engineHours')?.hasError('required')">
+                              Engine hours are required
+                            </mat-error>
+                            <mat-error *ngIf="usageLogForm.get('engineHours')?.hasError('pattern')">
+                              Please use HH:MM format (e.g., 08:30)
+                            </mat-error>
+                          </mat-form-field>
+
+                          <mat-form-field>
+                            <mat-label>Idle Hours (HH:MM)</mat-label>
+                            <input matInput formControlName="idleHours" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required>
+                            <mat-hint>Hours machine was ON but not working</mat-hint>
+                            <mat-error *ngIf="usageLogForm.get('idleHours')?.hasError('required')">
+                              Idle hours are required
+                            </mat-error>
+                            <mat-error *ngIf="usageLogForm.get('idleHours')?.hasError('pattern')">
+                              Please use HH:MM format (e.g., 02:15)
+                            </mat-error>
+                          </mat-form-field>
+
+                          <mat-form-field>
+                            <mat-label>Working Hours (HH:MM)</mat-label>
+                            <input matInput formControlName="workingHours" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required>
+                            <mat-hint>Actual productive hours</mat-hint>
+                            <mat-error *ngIf="usageLogForm.get('workingHours')?.hasError('required')">
+                              Working hours are required
+                            </mat-error>
+                            <mat-error *ngIf="usageLogForm.get('workingHours')?.hasError('pattern')">
+                              Please use HH:MM format (e.g., 06:45)
+                            </mat-error>
+                          </mat-form-field>
+                        </div>
+                      </div>
+
+                      <!-- Fuel Consumption -->
+                      <div class="form-section">
+                        <h4>Fuel Consumption (Optional)</h4>
+                        <mat-form-field class="full-width">
+                          <mat-label>Fuel Consumed (Liters)</mat-label>
+                          <input matInput type="number" formControlName="fuelConsumed" min="0" step="0.1">
+                          <mat-hint>Enter fuel consumption if tracked</mat-hint>
+                        </mat-form-field>
+                      </div>
+
+                      <!-- Downtime/Breakdown Section -->
+                      <div class="form-section">
+                        <h4>Downtime & Breakdown</h4>
+                        <mat-checkbox formControlName="hasDowntime" class="downtime-checkbox">
+                          Machine experienced downtime or breakdown
+                        </mat-checkbox>
+                        
+                        <div *ngIf="usageLogForm.get('hasDowntime')?.value" class="downtime-details">
+                          <mat-form-field class="full-width">
+                            <mat-label>Downtime Hours (HH:MM)</mat-label>
+                            <input matInput formControlName="downtimeHours" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$">
+                            <mat-hint>Total hours machine was down</mat-hint>
+                            <mat-error *ngIf="usageLogForm.get('downtimeHours')?.hasError('pattern')">
+                              Please use HH:MM format (e.g., 01:30)
+                            </mat-error>
+                          </mat-form-field>
+
+                          <mat-form-field class="full-width">
+                            <mat-label>Breakdown Description</mat-label>
+                            <textarea matInput formControlName="breakdownDescription" rows="3" placeholder="Describe the breakdown or issue..."></textarea>
+                            <mat-hint>Provide details about the breakdown</mat-hint>
+                          </mat-form-field>
+                        </div>
+                      </div>
+
+                      <!-- Remarks/Notes -->
+                      <div class="form-section">
+                        <h4>Remarks & Observations</h4>
+                        <mat-form-field class="full-width">
+                          <mat-label>Remarks/Notes</mat-label>
+                          <textarea matInput formControlName="remarks" rows="4" placeholder="Any observations, unusual noise, overheating, etc..."></textarea>
+                          <mat-hint>Optional: Add any observations or notes</mat-hint>
+                        </mat-form-field>
+                      </div>
+
+                      <!-- File Upload Section -->
+                      <div class="form-section">
+                        <h4>Attachments (Optional)</h4>
+                        <div class="file-upload-area">
+                          <input type="file" #fileInput multiple accept="image/*,.pdf,.doc,.docx" (change)="onFileSelected($event)" style="display: none;">
+                          <button type="button" mat-stroked-button (click)="fileInput.click()">
+                            <mat-icon>attach_file</mat-icon>
+                            Upload Photos/Documents
+                          </button>
+                          <p class="upload-hint">Upload photos of broken parts, meter readings, or relevant documents</p>
+                          
+                          <div *ngIf="selectedFiles.length > 0" class="selected-files">
+                            <h5>Selected Files:</h5>
+                            <div *ngFor="let file of selectedFiles; let i = index" class="file-item">
+                              <mat-icon>{{ getFileIcon(file.type) }}</mat-icon>
+                              <span class="file-name">{{ file.name }}</span>
+                              <span class="file-size">({{ formatFileSize(file.size) }})</span>
+                              <button type="button" mat-icon-button (click)="removeFile(i)" color="warn">
+                                <mat-icon>close</mat-icon>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                     </form>
                   </mat-dialog-content>
+
+                  <mat-dialog-actions align="end" class="dialog-actions">
+                    <button mat-button mat-dialog-close type="button">Cancel</button>
+                    <button mat-flat-button color="primary" type="button" 
+                            (click)="submitEnhancedLogUsage()" 
+                            [disabled]="!usageLogForm.valid || isSubmittingUsage">
+                      <mat-icon *ngIf="isSubmittingUsage">hourglass_empty</mat-icon>
+                      {{ isSubmittingUsage ? 'Saving...' : 'Save Usage Log' }}
+                    </button>
+                  </mat-dialog-actions>
                 </ng-template>
                 
                 <mat-divider class="section-divider"></mat-divider>
@@ -381,14 +517,103 @@ import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maint
     .last-updated { margin-top: 0.5rem; font-size: 0.8rem; color: #757575; }
 
     /* Log usage dialog styles */
-    .log-usage-content { display: block; min-width: 320px; max-width: 560px; }
-    .log-usage-form .full-width { width: 100%; }
-    .current-metrics {
+    .log-usage-content { 
+      display: block; 
+      min-width: 400px; 
+      max-width: 700px; 
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .usage-log-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .form-section {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1rem;
+      background: #fafafa;
+    }
+    
+    .form-section h4 {
+      margin: 0 0 1rem 0;
+      color: #424242;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    
+    .hours-grid {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.25rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .downtime-checkbox {
+      margin-bottom: 1rem;
+    }
+    
+    .downtime-details {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .file-upload-area {
+      text-align: center;
+      padding: 1rem;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    
+    .upload-hint {
+      margin: 0.5rem 0 0 0;
+      font-size: 0.875rem;
+      color: #666;
+    }
+    
+    .selected-files {
+      margin-top: 1rem;
+      text-align: left;
+    }
+    
+    .selected-files h5 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.875rem;
+      color: #424242;
+    }
+    
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
       margin-bottom: 0.5rem;
-      color: #555;
+    }
+    
+    .file-name {
+      flex: 1;
+      font-size: 0.875rem;
+    }
+    
+    .file-size {
+      font-size: 0.75rem;
+      color: #666;
+    }
+    
+    .dialog-actions {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .full-width { 
+      width: 100%; 
     }
     @media (min-width: 600px) {
       .current-metrics { grid-template-columns: repeat(3, 1fr); }
@@ -562,6 +787,13 @@ export class MyMachinesComponent implements OnInit {
   error = signal<string | null>(null);
   usageMetrics = signal<UsageMetrics | null>(null);
   serviceIntervalHours = signal<number>(500);
+  
+  // Enhanced usage logging properties
+  usageLogForm!: FormGroup;
+  selectedFiles: File[] = [];
+  isSubmittingUsage = false;
+  
+  // Legacy properties for backward compatibility
   engineDelta = 0;
   idleDelta = 0;
   serviceDelta = 0;
@@ -571,6 +803,97 @@ export class MyMachinesComponent implements OnInit {
   public dialog = inject(MatDialog);
   private maintenanceService = inject(MaintenanceService);
   private snackBar = inject(MatSnackBar);
+  private fb = inject(FormBuilder);
+  
+  // Enhanced usage logging methods
+  onFileSelected(event: any) {
+    const files = event.target.files;
+    if (files) {
+      for (let file of files) {
+        if (file.size <= 10 * 1024 * 1024) { // 10MB limit
+          this.selectedFiles.push(file);
+        } else {
+          this.snackBar.open(`File ${file.name} is too large (max 10MB)`, 'OK', { duration: 3000 });
+        }
+      }
+    }
+  }
+  
+  removeFile(index: number) {
+    this.selectedFiles.splice(index, 1);
+  }
+  
+  getFileIcon(fileType: string): string {
+    if (fileType.startsWith('image/')) return 'image';
+    if (fileType.includes('pdf')) return 'picture_as_pdf';
+    if (fileType.includes('doc')) return 'description';
+    return 'attach_file';
+  }
+  
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+  
+  submitEnhancedLogUsage() {
+    if (!this.usageLogForm.valid || this.isSubmittingUsage) return;
+    
+    this.isSubmittingUsage = true;
+    const formData = this.usageLogForm.value;
+    
+    // Convert time strings to decimal hours
+    const engineHours = this.timeStringToDecimal(formData.engineHours);
+    const idleHours = this.timeStringToDecimal(formData.idleHours);
+    const workingHours = this.timeStringToDecimal(formData.workingHours);
+    const downtimeHours = formData.hasDowntime ? this.timeStringToDecimal(formData.downtimeHours) : 0;
+    
+    const usageLogData: CreateUsageLogRequest = {
+        machineId: formData.selectedMachineId,
+        logDate: formData.logDate,
+        engineHours: engineHours.toString(),
+        idleHours: idleHours.toString(),
+        workingHours: workingHours.toString(),
+        fuelConsumed: formData.fuelConsumed || 0,
+        hasDowntime: formData.hasDowntime,
+        downtimeHours: downtimeHours.toString(),
+        breakdownDescription: formData.breakdownDescription || '',
+        remarks: formData.remarks || '',
+        attachments: this.selectedFiles
+      };
+    
+    // Simulate API call - in real app, this would be a service call
+    setTimeout(() => {
+      // Update local usage metrics
+      const currentMetrics = this.usageMetrics();
+      if (currentMetrics) {
+        const updatedMetrics: UsageMetrics = {
+          ...currentMetrics,
+          engineHours: currentMetrics.engineHours + engineHours,
+          idleHours: currentMetrics.idleHours + idleHours,
+          serviceHours: currentMetrics.serviceHours + engineHours, // Engine hours contribute to service hours
+          lastUpdated: new Date()
+        };
+        this.usageMetrics.set(updatedMetrics);
+      }
+      
+      this.isSubmittingUsage = false;
+      this.selectedFiles = [];
+      this.dialog.closeAll();
+      this.snackBar.open('Usage log submitted successfully!', 'OK', { duration: 3000 });
+      
+      // Reset form
+      this.initializeUsageLogForm();
+    }, 2000);
+  }
+  
+  private timeStringToDecimal(timeStr: string): number {
+    if (!timeStr) return 0;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours + (minutes / 60);
+  }
 
   activeReportsCount = computed(() => 
     this.recentReports().filter(report => 
@@ -590,6 +913,42 @@ export class MyMachinesComponent implements OnInit {
   
   ngOnInit() {
     this.loadData();
+    this.initializeUsageLogForm();
+  }
+  
+  private initializeUsageLogForm() {
+    const currentDate = new Date();
+    const machine = this.assignedMachine();
+    
+    this.usageLogForm = this.fb.group({
+      selectedMachineId: [machine?.id || '', [Validators.required]],
+      logDate: [currentDate, [Validators.required]],
+      engineHours: ['', [Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]],
+      idleHours: ['', [Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]],
+      workingHours: ['', [Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]],
+      fuelConsumed: ['', [Validators.min(0)]],
+      hasDowntime: [false],
+      downtimeHours: [''],
+      breakdownDescription: [''],
+      remarks: ['']
+    });
+    
+    // Add conditional validators for downtime fields
+    this.usageLogForm.get('hasDowntime')?.valueChanges.subscribe(hasDowntime => {
+      const downtimeHoursControl = this.usageLogForm.get('downtimeHours');
+      const breakdownDescControl = this.usageLogForm.get('breakdownDescription');
+      
+      if (hasDowntime) {
+        downtimeHoursControl?.setValidators([Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]);
+        breakdownDescControl?.setValidators([Validators.required, Validators.minLength(10)]);
+      } else {
+        downtimeHoursControl?.clearValidators();
+        breakdownDescControl?.clearValidators();
+      }
+      
+      downtimeHoursControl?.updateValueAndValidity();
+      breakdownDescControl?.updateValueAndValidity();
+    });
   }
   
   refreshData() {

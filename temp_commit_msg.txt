@@ -1,3 +1,6 @@
-Merge pull request #9 from SaadDev-01/master
+feat(drill-visualization): improve 3D visualization loading experience
 
-latest update
+- Add loading overlay with spinner while drill data loads
+- Implement retry mechanism for Three.js initialization
+- Add webkit prefixes for better cross-browser compatibility
+- Update connection string for development environment
