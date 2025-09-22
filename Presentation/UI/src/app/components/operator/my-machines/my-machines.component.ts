@@ -139,9 +139,8 @@ import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maint
                       </div>
                       <div class="usage-item">
                         <div class="usage-label"><mat-icon>schedule</mat-icon> Remaining to Next Service</div>
--                        <div class="usage-value">{{ remainingServiceHours() === null ? '—' : (remainingServiceHours()! | number) }} h</div>
-+                        <div class="usage-value">{{ remainingServiceHours() === null ? '—' : ((remainingServiceHours()! | number) + ' h') }}</div>
-                       </div>
+                      <div class="usage-value">{{ remainingServiceHours() === null ? '—' : (remainingServiceHours()! | number) }} h</div>
+                      </div>
                      </div>
                      <div class="last-updated">Last updated: {{ formatDate(usageMetrics()!.lastUpdated) }}</div>
                    } @else {
@@ -205,6 +204,16 @@ import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maint
                         <mat-label>Service hours to add</mat-label>
                         <input matInput type="number" [(ngModel)]="serviceDelta" name="serviceDelta" min="0" step="0.1" />
                       </mat-form-field>
+
+                      <!-- Remaining-to-service and progress (UI-only) -->
+                      <div class="current-metrics" *ngIf="usageMetrics() as um">
+                        <p><strong>Projected Engine Hours:</strong> {{ (um.engineHours + (engineDelta||0)) | number }} h</p>
+                        <p><strong>Projected Service Hours:</strong> {{ (um.serviceHours + (serviceDelta||0)) | number }} h</p>
+                        <p><strong>Remaining to Next Service:</strong>
+                          {{ (serviceIntervalHours() - ((um.engineHours % serviceIntervalHours()) + (engineDelta||0) + (serviceDelta||0)) % serviceIntervalHours()) | number }} h
+                        </p>
+                      </div>
+
                       <div mat-dialog-actions align="end">
                         <button mat-button mat-dialog-close type="button">Cancel</button>
                         <button mat-flat-button color="primary" type="button" (click)="submitLogUsage()">Save</button>

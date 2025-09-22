@@ -1,0 +1,793 @@
+.site-details-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+// Header Styles
+.site-header {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+
+  .back-button {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 15px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: #5a6268;
+    }
+
+    i {
+      margin-right: 8px;
+    }
+  }
+
+  .site-title {
+    h1 {
+      margin: 0 0 10px 0;
+      color: #2c3e50;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .site-meta {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+
+      .location {
+        color: #6c757d;
+        font-size: 14px;
+
+        i {
+          margin-right: 5px;
+          color: #dc3545;
+        }
+      }
+
+      .status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+
+        &.status-approved {
+          background: #d4edda;
+          color: #155724;
+        }
+
+        &.status-pending {
+          background: #fff3cd;
+          color: #856404;
+        }
+
+        i {
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+}
+
+// Loading and Error States
+.loading-container, .error-container {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  i {
+    font-size: 48px;
+    color: #dc3545;
+    margin-bottom: 20px;
+  }
+
+  p {
+    color: #6c757d;
+    font-size: 16px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Main Content
+.site-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+// Tab Navigation
+.tab-navigation {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+
+  .tab-button {
+    flex: 1;
+    padding: 15px 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6c757d;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+
+    &:hover {
+      background: #e9ecef;
+      color: #495057;
+    }
+
+    &.active {
+      background: white;
+      color: #007bff;
+      border-bottom-color: #007bff;
+    }
+
+    i {
+      margin-right: 8px;
+    }
+  }
+}
+
+// Tab Content
+.tab-content {
+  padding: 30px;
+}
+
+.tab-panel {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Overview Tab
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info-card {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+
+  h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e9ecef;
+
+    &:last-child {
+      margin-bottom: 0;
+      border-bottom: none;
+    }
+
+    .label {
+      font-weight: 500;
+      color: #6c757d;
+    }
+
+    .value {
+      color: #2c3e50;
+      text-align: right;
+    }
+  }
+}
+
+.pattern-status {
+  text-align: center;
+
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    margin-bottom: 15px;
+
+    &.approved {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    &:not(.approved) {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    i {
+      margin-right: 8px;
+      font-size: 18px;
+    }
+  }
+
+  .status-description {
+    color: #6c757d;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+// Drill Plan Tab
+.drill-plan-header {
+  margin-bottom: 25px;
+
+  h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 20px;
+  }
+
+  p {
+    color: #6c757d;
+    margin: 0;
+  }
+}
+
+.drill-holes-table {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #2c3e50;
+      position: sticky;
+      top: 0;
+    }
+
+    tr {
+      &.status-completed {
+        background: #f8fff8;
+      }
+
+      &.status-drilled {
+        background: #fff8e1;
+      }
+
+      &.status-pending {
+        background: #fff;
+      }
+    }
+
+    .hole-id {
+      font-weight: 600;
+      color: #007bff;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+
+      &.status-completed {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      &.status-drilled {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      &.status-pending {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      i {
+        margin-right: 4px;
+      }
+    }
+
+    .action-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background-color 0.2s;
+
+      &:hover:not(:disabled) {
+        background: #0056b3;
+      }
+
+      &:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Blast Sequence Tab
+.blast-sequence-header {
+  margin-bottom: 25px;
+
+  h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 20px;
+  }
+
+  .warning {
+    background: #fff3cd;
+    color: #856404;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border-left: 4px solid #ffc107;
+    margin: 0;
+
+    i {
+      margin-right: 8px;
+    }
+  }
+}
+
+.sequence-table {
+  margin-bottom: 30px;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .firing-order {
+      .order-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        font-weight: 600;
+      }
+    }
+
+    .hole-id {
+      font-weight: 600;
+      color: #007bff;
+    }
+
+    .timing {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+    }
+  }
+}
+
+.sequence-visualization {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+
+  h4 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+  }
+
+  .sequence-timeline {
+    position: relative;
+    height: 60px;
+    background: #e9ecef;
+    border-radius: 4px;
+    margin: 20px 0;
+
+    .timeline-item {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+
+      .timeline-marker {
+        width: 24px;
+        height: 24px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+
+      .timeline-label {
+        font-size: 10px;
+        color: #6c757d;
+        text-align: center;
+      }
+    }
+  }
+}
+
+// Safety Checklist Tab
+.safety-header {
+  margin-bottom: 25px;
+
+  h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 20px;
+  }
+
+  .safety-warning {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border-left: 4px solid #dc3545;
+    margin: 0;
+
+    i {
+      margin-right: 8px;
+    }
+  }
+}
+
+.checklist-container {
+  margin-bottom: 30px;
+
+  .checklist-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+
+    &.completed {
+      background: #f8fff8;
+      border-color: #28a745;
+    }
+
+    &.required {
+      border-left: 4px solid #dc3545;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      cursor: pointer;
+      margin: 0;
+
+      input[type="checkbox"] {
+        display: none;
+      }
+
+      .checkmark {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #dee2e6;
+        border-radius: 4px;
+        margin-right: 12px;
+        position: relative;
+        transition: all 0.2s;
+
+        &::after {
+          content: '';
+          position: absolute;
+          left: 6px;
+          top: 2px;
+          width: 6px;
+          height: 10px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+      }
+
+      input:checked + .checkmark {
+        background: #28a745;
+        border-color: #28a745;
+
+        &::after {
+          opacity: 1;
+        }
+      }
+
+      .item-text {
+        flex: 1;
+        color: #2c3e50;
+        line-height: 1.4;
+      }
+
+      .required-badge {
+        background: #dc3545;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+    }
+  }
+}
+
+.safety-actions {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+
+  .safety-status {
+    margin-bottom: 20px;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+
+      &.ready {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      &.not-ready {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      i {
+        margin-right: 8px;
+        font-size: 18px;
+      }
+    }
+  }
+
+  .execute-blast-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+
+    &:hover:not(:disabled) {
+      background: #c82333;
+    }
+
+    &:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+
+    i {
+      margin-right: 8px;
+    }
+  }
+}
+
+// Tasks Tab
+.tasks-container {
+  .task-section {
+    margin-bottom: 40px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h3 {
+      margin: 0 0 20px 0;
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+
+      i {
+        margin-right: 10px;
+        color: #007bff;
+      }
+    }
+
+    .task-list {
+      .task-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+
+        &.status-completed {
+          background: #f8fff8;
+          border-color: #28a745;
+        }
+
+        &.status-in-progress {
+          background: #fff8e1;
+          border-color: #ffc107;
+        }
+
+        .task-info {
+          flex: 1;
+
+          .task-description {
+            display: block;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 5px;
+          }
+
+          .task-date {
+            font-size: 12px;
+            color: #6c757d;
+          }
+        }
+
+        .task-status {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+
+            &.status-completed {
+              background: #d4edda;
+              color: #155724;
+            }
+
+            &.status-in-progress {
+              background: #fff3cd;
+              color: #856404;
+            }
+
+            &.status-pending {
+              background: #f8d7da;
+              color: #721c24;
+            }
+          }
+
+          .task-action-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+
+            &:hover:not(:disabled) {
+              background: #218838;
+            }
+
+            &:disabled {
+              background: #6c757d;
+              cursor: not-allowed;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .site-details-container {
+    padding: 10px;
+  }
+
+  .tab-navigation {
+    flex-wrap: wrap;
+
+    .tab-button {
+      flex: 1 1 50%;
+      min-width: 120px;
+    }
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+
+  .drill-holes-table,
+  .sequence-table {
+    font-size: 12px;
+
+    th, td {
+      padding: 8px;
+    }
+  }
+
+  .task-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+
+    .task-status {
+      align-self: flex-end;
+    }
+  }
+}

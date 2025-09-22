@@ -311,8 +311,9 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   }
 
   navigateToSites(): void {
-    this.router.navigate(['/operator/my-project/sites']);
-  }
+-    this.router.navigate(['/operator/my-project/sites']);
++    this.router.navigate(['/operator/my-project'], { queryParams: { showSites: true } });
+   }
 
   navigateToSite(siteId: number): void {
     this.router.navigate(['/operator/my-project/sites', siteId, 'pattern-view']);
@@ -325,4 +326,4 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   trackActivity(index: number, activity: any): number {
     return activity.id;
   }
-} 
+}
