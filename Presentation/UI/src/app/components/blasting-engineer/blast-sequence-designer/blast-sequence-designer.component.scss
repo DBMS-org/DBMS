@@ -716,44 +716,76 @@
 
 
 
-// Canvas Container
+// Enhanced Canvas Container
 .canvas-container {
   flex: 1 1 auto;
   background: #ffffff;
-  border: 1px solid #e9ecef;
+  border: 2px solid #e9ecef;
   margin: 0;
   position: relative;
   overflow: hidden;
-  min-height: 350px; // Maintain good size for 2D work
-  height: auto; // Allow height to be flexible
+  min-height: 450px; // Increased from 350px for better usability
+  height: auto;
   width: 100%;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  // Enhanced visual feedback
+  &:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
   
   // Responsive sizing - maintain usable canvas size
   @media (max-height: 900px) {
-    min-height: 300px; // Still reasonable for smaller screens
+    min-height: 400px; // Increased from 300px
   }
   
   @media (max-height: 700px) {
-    min-height: 250px; // Smaller but still usable
+    min-height: 350px; // Increased from 250px
   }
   
   @media (max-height: 500px) {
-    min-height: 200px; // Minimum for very small screens
+    min-height: 300px; // Increased from 200px
   }
 
   &.connection-mode {
     cursor: crosshair;
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    
+    // Enhanced connection mode styling
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at center, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    
     // Ensure visibility in connection mode
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
     
-    // Don't reduce size in connection mode - maintain usability
-    min-height: 350px; // Keep same size in connection mode
+    // Maintain larger size in connection mode for better usability
+    min-height: 450px;
     
     @media (max-height: 700px) {
-      min-height: 250px; // Only reduce on very small screens
+      min-height: 350px;
     }
+  }
+
+  // Loading state
+  &.loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
   }
 
   // Ensure Konva canvas is properly sized and responsive
@@ -763,6 +795,50 @@
     height: 100% !important;
     max-width: 100%;
     max-height: 100%;
+    position: relative;
+    z-index: 2;
+  }
+
+  // Canvas overlay for hints and guidance
+  .canvas-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 3;
+    
+    .overlay-hint {
+      position: absolute;
+      background: rgba(102, 126, 234, 0.9);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      animation: fadeInOut 2s ease-in-out;
+    }
+  }
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -1579,5 +1655,394 @@ select:focus {
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+// Smart Hints System
+.smart-hint-container {
+  position: fixed;
+  top: 120px;
+  right: 2rem;
+  z-index: 1000;
+  max-width: 400px;
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.smart-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border-left: 4px solid #667eea;
+  position: relative;
+
+  &.priority-high {
+    border-left-color: #ef4444;
+    
+    .hint-icon .material-icons {
+      color: #ef4444;
+    }
+  }
+
+  &.priority-medium {
+    border-left-color: #f59e0b;
+    
+    .hint-icon .material-icons {
+      color: #f59e0b;
+    }
+  }
+
+  &.priority-low {
+    border-left-color: #10b981;
+    
+    .hint-icon .material-icons {
+      color: #10b981;
+    }
+  }
+
+  .hint-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .material-icons {
+      font-size: 1.5rem;
+      color: #667eea;
+    }
+  }
+
+  .hint-content {
+    flex: 1;
+
+    .hint-title {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .hint-message {
+      margin: 0 0 1rem 0;
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .hint-actions {
+      .hint-action-btn {
+        padding: 0.5rem 1rem;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #5a67d8;
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+
+  .hint-dismiss-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .material-icons {
+      font-size: 1rem;
+    }
+  }
+}
+
+// Wizard Overlay
+.wizard-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.wizard-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: scaleIn 0.3s ease-out;
+}
+
+.wizard-header {
+  padding: 2rem 2rem 1rem 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+    opacity: 0.9;
+  }
+}
+
+.wizard-content {
+  padding: 2rem;
+  text-align: center;
+}
+
+.wizard-step {
+  .step-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+
+    .step-number {
+      color: #667eea;
+    }
+  }
+
+  .step-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto;
+
+    .material-icons {
+      font-size: 2.5rem;
+      color: white;
+    }
+  }
+
+  .step-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .step-description {
+    margin: 0;
+    font-size: 1rem;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem 2rem 2rem;
+  border-top: 1px solid #e5e7eb;
+
+  .wizard-navigation {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .wizard-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.primary {
+      background: #667eea;
+      color: white;
+
+      &:hover {
+        background: #5a67d8;
+        transform: translateY(-1px);
+      }
+    }
+
+    &.secondary {
+      background: #f3f4f6;
+      color: #6b7280;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+}
+
+// Enhanced Status Bar Components
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-right: 1rem;
+
+  .progress-bar {
+    width: 120px;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+  }
+}
+
+.next-action-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  margin-right: 1rem;
+
+  .material-icons {
+    font-size: 1.1rem;
+    color: #667eea;
+  }
+
+  .action-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #667eea;
+  }
+}
+
+// Canvas Highlight Effect
+.canvas-container.highlight-hint {
+  animation: highlightPulse 2s ease-in-out;
+  border: 3px solid #667eea;
+  border-radius: 8px;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 20px rgba(102, 126, 234, 0);
+  }
+}
+
+// Additional Animations
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Mobile Responsive Updates
+@media (max-width: 768px) {
+  .smart-hint-container {
+    top: 80px;
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+  }
+
+  .wizard-container {
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
+
+  .progress-section {
+    .progress-bar {
+      width: 80px;
+    }
+  }
+
+  .next-action-section {
+    .action-text {
+      display: none;
+    }
   }
 }
