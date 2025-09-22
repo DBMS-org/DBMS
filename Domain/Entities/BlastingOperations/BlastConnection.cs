@@ -16,9 +16,6 @@ namespace Domain.Entities.BlastingOperations
         public int Delay { get; set; } // milliseconds
         public int Sequence { get; set; }
         
-        // Starting hole for blast simulation
-        public bool IsStartingHole { get; set; } = false;
-        
         // Project and Site context
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
@@ -69,4 +66,4 @@ namespace Domain.Entities.BlastingOperations
         NonElectric = 1,
         Electronic = 2
     }
-}
+} 

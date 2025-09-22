@@ -11,7 +11,7 @@ import {
   DetonatorInfo, 
   DetonatorType
 } from '../drilling-pattern-creator/models/drill-point.model';
-import { ConnectorType, BlastConnection, UpdateBlastConnectionRequest } from '../../../core/models/site-blasting.model';
+import { ConnectorType, BlastConnection } from '../../../core/models/site-blasting.model';
 import { DrillLocation } from '../../../core/models/drilling.model';
 
 // Local interface for export functionality
@@ -101,18 +101,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   // Site context
   private currentProjectId!: number;
   private currentSiteId!: number;
-
-  // Continuous connection throttling
-  private lastHoverTime = 0;
-  private hoverThrottleDelay = 100; // milliseconds
-  private lastHoveredHoleId: string | null = null;
-
-  // Context menu and starting hole functionality
-  public showContextMenu = false;
-  public contextMenuX = 0;
-  public contextMenuY = 0;
-  public contextMenuHole: any = null;
-  public startingHoleId: string | null = null;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -292,97 +280,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     this.cdr.markForCheck();
   }
 
-  // Context Menu Methods
-  private showDrillPointContextMenu(e: Konva.KonvaEventObject<MouseEvent>, drillPoint: any): void {
-    // Hide any existing context menu
-    this.hideContextMenu();
-    
-    // Get mouse position relative to the page
-    const stage = e.target.getStage();
-    const container = stage?.container();
-    if (!container) return;
-    
-    const containerRect = container.getBoundingClientRect();
-    this.contextMenuX = e.evt.clientX;
-    this.contextMenuY = e.evt.clientY;
-    this.contextMenuHole = drillPoint;
-    this.showContextMenu = true;
-    
-    this.cdr.detectChanges();
-  }
-
-  public hideContextMenu(): void {
-    this.showContextMenu = false;
-    this.contextMenuHole = null;
-    this.cdr.detectChanges();
-  }
-
-  public setAsStartingHole(hole: any): void {
-    if (!hole) return;
-    
-    // Clear previous starting hole
-    this.startingHoleId = hole.id;
-    
-    // Redraw drill points to update visual indicators
-    this.drawDrillPoints();
-    
-    // Save to backend
-    this.saveStartingHoleToBackend(hole.id);
-    
-    this.notification.showSuccess(`Hole ${hole.id} set as starting hole for blast simulation`);
-    this.hideContextMenu();
-  }
-
-  private saveStartingHoleToBackend(holeId: string): void {
-    // Update all connections to mark the starting hole
-    this.connections.forEach(connection => {
-      const wasStartingHole = connection.isStartingHole;
-      connection.isStartingHole = (connection.point1DrillPointId === holeId || connection.point2DrillPointId === holeId);
-      
-      // Only save if the status changed
-      if (wasStartingHole !== connection.isStartingHole) {
-        const updateRequest: UpdateBlastConnectionRequest = {
-          id: connection.id,
-          point1DrillPointId: connection.point1DrillPointId,
-          point2DrillPointId: connection.point2DrillPointId,
-          fromHoleId: connection.fromHoleId,
-          toHoleId: connection.toHoleId,
-          connectorType: connection.connectorType,
-          delay: connection.delay,
-          sequence: connection.sequence,
-          isStartingHole: connection.isStartingHole,
-          projectId: this.currentProjectId,
-          siteId: this.currentSiteId
-        };
-        
-        this.siteBlastingService.updateBlastConnection(connection.id, this.currentProjectId, this.currentSiteId, updateRequest).subscribe({
-          next: (response) => {
-            console.log('✅ Starting hole status updated for connection:', connection.id);
-          },
-          error: (error) => {
-            console.error('❌ Failed to update starting hole status:', error);
-            this.notification.showError('Failed to save starting hole to database');
-          }
-        });
-      }
-    });
-  }
-
-  public isStartingHole(holeId: string): boolean {
-    return this.startingHoleId === holeId;
-  }
-
-  // Click outside to hide context menu
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (this.showContextMenu) {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.context-menu')) {
-        this.hideContextMenu();
-      }
-    }
-  }
-
   // Helper method to map connector type from API numeric value to UI string
   private mapConnectorTypeFromApi(connectorType: number): ConnectorType {
     switch (connectorType) {
@@ -560,31 +457,20 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
         this.handlePan(e);
       } else if (this.isConnectionMode && this.selectedFromHole && this.temporaryLine) {
         this.updateTemporaryLine(e);
-        // Handle hover-based connection creation
-        this.handleConnectionHover(e);
       }
     });
 
-    // Right click for context menu or panning
+    // Right click for panning
     this.stage.on('mousedown', (e) => {
       if (e.evt.button === 2) { // Right mouse button
-        const clickedPoint = this.getClickedDrillPoint(e);
-        if (clickedPoint) {
-          // Show context menu for drill point
-          this.showDrillPointContextMenu(e, clickedPoint);
-        } else {
-          // Start panning if not clicking on a drill point
-          this.startPan(e);
-        }
+        this.startPan(e);
         e.cancelBubble = true;
       }
     });
 
     this.stage.on('mouseup', (e) => {
       if (e.evt.button === 2) { // Right mouse button
-        if (this.isPanning) {
-          this.endPan();
-        }
+        this.endPan();
       }
     });
 
@@ -614,65 +500,19 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     }
 
     if (!this.selectedFromHole) {
-      // First selection - start chain connection mode
+      // First selection
       this.selectedFromHole = clickedPoint;
       this.startTemporaryLine(clickedPoint);
       this.highlightPoint(clickedPoint, '#4CAF50');
-      this.notification.showSuccess('Chain connection started! Hover over holes to create connections. Click any hole to stop.');
-    } else {
-      // Any click after initial selection stops the chain connection process
+    } else if (clickedPoint.id !== this.selectedFromHole.id) {
+      // Second selection - create connection
+      this.selectedToHole = clickedPoint;
+      this.createConnection();
       this.cancelConnection();
-      this.notification.showSuccess('Chain connection stopped.');
+    } else {
+      // Same point clicked - cancel
+      this.cancelConnection();
     }
-  }
-
-  private handleConnectionHover(e: Konva.KonvaEventObject<MouseEvent>): void {
-    if (!this.selectedFromHole) return;
-    
-    const hoveredPoint = this.getClickedDrillPoint(e);
-    
-    if (!hoveredPoint || hoveredPoint.id === this.selectedFromHole.id) {
-      return;
-    }
-
-    // Throttling to prevent excessive connection creation
-    const currentTime = Date.now();
-    if (currentTime - this.lastHoverTime < this.hoverThrottleDelay) {
-      return;
-    }
-
-    // Skip if we're hovering over the same hole as before
-    if (this.lastHoveredHoleId === hoveredPoint.id) {
-      return;
-    }
-
-    this.lastHoverTime = currentTime;
-    this.lastHoveredHoleId = hoveredPoint.id;
-
-    // Check if connection already exists
-    const existingConnection = this.connections.find(conn =>
-      (conn.point1DrillPointId === this.selectedFromHole!.id && conn.point2DrillPointId === hoveredPoint.id) ||
-      (conn.point1DrillPointId === hoveredPoint.id && conn.point2DrillPointId === this.selectedFromHole!.id)
-    );
-
-    if (existingConnection) {
-      return; // Don't create duplicate connections
-    }
-
-    // Create connection on hover
-    this.selectedToHole = hoveredPoint;
-    this.createConnection(false); // Don't keep from hole selected
-    
-    // Make the hovered point the new starting point for chain connections
-    this.selectedFromHole = hoveredPoint;
-    this.selectedToHole = null;
-    
-    // Update visual feedback - highlight the new starting point
-    this.clearHighlights();
-    this.highlightPoint(hoveredPoint, '#4CAF50');
-    
-    // Start new temporary line from the new starting point
-    this.startTemporaryLine(hoveredPoint);
   }
 
   private handleSelectionClick(e: Konva.KonvaEventObject<MouseEvent>): void {
@@ -1039,7 +879,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     }
   }
 
-  private createConnection(keepFromHoleSelected: boolean = false): void {
+  private createConnection(): void {
     if (!this.selectedFromHole || !this.selectedToHole) {
       console.warn('Both from and to holes must be selected');
       this.notification.showError('Please select both drill points to create a connection');
@@ -1117,19 +957,8 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     // Update sequence counter
     this.currentSequence++;
 
-    // Reset selection conditionally
-    if (keepFromHoleSelected) {
-      // Only reset the target hole, keep the from hole selected for multiple connections
-      this.selectedToHole = null;
-      // Remove temporary line
-      if (this.temporaryLine) {
-        this.temporaryLine.destroy();
-        this.temporaryLine = null;
-      }
-    } else {
-      // Reset both selections (traditional behavior)
-      this.cancelConnection();
-    }
+    // Reset selection
+    this.cancelConnection();
 
     console.log('✅ Created connection:', newConnection);
     this.notification.showSuccess(`Connection created between points ${this.selectedFromHole?.id} and ${this.selectedToHole?.id}`);
@@ -1263,10 +1092,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       this.temporaryLine = null;
       this.connectionsLayer.draw();
     }
-    
-    // Reset hover tracking for continuous connections
-    this.lastHoveredHoleId = null;
-    this.lastHoverTime = 0;
     
     this.clearHighlights();
   }
@@ -1404,15 +1229,12 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
         pointId: point.id
       });
 
-      // Check if this is the starting hole
-      const isStarting = this.startingHoleId === point.id;
-      
       // Make circles larger and more visible
       const circle = new Konva.Circle({
         radius: 12, // Increased from 8 to 12
-        fill: isStarting ? '#4CAF50' : '#2196F3', // Green for starting hole
-        stroke: isStarting ? '#2E7D32' : '#1976D2', // Darker green border for starting hole
-        strokeWidth: isStarting ? 4 : 3, // Thicker border for starting hole
+        fill: '#2196F3',
+        stroke: '#1976D2',
+        strokeWidth: 3, // Increased from 2 to 3
         pointId: point.id
       });
 
@@ -1432,21 +1254,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
       pointGroup.add(circle);
       pointGroup.add(text);
-
-      // Add starting hole indicator (play icon)
-      if (isStarting) {
-        const startIcon = new Konva.Path({
-          data: 'M8 5v14l11-7z', // Play icon path
-          fill: 'white',
-          scale: { x: 0.8, y: 0.8 },
-          offsetX: 12,
-          offsetY: 12,
-          x: 18,
-          y: 12,
-          pointId: point.id
-        });
-        pointGroup.add(startIcon);
-      }
       this.pointsLayer.add(pointGroup);
       
       this.drillPointObjects.set(point.id, pointGroup);
@@ -1472,7 +1279,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     return result;
   }
 
-  // Clean up Konva stage resources
   private cleanup(): void {
     if (this.stage) {
       this.stage.destroy();
@@ -1904,7 +1710,6 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     return this.filteredConnections;
   }
 
-  // Filter and sort connections based on search term and sort criteria
   private updateFilteredConnections(): void {
     let filtered = [...this.connections];
 

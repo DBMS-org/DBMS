@@ -9,11 +9,17 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { MaintenanceReportService } from '../maintenance-reports/services/maintenance-report.service';
 import { OperatorMachine, ProblemReport } from '../maintenance-reports/models/maintenance-report.models';
 import { MachineReportDialogComponent } from './machine-report-dialog/machine-report-dialog.component';
+import { MaintenanceService } from '../../mechanical-engineer/maintenance/services/maintenance.service';
+import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maintenance.models';
 
 @Component({
   selector: 'app-my-machines',
@@ -28,7 +34,11 @@ import { MachineReportDialogComponent } from './machine-report-dialog/machine-re
     MatDividerModule,
     MatBadgeModule,
     MatChipsModule,
-    MatDialogModule
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
+    MatSnackBarModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -110,7 +120,37 @@ import { MachineReportDialogComponent } from './machine-report-dialog/machine-re
                 </div>
                 
                 <mat-divider class="section-divider"></mat-divider>
-                
+
+                <div class="usage-metrics">
+                  <h3>Usage Metrics</h3>
+                  @if (usageMetrics()) {
+                    <div class="usage-grid">
+                      <div class="usage-item">
+                        <div class="usage-label"><mat-icon>speed</mat-icon> Engine Hours</div>
+                        <div class="usage-value">{{ usageMetrics()?.engineHours | number }}</div>
+                      </div>
+                      <div class="usage-item">
+                        <div class="usage-label"><mat-icon>hourglass_empty</mat-icon> Idle Hours</div>
+                        <div class="usage-value">{{ usageMetrics()?.idleHours | number }}</div>
+                      </div>
+                      <div class="usage-item">
+                        <div class="usage-label"><mat-icon>build</mat-icon> Service Hours</div>
+                        <div class="usage-value">{{ usageMetrics()?.serviceHours | number }}</div>
+                      </div>
+                      <div class="usage-item">
+                        <div class="usage-label"><mat-icon>schedule</mat-icon> Remaining to Next Service</div>
+-                        <div class="usage-value">{{ remainingServiceHours() === null ? '—' : (remainingServiceHours()! | number) }} h</div>
++                        <div class="usage-value">{{ remainingServiceHours() === null ? '—' : ((remainingServiceHours()! | number) + ' h') }}</div>
+                       </div>
+                     </div>
+                     <div class="last-updated">Last updated: {{ formatDate(usageMetrics()!.lastUpdated) }}</div>
+                   } @else {
+                     <p class="no-usage">No usage data available.</p>
+                   }
+                 </div>
+
+                <mat-divider class="section-divider"></mat-divider>
+
                 <div class="machine-actions">
                   <h3>Machine Actions</h3>
                   <div class="action-buttons">
@@ -131,8 +171,47 @@ import { MachineReportDialogComponent } from './machine-report-dialog/machine-re
                       <mat-icon>history</mat-icon>
                       Maintenance History
                     </button>
+                    <button 
+                      mat-raised-button 
+                      color="primary"
+                      class="log-usage-btn"
+                      (click)="dialog.open(logUsageDialog)">
+                      <mat-icon>edit</mat-icon>
+                      Log Usage
+                    </button>
                   </div>
                 </div>
+
+                <ng-template #logUsageDialog>
+                  <h2 mat-dialog-title>Log Usage</h2>
+                  <mat-dialog-content class="log-usage-content">
+                    @if (usageMetrics()) {
+                      <div class="current-metrics">
+                        <p><strong>Current Engine Hours:</strong> {{ usageMetrics()?.engineHours | number }}</p>
+                        <p><strong>Current Idle Hours:</strong> {{ usageMetrics()?.idleHours | number }}</p>
+                        <p><strong>Current Service Hours:</strong> {{ usageMetrics()?.serviceHours | number }}</p>
+                      </div>
+                    }
+                    <form class="log-usage-form" (ngSubmit)="submitLogUsage()">
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Engine hours to add</mat-label>
+                        <input matInput type="number" [(ngModel)]="engineDelta" name="engineDelta" min="0" step="0.1" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Idle hours to add</mat-label>
+                        <input matInput type="number" [(ngModel)]="idleDelta" name="idleDelta" min="0" step="0.1" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Service hours to add</mat-label>
+                        <input matInput type="number" [(ngModel)]="serviceDelta" name="serviceDelta" min="0" step="0.1" />
+                      </mat-form-field>
+                      <div mat-dialog-actions align="end">
+                        <button mat-button mat-dialog-close type="button">Cancel</button>
+                        <button mat-flat-button color="primary" type="button" (click)="submitLogUsage()">Save</button>
+                      </div>
+                    </form>
+                  </mat-dialog-content>
+                </ng-template>
                 
                 <mat-divider class="section-divider"></mat-divider>
                 
@@ -239,6 +318,8 @@ import { MachineReportDialogComponent } from './machine-report-dialog/machine-re
 
     .machine-card {
       margin-bottom: 2rem;
+      overflow: hidden;
+      border-radius: 10px;
     }
 
     .machine-avatar {
@@ -254,6 +335,54 @@ import { MachineReportDialogComponent } from './machine-report-dialog/machine-re
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1.5rem;
       margin: 1.5rem 0;
+    }
+
+    /* Usage metrics layout */
+    .usage-metrics { margin: 1rem 0; }
+    .usage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    .usage-item {
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 0.75rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .usage-item:hover {
+      background: #fdfdfd;
+      border-color: #e6e6e6;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .usage-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #616161;
+      font-size: 0.875rem;
+    }
+    .usage-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #212121;
+    }
+    .last-updated { margin-top: 0.5rem; font-size: 0.8rem; color: #757575; }
+
+    /* Log usage dialog styles */
+    .log-usage-content { display: block; min-width: 320px; max-width: 560px; }
+    .log-usage-form .full-width { width: 100%; }
+    .current-metrics {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+    @media (min-width: 600px) {
+      .current-metrics { grid-template-columns: repeat(3, 1fr); }
     }
 
     .info-item {
@@ -326,8 +455,9 @@ import { MachineReportDialogComponent } from './machine-report-dialog/machine-re
       padding: 0.75rem 1rem;
       background-color: #f9f9f9;
       border-radius: 4px;
+      transition: transform 0.15s ease, background-color 0.2s ease;
     }
-
+    .report-item:hover { background-color: #f3f6ff; transform: translateY(-1px); }
     .report-item.status-reported {
       border-left-color: #2196f3;
     }
@@ -408,14 +538,11 @@ import { MachineReportDialogComponent } from './machine-report-dialog/machine-re
         gap: 1rem;
         align-items: flex-start;
       }
-
-      .machine-info-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .action-buttons {
-        flex-direction: column;
-      }
+      .page-header h1 { font-size: 1.5rem; }
+      .my-machines-container { padding: 0.75rem; }
+      .machine-info-grid { grid-template-columns: 1fr; }
+      .action-buttons { flex-direction: column; }
+      .action-buttons button { width: 100%; }
     }
   `]
 })
@@ -424,10 +551,17 @@ export class MyMachinesComponent implements OnInit {
   recentReports = signal<ProblemReport[]>([]);
   isLoading = signal(false);
   error = signal<string | null>(null);
+  usageMetrics = signal<UsageMetrics | null>(null);
+  serviceIntervalHours = signal<number>(500);
+  engineDelta = 0;
+  idleDelta = 0;
+  serviceDelta = 0;
   
   private maintenanceReportService = inject(MaintenanceReportService);
   private authService = inject(AuthService);
-  private dialog = inject(MatDialog);
+  public dialog = inject(MatDialog);
+  private maintenanceService = inject(MaintenanceService);
+  private snackBar = inject(MatSnackBar);
 
   activeReportsCount = computed(() => 
     this.recentReports().filter(report => 
@@ -436,6 +570,14 @@ export class MyMachinesComponent implements OnInit {
       report.status === 'IN_PROGRESS'
     ).length
   );
+
+  remainingServiceHours = computed(() => {
+    const metrics = this.usageMetrics();
+    if (!metrics) return null;
+    const interval = this.serviceIntervalHours();
+    const remainder = metrics.engineHours % interval;
+    return Math.max(interval - remainder, 0);
+  });
   
   ngOnInit() {
     this.loadData();
@@ -460,6 +602,9 @@ export class MyMachinesComponent implements OnInit {
     this.maintenanceReportService.getOperatorMachine(currentUser.id).subscribe({
       next: (machine) => {
         this.assignedMachine.set(machine);
+        if (machine?.id) {
+          this.loadUsageMetrics(machine.id);
+        }
         this.loadReports(currentUser.id);
       },
       error: (err) => {
@@ -469,6 +614,32 @@ export class MyMachinesComponent implements OnInit {
         } else {
           this.error.set('Failed to load your assigned machine. Please try again.');
         }
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  private loadUsageMetrics(machineId: string) {
+    this.maintenanceService.getUsageMetrics(machineId).subscribe({
+      next: (metricsArr) => {
+        const m = metricsArr && metricsArr.length ? metricsArr[0] : null;
+        if (m) this.usageMetrics.set(m);
+        // Try to load interval config (optional); fallback to default 500h if fails
+        this.maintenanceService.getServiceIntervalConfigs().subscribe({
+          next: (configs) => {
+            // Without machineType, keep default; could enhance by matching model keywords
+            const defaultInterval = 500;
+            this.serviceIntervalHours.set(defaultInterval);
+          },
+          error: () => {
+            this.serviceIntervalHours.set(500);
+          }
+        });
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load usage metrics:', err);
+        this.usageMetrics.set(null);
         this.isLoading.set(false);
       }
     });
@@ -490,6 +661,39 @@ export class MyMachinesComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+  
+  submitLogUsage() {
+    if (!this.assignedMachine()) return;
+    const m = this.usageMetrics();
+    const updated: UsageMetrics = {
+      machineId: this.assignedMachine()!.id,
+      engineHours: (m?.engineHours || 0) + (this.engineDelta || 0),
+      idleHours: (m?.idleHours || 0) + (this.idleDelta || 0),
+      serviceHours: (m?.serviceHours || 0) + (this.serviceDelta || 0),
+      lastUpdated: new Date()
+    };
+    this.usageMetrics.set(updated);
+
+    // persist locally
+    try {
+      const key = `machine_usage_logs_${updated.machineId}`;
+      const existing = localStorage.getItem(key);
+      const arr = existing ? JSON.parse(existing) : [];
+      arr.push({
+        engineDelta: this.engineDelta,
+        idleDelta: this.idleDelta,
+        serviceDelta: this.serviceDelta,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem(key, JSON.stringify(arr));
+    } catch {}
+
+    this.dialog.closeAll();
+    this.engineDelta = 0;
+    this.idleDelta = 0;
+    this.serviceDelta = 0;
+    this.snackBar.open('Usage logged successfully', 'OK', { duration: 2500 });
   }
   
   reportIssue() {

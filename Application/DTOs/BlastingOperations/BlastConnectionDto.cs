@@ -10,7 +10,6 @@ namespace Application.DTOs.BlastingOperations
         public ConnectorType ConnectorType { get; set; }
         public int Delay { get; set; }
         public int Sequence { get; set; }
-        public bool IsStartingHole { get; set; } = false;
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -32,4 +31,4 @@ namespace Application.DTOs.BlastingOperations
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
     }
-}
+} 

@@ -271,23 +271,6 @@
          [class.connection-mode]="isConnectionMode">
     </div>
 
-    <!-- Context Menu for Drill Points -->
-    <div class="context-menu" 
-         *ngIf="showContextMenu"
-         [style.left.px]="contextMenuX"
-         [style.top.px]="contextMenuY"
-         (click)="$event.stopPropagation()">
-      <div class="context-menu-item" 
-           (click)="setAsStartingHole(contextMenuHole)"
-           [class.disabled]="isStartingHole(contextMenuHole)">
-        <span class="material-icons">play_arrow</span>
-        <span class="menu-text">
-          {{ isStartingHole(contextMenuHole) ? 'Starting Hole' : 'Set as Starting Hole' }}
-        </span>
-        <span class="checkmark" *ngIf="isStartingHole(contextMenuHole)">✓</span>
-      </div>
-    </div>
-
         <!-- Connection Status -->
     <div class="status-bar">
       <div class="status-left">

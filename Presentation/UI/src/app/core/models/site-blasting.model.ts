@@ -48,8 +48,6 @@ export interface BlastConnection {
   connectorType: ConnectorType;
   delay: number;
   sequence: number;
-  // Starting hole for blast simulation
-  isStartingHole?: boolean;
   projectId: number;
   siteId: number;
   createdAt?: Date;
@@ -95,7 +93,6 @@ export interface UpdateBlastConnectionRequest {
   connectorType: ConnectorType;
   delay: number;
   sequence: number;
-  isStartingHole?: boolean;
   projectId: number;
   siteId: number;
 }

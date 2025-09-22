@@ -1,3 +1,7 @@
-Merge pull request #7 from SaadDev-01/master
+feat(blast-sequence): add starting hole functionality and UI improvements
 
-feat(operator-dashboard): add machine usage, status and operations pa…
+- Implement starting hole selection for blast simulation with context menu
+- Add visual indicators for starting holes in sequence designer
+- Improve connection creation with hover-based chain connections
+- Enhance UI layout with better responsive behavior
+- Update backend models and services to support starting hole feature
