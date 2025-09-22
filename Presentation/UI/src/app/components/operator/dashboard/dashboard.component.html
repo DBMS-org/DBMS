@@ -31,53 +31,7 @@
 </div>
 
 <div class="dashboard-content" *ngIf="!isLoading && !error">
-  <!-- Project Overview Section -->
-  <section class="project-overview" *ngIf="assignedProject; else noProject">
-    <div class="project-header">
-      <h2>Your Assigned Project</h2>
-      <button class="view-project-btn" (click)="navigateToProject()">
-        <i class="material-icons">visibility</i>
-        View Details
-      </button>
-    </div>
-    
-    <div class="project-card">
-      <div class="project-info">
-        <h3>{{ assignedProject.name }}</h3>
-        <div class="project-details">
-          <div class="detail-item">
-            <i class="material-icons">location_on</i>
-            <span><strong>Region:</strong> {{ assignedProject.region }}</span>
-          </div>
-          <div class="detail-item">
-            <i class="material-icons">flag</i>
-            <span><strong>Status:</strong> 
-              <span class="status-badge" [class]="'status-' + assignedProject.status.toLowerCase()">
-                {{ assignedProject.status }}
-              </span>
-            </span>
-          </div>
-          <div class="detail-item">
-            <i class="material-icons">event</i>
-            <span><strong>Duration:</strong> {{ formatDate(assignedProject.startDate) }} - {{ formatDate(assignedProject.endDate) }}</span>
-          </div>
-          <div class="detail-item">
-            <i class="material-icons">description</i>
-            <span><strong>Description:</strong> {{ assignedProject.description || 'No description available' }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="project-progress">
-        <div class="progress-circle">
-          <div class="progress-value">{{ stats.projectProgress }}%</div>
-          <div class="progress-label">Complete</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Dashboard Statistics -->
+  <!-- Dashboard Statistics (moved to top) -->
   <div class="dashboard-stats">
     <div class="stat-card">
       <div class="stat-icon">
@@ -124,6 +78,54 @@
     </div>
   </div>
 
+  <!-- Project Overview Section -->
+  <section class="project-overview" *ngIf="assignedProject; else noProject">
+    <div class="project-header">
+      <h2>My Assigned Project</h2>
+      <button class="view-project-btn" (click)="navigateToProject()">
+        <i class="material-icons">visibility</i>
+        View Details
+      </button>
+    </div>
+    
+    <div class="project-card">
+      <div class="project-info">
+        <h3>{{ assignedProject.name }}</h3>
+        <div class="project-details">
+          <div class="detail-item">
+            <i class="material-icons">location_on</i>
+            <span><strong>Region:</strong> {{ assignedProject.region }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="material-icons">flag</i>
+            <span><strong>Status:</strong> 
+              <span class="status-badge" [class]="'status-' + assignedProject.status.toLowerCase()">
+                {{ assignedProject.status }}
+              </span>
+            </span>
+          </div>
+          <div class="detail-item">
+            <i class="material-icons">event</i>
+            <span><strong>Duration:</strong> {{ formatDate(assignedProject.startDate) }} - {{ formatDate(assignedProject.endDate) }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="material-icons">description</i>
+            <span><strong>Description:</strong> {{ assignedProject.description || 'No description available' }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="project-progress">
+        <div class="progress-circle">
+          <div class="progress-value">{{ stats.projectProgress }}%</div>
+          <div class="progress-label">Complete</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- duplicate dashboard-stats removed -->
+
   <!-- System Metrics Panel -->
   <div class="system-metrics-panel">
     <h3>
@@ -164,41 +166,7 @@
     </div>
   </div>
 
-  <!-- Quick Actions Panel -->
-  <div class="quick-actions-panel">
-    <h3>
-      <i class="material-icons">dashboard</i>
-      Quick Actions
-    </h3>
-    <div class="action-cards">
-      <div class="action-card project-action" (click)="navigateToProject()">
-        <div class="action-icon">
-          <i class="material-icons">assignment</i>
-        </div>
-        <h4>View Project</h4>
-        <p>Access detailed project information and timeline</p>
-        <div class="action-status">{{ assignedProject?.name || 'No project' }}</div>
-      </div>
-      
-      <div class="action-card sites-action" (click)="navigateToSites()">
-        <div class="action-icon">
-          <i class="material-icons">location_city</i>
-        </div>
-        <h4>Project Sites</h4>
-        <p>View and manage all assigned project sites</p>
-        <div class="action-status">{{ stats.totalSites }} sites</div>
-      </div>
-
-      <div class="action-card patterns-action" *ngIf="stats.approvedPatterns > 0">
-        <div class="action-icon">
-          <i class="material-icons">grid_on</i>
-        </div>
-        <h4>Approved Patterns</h4>
-        <p>Review approved drilling patterns for execution</p>
-        <div class="action-status">{{ stats.approvedPatterns }} approved</div>
-      </div>
-    </div>
-  </div>
+  <!-- Quick Actions Panel removed -->
 
   <!-- Project Sites Overview -->
   <div class="sites-overview" *ngIf="projectSites.length > 0">
@@ -239,400 +207,7 @@
     </div>
   </div>
 
-  <!-- Operator Machine Usage & Status -->
-  <section class="usage-status-grid">
-    <!-- Daily Machine Usage Log -->
-    <div class="card usage-log">
-      <h3>
-        <i class="material-icons">timer</i>
-        Daily Machine Usage
-      </h3>
-
-      <div class="usage-form">
-        <div class="form-row">
-          <label for="logDate">Date</label>
-          <input id="logDate" type="date" />
-        </div>
-        <div class="form-row">
-          <label for="machine">Machine</label>
-          <select id="machine">
-            <option value="">Select machine</option>
-            <option>Machine A</option>
-            <option>Machine B</option>
-            <option>Machine C</option>
-          </select>
-        </div>
-
-        <div class="form-row hours-grid">
-          <div class="field">
-            <label for="engineHours">Engine Hours</label>
-            <input id="engineHours" #engine type="number" min="0" step="0.1" placeholder="e.g. 7.5" />
-          </div>
-          <div class="field">
-            <label for="idleHours">Idle Hours</label>
-            <input id="idleHours" #idle type="number" min="0" step="0.1" placeholder="e.g. 1.0" />
-          </div>
-          <div class="field">
-            <label for="serviceHours">Service Hours</label>
-            <input id="serviceHours" #service type="number" min="0" step="0.1" placeholder="e.g. 0.5" />
-          </div>
-          <div class="field">
-            <label for="sinceService">Hours Since Last Service</label>
-            <input id="sinceService" #since type="number" min="0" step="0.1" placeholder="e.g. 210" />
-          </div>
-        </div>
-
-        <!-- Auto-calculated remaining service hours (interval 250h) -->
-        <div class="calc-row">
-          <div class="calc-label">Remaining to service (of 250h):</div>
-          <div class="calc-value">
-            {{ 250 - ((since.valueAsNumber || 0) + (engine.valueAsNumber || 0) + (service.valueAsNumber || 0)) | number:'1.0-1' }} h
-          </div>
-        </div>
-        <div class="progress-row">
-          <progress [attr.max]="250" [attr.value]="(since.valueAsNumber||0) + (engine.valueAsNumber||0) + (service.valueAsNumber||0)"></progress>
-          <span class="progress-text">
-            Used: {{ ((since.valueAsNumber||0) + (engine.valueAsNumber||0) + (service.valueAsNumber||0)) | number:'1.0-1' }} h / 250 h
-          </span>
-        </div>
-
-        <div class="note">Note: Values are local-only in this demo UI. Backend submission will be wired later.</div>
-
-        <div class="actions">
-          <button class="primary" type="button" title="Save usage (UI only)">
-            <i class="material-icons">save</i>
-            Save Log
-          </button>
-        </div>
-
-        <!-- Threshold alerts (<= 20h remaining) -->
-        <div class="alert danger" *ngIf="250 - ((since.valueAsNumber || 0) + (engine.valueAsNumber || 0) + (service.valueAsNumber || 0)) <= 0">
-          <i class="material-icons">warning</i>
-          Service due now. Please schedule maintenance immediately.
-        </div>
-        <div class="alert warning" *ngIf="250 - ((since.valueAsNumber || 0) + (engine.valueAsNumber || 0) + (service.valueAsNumber || 0)) > 0 && 250 - ((since.valueAsNumber || 0) + (engine.valueAsNumber || 0) + (service.valueAsNumber || 0)) <= 20">
-          <i class="material-icons">notification_important</i>
-          Approaching service threshold. Plan service soon.
-        </div>
-      </div>
-    </div>
-
-    <!-- Real-time Machine Status -->
-    <div class="card machine-status">
-      <h3>
-        <i class="material-icons">speed</i>
-        Real-time Status
-      </h3>
-      <div class="status-control">
-        <label for="statusSelect">Set Status</label>
-        <select id="statusSelect" #statusSel>
-          <option value="Available">Available</option>
-          <option value="Running">Running</option>
-          <option value="Idle">Idle</option>
-          <option value="Under Maintenance">Under Maintenance</option>
-          <option value="Breakdown">Breakdown</option>
-        </select>
-      </div>
-      <div class="current-status">
-        <span>Current:</span>
-        <span class="status-badge" [ngClass]="{
-          'status-available': (statusSel.value || 'Available') === 'Available',
-          'status-running': statusSel.value === 'Running',
-          'status-idle': statusSel.value === 'Idle',
-          'status-maintenance': statusSel.value === 'Under Maintenance',
-          'status-breakdown': statusSel.value === 'Breakdown'
-        }">{{ statusSel.value || 'Available' }}</span>
-      </div>
-    </div>
-
-    <!-- Alerts Panel -->
-    <div class="card alerts-panel">
-      <h3>
-        <i class="material-icons">notifications_active</i>
-        Alerts
-      </h3>
-      <ul class="alert-list">
-        <li *ngIf="250 - ((since.valueAsNumber || 0) + (engine.valueAsNumber || 0) + (service.valueAsNumber || 0)) <= 20">
-          <i class="material-icons">build_circle</i>
-          Service window approaching based on logged usage.
-        </li>
-        <li>
-          <i class="material-icons">health_and_safety</i>
-          Ensure safety interlocks and PPE checks before operation.
-        </li>
-      </ul>
-    </div>
-
-    <!-- Assignment Notifications -->
-    <div class="card notifications-panel">
-      <h3>
-        <i class="material-icons">mark_email_unread</i>
-        Notifications
-      </h3>
-      <ul class="notifications">
-        <li>
-          <i class="material-icons">assignment_ind</i>
-          You have been assigned to Machine A by Machine Manager.
-          <span class="time">Just now</span>
-        </li>
-        <li>
-          <i class="material-icons">assignment_turned_in</i>
-          Assignment to Machine B updated by General Manager.
-          <span class="time">10 min ago</span>
-        </li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- Blast & Drilling Workspace -->
-  <section class="operations-workspace">
-    <div class="workspace-grid">
-      <div class="workspace-card" (click)="navigateToSites()" title="Access blast designs">
-        <div class="icon"><i class="material-icons">architecture</i></div>
-        <h4>Blast Designs</h4>
-        <p>View designs prepared by the Blasting Engineer.</p>
-      </div>
-      <div class="workspace-card" (click)="navigateToSites()" title="Execute drilling per plan">
-        <div class="icon"><i class="material-icons">precision_manufacturing</i></div>
-        <h4>Drilling Execution</h4>
-        <p>Execute drilling as per blast plan and imported survey data.</p>
-      </div>
-      <div class="workspace-card" (click)="navigateToSites()" title="Follow simulated sequence">
-        <div class="icon"><i class="material-icons">bolt</i></div>
-        <h4>Simulated Sequence</h4>
-        <p>Follow firing order and simulated blast sequence.</p>
-      </div>
-      <div class="workspace-card" (click)="navigateToSites()" title="Compliance checklist">
-        <div class="icon"><i class="material-icons">rule</i></div>
-        <h4>Compliance</h4>
-        <p>Validate burden, stemming, depth, and charge.</p>
-      </div>
-      <div class="workspace-card" (click)="navigateToSites()" title="Safety standards">
-        <div class="icon"><i class="material-icons">security</i></div>
-        <h4>Safety</h4>
-        <p>Follow all safety standards and compliance rules.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Operations Panels: Compliance, Safety, Sequence, Drilling Execution -->
-  <section class="operations-panels">
-    <!-- Compliance Validation Panel -->
-    <div class="panel card compliance-panel">
-      <h3>
-        <i class="material-icons">rule</i>
-        Compliance Validation
-      </h3>
-
-      <div class="form-grid">
-        <div class="metric">
-          <label for="burdenInput">Burden (m) <span class="hint">2.5 - 3.5</span></label>
-          <input id="burdenInput" #burden type="number" min="0" step="0.1" placeholder="e.g. 3.0" />
-          <span class="badge neutral" *ngIf="burden.value === ''">—</span>
-          <span class="badge" *ngIf="burden.value !== ''" [ngClass]="{ 'ok': (burden.valueAsNumber >= 2.5 && burden.valueAsNumber <= 3.5), 'bad': !(burden.valueAsNumber >= 2.5 && burden.valueAsNumber <= 3.5) }">
-            {{ (burden.valueAsNumber >= 2.5 && burden.valueAsNumber <= 3.5) ? 'OK' : 'Adjust' }}
-          </span>
-        </div>
-
-        <div class="metric">
-          <label for="stemmingInput">Stemming (m) <span class="hint">0.7 - 1.2</span></label>
-          <input id="stemmingInput" #stemming type="number" min="0" step="0.1" placeholder="e.g. 0.9" />
-          <span class="badge neutral" *ngIf="stemming.value === ''">—</span>
-          <span class="badge" *ngIf="stemming.value !== ''" [ngClass]="{ 'ok': (stemming.valueAsNumber >= 0.7 && stemming.valueAsNumber <= 1.2), 'bad': !(stemming.valueAsNumber >= 0.7 && stemming.valueAsNumber <= 1.2) }">
-            {{ (stemming.valueAsNumber >= 0.7 && stemming.valueAsNumber <= 1.2) ? 'OK' : 'Adjust' }}
-          </span>
-        </div>
-
-        <div class="metric">
-          <label for="depthInput">Hole Depth (m) <span class="hint">8 - 12</span></label>
-          <input id="depthInput" #depth type="number" min="0" step="0.1" placeholder="e.g. 10.0" />
-          <span class="badge neutral" *ngIf="depth.value === ''">—</span>
-          <span class="badge" *ngIf="depth.value !== ''" [ngClass]="{ 'ok': (depth.valueAsNumber >= 8 && depth.valueAsNumber <= 12), 'bad': !(depth.valueAsNumber >= 8 && depth.valueAsNumber <= 12) }">
-            {{ (depth.valueAsNumber >= 8 && depth.valueAsNumber <= 12) ? 'OK' : 'Adjust' }}
-          </span>
-        </div>
-
-        <div class="metric">
-          <label for="chargeInput">Charge (kg/hole) <span class="hint">5 - 25</span></label>
-          <input id="chargeInput" #charge type="number" min="0" step="0.1" placeholder="e.g. 18.0" />
-          <span class="badge neutral" *ngIf="charge.value === ''">—</span>
-          <span class="badge" *ngIf="charge.value !== ''" [ngClass]="{ 'ok': (charge.valueAsNumber >= 5 && charge.valueAsNumber <= 25), 'bad': !(charge.valueAsNumber >= 5 && charge.valueAsNumber <= 25) }">
-            {{ (charge.valueAsNumber >= 5 && charge.valueAsNumber <= 25) ? 'OK' : 'Adjust' }}
-          </span>
-        </div>
-      </div>
-
-      <div class="overall" *ngIf="burden.value!=='' && stemming.value!=='' && depth.value!=='' && charge.value!==''">
-        Overall compliance:
-        <span class="badge" [ngClass]="{ 'ok': (burden.valueAsNumber >= 2.5 && burden.valueAsNumber <= 3.5) && (stemming.valueAsNumber >= 0.7 && stemming.valueAsNumber <= 1.2) && (depth.valueAsNumber >= 8 && depth.valueAsNumber <= 12) && (charge.valueAsNumber >= 5 && charge.valueAsNumber <= 25), 'bad': !((burden.valueAsNumber >= 2.5 && burden.valueAsNumber <= 3.5) && (stemming.valueAsNumber >= 0.7 && stemming.valueAsNumber <= 1.2) && (depth.valueAsNumber >= 8 && depth.valueAsNumber <= 12) && (charge.valueAsNumber >= 5 && charge.valueAsNumber <= 25)) }">
-          {{ ((burden.valueAsNumber >= 2.5 && burden.valueAsNumber <= 3.5) && (stemming.valueAsNumber >= 0.7 && stemming.valueAsNumber <= 1.2) && (depth.valueAsNumber >= 8 && depth.valueAsNumber <= 12) && (charge.valueAsNumber >= 5 && charge.valueAsNumber <= 25)) ? 'PASS' : 'CHECK' }}
-        </span>
-      </div>
-      <div class="overall note" *ngIf="!(burden.value!=='' && stemming.value!=='' && depth.value!=='' && charge.value!=='' )">Enter values to evaluate compliance.</div>
-    </div>
-
-    <!-- Safety Checklist Panel -->
-    <div class="panel card safety-panel">
-      <h3>
-        <i class="material-icons">health_and_safety</i>
-        Safety Checklist
-      </h3>
-
-      <ul class="checklist">
-        <li><label><input type="checkbox" #ck1> PPE verified</label></li>
-        <li><label><input type="checkbox" #ck2> Interlocks functional</label></li>
-        <li><label><input type="checkbox" #ck3> Exclusion zone clear</label></li>
-        <li><label><input type="checkbox" #ck4> Environmental checks complete</label></li>
-        <li><label><input type="checkbox" #ck5> Pre-start inspection done</label></li>
-      </ul>
-
-      <div class="safety-status">
-        <span class="badge" [ngClass]="{ 'ok': ck1.checked && ck2.checked && ck3.checked && ck4.checked && ck5.checked, 'bad': !(ck1.checked && ck2.checked && ck3.checked && ck4.checked && ck5.checked) }">
-          {{ (ck1.checked && ck2.checked && ck3.checked && ck4.checked && ck5.checked) ? 'All checks complete' : 'Pending checks' }}
-        </span>
-        <button class="primary" [disabled]="!(ck1.checked && ck2.checked && ck3.checked && ck4.checked && ck5.checked)" title="Enabled after all checks">
-          <i class="material-icons">play_circle</i>
-          Start Operation
-        </button>
-      </div>
-    </div>
-
-    <!-- Blast Sequence Adherence Panel -->
-    <div class="panel card sequence-panel">
-      <h3>
-        <i class="material-icons">bolt</i>
-        Blast Sequence
-      </h3>
-
-      <div class="sequence-control">
-        <label for="seqStep">Current step</label>
-        <select id="seqStep" #seq>
-          <option value="1">1. Drill</option>
-          <option value="2">2. Load</option>
-          <option value="3">3. Stem</option>
-          <option value="4">4. Connect</option>
-          <option value="5">5. Fire</option>
-        </select>
-        <div class="next-action">
-          Next:
-          <strong>
-            {{ seq.value === '1' ? 'Load' : (seq.value === '2' ? 'Stem' : (seq.value === '3' ? 'Connect' : (seq.value === '4' ? 'Fire' : 'Complete'))) }}
-          </strong>
-        </div>
-      </div>
-
-      <ol class="sequence-steps">
-        <li [class.active]="seq.value==='1'">Drill</li>
-        <li [class.active]="seq.value==='2'">Load</li>
-        <li [class.active]="seq.value==='3'">Stem</li>
-        <li [class.active]="seq.value==='4'">Connect</li>
-        <li [class.active]="seq.value==='5'">Fire</li>
-      </ol>
-    </div>
-
-    <!-- Drilling Execution Panel -->
-    <div class="panel card drilling-execution-panel">
-      <h3>
-        <i class="material-icons">precision_manufacturing</i>
-        Drilling Execution
-      </h3>
-
-      <div class="form-grid">
-        <div class="metric">
-          <label for="holeNo">Hole #</label>
-          <input id="holeNo" type="number" min="1" placeholder="e.g. 42" #holeNo>
-        </div>
-        <div class="metric">
-          <label for="targetDepth">Target Depth (m)</label>
-          <input id="targetDepth" type="number" min="0" step="0.1" value="10.0" #targetDepth>
-        </div>
-        <div class="metric">
-          <label for="actualDepth">Actual Depth (m)</label>
-          <input id="actualDepth" type="number" min="0" step="0.1" placeholder="e.g. 9.9" #actualDepth>
-          <span class="badge neutral" *ngIf="actualDepth.value === ''">—</span>
-          <span class="badge" *ngIf="actualDepth.value !== ''" [ngClass]="{ 'ok': ((((actualDepth.valueAsNumber || 0) - (targetDepth.valueAsNumber || 0)) * ((actualDepth.valueAsNumber || 0) - (targetDepth.valueAsNumber || 0))) <= 0.04), 'bad': !((((actualDepth.valueAsNumber || 0) - (targetDepth.valueAsNumber || 0)) * ((actualDepth.valueAsNumber || 0) - (targetDepth.valueAsNumber || 0))) <= 0.04) }">
-            {{ ((((actualDepth.valueAsNumber || 0) - (targetDepth.valueAsNumber || 0)) * ((actualDepth.valueAsNumber || 0) - (targetDepth.valueAsNumber || 0))) <= 0.04) ? 'Within ±0.2m' : 'Adjust' }}
-          </span>
-        </div>
-        <div class="metric">
-          <label for="azimuth">Azimuth (°) <span class="hint">0 - 360</span></label>
-          <input id="azimuth" type="number" min="0" max="360" step="0.1" placeholder="e.g. 90" #azimuth>
-          <span class="badge neutral" *ngIf="azimuth.value === ''">—</span>
-          <span class="badge" *ngIf="azimuth.value !== ''" [ngClass]="{ 'ok': (azimuth.valueAsNumber >= 0 && azimuth.valueAsNumber <= 360), 'bad': !(azimuth.valueAsNumber >= 0 && azimuth.valueAsNumber <= 360) }">
-            {{ (azimuth.valueAsNumber >= 0 && azimuth.valueAsNumber <= 360) ? 'OK' : 'Adjust' }}
-          </span>
-        </div>
-        <div class="metric">
-          <label for="dip">Dip (°) <span class="hint">0 - 90</span></label>
-          <input id="dip" type="number" min="0" max="90" step="0.1" placeholder="e.g. 15" #dip>
-          <span class="badge neutral" *ngIf="dip.value === ''">—</span>
-          <span class="badge" *ngIf="dip.value !== ''" [ngClass]="{ 'ok': (dip.valueAsNumber >= 0 && dip.valueAsNumber <= 90), 'bad': !(dip.valueAsNumber >= 0 && dip.valueAsNumber <= 90) }">
-            {{ (dip.valueAsNumber >= 0 && dip.valueAsNumber <= 90) ? 'OK' : 'Adjust' }}
-          </span>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="secondary" type="button" title="UI only">
-          <i class="material-icons">playlist_add</i>
-          Record (UI)
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- User Profile Section -->
-  <div class="user-profile-section">
-    <h3>
-      <i class="material-icons">account_circle</i>
-      Operator Profile
-    </h3>
-    <div class="profile-card" *ngIf="currentUser">
-      <div class="profile-header">
-        <div class="profile-avatar">
-          <span class="avatar-initials">{{ getInitials() }}</span>
-        </div>
-        <div class="profile-main-info">
-          <h4>{{ currentUser.name }}</h4>
-          <p class="profile-email">{{ currentUser.email }}</p>
-          <div class="profile-role-badge">
-            <span class="role-badge">Operator</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="profile-details-grid">
-        <div class="profile-detail-item">
-          <div class="detail-label">Specialization:</div>
-          <div class="detail-value">Site Operations</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Operating Region:</div>
-          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Country:</div>
-          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Contact:</div>
-          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Status:</div>
-          <div class="detail-value">
-            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
-              {{ currentUser.status || 'ACTIVE' }}
-            </span>
-          </div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Data Sets:</div>
-          <div class="detail-value">{{ stats.totalSites }} sites managed</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- All sections below Project Sites Overview removed -->
 
 
 
