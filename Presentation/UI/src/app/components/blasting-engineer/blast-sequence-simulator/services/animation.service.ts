@@ -36,13 +36,13 @@ export class AnimationService {
     return this.animationFrame$.asObservable();
   }
 
-  startAnimation(state: SimulationState, connections: BlastConnection[]): void {
+  startAnimation(state: SimulationState, connections: BlastConnection[], drillPoints?: any[]): void {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
 
-    // Build propagation schedule based on connection topology
-    this.buildPropagationSchedule(connections);
+    // Build propagation schedule based on connection topology and starting hole location
+    this.buildPropagationSchedule(connections, drillPoints);
 
     // Maximum duration for stopping criteria
     this.totalDurationMs = Math.max(
@@ -114,29 +114,54 @@ export class AnimationService {
     }
   }
 
-  private buildPropagationSchedule(connections: BlastConnection[]): void {
+  private buildPropagationSchedule(connections: BlastConnection[], drillPoints?: any[]): void {
     this.holeStartTimes.clear();
     this.connectionStartTimes.clear();
 
-    // Determine holes that are never a toHoleId (no incoming connections)
-    const allToHoles = new Set(connections.map(c => c.point2DrillPointId));
-
     const queue: Array<{holeId: string, start: number}> = [];
-    connections.forEach(conn => {
-      if (!allToHoles.has(conn.point1DrillPointId) && !this.holeStartTimes.has(conn.point1DrillPointId)) {
-        this.holeStartTimes.set(conn.point1DrillPointId, 0);
-        queue.push({ holeId: conn.point1DrillPointId, start: 0 });
-      }
-    });
 
-    // Edge case: if every hole has incoming, choose the first connection's fromHole as root
-    if (queue.length === 0 && connections.length > 0) {
-      const root = connections[0].point1DrillPointId;
-      this.holeStartTimes.set(root, 0);
-      queue.push({ holeId: root, start: 0 });
+    // First priority: Find connections marked as starting holes (IsStartingHole = true)
+    const startingConnections = connections.filter(conn => (conn as any).isStartingHole === true);
+    
+    if (startingConnections.length > 0) {
+      // Use holes marked as starting holes - these represent the actual starting hole location
+      startingConnections.forEach(conn => {
+        // Get the actual starting hole ID from the connection
+        const startingHoleId = conn.point1DrillPointId;
+        
+        if (!this.holeStartTimes.has(startingHoleId)) {
+          this.holeStartTimes.set(startingHoleId, 0);
+          queue.push({ holeId: startingHoleId, start: 0 });
+          
+          // Log for debugging - starting from actual hole location
+          if (drillPoints) {
+            const startingPoint = drillPoints.find(p => p.id === startingHoleId);
+            if (startingPoint) {
+              console.log(`Starting simulation from hole ${startingHoleId} at coordinates (${startingPoint.x}, ${startingPoint.y})`);
+            }
+          }
+        }
+      });
+    } else {
+      // Fallback: Determine holes that are never a toHoleId (no incoming connections)
+      const allToHoles = new Set(connections.map(c => c.point2DrillPointId));
+
+      connections.forEach(conn => {
+        if (!allToHoles.has(conn.point1DrillPointId) && !this.holeStartTimes.has(conn.point1DrillPointId)) {
+          this.holeStartTimes.set(conn.point1DrillPointId, 0);
+          queue.push({ holeId: conn.point1DrillPointId, start: 0 });
+        }
+      });
+
+      // Edge case: if every hole has incoming, choose the first connection's fromHole as root
+      if (queue.length === 0 && connections.length > 0) {
+        const root = connections[0].point1DrillPointId;
+        this.holeStartTimes.set(root, 0);
+        queue.push({ holeId: root, start: 0 });
+      }
     }
 
-    // BFS/DFS propagation
+    // BFS/DFS propagation from the actual starting hole location
     while (queue.length > 0) {
       const { holeId, start } = queue.shift()!;
 
@@ -193,4 +218,4 @@ export class AnimationService {
       currentTime < effect.startTime + effect.duration
     );
   }
-} 
+}
