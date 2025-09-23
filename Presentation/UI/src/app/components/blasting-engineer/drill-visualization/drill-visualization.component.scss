@@ -47,6 +47,7 @@
     align-items: center;
         gap: 0.75rem;
         text-decoration: none;
+        -webkit-backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
 
         &:hover {
@@ -107,6 +108,7 @@
       padding: 0.75rem 1.5rem;
       border-radius: 50px;
       font-weight: 600;
+      -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
       border: 2px solid rgba(255, 255, 255, 0.3);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -414,6 +416,7 @@
 
           .stat-item {
             background: rgba(255, 255, 255, 0.95);
+            -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
@@ -457,6 +460,7 @@
           right: 1rem;
           transform: translateY(-50%);
           background: rgba(255, 255, 255, 0.95);
+          -webkit-backdrop-filter: blur(10px);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 16px;
@@ -526,6 +530,7 @@
           bottom: 1rem;
           right: 1rem;
           background: rgba(255, 255, 255, 0.95);
+          -webkit-backdrop-filter: blur(10px);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 16px;
@@ -563,6 +568,7 @@
               align-items: center;
               gap: 0.75rem;
               cursor: pointer;
+              -webkit-user-select: none;
               user-select: none;
 
               input[type="checkbox"] {
@@ -616,6 +622,7 @@
           right: 0;
           bottom: 0;
           background: rgba(26, 26, 46, 0.8);
+          -webkit-backdrop-filter: blur(5px);
           backdrop-filter: blur(5px);
           display: flex;
           align-items: center;
@@ -665,6 +672,7 @@
           align-items: center;
           gap: 0.5rem;
           font-family: 'Monaco', 'Courier New', monospace;
+          -webkit-backdrop-filter: blur(5px);
           backdrop-filter: blur(5px);
           border: 1px solid rgba(0, 255, 136, 0.3);
 
@@ -1147,4 +1155,51 @@
   &.success { background-color: #28a745; }
   &.error { background-color: #dc3545; }
   &.warning { background-color: #ffc107; }
+}
+
+/* Loading overlay for 3D visualization */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  border-radius: 15px;
+
+  .loading-content {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+
+    i {
+      font-size: 3rem;
+      color: #667eea;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    h3 {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+  }
 }
