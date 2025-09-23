@@ -1,0 +1,576 @@
+<div class="accessories-inventory">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <i class="fas fa-toolbox"></i>
+          Accessories Inventory
+        </h1>
+        <p class="page-subtitle">Manage machine accessories, parts, and consumables</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" (click)="exportInventory()" [disabled]="isLoading">
+          <i class="fas fa-download"></i>
+          Export
+        </button>
+        <button class="btn btn-primary" (click)="refreshInventory()" [disabled]="isRefreshing">
+          <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+          Refresh
+        </button>
+        <button class="btn btn-success" (click)="openAddAccessoryModal()">
+          <i class="fas fa-plus"></i>
+          Add Accessory
+        </button>
+      </div>
+    </div>
+    <div class="timestamp">
+      Last updated: {{ lastUpdated | date:'medium' }}
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ errorMessage }}
+    <button class="alert-close" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon available">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.totalAvailable }}</div>
+        <div class="stat-label">Available</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon low-stock">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.lowStock }}</div>
+        <div class="stat-label">Low Stock</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon out-of-stock">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.outOfStock }}</div>
+        <div class="stat-label">Out of Stock</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon total-value">
+        <i class="fas fa-dollar-sign"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">${{ statistics.totalValue | number:'1.0-0' }}</div>
+        <div class="stat-label">Total Value</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input 
+          type="text" 
+          placeholder="Search accessories..." 
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+          class="search-input">
+        <button *ngIf="searchTerm" class="clear-search" (click)="clearSearch()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="filter-group">
+        <select [(ngModel)]="selectedCategory" (change)="onCategoryFilterChange()" class="filter-select">
+          <option value="">All Categories</option>
+          <option *ngFor="let category of categoryOptions" [value]="category">{{ category }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()" class="filter-select">
+          <option value="">All Status</option>
+          <option value="available">Available</option>
+          <option value="low-stock">Low Stock</option>
+          <option value="out-of-stock">Out of Stock</option>
+          <option value="discontinued">Discontinued</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <select [(ngModel)]="selectedSupplier" (change)="onSupplierFilterChange()" class="filter-select">
+          <option value="">All Suppliers</option>
+          <option *ngFor="let supplier of supplierOptions" [value]="supplier">{{ supplier }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="active-filters" *ngIf="hasActiveFilters()">
+      <span class="filter-label">Active filters:</span>
+      <span class="filter-tag" *ngIf="searchTerm">
+        Search: "{{ searchTerm }}"
+        <button (click)="clearSearch()"><i class="fas fa-times"></i></button>
+      </span>
+      <span class="filter-tag" *ngIf="selectedCategory">
+        Category: {{ selectedCategory }}
+        <button (click)="selectedCategory = ''; onCategoryFilterChange()"><i class="fas fa-times"></i></button>
+      </span>
+      <span class="filter-tag" *ngIf="selectedStatus">
+        Status: {{ selectedStatus }}
+        <button (click)="selectedStatus = ''; onStatusFilterChange()"><i class="fas fa-times"></i></button>
+      </span>
+      <span class="filter-tag" *ngIf="selectedSupplier">
+        Supplier: {{ selectedSupplier }}
+        <button (click)="selectedSupplier = ''; onSupplierFilterChange()"><i class="fas fa-times"></i></button>
+      </span>
+      <button class="clear-all-filters" (click)="clearAllFilters()">
+        <i class="fas fa-times"></i> Clear All
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Loading accessories inventory...</p>
+    </div>
+  </div>
+
+  <!-- Accessories Table -->
+  <div class="table-container" *ngIf="!isLoading">
+    <table class="accessories-table">
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('name')">
+            Name
+            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'name' && sortDirection === 'asc'" 
+               [class.fa-sort-down]="sortField === 'name' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="sortable" (click)="sortBy('category')">
+            Category
+            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'category' && sortDirection === 'asc'" 
+               [class.fa-sort-down]="sortField === 'category' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="sortable" (click)="sortBy('partNumber')">
+            Part Number
+            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'partNumber' && sortDirection === 'asc'" 
+               [class.fa-sort-down]="sortField === 'partNumber' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="sortable" (click)="sortBy('quantity')">
+            Quantity
+            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'quantity' && sortDirection === 'asc'" 
+               [class.fa-sort-down]="sortField === 'quantity' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="sortable" (click)="sortBy('unitPrice')">
+            Unit Price
+            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'unitPrice' && sortDirection === 'asc'" 
+               [class.fa-sort-down]="sortField === 'unitPrice' && sortDirection === 'desc'"></i>
+          </th>
+          <th>Status</th>
+          <th class="sortable" (click)="sortBy('supplier')">
+            Supplier
+            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'supplier' && sortDirection === 'asc'" 
+               [class.fa-sort-down]="sortField === 'supplier' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="sortable" (click)="sortBy('lastUpdated')">
+            Last Updated
+            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'lastUpdated' && sortDirection === 'asc'" 
+               [class.fa-sort-down]="sortField === 'lastUpdated' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="actions-column">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let accessory of paginatedAccessories; trackBy: trackByAccessoryId" 
+            class="accessory-row" [class.low-stock-row]="accessory.quantity <= accessory.minStockLevel">
+          <td class="accessory-name">
+            <div class="name-cell">
+              <strong>{{ accessory.name }}</strong>
+              <small *ngIf="accessory.description">{{ accessory.description }}</small>
+            </div>
+          </td>
+          <td>
+            <span class="category-badge">{{ accessory.category }}</span>
+          </td>
+          <td class="part-number">{{ accessory.partNumber }}</td>
+          <td class="quantity-cell">
+            <div class="quantity-info">
+              <span class="current-quantity" [class.low-stock]="accessory.quantity <= accessory.minStockLevel">
+                {{ accessory.quantity }}
+              </span>
+              <span class="unit">{{ accessory.unit }}</span>
+              <small class="min-stock">Min: {{ accessory.minStockLevel }}</small>
+            </div>
+          </td>
+          <td class="price-cell">${{ accessory.unitPrice | number:'1.2-2' }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(accessory)">
+              {{ getStatusDisplay(accessory) }}
+            </span>
+          </td>
+          <td class="supplier-cell">{{ accessory.supplier }}</td>
+          <td class="date-cell">{{ accessory.lastUpdated | date:'short' }}</td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button class="btn-icon btn-primary" (click)="viewAccessoryDetails(accessory)" 
+                      title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn-icon btn-secondary" (click)="editAccessory(accessory)" 
+                      title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn-icon btn-warning" (click)="adjustStock(accessory)" 
+                      title="Adjust Stock">
+                <i class="fas fa-plus-minus"></i>
+              </button>
+              <button class="btn-icon btn-danger" (click)="deleteAccessory(accessory)" 
+                      title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredAccessories.length === 0">
+      <div class="empty-icon">
+        <i class="fas fa-toolbox"></i>
+      </div>
+      <h3>No Accessories Found</h3>
+      <p *ngIf="hasActiveFilters()">No accessories match your current filters. Try adjusting your search criteria.</p>
+      <p *ngIf="!hasActiveFilters()">No accessories have been added to the inventory yet.</p>
+      <button class="btn btn-primary" (click)="openAddAccessoryModal()" *ngIf="!hasActiveFilters()">
+        <i class="fas fa-plus"></i>
+        Add First Accessory
+      </button>
+      <button class="btn btn-secondary" (click)="clearAllFilters()" *ngIf="hasActiveFilters()">
+        <i class="fas fa-times"></i>
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="filteredAccessories.length > 0">
+    <div class="pagination-info">
+      Showing {{ getStartIndex() + 1 }} to {{ getEndIndex() }} of {{ filteredAccessories.length }} accessories
+    </div>
+    <div class="pagination-controls">
+      <button class="btn btn-sm" (click)="goToPage(currentPage - 1)" 
+              [disabled]="currentPage === 1">
+        <i class="fas fa-chevron-left"></i>
+        Previous
+      </button>
+      
+      <div class="page-numbers">
+        <button *ngFor="let page of getVisiblePages()" 
+                class="btn btn-sm page-btn" 
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+      
+      <button class="btn btn-sm" (click)="goToPage(currentPage + 1)" 
+              [disabled]="currentPage === totalPages">
+        Next
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    <div class="page-size-selector">
+      <label>Show:</label>
+      <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>per page</span>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Accessory Modal -->
+<div class="modal-overlay" *ngIf="showAccessoryModal" (click)="closeAccessoryModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isEditMode ? 'Edit Accessory' : 'Add New Accessory' }}</h3>
+      <button class="modal-close" (click)="closeAccessoryModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="accessory-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="accessoryName">Name *</label>
+            <input type="text" id="accessoryName" [(ngModel)]="accessoryForm.name" 
+                   name="name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="accessoryCategory">Category *</label>
+            <select id="accessoryCategory" [(ngModel)]="accessoryForm.category" 
+                    name="category" class="form-control" required>
+              <option value="">Select Category</option>
+              <option value="Engine Parts">Engine Parts</option>
+              <option value="Hydraulic Parts">Hydraulic Parts</option>
+              <option value="Electrical Components">Electrical Components</option>
+              <option value="Filters">Filters</option>
+              <option value="Belts & Hoses">Belts & Hoses</option>
+              <option value="Lubricants">Lubricants</option>
+              <option value="Safety Equipment">Safety Equipment</option>
+              <option value="Tools">Tools</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="partNumber">Part Number *</label>
+            <input type="text" id="partNumber" [(ngModel)]="accessoryForm.partNumber" 
+                   name="partNumber" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="supplier">Supplier *</label>
+            <input type="text" id="supplier" [(ngModel)]="accessoryForm.supplier" 
+                   name="supplier" class="form-control" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity">Current Quantity *</label>
+            <input type="number" id="quantity" [(ngModel)]="accessoryForm.quantity" 
+                   name="quantity" class="form-control" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="unit">Unit *</label>
+            <select id="unit" [(ngModel)]="accessoryForm.unit" 
+                    name="unit" class="form-control" required>
+              <option value="">Select Unit</option>
+              <option value="pcs">Pieces</option>
+              <option value="kg">Kilograms</option>
+              <option value="ltr">Liters</option>
+              <option value="m">Meters</option>
+              <option value="box">Box</option>
+              <option value="set">Set</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="minStockLevel">Minimum Stock Level *</label>
+            <input type="number" id="minStockLevel" [(ngModel)]="accessoryForm.minStockLevel" 
+                   name="minStockLevel" class="form-control" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="unitPrice">Unit Price ($) *</label>
+            <input type="number" id="unitPrice" [(ngModel)]="accessoryForm.unitPrice" 
+                   name="unitPrice" class="form-control" min="0" step="0.01" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" [(ngModel)]="accessoryForm.description" 
+                    name="description" class="form-control" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="location">Storage Location</label>
+          <input type="text" id="location" [(ngModel)]="accessoryForm.location" 
+                 name="location" class="form-control">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeAccessoryModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveAccessory()" [disabled]="!isAccessoryFormValid()">
+        {{ isEditMode ? 'Update' : 'Add' }} Accessory
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div class="modal-overlay" *ngIf="showStockModal" (click)="closeStockModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Adjust Stock - {{ selectedAccessory?.name }}</h3>
+      <button class="modal-close" (click)="closeStockModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="current-stock-info">
+        <p><strong>Current Stock:</strong> {{ selectedAccessory?.quantity }} {{ selectedAccessory?.unit }}</p>
+        <p><strong>Minimum Level:</strong> {{ selectedAccessory?.minStockLevel }} {{ selectedAccessory?.unit }}</p>
+      </div>
+      
+      <form class="stock-form">
+        <div class="form-group">
+          <label for="adjustmentType">Adjustment Type</label>
+          <select id="adjustmentType" [(ngModel)]="stockAdjustment.type" 
+                  name="type" class="form-control">
+            <option value="add">Add Stock</option>
+            <option value="remove">Remove Stock</option>
+            <option value="set">Set Exact Amount</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="adjustmentQuantity">
+            {{ stockAdjustment.type === 'set' ? 'New Quantity' : 'Quantity to ' + (stockAdjustment.type === 'add' ? 'Add' : 'Remove') }}
+          </label>
+          <input type="number" id="adjustmentQuantity" [(ngModel)]="stockAdjustment.quantity" 
+                 name="quantity" class="form-control" min="0" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="adjustmentReason">Reason</label>
+          <select id="adjustmentReason" [(ngModel)]="stockAdjustment.reason" 
+                  name="reason" class="form-control">
+            <option value="purchase">New Purchase</option>
+            <option value="usage">Used in Maintenance</option>
+            <option value="damaged">Damaged/Defective</option>
+            <option value="lost">Lost/Missing</option>
+            <option value="returned">Returned to Supplier</option>
+            <option value="correction">Inventory Correction</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="adjustmentNotes">Notes</label>
+          <textarea id="adjustmentNotes" [(ngModel)]="stockAdjustment.notes" 
+                    name="notes" class="form-control" rows="3"></textarea>
+        </div>
+        
+        <div class="adjustment-preview" *ngIf="stockAdjustment.quantity > 0">
+          <p><strong>New Stock Level:</strong> {{ calculateNewStock() }} {{ selectedAccessory?.unit }}</p>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeStockModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="applyStockAdjustment()" 
+              [disabled]="!stockAdjustment.quantity || stockAdjustment.quantity <= 0">
+        Apply Adjustment
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Accessory Details Modal -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ selectedAccessory?.name }} - Details</h3>
+      <button class="modal-close" (click)="closeDetailsModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="details-grid" *ngIf="selectedAccessory">
+        <div class="detail-section">
+          <h4>Basic Information</h4>
+          <div class="detail-row">
+            <span class="label">Name:</span>
+            <span class="value">{{ selectedAccessory.name }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Category:</span>
+            <span class="value">{{ selectedAccessory.category }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Part Number:</span>
+            <span class="value">{{ selectedAccessory.partNumber }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Description:</span>
+            <span class="value">{{ selectedAccessory.description || 'N/A' }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Stock Information</h4>
+          <div class="detail-row">
+            <span class="label">Current Quantity:</span>
+            <span class="value">{{ selectedAccessory.quantity }} {{ selectedAccessory.unit }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Minimum Stock Level:</span>
+            <span class="value">{{ selectedAccessory.minStockLevel }} {{ selectedAccessory.unit }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Unit Price:</span>
+            <span class="value">${{ selectedAccessory.unitPrice | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Total Value:</span>
+            <span class="value">${{ (selectedAccessory.quantity * selectedAccessory.unitPrice) | number:'1.2-2' }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Supplier Information</h4>
+          <div class="detail-row">
+            <span class="label">Supplier:</span>
+            <span class="value">{{ selectedAccessory.supplier }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Storage Location:</span>
+            <span class="value">{{ selectedAccessory.location || 'Not specified' }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Status & Dates</h4>
+          <div class="detail-row">
+            <span class="label">Status:</span>
+            <span class="value">
+              <span class="status-badge" [ngClass]="getStatusClass(selectedAccessory)">
+                {{ getStatusDisplay(selectedAccessory) }}
+              </span>
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Last Updated:</span>
+            <span class="value">{{ selectedAccessory.lastUpdated | date:'full' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Created:</span>
+            <span class="value">{{ selectedAccessory.createdAt | date:'full' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+      <button class="btn btn-primary" (click)="editAccessory(selectedAccessory!)">
+        <i class="fas fa-edit"></i>
+        Edit Accessory
+      </button>
+    </div>
+  </div>
+</div>
