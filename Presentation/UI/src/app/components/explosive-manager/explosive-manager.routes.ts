@@ -10,7 +10,6 @@ import { EmulsionInventoryComponent } from './inventory/emulsion-inventory/emuls
 import { EmulsionAddComponent } from './inventory/emulsion-inventory/emulsion-add/emulsion-add.component';
 import { EmulsionEditComponent } from './inventory/emulsion-inventory/emulsion-edit/emulsion-edit.component';
 import { RequestsComponent } from './requests/requests.component';
-import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 
 export const EXPLOSIVE_MANAGER_ROUTES: Routes = [
     {
@@ -19,7 +18,6 @@ export const EXPLOSIVE_MANAGER_ROUTES: Routes = [
         children: [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: ExplosiveManagerDashboardComponent },
-            { path: 'profile', component: UserProfileComponent },
             { path: 'stores', component: StoresComponent },
             { path: 'inventory', component: InventoryComponent },
             { path: 'inventory/anfo', component: AnfoInventoryComponent },

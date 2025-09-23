@@ -7,7 +7,6 @@ import { MaintenanceCalendarComponent } from './maintenance/maintenance-calendar
 import { MaintenanceJobsComponent } from './maintenance/maintenance-jobs/maintenance-jobs.component';
 import { MaintenanceAnalyticsComponent } from './maintenance/maintenance-analytics/maintenance-analytics.component';
 import { MaintenanceSettingsComponent } from './maintenance/maintenance-settings/maintenance-settings.component';
-import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 
 export const MECHANICAL_ENGINEER_ROUTES: Routes = [
     {
@@ -16,7 +15,6 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
         children: [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: MechanicalEngineerDashboardComponent },
-            { path: 'profile', component: UserProfileComponent },
             { 
                 path: 'maintenance', 
                 component: MaintenanceComponent,
@@ -38,4 +36,4 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
             { path: 'settings', component: MechanicalEngineerDashboardComponent }
         ]
     }
-];
+]; 

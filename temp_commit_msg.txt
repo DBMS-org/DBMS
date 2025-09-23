@@ -1,6 +1,1 @@
-feat(user-profile): add profile navigation and components for all roles
-
-Implement user profile navigation across all role-specific navbars with click handlers
-Add user profile components for each role with consistent styling and functionality
-Update routing configurations to include profile routes for all roles
-Add VS Code configuration files for build and debug tasks
+Merge branch 'master' of https://github.com/DBMS-org/DBMS

@@ -13,7 +13,6 @@ import { AddSiteComponent } from './project-management/add-site/add-site.compone
 import { SiteDashboardComponent } from './project-management/site-dashboard/site-dashboard.component';
 import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/view-sequence-simulator/view-sequence-simulator.component';
 import { ProposalHistoryComponent } from './proposal-history/proposal-history.component';
-import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 
 export const BLASTING_ENGINEER_ROUTES: Routes = [
     {
@@ -22,7 +21,6 @@ export const BLASTING_ENGINEER_ROUTES: Routes = [
         children: [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: BlastingEngineerDashboardComponent },
-            { path: 'profile', component: UserProfileComponent },
             { path: 'proposal-history', component: ProposalHistoryComponent },
             { path: 'csv-upload', component: CsvUploadComponent },
             { path: 'drilling-pattern', component: DrillingPatternCreatorComponent },

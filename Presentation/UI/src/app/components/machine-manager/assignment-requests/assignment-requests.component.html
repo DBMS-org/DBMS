@@ -1,1 +1,519 @@
-<p>assignment-requests works!</p>
+<div class="assignment-requests-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">Machine Assignment Requests</h2>
+    <div class="header-actions">
+      <button 
+        class="btn btn-outline-secondary"
+        (click)="refreshRequests()"
+        [disabled]="isLoading">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  @if (error) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="material-icons">error</i>
+      {{ error }}
+      <button type="button" class="btn-close" (click)="error = null"></button>
+    </div>
+  }
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card pending">
+      <div class="stat-icon">
+        <i class="material-icons">pending_actions</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.pending }}</h3>
+        <p>Pending Requests</p>
+      </div>
+    </div>
+    <div class="stat-card approved">
+      <div class="stat-icon">
+        <i class="material-icons">check_circle</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.approved }}</h3>
+        <p>Approved Today</p>
+      </div>
+    </div>
+    <div class="stat-card rejected">
+      <div class="stat-icon">
+        <i class="material-icons">cancel</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.rejected }}</h3>
+        <p>Rejected Today</p>
+      </div>
+    </div>
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <i class="material-icons">assignment</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.total }}</h3>
+        <p>Total Requests</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label for="statusFilter">Status:</label>
+      <select 
+        id="statusFilter"
+        class="form-select"
+        [(ngModel)]="selectedStatus"
+        (change)="applyFilters()">
+        <option value="ALL">All Status</option>
+        <option value="PENDING">Pending</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label for="urgencyFilter">Urgency:</label>
+      <select 
+        id="urgencyFilter"
+        class="form-select"
+        [(ngModel)]="selectedUrgency"
+        (change)="applyFilters()">
+        <option value="ALL">All Urgency</option>
+        <option value="LOW">Low</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option>
+        <option value="URGENT">Urgent</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="machineTypeFilter">Machine Type:</label>
+      <select 
+        id="machineTypeFilter"
+        class="form-select"
+        [(ngModel)]="selectedMachineType"
+        (change)="applyFilters()">
+        <option value="ALL">All Types</option>
+        <option value="EXCAVATOR">Excavator</option>
+        <option value="BULLDOZER">Bulldozer</option>
+        <option value="LOADER">Loader</option>
+        <option value="DUMP_TRUCK">Dump Truck</option>
+        <option value="DRILL_RIG">Drill Rig</option>
+        <option value="CRANE">Crane</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Loading assignment requests...</p>
+    </div>
+  }
+
+  <!-- Requests Table -->
+  @if (!isLoading && filteredRequests.length > 0) {
+    <div class="requests-table-container">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Requester</th>
+            <th>Project</th>
+            <th>Machine Type</th>
+            <th>Quantity</th>
+            <th>Urgency</th>
+            <th>Status</th>
+            <th>Requested Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let request of filteredRequests" class="request-row">
+            <td class="request-id">
+              <span class="id-badge">{{ request.id }}</span>
+            </td>
+            <td class="requester-info">
+              <div class="requester-details">
+                <span class="name">{{ request.requesterName }}</span>
+                <small class="email">{{ request.requesterEmail }}</small>
+              </div>
+            </td>
+            <td class="project-info">
+              <div class="project-details">
+                <span class="project-name">{{ request.projectName }}</span>
+                <small class="project-id">ID: {{ request.projectId }}</small>
+              </div>
+            </td>
+            <td class="machine-type">
+              <span class="type-badge">{{ request.machineType }}</span>
+            </td>
+            <td class="quantity">
+              <span class="quantity-badge">{{ request.quantity }}</span>
+            </td>
+            <td class="urgency">
+              <span class="urgency-badge" [ngClass]="getUrgencyClass(request.urgency)">
+                {{ request.urgency }}
+              </span>
+            </td>
+            <td class="status">
+              <span class="status-badge" [ngClass]="getStatusClass(request.status)">
+                {{ request.status }}
+              </span>
+            </td>
+            <td class="requested-date">
+              {{ formatDate(request.requestedAt) }}
+            </td>
+            <td class="actions">
+              <div class="action-buttons">
+                <button 
+                  class="btn btn-sm btn-info action-btn" 
+                  (click)="viewRequestDetails(request)"
+                  title="View Details">
+                  <i class="material-icons">visibility</i>
+                </button>
+                @if (request.status === 'PENDING') {
+                  <button 
+                    class="btn btn-sm btn-success action-btn" 
+                    (click)="approveRequest(request)"
+                    title="Approve Request">
+                    <i class="material-icons">check</i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-danger action-btn" 
+                    (click)="rejectRequest(request)"
+                    title="Reject Request">
+                    <i class="material-icons">close</i>
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredRequests.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="material-icons">assignment</i>
+      </div>
+      <h3>No Assignment Requests</h3>
+      <p>There are no machine assignment requests matching your current filters.</p>
+    </div>
+  }
+</div>
+
+<!-- Request Details Modal -->
+<div
+  class="modal fade"
+  id="requestDetailsModal"
+  tabindex="-1"
+  aria-labelledby="requestDetailsModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="requestDetailsModalLabel">
+          Request Details
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        @if (selectedRequest) {
+        <div class="details-grid">
+          <div class="detail-item">
+            <label>Request ID:</label>
+            <span>{{ selectedRequest.id }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Requester:</label>
+            <span
+              >{{ selectedRequest.requesterName }} ({{
+                selectedRequest.requesterEmail
+              }})</span
+            >
+          </div>
+          <div class="detail-item">
+            <label>Project:</label>
+            <span
+              >{{ selectedRequest.projectName }} (ID:
+              {{ selectedRequest.projectId }})</span
+            >
+          </div>
+          <div class="detail-item">
+            <label>Machine Type:</label>
+            <span>{{ selectedRequest.machineType }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Quantity:</label>
+            <span>{{ selectedRequest.quantity }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Urgency:</label>
+            <span
+              class="urgency-badge"
+              [ngClass]="getUrgencyClass(selectedRequest.urgency)"
+            >
+              {{ selectedRequest.urgency }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Status:</label>
+            <span
+              class="status-badge"
+              [ngClass]="getStatusClass(selectedRequest.status)"
+            >
+              {{ selectedRequest.status }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Requested Date:</label>
+            <span>{{ formatDate(selectedRequest.requestedAt) }}</span>
+          </div>
+          @if (selectedRequest.description) {
+          <div class="detail-item full-width">
+            <label>Description:</label>
+            <p class="description">{{ selectedRequest.description }}</p>
+          </div>
+          } @if (selectedRequest.rejectionReason) {
+          <div class="detail-item full-width">
+            <label>Rejection Reason:</label>
+            <p class="rejection-reason">
+              {{ selectedRequest.rejectionReason }}
+            </p>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      <div class="modal-footer">
+        @if (selectedRequest?.status === 'PENDING') {
+        <button
+          class="btn btn-success"
+          (click)="selectedRequest && approveRequest(selectedRequest)"
+          data-bs-toggle="modal"
+          data-bs-target="#approveRequestModal"
+        >
+          <i class="material-icons">check</i>
+          Approve Request
+        </button>
+        <button
+          class="btn btn-danger"
+          (click)="selectedRequest && rejectRequest(selectedRequest)"
+          data-bs-toggle="modal"
+          data-bs-target="#rejectRequestModal"
+        >
+          <i class="material-icons">close</i>
+          Reject Request
+        </button>
+        }
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Approve Request Modal -->
+<div
+  class="modal fade"
+  id="approveRequestModal"
+  tabindex="-1"
+  aria-labelledby="approveRequestModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="approveRequestModalLabel">
+          Approve Assignment Request
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        @if (requestToApprove) {
+        <div class="request-summary">
+          <h4>Request Summary</h4>
+          <p><strong>Requester:</strong> {{ requestToApprove.requesterName }}</p>
+          <p><strong>Project:</strong> {{ requestToApprove.projectName }}</p>
+          <p><strong>Machine Type:</strong> {{ requestToApprove.machineType }}</p>
+          <p><strong>Quantity:</strong> {{ requestToApprove.quantity }}</p>
+        </div>
+
+        <div class="machine-selection">
+          <h4>Select Machines to Assign</h4>
+          <div class="available-machines">
+            @for (machine of
+            getAvailableMachinesForType(requestToApprove.machineType); track
+            machine.id) {
+            <div class="machine-option">
+              <input
+                type="checkbox"
+                [id]="'machine-' + machine.id"
+                [checked]="isMachineSelected(machine.id)"
+                (change)="toggleMachineSelection(machine.id)"
+                [disabled]="
+                  !isMachineSelected(machine.id) &&
+                  selectedMachinesForAssignment.length >=
+                    requestToApprove.quantity
+                "
+              />
+              <label [for]="'machine-' + machine.id" class="machine-label">
+                <div class="machine-info">
+                  <span class="machine-name">{{ machine.name }}</span>
+                  <span class="machine-details"
+                    >{{ machine.model }} - {{ machine.serialNumber }}</span
+                  >
+                  <span class="machine-location"
+                    >Location: {{ machine.currentLocation || "N/A" }}</span
+                  >
+                </div>
+              </label>
+            </div>
+            } @if
+            (getAvailableMachinesForType(requestToApprove.machineType).length
+            === 0) {
+            <div class="no-machines-available">
+              <p>
+                No available machines of type
+                {{ requestToApprove.machineType }} found.
+              </p>
+            </div>
+            }
+          </div>
+        </div>
+
+        <div class="approval-notes">
+          <label for="approvalNotes">Approval Notes (Optional):</label>
+          <textarea
+            id="approvalNotes"
+            class="form-control"
+            [(ngModel)]="approvalNotes"
+            rows="3"
+            placeholder="Add any notes about this approval..."
+          ></textarea>
+        </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button
+          class="btn btn-success"
+          (click)="confirmApproval()"
+          [disabled]="selectedMachinesForAssignment.length === 0 || isProcessing"
+        >
+          @if (isProcessing) {
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          }
+          <i class="material-icons">check</i>
+          Confirm Approval
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          [disabled]="isProcessing"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Request Modal -->
+<div
+  class="modal fade"
+  id="rejectRequestModal"
+  tabindex="-1"
+  aria-labelledby="rejectRequestModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="rejectRequestModalLabel">
+          Reject Assignment Request
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        @if (requestToReject) {
+        <div class="request-summary">
+          <h4>Request Summary</h4>
+          <p><strong>Requester:</strong> {{ requestToReject.requesterName }}</p>
+          <p><strong>Project:</strong> {{ requestToReject.projectName }}</p>
+          <p><strong>Machine Type:</strong> {{ requestToReject.machineType }}</p>
+          <p><strong>Quantity:</strong> {{ requestToReject.quantity }}</p>
+        </div>
+
+        <div class="rejection-reason">
+          <label for="rejectionReason">Rejection Reason (Required):</label>
+          <textarea
+            id="rejectionReason"
+            class="form-control"
+            [(ngModel)]="rejectionReason"
+            rows="4"
+            placeholder="Please provide a reason for rejecting this request..."
+            required
+          ></textarea>
+        </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button
+          class="btn btn-danger"
+          (click)="confirmRejection()"
+          [disabled]="!rejectionReason.trim() || isProcessing"
+        >
+          @if (isProcessing) {
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          }
+          <i class="material-icons">close</i>
+          Confirm Rejection
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          [disabled]="isProcessing"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

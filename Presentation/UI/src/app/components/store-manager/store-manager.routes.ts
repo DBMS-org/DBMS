@@ -4,7 +4,6 @@ import { DashboardComponent as StoreManagerDashboardComponent } from './dashboar
 import { AddStockComponent } from './add-stock/add-stock.component';
 import { RequestHistoryComponent } from './request-history/request-history.component';
 import { BlastingEngineerRequestsComponent } from './blasting-engineer-requests/blasting-engineer-requests.component';
-import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 
 export const STORE_MANAGER_ROUTES: Routes = [
     {
@@ -13,7 +12,6 @@ export const STORE_MANAGER_ROUTES: Routes = [
         children: [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: StoreManagerDashboardComponent },
-            { path: 'profile', component: UserProfileComponent },
             { path: 'add-stock', component: AddStockComponent },
             { path: 'request-history', component: RequestHistoryComponent },
             { path: 'blasting-engineer-requests', component: BlastingEngineerRequestsComponent },

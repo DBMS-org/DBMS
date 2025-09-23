@@ -12,7 +12,6 @@ import { ProjectSitesComponent } from './project-management/project-sites/projec
 import { MachineInventoryComponent } from './machine-inventory/machine-inventory.component';
 import { MachineAssignmentsComponent } from './machine-assignments/machine-assignments.component';
 import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/view-sequence-simulator/view-sequence-simulator.component';
-import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 
 export const ADMIN_ROUTES: Routes = [
     {
@@ -21,7 +20,6 @@ export const ADMIN_ROUTES: Routes = [
         children: [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: DashboardComponent },
-            { path: 'profile', component: UserProfileComponent },
             { path: 'users', component: UsersComponent },
             { path: 'users/:id', component: UserDetailsComponent },
             { path: 'users/:id/edit', component: EditUserComponent },
@@ -35,4 +33,4 @@ export const ADMIN_ROUTES: Routes = [
             { path: 'machine-assignments', component: MachineAssignmentsComponent }
         ]
     }
-];
+]; 
