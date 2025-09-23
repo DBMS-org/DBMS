@@ -122,6 +122,17 @@
         }
       </select>
       
+      <select 
+        class="form-select" 
+        [(ngModel)]="selectedProject" 
+        (ngModelChange)="onProjectFilterChange()">
+        <option value="ALL">All Projects</option>
+        <option value="UNASSIGNED">Unassigned</option>
+        @for (project of projectOptions; track project) {
+          <option [value]="project">{{ project }}</option>
+        }
+      </select>
+      
       <button class="btn btn-secondary filter-btn" (click)="applyFilters()">
         Filter
       </button>
