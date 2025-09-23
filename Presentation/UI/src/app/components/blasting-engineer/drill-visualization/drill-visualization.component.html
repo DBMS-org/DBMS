@@ -132,7 +132,7 @@
     </div>
 
     <!-- 3D Visualization Section -->
-    <div *ngIf="show3DView && isDataLoaded" class="visualization-card">
+    <div *ngIf="show3DView" class="visualization-card">
       <div class="card-header">
         <h4>
           <i class="fas fa-cube"></i>
@@ -148,10 +148,19 @@
       
       <div class="canvas-wrapper">
         <!-- 3D Canvas Container -->
-    <div class="threejs-container"></div>
+        <div class="threejs-container"></div>
+        
+        <!-- Loading State -->
+        <div *ngIf="!isDataLoaded" class="loading-overlay">
+          <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h3>Loading Drill Data...</h3>
+            <p>Please wait while we load the drill hole data for visualization.</p>
+          </div>
+        </div>
         
         <!-- Floating UI Overlays -->
-        <div class="canvas-overlays">
+        <div class="canvas-overlays" *ngIf="isDataLoaded">
           <!-- Top Stats Bar -->
           <div class="stats-overlay">
             <div class="stat-item">
