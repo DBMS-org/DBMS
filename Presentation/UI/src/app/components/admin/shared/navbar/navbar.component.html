@@ -7,7 +7,7 @@
   </div>
   <div class="navbar-right">
     <div class="user-menu">
-      <div class="user-info">
+      <div class="user-info" (click)="navigateToProfile()" title="View Profile">
         <i class="material-icons">account_circle</i>
         <span class="user-name">{{ getUserDisplayName() }}</span>
         <span class="user-role" *ngIf="currentUser">{{ currentUser.role }}</span>
