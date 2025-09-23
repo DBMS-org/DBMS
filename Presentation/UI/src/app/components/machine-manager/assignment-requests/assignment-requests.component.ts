@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -70,9 +70,6 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   selectedMachineType: string = 'ALL';
 
   // Modal properties
-  showRequestDetailsModal: boolean = false;
-  showApproveModal: boolean = false;
-  showRejectModal: boolean = false;
   selectedRequest: AssignmentRequest | null = null;
   requestToApprove: AssignmentRequest | null = null;
   requestToReject: AssignmentRequest | null = null;
@@ -88,7 +85,9 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   error: string | null = null;
 
   constructor(
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private elementRef: ElementRef,
+    private renderer: Renderer2
   ) {}
 
   ngOnInit(): void {
@@ -160,32 +159,52 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   // Modal methods
   viewRequestDetails(request: AssignmentRequest): void {
     this.selectedRequest = request;
-    this.showRequestDetailsModal = true;
+    this.triggerModal('requestDetailsModal', 'show');
   }
 
   approveRequest(request: AssignmentRequest): void {
     this.requestToApprove = request;
     this.selectedMachinesForAssignment = [];
     this.approvalNotes = '';
-    this.showApproveModal = true;
+    this.triggerModal('approveRequestModal', 'show');
   }
 
   rejectRequest(request: AssignmentRequest): void {
     this.requestToReject = request;
     this.rejectionReason = '';
-    this.showRejectModal = true;
+    this.triggerModal('rejectRequestModal', 'show');
   }
 
   closeModals(): void {
-    this.showRequestDetailsModal = false;
-    this.showApproveModal = false;
-    this.showRejectModal = false;
-    this.selectedRequest = null;
-    this.requestToApprove = null;
-    this.requestToReject = null;
-    this.approvalNotes = '';
-    this.rejectionReason = '';
-    this.selectedMachinesForAssignment = [];
+    this.triggerModal('requestDetailsModal', 'hide');
+    this.triggerModal('approveRequestModal', 'hide');
+    this.triggerModal('rejectRequestModal', 'hide');
+
+    // Reset properties after a short delay to allow modals to close gracefully
+    setTimeout(() => {
+      this.selectedRequest = null;
+      this.requestToApprove = null;
+      this.requestToReject = null;
+      this.approvalNotes = '';
+      this.rejectionReason = ''
+      this.selectedMachinesForAssignment = [];
+    }, 300);
+  }
+
+  private triggerModal(modalId: string, action: 'show' | 'hide'): void {
+    const modalElement = this.elementRef.nativeElement.querySelector(`#${modalId}`);
+    if (modalElement) {
+      // Using Bootstrap's native JavaScript API
+      const bootstrap = (window as any).bootstrap;
+      if (bootstrap) {
+        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        if (action === 'show') {
+          modal.show();
+        } else {
+          modal.hide();
+        }
+      }
+    }
   }
 
   // Machine selection methods

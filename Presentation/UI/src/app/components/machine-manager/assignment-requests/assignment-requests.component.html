@@ -217,17 +217,28 @@
 </div>
 
 <!-- Request Details Modal -->
-@if (showRequestDetailsModal && selectedRequest) {
-  <div class="modal-overlay" (click)="closeModals()">
-    <div class="modal-content request-details-modal" (click)="$event.stopPropagation()">
+<div
+  class="modal fade"
+  id="requestDetailsModal"
+  tabindex="-1"
+  aria-labelledby="requestDetailsModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
       <div class="modal-header">
-        <h3>Request Details</h3>
-        <button class="close-btn" (click)="closeModals()">
-          <i class="material-icons">close</i>
-        </button>
+        <h5 class="modal-title" id="requestDetailsModalLabel">
+          Request Details
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
-      
       <div class="modal-body">
+        @if (selectedRequest) {
         <div class="details-grid">
           <div class="detail-item">
             <label>Request ID:</label>
@@ -235,11 +246,18 @@
           </div>
           <div class="detail-item">
             <label>Requester:</label>
-            <span>{{ selectedRequest.requesterName }} ({{ selectedRequest.requesterEmail }})</span>
+            <span
+              >{{ selectedRequest.requesterName }} ({{
+                selectedRequest.requesterEmail
+              }})</span
+            >
           </div>
           <div class="detail-item">
             <label>Project:</label>
-            <span>{{ selectedRequest.projectName }} (ID: {{ selectedRequest.projectId }})</span>
+            <span
+              >{{ selectedRequest.projectName }} (ID:
+              {{ selectedRequest.projectId }})</span
+            >
           </div>
           <div class="detail-item">
             <label>Machine Type:</label>
@@ -251,13 +269,19 @@
           </div>
           <div class="detail-item">
             <label>Urgency:</label>
-            <span class="urgency-badge" [ngClass]="getUrgencyClass(selectedRequest.urgency)">
+            <span
+              class="urgency-badge"
+              [ngClass]="getUrgencyClass(selectedRequest.urgency)"
+            >
               {{ selectedRequest.urgency }}
             </span>
           </div>
           <div class="detail-item">
             <label>Status:</label>
-            <span class="status-badge" [ngClass]="getStatusClass(selectedRequest.status)">
+            <span
+              class="status-badge"
+              [ngClass]="getStatusClass(selectedRequest.status)"
+            >
               {{ selectedRequest.status }}
             </span>
           </div>
@@ -266,53 +290,77 @@
             <span>{{ formatDate(selectedRequest.requestedAt) }}</span>
           </div>
           @if (selectedRequest.description) {
-            <div class="detail-item full-width">
-              <label>Description:</label>
-              <p class="description">{{ selectedRequest.description }}</p>
-            </div>
-          }
-          @if (selectedRequest.rejectionReason) {
-            <div class="detail-item full-width">
-              <label>Rejection Reason:</label>
-              <p class="rejection-reason">{{ selectedRequest.rejectionReason }}</p>
-            </div>
+          <div class="detail-item full-width">
+            <label>Description:</label>
+            <p class="description">{{ selectedRequest.description }}</p>
+          </div>
+          } @if (selectedRequest.rejectionReason) {
+          <div class="detail-item full-width">
+            <label>Rejection Reason:</label>
+            <p class="rejection-reason">
+              {{ selectedRequest.rejectionReason }}
+            </p>
+          </div>
           }
         </div>
-      </div>
-      
-      <div class="modal-footer">
-        @if (selectedRequest.status === 'PENDING') {
-          <button 
-            class="btn btn-success"
-            (click)="approveRequest(selectedRequest)">
-            <i class="material-icons">check</i>
-            Approve Request
-          </button>
-          <button 
-            class="btn btn-danger"
-            (click)="rejectRequest(selectedRequest)">
-            <i class="material-icons">close</i>
-            Reject Request
-          </button>
         }
-        <button class="btn btn-secondary" (click)="closeModals()">Close</button>
+      </div>
+      <div class="modal-footer">
+        @if (selectedRequest?.status === 'PENDING') {
+        <button
+          class="btn btn-success"
+          (click)="selectedRequest && approveRequest(selectedRequest)"
+          data-bs-toggle="modal"
+          data-bs-target="#approveRequestModal"
+        >
+          <i class="material-icons">check</i>
+          Approve Request
+        </button>
+        <button
+          class="btn btn-danger"
+          (click)="selectedRequest && rejectRequest(selectedRequest)"
+          data-bs-toggle="modal"
+          data-bs-target="#rejectRequestModal"
+        >
+          <i class="material-icons">close</i>
+          Reject Request
+        </button>
+        }
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Close
+        </button>
       </div>
     </div>
   </div>
-}
+</div>
 
 <!-- Approve Request Modal -->
-@if (showApproveModal && requestToApprove) {
-  <div class="modal-overlay" (click)="closeModals()">
-    <div class="modal-content approve-modal" (click)="$event.stopPropagation()">
+<div
+  class="modal fade"
+  id="approveRequestModal"
+  tabindex="-1"
+  aria-labelledby="approveRequestModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
       <div class="modal-header">
-        <h3>Approve Assignment Request</h3>
-        <button class="close-btn" (click)="closeModals()">
-          <i class="material-icons">close</i>
-        </button>
+        <h5 class="modal-title" id="approveRequestModalLabel">
+          Approve Assignment Request
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
-      
       <div class="modal-body">
+        @if (requestToApprove) {
         <div class="request-summary">
           <h4>Request Summary</h4>
           <p><strong>Requester:</strong> {{ requestToApprove.requesterName }}</p>
@@ -320,76 +368,110 @@
           <p><strong>Machine Type:</strong> {{ requestToApprove.machineType }}</p>
           <p><strong>Quantity:</strong> {{ requestToApprove.quantity }}</p>
         </div>
-        
+
         <div class="machine-selection">
           <h4>Select Machines to Assign</h4>
           <div class="available-machines">
-            @for (machine of getAvailableMachinesForType(requestToApprove.machineType); track machine.id) {
-              <div class="machine-option">
-                <input 
-                  type="checkbox"
-                  [id]="'machine-' + machine.id"
-                  [checked]="isMachineSelected(machine.id)"
-                  (change)="toggleMachineSelection(machine.id)"
-                  [disabled]="!isMachineSelected(machine.id) && selectedMachinesForAssignment.length >= requestToApprove.quantity">
-                <label [for]="'machine-' + machine.id" class="machine-label">
-                  <div class="machine-info">
-                    <span class="machine-name">{{ machine.name }}</span>
-                    <span class="machine-details">{{ machine.model }} - {{ machine.serialNumber }}</span>
-                    <span class="machine-location">Location: {{ machine.currentLocation || 'N/A' }}</span>
-                  </div>
-                </label>
-              </div>
+            @for (machine of
+            getAvailableMachinesForType(requestToApprove.machineType); track
+            machine.id) {
+            <div class="machine-option">
+              <input
+                type="checkbox"
+                [id]="'machine-' + machine.id"
+                [checked]="isMachineSelected(machine.id)"
+                (change)="toggleMachineSelection(machine.id)"
+                [disabled]="
+                  !isMachineSelected(machine.id) &&
+                  selectedMachinesForAssignment.length >=
+                    requestToApprove.quantity
+                "
+              />
+              <label [for]="'machine-' + machine.id" class="machine-label">
+                <div class="machine-info">
+                  <span class="machine-name">{{ machine.name }}</span>
+                  <span class="machine-details"
+                    >{{ machine.model }} - {{ machine.serialNumber }}</span
+                  >
+                  <span class="machine-location"
+                    >Location: {{ machine.currentLocation || "N/A" }}</span
+                  >
+                </div>
+              </label>
+            </div>
+            } @if
+            (getAvailableMachinesForType(requestToApprove.machineType).length
+            === 0) {
+            <div class="no-machines-available">
+              <p>
+                No available machines of type
+                {{ requestToApprove.machineType }} found.
+              </p>
+            </div>
             }
           </div>
-          
-          @if (getAvailableMachinesForType(requestToApprove.machineType).length === 0) {
-            <div class="no-machines-available">
-              <p>No available machines of type {{ requestToApprove.machineType }} found.</p>
-            </div>
-          }
         </div>
-        
+
         <div class="approval-notes">
           <label for="approvalNotes">Approval Notes (Optional):</label>
-          <textarea 
+          <textarea
             id="approvalNotes"
             class="form-control"
             [(ngModel)]="approvalNotes"
             rows="3"
-            placeholder="Add any notes about this approval..."></textarea>
+            placeholder="Add any notes about this approval..."
+          ></textarea>
         </div>
+        }
       </div>
-      
       <div class="modal-footer">
-        <button 
+        <button
           class="btn btn-success"
           (click)="confirmApproval()"
-          [disabled]="selectedMachinesForAssignment.length === 0 || isProcessing">
+          [disabled]="selectedMachinesForAssignment.length === 0 || isProcessing"
+        >
           @if (isProcessing) {
-            <span class="spinner-border spinner-border-sm me-2"></span>
+          <span class="spinner-border spinner-border-sm me-2"></span>
           }
           <i class="material-icons">check</i>
           Confirm Approval
         </button>
-        <button class="btn btn-secondary" (click)="closeModals()" [disabled]="isProcessing">Cancel</button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          [disabled]="isProcessing"
+        >
+          Cancel
+        </button>
       </div>
     </div>
   </div>
-}
+</div>
 
 <!-- Reject Request Modal -->
-@if (showRejectModal && requestToReject) {
-  <div class="modal-overlay" (click)="closeModals()">
-    <div class="modal-content reject-modal" (click)="$event.stopPropagation()">
+<div
+  class="modal fade"
+  id="rejectRequestModal"
+  tabindex="-1"
+  aria-labelledby="rejectRequestModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
       <div class="modal-header">
-        <h3>Reject Assignment Request</h3>
-        <button class="close-btn" (click)="closeModals()">
-          <i class="material-icons">close</i>
-        </button>
+        <h5 class="modal-title" id="rejectRequestModalLabel">
+          Reject Assignment Request
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
-      
       <div class="modal-body">
+        @if (requestToReject) {
         <div class="request-summary">
           <h4>Request Summary</h4>
           <p><strong>Requester:</strong> {{ requestToReject.requesterName }}</p>
@@ -397,32 +479,41 @@
           <p><strong>Machine Type:</strong> {{ requestToReject.machineType }}</p>
           <p><strong>Quantity:</strong> {{ requestToReject.quantity }}</p>
         </div>
-        
+
         <div class="rejection-reason">
           <label for="rejectionReason">Rejection Reason (Required):</label>
-          <textarea 
+          <textarea
             id="rejectionReason"
             class="form-control"
             [(ngModel)]="rejectionReason"
             rows="4"
             placeholder="Please provide a reason for rejecting this request..."
-            required></textarea>
+            required
+          ></textarea>
         </div>
+        }
       </div>
-      
       <div class="modal-footer">
-        <button 
+        <button
           class="btn btn-danger"
           (click)="confirmRejection()"
-          [disabled]="!rejectionReason.trim() || isProcessing">
+          [disabled]="!rejectionReason.trim() || isProcessing"
+        >
           @if (isProcessing) {
-            <span class="spinner-border spinner-border-sm me-2"></span>
+          <span class="spinner-border spinner-border-sm me-2"></span>
           }
           <i class="material-icons">close</i>
           Confirm Rejection
         </button>
-        <button class="btn btn-secondary" (click)="closeModals()" [disabled]="isProcessing">Cancel</button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          [disabled]="isProcessing"
+        >
+          Cancel
+        </button>
       </div>
     </div>
   </div>
-}
+</div>
