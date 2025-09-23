@@ -1,0 +1,686 @@
+<!-- Maintenance Management Component -->
+<div class="maintenance-management">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <i class="fas fa-tools"></i>
+          Maintenance Management
+        </h1>
+        <p class="page-subtitle">Schedule, track, and manage machine maintenance activities</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-success" (click)="openScheduleModal()">
+          <i class="fas fa-plus"></i>
+          Schedule Maintenance
+        </button>
+        <button class="btn btn-secondary" (click)="exportMaintenanceData()" [disabled]="isExporting">
+          <i class="fas fa-download" [class.fa-spin]="isExporting"></i>
+          Export Data
+        </button>
+        <button class="btn btn-primary" (click)="refreshData()" [disabled]="isLoading">
+          <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+    <div class="timestamp">
+      Last updated: {{ lastUpdated | date:'medium' }}
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <div class="alert-content">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+    <button class="alert-close" (click)="clearError()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Statistics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon scheduled">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.scheduled }}</div>
+        <div class="stat-label">Scheduled</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon in-progress">
+        <i class="fas fa-wrench"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.inProgress }}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon overdue">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.overdue }}</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon completed">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.completed }}</div>
+        <div class="stat-label">Completed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search by machine name, maintenance type, or technician..."
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+        >
+        <button class="clear-search" *ngIf="searchTerm" (click)="clearSearch()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="filter-group">
+        <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
+          <option value="">All Status</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="overdue">Overdue</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <select class="filter-select" [(ngModel)]="selectedType" (change)="onTypeFilterChange()">
+          <option value="">All Types</option>
+          <option value="preventive">Preventive</option>
+          <option value="corrective">Corrective</option>
+          <option value="emergency">Emergency</option>
+          <option value="inspection">Inspection</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <select class="filter-select" [(ngModel)]="selectedPriority" (change)="onPriorityFilterChange()">
+          <option value="">All Priorities</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Active Filters -->
+    <div class="active-filters" *ngIf="hasActiveFilters()">
+      <span class="filter-label">Active Filters:</span>
+      <span class="filter-tag" *ngIf="selectedStatus">
+        Status: {{ selectedStatus }}
+        <button (click)="clearStatusFilter()"><i class="fas fa-times"></i></button>
+      </span>
+      <span class="filter-tag" *ngIf="selectedType">
+        Type: {{ selectedType }}
+        <button (click)="clearTypeFilter()"><i class="fas fa-times"></i></button>
+      </span>
+      <span class="filter-tag" *ngIf="selectedPriority">
+        Priority: {{ selectedPriority }}
+        <button (click)="clearPriorityFilter()"><i class="fas fa-times"></i></button>
+      </span>
+      <span class="filter-tag" *ngIf="searchTerm">
+        Search: "{{ searchTerm }}"
+        <button (click)="clearSearch()"><i class="fas fa-times"></i></button>
+      </span>
+      <button class="clear-all-filters" (click)="clearAllFilters()">
+        <i class="fas fa-times"></i>
+        Clear All
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Loading maintenance records...</p>
+    </div>
+  </div>
+
+  <!-- Maintenance Table -->
+  <div class="table-container" *ngIf="!isLoading">
+    <table class="maintenance-table" *ngIf="paginatedMaintenanceRecords.length > 0">
+      <thead>
+        <tr>
+          <th class="sortable" (click)="sortBy('machineId')">
+            Machine
+            <i class="fas fa-sort" *ngIf="sortField !== 'machineId'"></i>
+            <i class="fas fa-sort-up" *ngIf="sortField === 'machineId' && sortDirection === 'asc'"></i>
+            <i class="fas fa-sort-down" *ngIf="sortField === 'machineId' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="sortable" (click)="sortBy('type')">
+            Type
+            <i class="fas fa-sort" *ngIf="sortField !== 'type'"></i>
+            <i class="fas fa-sort-up" *ngIf="sortField === 'type' && sortDirection === 'asc'"></i>
+            <i class="fas fa-sort-down" *ngIf="sortField === 'type' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="sortable" (click)="sortBy('priority')">
+            Priority
+            <i class="fas fa-sort" *ngIf="sortField !== 'priority'"></i>
+            <i class="fas fa-sort-up" *ngIf="sortField === 'priority' && sortDirection === 'asc'"></i>
+            <i class="fas fa-sort-down" *ngIf="sortField === 'priority' && sortDirection === 'desc'"></i>
+          </th>
+          <th class="sortable" (click)="sortBy('scheduledDate')">
+            Scheduled Date
+            <i class="fas fa-sort" *ngIf="sortField !== 'scheduledDate'"></i>
+            <i class="fas fa-sort-up" *ngIf="sortField === 'scheduledDate' && sortDirection === 'asc'"></i>
+            <i class="fas fa-sort-down" *ngIf="sortField === 'scheduledDate' && sortDirection === 'desc'"></i>
+          </th>
+          <th>Status</th>
+          <th>Technician</th>
+          <th>Duration</th>
+          <th class="actions-column">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="maintenance-row" 
+            *ngFor="let record of paginatedMaintenanceRecords"
+            [class.overdue-row]="record.status === 'overdue'"
+            [class.critical-row]="record.priority === 'critical'">
+          <td class="machine-cell">
+            <div class="machine-info">
+              <strong>{{ record.machineName }}</strong>
+              <small>{{ record.machineModel }} - {{ record.rigNo }}</small>
+            </div>
+          </td>
+          <td class="type-cell">
+            <span class="type-badge" [class]="'type-' + record.type">
+              {{ record.type | titlecase }}
+            </span>
+          </td>
+          <td class="priority-cell">
+            <span class="priority-badge" [class]="'priority-' + record.priority">
+              {{ record.priority | titlecase }}
+            </span>
+          </td>
+          <td class="date-cell">
+            <div class="date-info">
+              <strong>{{ record.scheduledDate | date:'MMM dd, yyyy' }}</strong>
+              <small>{{ record.scheduledTime }}</small>
+            </div>
+          </td>
+          <td class="status-cell">
+            <span class="status-badge" [class]="'status-' + record.status">
+              {{ record.status | titlecase }}
+            </span>
+          </td>
+          <td class="technician-cell">
+            {{ record.assignedTechnician }}
+          </td>
+          <td class="duration-cell">
+            {{ record.estimatedDuration }}h
+          </td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button class="btn-icon btn-primary" 
+                      (click)="viewMaintenanceDetails(record)"
+                      title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn-icon btn-secondary" 
+                      (click)="editMaintenance(record)"
+                      title="Edit"
+                      *ngIf="record.status !== 'completed'">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn-icon btn-success" 
+                      (click)="startMaintenance(record)"
+                      title="Start Maintenance"
+                      *ngIf="record.status === 'scheduled'">
+                <i class="fas fa-play"></i>
+              </button>
+              <button class="btn-icon btn-warning" 
+                      (click)="completeMaintenance(record)"
+                      title="Complete Maintenance"
+                      *ngIf="record.status === 'in-progress'">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="btn-icon btn-danger" 
+                      (click)="cancelMaintenance(record)"
+                      title="Cancel"
+                      *ngIf="record.status === 'scheduled'">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="paginatedMaintenanceRecords.length === 0">
+      <div class="empty-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <h3>No Maintenance Records Found</h3>
+      <p>
+        <span *ngIf="!hasActiveFilters() && !searchTerm">No maintenance activities have been scheduled yet.</span>
+        <span *ngIf="hasActiveFilters() || searchTerm">No maintenance records match your current filters.</span>
+      </p>
+      <button class="btn btn-primary" (click)="openScheduleModal()" *ngIf="!hasActiveFilters() && !searchTerm">
+        <i class="fas fa-plus"></i>
+        Schedule First Maintenance
+      </button>
+      <button class="btn btn-secondary" (click)="clearAllFilters()" *ngIf="hasActiveFilters() || searchTerm">
+        <i class="fas fa-times"></i>
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!isLoading && filteredMaintenanceRecords.length > 0">
+    <div class="pagination-info">
+      Showing {{ getStartIndex() + 1 }} to {{ getEndIndex() }} of {{ filteredMaintenanceRecords.length }} records
+    </div>
+    <div class="pagination-controls">
+      <button class="btn btn-secondary btn-sm" 
+              (click)="previousPage()" 
+              [disabled]="currentPage === 1">
+        <i class="fas fa-chevron-left"></i>
+        Previous
+      </button>
+      <div class="page-numbers">
+        <button class="btn btn-sm page-btn"
+                *ngFor="let page of getPageNumbers()"
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+      <button class="btn btn-secondary btn-sm" 
+              (click)="nextPage()" 
+              [disabled]="currentPage === totalPages">
+        Next
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    <div class="page-size-selector">
+      <span>Show:</span>
+      <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>per page</span>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule Maintenance Modal -->
+<div class="modal-overlay" *ngIf="showScheduleModal" (click)="closeScheduleModal()">
+  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ editingMaintenance ? 'Edit Maintenance' : 'Schedule Maintenance' }}</h3>
+      <button class="modal-close" (click)="closeScheduleModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="maintenance-form" (ngSubmit)="saveMaintenance()" #maintenanceForm="ngForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="machineId">Machine *</label>
+            <select id="machineId" 
+                    class="form-control" 
+                    [(ngModel)]="maintenanceFormData.machineId" 
+                    name="machineId" 
+                    required>
+              <option value="">Select Machine</option>
+              <option *ngFor="let machine of availableMachines" [value]="machine.id">
+                {{ machine.name }} - {{ machine.model }} ({{ machine.rigNo }})
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="type">Maintenance Type *</label>
+            <select id="type" 
+                    class="form-control" 
+                    [(ngModel)]="maintenanceFormData.type" 
+                    name="type" 
+                    required>
+              <option value="">Select Type</option>
+              <option value="preventive">Preventive</option>
+              <option value="corrective">Corrective</option>
+              <option value="emergency">Emergency</option>
+              <option value="inspection">Inspection</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="priority">Priority *</label>
+            <select id="priority" 
+                    class="form-control" 
+                    [(ngModel)]="maintenanceFormData.priority" 
+                    name="priority" 
+                    required>
+              <option value="">Select Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="assignedTechnician">Assigned Technician *</label>
+            <select id="assignedTechnician" 
+                    class="form-control" 
+                    [(ngModel)]="maintenanceFormData.assignedTechnician" 
+                    name="assignedTechnician" 
+                    required>
+              <option value="">Select Technician</option>
+              <option *ngFor="let technician of availableTechnicians" [value]="technician">
+                {{ technician }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="scheduledDate">Scheduled Date *</label>
+            <input type="date" 
+                   id="scheduledDate" 
+                   class="form-control" 
+                   [(ngModel)]="maintenanceFormData.scheduledDate" 
+                   name="scheduledDate" 
+                   required>
+          </div>
+          <div class="form-group">
+            <label for="scheduledTime">Scheduled Time *</label>
+            <input type="time" 
+                   id="scheduledTime" 
+                   class="form-control" 
+                   [(ngModel)]="maintenanceFormData.scheduledTime" 
+                   name="scheduledTime" 
+                   required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="estimatedDuration">Estimated Duration (hours) *</label>
+            <input type="number" 
+                   id="estimatedDuration" 
+                   class="form-control" 
+                   [(ngModel)]="maintenanceFormData.estimatedDuration" 
+                   name="estimatedDuration" 
+                   min="0.5" 
+                   step="0.5" 
+                   required>
+          </div>
+          <div class="form-group">
+            <label for="cost">Estimated Cost</label>
+            <input type="number" 
+                   id="cost" 
+                   class="form-control" 
+                   [(ngModel)]="maintenanceFormData.cost" 
+                   name="cost" 
+                   min="0" 
+                   step="0.01" 
+                   placeholder="0.00">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="description">Description *</label>
+          <textarea id="description" 
+                    class="form-control" 
+                    [(ngModel)]="maintenanceFormData.description" 
+                    name="description" 
+                    rows="3" 
+                    placeholder="Describe the maintenance work to be performed..."
+                    required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="notes">Additional Notes</label>
+          <textarea id="notes" 
+                    class="form-control" 
+                    [(ngModel)]="maintenanceFormData.notes" 
+                    name="notes" 
+                    rows="2" 
+                    placeholder="Any additional notes or special instructions..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeScheduleModal()">
+        Cancel
+      </button>
+      <button type="submit" 
+              class="btn btn-primary" 
+              (click)="saveMaintenance()" 
+              [disabled]="!isMaintenanceFormValid() || isSaving">
+        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+        <i class="fas fa-save" *ngIf="!isSaving"></i>
+        {{ editingMaintenance ? 'Update' : 'Schedule' }} Maintenance
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Maintenance Details Modal -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Maintenance Details</h3>
+      <button class="modal-close" (click)="closeDetailsModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="selectedMaintenance">
+      <div class="details-grid">
+        <div class="detail-section">
+          <h4>Basic Information</h4>
+          <div class="detail-row">
+            <span class="label">Maintenance ID:</span>
+            <span class="value">{{ selectedMaintenance.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Machine:</span>
+            <span class="value">{{ selectedMaintenance.machineName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Model:</span>
+            <span class="value">{{ selectedMaintenance.machineModel }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Rig No:</span>
+            <span class="value">{{ selectedMaintenance.rigNo }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Type:</span>
+            <span class="value">
+              <span class="type-badge" [class]="'type-' + selectedMaintenance.type">
+                {{ selectedMaintenance.type | titlecase }}
+              </span>
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Priority:</span>
+            <span class="value">
+              <span class="priority-badge" [class]="'priority-' + selectedMaintenance.priority">
+                {{ selectedMaintenance.priority | titlecase }}
+              </span>
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Status:</span>
+            <span class="value">
+              <span class="status-badge" [class]="'status-' + selectedMaintenance.status">
+                {{ selectedMaintenance.status | titlecase }}
+              </span>
+            </span>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>Schedule & Assignment</h4>
+          <div class="detail-row">
+            <span class="label">Scheduled Date:</span>
+            <span class="value">{{ selectedMaintenance.scheduledDate | date:'fullDate' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Scheduled Time:</span>
+            <span class="value">{{ selectedMaintenance.scheduledTime }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Assigned Technician:</span>
+            <span class="value">{{ selectedMaintenance.assignedTechnician }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Estimated Duration:</span>
+            <span class="value">{{ selectedMaintenance.estimatedDuration }} hours</span>
+          </div>
+          <div class="detail-row" *ngIf="selectedMaintenance.actualDuration">
+            <span class="label">Actual Duration:</span>
+            <span class="value">{{ selectedMaintenance.actualDuration }} hours</span>
+          </div>
+          <div class="detail-row" *ngIf="selectedMaintenance.cost">
+            <span class="label">Estimated Cost:</span>
+            <span class="value">${{ selectedMaintenance.cost | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-row" *ngIf="selectedMaintenance.actualCost">
+            <span class="label">Actual Cost:</span>
+            <span class="value">${{ selectedMaintenance.actualCost | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-section full-width">
+        <h4>Description</h4>
+        <p class="description-text">{{ selectedMaintenance.description }}</p>
+      </div>
+      <div class="detail-section full-width" *ngIf="selectedMaintenance.notes">
+        <h4>Notes</h4>
+        <p class="notes-text">{{ selectedMaintenance.notes }}</p>
+      </div>
+      <div class="detail-section full-width" *ngIf="selectedMaintenance.completionNotes">
+        <h4>Completion Notes</h4>
+        <p class="completion-notes">{{ selectedMaintenance.completionNotes }}</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
+        Close
+      </button>
+      <button type="button" 
+              class="btn btn-primary" 
+              (click)="editMaintenance(selectedMaintenance)"
+              *ngIf="selectedMaintenance?.status !== 'completed'">
+        <i class="fas fa-edit"></i>
+        Edit Maintenance
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Maintenance Modal -->
+<div class="modal-overlay" *ngIf="showCompleteModal" (click)="closeCompleteModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Complete Maintenance</h3>
+      <button class="modal-close" (click)="closeCompleteModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="completion-form">
+        <div class="form-group">
+          <label for="actualDuration">Actual Duration (hours) *</label>
+          <input type="number" 
+                 id="actualDuration" 
+                 class="form-control" 
+                 [(ngModel)]="completionData.actualDuration" 
+                 name="actualDuration" 
+                 min="0.1" 
+                 step="0.1" 
+                 required>
+        </div>
+        <div class="form-group">
+          <label for="actualCost">Actual Cost</label>
+          <input type="number" 
+                 id="actualCost" 
+                 class="form-control" 
+                 [(ngModel)]="completionData.actualCost" 
+                 name="actualCost" 
+                 min="0" 
+                 step="0.01" 
+                 placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label for="completionNotes">Completion Notes *</label>
+          <textarea id="completionNotes" 
+                    class="form-control" 
+                    [(ngModel)]="completionData.completionNotes" 
+                    name="completionNotes" 
+                    rows="4" 
+                    placeholder="Describe the work performed, parts used, issues found, etc..."
+                    required></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeCompleteModal()">
+        Cancel
+      </button>
+      <button type="button" 
+              class="btn btn-success" 
+              (click)="confirmCompleteMaintenance()" 
+              [disabled]="!isCompletionFormValid() || isSaving">
+        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+        <i class="fas fa-check" *ngIf="!isSaving"></i>
+        Complete Maintenance
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ confirmModalData.title }}</h3>
+      <button class="modal-close" (click)="closeConfirmModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>{{ confirmModalData.message }}</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeConfirmModal()">
+        Cancel
+      </button>
+      <button type="button" 
+              class="btn" 
+              [class]="confirmModalData.confirmButtonClass" 
+              (click)="confirmModalData.onConfirm()" 
+              [disabled]="isSaving">
+        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+        {{ confirmModalData.confirmButtonText }}
+      </button>
+    </div>
+  </div>
+</div>

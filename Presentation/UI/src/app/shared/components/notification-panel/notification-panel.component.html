@@ -1,0 +1,188 @@
+<!-- Notification Panel Component -->
+<div class="notification-panel" [class.open]="isOpen">
+  <!-- Panel Header -->
+  <div class="panel-header">
+    <div class="header-content">
+      <h3>Notifications</h3>
+      <div class="header-actions">
+        <button 
+          class="btn btn-text" 
+          (click)="markAllAsRead()" 
+          [disabled]="unreadCount === 0"
+          title="Mark all as read">
+          <i class="fas fa-check-double"></i>
+        </button>
+        <button 
+          class="btn btn-text" 
+          (click)="clearAll()" 
+          [disabled]="notifications.length === 0"
+          title="Clear all notifications">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button 
+          class="btn btn-text close-btn" 
+          (click)="closePanel()"
+          title="Close panel">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Notification Filters -->
+    <div class="notification-filters" *ngIf="notifications.length > 0">
+      <button 
+        class="filter-btn" 
+        [class.active]="selectedFilter === 'all'"
+        (click)="setFilter('all')">
+        All ({{ notifications.length }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="selectedFilter === 'unread'"
+        (click)="setFilter('unread')"
+        *ngIf="unreadCount > 0">
+        Unread ({{ unreadCount }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="selectedFilter === 'assignment'"
+        (click)="setFilter('assignment')"
+        *ngIf="getNotificationCountByType('assignment') > 0">
+        Assignments ({{ getNotificationCountByType('assignment') }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="selectedFilter === 'maintenance'"
+        (click)="setFilter('maintenance')"
+        *ngIf="getNotificationCountByType('maintenance') > 0">
+        Maintenance ({{ getNotificationCountByType('maintenance') }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="selectedFilter === 'request'"
+        (click)="setFilter('request')"
+        *ngIf="getNotificationCountByType('request') > 0">
+        Requests ({{ getNotificationCountByType('request') }})
+      </button>
+    </div>
+  </div>
+
+  <!-- Panel Body -->
+  <div class="panel-body">
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading">
+      <div class="loading-spinner"></div>
+      <span class="loading-text">Loading notifications...</span>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && filteredNotifications.length === 0">
+      <div class="empty-icon">
+        <i class="fas fa-bell-slash"></i>
+      </div>
+      <h4>{{ getEmptyStateTitle() }}</h4>
+      <p>{{ getEmptyStateMessage() }}</p>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="notifications-list" *ngIf="!isLoading && filteredNotifications.length > 0">
+      <div 
+        class="notification-item" 
+        *ngFor="let notification of filteredNotifications; trackBy: trackByNotificationId"
+        [class.unread]="!notification.read"
+        [class.high-priority]="notification.priority === 'high' || notification.priority === 'urgent'"
+        (click)="handleNotificationClick(notification)">
+        
+        <!-- Notification Icon -->
+        <div class="notification-icon" [ngClass]="getNotificationIconClass(notification.type)">
+          <i [class]="getNotificationIcon(notification.type)"></i>
+        </div>
+
+        <!-- Notification Content -->
+        <div class="notification-content">
+          <div class="notification-header">
+            <h5 class="notification-title">{{ notification.title }}</h5>
+            <div class="notification-meta">
+              <span class="notification-time" [title]="formatFullDateTime(notification.timestamp)">
+                {{ formatRelativeTime(notification.timestamp) }}
+              </span>
+              <span class="priority-badge" [ngClass]="getPriorityClass(notification.priority)">
+                {{ notification.priority }}
+              </span>
+            </div>
+          </div>
+          
+          <p class="notification-message">{{ notification.message }}</p>
+          
+          <!-- Notification Actions -->
+          <div class="notification-actions" *ngIf="notification.actionUrl || !notification.read">
+            <button 
+              class="btn btn-sm btn-primary" 
+              *ngIf="notification.actionUrl"
+              (click)="navigateToAction(notification, $event)">
+              <i class="fas fa-external-link-alt"></i>
+              View Details
+            </button>
+            <button 
+              class="btn btn-sm btn-outline" 
+              *ngIf="!notification.read"
+              (click)="markAsRead(notification.id, $event)">
+              <i class="fas fa-check"></i>
+              Mark Read
+            </button>
+            <button 
+              class="btn btn-sm btn-text delete-btn" 
+              (click)="deleteNotification(notification.id, $event)"
+              title="Delete notification">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Unread Indicator -->
+        <div class="unread-indicator" *ngIf="!notification.read"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel Footer -->
+  <div class="panel-footer" *ngIf="filteredNotifications.length > 0">
+    <div class="footer-info">
+      <span class="results-count">
+        Showing {{ filteredNotifications.length }} of {{ notifications.length }} notifications
+      </span>
+    </div>
+    <div class="footer-actions">
+      <button class="btn btn-sm btn-outline" (click)="refreshNotifications()">
+        <i class="fas fa-sync-alt" [class.spinning]="isRefreshing"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop -->
+<div class="notification-backdrop" *ngIf="isOpen" (click)="closePanel()"></div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showConfirmModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>{{ confirmModalTitle }}</h3>
+      <button class="close-btn" (click)="closeConfirmModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>{{ confirmModalMessage }}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeConfirmModal()">
+        Cancel
+      </button>
+      <button class="btn btn-danger" (click)="confirmAction()">
+        {{ confirmModalAction }}
+      </button>
+    </div>
+  </div>
+</div>

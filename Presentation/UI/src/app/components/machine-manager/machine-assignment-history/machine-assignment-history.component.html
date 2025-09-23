@@ -1,0 +1,429 @@
+<div class="assignment-history-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">Machine Assignment History</h2>
+    <div class="header-actions">
+      <button 
+        class="btn btn-outline-secondary"
+        (click)="exportHistory()"
+        [disabled]="isLoading || filteredHistory.length === 0">
+        <i class="material-icons">download</i>
+        Export History
+      </button>
+      <button 
+        class="btn btn-outline-primary"
+        (click)="refreshHistory()"
+        [disabled]="isLoading">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  @if (error) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="material-icons">error</i>
+      {{ error }}
+      <button type="button" class="btn-close" (click)="error = null"></button>
+    </div>
+  }
+
+  <!-- Statistics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <i class="material-icons">history</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.totalAssignments }}</h3>
+        <p>Total Assignments</p>
+      </div>
+    </div>
+    <div class="stat-card active">
+      <div class="stat-icon">
+        <i class="material-icons">assignment_ind</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.activeAssignments }}</h3>
+        <p>Currently Active</p>
+      </div>
+    </div>
+    <div class="stat-card completed">
+      <div class="stat-icon">
+        <i class="material-icons">assignment_turned_in</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.completedAssignments }}</h3>
+        <p>Completed</p>
+      </div>
+    </div>
+    <div class="stat-card overdue">
+      <div class="stat-icon">
+        <i class="material-icons">schedule</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.overdueAssignments }}</h3>
+        <p>Overdue Returns</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Search by machine, project, or operator..." 
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()">
+    </div>
+    
+    <div class="filter-group">
+      <label>Status</label>
+      <select 
+        class="form-select" 
+        [(ngModel)]="selectedStatus" 
+        (ngModelChange)="onStatusFilterChange()">
+        <option value="ALL">All Status</option>
+        @for (status of assignmentStatusOptions; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label>Machine Type</label>
+      <select 
+        class="form-select" 
+        [(ngModel)]="selectedMachineType" 
+        (ngModelChange)="onMachineTypeFilterChange()">
+        <option value="ALL">All Types</option>
+        @for (type of machineTypeOptions; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label>Date Range</label>
+      <select 
+        class="form-select" 
+        [(ngModel)]="selectedDateRange" 
+        (ngModelChange)="onDateRangeFilterChange()">
+        <option value="ALL">All Time</option>
+        <option value="LAST_7_DAYS">Last 7 Days</option>
+        <option value="LAST_30_DAYS">Last 30 Days</option>
+        <option value="LAST_3_MONTHS">Last 3 Months</option>
+        <option value="LAST_6_MONTHS">Last 6 Months</option>
+        <option value="LAST_YEAR">Last Year</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Loading assignment history...</p>
+    </div>
+  }
+
+  <!-- Assignment History Table -->
+  <div class="history-table-container" *ngIf="!isLoading">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Assignment ID</th>
+          <th>Machine</th>
+          <th>Project</th>
+          <th>Operator</th>
+          <th>Assigned Date</th>
+          <th>Expected Return</th>
+          <th>Actual Return</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let assignment of filteredHistory" class="history-row">
+          <td class="assignment-id">
+            <span class="id-badge">{{ assignment.id }}</span>
+          </td>
+          <td class="machine-info">
+            <div class="machine-details">
+              <span class="machine-name">{{ assignment.machineName }}</span>
+              <small class="machine-type">{{ assignment.machineType }}</small>
+            </div>
+          </td>
+          <td class="project-info">
+            <div class="project-details">
+              <span class="project-name">{{ assignment.projectName }}</span>
+              <small class="project-location">{{ assignment.projectLocation }}</small>
+            </div>
+          </td>
+          <td class="operator-info">
+            <div class="operator-details">
+              <span class="operator-name">{{ assignment.operatorName }}</span>
+              <small class="operator-role">{{ assignment.operatorRole }}</small>
+            </div>
+          </td>
+          <td class="assigned-date">
+            <div class="date-info">
+              <span class="date">{{ formatDate(assignment.assignedDate) }}</span>
+              <small class="time">{{ formatTime(assignment.assignedDate) }}</small>
+            </div>
+          </td>
+          <td class="expected-return">
+            <div class="date-info" *ngIf="assignment.expectedReturnDate">
+              <span class="date">{{ formatDate(assignment.expectedReturnDate) }}</span>
+              <small class="time">{{ formatTime(assignment.expectedReturnDate) }}</small>
+            </div>
+            <span class="no-date" *ngIf="!assignment.expectedReturnDate">Not specified</span>
+          </td>
+          <td class="actual-return">
+            <div class="date-info" *ngIf="assignment.actualReturnDate">
+              <span class="date">{{ formatDate(assignment.actualReturnDate) }}</span>
+              <small class="time">{{ formatTime(assignment.actualReturnDate) }}</small>
+            </div>
+            <span class="pending-return" *ngIf="!assignment.actualReturnDate && assignment.status === 'ACTIVE'">
+              Still assigned
+            </span>
+            <span class="no-date" *ngIf="!assignment.actualReturnDate && assignment.status !== 'ACTIVE'">
+              Not returned
+            </span>
+          </td>
+          <td class="assignment-status">
+            <span class="status-badge" [ngClass]="getStatusClass(assignment.status)">
+              {{ assignment.status }}
+            </span>
+          </td>
+          <td class="duration">
+            <span class="duration-badge" [ngClass]="getDurationClass(assignment)">
+              {{ calculateDuration(assignment) }}
+            </span>
+          </td>
+          <td class="actions">
+            <div class="action-buttons">
+              <button 
+                class="btn btn-sm btn-info action-btn" 
+                (click)="viewAssignmentDetails(assignment)"
+                title="View Details">
+                <i class="material-icons">visibility</i>
+              </button>
+              <button 
+                class="btn btn-sm btn-primary action-btn" 
+                (click)="viewMachineHistory(assignment.machineId)"
+                title="Machine History">
+                <i class="material-icons">history</i>
+              </button>
+              @if (assignment.status === 'ACTIVE') {
+                <button 
+                  class="btn btn-sm btn-warning action-btn" 
+                  (click)="returnMachine(assignment)"
+                  title="Return Machine">
+                  <i class="material-icons">keyboard_return</i>
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    @if (filteredHistory.length === 0 && !isLoading) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="material-icons">history</i>
+        </div>
+        <h3>No Assignment History Found</h3>
+        <p>No machine assignments match your current filters.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="filteredHistory.length > 0">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, filteredHistory.length) }} of {{ filteredHistory.length }} assignments
+    </div>
+    <div class="pagination-controls">
+      <button 
+        class="btn btn-outline-secondary"
+        (click)="previousPage()"
+        [disabled]="currentPage === 1">
+        <i class="material-icons">chevron_left</i>
+        Previous
+      </button>
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button 
+        class="btn btn-outline-secondary"
+        (click)="nextPage()"
+        [disabled]="currentPage === totalPages">
+        Next
+        <i class="material-icons">chevron_right</i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Assignment Details Modal -->
+@if (showDetailsModal && selectedAssignment) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content assignment-details-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Assignment Details</h3>
+        <button class="close-btn" (click)="closeModals()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="details-grid">
+          <div class="detail-section">
+            <h4>Assignment Information</h4>
+            <div class="detail-item">
+              <label>Assignment ID:</label>
+              <span>{{ selectedAssignment.id }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Status:</label>
+              <span class="status-badge" [ngClass]="getStatusClass(selectedAssignment.status)">
+                {{ selectedAssignment.status }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <label>Assigned By:</label>
+              <span>{{ selectedAssignment.assignedBy }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Assignment Date:</label>
+              <span>{{ formatDateTime(selectedAssignment.assignedDate) }}</span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Machine Information</h4>
+            <div class="detail-item">
+              <label>Machine Name:</label>
+              <span>{{ selectedAssignment.machineName }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Machine Type:</label>
+              <span>{{ selectedAssignment.machineType }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Serial Number:</label>
+              <span>{{ selectedAssignment.machineSerialNumber }}</span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Project Information</h4>
+            <div class="detail-item">
+              <label>Project Name:</label>
+              <span>{{ selectedAssignment.projectName }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Project Location:</label>
+              <span>{{ selectedAssignment.projectLocation }}</span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Operator Information</h4>
+            <div class="detail-item">
+              <label>Operator Name:</label>
+              <span>{{ selectedAssignment.operatorName }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Operator Role:</label>
+              <span>{{ selectedAssignment.operatorRole }}</span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Timeline</h4>
+            <div class="detail-item">
+              <label>Expected Return Date:</label>
+              <span>{{ selectedAssignment.expectedReturnDate ? formatDateTime(selectedAssignment.expectedReturnDate) : 'Not specified' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Actual Return Date:</label>
+              <span>{{ selectedAssignment.actualReturnDate ? formatDateTime(selectedAssignment.actualReturnDate) : 'Not returned yet' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Duration:</label>
+              <span>{{ calculateDuration(selectedAssignment) }}</span>
+            </div>
+          </div>
+
+          @if (selectedAssignment.notes) {
+            <div class="detail-section full-width">
+              <h4>Notes</h4>
+              <div class="notes-content">
+                <p>{{ selectedAssignment.notes }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        @if (selectedAssignment.status === 'ACTIVE') {
+          <button class="btn btn-warning" (click)="returnMachine(selectedAssignment)">
+            <i class="material-icons">keyboard_return</i>
+            Return Machine
+          </button>
+        }
+        <button class="btn btn-secondary" (click)="closeModals()">Close</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Return Machine Modal -->
+@if (showReturnModal && machineToReturn) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content return-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Return Machine</h3>
+        <button class="close-btn" (click)="closeModals()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="return-summary">
+          <h4>Assignment Summary</h4>
+          <p><strong>Machine:</strong> {{ machineToReturn.machineName }}</p>
+          <p><strong>Project:</strong> {{ machineToReturn.projectName }}</p>
+          <p><strong>Operator:</strong> {{ machineToReturn.operatorName }}</p>
+          <p><strong>Assigned Date:</strong> {{ formatDateTime(machineToReturn.assignedDate) }}</p>
+        </div>
+        
+        <div class="return-notes">
+          <label for="returnNotes">Return Notes (Optional)</label>
+          <textarea 
+            id="returnNotes"
+            class="form-control" 
+            rows="4" 
+            placeholder="Add any notes about the machine condition or assignment completion..."
+            [(ngModel)]="returnNotes">
+          </textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-primary" (click)="confirmReturn()" [disabled]="isReturning">
+          @if (isReturning) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+          }
+          Confirm Return
+        </button>
+      </div>
+    </div>
+  </div>
+}
