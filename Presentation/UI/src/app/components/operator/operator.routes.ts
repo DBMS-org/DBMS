@@ -7,6 +7,7 @@ import { OperatorPatternViewComponent } from './pattern-view/pattern-view.compon
 import { MaintenanceReportsComponent } from './maintenance-reports/maintenance-reports.component';
 import { MyMachinesComponent } from './my-machines/my-machines.component';
 import { SiteDetailsComponent } from './site-details/site-details.component';
+import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 
 export const OPERATOR_ROUTES: Routes = [
     {
@@ -15,6 +16,7 @@ export const OPERATOR_ROUTES: Routes = [
         children: [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: OperatorDashboardComponent },
+            { path: 'profile', component: UserProfileComponent },
             { path: 'my-project', component: MyProjectComponent },
             // Removed separate project sites list route; sites are now embedded within My Project page
             { path: 'my-project/sites/:siteId/pattern-view', component: OperatorPatternViewComponent },

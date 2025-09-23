@@ -1,0 +1,104 @@
+<div class="user-profile-container">
+  <div class="profile-header">
+    <button class="back-btn" routerLink="/store-manager/dashboard">
+      <i class="material-icons">arrow_back</i>
+      Back to Dashboard
+    </button>
+    <h1>User Profile</h1>
+  </div>
+
+  <div class="profile-content" *ngIf="currentUser">
+    <div class="profile-card">
+      <div class="profile-avatar-section">
+        <div class="profile-avatar">
+          <span class="avatar-initials">{{ getInitials() }}</span>
+        </div>
+        <div class="profile-basic-info">
+          <h2>{{ currentUser.name }}</h2>
+          <p class="profile-email">{{ currentUser.email }}</p>
+          <div class="role-badge">
+            <i class="material-icons">store</i>
+            <span>{{ formatRole(currentUser.role) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-details">
+        <h3>
+          <i class="material-icons">info</i>
+          Profile Information
+        </h3>
+        
+        <div class="details-grid">
+          <div class="detail-item">
+            <label>Full Name</label>
+            <span>{{ currentUser.name }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Email Address</label>
+            <span>{{ currentUser.email }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Role</label>
+            <span>{{ formatRole(currentUser.role) }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Status</label>
+            <span class="status-badge" [class.active]="currentUser.status === 'Active'">
+              {{ currentUser.status }}
+            </span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Region</label>
+            <span>{{ currentUser.region }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Country</label>
+            <span>{{ currentUser.country }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Oman Phone</label>
+            <span>{{ currentUser.omanPhone || 'Not provided' }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Country Phone</label>
+            <span>{{ currentUser.countryPhone || 'Not provided' }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Last Login</label>
+            <span>{{ formatDate(currentUser.lastLoginAt) }}</span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Account Created</label>
+            <span>{{ formatDate(currentUser.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button class="action-btn secondary" routerLink="/store-manager/dashboard">
+          <i class="material-icons">dashboard</i>
+          Go to Dashboard
+        </button>
+        <button class="action-btn danger" (click)="logout()">
+          <i class="material-icons">logout</i>
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="!currentUser">
+    <div class="loading-spinner"></div>
+    <p>Loading profile...</p>
+  </div>
+</div>

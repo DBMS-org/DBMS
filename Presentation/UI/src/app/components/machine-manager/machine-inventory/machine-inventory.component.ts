@@ -42,10 +42,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   searchTerm = '';
   selectedStatus: MachineStatus | 'ALL' = 'ALL';
   selectedType: MachineType | 'ALL' = 'ALL';
-  selectedProject: string | 'ALL' | 'UNASSIGNED' = 'ALL';
-  
-  // Available options for filters
-  projectOptions: string[] = [];
   
   // Modal states
   showDeleteConfirmModal = false;
@@ -92,7 +88,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     const sub = this.machineService.getAllMachines().subscribe({
       next: (machines) => {
         this.machines = machines;
-        this.extractProjectOptions();
         this.applyFilters();
         this.calculateStatistics();
         this.isLoading = false;
@@ -164,12 +159,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
       const matchesStatus = this.selectedStatus === 'ALL' || machine.status === this.selectedStatus;
       const matchesType = this.selectedType === 'ALL' || machine.type === this.selectedType;
       
-      const matchesProject = this.selectedProject === 'ALL' || 
-        (this.selectedProject === 'UNASSIGNED' && (!machine.assignedToProject && !machine.projectName)) ||
-        (machine.assignedToProject && machine.assignedToProject === this.selectedProject) ||
-        (machine.projectName && machine.projectName === this.selectedProject);
-      
-      return matchesSearch && matchesStatus && matchesType && matchesProject;
+      return matchesSearch && matchesStatus && matchesType;
     });
   }
 
@@ -183,23 +173,6 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
 
   onTypeFilterChange(): void {
     this.applyFilters();
-  }
-
-  onProjectFilterChange(): void {
-    this.applyFilters();
-  }
-
-  private extractProjectOptions(): void {
-    const projects = new Set<string>();
-    this.machines.forEach(machine => {
-      if (machine.assignedToProject) {
-        projects.add(machine.assignedToProject);
-      }
-      if (machine.projectName) {
-        projects.add(machine.projectName);
-      }
-    });
-    this.projectOptions = Array.from(projects).sort();
   }
 
   openAddMachineModal(): void {

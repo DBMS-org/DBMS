@@ -1,94 +1,62 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
-import { NotificationService } from '../../../core/services/notification.service';
-
-export interface AssignmentRequest {
-  id: string;
-  requesterName: string;
-  requesterEmail: string;
-  projectId: string;
-  projectName: string;
-  machineType: string;
-  quantity: number;
-  urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  description?: string;
-  requestedAt: Date;
-  processedAt?: Date;
-  processedBy?: string;
-  rejectionReason?: string;
-  assignedMachines?: string[];
-  approvalNotes?: string;
-}
-
-export interface Machine {
-  id: string;
-  name: string;
-  model: string;
-  serialNumber: string;
-  type: string;
-  status: 'AVAILABLE' | 'ASSIGNED' | 'UNDER_MAINTENANCE';
-  currentLocation?: string;
-  rigNo?: string;
-  plateNo?: string;
-  company?: string;
-}
-
-export interface RequestStatistics {
-  pending: number;
-  approved: number;
-  rejected: number;
-  total: number;
-}
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { MachineService } from '../../../core/services/machine.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { 
+  Machine, 
+  MachineAssignmentRequest, 
+  AssignmentRequestStatus, 
+  RequestUrgency,
+  MachineType,
+  MachineStatus
+} from '../../../core/models/machine.model';
 
 @Component({
   selector: 'app-assignment-requests',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './assignment-requests.component.html',
   styleUrl: './assignment-requests.component.scss'
 })
 export class AssignmentRequestsComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
-  // Data properties
-  assignmentRequests: AssignmentRequest[] = [];
-  filteredRequests: AssignmentRequest[] = [];
+  assignmentRequests: MachineAssignmentRequest[] = [];
+  filteredRequests: MachineAssignmentRequest[] = [];
   availableMachines: Machine[] = [];
-  statistics: RequestStatistics = {
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-    total: 0
-  };
-
-  // Filter properties
-  selectedStatus: string = 'ALL';
-  selectedUrgency: string = 'ALL';
-  selectedMachineType: string = 'ALL';
-
-  // Modal properties
-  showRequestDetailsModal: boolean = false;
-  showApproveModal: boolean = false;
-  showRejectModal: boolean = false;
-  selectedRequest: AssignmentRequest | null = null;
-  requestToApprove: AssignmentRequest | null = null;
-  requestToReject: AssignmentRequest | null = null;
-
-  // Form properties
-  approvalNotes: string = '';
-  rejectionReason: string = '';
-  selectedMachinesForAssignment: string[] = [];
-
-  // State properties
-  isLoading: boolean = false;
-  isProcessing: boolean = false;
+  
+  isLoading = false;
   error: string | null = null;
+  
+  // Filter properties
+  searchTerm = '';
+  selectedStatus: AssignmentRequestStatus | 'ALL' = 'ALL';
+  selectedUrgency: RequestUrgency | 'ALL' = 'ALL';
+  selectedMachineType: MachineType | 'ALL' = 'ALL';
+  
+  // Modal states
+  showRequestDetailsModal = false;
+  showAssignMachinesModal = false;
+  showRejectRequestModal = false;
+  selectedRequest: MachineAssignmentRequest | null = null;
+  
+  // Assignment modal data
+  selectedMachinesForAssignment: string[] = [];
+  assignmentComments = '';
+  rejectionReason = '';
+  
+  // Enums for template
+  AssignmentRequestStatus = AssignmentRequestStatus;
+  RequestUrgency = RequestUrgency;
+  MachineType = MachineType;
+  
+  private subscriptions: Subscription[] = [];
 
   constructor(
-    private notificationService: NotificationService
+    private machineService: MachineService,
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -97,235 +65,192 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  // Data loading methods
-  loadAssignmentRequests(): void {
+  private loadAssignmentRequests(): void {
     this.isLoading = true;
-    this.error = null;
-
-    // Simulate API call with mock data
-    setTimeout(() => {
-      this.assignmentRequests = this.generateMockRequests();
-      this.calculateStatistics();
-      this.applyFilters();
-      this.isLoading = false;
-    }, 1000);
+    const sub = this.machineService.getAllAssignmentRequests().subscribe({
+      next: (requests) => {
+        this.assignmentRequests = requests.sort((a, b) => 
+          new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime()
+        );
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.error = 'Failed to load assignment requests';
+        this.isLoading = false;
+        console.error('Error loading assignment requests:', error);
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
-  loadAvailableMachines(): void {
-    // Simulate API call with mock data
-    this.availableMachines = this.generateMockMachines();
+  private loadAvailableMachines(): void {
+    const sub = this.machineService.getAllMachines().subscribe({
+      next: (machines: Machine[]) => {
+        this.availableMachines = machines.filter(m => m.status === MachineStatus.AVAILABLE);
+      },
+      error: (error: any) => {
+        console.error('Error loading available machines:', error);
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
-  refreshRequests(): void {
-    this.loadAssignmentRequests();
-    this.notificationService.showSuccess('Assignment requests refreshed successfully');
-  }
-
-  // Filter methods
   applyFilters(): void {
     this.filteredRequests = this.assignmentRequests.filter(request => {
-      const statusMatch = this.selectedStatus === 'ALL' || request.status === this.selectedStatus;
-      const urgencyMatch = this.selectedUrgency === 'ALL' || request.urgency === this.selectedUrgency;
-      const typeMatch = this.selectedMachineType === 'ALL' || request.machineType === this.selectedMachineType;
+      const matchesSearch = !this.searchTerm || 
+        request.projectId.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.machineType.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.requestedBy.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (request.detailsOrExplanation && request.detailsOrExplanation.toLowerCase().includes(this.searchTerm.toLowerCase()));
       
-      return statusMatch && urgencyMatch && typeMatch;
+      const matchesStatus = this.selectedStatus === 'ALL' || request.status === this.selectedStatus;
+      const matchesUrgency = this.selectedUrgency === 'ALL' || request.urgency === this.selectedUrgency;
+      const matchesMachineType = this.selectedMachineType === 'ALL' || request.machineType === this.selectedMachineType;
+      
+      return matchesSearch && matchesStatus && matchesUrgency && matchesMachineType;
     });
   }
 
-  // Statistics calculation
-  calculateStatistics(): void {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    this.statistics = {
-      pending: this.assignmentRequests.filter(r => r.status === 'PENDING').length,
-      approved: this.assignmentRequests.filter(r => 
-        r.status === 'APPROVED' && 
-        r.processedAt && 
-        new Date(r.processedAt) >= today
-      ).length,
-      rejected: this.assignmentRequests.filter(r => 
-        r.status === 'REJECTED' && 
-        r.processedAt && 
-        new Date(r.processedAt) >= today
-      ).length,
-      total: this.assignmentRequests.length
-    };
+  onSearchChange(): void {
+    this.applyFilters();
   }
 
-  // Modal methods
-  viewRequestDetails(request: AssignmentRequest): void {
+  onStatusFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onUrgencyFilterChange(): void {
+    this.applyFilters();
+  }
+
+  onMachineTypeFilterChange(): void {
+    this.applyFilters();
+  }
+
+  openRequestDetails(request: MachineAssignmentRequest): void {
     this.selectedRequest = request;
     this.showRequestDetailsModal = true;
   }
 
-  approveRequest(request: AssignmentRequest): void {
-    this.requestToApprove = request;
+  openAssignMachinesModal(request: MachineAssignmentRequest): void {
+    this.selectedRequest = request;
     this.selectedMachinesForAssignment = [];
-    this.approvalNotes = '';
-    this.showApproveModal = true;
+    this.assignmentComments = '';
+    this.showAssignMachinesModal = true;
   }
 
-  rejectRequest(request: AssignmentRequest): void {
-    this.requestToReject = request;
+  openRejectRequestModal(request: MachineAssignmentRequest): void {
+    this.selectedRequest = request;
     this.rejectionReason = '';
-    this.showRejectModal = true;
+    this.showRejectRequestModal = true;
   }
 
   closeModals(): void {
     this.showRequestDetailsModal = false;
-    this.showApproveModal = false;
-    this.showRejectModal = false;
+    this.showAssignMachinesModal = false;
+    this.showRejectRequestModal = false;
     this.selectedRequest = null;
-    this.requestToApprove = null;
-    this.requestToReject = null;
-    this.approvalNotes = '';
-    this.rejectionReason = '';
     this.selectedMachinesForAssignment = [];
-  }
-
-  // Machine selection methods
-  getAvailableMachinesForType(machineType: string): Machine[] {
-    return this.availableMachines.filter(machine => 
-      machine.type === machineType && machine.status === 'AVAILABLE'
-    );
-  }
-
-  isMachineSelected(machineId: string): boolean {
-    return this.selectedMachinesForAssignment.includes(machineId);
+    this.assignmentComments = '';
+    this.rejectionReason = '';
   }
 
   toggleMachineSelection(machineId: string): void {
     const index = this.selectedMachinesForAssignment.indexOf(machineId);
     if (index > -1) {
       this.selectedMachinesForAssignment.splice(index, 1);
-    } else if (this.requestToApprove && this.selectedMachinesForAssignment.length < this.requestToApprove.quantity) {
+    } else {
       this.selectedMachinesForAssignment.push(machineId);
     }
   }
 
-  // Request processing methods
-  confirmApproval(): void {
-    if (!this.requestToApprove || this.selectedMachinesForAssignment.length === 0) {
-      return;
-    }
+  isMachineSelected(machineId: string): boolean {
+    return this.selectedMachinesForAssignment.includes(machineId);
+  }
 
-    this.isProcessing = true;
-
-    // Simulate API call
-    setTimeout(() => {
-      const requestIndex = this.assignmentRequests.findIndex(r => r.id === this.requestToApprove!.id);
-      if (requestIndex > -1) {
-        this.assignmentRequests[requestIndex] = {
-          ...this.assignmentRequests[requestIndex],
-          status: 'APPROVED',
-          processedAt: new Date(),
-          processedBy: 'Current Machine Manager', // In real app, get from auth service
-          assignedMachines: [...this.selectedMachinesForAssignment],
-          approvalNotes: this.approvalNotes
-        };
-
-        // Update machine statuses
-        this.selectedMachinesForAssignment.forEach(machineId => {
-          const machine = this.availableMachines.find(m => m.id === machineId);
-          if (machine) {
-            machine.status = 'ASSIGNED';
-          }
-        });
-
-        this.calculateStatistics();
-        this.applyFilters();
-        this.notificationService.showSuccess('Assignment request approved successfully');
-        
-        // In real app, send notification to requester and operators
-        if (this.requestToApprove) {
-          this.sendAssignmentNotifications(this.requestToApprove, this.selectedMachinesForAssignment);
+  confirmAssignment(): void {
+    if (this.selectedRequest && this.selectedMachinesForAssignment.length > 0) {
+      const sub = this.machineService.approveAssignmentRequest(
+        this.selectedRequest.id,
+        this.selectedMachinesForAssignment,
+        this.assignmentComments
+      ).subscribe({
+        next: () => {
+          this.loadAssignmentRequests();
+          this.loadAvailableMachines();
+          this.closeModals();
+        },
+        error: (error: any) => {
+          this.error = 'Failed to assign machines. Please try again.';
+          console.error('Error assigning machines:', error);
         }
-      }
-
-      this.isProcessing = false;
-      this.closeModals();
-    }, 1500);
+      });
+      this.subscriptions.push(sub);
+    }
   }
 
   confirmRejection(): void {
-    if (!this.requestToReject || !this.rejectionReason.trim()) {
-      return;
-    }
-
-    this.isProcessing = true;
-
-    // Simulate API call
-    setTimeout(() => {
-      const requestIndex = this.assignmentRequests.findIndex(r => r.id === this.requestToReject!.id);
-      if (requestIndex > -1) {
-        this.assignmentRequests[requestIndex] = {
-          ...this.assignmentRequests[requestIndex],
-          status: 'REJECTED',
-          processedAt: new Date(),
-          processedBy: 'Current Machine Manager', // In real app, get from auth service
-          rejectionReason: this.rejectionReason
-        };
-
-        this.calculateStatistics();
-        this.applyFilters();
-        this.notificationService.showSuccess('Assignment request rejected');
-        
-        // In real app, send notification to requester
-        if (this.requestToReject) {
-          this.sendRejectionNotification(this.requestToReject, this.rejectionReason);
+    if (this.selectedRequest && this.rejectionReason.trim()) {
+      const sub = this.machineService.rejectAssignmentRequest(
+        this.selectedRequest.id,
+        this.rejectionReason
+      ).subscribe({
+        next: () => {
+          this.loadAssignmentRequests();
+          this.closeModals();
+        },
+        error: (error: any) => {
+          this.error = 'Failed to reject request. Please try again.';
+          console.error('Error rejecting request:', error);
         }
-      }
-
-      this.isProcessing = false;
-      this.closeModals();
-    }, 1000);
+      });
+      this.subscriptions.push(sub);
+    }
   }
 
-  // Notification methods
-  private sendAssignmentNotifications(request: AssignmentRequest, machineIds: string[]): void {
-    // In real implementation, this would call a notification service
-    console.log('Sending assignment notifications:', {
-      requester: request.requesterEmail,
-      machines: machineIds,
-      project: request.projectName
-    });
-  }
-
-  private sendRejectionNotification(request: AssignmentRequest, reason: string): void {
-    // In real implementation, this would call a notification service
-    console.log('Sending rejection notification:', {
-      requester: request.requesterEmail,
-      reason: reason,
-      project: request.projectName
-    });
-  }
-
-  // Utility methods
-  getStatusClass(status: string): string {
+  getStatusClass(status: AssignmentRequestStatus): string {
     switch (status) {
-      case 'PENDING': return 'status-pending';
-      case 'APPROVED': return 'status-approved';
-      case 'REJECTED': return 'status-rejected';
-      default: return '';
+      case AssignmentRequestStatus.PENDING:
+        return 'bg-warning text-dark';
+      case AssignmentRequestStatus.APPROVED:
+        return 'bg-success';
+      case AssignmentRequestStatus.REJECTED:
+        return 'bg-danger';
+      case AssignmentRequestStatus.PARTIALLY_FULFILLED:
+        return 'bg-info';
+      case AssignmentRequestStatus.COMPLETED:
+        return 'bg-primary';
+      case AssignmentRequestStatus.CANCELLED:
+        return 'bg-secondary';
+      default:
+        return 'bg-light text-dark';
     }
   }
 
-  getUrgencyClass(urgency: string): string {
+  getUrgencyClass(urgency: RequestUrgency): string {
     switch (urgency) {
-      case 'LOW': return 'urgency-low';
-      case 'MEDIUM': return 'urgency-medium';
-      case 'HIGH': return 'urgency-high';
-      case 'URGENT': return 'urgency-urgent';
-      default: return '';
+      case RequestUrgency.LOW:
+        return 'bg-success';
+      case RequestUrgency.MEDIUM:
+        return 'bg-warning text-dark';
+      case RequestUrgency.HIGH:
+        return 'bg-danger';
+      case RequestUrgency.CRITICAL:
+        return 'bg-dark';
+      default:
+        return 'bg-light text-dark';
     }
   }
 
-  formatDate(date: Date): string {
+  getAvailableMachinesForType(machineType: MachineType): Machine[] {
+    return this.availableMachines.filter(machine => machine.type === machineType);
+  }
+
+  formatDate(date: Date | string): string {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -335,126 +260,19 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Mock data generation methods
-  private generateMockRequests(): AssignmentRequest[] {
-    const mockRequests: AssignmentRequest[] = [
-      {
-        id: 'REQ-001',
-        requesterName: 'John Smith',
-        requesterEmail: 'john.smith@company.com',
-        projectId: 'PROJ-2024-001',
-        projectName: 'Highway Construction Phase 1',
-        machineType: 'EXCAVATOR',
-        quantity: 2,
-        urgency: 'HIGH',
-        status: 'PENDING',
-        description: 'Need 2 excavators for foundation work starting next week',
-        requestedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 'REQ-002',
-        requesterName: 'Sarah Johnson',
-        requesterEmail: 'sarah.johnson@company.com',
-        projectId: 'PROJ-2024-002',
-        projectName: 'Building Complex Development',
-        machineType: 'CRANE',
-        quantity: 1,
-        urgency: 'URGENT',
-        status: 'PENDING',
-        description: 'Urgent need for crane for high-rise construction',
-        requestedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 'REQ-003',
-        requesterName: 'Mike Wilson',
-        requesterEmail: 'mike.wilson@company.com',
-        projectId: 'PROJ-2024-003',
-        projectName: 'Road Maintenance Project',
-        machineType: 'BULLDOZER',
-        quantity: 1,
-        urgency: 'MEDIUM',
-        status: 'APPROVED',
-        description: 'Road clearing and leveling work',
-        requestedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        processedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        processedBy: 'Machine Manager',
-        assignedMachines: ['MACH-001'],
-        approvalNotes: 'Approved for immediate deployment'
-      },
-      {
-        id: 'REQ-004',
-        requesterName: 'Lisa Brown',
-        requesterEmail: 'lisa.brown@company.com',
-        projectId: 'PROJ-2024-004',
-        projectName: 'Mining Operation Expansion',
-        machineType: 'DUMP_TRUCK',
-        quantity: 3,
-        urgency: 'LOW',
-        status: 'REJECTED',
-        description: 'Need dump trucks for material transport',
-        requestedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        processedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        processedBy: 'Machine Manager',
-        rejectionReason: 'All dump trucks currently assigned to higher priority projects'
-      }
-    ];
-
-    return mockRequests;
+  navigateToInventory(): void {
+    this.router.navigate(['/machine-manager/machine-inventory']);
   }
 
-  private generateMockMachines(): Machine[] {
-    const mockMachines: Machine[] = [
-      {
-        id: 'MACH-001',
-        name: 'CAT 320D Excavator',
-        model: '320D',
-        serialNumber: 'CAT320D001',
-        type: 'EXCAVATOR',
-        status: 'AVAILABLE',
-        currentLocation: 'Warehouse A',
-        rigNo: 'RIG-001',
-        plateNo: 'ABC-123',
-        company: 'Caterpillar'
-      },
-      {
-        id: 'MACH-002',
-        name: 'CAT 330D Excavator',
-        model: '330D',
-        serialNumber: 'CAT330D001',
-        type: 'EXCAVATOR',
-        status: 'AVAILABLE',
-        currentLocation: 'Warehouse B',
-        rigNo: 'RIG-002',
-        plateNo: 'DEF-456',
-        company: 'Caterpillar'
-      },
-      {
-        id: 'MACH-003',
-        name: 'Liebherr LTM 1050',
-        model: 'LTM 1050',
-        serialNumber: 'LIE1050001',
-        type: 'CRANE',
-        status: 'AVAILABLE',
-        currentLocation: 'Site C',
-        rigNo: 'RIG-003',
-        plateNo: 'GHI-789',
-        company: 'Liebherr'
-      },
-      {
-        id: 'MACH-004',
-        name: 'CAT D6T Bulldozer',
-        model: 'D6T',
-        serialNumber: 'CATD6T001',
-        type: 'BULLDOZER',
-        status: 'ASSIGNED',
-        currentLocation: 'Project Site 1',
-        rigNo: 'RIG-004',
-        plateNo: 'JKL-012',
-        company: 'Caterpillar'
-      }
-    ];
-
-    return mockMachines;
+  get assignmentRequestStatusOptions() {
+    return Object.values(AssignmentRequestStatus);
   }
 
+  get requestUrgencyOptions() {
+    return Object.values(RequestUrgency);
+  }
+
+  get machineTypeOptions() {
+    return Object.values(MachineType);
+  }
 }

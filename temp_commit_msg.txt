@@ -1,7 +1,1 @@
-feat(machine-inventory): add project filter to machine inventory
-
-feat(notification-panel): implement notification panel component with filtering and actions
-
-feat(assignment-requests): create assignment requests component with approval workflow
-
-feat(notification-service): enhance notification service with machine assignment notifications
+Merge branch 'master' of https://github.com/SaadDev-01/DBMS
