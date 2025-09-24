@@ -56,6 +56,8 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   // Data properties
   assignmentRequests: AssignmentRequest[] = [];
   filteredRequests: AssignmentRequest[] = [];
+  // Add displayed slice for pagination
+  displayedRequests: AssignmentRequest[] = [];
   availableMachines: Machine[] = [];
   statistics: RequestStatistics = {
     pending: 0,
@@ -68,9 +70,18 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   selectedStatus: string = 'ALL';
   selectedUrgency: string = 'ALL';
   selectedMachineType: string = 'ALL';
+  // Free-text search
+  searchQuery: string = '';
+
+  // Sorting and pagination
+  sortBy: 'requestedAt' | 'urgency' | 'status' | 'machineType' | 'projectName' | 'requesterName' | 'id' = 'requestedAt';
+  sortDirection: 'asc' | 'desc' = 'desc';
+  pageSize: number = 10;
+  currentPage: number = 1;
+  pageNumbers: number[] = [];
 
   // Modal properties
-  selectedRequest: AssignmentRequest | null = null;
+  // selectedRequest property removed as view details functionality is no longer used
   requestToApprove: AssignmentRequest | null = null;
   requestToReject: AssignmentRequest | null = null;
 
@@ -109,7 +120,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.assignmentRequests = this.generateMockRequests();
       this.calculateStatistics();
-      this.applyFilters();
+      this.applyAll();
       this.isLoading = false;
     }, 1000);
   }
@@ -130,9 +141,146 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
       const statusMatch = this.selectedStatus === 'ALL' || request.status === this.selectedStatus;
       const urgencyMatch = this.selectedUrgency === 'ALL' || request.urgency === this.selectedUrgency;
       const typeMatch = this.selectedMachineType === 'ALL' || request.machineType === this.selectedMachineType;
-      
-      return statusMatch && urgencyMatch && typeMatch;
+      const search = this.searchQuery.trim().toLowerCase();
+      const searchMatch = !search || (
+        request.id.toLowerCase().includes(search) ||
+        request.requesterName.toLowerCase().includes(search) ||
+        (request.requesterEmail || '').toLowerCase().includes(search) ||
+        request.projectName.toLowerCase().includes(search) ||
+        request.projectId.toLowerCase().includes(search) ||
+        request.machineType.toLowerCase().includes(search)
+      );
+      return statusMatch && urgencyMatch && typeMatch && searchMatch;
     });
+  }
+
+  applyAll(): void {
+    this.applyFilters();
+    this.sortRequests();
+    this.updatePagination();
+    this.updateDisplayedRequests();
+  }
+
+  sortRequests(): void {
+    const dir = this.sortDirection === 'asc' ? 1 : -1;
+    this.filteredRequests.sort((a, b) => {
+      let av: any;
+      let bv: any;
+      switch (this.sortBy) {
+        case 'requestedAt':
+          av = new Date(a.requestedAt).getTime();
+          bv = new Date(b.requestedAt).getTime();
+          break;
+        case 'urgency':
+          const order = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 4 } as const;
+          av = order[a.urgency];
+          bv = order[b.urgency];
+          break;
+        case 'status':
+          const sOrder = { PENDING: 1, APPROVED: 2, REJECTED: 3 } as const;
+          av = sOrder[a.status];
+          bv = sOrder[b.status];
+          break;
+        case 'machineType':
+          av = a.machineType.toLowerCase();
+          bv = b.machineType.toLowerCase();
+          break;
+        case 'projectName':
+          av = a.projectName.toLowerCase();
+          bv = b.projectName.toLowerCase();
+          break;
+        case 'requesterName':
+          av = a.requesterName.toLowerCase();
+          bv = b.requesterName.toLowerCase();
+          break;
+        case 'id':
+          av = a.id.toLowerCase();
+          bv = b.id.toLowerCase();
+          break;
+        default:
+          av = 0; bv = 0;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }
+
+  // Computed total pages for pagination controls
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredRequests.length / this.pageSize));
+  }
+
+  updatePagination(): void {
+    const totalPages = this.totalPages;
+    if (this.currentPage > totalPages) {
+      this.currentPage = totalPages;
+    }
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
+    }
+    // Build page numbers array for template ngFor
+    this.pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  updateDisplayedRequests(): void {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.displayedRequests = this.filteredRequests.slice(start, end);
+  }
+
+  setSort(field: typeof this.sortBy): void {
+    if (this.sortBy === field) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = field;
+      this.sortDirection = 'asc';
+    }
+    this.sortRequests();
+    this.updateDisplayedRequests();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.updateDisplayedRequests();
+  }
+
+  setPageSize(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+    this.updatePagination();
+    this.updateDisplayedRequests();
+  }
+
+  clearFilters(): void {
+    this.selectedStatus = 'ALL';
+    this.selectedUrgency = 'ALL';
+    this.selectedMachineType = 'ALL';
+    this.searchQuery = '';
+    this.currentPage = 1;
+    this.applyAll();
+  }
+
+  // Removed exportCSV functionality as per request
+  getRowClass(request: AssignmentRequest): string {
+    switch (request.urgency) {
+      case 'URGENT': return 'urgent-row';
+      case 'HIGH': return 'high-row';
+      case 'MEDIUM': return 'medium-row';
+      default: return 'low-row';
+    }
+  }
+
+  getRequestAgeLabel(request: AssignmentRequest): string {
+    const now = new Date().getTime();
+    const then = new Date(request.requestedAt).getTime();
+    let diff = Math.max(0, Math.floor((now - then) / 1000)); // seconds
+    const days = Math.floor(diff / 86400); diff %= 86400;
+    const hours = Math.floor(diff / 3600); diff %= 3600;
+    const minutes = Math.floor(diff / 60);
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
   }
 
   // Statistics calculation
@@ -157,32 +305,86 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   // Modal methods
-  viewRequestDetails(request: AssignmentRequest): void {
-    this.selectedRequest = request;
-    this.triggerModal('requestDetailsModal', 'show');
-  }
-
+  // Removed viewRequestDetails method as the eye/view details action has been removed
   approveRequest(request: AssignmentRequest): void {
-    this.requestToApprove = request;
-    this.selectedMachinesForAssignment = [];
-    this.approvalNotes = '';
-    this.triggerModal('approveRequestModal', 'show');
+    // Immediately process approval without modal by auto-assigning available machines
+    const available = this.getAvailableMachinesForType(request.machineType);
+
+    if (available.length < request.quantity) {
+      this.notificationService.showWarning('Not enough available machines to fulfill this request.');
+      return;
+    }
+
+    this.isProcessing = true;
+
+    // Auto-select the first N available machines matching the request type
+    const assignedIds = available.slice(0, request.quantity).map(m => m.id);
+
+    // Simulate API call
+    setTimeout(() => {
+      const requestIndex = this.assignmentRequests.findIndex(r => r.id === request.id);
+      if (requestIndex > -1) {
+        this.assignmentRequests[requestIndex] = {
+          ...this.assignmentRequests[requestIndex],
+          status: 'APPROVED',
+          processedAt: new Date(),
+          processedBy: 'Current Machine Manager', // In real app, get from auth service
+          assignedMachines: assignedIds,
+          approvalNotes: ''
+        };
+      }
+
+      // Update machine statuses
+      assignedIds.forEach(machineId => {
+        const machine = this.availableMachines.find(m => m.id === machineId);
+        if (machine) {
+          machine.status = 'ASSIGNED';
+        }
+      });
+
+      this.calculateStatistics();
+      this.applyFilters();
+      this.notificationService.showSuccess('Assignment request approved successfully');
+      this.sendAssignmentNotifications(request, assignedIds);
+
+      this.isProcessing = false;
+    }, 500);
   }
 
   rejectRequest(request: AssignmentRequest): void {
-    this.requestToReject = request;
-    this.rejectionReason = '';
-    this.triggerModal('rejectRequestModal', 'show');
+    // Immediately process rejection without modal
+    this.isProcessing = true;
+
+    // Simulate API call
+    setTimeout(() => {
+      const requestIndex = this.assignmentRequests.findIndex(r => r.id === request.id);
+      if (requestIndex > -1) {
+        this.assignmentRequests[requestIndex] = {
+          ...this.assignmentRequests[requestIndex],
+          status: 'REJECTED',
+          processedAt: new Date(),
+          processedBy: 'Current Machine Manager', // In real app, get from auth service
+          rejectionReason: 'Rejected by manager'
+        };
+      }
+
+      this.calculateStatistics();
+      this.applyFilters();
+      this.notificationService.showSuccess('Assignment request rejected');
+      this.sendRejectionNotification(request, 'Rejected by manager');
+
+      this.isProcessing = false;
+    }, 300);
   }
 
   closeModals(): void {
-    this.triggerModal('requestDetailsModal', 'hide');
+    // Removed requestDetailsModal hide since details modal was removed
     this.triggerModal('approveRequestModal', 'hide');
     this.triggerModal('rejectRequestModal', 'hide');
 
     // Reset properties after a short delay to allow modals to close gracefully
     setTimeout(() => {
-      this.selectedRequest = null;
+      // Removed selectedRequest reset since it no longer exists
       this.requestToApprove = null;
       this.requestToReject = null;
       this.approvalNotes = '';
