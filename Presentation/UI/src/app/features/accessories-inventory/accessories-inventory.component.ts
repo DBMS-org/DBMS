@@ -312,22 +312,32 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
 
   private applySorting(): void {
     this.filteredAccessories.sort((a, b) => {
-      let aValue = a[this.sortField as keyof Accessory];
-      let bValue = b[this.sortField as keyof Accessory];
-      
-      // Handle different data types
-      if (aValue instanceof Date && bValue instanceof Date) {
-        aValue = aValue.getTime();
-        bValue = bValue.getTime();
-      } else if (typeof aValue === 'string' && typeof bValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
+      const aRaw = a[this.sortField as keyof Accessory];
+      const bRaw = b[this.sortField as keyof Accessory];
+
+      let av: number | string;
+      let bv: number | string;
+
+      if (aRaw instanceof Date) {
+        av = aRaw.getTime();
+      } else if (typeof aRaw === 'string') {
+        av = aRaw.toLowerCase();
+      } else {
+        av = (aRaw as number) ?? 0;
       }
-      
-      if (aValue < bValue) {
+
+      if (bRaw instanceof Date) {
+        bv = bRaw.getTime();
+      } else if (typeof bRaw === 'string') {
+        bv = bRaw.toLowerCase();
+      } else {
+        bv = (bRaw as number) ?? 0;
+      }
+
+      if (av < bv) {
         return this.sortDirection === 'asc' ? -1 : 1;
       }
-      if (aValue > bValue) {
+      if (av > bv) {
         return this.sortDirection === 'asc' ? 1 : -1;
       }
       return 0;

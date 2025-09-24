@@ -491,107 +491,97 @@
         <i class="fas fa-times"></i>
       </button>
     </div>
-    <div class="modal-body" *ngIf="selectedMaintenance">
-      <div class="details-grid">
-        <div class="detail-section">
-          <h4>Basic Information</h4>
-          <div class="detail-row">
-            <span class="label">Maintenance ID:</span>
-            <span class="value">{{ selectedMaintenance.id }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Machine:</span>
-            <span class="value">{{ selectedMaintenance.machineName }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Model:</span>
-            <span class="value">{{ selectedMaintenance.machineModel }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Rig No:</span>
-            <span class="value">{{ selectedMaintenance.rigNo }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Type:</span>
-            <span class="value">
-              <span class="type-badge" [class]="'type-' + selectedMaintenance.type">
-                {{ selectedMaintenance.type | titlecase }}
-              </span>
-            </span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Priority:</span>
-            <span class="value">
-              <span class="priority-badge" [class]="'priority-' + selectedMaintenance.priority">
-                {{ selectedMaintenance.priority | titlecase }}
-              </span>
-            </span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Status:</span>
-            <span class="value">
-              <span class="status-badge" [class]="'status-' + selectedMaintenance.status">
-                {{ selectedMaintenance.status | titlecase }}
-              </span>
-            </span>
-          </div>
-        </div>
-        <div class="detail-section">
-          <h4>Schedule & Assignment</h4>
-          <div class="detail-row">
-            <span class="label">Scheduled Date:</span>
-            <span class="value">{{ selectedMaintenance.scheduledDate | date:'fullDate' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Scheduled Time:</span>
-            <span class="value">{{ selectedMaintenance.scheduledTime }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Assigned Technician:</span>
-            <span class="value">{{ selectedMaintenance.assignedTechnician }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Estimated Duration:</span>
-            <span class="value">{{ selectedMaintenance.estimatedDuration }} hours</span>
-          </div>
-          <div class="detail-row" *ngIf="selectedMaintenance.actualDuration">
-            <span class="label">Actual Duration:</span>
-            <span class="value">{{ selectedMaintenance.actualDuration }} hours</span>
-          </div>
-          <div class="detail-row" *ngIf="selectedMaintenance.cost">
-            <span class="label">Estimated Cost:</span>
-            <span class="value">${{ selectedMaintenance.cost | number:'1.2-2' }}</span>
-          </div>
-          <div class="detail-row" *ngIf="selectedMaintenance.actualCost">
-            <span class="label">Actual Cost:</span>
-            <span class="value">${{ selectedMaintenance.actualCost | number:'1.2-2' }}</span>
-          </div>
-        </div>
+    <div class="modal-body" *ngIf="selectedMaintenance as record">
+      <!-- Identification details -->
+      <div class="detail-row">
+        <span class="label">Record ID</span>
+        <span class="value">{{ record.id }}</span>
       </div>
+      <div class="detail-row">
+        <span class="label">Machine Name</span>
+        <span class="value">{{ record.machineName }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Model</span>
+        <span class="value">{{ record.machineModel }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Rig No</span>
+        <span class="value">{{ record.rigNo }}</span>
+      </div>
+  
+      <!-- Badges -->
+      <div class="detail-row">
+        <span class="label">Type</span>
+        <span class="type-badge" [class]="'type-' + record.type">{{ record.type | titlecase }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Priority</span>
+        <span class="priority-badge" [class]="'priority-' + record.priority">{{ record.priority | titlecase }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Status</span>
+        <span class="status-badge" [class]="'status-' + record.status">{{ record.status | titlecase }}</span>
+      </div>
+  
+      <!-- Scheduling details -->
+      <div class="detail-row">
+        <span class="label">Scheduled Date</span>
+        <span class="value">{{ record.scheduledDate | date:'fullDate' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Scheduled Time</span>
+        <span class="value">{{ record.scheduledTime }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Technician</span>
+        <span class="value">{{ record.assignedTechnician }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Estimated Duration</span>
+        <span class="value">{{ record.estimatedDuration }} hours</span>
+      </div>
+      <div class="detail-row" *ngIf="record.actualDuration">
+        <span class="label">Actual Duration</span>
+        <span class="value">{{ record.actualDuration }} hours</span>
+      </div>
+      <div class="detail-row" *ngIf="record.cost">
+        <span class="label">Estimated Cost</span>
+        <span class="value">${{ record.cost | number:'1.2-2' }}</span>
+      </div>
+      <div class="detail-row" *ngIf="record.actualCost">
+        <span class="label">Actual Cost</span>
+        <span class="value">${{ record.actualCost | number:'1.2-2' }}</span>
+      </div>
+  
+      <!-- Description and notes -->
       <div class="detail-section full-width">
-        <h4>Description</h4>
-        <p class="description-text">{{ selectedMaintenance.description }}</p>
+        <span class="label">Description</span>
+        <p class="description-text">{{ record.description }}</p>
       </div>
-      <div class="detail-section full-width" *ngIf="selectedMaintenance.notes">
-        <h4>Notes</h4>
-        <p class="notes-text">{{ selectedMaintenance.notes }}</p>
+      <div class="detail-section full-width" *ngIf="record.notes">
+        <span class="label">Notes</span>
+        <p class="notes-text">{{ record.notes }}</p>
       </div>
-      <div class="detail-section full-width" *ngIf="selectedMaintenance.completionNotes">
-        <h4>Completion Notes</h4>
-        <p class="completion-notes">{{ selectedMaintenance.completionNotes }}</p>
+      <div class="detail-section full-width" *ngIf="record.completionNotes">
+        <span class="label">Completion Notes</span>
+        <p class="completion-notes">{{ record.completionNotes }}</p>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
-        Close
-      </button>
-      <button type="button" 
-              class="btn btn-primary" 
-              (click)="editMaintenance(selectedMaintenance)"
-              *ngIf="selectedMaintenance?.status !== 'completed'">
-        <i class="fas fa-edit"></i>
-        Edit Maintenance
-      </button>
+  
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button class="btn btn-primary" (click)="editMaintenance(record)" *ngIf="record.status !== 'completed'">Edit</button>
+        <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
+          Close
+        </button>
+        <button type="button" 
+                class="btn btn-primary" 
+                (click)="editMaintenance(selectedMaintenance)"
+                *ngIf="selectedMaintenance?.status !== 'completed'">
+          <i class="fas fa-edit"></i>
+          Edit Maintenance
+        </button>
+      </div>
     </div>
   </div>
 </div>
