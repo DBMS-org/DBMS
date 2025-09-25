@@ -1,6 +1,1 @@
-feat(drilling): implement GUID-based IDs for drill holes
-
-- Replace sequential IDs with GUIDs for better uniqueness
-- Add displayName field to maintain DH1, DH2 format
-- Make SerialNumber nullable in DrillHole entity
-- Update EF Core configuration for new ID strategy
+Merge branch 'DBMS-org:master' into master
