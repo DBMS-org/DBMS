@@ -658,7 +658,7 @@ namespace Application.Services.DrillingOperations
         {
             return csvData.Select((hole, index) => new DrillPoint
             {
-                Id = hole.Id?.ToString() ?? $"DH{index + 1}",
+                Id = !string.IsNullOrEmpty(hole.Id?.ToString()) ? hole.Id.ToString() : Guid.NewGuid().ToString(),
                 X = hole.Easting ?? 0,
                 Y = hole.Northing ?? 0,
                 Depth = hole.Depth ?? hole.Length ?? 10.0,
