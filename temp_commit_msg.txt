@@ -1,3 +1,7 @@
-Merge pull request #11 from SaadDev-01/master
+feat(drill-pattern): add export to pattern creator and improve hole ID handling
 
-Merge pull request #1 from DBMS-org/master
+- Add export functionality from drill visualization to pattern creator
+- Change hole IDs from GUID to DH1, DH2 format for consistency
+- Implement sorting of drill data by hole ID
+- Update canvas service to use displayName when available
+- Add confirmation dialog when importing drill data over existing pattern

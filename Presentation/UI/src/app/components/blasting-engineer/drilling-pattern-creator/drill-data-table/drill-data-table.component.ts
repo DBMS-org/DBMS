@@ -43,7 +43,7 @@ export class DrillDataTableComponent implements OnInit {
   // Density inputs for calculations
   emulsionDensity: number = 1.2; // g/cm³
   anfoeDensity: number = 0.8; // g/cm³
-  emulsionPerHole: number = 50; // kg
+  emulsionPerHole: number = 1.5; // kg
   holeDiameter: number = 89; // mm
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<DrillDataRow[]>();
