@@ -147,6 +147,22 @@ export class DrillDataTableComponent implements OnInit {
         anfo: anfo,
         emulsion: emulsion
       };
+    }).sort((a, b) => {
+      // Sort by holeId in ascending order
+      // Handle both numeric and string hole IDs
+      const aId = a.holeId;
+      const bId = b.holeId;
+      
+      // If both are numeric, compare as numbers
+      const aNum = parseFloat(aId);
+      const bNum = parseFloat(bId);
+      
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+      }
+      
+      // Otherwise, compare as strings
+      return aId.localeCompare(bId, undefined, { numeric: true, sensitivity: 'base' });
     });
     
     // Calculate totals after generating data
