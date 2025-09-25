@@ -57,6 +57,7 @@
             <div class="form-group">
               <label>Status</label>
               <select
+                title="Filter by status"
                 class="form-select"
                 [(ngModel)]="filterStatus"
                 (change)="applyFilters()">
@@ -71,6 +72,7 @@
             <div class="form-group">
               <label>Explosive Type</label>
               <select
+                title="Filter by explosive type"
                 class="form-select"
                 [(ngModel)]="filterType"
                 (change)="applyFilters()">
@@ -90,12 +92,24 @@
                 type="date" 
                 class="form-control"
                 [(ngModel)]="filterDateFrom"
+                (change)="applyFilters()"
+                title="Filter from date"
+                placeholder="yyyy-mm-dd">
+                type="date" 
+                class="form-control"
+                [(ngModel)]="filterDateFrom"
                 (change)="applyFilters()">
             </div>
             
             <div class="form-group">
               <label>Date To</label>
               <input 
+                type="date" 
+                class="form-control"
+                [(ngModel)]="filterDateTo"
+                (change)="applyFilters()"
+                title="Filter to date"
+                placeholder="yyyy-mm-dd">
                 type="date" 
                 class="form-control"
                 [(ngModel)]="filterDateTo"

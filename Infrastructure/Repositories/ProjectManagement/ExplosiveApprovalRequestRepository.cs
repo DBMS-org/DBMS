@@ -227,5 +227,26 @@ namespace Infrastructure.Repositories.ProjectManagement
                 throw;
             }
         }
+
+        public async Task<IEnumerable<ExplosiveApprovalRequest>> GetByRegionAsync(string region)
+        {
+            try
+            {
+                return await _context.ExplosiveApprovalRequests
+                    .Include(r => r.ProjectSite)
+                        .ThenInclude(ps => ps.Project)
+                            .ThenInclude(p => p.RegionNavigation)
+                    .Include(r => r.RequestedByUser)
+                    .Include(r => r.ProcessedByUser)
+                    .Where(r => r.ProjectSite.Project.Region == region)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving explosive approval requests for region {Region}", region);
+                throw;
+            }
+        }
     }
 }
