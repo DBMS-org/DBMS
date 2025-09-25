@@ -6,9 +6,33 @@
         <i class="material-icons">engineering</i>
         Blasting Engineer Requests
       </h2>
-      <p class="page-subtitle">Manage explosive material requests from blasting engineers</p>
+      <p class="page-subtitle">Manage explosive material requests from blasting engineers in your region</p>
+      @if (currentUserRegion) {
+        <div class="region-info">
+          <i class="material-icons">location_on</i>
+          <span>Region: {{ currentUserRegion }}</span>
+        </div>
+      }
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="refreshRequests()" [disabled]="isLoading">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
     </div>
   </div>
+
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="error-message">
+      <i class="material-icons">error</i>
+      <span>{{ errorMessage }}</span>
+      <button class="btn btn-sm btn-secondary" (click)="refreshRequests()">
+        <i class="material-icons">refresh</i>
+        Retry
+      </button>
+    </div>
+  }
 
   <!-- Filters Section -->
   <div class="filters-section">
@@ -17,7 +41,7 @@
         <i class="material-icons">search</i>
         <input 
           type="text" 
-          placeholder="Search by Request ID, Engineer, Explosive Type, or Purpose..." 
+          placeholder="Search by Request ID, Engineer, Project Site, or Comments..." 
           [(ngModel)]="searchTerm"
           (input)="onSearch()"
           class="search-input">
@@ -38,11 +62,11 @@
           (change)="onStatusFilterChange()"
           class="filter-select">
           <option value="ALL">All Statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="COMPLETED">Completed</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Cancelled">Cancelled</option>
+          <option value="Expired">Expired</option>
         </select>
       </div>
       
@@ -67,48 +91,54 @@
             <tr>
               <th>Request ID</th>
               <th>Engineer</th>
-              <th>Explosive Type</th>
-              <th>Quantity</th>
+              <th>Project Site</th>
+              <th>Expected Date</th>
               <th>Request Date</th>
-              <th>Required Date</th>
               <th>Status</th>
-              <th>Purpose</th>
+              <th>Priority</th>
+              <th>Type</th>
+              <th>Comments</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (request of filteredRequests; track request.requestId) {
+            @for (request of filteredRequests; track request.id) {
               <tr class="request-row">
                 <td class="request-id">
-                  <span class="id-badge">{{ request.requestId }}</span>
+                  <span class="id-badge">{{ request.id }}</span>
                 </td>
                 <td class="engineer-info">
                   <div class="engineer-details">
-                    <span class="engineer-name">{{ request.engineer.name }}</span>
-                    <span class="engineer-title">{{ request.engineer.title }}</span>
+                    <span class="engineer-name">{{ request.requestedByUser?.name || 'Unknown' }}</span>
+                    <span class="engineer-email">{{ request.requestedByUser?.email || '' }}</span>
                   </div>
                 </td>
-                <td class="explosive-type">
-                  <span class="type-badge" [class]="'type-' + request.explosiveType.toLowerCase()">
-                    {{ request.explosiveType }}
-                  </span>
-                </td>
-                <td class="quantity">
-                  <div class="quantity-info">
-                    <span class="amount">{{ request.quantity.amount }}</span>
-                    <span class="unit">{{ request.quantity.unit }}</span>
+                <td class="project-site">
+                  <div class="site-info">
+                    <span class="site-name">{{ request.projectSite?.name || 'Unknown Site' }}</span>
+                    <span class="project-name">{{ request.projectSite?.project?.name || '' }}</span>
                   </div>
                 </td>
-                <td class="request-date">{{ request.requestDate }}</td>
-                <td class="required-date">{{ request.requiredDate }}</td>
+                <td class="expected-date">{{ formatDate(request.expectedUsageDate) }}</td>
+                <td class="request-date">{{ formatDate(request.createdAt) }}</td>
                 <td class="status">
                   <span class="status-badge" [class]="getStatusClass(request.status)">
                     {{ request.status }}
                   </span>
                 </td>
-                <td class="purpose">
-                  <span class="purpose-text" [title]="request.purpose">
-                    {{ request.purpose.length > 50 ? request.purpose.substring(0, 50) + '...' : request.purpose }}
+                <td class="priority">
+                  <span class="priority-badge" [class]="'priority-' + request.priority.toLowerCase()">
+                    {{ request.priority }}
+                  </span>
+                </td>
+                <td class="approval-type">
+                  <span class="type-badge" [class]="'type-' + request.approvalType.toLowerCase()">
+                    {{ request.approvalType }}
+                  </span>
+                </td>
+                <td class="comments">
+                  <span class="comments-text" [title]="request.comments || 'No comments'">
+                    {{ request.comments ? (request.comments.length > 30 ? request.comments.substring(0, 30) + '...' : request.comments) : 'No comments' }}
                   </span>
                 </td>
                 <td class="actions">
@@ -119,7 +149,7 @@
                       title="View Details">
                       <i class="material-icons">visibility</i>
                     </button>
-                    @if (request.status === 'PENDING') {
+                    @if (request.status === 'Pending') {
                       <button 
                         class="btn btn-sm btn-success" 
                         (click)="onApprove(request)"
@@ -138,7 +168,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="9" class="no-data">
+                <td colspan="10" class="no-data">
                   <div class="empty-state">
                     <i class="material-icons">inbox</i>
                     <h4>No Requests Found</h4>
