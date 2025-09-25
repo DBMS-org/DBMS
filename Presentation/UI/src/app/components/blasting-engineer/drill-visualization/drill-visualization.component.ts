@@ -1146,8 +1146,8 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     console.log(`🎯 Drill objects in array: ${this.drillObjects.length}`);
     console.log(`🏷️ Label objects in array: ${this.labelObjects.length}`);
 
-    // Auto-frame the pattern for optimal viewing
-    this.autoFramePattern();
+    // Set optimal camera view (same as reset) for consistent initial positioning
+    this.setOptimalCameraView();
   }
 
   private getColorForHole(index: number): number {
@@ -1533,8 +1533,8 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
       this.create3DDrillHoles();
     }
 
-    // Reset camera view
-    this.autoFramePattern();
+    // Reset camera to optimal view (same as reset button)
+    this.setOptimalCameraView();
   }
 
   // Getter methods for template expressions (Angular templates cannot use complex expressions)

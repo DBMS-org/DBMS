@@ -4,7 +4,7 @@ namespace Application.DTOs.DrillingOperations
 {
     public class DrillHoleDto
     {
-        public int SerialNumber { get; set; }
+        public int? SerialNumber { get; set; }
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public double Easting { get; set; }
@@ -100,4 +100,4 @@ namespace Application.DTOs.DrillingOperations
         [Required]
         public double Stemming { get; set; }
     }
-} 
+}
