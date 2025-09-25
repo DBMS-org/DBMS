@@ -22,6 +22,15 @@ export const MACHINE_MANAGER_ROUTES: Routes = [
             {
               path: 'assignment-requests',
               component: AssignmentRequestsComponent
+            },
+            // Added missing feature routes for Machine Manager
+            {
+              path: 'accessories-inventory',
+              loadComponent: () => import('../../features/accessories-inventory/accessories-inventory.component').then(m => m.AccessoriesInventoryComponent)
+            },
+            {
+              path: 'maintenance-management',
+              loadComponent: () => import('../../features/maintenance-management/maintenance-management.component').then(m => m.MaintenanceManagementComponent)
             }
         ]
     }
