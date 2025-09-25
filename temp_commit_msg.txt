@@ -1,7 +1,5 @@
-feat(drill-pattern): add export to pattern creator and improve hole ID handling
+feat(proposal-history): add delete functionality for pending proposals
 
-- Add export functionality from drill visualization to pattern creator
-- Change hole IDs from GUID to DH1, DH2 format for consistency
-- Implement sorting of drill data by hole ID
-- Update canvas service to use displayName when available
-- Add confirmation dialog when importing drill data over existing pattern
+refactor(explosive-calculations): update UI with compact header and grid layout
+
+fix(drill-data-table): correct emulsionPerHole default value from 50 to 1.5 kg
