@@ -2,6 +2,7 @@ export interface DrillPoint {
   x: number;
   y: number;
   id: string;
+  displayName?: string; // For DH1, DH2 display format
   depth: number;
   spacing: number;
   burden: number;

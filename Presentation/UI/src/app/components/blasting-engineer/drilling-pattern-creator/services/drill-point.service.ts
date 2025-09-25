@@ -67,7 +67,8 @@ export class DrillPointService {
     return {
       x: Number(finalX.toFixed(2)),
       y: Number(finalY.toFixed(2)),
-      id: `DH${this.currentId++}`,
+      id: this.generateGuid(), // Generate GUID instead of DH${currentId++}
+      displayName: `DH${this.currentId++}`, // Keep DH1, DH2 format for display
       depth: safeDepth,
       spacing: safeSpacing,
       burden: safeBurden,
@@ -160,7 +161,8 @@ export class DrillPointService {
         points.push({
           x: Number(x.toFixed(2)),
           y: Number(y.toFixed(2)),
-          id: `DH${this.currentId++}`,
+          id: this.generateGuid(), // Generate GUID instead of DH${currentId++}
+          displayName: `DH${this.currentId++}`, // Keep DH1, DH2 format for display
           depth: depth,
           spacing: spacing,
           burden: burden,
@@ -280,5 +282,16 @@ export class DrillPointService {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
     return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /**
+   * Generate a proper GUID/UUID v4
+   */
+  private generateGuid(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 }

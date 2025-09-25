@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProposalHistoryService, ProposalHistoryItem, ExplosiveApprovalStatus } from '../../../core/services/proposal-history.service';
+import { SiteService, ProjectSite } from '../../../core/services/site.service';
+import { ProjectService } from '../../../core/services/project.service';
+import { forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 interface DisplayProposalItem {
   id: number;
@@ -30,7 +34,11 @@ export class ProposalHistoryComponent implements OnInit {
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  constructor(private proposalHistoryService: ProposalHistoryService) {}
+  constructor(
+    private proposalHistoryService: ProposalHistoryService,
+    private siteService: SiteService,
+    private projectService: ProjectService
+  ) {}
 
   ngOnInit() {
     this.loadProposalHistory();
@@ -42,9 +50,74 @@ export class ProposalHistoryComponent implements OnInit {
     
     this.proposalHistoryService.getUserProposals().subscribe({
       next: (proposals: ProposalHistoryItem[]) => {
-        this.proposalHistory = proposals.map(proposal => this.mapToDisplayItem(proposal));
-        this.filteredHistory = [...this.proposalHistory];
-        this.isLoading = false;
+        // Create an array of observables to fetch site details for each proposal
+        const siteRequests = proposals.map(proposal => 
+          this.siteService.getSite(proposal.projectSiteId).pipe(
+            catchError(error => {
+              console.error(`Error fetching site ${proposal.projectSiteId}:`, error);
+              // Return a fallback site object if fetch fails
+              return of({
+                id: proposal.projectSiteId,
+                projectId: 0,
+                name: proposal.projectSiteName || `Site ${proposal.projectSiteId}`,
+                location: '',
+                status: '',
+                description: '',
+                isPatternApproved: false,
+                isSimulationConfirmed: false,
+                isOperatorCompleted: false,
+                isExplosiveApprovalRequested: false,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              } as ProjectSite);
+            })
+          )
+        );
+
+        // Execute all site requests in parallel
+        forkJoin(siteRequests).subscribe({
+          next: (sites: ProjectSite[]) => {
+            // Create an array of observables to fetch project details
+            const projectRequests = sites.map(site => 
+              site.projectId > 0 ? 
+                this.projectService.getProject(site.projectId).pipe(
+                  catchError(error => {
+                    console.error(`Error fetching project ${site.projectId}:`, error);
+                    return of({ id: site.projectId, name: `Project ${site.projectId}` });
+                  })
+                ) : 
+                of({ id: 0, name: 'Unknown Project' })
+            );
+
+            // Execute all project requests in parallel
+            forkJoin(projectRequests).subscribe({
+              next: (projects: any[]) => {
+                // Map proposals with their corresponding site and project data
+                this.proposalHistory = proposals.map((proposal, index) => 
+                  this.mapToDisplayItem(proposal, sites[index], projects[index])
+                );
+                this.filteredHistory = [...this.proposalHistory];
+                this.isLoading = false;
+              },
+              error: (error) => {
+                console.error('Error loading project details:', error);
+                // Fallback to mapping with site data only
+                this.proposalHistory = proposals.map((proposal, index) => 
+                  this.mapToDisplayItem(proposal, sites[index])
+                );
+                this.filteredHistory = [...this.proposalHistory];
+                this.isLoading = false;
+              }
+            });
+          },
+          error: (error) => {
+            console.error('Error loading site details:', error);
+            // Fallback to original mapping without site/project data
+            this.proposalHistory = proposals.map(proposal => this.mapToDisplayItem(proposal));
+            this.filteredHistory = [...this.proposalHistory];
+            this.isLoading = false;
+          }
+        });
       },
       error: (error) => {
         console.error('Error loading proposal history:', error);
@@ -57,11 +130,11 @@ export class ProposalHistoryComponent implements OnInit {
     });
   }
 
-  private mapToDisplayItem(proposal: ProposalHistoryItem): DisplayProposalItem {
+  private mapToDisplayItem(proposal: ProposalHistoryItem, site?: ProjectSite, project?: any): DisplayProposalItem {
     return {
       id: proposal.id,
-      projectName: proposal.projectSiteName || `Project Site ${proposal.projectSiteId}`,
-      siteName: proposal.projectSiteName || `Site ${proposal.projectSiteId}`,
+      projectName: project?.name || `Project ${site?.projectId || 'Unknown'}`,
+      siteName: site?.name || proposal.projectSiteName || `Site ${proposal.projectSiteId}`,
       proposalType: 'Explosive Approval Request',
       status: this.mapStatus(proposal.status),
       submittedDate: proposal.createdAt,

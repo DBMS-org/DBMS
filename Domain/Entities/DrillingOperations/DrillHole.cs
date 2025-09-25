@@ -2,7 +2,7 @@ namespace Domain.Entities.DrillingOperations
 {
     public class DrillHole
     {
-        public int SerialNumber { get; set; }
+        public int? SerialNumber { get; set; }
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public double Easting { get; set; }
@@ -29,4 +29,4 @@ namespace Domain.Entities.DrillingOperations
         public bool Has3DData => Azimuth.HasValue && Dip.HasValue;
         public bool RequiresFallbackTo2D => !Has3DData;
     }
-} 
+}
