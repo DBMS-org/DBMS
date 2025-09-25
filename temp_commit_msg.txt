@@ -1,6 +1,5 @@
-feat(machine-manager): add sorting, pagination and search to assignment requests
+feat(drill-visualization): enhance UI with modern styling and improved functionality
 
-refactor(assignment-requests): simplify approval/rejection flow and remove details modal
-style(assignment-requests): improve responsive design and UI elements
-fix(accessories-inventory): improve sorting logic for different data types
-chore: update development database connection to localhost
+refactor(drill-visualization): rename autoFramePattern to setOptimalCameraView for clarity
+feat(proposal-history): add site and project data fetching for proposals
+style(drill-visualization): update SCSS with compact layouts and interactive elements
