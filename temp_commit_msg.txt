@@ -1,7 +1,6 @@
-feat(assignment-requests): refactor modal handling and add styling
+feat(machine-manager): add sorting, pagination and search to assignment requests
 
-- Replace custom modal implementation with Bootstrap modals
-- Add ElementRef and Renderer2 for modal control
-- Implement triggerModal method for centralized modal handling
-- Add SCSS styling for the component
-- Update HTML structure to use Bootstrap modal components
+refactor(assignment-requests): simplify approval/rejection flow and remove details modal
+style(assignment-requests): improve responsive design and UI elements
+fix(accessories-inventory): improve sorting logic for different data types
+chore: update development database connection to localhost

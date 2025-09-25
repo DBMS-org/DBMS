@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { User } from '../../../../core/models/user.model';
@@ -17,7 +18,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   private userSubscription: Subscription = new Subscription();
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
@@ -35,6 +39,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   getUserDisplayName(): string {
     return this.currentUser?.name || 'Admin User';
+  }
+
+  navigateToProfile() {
+    this.router.navigate(['/admin/profile']);
   }
 
   logout() {
