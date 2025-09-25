@@ -1,5 +1,6 @@
-feat(drill-visualization): enhance UI with modern styling and improved functionality
+feat(drilling): implement GUID-based IDs for drill holes
 
-refactor(drill-visualization): rename autoFramePattern to setOptimalCameraView for clarity
-feat(proposal-history): add site and project data fetching for proposals
-style(drill-visualization): update SCSS with compact layouts and interactive elements
+- Replace sequential IDs with GUIDs for better uniqueness
+- Add displayName field to maintain DH1, DH2 format
+- Make SerialNumber nullable in DrillHole entity
+- Update EF Core configuration for new ID strategy
