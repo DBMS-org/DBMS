@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
 import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.service';
 import { SiteService } from '../../../core/services/site.service';
+import { DrillDataService } from '../csv-upload/drill-data.service';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DrillLocation } from '../../../core/models/drilling.model';
@@ -53,6 +54,7 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
     private unifiedDrillDataService: UnifiedDrillDataService,
     private drillHoleService: DrillHoleService,
     private siteService: SiteService,
+    private drillDataService: DrillDataService,
     private router: Router,
     private route: ActivatedRoute
   ) { }
@@ -1535,6 +1537,51 @@ export class DrillVisualizationComponent implements OnInit, AfterViewInit, OnDes
 
     // Reset camera to optimal view (same as reset button)
     this.setOptimalCameraView();
+  }
+
+  // Export drill data to Pattern Creator
+  exportToPatternCreator(): void {
+    if (!this.isDataLoaded || !this.drillData || this.drillData.length === 0) {
+      console.warn('No drill data available to export');
+      return;
+    }
+
+    if (!this.projectId || !this.siteId) {
+      console.error('Missing project or site context for export');
+      return;
+    }
+
+    console.log('Exporting drill data to Pattern Creator:', {
+      projectId: this.projectId,
+      siteId: this.siteId,
+      drillDataCount: this.drillData.length
+    });
+
+    // Convert drill hole data to the format expected by pattern creator
+    const exportData = this.drillData.map((hole, index) => ({
+      id: hole.name || hole.id || `DH${index + 1}`,
+      easting: hole.easting,
+      northing: hole.northing,
+      elevation: hole.elevation,
+      depth: hole.depth,
+      azimuth: hole.azimuth,
+      dip: hole.dip,
+      stemming: hole.stemming
+    }));
+
+    // Store the data in DrillDataService for pattern creator to pick up
+    this.drillDataService.setDrillData(exportData);
+
+    console.log('Drill data stored in service, navigating to pattern creator...');
+
+    // Navigate to pattern creator
+    this.router.navigate([
+      '/blasting-engineer/project-management', 
+      this.projectId, 
+      'sites', 
+      this.siteId, 
+      'pattern-creator'
+    ]);
   }
 
   // Getter methods for template expressions (Angular templates cannot use complex expressions)
