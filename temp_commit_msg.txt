@@ -1,7 +1,15 @@
-feat(store-manager): add region-based explosive request management
+feat(auth): add Operator role access to drilling operations
 
-- Implement new authorization policy for store managers
-- Add repository and service methods to filter requests by region
-- Create UI component for store managers to view/approve regional requests
-- Include region validation and error handling
-- Add styling for priority badges and region info display
+refactor(ui): simplify drill hole status to pending/completed
+- Remove intermediate 'drilled' status and related UI elements
+- Update status styling and action buttons accordingly
+
+refactor(pattern-view): remove pattern overview card and improve points table
+- Sort points by ID in ascending order
+- Display point count in dialog title
+- Reorganize columns to show depth, spacing, and burden
+
+style(my-project): improve responsive layout and visual hierarchy
+- Update grid layouts for better mobile experience
+- Enhance typography and spacing
+- Add progress bar animation
