@@ -1,5 +1,7 @@
-feat(proposal-history): add delete functionality for pending proposals
+feat(store-manager): add region-based explosive request management
 
-refactor(explosive-calculations): update UI with compact header and grid layout
-
-fix(drill-data-table): correct emulsionPerHole default value from 50 to 1.5 kg
+- Implement new authorization policy for store managers
+- Add repository and service methods to filter requests by region
+- Create UI component for store managers to view/approve regional requests
+- Include region validation and error handling
+- Add styling for priority badges and region info display
