@@ -1,4 +1,3 @@
-refactor(UI): remove unused components and styles from machine manager
+refactor(machine-inventory): remove add machine button from empty state
 
-- Delete system status panel and user profile section from dashboard
-- Remove assignment-requests component CSS file as it's no longer needed
+The button was redundant as the same functionality is available in the main toolbar. This simplifies the empty state UI.
