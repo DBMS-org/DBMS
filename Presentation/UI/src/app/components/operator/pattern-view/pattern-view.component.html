@@ -46,11 +46,10 @@
 
         <button 
           class="btn btn-outline-secondary help-button"
-          (mouseenter)="showInstructions = true"
-          (mouseleave)="showInstructions = false"
+          (click)="toggleInstructions()"
           [attr.aria-expanded]="showInstructions">
           <i class="material-icons">help_outline</i>
-          <span>Show Help</span>
+          <span>{{ showInstructions ? 'Hide Help' : 'Show Help' }}</span>
         </button>
 
         <button 
