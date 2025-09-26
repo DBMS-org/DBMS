@@ -545,6 +545,10 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
     this.loadPatternData();
   }
 
+  toggleInstructions(): void {
+    this.showInstructions = !this.showInstructions;
+  }
+
   markAsCompleted(): void {
     if (this.isCompleted || this.drillPoints.length === 0) {
       return;
