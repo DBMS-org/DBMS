@@ -73,36 +73,6 @@
     </div>
   </div>
 
-  <!-- System Status Panel -->
-  <div class="operations-panel">
-    <h3>
-      <i class="material-icons">monitor_heart</i>
-      System Status Overview
-    </h3>
-    <div class="metrics-grid">
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">power</i>
-          System Status:
-        </span>
-        <span class="metric-value status-operational">{{ systemMetrics.systemStatus }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">assignment_turned_in</i>
-          Pending Requests:
-        </span>
-        <span class="metric-value" [class]="systemMetrics.pendingRequests > 0 ? 'pending-requests' : ''">{{ systemMetrics.pendingRequests }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">warning</i>
-          Critical Alerts:
-        </span>
-        <span class="metric-value" [class]="systemMetrics.criticalAlerts > 0 ? 'critical-alerts' : ''">{{ systemMetrics.criticalAlerts }}</span>
-      </div>
-    </div>
-  </div>
 
   <!-- Quick Actions Panel -->
   <div class="actions-panel">
@@ -172,58 +142,6 @@
     </div>
   </div>
 
-  <!-- User Profile Section -->
-  <div class="user-profile-section">
-    <h3>
-      <i class="material-icons">account_circle</i>
-      Machine Manager Profile
-    </h3>
-    <div class="profile-card" *ngIf="currentUser">
-      <div class="profile-header">
-        <div class="profile-avatar">
-          <span class="avatar-initials">{{ getInitials() }}</span>
-        </div>
-        <div class="profile-main-info">
-          <h4>{{ currentUser.name }}</h4>
-          <p class="profile-email">{{ currentUser.email }}</p>
-          <div class="profile-role-badge">
-            <span class="role-badge">Machine Manager</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="profile-details-grid">
-        <div class="profile-detail-item">
-          <div class="detail-label">Specialization:</div>
-          <div class="detail-value">Machine Management</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Operating Region:</div>
-          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Country:</div>
-          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Contact:</div>
-          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Status:</div>
-          <div class="detail-value">
-            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
-              {{ currentUser.status || 'ACTIVE' }}
-            </span>
-          </div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Data Sets:</div>
-          <div class="detail-value">{{ stats.totalMachines }} machines managed</div>
-        </div>
-      </div>
-    </div>
-  </div>
 
 
 </div>
