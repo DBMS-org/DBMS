@@ -1,3 +1,4 @@
-fix(drilling-pattern-creator): add missing spacing and burden properties update
+refactor(UI): remove unused components and styles from machine manager
 
-The properties were not being updated when drill point data was received, which could lead to incorrect calculations. Added the missing updates to ensure proper behavior.
+- Delete system status panel and user profile section from dashboard
+- Remove assignment-requests component CSS file as it's no longer needed
