@@ -1,3 +1,3 @@
-feat(operator): add toggle for help instructions and update default spacing
+fix(drilling-pattern-creator): add missing spacing and burden properties update
 
-refactor(operator): remove end date and duration stats from project view
+The properties were not being updated when drill point data was received, which could lead to incorrect calculations. Added the missing updates to ensure proper behavior.

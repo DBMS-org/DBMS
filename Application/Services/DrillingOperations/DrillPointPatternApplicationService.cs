@@ -47,7 +47,7 @@ namespace Application.Services.DrillingOperations
                 return true; // Admins have access to all regions
             }
 
-            if (_userContext.IsInRole("BlastingEngineer") || _userContext.IsInRole("Operator"))
+            if (_userContext.IsInRole("BlastingEngineer"))
             {
                 var region = _userContext.Region;
                 if (!string.IsNullOrEmpty(region))

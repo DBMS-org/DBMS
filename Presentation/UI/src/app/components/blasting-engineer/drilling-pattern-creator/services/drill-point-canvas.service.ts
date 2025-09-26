@@ -61,7 +61,7 @@ export class DrillPointCanvasService {
     });
 
     const text = new Konva.Text({
-      text: point.displayName || point.id, // Use displayName (DH1, DH2) if available, fallback to id
+      text: point.id,
       fontSize: 12,
       fill: '#000000',
       offsetX: CANVAS_CONSTANTS.POINT_RADIUS,
@@ -155,4 +155,4 @@ export class DrillPointCanvasService {
       group.draggable(!isHolePlacementMode);
     });
   }
-}
+} 

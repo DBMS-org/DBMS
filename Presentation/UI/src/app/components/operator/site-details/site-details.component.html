@@ -45,6 +45,21 @@
               (click)="setActiveTab('drill-plan')">
         <i class="fas fa-drill"></i> Drill Plan
       </button>
+      <button class="tab-button" 
+              [class.active]="activeTab === 'blast-sequence'"
+              (click)="setActiveTab('blast-sequence')">
+        <i class="fas fa-bomb"></i> Blast Sequence
+      </button>
+      <button class="tab-button" 
+              [class.active]="activeTab === 'safety'"
+              (click)="setActiveTab('safety')">
+        <i class="fas fa-shield-alt"></i> Safety Checklist
+      </button>
+      <button class="tab-button" 
+              [class.active]="activeTab === 'tasks'"
+              (click)="setActiveTab('tasks')">
+        <i class="fas fa-tasks"></i> Tasks
+      </button>
     </div>
 
     <!-- Tab Content -->
@@ -123,6 +138,7 @@
                   <span class="status-badge" [class]="'status-' + hole.status">
                     <i class="fas" 
                        [class.fa-clock]="hole.status === 'pending'"
+                       [class.fa-cog]="hole.status === 'drilled'"
                        [class.fa-check]="hole.status === 'completed'"></i>
                     {{ hole.status | titlecase }}
                   </span>
@@ -131,12 +147,167 @@
                   <button class="action-btn" 
                           [disabled]="hole.status === 'completed'"
                           (click)="markDrillHoleCompleted(hole.id)">
-                    {{ hole.status === 'pending' ? 'Mark Completed' : 'Completed' }}
+                    {{ hole.status === 'pending' ? 'Mark Drilled' : 
+                       hole.status === 'drilled' ? 'Mark Completed' : 'Completed' }}
                   </button>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Blast Sequence Tab -->
+      <div *ngIf="activeTab === 'blast-sequence'" class="tab-panel">
+        <div class="blast-sequence-header">
+          <h3>Simulated Blast Sequence</h3>
+          <p class="warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            Follow the firing order exactly as provided. Do not deviate from the sequence.
+          </p>
+        </div>
+
+        <div class="sequence-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Firing Order</th>
+                <th>Hole ID</th>
+                <th>Sequence</th>
+                <th>Delay (ms)</th>
+                <th>Charge Type</th>
+                <th>Timing</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let seq of blastSequence" class="sequence-row">
+                <td class="firing-order">
+                  <span class="order-badge">{{ seq.firingOrder }}</span>
+                </td>
+                <td class="hole-id">{{ seq.holeId }}</td>
+                <td>{{ seq.sequence }}</td>
+                <td>{{ seq.delay }}</td>
+                <td>{{ seq.chargeType }}</td>
+                <td class="timing">{{ seq.timing }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="sequence-visualization">
+          <h4>Firing Sequence Visualization</h4>
+          <div class="sequence-timeline">
+            <div *ngFor="let seq of blastSequence" 
+                 class="timeline-item"
+                 [style.left.%]="(seq.delay / 100) * 100">
+              <div class="timeline-marker">{{ seq.firingOrder }}</div>
+              <div class="timeline-label">{{ seq.holeId }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Safety Checklist Tab -->
+      <div *ngIf="activeTab === 'safety'" class="tab-panel">
+        <div class="safety-header">
+          <h3>Safety Checklist</h3>
+          <p class="safety-warning">
+            <i class="fas fa-shield-alt"></i>
+            Complete all required items before executing blast operations.
+          </p>
+        </div>
+
+        <div class="checklist-container">
+          <div *ngFor="let item of safetyChecklist" 
+               class="checklist-item"
+               [class.completed]="item.isCompleted"
+               [class.required]="item.isRequired">
+            <label class="checkbox-label">
+              <input type="checkbox" 
+                     [checked]="item.isCompleted"
+                     (change)="toggleSafetyItem(item.id)">
+              <span class="checkmark"></span>
+              <span class="item-text">{{ item.description }}</span>
+              <span *ngIf="item.isRequired" class="required-badge">Required</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="safety-actions">
+          <div class="safety-status">
+            <span [class.ready]="canExecuteBlast()" [class.not-ready]="!canExecuteBlast()">
+              <i class="fas" [class.fa-check-circle]="canExecuteBlast()" 
+                 [class.fa-exclamation-triangle]="!canExecuteBlast()"></i>
+              {{ canExecuteBlast() ? 'Ready for Blast Execution' : 'Safety Requirements Not Met' }}
+            </span>
+          </div>
+          <button class="execute-blast-btn" 
+                  [disabled]="!canExecuteBlast()"
+                  (click)="executeBlast()">
+            <i class="fas fa-bomb"></i>
+            Execute Blast Sequence
+          </button>
+        </div>
+      </div>
+
+      <!-- Tasks Tab -->
+      <div *ngIf="activeTab === 'tasks'" class="tab-panel">
+        <div class="tasks-container">
+          <!-- Drilling Tasks -->
+          <div class="task-section">
+            <h3>
+              <i class="fas fa-drill"></i>
+              Drilling Tasks
+            </h3>
+            <div class="task-list">
+              <div *ngFor="let task of drillingTasks" 
+                   class="task-item"
+                   [class]="'status-' + task.status">
+                <div class="task-info">
+                  <span class="task-description">{{ task.description }}</span>
+                  <span class="task-date">Assigned: {{ task.assignedDate | date:'shortDate' }}</span>
+                </div>
+                <div class="task-status">
+                  <span class="status-badge" [class]="'status-' + task.status">
+                    {{ task.status | titlecase }}
+                  </span>
+                  <button class="task-action-btn" 
+                          [disabled]="task.status === 'completed'"
+                          (click)="markTaskCompleted(task.id, 'drilling')">
+                    {{ task.status === 'completed' ? 'Completed' : 'Mark Complete' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blasting Tasks -->
+          <div class="task-section">
+            <h3>
+              <i class="fas fa-bomb"></i>
+              Blasting Tasks
+            </h3>
+            <div class="task-list">
+              <div *ngFor="let task of blastingTasks" 
+                   class="task-item"
+                   [class]="'status-' + task.status">
+                <div class="task-info">
+                  <span class="task-description">{{ task.description }}</span>
+                  <span class="task-date">Assigned: {{ task.assignedDate | date:'shortDate' }}</span>
+                </div>
+                <div class="task-status">
+                  <span class="status-badge" [class]="'status-' + task.status">
+                    {{ task.status | titlecase }}
+                  </span>
+                  <button class="task-action-btn" 
+                          [disabled]="task.status === 'completed'"
+                          (click)="markTaskCompleted(task.id, 'blasting')">
+                    {{ task.status === 'completed' ? 'Completed' : 'Mark Complete' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

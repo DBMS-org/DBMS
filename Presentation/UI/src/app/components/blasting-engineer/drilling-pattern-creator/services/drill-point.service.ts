@@ -67,8 +67,8 @@ export class DrillPointService {
     return {
       x: Number(finalX.toFixed(2)),
       y: Number(finalY.toFixed(2)),
-      id: `DH${this.currentId++}`, // Use DH1, DH2 format for ID instead of GUID
-      displayName: `DH${this.currentId - 1}`, // Keep consistent with ID
+      id: this.generateGuid(), // Generate GUID instead of DH${currentId++}
+      displayName: `DH${this.currentId++}`, // Keep DH1, DH2 format for display
       depth: safeDepth,
       spacing: safeSpacing,
       burden: safeBurden,
@@ -161,8 +161,8 @@ export class DrillPointService {
         points.push({
           x: Number(x.toFixed(2)),
           y: Number(y.toFixed(2)),
-          id: `DH${this.currentId++}`, // Use DH1, DH2 format for ID instead of GUID
-          displayName: `DH${this.currentId - 1}`, // Keep consistent with ID
+          id: this.generateGuid(), // Generate GUID instead of DH${currentId++}
+          displayName: `DH${this.currentId++}`, // Keep DH1, DH2 format for display
           depth: depth,
           spacing: spacing,
           burden: burden,

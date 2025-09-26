@@ -295,17 +295,11 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
             }, 100);
             
             this.cdr.markForCheck();
-            
-            // After loading backend data, check for imported drill data
-            this.checkForImportedDrillData();
           } else {
             // No explicit drill-pattern record – fall back to generic workflow state
             this.loadWorkflowStateFromBackend();
             // Initialize default spacing and burden values if no pattern exists
             this.initializeSpacingAndBurdenDefaults();
-            
-            // After attempting to load backend data, check for imported drill data
-            this.checkForImportedDrillData();
           }
           // After attempting to load backend pattern, process any uploaded CSV data
           this.processIncomingDrillData();
@@ -316,10 +310,6 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
           this.loadWorkflowStateFromBackend();
           // Initialize default spacing and burden values if no pattern exists
           this.initializeSpacingAndBurdenDefaults();
-          
-          // After error handling, check for imported drill data
-          this.checkForImportedDrillData();
-          
           // Even if error, still process incoming CSV data
           this.processIncomingDrillData();
         }
@@ -1732,14 +1722,12 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         this.drillPoints[index].stemming = data.stemming;
         this.drillPoints[index].subDrill = data.subDrill;
         
-        // Update spacing and burden properties - this was missing!
-        this.drillPoints[index].spacing = data.spacing;
-        this.drillPoints[index].burden = data.burden;
-        
         // Include explosive calculation properties
         this.drillPoints[index].volume = data.volume || 0;
         this.drillPoints[index].anfo = data.anfo || 0;
         this.drillPoints[index].emulsion = data.emulsion || 0;
+        
+        // Note: spacing, burden, and volume are calculated values
       }
     });
     
@@ -2401,193 +2389,5 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
           this.cdr.markForCheck();
         }
       });
-  }
-
-  private checkForImportedDrillData(): void {
-    // Check if there's drill data imported from drill-visualization
-    const importedDrillData = this.drillDataService.getDrillData();
-    if (!importedDrillData || importedDrillData.length === 0) {
-      return; // No imported data to process
-    }
-
-    console.log('Found imported drill data from drill-visualization:', importedDrillData.length, 'holes');
-
-    const hasExistingPattern = this.drillPoints && this.drillPoints.length > 0;
-    let proceedWithImport = true;
-
-    // If there is already a pattern, confirm with user
-    if (hasExistingPattern) {
-      proceedWithImport = window.confirm(
-        'A drilling pattern already exists for this site.\n' +
-        'Do you want to delete the existing pattern and import the new drill data from the drill visualization?'
-      );
-    }
-
-    if (!proceedWithImport) {
-      // User chose to keep existing pattern – clear the imported drill data to avoid repeated prompts
-      this.drillDataService.clearDrillData();
-      return;
-    }
-
-    // User confirmed (or no existing pattern). Clean up old pattern data if any
-    if (hasExistingPattern && this.currentProjectId && this.currentSiteId) {
-      // Use the comprehensive cleanup method from blastSequenceDataService
-      // This will handle both backend and frontend data deletion properly
-      console.log('🧹 Starting comprehensive data cleanup for imported drill data');
-      this.blastSequenceDataService.cleanupPatternData(this.currentProjectId, this.currentSiteId);
-      
-      // Process the imported drill data after cleanup
-      // Add a small delay to ensure cleanup is complete
-      setTimeout(() => {
-        this.processImportedDrillData(importedDrillData);
-      }, 100);
-    } else {
-      // No existing pattern, directly process imported data
-      this.processImportedDrillData(importedDrillData);
-    }
-    
-    // Clear the imported data after processing
-    this.drillDataService.clearDrillData();
-  }
-
-  private processImportedDrillData(importedData: any[]): void {
-    const defaultDepthSetting = this.settings.depth ?? CANVAS_CONSTANTS.DEFAULT_SETTINGS.depth;
-
-    console.log('Processing imported drill data:', {
-      dataCount: importedData.length,
-      sampleData: importedData.slice(0, 3).map(h => ({
-        id: h.id,
-        easting: h.easting,
-        northing: h.northing,
-        elevation: h.elevation,
-        depth: h.depth
-      }))
-    });
-
-    // Filter out invalid coordinates (similar to visualization component)
-    const MIN_UTM_COORDINATE = 1000;
-    const validHoles = importedData.filter(hole => 
-      hole.easting > MIN_UTM_COORDINATE && 
-      hole.northing > MIN_UTM_COORDINATE &&
-      !isNaN(Number(hole.easting)) && 
-      !isNaN(Number(hole.northing))
-    );
-
-    if (validHoles.length === 0) {
-      console.error('No valid drill holes found for import');
-      return;
-    }
-
-    // Step 1: Find the UTM origin (minimum coordinates) - same as visualization
-    const eastings = validHoles.map(h => Number(h.easting));
-    const northings = validHoles.map(h => Number(h.northing));
-    
-    const originEasting = Math.min(...eastings);
-    const originNorthing = Math.min(...northings);
-
-    console.log('UTM coordinate transformation:', {
-      originEasting: originEasting.toFixed(2),
-      originNorthing: originNorthing.toFixed(2),
-      eastingRange: (Math.max(...eastings) - originEasting).toFixed(2),
-      northingRange: (Math.max(...northings) - originNorthing).toFixed(2)
-    });
-
-    // Step 2: Transform UTM coordinates to local coordinates
-    const transformedPoints: DrillPoint[] = validHoles.map((hole, index) => {
-      const depthValue = hole.depth ?? defaultDepthSetting;
-      
-      // Convert UTM to local coordinates by subtracting origin
-      const localX = Number(hole.easting) - originEasting;
-      const localY = Number(hole.northing) - originNorthing;
-      
-      console.log(`Transforming hole ${hole.id}:`, {
-        utmEasting: hole.easting,
-        utmNorthing: hole.northing,
-        localX: localX.toFixed(2),
-        localY: localY.toFixed(2)
-      });
-
-      return {
-        x: Number(localX.toFixed(2)),
-        y: Number(localY.toFixed(2)),
-        id: hole.id ? hole.id.toString() : `DH${index + 1}`,
-        depth: depthValue,
-        spacing: 0,
-        burden: 0
-      } as DrillPoint;
-    });
-
-    // Step 2.5: Ensure leftmost hole is at x=0 and topmost hole is at y=0 for canvas positioning
-    const minX = Math.min(...transformedPoints.map(p => p.x));
-    const minY = Math.min(...transformedPoints.map(p => p.y));
-    
-    console.log('Canvas positioning adjustment:', {
-      minX: minX.toFixed(2),
-      minY: minY.toFixed(2),
-      adjustment: 'Moving pattern to start at (0,0)'
-    });
-
-    // Adjust all points to start from (0,0)
-    const canvasPositionedPoints = transformedPoints.map(point => ({
-      ...point,
-      x: Number((point.x - minX).toFixed(2)),
-      y: Number((point.y - minY).toFixed(2))
-    }));
-
-    // Step 3: Auto-detect pitch from the canvas positioned data
-    const { spacing: autoSpacing, burden: autoBurden } = this.drillPointService.calculateGridPitch(canvasPositionedPoints);
-
-    // Apply pitch to settings
-    this.settings.spacing = autoSpacing;
-    this.settings.burden = autoBurden;
-
-    // Step 4: Apply spacing and burden to all points
-    const finalPoints = canvasPositionedPoints.map(point => ({
-      ...point,
-      spacing: autoSpacing,
-      burden: autoBurden
-    }));
-
-    // Step 5: Optional grid alignment (can be disabled if exact positioning is preferred)
-    const shouldAlignToGrid = false; // Set to true if you want grid alignment
-    
-    let alignedPoints = finalPoints;
-    if (shouldAlignToGrid && autoSpacing > 0 && autoBurden > 0) {
-      alignedPoints = finalPoints.map(point => {
-        const gridX = Math.round(point.x / autoSpacing) * autoSpacing;
-        const gridY = Math.round(point.y / autoBurden) * autoBurden;
-        return { ...point, x: gridX, y: gridY };
-      });
-      console.log('Applied grid alignment to imported points');
-    }
-
-    // Replace current drill points with imported data
-    this.drillPoints = alignedPoints;
-
-    // Reset hole numbering in drillPointService
-    this.drillPointService.setCurrentId(this.drillPoints.length + 1);
-
-    console.log('Successfully imported and transformed drill data:', {
-      pointsCount: this.drillPoints.length,
-      spacing: autoSpacing.toFixed(2),
-      burden: autoBurden.toFixed(2),
-      nextId: this.drillPointService.getCurrentId(),
-      coordinateRange: {
-        minX: Math.min(...this.drillPoints.map(p => p.x)).toFixed(2),
-        maxX: Math.max(...this.drillPoints.map(p => p.x)).toFixed(2),
-        minY: Math.min(...this.drillPoints.map(p => p.y)).toFixed(2),
-        maxY: Math.max(...this.drillPoints.map(p => p.y)).toFixed(2)
-      }
-    });
-
-    // Redraw points if canvas is ready
-    setTimeout(() => {
-      if (this.isInitialized) {
-        this.drawDrillPoints();
-      }
-    }, 100);
-
-    // Trigger UI update
-    this.cdr.markForCheck();
   }
 }

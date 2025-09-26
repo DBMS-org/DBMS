@@ -1,8 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ExplosiveApprovalRequestService, ExplosiveApprovalRequest } from '../../../core/services/explosive-approval-request.service';
-import { AuthService } from '../../../core/services/auth.service';
+
+interface BlastingEngineerRequest {
+  requestId: string;
+  engineer: {
+    name: string;
+    title: string;
+  };
+  explosiveType: string;
+  quantity: {
+    amount: number;
+    unit: string;
+  };
+  requestDate: string;
+  requiredDate: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'IN_PROGRESS' | 'COMPLETED';
+  purpose: string;
+}
 
 @Component({
   selector: 'app-blasting-engineer-requests',
@@ -12,49 +27,73 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrl: './blasting-engineer-requests.component.scss'
 })
 export class BlastingEngineerRequestsComponent implements OnInit {
-  requests: ExplosiveApprovalRequest[] = [];
-  filteredRequests: ExplosiveApprovalRequest[] = [];
+  requests: BlastingEngineerRequest[] = [];
+  filteredRequests: BlastingEngineerRequest[] = [];
   searchTerm: string = '';
   statusFilter: string = 'ALL';
   isLoading: boolean = false;
-  currentUserRegion: string | null = null;
-  errorMessage: string = '';
-
-  constructor(
-    private explosiveApprovalService: ExplosiveApprovalRequestService,
-    private authService: AuthService
-  ) {}
 
   ngOnInit(): void {
-    this.currentUserRegion = this.authService.getUserRegion();
     this.loadRequests();
   }
 
   loadRequests(): void {
     this.isLoading = true;
-    this.errorMessage = '';
-
-    if (!this.currentUserRegion) {
-      this.errorMessage = 'Unable to determine your region. Please contact your administrator.';
-      this.isLoading = false;
-      return;
-    }
-
-    this.explosiveApprovalService.getExplosiveApprovalRequestsByRegion(this.currentUserRegion)
-      .subscribe({
-        next: (requests) => {
-          this.requests = requests;
-          this.filteredRequests = [...this.requests];
-          this.isLoading = false;
+    // Simulate API call with sample data
+    setTimeout(() => {
+      this.requests = [
+        {
+          requestId: '001',
+          engineer: {
+            name: 'John Smith',
+            title: 'Blasting Engineer'
+          },
+          explosiveType: 'ANFO',
+          quantity: {
+            amount: 500,
+            unit: 'kg'
+          },
+          requestDate: 'Jan 15, 2024',
+          requiredDate: 'Jan 20, 2024',
+          status: 'PENDING',
+          purpose: 'Bench blasting operation - Section A mining area'
         },
-        error: (error) => {
-          console.error('Error loading explosive approval requests:', error);
-          this.errorMessage = 'Failed to load blasting engineer requests. Please try again later.';
-          this.isLoading = false;
-          this.requests = [];
-          this.filteredRequests = [];
+        {
+          requestId: '002',
+          engineer: {
+            name: 'Sarah Johnson',
+            title: 'Senior Blasting Engineer'
+          },
+          explosiveType: 'Emulsion',
+          quantity: {
+            amount: 750,
+            unit: 'kg'
+          },
+          requestDate: 'Jan 16, 2024',
+          requiredDate: 'Jan 22, 2024',
+          status: 'APPROVED',
+          purpose: 'Underground tunnel blasting - Phase 2'
+        },
+        {
+          requestId: '003',
+          engineer: {
+            name: 'Mike Wilson',
+            title: 'Blasting Engineer'
+          },
+          explosiveType: 'ANFO',
+          quantity: {
+            amount: 300,
+            unit: 'kg'
+          },
+          requestDate: 'Jan 17, 2024',
+          requiredDate: 'Jan 25, 2024',
+          status: 'IN_PROGRESS',
+          purpose: 'Rock fragmentation for quarry operations'
         }
-      });
+      ];
+      this.filteredRequests = [...this.requests];
+      this.isLoading = false;
+    }, 1000);
   }
 
   onSearch(): void {
@@ -68,10 +107,10 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   private applyFilters(): void {
     this.filteredRequests = this.requests.filter(request => {
       const matchesSearch = !this.searchTerm || 
-        request.id.toString().includes(this.searchTerm) ||
-        request.requestedByUser?.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        request.projectSite?.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        request.comments?.toLowerCase().includes(this.searchTerm.toLowerCase());
+        request.requestId.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.engineer.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.explosiveType.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.purpose.toLowerCase().includes(this.searchTerm.toLowerCase());
       
       const matchesStatus = this.statusFilter === 'ALL' || request.status === this.statusFilter;
       
@@ -81,53 +120,27 @@ export class BlastingEngineerRequestsComponent implements OnInit {
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'Pending': return 'status-pending';
-      case 'Approved': return 'status-approved';
-      case 'Rejected': return 'status-rejected';
-      case 'Cancelled': return 'status-cancelled';
-      case 'Expired': return 'status-expired';
+      case 'PENDING': return 'status-pending';
+      case 'APPROVED': return 'status-approved';
+      case 'REJECTED': return 'status-rejected';
+      case 'IN_PROGRESS': return 'status-in-progress';
+      case 'COMPLETED': return 'status-completed';
       default: return '';
     }
   }
 
-  onApprove(request: ExplosiveApprovalRequest): void {
-    this.explosiveApprovalService.approveExplosiveApprovalRequest(request.id, 'Approved by store manager')
-      .subscribe({
-        next: (success) => {
-          if (success) {
-            request.status = 'Approved';
-            console.log('Approved request:', request.id);
-          }
-        },
-        error: (error) => {
-          console.error('Error approving request:', error);
-          this.errorMessage = 'Failed to approve request. Please try again.';
-        }
-      });
+  onApprove(request: BlastingEngineerRequest): void {
+    request.status = 'APPROVED';
+    console.log('Approved request:', request.requestId);
   }
 
-  onReject(request: ExplosiveApprovalRequest): void {
-    const rejectionReason = prompt('Please provide a reason for rejection:');
-    if (rejectionReason) {
-      this.explosiveApprovalService.rejectExplosiveApprovalRequest(request.id, rejectionReason)
-        .subscribe({
-          next: (success) => {
-            if (success) {
-              request.status = 'Rejected';
-              console.log('Rejected request:', request.id);
-            }
-          },
-          error: (error) => {
-            console.error('Error rejecting request:', error);
-            this.errorMessage = 'Failed to reject request. Please try again.';
-          }
-        });
-    }
+  onReject(request: BlastingEngineerRequest): void {
+    request.status = 'REJECTED';
+    console.log('Rejected request:', request.requestId);
   }
 
-  onViewDetails(request: ExplosiveApprovalRequest): void {
-    console.log('View details for request:', request.id);
-    // TODO: Implement modal or navigation to detailed view
+  onViewDetails(request: BlastingEngineerRequest): void {
+    console.log('View details for request:', request.requestId);
   }
 
   clearFilters(): void {
@@ -137,22 +150,10 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   }
 
   getPendingCount(): number {
-    return this.filteredRequests.filter(request => request.status === 'Pending').length;
+    return this.filteredRequests.filter(request => request.status === 'PENDING').length;
   }
 
   getApprovedCount(): number {
-    return this.filteredRequests.filter(request => request.status === 'Approved').length;
-  }
-
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
-
-  refreshRequests(): void {
-    this.loadRequests();
+    return this.filteredRequests.filter(request => request.status === 'APPROVED').length;
   }
 }

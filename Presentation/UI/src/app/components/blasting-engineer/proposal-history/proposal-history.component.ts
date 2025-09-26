@@ -34,11 +34,6 @@ export class ProposalHistoryComponent implements OnInit {
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  // Delete modal properties
-  showDeleteModal: boolean = false;
-  deleteProposalData: { id: number; projectName: string; siteName: string } | null = null;
-  isDeleting: boolean = false;
-
   constructor(
     private proposalHistoryService: ProposalHistoryService,
     private siteService: SiteService,
@@ -200,71 +195,6 @@ export class ProposalHistoryComponent implements OnInit {
       default:
         return 'status-pending';
     }
-  }
-
-  /**
-   * Check if a proposal can be deleted (only pending proposals can be deleted)
-   */
-  canDeleteProposal(status: string): boolean {
-    return status === 'pending';
-  }
-
-  /**
-   * Show delete confirmation modal
-   */
-  confirmDeleteProposal(id: number, projectName: string, siteName: string): void {
-    this.deleteProposalData = { id, projectName, siteName };
-    this.showDeleteModal = true;
-  }
-
-  /**
-   * Cancel delete operation
-   */
-  cancelDelete(): void {
-    this.showDeleteModal = false;
-    this.deleteProposalData = null;
-    this.isDeleting = false;
-  }
-
-  /**
-   * Delete the proposal
-   */
-  deleteProposal(): void {
-    if (!this.deleteProposalData) return;
-
-    this.isDeleting = true;
-    const proposalId = this.deleteProposalData.id;
-
-    this.proposalHistoryService.deleteProposal(proposalId).subscribe({
-      next: () => {
-        // Remove the deleted proposal from the arrays
-        this.proposalHistory = this.proposalHistory.filter(p => p.id !== proposalId);
-        this.filteredHistory = this.filteredHistory.filter(p => p.id !== proposalId);
-        
-        // Close the modal
-        this.cancelDelete();
-        
-        // Show success message (you could implement a toast notification here)
-        console.log('Proposal deleted successfully');
-      },
-      error: (error) => {
-        console.error('Error deleting proposal:', error);
-        this.isDeleting = false;
-        
-        // Handle specific error cases
-        let errorMessage = 'Failed to delete proposal. Please try again.';
-        if (error.status === 404) {
-          errorMessage = 'Proposal not found. It may have already been deleted.';
-        } else if (error.status === 403) {
-          errorMessage = 'You are not authorized to delete this proposal.';
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        // You could implement a toast notification here instead of alert
-        alert(errorMessage);
-      }
-    });
   }
 
 }

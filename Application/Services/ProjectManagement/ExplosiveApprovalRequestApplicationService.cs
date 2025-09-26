@@ -216,18 +216,5 @@ namespace Application.Services.ProjectManagement
                 throw;
             }
         }
-
-        public async Task<IEnumerable<ExplosiveApprovalRequest>> GetExplosiveApprovalRequestsByRegionAsync(string region)
-        {
-            try
-            {
-                return await _explosiveApprovalRequestRepository.GetByRegionAsync(region);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving explosive approval requests for region {Region}", region);
-                throw;
-            }
-        }
     }
 }

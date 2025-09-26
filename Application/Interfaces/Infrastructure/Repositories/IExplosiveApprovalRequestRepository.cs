@@ -53,10 +53,5 @@ namespace Application.Interfaces.Infrastructure.Repositories
         /// Deletes an explosive approval request
         /// </summary>
         Task<bool> DeleteAsync(int id);
-        
-        /// <summary>
-        /// Retrieves explosive approval requests filtered by region
-        /// </summary>
-        Task<IEnumerable<ExplosiveApprovalRequest>> GetByRegionAsync(string region);
     }
 }

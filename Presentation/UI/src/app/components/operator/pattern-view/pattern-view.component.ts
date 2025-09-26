@@ -81,25 +81,25 @@ export class ConfirmationDialogComponent {
   template: `
     <h2 mat-dialog-title>
       <span class="material-icons">grid_on</span>
-      Drill Points List ({{ sortedPoints.length }} points)
+      Drill Points List
     </h2>
     <mat-dialog-content>
-      <table class="points-table" *ngIf="sortedPoints.length > 0; else emptyState">
+      <table class="points-table" *ngIf="data.points.length > 0; else emptyState">
         <thead>
           <tr>
             <th>Point ID</th>
+            <th>X (m)</th>
+            <th>Y (m)</th>
             <th>Depth (m)</th>
-            <th>Spacing (m)</th>
-            <th>Burden (m)</th>
           </tr>
         </thead>
         <tbody>
-          @for (p of sortedPoints; track p.id) {
+          @for (p of data.points; track p.id) {
             <tr>
-              <td class="point-id">{{ p.id }}</td>
+              <td>{{ p.id }}</td>
+              <td>{{ p.x.toFixed(2) }}</td>
+              <td>{{ p.y.toFixed(2) }}</td>
               <td>{{ p.depth.toFixed(2) }}</td>
-              <td>{{ p.spacing.toFixed(2) }}</td>
-              <td>{{ p.burden.toFixed(2) }}</td>
             </tr>
           }
         </tbody>
@@ -160,12 +160,7 @@ export class ConfirmationDialogComponent {
   imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule]
 })
 export class PointsTableDialogComponent {
-  sortedPoints: any[] = [];
-
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { points: any[] }) {
-    // Sort points by ID in ascending order
-    this.sortedPoints = [...data.points].sort((a, b) => a.id - b.id);
-  }
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { points: DrillPoint[] }) {}
 }
 
 @Component({
@@ -463,8 +458,6 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
   private loadPatternData(): void {
     if (!this.projectId || !this.siteId) {
       console.error('Project ID or Site ID not available');
-      this.error = 'Project ID or Site ID not available';
-      this.loading = false;
       return;
     }
 
@@ -482,20 +475,11 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
           stemming: point.stemming || this.settings.stemming,
           subDrill: point.subDrill || this.settings.subDrill
         }));
-        this.loading = false;
-        this.error = null;
         this.cdr.detectChanges();
-        
-        // Render canvas after data is loaded
-        setTimeout(() => {
-          this.renderCanvas();
-        }, 100);
       },
       error: (error) => {
         console.error('Error loading drill points:', error);
-        this.error = 'Failed to load drill points: ' + (error.message || 'Unknown error');
         this.drillPoints = [];
-        this.loading = false;
         this.cdr.detectChanges();
       }
     });
@@ -543,10 +527,6 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
     this.error = null;
     this.loading = true;
     this.loadPatternData();
-  }
-
-  toggleInstructions(): void {
-    this.showInstructions = !this.showInstructions;
   }
 
   markAsCompleted(): void {
