@@ -1,15 +1,3 @@
-feat(auth): add Operator role access to drilling operations
+feat(operator): add toggle for help instructions and update default spacing
 
-refactor(ui): simplify drill hole status to pending/completed
-- Remove intermediate 'drilled' status and related UI elements
-- Update status styling and action buttons accordingly
-
-refactor(pattern-view): remove pattern overview card and improve points table
-- Sort points by ID in ascending order
-- Display point count in dialog title
-- Reorganize columns to show depth, spacing, and burden
-
-style(my-project): improve responsive layout and visual hierarchy
-- Update grid layouts for better mobile experience
-- Enhance typography and spacing
-- Add progress bar animation
+refactor(operator): remove end date and duration stats from project view
