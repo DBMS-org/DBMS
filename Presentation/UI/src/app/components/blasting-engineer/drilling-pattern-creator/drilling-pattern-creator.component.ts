@@ -1732,12 +1732,14 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         this.drillPoints[index].stemming = data.stemming;
         this.drillPoints[index].subDrill = data.subDrill;
         
+        // Update spacing and burden properties - this was missing!
+        this.drillPoints[index].spacing = data.spacing;
+        this.drillPoints[index].burden = data.burden;
+        
         // Include explosive calculation properties
         this.drillPoints[index].volume = data.volume || 0;
         this.drillPoints[index].anfo = data.anfo || 0;
         this.drillPoints[index].emulsion = data.emulsion || 0;
-        
-        // Note: spacing, burden, and volume are calculated values
       }
     });
     
