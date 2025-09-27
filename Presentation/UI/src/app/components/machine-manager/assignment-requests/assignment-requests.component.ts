@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
-import { MachineService } from '../../../core/services/machine.service';
 
 export interface AssignmentRequest {
   id: string;
@@ -99,8 +98,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   constructor(
     private notificationService: NotificationService,
     private elementRef: ElementRef,
-    private renderer: Renderer2,
-    private machineService: MachineService
+    private renderer: Renderer2
   ) {}
 
   ngOnInit(): void {
@@ -309,7 +307,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   // Modal methods
   // Removed viewRequestDetails method as the eye/view details action has been removed
   approveRequest(request: AssignmentRequest): void {
-    // Auto-assign the first N available machines matching the request type
+    // Immediately process approval without modal by auto-assigning available machines
     const available = this.getAvailableMachinesForType(request.machineType);
 
     if (available.length < request.quantity) {
@@ -319,77 +317,64 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
     this.isProcessing = true;
 
+    // Auto-select the first N available machines matching the request type
     const assignedIds = available.slice(0, request.quantity).map(m => m.id);
 
-    // Call backend to approve request
-    this.machineService.approveAssignmentRequest(request.id, assignedIds, this.approvalNotes || '')
-      .subscribe({
-        next: (resp) => {
-          const requestIndex = this.assignmentRequests.findIndex(r => r.id === request.id);
-          if (requestIndex > -1) {
-            this.assignmentRequests[requestIndex] = {
-              ...this.assignmentRequests[requestIndex],
-              status: 'APPROVED',
-              processedAt: new Date(),
-              processedBy: 'Machine Manager',
-              assignedMachines: assignedIds,
-              approvalNotes: this.approvalNotes || ''
-            };
-          }
+    // Simulate API call
+    setTimeout(() => {
+      const requestIndex = this.assignmentRequests.findIndex(r => r.id === request.id);
+      if (requestIndex > -1) {
+        this.assignmentRequests[requestIndex] = {
+          ...this.assignmentRequests[requestIndex],
+          status: 'APPROVED',
+          processedAt: new Date(),
+          processedBy: 'Current Machine Manager', // In real app, get from auth service
+          assignedMachines: assignedIds,
+          approvalNotes: ''
+        };
+      }
 
-          // Update machine statuses in local list
-          assignedIds.forEach(machineId => {
-            const machine = this.availableMachines.find(m => m.id === machineId);
-            if (machine) {
-              machine.status = 'ASSIGNED';
-            }
-          });
-
-          this.calculateStatistics();
-          this.applyAll();
-          this.notificationService.showSuccess('Assignment request approved successfully');
-          this.sendAssignmentNotifications(request, assignedIds);
-          this.isProcessing = false;
-        },
-        error: (err) => {
-          console.error('Failed to approve assignment request', err);
-          this.notificationService.showError('Failed to approve assignment request');
-          this.isProcessing = false;
+      // Update machine statuses
+      assignedIds.forEach(machineId => {
+        const machine = this.availableMachines.find(m => m.id === machineId);
+        if (machine) {
+          machine.status = 'ASSIGNED';
         }
       });
+
+      this.calculateStatistics();
+      this.applyFilters();
+      this.notificationService.showSuccess('Assignment request approved successfully');
+      this.sendAssignmentNotifications(request, assignedIds);
+
+      this.isProcessing = false;
+    }, 500);
   }
 
   rejectRequest(request: AssignmentRequest): void {
+    // Immediately process rejection without modal
     this.isProcessing = true;
-    const comments = 'Rejected by manager';
 
-    // Call backend to reject request
-    this.machineService.rejectAssignmentRequest(request.id, comments)
-      .subscribe({
-        next: (resp) => {
-          const requestIndex = this.assignmentRequests.findIndex(r => r.id === request.id);
-          if (requestIndex > -1) {
-            this.assignmentRequests[requestIndex] = {
-              ...this.assignmentRequests[requestIndex],
-              status: 'REJECTED',
-              processedAt: new Date(),
-              processedBy: 'Machine Manager',
-              rejectionReason: comments
-            };
-          }
+    // Simulate API call
+    setTimeout(() => {
+      const requestIndex = this.assignmentRequests.findIndex(r => r.id === request.id);
+      if (requestIndex > -1) {
+        this.assignmentRequests[requestIndex] = {
+          ...this.assignmentRequests[requestIndex],
+          status: 'REJECTED',
+          processedAt: new Date(),
+          processedBy: 'Current Machine Manager', // In real app, get from auth service
+          rejectionReason: 'Rejected by manager'
+        };
+      }
 
-          this.calculateStatistics();
-          this.applyAll();
-          this.notificationService.showSuccess('Assignment request rejected');
-          this.sendRejectionNotification(request, comments);
-          this.isProcessing = false;
-        },
-        error: (err) => {
-          console.error('Failed to reject assignment request', err);
-          this.notificationService.showError('Failed to reject assignment request');
-          this.isProcessing = false;
-        }
-      });
+      this.calculateStatistics();
+      this.applyFilters();
+      this.notificationService.showSuccess('Assignment request rejected');
+      this.sendRejectionNotification(request, 'Rejected by manager');
+
+      this.isProcessing = false;
+    }, 300);
   }
 
   closeModals(): void {
@@ -452,46 +437,40 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
     this.isProcessing = true;
 
-    // Call backend to approve request with selected machines
-    this.machineService.approveAssignmentRequest(this.requestToApprove.id, [...this.selectedMachinesForAssignment], this.approvalNotes || '')
-      .subscribe({
-        next: () => {
-          const requestIndex = this.assignmentRequests.findIndex(r => r.id === this.requestToApprove!.id);
-          if (requestIndex > -1) {
-            this.assignmentRequests[requestIndex] = {
-              ...this.assignmentRequests[requestIndex],
-              status: 'APPROVED',
-              processedAt: new Date(),
-              processedBy: 'Machine Manager',
-              assignedMachines: [...this.selectedMachinesForAssignment],
-              approvalNotes: this.approvalNotes
-            };
+    // Simulate API call
+    setTimeout(() => {
+      const requestIndex = this.assignmentRequests.findIndex(r => r.id === this.requestToApprove!.id);
+      if (requestIndex > -1) {
+        this.assignmentRequests[requestIndex] = {
+          ...this.assignmentRequests[requestIndex],
+          status: 'APPROVED',
+          processedAt: new Date(),
+          processedBy: 'Current Machine Manager', // In real app, get from auth service
+          assignedMachines: [...this.selectedMachinesForAssignment],
+          approvalNotes: this.approvalNotes
+        };
 
-            // Update machine statuses
-            this.selectedMachinesForAssignment.forEach(machineId => {
-              const machine = this.availableMachines.find(m => m.id === machineId);
-              if (machine) {
-                machine.status = 'ASSIGNED';
-              }
-            });
-
-            this.calculateStatistics();
-            this.applyAll();
-            this.notificationService.showSuccess('Assignment request approved successfully');
-            if (this.requestToApprove) {
-              this.sendAssignmentNotifications(this.requestToApprove, this.selectedMachinesForAssignment);
-            }
+        // Update machine statuses
+        this.selectedMachinesForAssignment.forEach(machineId => {
+          const machine = this.availableMachines.find(m => m.id === machineId);
+          if (machine) {
+            machine.status = 'ASSIGNED';
           }
+        });
 
-          this.isProcessing = false;
-          this.closeModals();
-        },
-        error: (err) => {
-          console.error('Failed to approve assignment request', err);
-          this.notificationService.showError('Failed to approve assignment request');
-          this.isProcessing = false;
+        this.calculateStatistics();
+        this.applyFilters();
+        this.notificationService.showSuccess('Assignment request approved successfully');
+        
+        // In real app, send notification to requester and operators
+        if (this.requestToApprove) {
+          this.sendAssignmentNotifications(this.requestToApprove, this.selectedMachinesForAssignment);
         }
-      });
+      }
+
+      this.isProcessing = false;
+      this.closeModals();
+    }, 1500);
   }
 
   confirmRejection(): void {
@@ -501,37 +480,31 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
     this.isProcessing = true;
 
-    // Call backend to reject request with reason
-    this.machineService.rejectAssignmentRequest(this.requestToReject.id, this.rejectionReason)
-      .subscribe({
-        next: () => {
-          const requestIndex = this.assignmentRequests.findIndex(r => r.id === this.requestToReject!.id);
-          if (requestIndex > -1) {
-            this.assignmentRequests[requestIndex] = {
-              ...this.assignmentRequests[requestIndex],
-              status: 'REJECTED',
-              processedAt: new Date(),
-              processedBy: 'Machine Manager',
-              rejectionReason: this.rejectionReason
-            };
+    // Simulate API call
+    setTimeout(() => {
+      const requestIndex = this.assignmentRequests.findIndex(r => r.id === this.requestToReject!.id);
+      if (requestIndex > -1) {
+        this.assignmentRequests[requestIndex] = {
+          ...this.assignmentRequests[requestIndex],
+          status: 'REJECTED',
+          processedAt: new Date(),
+          processedBy: 'Current Machine Manager', // In real app, get from auth service
+          rejectionReason: this.rejectionReason
+        };
 
-            this.calculateStatistics();
-            this.applyAll();
-            this.notificationService.showSuccess('Assignment request rejected');
-            if (this.requestToReject) {
-              this.sendRejectionNotification(this.requestToReject, this.rejectionReason);
-            }
-          }
-
-          this.isProcessing = false;
-          this.closeModals();
-        },
-        error: (err) => {
-          console.error('Failed to reject assignment request', err);
-          this.notificationService.showError('Failed to reject assignment request');
-          this.isProcessing = false;
+        this.calculateStatistics();
+        this.applyFilters();
+        this.notificationService.showSuccess('Assignment request rejected');
+        
+        // In real app, send notification to requester
+        if (this.requestToReject) {
+          this.sendRejectionNotification(this.requestToReject, this.rejectionReason);
         }
-      });
+      }
+
+      this.isProcessing = false;
+      this.closeModals();
+    }, 1000);
   }
 
   // Notification methods

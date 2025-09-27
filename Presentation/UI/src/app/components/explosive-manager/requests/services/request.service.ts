@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { map, delay } from 'rxjs/operators';
-import { ExplosiveRequest, ExplosiveType, RequestStatus, RequestSearchCriteria } from '../models/request.model';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { delay, map } from 'rxjs/operators';
+import { ExplosiveRequest, ExplosiveType, RequestStatus, RequestSearchCriteria } from '../models/explosive-request.model';
+import { ApprovalForm } from '../models/approval.model';
+import { DispatchForm } from '../models/dispatch.model';
 
 @Injectable({
   providedIn: 'root'
@@ -63,13 +65,17 @@ export class RequestService {
       const { explosiveType, status, requesterName, dateFrom, dateTo, storeLocation } = criteria.filters;
       
       if (explosiveType) {
-        filtered = filtered.filter(req => req.explosiveType === explosiveType);
+        filtered = filtered.filter(req =>
+          (req.requestedItems?.some(i => i.explosiveType === explosiveType)) ||
+          req.explosiveType === explosiveType
+        );
       }
       
       if (status) {
         filtered = filtered.filter(req => req.status === status);
       }
       
+      // priority filter removed
 
       if (requesterName) {
         filtered = filtered.filter(req => req.requesterName.toLowerCase().includes(requesterName.toLowerCase()));
@@ -91,8 +97,8 @@ export class RequestService {
     // Apply sorting
     if (criteria.sortBy) {
       filtered.sort((a, b) => {
-        const aValue = a[criteria.sortBy!];
-        const bValue = b[criteria.sortBy!];
+        const aValue = (a as any)[criteria.sortBy!];
+        const bValue = (b as any)[criteria.sortBy!];
         
         if (criteria.sortOrder === 'desc') {
           return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
@@ -111,6 +117,7 @@ export class RequestService {
         requesterId: 'SM001',
         requesterName: 'John Smith',
         requesterRole: 'Store Manager',
+        // single-item kept for compatibility
         explosiveType: ExplosiveType.ANFO,
         quantity: 0.5,
         unit: 'tons',
@@ -119,10 +126,13 @@ export class RequestService {
         status: RequestStatus.APPROVED,
         approvalDate: new Date('2024-01-16'),
         approvedBy: 'Safety Manager',
-
         storeLocation: 'Warehouse A',
         purpose: 'Mining operation - Sector 7',
-        notes: 'Urgent requirement for scheduled blasting'
+        notes: 'Urgent requirement for scheduled blasting',
+        requestedItems: [
+          { explosiveType: ExplosiveType.ANFO, quantity: 0.3, unit: 'tons', purpose: 'Primary blasting', specifications: 'Bulk ANFO' },
+          { explosiveType: ExplosiveType.EMULSION, quantity: 60, unit: 'kg', purpose: 'Initiation charges', specifications: 'Cartridges 32mm' }
+        ]
       },
       {
         id: '2',
@@ -135,10 +145,13 @@ export class RequestService {
         requestDate: new Date('2024-01-14'),
         requiredDate: new Date('2024-01-25'),
         status: RequestStatus.PENDING,
-
         storeLocation: 'Warehouse B',
         purpose: 'Quarry expansion project',
-        notes: 'Weather dependent operation'
+        notes: 'Weather dependent operation',
+        requestedItems: [
+          { explosiveType: ExplosiveType.EMULSION, quantity: 0.25, unit: 'tons', purpose: 'Bulk loading', specifications: 'Pumpable' },
+          { explosiveType: ExplosiveType.ANFO, quantity: 20, unit: 'kg', purpose: 'Stemming tests' }
+        ]
       },
       {
         id: '3',
@@ -153,10 +166,13 @@ export class RequestService {
         status: RequestStatus.COMPLETED,
         approvalDate: new Date('2024-01-13'),
         approvedBy: 'Operations Manager',
-
         storeLocation: 'Warehouse A',
         purpose: 'Emergency road construction',
-        notes: 'Completed successfully'
+        notes: 'Completed successfully',
+        requestedItems: [
+          { explosiveType: ExplosiveType.ANFO, quantity: 0.5, unit: 'tons', purpose: 'Blast pattern A' },
+          { explosiveType: ExplosiveType.ANFO, quantity: 0.25, unit: 'tons', purpose: 'Blast pattern B' }
+        ]
       },
       {
         id: '4',
@@ -170,10 +186,12 @@ export class RequestService {
         requiredDate: new Date('2024-01-22'),
         status: RequestStatus.REJECTED,
         rejectionReason: 'Insufficient safety clearance',
-
         storeLocation: 'Warehouse C',
         purpose: 'Demolition project',
-        notes: 'Resubmit with proper safety documentation'
+        notes: 'Resubmit with proper safety documentation',
+        requestedItems: [
+          { explosiveType: ExplosiveType.EMULSION, quantity: 0.2, unit: 'tons', purpose: 'Structure demolition', specifications: 'Cartridges 40mm' }
+        ]
       },
       {
         id: '5',
@@ -188,11 +206,109 @@ export class RequestService {
         status: RequestStatus.IN_PROGRESS,
         approvalDate: new Date('2024-01-09'),
         approvedBy: 'Safety Manager',
-
         storeLocation: 'Warehouse B',
         purpose: 'Tunnel excavation',
-        notes: 'Preparation in progress'
+        notes: 'Preparation in progress',
+        requestedItems: [
+          { explosiveType: ExplosiveType.ANFO, quantity: 0.35, unit: 'tons', purpose: 'Main tunnel blasting' },
+          { explosiveType: ExplosiveType.EMULSION, quantity: 15, unit: 'kg', purpose: 'Secondary blasting' }
+        ]
       }
     ];
+  }
+
+  approveRequest(id: string, approvalData: {
+    approvedQuantity: number;
+    departureDate: Date;
+    expectedReceiptDate: Date;
+    approvalComments: string;
+  }): Observable<ExplosiveRequest> {
+    const requests = this.requestsSubject.value;
+    const requestIndex = requests.findIndex(req => req.id === id);
+
+    if (requestIndex !== -1) {
+      const updatedRequest = {
+        ...requests[requestIndex],
+        approvedQuantity: approvalData.approvedQuantity,
+        departureDate: approvalData.departureDate,
+        expectedReceiptDate: approvalData.expectedReceiptDate,
+        notes: approvalData.approvalComments,
+        status: RequestStatus.APPROVED
+      };
+
+      requests[requestIndex] = updatedRequest;
+      this.requestsSubject.next([...requests]);
+      return of(updatedRequest).pipe(delay(200));
+    }
+
+    return throwError(() => new Error('Request not found'));
+  }
+
+  rejectRequest(id: string, rejectionData: {
+    rejectionReason: string;
+    approvalComments: string;
+  }): Observable<ExplosiveRequest> {
+    const requests = this.requestsSubject.value;
+    const requestIndex = requests.findIndex(req => req.id === id);
+
+    if (requestIndex !== -1) {
+      const updatedRequest = {
+        ...requests[requestIndex],
+        rejectionReason: rejectionData.rejectionReason,
+        notes: rejectionData.approvalComments,
+        status: RequestStatus.REJECTED
+      };
+
+      requests[requestIndex] = updatedRequest;
+      this.requestsSubject.next([...requests]);
+      return of(updatedRequest).pipe(delay(200));
+    }
+
+    return throwError(() => new Error('Request not found'));
+  }
+
+  setPending(id: string, pendingData: {
+    approvalComments: string;
+  }): Observable<ExplosiveRequest> {
+    const requests = this.requestsSubject.value;
+    const requestIndex = requests.findIndex(req => req.id === id);
+    
+    if (requestIndex !== -1) {
+      const updatedRequest = {
+        ...requests[requestIndex],
+        notes: pendingData.approvalComments,
+        status: RequestStatus.PENDING
+      };
+      
+      requests[requestIndex] = updatedRequest;
+      this.requestsSubject.next([...requests]);
+      return of(updatedRequest).pipe(delay(200));
+    }
+    
+    return throwError(() => new Error('Request not found'));
+  }
+
+  dispatchRequest(id: string, dispatchData: DispatchForm): Observable<ExplosiveRequest> {
+    const requests = this.requestsSubject.value;
+    const requestIndex = requests.findIndex(req => req.id === id);
+    
+    if (requestIndex !== -1) {
+      const updatedRequest = {
+        ...requests[requestIndex],
+        status: RequestStatus.DISPATCHED,
+        dispatchDate: dispatchData.dispatchDate,
+        truckNumber: dispatchData.truckNumber,
+        driverName: dispatchData.driverName,
+        routeInformation: dispatchData.routeInformation,
+        dispatchNotes: dispatchData.dispatchNotes,
+        dispatchedBy: 'Explosive Manager' // In a real app, this would come from auth service
+      };
+      
+      requests[requestIndex] = updatedRequest;
+      this.requestsSubject.next([...requests]);
+      return of(updatedRequest).pipe(delay(200));
+    }
+    
+    return throwError(() => new Error('Request not found'));
   }
 }

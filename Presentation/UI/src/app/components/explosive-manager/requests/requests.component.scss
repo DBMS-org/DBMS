@@ -312,33 +312,7 @@
               }
             }
             
-            .priority-badge {
-              padding: 4px 12px;
-              border-radius: 20px;
-              font-size: 12px;
-              font-weight: 600;
-              text-transform: uppercase;
-              
-              &.priority-urgent {
-                background: #fee2e2;
-                color: #dc2626;
-              }
-              
-              &.priority-high {
-                background: #fed7aa;
-                color: #ea580c;
-              }
-              
-              &.priority-medium {
-                background: #fef3c7;
-                color: #d97706;
-              }
-              
-              &.priority-low {
-                background: #dcfce7;
-                color: #16a34a;
-              }
-            }
+
             
             .status-badge {
               padding: 4px 12px;
@@ -378,6 +352,8 @@
               }
             }
             
+
+            
             &.purpose-cell {
               max-width: 200px;
               overflow: hidden;
@@ -405,21 +381,12 @@
                     font-size: 16px;
                   }
                   
-                  &.approve-btn {
-                    background: #dcfce7;
-                    color: #16a34a;
+                  &.review-btn {
+                    background: #e0f2fe;
+                    color: #0284c7;
                     
                     &:hover {
-                      background: #bbf7d0;
-                    }
-                  }
-                  
-                  &.reject-btn {
-                    background: #fee2e2;
-                    color: #dc2626;
-                    
-                    &:hover {
-                      background: #fecaca;
+                      background: #bae6fd;
                     }
                   }
                   
@@ -429,6 +396,15 @@
                     
                     &:hover {
                       background: #c7d2fe;
+                    }
+                  }
+
+                  &.dispatch-btn {
+                    background: #ecfccb;
+                    color: #4d7c0f;
+
+                    &:hover {
+                      background: #d9f99d;
                     }
                   }
                 }
@@ -842,4 +818,100 @@
       }
     }
   }
+}
+
+// Nested items table styles for expanded rows and the details modal
+.nested-items-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 8px 0 0 0;
+  table-layout: auto;
+
+  thead {
+    background: #f1f5f9;
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f1f5f9;
+
+      &:nth-child(even) {
+        background: #fafafa;
+      }
+
+      &:hover {
+        background: #f8fafc;
+      }
+    }
+
+    td {
+      padding: 12px 16px;
+      vertical-align: middle;
+      color: #1e293b;
+    }
+
+    .index-cell {
+      width: 48px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .qty-cell {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .unit-cell {
+      color: #475569;
+      white-space: nowrap;
+    }
+
+    .purpose-cell {
+      color: #334155;
+    }
+
+    .spec-cell {
+      color: #374151;
+      word-break: break-word;
+      white-space: normal;
+    }
+
+    .explosive-type {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: fit-content;
+
+      &.type-anfo {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      &.type-emulsion {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+    }
+  }
+}
+
+// Ensure nested table looks good inside the modal as well
+.modal-body .nested-items-table {
+  margin-top: 0;
+  border-radius: 8px;
+  overflow: hidden;
 }

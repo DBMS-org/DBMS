@@ -75,27 +75,28 @@
           Explosive Details
         </h3>
         <div class="info-grid">
-          <div *ngFor="let item of request?.requestedItems; let i = index" class="info-grid">
-            <div class="info-item">
-              <label>Explosive Type {{ i + 1 }}:</label>
-              <span class="value explosive-type">{{ item.explosiveType }}</span>
-            </div>
-            
-            <div class="info-item">
-              <label>Quantity:</label>
-              <span class="value quantity">{{ item.requestedQuantity }} {{ item.unit }}</span>
-            </div>
-            
-            <div class="info-item full-width">
-              <label>Purpose:</label>
-              <span class="value purpose">{{ item.purpose }}</span>
-            </div>
-            
-            <div class="info-item full-width" *ngIf="item.specifications">
-              <label>Specifications:</label>
-              <span class="value">{{ item.specifications }}</span>
-            </div>
-          </div>
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Purpose</th>
+                <th>Specifications</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of request?.requestedItems; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ item.explosiveType }}</td>
+                <td>{{ item.requestedQuantity }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.purpose }}</td>
+                <td>{{ item.specifications || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 

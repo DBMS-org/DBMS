@@ -41,6 +41,9 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
   // UI state
   isFiltersCollapsed = true;
   
+  // Row expansion state
+  expandedRows: Set<string> = new Set<string>();
+  
   // View Details Modal
   showViewDetails = false;
   selectedRequest: StockRequest | null = null;
@@ -72,6 +75,20 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
           unit: 'tons',
           purpose: 'Mining operations - Phase 2',
           specifications: 'Standard grade ANFO for surface mining'
+        },
+        {
+          explosiveType: ExplosiveType.DETONATING_CORD,
+          requestedQuantity: 250,
+          unit: 'meters',
+          purpose: 'Surface blast connections',
+          specifications: '10 g/m detonating cord'
+        },
+        {
+          explosiveType: ExplosiveType.BLASTING_CAPS,
+          requestedQuantity: 60,
+          unit: 'pieces',
+          purpose: 'Detonation sequence setup',
+          specifications: 'Electric blasting caps, delay 0-9'
         }
       ],
       requestDate: new Date('2024-01-15'),
@@ -96,6 +113,13 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
           unit: 'tons',
           purpose: 'Underground blasting operations',
           specifications: 'Water-resistant emulsion for wet conditions'
+        },
+        {
+          explosiveType: ExplosiveType.PRIMER,
+          requestedQuantity: 40,
+          unit: 'pieces',
+          purpose: 'Primer cartridges for emulsion shots',
+          specifications: 'Suitable for 32-40mm boreholes'
         }
       ],
       requestDate: new Date('2024-01-20'),
@@ -119,6 +143,13 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
           unit: 'pieces',
           purpose: 'Detonation sequence setup',
           specifications: 'Electric blasting caps, delay 0-9'
+        },
+        {
+          explosiveType: ExplosiveType.BOOSTER,
+          requestedQuantity: 20,
+          unit: 'pieces',
+          purpose: 'Boosters for large diameter holes',
+          specifications: '400g boosters for 76-89mm holes'
         }
       ],
       requestDate: new Date('2024-01-18'),
@@ -222,6 +253,19 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
 
   toggleFilters(): void {
     this.isFiltersCollapsed = !this.isFiltersCollapsed;
+  }
+
+  // Expand/collapse handlers for parent table rows
+  isExpanded(id: string): boolean {
+    return this.expandedRows.has(id);
+  }
+
+  toggleExpanded(id: string): void {
+    if (this.expandedRows.has(id)) {
+      this.expandedRows.delete(id);
+    } else {
+      this.expandedRows.add(id);
+    }
   }
 
   // View Details Modal Methods

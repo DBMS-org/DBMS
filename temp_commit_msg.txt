@@ -1,3 +1,4 @@
-refactor(machine-inventory): remove add machine button from empty state
+feat(machine-manager): replace mock API calls with real service integration
 
-The button was redundant as the same functionality is available in the main toolbar. This simplifies the empty state UI.
+Replace setTimeout mock API calls with actual MachineService calls for approving/rejecting assignment requests
+Update component to handle API responses and errors properly

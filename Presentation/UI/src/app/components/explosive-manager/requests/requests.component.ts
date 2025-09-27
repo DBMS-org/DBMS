@@ -1,24 +1,33 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { RequestService } from './services/request.service';
-import { ExplosiveRequest, ExplosiveType, RequestStatus, RequestSearchCriteria } from './models/request.model';
-import { AnfoRequestsComponent } from './anfo-requests/anfo-requests.component';
-import { EmulsionRequestsComponent } from './emulsion-requests/emulsion-requests.component';
+import { ExplosiveRequest, ExplosiveType, RequestStatus, RequestSearchCriteria } from './models/explosive-request.model';
 
 @Component({
   selector: 'app-requests',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
+    CommonModule,
     ReactiveFormsModule,
-    AnfoRequestsComponent,
-    EmulsionRequestsComponent
+    FormsModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatChipsModule,
+    MatSnackBarModule
   ],
   templateUrl: './requests.component.html',
-  styleUrl: './requests.component.scss'
+  styleUrls: ['./requests.component.scss']
 })
 export class RequestsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -39,7 +48,7 @@ export class RequestsComponent implements OnInit, OnDestroy {
   
   // View options
   currentView: 'all' | 'anfo' | 'emulsion' = 'all';
-  sortBy: 'requestDate' | 'requiredDate' | 'status' | 'quantity' = 'requestDate';
+  sortBy: 'requestDate' | 'requiredDate' | 'status' = 'requestDate';
   sortOrder: 'asc' | 'desc' = 'desc';
   
   // Pagination
@@ -50,15 +59,18 @@ export class RequestsComponent implements OnInit, OnDestroy {
   // Modal state
   showDetailsModal = false;
   selectedRequest: ExplosiveRequest | null = null;
-  
+
+  // Row expansion state
+  expandedRows = new Set<string>();
   constructor(
     private requestService: RequestService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.filterForm = this.fb.group({
       explosiveType: [''],
       status: [''],
-      priority: [''],
+      /* priority removed */
       requesterName: [''],
       storeLocation: [''],
       dateFrom: [''],
@@ -117,9 +129,9 @@ export class RequestsComponent implements OnInit, OnDestroy {
     let filtered = [...this.requests];
     
     if (this.currentView === 'anfo') {
-      filtered = filtered.filter(req => req.explosiveType === ExplosiveType.ANFO);
+      filtered = filtered.filter(req => (req.requestedItems?.some(i => i.explosiveType === ExplosiveType.ANFO)) || req.explosiveType === ExplosiveType.ANFO);
     } else if (this.currentView === 'emulsion') {
-      filtered = filtered.filter(req => req.explosiveType === ExplosiveType.EMULSION);
+      filtered = filtered.filter(req => (req.requestedItems?.some(i => i.explosiveType === ExplosiveType.EMULSION)) || req.explosiveType === ExplosiveType.EMULSION);
     }
     
     this.filteredRequests = filtered;
@@ -130,7 +142,7 @@ export class RequestsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
   
-  onSortChange(field: 'requestDate' | 'requiredDate' | 'status' | 'quantity'): void {
+  onSortChange(field: 'requestDate' | 'requiredDate' | 'status'): void {
     if (this.sortBy === field) {
       this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
     } else {
@@ -143,21 +155,6 @@ export class RequestsComponent implements OnInit, OnDestroy {
   onViewChange(view: 'all' | 'anfo' | 'emulsion'): void {
     this.currentView = view;
     this.applyViewFilter();
-  }
-  
-  updateRequestStatus(requestId: string, status: RequestStatus): void {
-    this.requestService.updateRequestStatus(requestId, status)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (success) => {
-          if (success) {
-            this.loadRequests();
-          }
-        },
-        error: (error) => {
-          console.error('Error updating request status:', error);
-        }
-      });
   }
   
   clearFilters(): void {
@@ -212,5 +209,65 @@ export class RequestsComponent implements OnInit, OnDestroy {
   closeDetailsModal(): void {
     this.showDetailsModal = false;
     this.selectedRequest = null;
+  }
+
+  openApprovalForm(request: ExplosiveRequest): void {
+    this.router.navigate(['/explosive-manager/requests/approval', request.id]);
+  }
+
+  goToDispatch(request: ExplosiveRequest): void {
+    this.router.navigate(['/explosive-manager/requests/dispatch', request.id]);
+  }
+
+  getDispatchStatusText(request: ExplosiveRequest): string {
+    if (request.status === RequestStatus.DISPATCHED) return 'Dispatched';
+    if (request.dispatchDate) return 'Scheduled';
+    return 'Not Dispatched';
+  }
+
+  getDispatchStatusClass(request: ExplosiveRequest): string {
+    const text = this.getDispatchStatusText(request);
+    switch (text) {
+      case 'Dispatched':
+        return 'status-completed';
+      case 'Scheduled':
+        return 'status-in-progress';
+      default:
+        return 'status-pending';
+    }
+  }
+
+  // Helpers for multi-item display
+  isExpanded(request: ExplosiveRequest): boolean {
+    return this.expandedRows.has(request.id);
+  }
+
+  toggleExpanded(requestId: string): void {
+    if (this.expandedRows.has(requestId)) {
+      this.expandedRows.delete(requestId);
+    } else {
+      this.expandedRows.add(requestId);
+    }
+  }
+
+  getItemsForRequest(request: ExplosiveRequest) {
+    if (request.requestedItems && request.requestedItems.length > 0) {
+      return request.requestedItems;
+    }
+    // Fallback to single-item fields if multi-item array is not present
+    if (request.explosiveType && request.quantity != null && request.unit) {
+      return [{
+        explosiveType: request.explosiveType,
+        quantity: request.quantity,
+        unit: request.unit,
+        purpose: request.purpose,
+        specifications: undefined
+      }];
+    }
+    return [];
+  }
+
+  getItemsCount(request: ExplosiveRequest): number {
+    return this.getItemsForRequest(request).length;
   }
 }

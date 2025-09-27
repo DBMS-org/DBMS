@@ -57,6 +57,7 @@
             <div class="form-group">
               <label>Status</label>
               <select
+                title="Filter by status"
                 class="form-select"
                 [(ngModel)]="filterStatus"
                 (change)="applyFilters()">
@@ -71,6 +72,7 @@
             <div class="form-group">
               <label>Explosive Type</label>
               <select
+                title="Filter by explosive type"
                 class="form-select"
                 [(ngModel)]="filterType"
                 (change)="applyFilters()">
@@ -90,12 +92,24 @@
                 type="date" 
                 class="form-control"
                 [(ngModel)]="filterDateFrom"
+                (change)="applyFilters()"
+                title="Filter from date"
+                placeholder="yyyy-mm-dd">
+                type="date" 
+                class="form-control"
+                [(ngModel)]="filterDateFrom"
                 (change)="applyFilters()">
             </div>
             
             <div class="form-group">
               <label>Date To</label>
               <input 
+                type="date" 
+                class="form-control"
+                [(ngModel)]="filterDateTo"
+                (change)="applyFilters()"
+                title="Filter to date"
+                placeholder="yyyy-mm-dd">
                 type="date" 
                 class="form-control"
                 [(ngModel)]="filterDateTo"
@@ -144,60 +158,98 @@
             <table class="table table-striped">
               <thead>
                 <tr>
+                  <th></th>
                   <th>Request ID</th>
                   <th>Date</th>
                   <th>Required Date</th>
                   <th>Status</th>
                   <th>Requested Items</th>
-                <th>Total Items</th>
-                <th>Justification</th>
+                  <th>Items</th>
+                  <th>Justification</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let request of filteredRequests">
-                  <td>
-                    <strong>{{ request.id }}</strong>
-                  </td>
-                  <td>{{ formatDate(request.requestDate) }}</td>
-                  <td>{{ formatDate(request.requiredDate) }}</td>
-                  <td>
-                    <span class="badge" [class]="getStatusClass(request.status)">
-                      {{ request.status }}
-                    </span>
-                  </td>
-                  <td>
-                    <div *ngFor="let item of request.requestedItems; let i = index">
-                      <small class="text-muted">{{ i + 1 }}.</small> {{ item.explosiveType }} 
-                      <span class="text-muted">({{ item.requestedQuantity }} {{ item.unit }})</span>
-                      <div *ngIf="request.requestedItems.length > 1" class="mt-1"></div>
-                    </div>
-                  </td>
-                  <td>{{ request.requestedItems.length }} item(s)</td>
-                <td class="purpose-cell">{{ request.justification }}</td>
-                  <td>
-                    <div class="action-buttons">
-                      <button 
-                        class="btn btn-sm btn-outline-primary"
-                        (click)="openViewDetails(request)"
-                        title="View Details">
-                        <i class="material-icons">visibility</i>
+                <ng-container *ngFor="let request of filteredRequests">
+                  <tr>
+                    <td>
+                      <button class="btn btn-sm btn-outline-secondary" (click)="toggleExpanded(request.id)" [attr.aria-expanded]="isExpanded(request.id)">
+                        <i class="material-icons">{{ isExpanded(request.id) ? 'expand_less' : 'expand_more' }}</i>
                       </button>
-                      <button 
-                        *ngIf="request.status === StockRequestStatus.PENDING"
-                        class="btn btn-sm btn-outline-warning"
-                        title="Edit Request">
-                        <i class="material-icons">edit</i>
-                      </button>
-                      <button 
-                        *ngIf="request.status === StockRequestStatus.PENDING"
-                        class="btn btn-sm btn-outline-danger"
-                        title="Cancel Request">
-                        <i class="material-icons">cancel</i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                    <td>
+                      <strong>{{ request.id }}</strong>
+                    </td>
+                    <td>{{ formatDate(request.requestDate) }}</td>
+                    <td>{{ formatDate(request.requiredDate) }}</td>
+                    <td>
+                      <span class="badge" [class]="getStatusClass(request.status)">
+                        {{ request.status }}
+                      </span>
+                    </td>
+                    <td>
+                      <div *ngFor="let item of request.requestedItems; let i = index">
+                        <small class="text-muted">{{ i + 1 }}.</small> {{ item.explosiveType }} 
+                        <span class="text-muted">({{ item.requestedQuantity }} {{ item.unit }})</span>
+                        <div *ngIf="request.requestedItems.length > 1" class="mt-1"></div>
+                      </div>
+                    </td>
+                    <td>{{ request.requestedItems.length }} item(s)</td>
+                    <td class="purpose-cell">{{ request.justification }}</td>
+                    <td>
+                      <div class="action-buttons">
+                        <button 
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="openViewDetails(request)"
+                          title="View Details">
+                          <i class="material-icons">visibility</i>
+                        </button>
+                        <button 
+                          *ngIf="request.status === StockRequestStatus.PENDING"
+                          class="btn btn-sm btn-outline-warning"
+                          title="Edit Request">
+                          <i class="material-icons">edit</i>
+                        </button>
+                        <button 
+                          *ngIf="request.status === StockRequestStatus.PENDING"
+                          class="btn btn-sm btn-outline-danger"
+                          title="Cancel Request">
+                          <i class="material-icons">cancel</i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <!-- Expanded row: nested items table -->
+                  <tr *ngIf="isExpanded(request.id)">
+                    <td colspan="9" class="nested-row">
+                      <div class="nested-table-wrapper">
+                        <table class="table table-sm table-bordered nested-table">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Type</th>
+                              <th>Quantity</th>
+                              <th>Unit</th>
+                              <th>Purpose</th>
+                              <th>Specifications</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let item of request.requestedItems; let idx = index">
+                              <td>{{ idx + 1 }}</td>
+                              <td>{{ item.explosiveType }}</td>
+                              <td>{{ item.requestedQuantity }}</td>
+                              <td>{{ item.unit }}</td>
+                              <td>{{ item.purpose }}</td>
+                              <td>{{ item.specifications || '-' }}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
               </tbody>
             </table>
           </div>
