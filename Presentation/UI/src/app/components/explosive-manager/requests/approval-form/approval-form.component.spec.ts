@@ -74,7 +74,7 @@ describe('ApprovalFormComponent', () => {
     
     expect(component.approvalForm.get('approvedQuantity')?.enabled).toBeTrue();
     expect(component.approvalForm.get('departureDate')?.enabled).toBeTrue();
-    expect(component.approvalForm.get('expectedReceiptDate')?.enabled).toBeTrue();
+    // expectedReceiptDate removed
   });
 
   it('should enable rejection reason when decision is reject', () => {
@@ -83,25 +83,11 @@ describe('ApprovalFormComponent', () => {
     expect(component.approvalForm.get('rejectionReason')?.enabled).toBeTrue();
   });
 
-  it('should validate dates correctly', () => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    component.approvalForm.patchValue({
-      departureDate: today,
-      expectedReceiptDate: tomorrow
-    });
-
-    expect(component.validateDates()).toBeTrue();
-  });
-
   it('should call approveRequest service method when form is submitted with approve decision', () => {
     const approvalData = {
       decision: 'approve',
       approvedQuantity: 0.5,
       departureDate: new Date(),
-      expectedReceiptDate: new Date(),
       comments: 'Approved with standard quantity'
     };
 

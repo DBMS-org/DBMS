@@ -1,7 +1,7 @@
 export interface ApprovalForm {
   approvedQuantity: number;
   departureDate: Date;
-  expectedReceiptDate: Date;
+  // expectedReceiptDate removed
   comments: string;
 }
 
