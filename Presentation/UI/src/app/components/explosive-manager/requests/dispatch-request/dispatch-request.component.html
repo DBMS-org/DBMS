@@ -21,64 +21,112 @@
         <div class="item"><label>Explosive Type:</label><span>{{request.explosiveType}}</span></div>
         <div class="item"><label>Approved Quantity:</label><span>{{request.approvedQuantity || request.quantity}} {{request.unit}}</span></div>
         <div class="item"><label>Departure Date:</label><span>{{request.departureDate | date:'mediumDate'}}</span></div>
-        <div class="item"><label>Expected Receipt Date:</label><span>{{request.expectedReceiptDate | date:'mediumDate'}}</span></div>
-        <div class="item"><label>Requester:</label><span>{{request.requesterName}} ({{request.requesterRole}})</span></div>
-        <div class="item"><label>Purpose:</label><span>{{request.purpose}}</span></div>
+        <!-- Header Section -->
+        <div class="dispatch-header">
+          <div class="grid">
+            <div class="item"><label>Request ID:</label><span>{{ request?.id }}</span></div>
+            <div class="item"><label>Requester:</label><span>{{ request?.requesterName }}</span></div>
+            <div class="item"><label>Store Location:</label><span>{{ request?.storeLocation }}</span></div>
+            <div class="item"><label>Explosive Type:</label><span>{{ request?.explosiveType }}</span></div>
+            <div class="item"><label>Requested Qty:</label><span>{{ request?.quantity }} {{ request?.unit }}</span></div>
+            <div class="item"><label>Required Date:</label><span>{{ request?.requiredDate | date: 'mediumDate' }}</span></div>
+            <!-- Expected Receipt Date removed -->
+          </div>
+        </div>
+        
+        <!-- Form Section -->
+        <form [formGroup]="dispatchForm" (ngSubmit)="submit()" class="dispatch-form">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Dispatch Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="dispatchDate" placeholder="Select dispatch date" />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        
+          <div class="grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Truck Number</mat-label>
+              <input matInput formControlName="truckNumber" placeholder="Enter truck number" />
+            </mat-form-field>
+        
+            <mat-form-field appearance="outline">
+              <mat-label>Driver Name</mat-label>
+              <input matInput formControlName="driverName" placeholder="Enter driver name" />
+            </mat-form-field>
+        
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Route Information</mat-label>
+              <textarea matInput formControlName="routeInformation" placeholder="Enter route details"></textarea>
+            </mat-form-field>
+        
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Dispatch Notes</mat-label>
+              <textarea matInput formControlName="dispatchNotes" placeholder="Any additional notes"></textarea>
+            </mat-form-field>
+          </div>
+
+          <!-- Per-item Decisions (inside the form) -->
+          <div class="per-item-card" *ngIf="viewItems.length">
+            <div class="card-header">
+              <mat-icon>playlist_add_check</mat-icon>
+              <h3>Per-item Decisions</h3>
+            </div>
+            <div formArrayName="items" class="items-table-wrapper">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Type</th>
+                    <th>Requested</th>
+                    <th>Approved Qty</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of viewItems; let i = index" [formGroupName]="i">
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                      <div class="type-cell">
+                        <span class="type-label">{{ item.explosiveType }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="requested">{{ item.quantity }} {{ item.unit }}</span>
+                    </td>
+                    <td>
+                      <mat-form-field appearance="outline" class="compact">
+                        <mat-label>Approved quantity</mat-label>
+                        <input matInput type="number" formControlName="approvedQuantity" [attr.max]="item.quantity" min="0" step="any" placeholder="&lt;= {{item.quantity}}" />
+                        <mat-hint align="end">Max {{ item.quantity }} {{ item.unit }}</mat-hint>
+                        <mat-error *ngIf="(dispatchForm.get('items')?.get(i.toString())?.get('approvedQuantity')?.errors?.['max'])">
+                          Approved quantity cannot exceed requested ({{item.quantity}})
+                        </mat-error>
+                      </mat-form-field>
+                    </td>
+                    <td>
+                      <mat-form-field appearance="outline" class="wide">
+                        <mat-label>Remarks</mat-label>
+                        <input matInput type="text" formControlName="remarks" placeholder="Optional remarks" />
+                      </mat-form-field>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button mat-raised-button type="button" (click)="goBack()" class="cancel">
+              <mat-icon>close</mat-icon>
+              Cancel
+            </button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="dispatchForm.invalid || isSubmitting" class="submit">
+              <mat-icon>local_shipping</mat-icon>
+              Dispatch
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <mat-icon>local_shipping</mat-icon>
-        <h3>Dispatch Details</h3>
-      </div>
-
-      <form [formGroup]="dispatchForm" (ngSubmit)="submit()" class="dispatch-form">
-        <div class="row">
-          <div class="field">
-            <label for="truckNumber">Truck Number *</label>
-            <input id="truckNumber" type="text" formControlName="truckNumber" placeholder="Enter truck number" [class.error]="hasError('truckNumber')" />
-            <div class="error" *ngIf="getError('truckNumber')">{{getError('truckNumber')}}</div>
-          </div>
-
-          <div class="field">
-            <label for="dispatchDate">Dispatch Date *</label>
-            <input id="dispatchDate" type="date" formControlName="dispatchDate" [class.error]="hasError('dispatchDate')" />
-            <div class="error" *ngIf="getError('dispatchDate')">{{getError('dispatchDate')}}</div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="driverName">Driver Name</label>
-            <input id="driverName" type="text" formControlName="driverName" placeholder="Enter driver name" />
-            <small class="hint">Recommended but not required</small>
-          </div>
-
-          <div class="field">
-            <label for="routeInformation">Route Information</label>
-            <input id="routeInformation" type="text" formControlName="routeInformation" placeholder="Enter route details" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field full">
-            <label for="additionalNotes">Additional Notes</label>
-            <textarea id="additionalNotes" rows="3" formControlName="additionalNotes" placeholder="Any additional instructions or notes"></textarea>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button mat-raised-button type="button" (click)="goBack()" class="cancel">
-            <mat-icon>close</mat-icon>
-            Cancel
-          </button>
-          <button mat-raised-button color="primary" type="submit" [disabled]="dispatchForm.invalid || isSubmitting" class="submit">
-            <mat-icon>local_shipping</mat-icon>
-            Dispatch
-          </button>
-        </div>
-      </form>
     </div>
   </div>
 </div>

@@ -16,7 +16,35 @@
 .hint { color: #777; font-size: 12px; }
 .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 12px; }
 
+/* Per-item decisions section */
+.per-item-card { margin-top: 8px; }
+.items-table-wrapper { width: 100%; overflow-x: auto; }
+.items-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: auto; font-size: 14px; }
+.items-table thead th { background: #f8fafc; color: #334155; font-weight: 600; text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1; }
+.items-table tbody td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.items-table tbody tr:hover { background: #f9fafb; }
+
+.type-cell .type-label { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .25px; }
+.requested { color: #475569; font-weight: 600; }
+
+/* Compact Material fields inside table */
+mat-form-field.compact { width: 160px; min-width: 140px; }
+mat-form-field.wide { width: 260px; min-width: 220px; }
+
+/* Tweak Material field density inside table */
+:host ::ng-deep .items-table mat-form-field.compact .mat-mdc-form-field-infix,
+:host ::ng-deep .items-table mat-form-field.wide .mat-mdc-form-field-infix { padding-top: 8px; padding-bottom: 8px; }
+:host ::ng-deep .items-table .mat-mdc-text-field-wrapper { --mdc-filled-text-field-container-height: 40px; }
+
+@media (max-width: 1024px) {
+  mat-form-field.compact { width: 140px; }
+  mat-form-field.wide { width: 220px; }
+}
+
 @media (max-width: 768px) {
   .summary-grid { grid-template-columns: 1fr; }
   .dispatch-form .row { grid-template-columns: 1fr; }
+  .items-table { font-size: 13px; }
+  mat-form-field.compact { width: 120px; }
+  mat-form-field.wide { width: 200px; }
 }

@@ -48,7 +48,7 @@ export class ApprovalFormComponent implements OnInit {
       decision: ['', Validators.required],
       approvedQuantity: [{ value: '', disabled: true }, [Validators.min(1)]],
       departureDate: [{ value: '', disabled: true }],
-      expectedReceiptDate: [{ value: '', disabled: true }],
+      // expectedReceiptDate removed
       rejectionReason: [{ value: '', disabled: true }, [Validators.minLength(10)]],
       comments: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]]
     });
@@ -97,7 +97,7 @@ export class ApprovalFormComponent implements OnInit {
       decision: ['', Validators.required],
       approvedQuantity: [{ value: '', disabled: true }, [Validators.required, Validators.min(0.1), Validators.max(this.request?.quantity || 999)]],
       departureDate: [{ value: '', disabled: true }, [Validators.required]],
-      expectedReceiptDate: [{ value: '', disabled: true }, [Validators.required]],
+      // expectedReceiptDate removed
       rejectionReason: [{ value: '', disabled: true }, [Validators.required, Validators.minLength(10)]],
       approvalComments: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]]
     });
@@ -107,29 +107,29 @@ export class ApprovalFormComponent implements OnInit {
       this.handleDecisionChange(decision);
     });
 
-    // Add date validation
-    this.approvalForm.get('expectedReceiptDate')?.valueChanges.subscribe(() => {
-      this.validateDates();
-    });
+    // Remove date validation subscription for expected receipt
+    // this.approvalForm.get('expectedReceiptDate')?.valueChanges.subscribe(() => {
+    //   this.validateDates();
+    // });
   }
 
   private handleDecisionChange(decision: string): void {
     const approvedQuantityControl = this.approvalForm.get('approvedQuantity');
     const departureDateControl = this.approvalForm.get('departureDate');
-    const expectedReceiptDateControl = this.approvalForm.get('expectedReceiptDate');
+    // const expectedReceiptDateControl = this.approvalForm.get('expectedReceiptDate');
     const rejectionReasonControl = this.approvalForm.get('rejectionReason');
     const approvalCommentsControl = this.approvalForm.get('approvalComments');
 
     // Reset and disable all conditional fields first
     approvedQuantityControl?.disable();
     departureDateControl?.disable();
-    expectedReceiptDateControl?.disable();
+    // expectedReceiptDateControl?.disable();
     rejectionReasonControl?.disable();
 
     // Clear validators for all fields
     approvedQuantityControl?.clearValidators();
     departureDateControl?.clearValidators();
-    expectedReceiptDateControl?.clearValidators();
+    // expectedReceiptDateControl?.clearValidators();
     rejectionReasonControl?.clearValidators();
     approvalCommentsControl?.clearValidators();
 
@@ -151,7 +151,7 @@ export class ApprovalFormComponent implements OnInit {
     // Update validators
     approvedQuantityControl?.updateValueAndValidity();
     departureDateControl?.updateValueAndValidity();
-    expectedReceiptDateControl?.updateValueAndValidity();
+    // expectedReceiptDateControl?.updateValueAndValidity();
     rejectionReasonControl?.updateValueAndValidity();
     approvalCommentsControl?.updateValueAndValidity();
   }
@@ -162,18 +162,19 @@ export class ApprovalFormComponent implements OnInit {
       
       switch (formValue.decision) {
         case 'approve':
-          if (!this.validateDates()) {
-            this.snackBar.open('Expected receipt date must be after departure date', 'Close', {
-              duration: 5000,
-              panelClass: ['error-snackbar']
-            });
-            return;
-          }
+          // Remove expected receipt date validation
+          // if (!this.validateDates()) {
+          //   this.snackBar.open('Expected receipt date must be after departure date', 'Close', {
+          //     duration: 5000,
+          //     panelClass: ['error-snackbar']
+          //   });
+          //   return;
+          // }
           
           this.requestService.approveRequest(this.request.id, {
             approvedQuantity: formValue.approvedQuantity,
             departureDate: formValue.departureDate,
-            expectedReceiptDate: formValue.expectedReceiptDate,
+            // expectedReceiptDate removed
             approvalComments: formValue.approvalComments
           }).subscribe({
             next: () => {
@@ -238,11 +239,11 @@ export class ApprovalFormComponent implements OnInit {
 
   validateDates(): boolean {
     const departureDate = this.approvalForm.get('departureDate')?.value;
-    const expectedReceiptDate = this.approvalForm.get('expectedReceiptDate')?.value;
+    // const expectedReceiptDate = this.approvalForm.get('expectedReceiptDate')?.value;
     
-    if (departureDate && expectedReceiptDate) {
-      return new Date(expectedReceiptDate) > new Date(departureDate);
-    }
+    // if (departureDate && expectedReceiptDate) {
+    //   return new Date(expectedReceiptDate) > new Date(departureDate);
+    // }
     return true;
   }
 

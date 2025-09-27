@@ -220,7 +220,7 @@ export class RequestService {
   approveRequest(id: string, approvalData: {
     approvedQuantity: number;
     departureDate: Date;
-    expectedReceiptDate: Date;
+    // expectedReceiptDate removed
     approvalComments: string;
   }): Observable<ExplosiveRequest> {
     const requests = this.requestsSubject.value;
@@ -231,7 +231,7 @@ export class RequestService {
         ...requests[requestIndex],
         approvedQuantity: approvalData.approvedQuantity,
         departureDate: approvalData.departureDate,
-        expectedReceiptDate: approvalData.expectedReceiptDate,
+        // expectedReceiptDate removed
         notes: approvalData.approvalComments,
         status: RequestStatus.APPROVED
       };
@@ -293,15 +293,32 @@ export class RequestService {
     const requestIndex = requests.findIndex(req => req.id === id);
     
     if (requestIndex !== -1) {
-      const updatedRequest = {
-        ...requests[requestIndex],
+      const current = requests[requestIndex];
+      // Merge per-item approved quantities and remarks into requestedItems if present
+      let updatedItems = current.requestedItems ? [...current.requestedItems] : undefined;
+      if (dispatchData.itemDecisions && updatedItems) {
+        dispatchData.itemDecisions.forEach(dec => {
+          const idx = dec.index;
+          if (idx >= 0 && idx < updatedItems!.length) {
+            updatedItems![idx] = {
+              ...updatedItems![idx],
+              approvedQuantity: dec.approvedQuantity,
+              remarks: dec.remarks
+            };
+          }
+        });
+      }
+
+      const updatedRequest: ExplosiveRequest = {
+        ...current,
         status: RequestStatus.DISPATCHED,
         dispatchDate: dispatchData.dispatchDate,
         truckNumber: dispatchData.truckNumber,
         driverName: dispatchData.driverName,
         routeInformation: dispatchData.routeInformation,
         dispatchNotes: dispatchData.dispatchNotes,
-        dispatchedBy: 'Explosive Manager' // In a real app, this would come from auth service
+        dispatchedBy: 'Explosive Manager', // In a real app, this would come from auth service
+        requestedItems: updatedItems ?? current.requestedItems
       };
       
       requests[requestIndex] = updatedRequest;
