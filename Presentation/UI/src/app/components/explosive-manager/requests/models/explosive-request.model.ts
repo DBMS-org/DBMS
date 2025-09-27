@@ -3,9 +3,10 @@ export interface ExplosiveRequest {
   requesterId: string;
   requesterName: string;
   requesterRole: string;
-  explosiveType: ExplosiveType;
-  quantity: number;
-  unit: string;
+  // Single-item fields (kept for compatibility with existing views)
+  explosiveType?: ExplosiveType;
+  quantity?: number;
+  unit?: string;
   requestDate: Date;
   requiredDate: Date;
   status: RequestStatus;
@@ -25,6 +26,9 @@ export interface ExplosiveRequest {
   routeInformation?: string;
   dispatchNotes?: string;
   dispatchedBy?: string;
+  
+  // Multi-item requests support
+  requestedItems?: RequestItem[];
 }
 
 export enum ExplosiveType {
@@ -42,7 +46,13 @@ export enum RequestStatus {
   DISPATCHED = 'DISPATCHED'
 }
 
-
+export interface RequestItem {
+  explosiveType: ExplosiveType;
+  quantity: number;
+  unit: string;
+  purpose: string;
+  specifications?: string;
+}
 
 export interface RequestFilter {
   explosiveType?: ExplosiveType;
@@ -56,7 +66,7 @@ export interface RequestFilter {
 export interface RequestSearchCriteria {
   searchTerm?: string;
   filters?: RequestFilter;
-  sortBy?: 'requestDate' | 'requiredDate' | 'status' | 'quantity';
+  sortBy?: 'requestDate' | 'requiredDate' | 'status';
   sortOrder?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
