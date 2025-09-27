@@ -16,7 +16,7 @@ export interface ExplosiveRequest {
   notes?: string;
   approvedQuantity?: number;
   departureDate?: Date;
-  expectedReceiptDate?: Date;
+  // expectedReceiptDate removed
   storeLocation: string;
   purpose: string;
   // Dispatch-related fields
@@ -46,12 +46,18 @@ export enum RequestStatus {
   DISPATCHED = 'DISPATCHED'
 }
 
+export type ItemDecisionStatus = 'APPROVE' | 'REJECT';
+
 export interface RequestItem {
   explosiveType: ExplosiveType;
   quantity: number;
   unit: string;
   purpose: string;
   specifications?: string;
+  // Per-item approval fields (front-end only)
+  decision?: ItemDecisionStatus;
+  approvedQuantity?: number;
+  remarks?: string;
 }
 
 export interface RequestFilter {

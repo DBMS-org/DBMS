@@ -15,7 +15,7 @@ export interface ExplosiveRequest {
   notes?: string;
   approvedQuantity?: number;
   departureDate?: Date;
-  expectedReceiptDate?: Date;
+  // expectedReceiptDate removed
   storeLocation: string;
   purpose: string;
   // Dispatch-related fields

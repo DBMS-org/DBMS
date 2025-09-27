@@ -10,7 +10,7 @@ export interface ExplosiveRequest {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   approvedQuantity?: number;
   departureDate?: Date;
-  expectedReceiptDate?: Date;
+  // expectedReceiptDate removed
   rejectionReason?: string;
   approvalComments?: string;
 }

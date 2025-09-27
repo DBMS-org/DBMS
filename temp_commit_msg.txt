@@ -1,4 +1,7 @@
-feat(machine-manager): replace mock API calls with real service integration
+feat(requests): implement multi-item request management and dispatch workflow
 
-Replace setTimeout mock API calls with actual MachineService calls for approving/rejecting assignment requests
-Update component to handle API responses and errors properly
+refactor(requests): consolidate request models and remove type-specific components
+feat(requests): add approval and dispatch forms with routing
+feat(requests): enhance request table with expandable rows for multi-item display
+refactor(requests): update service to handle multi-item requests and status changes
+style(requests): improve UI for request management and add responsive tables
