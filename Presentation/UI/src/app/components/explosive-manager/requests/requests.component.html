@@ -419,7 +419,7 @@
       </div>
       
       <!-- Dispatch Information -->
-      <div class="details-section" *ngIf="selectedRequest.dispatchDate || selectedRequest.departureDate || selectedRequest.expectedReceiptDate || selectedRequest.truckNumber || selectedRequest.driverName || selectedRequest.routeInformation || selectedRequest.dispatchNotes || selectedRequest.dispatchedBy">
+      <div class="details-section" *ngIf="selectedRequest.dispatchDate || selectedRequest.departureDate || selectedRequest.truckNumber || selectedRequest.driverName || selectedRequest.routeInformation || selectedRequest.dispatchNotes || selectedRequest.dispatchedBy">
         <h3>Dispatch Information</h3>
         <div class="details-grid">
           <div class="detail-item" *ngIf="selectedRequest.dispatchDate">
@@ -430,10 +430,7 @@
             <label>Departure Date:</label>
             <span>{{ selectedRequest.departureDate | date:'medium' }}</span>
           </div>
-          <div class="detail-item" *ngIf="selectedRequest.expectedReceiptDate">
-            <label>Expected Receipt Date:</label>
-            <span>{{ selectedRequest.expectedReceiptDate | date:'medium' }}</span>
-          </div>
+          <!-- Expected Receipt Date removed -->
           <div class="detail-item" *ngIf="selectedRequest.truckNumber">
             <label>Truck Number:</label>
             <span>{{ selectedRequest.truckNumber }}</span>
