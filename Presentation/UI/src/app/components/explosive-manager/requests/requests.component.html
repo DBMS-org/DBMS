@@ -72,6 +72,8 @@
           </select>
         </div>
 
+
+
         <div class="filter-group">
           <label>Requester</label>
           <input 
@@ -97,7 +99,8 @@
           <input 
             type="date" 
             formControlName="dateFrom" 
-            class="filter-input">
+            class="filter-input"
+            title="Filter start date">
         </div>
 
         <div class="filter-group">
@@ -105,7 +108,8 @@
           <input 
             type="date" 
             formControlName="dateTo" 
-            class="filter-input">
+            class="filter-input"
+            title="Filter end date">
         </div>
 
         <div class="filter-actions">
@@ -133,6 +137,7 @@
     <table class="requests-table">
       <thead>
         <tr>
+          <th></th>
           <th (click)="onSortChange('requestDate')" class="sortable">
             Request Date
             <i class="material-icons sort-icon" 
@@ -142,15 +147,7 @@
             </i>
           </th>
           <th>Requester</th>
-          <th>Explosive Type</th>
-          <th (click)="onSortChange('quantity')" class="sortable">
-            Quantity
-            <i class="material-icons sort-icon" 
-               [class.active]="sortBy === 'quantity'"
-               [class.desc]="sortBy === 'quantity' && sortOrder === 'desc'">
-              arrow_upward
-            </i>
-          </th>
+          <th>Items</th>
           <th (click)="onSortChange('requiredDate')" class="sortable">
             Required Date
             <i class="material-icons sort-icon" 
@@ -168,58 +165,98 @@
               arrow_upward
             </i>
           </th>
+          <th>Dispatch Status</th>
           <th>Purpose</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let request of paginatedRequests" class="request-row">
-          <td>{{request.requestDate | date:'short'}}</td>
-          <td>
-            <div class="requester-info">
-              <strong>{{request.requesterName}}</strong>
-              <small>{{request.requesterRole}}</small>
-            </div>
-          </td>
-          <td>
-            <span class="explosive-type" [class]="'type-' + request.explosiveType.toLowerCase()">
-              {{request.explosiveType}}
-            </span>
-          </td>
-          <td>{{request.quantity}} {{request.unit}}</td>
-          <td>{{request.requiredDate | date:'short'}}</td>
+        <ng-container *ngFor="let request of paginatedRequests">
+          <tr class="request-row">
+            <td class="expander-cell">
+              <button class="expand-btn" (click)="toggleExpanded(request.id)" [attr.aria-expanded]="isExpanded(request)">
+                <i class="material-icons">{{ isExpanded(request) ? 'expand_less' : 'expand_more' }}</i>
+              </button>
+            </td>
+            <td>{{request.requestDate | date:'short'}}</td>
+            <td>
+              <div class="requester-info">
+                <strong>{{request.requesterName}}</strong>
+                <small>{{request.requesterRole}}</small>
+              </div>
+            </td>
+            <td>
+              <span class="items-count">{{ getItemsCount(request) }}</span>
+            </td>
+            <td>{{request.requiredDate | date:'short'}}</td>
 
-          <td>
-            <span class="status-badge" [class]="getStatusClass(request.status)">
-              {{request.status}}
-            </span>
-          </td>
-          <td class="purpose-cell">{{request.purpose}}</td>
-          <td class="actions-cell">
-            <div class="action-buttons">
-              <button 
-                *ngIf="request.status === RequestStatus.PENDING"
-                (click)="updateRequestStatus(request.id, RequestStatus.APPROVED)"
-                class="action-btn approve-btn"
-                title="Approve Request">
-                <i class="material-icons">check</i>
-              </button>
-              <button 
-                *ngIf="request.status === RequestStatus.PENDING"
-                (click)="updateRequestStatus(request.id, RequestStatus.REJECTED)"
-                class="action-btn reject-btn"
-                title="Reject Request">
-                <i class="material-icons">close</i>
-              </button>
-              <button 
-                (click)="viewRequestDetails(request)"
-                class="action-btn view-btn"
-                title="View Details">
-                <i class="material-icons">visibility</i>
-              </button>
-            </div>
-          </td>
-        </tr>
+            <td>
+              <span class="status-badge" [class]="getStatusClass(request.status)">
+                {{request.status}}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [class]="getDispatchStatusClass(request)">
+                {{ getDispatchStatusText(request) }}
+              </span>
+            </td>
+            <td class="purpose-cell">{{request.purpose}}</td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <button 
+                  *ngIf="request.status === RequestStatus.PENDING"
+                  (click)="openApprovalForm(request)"
+                  class="action-btn review-btn"
+                  matTooltip="Review Request">
+                  <i class="material-icons">rate_review</i>
+                </button>
+                <button 
+                  (click)="viewRequestDetails(request)"
+                  class="action-btn view-btn"
+                  matTooltip="View Details">
+                  <i class="material-icons">visibility</i>
+                </button>
+                <button 
+                  *ngIf="request.status === RequestStatus.APPROVED"
+                  (click)="goToDispatch(request)"
+                  class="action-btn dispatch-btn"
+                  matTooltip="Go to Dispatch">
+                  <i class="material-icons">local_shipping</i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="isExpanded(request)" class="expanded-row">
+            <td></td>
+            <td colspan="8">
+              <table class="nested-items-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th>Purpose</th>
+                    <th>Specifications</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of getItemsForRequest(request)">
+                    <td>
+                      <span class="explosive-type" [ngClass]="item.explosiveType ? 'type-' + (item.explosiveType | lowercase) : ''">
+                        {{ item.explosiveType }}
+                      </span>
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.unit }}</td>
+                    <td>{{ item.purpose }}</td>
+                    <td>{{ item.specifications || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </ng-container>
       </tbody>
     </table>
 
@@ -257,13 +294,7 @@
   </div>
 
   <!-- Sub-components for detailed views -->
-  <div *ngIf="currentView === 'anfo'" class="sub-component">
-    <app-anfo-requests [requests]="filteredRequests"></app-anfo-requests>
-  </div>
-
-  <div *ngIf="currentView === 'emulsion'" class="sub-component">
-    <app-emulsion-requests [requests]="filteredRequests"></app-emulsion-requests>
-  </div>
+  <!-- Removed redundant sub-components as filtering is now handled in the main component -->
 </div>
 
 <!-- Request Details Modal -->
@@ -302,6 +333,11 @@
               {{ selectedRequest.status }}
             </span>
           </div>
+          <!-- Overall Purpose at request level (optional) -->
+          <div class="detail-item" *ngIf="selectedRequest.purpose">
+            <label>Overall Purpose:</label>
+            <span>{{ selectedRequest.purpose }}</span>
+          </div>
         </div>
       </div>
       
@@ -328,25 +364,35 @@
         </div>
       </div>
       
-      <!-- Explosive Details -->
+      <!-- Explosive Items -->
       <div class="details-section">
-        <h3>Explosive Details</h3>
-        <div class="details-grid">
-          <div class="detail-item">
-            <label>Type:</label>
-            <span class="explosive-type" [class]="'type-' + selectedRequest.explosiveType.toLowerCase()">
-              {{ selectedRequest.explosiveType }}
-            </span>
-          </div>
-          <div class="detail-item">
-            <label>Quantity:</label>
-            <span>{{ selectedRequest.quantity }} {{ selectedRequest.unit }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Purpose:</label>
-            <span>{{ selectedRequest.purpose }}</span>
-          </div>
-        </div>
+        <h3>Explosive Items</h3>
+        <table class="nested-items-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Type</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Purpose</th>
+              <th>Specifications / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of getItemsForRequest(selectedRequest); let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>
+                <span class="explosive-type" [ngClass]="item.explosiveType ? 'type-' + (item.explosiveType | lowercase) : ''">
+                  {{ item.explosiveType }}
+                </span>
+              </td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.unit }}</td>
+              <td>{{ item.purpose }}</td>
+              <td>{{ item.specifications || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       
       <!-- Approval Information -->
@@ -361,9 +407,52 @@
             <label>Approved By:</label>
             <span>{{ selectedRequest.approvedBy }}</span>
           </div>
+          <div class="detail-item" *ngIf="selectedRequest.approvedQuantity">
+            <label>Approved Quantity:</label>
+            <span>{{ selectedRequest.approvedQuantity }}</span>
+          </div>
           <div class="detail-item" *ngIf="selectedRequest.rejectionReason">
             <label>Rejection Reason:</label>
             <span class="rejection-reason">{{ selectedRequest.rejectionReason }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dispatch Information -->
+      <div class="details-section" *ngIf="selectedRequest.dispatchDate || selectedRequest.departureDate || selectedRequest.expectedReceiptDate || selectedRequest.truckNumber || selectedRequest.driverName || selectedRequest.routeInformation || selectedRequest.dispatchNotes || selectedRequest.dispatchedBy">
+        <h3>Dispatch Information</h3>
+        <div class="details-grid">
+          <div class="detail-item" *ngIf="selectedRequest.dispatchDate">
+            <label>Dispatch Date:</label>
+            <span>{{ selectedRequest.dispatchDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.departureDate">
+            <label>Departure Date:</label>
+            <span>{{ selectedRequest.departureDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.expectedReceiptDate">
+            <label>Expected Receipt Date:</label>
+            <span>{{ selectedRequest.expectedReceiptDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.truckNumber">
+            <label>Truck Number:</label>
+            <span>{{ selectedRequest.truckNumber }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.driverName">
+            <label>Driver Name:</label>
+            <span>{{ selectedRequest.driverName }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.routeInformation">
+            <label>Route Information:</label>
+            <span>{{ selectedRequest.routeInformation }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.dispatchNotes">
+            <label>Dispatch Notes:</label>
+            <span>{{ selectedRequest.dispatchNotes }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.dispatchedBy">
+            <label>Dispatched By:</label>
+            <span>{{ selectedRequest.dispatchedBy }}</span>
           </div>
         </div>
       </div>
@@ -380,20 +469,6 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="closeDetailsModal()">
         Close
-      </button>
-      <button 
-        *ngIf="selectedRequest?.status === RequestStatus.PENDING"
-        class="btn btn-success"
-        (click)="updateRequestStatus(selectedRequest!.id, RequestStatus.APPROVED); closeDetailsModal()">
-        <i class="material-icons">check</i>
-        Approve
-      </button>
-      <button 
-        *ngIf="selectedRequest?.status === RequestStatus.PENDING"
-        class="btn btn-danger"
-        (click)="updateRequestStatus(selectedRequest!.id, RequestStatus.REJECTED); closeDetailsModal()">
-        <i class="material-icons">close</i>
-        Reject
       </button>
     </div>
   </div>
