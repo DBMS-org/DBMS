@@ -1,7 +1,6 @@
-feat(requests): implement multi-item request management and dispatch workflow
+feat(requests): add per-item approval in dispatch form and remove expected receipt date
 
-refactor(requests): consolidate request models and remove type-specific components
-feat(requests): add approval and dispatch forms with routing
-feat(requests): enhance request table with expandable rows for multi-item display
-refactor(requests): update service to handle multi-item requests and status changes
-style(requests): improve UI for request management and add responsive tables
+- Implement per-item approval functionality in dispatch request form
+- Remove expected receipt date field from all request models and forms
+- Update request service to handle per-item decisions during dispatch
+- Improve dispatch form UI with material components and responsive layout

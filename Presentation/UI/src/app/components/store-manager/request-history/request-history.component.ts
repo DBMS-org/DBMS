@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { Subject, takeUntil } from 'rxjs';
 import { StockRequestService } from '../../../core/services/stock-request.service';
 import { 
@@ -13,7 +16,7 @@ import { ViewDetailsComponent } from './view-details/view-details.component';
 @Component({
   selector: 'app-request-history',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ViewDetailsComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ViewDetailsComponent, MatIconModule, MatButtonModule],
   templateUrl: './request-history.component.html',
   styleUrls: ['./request-history.component.scss']
 })
@@ -47,6 +50,10 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
   // View Details Modal
   showViewDetails = false;
   selectedRequest: StockRequest | null = null;
+  
+  // Dispatch Info Modal
+  showDispatchInfo = false;
+  selectedDispatchRequest: StockRequest | null = null;
 
   // User and store information (would typically come from auth service)
   currentUser = {
@@ -94,6 +101,9 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
       requestDate: new Date('2024-01-15'),
       requiredDate: new Date('2024-01-25'),
       status: StockRequestStatus.APPROVED,
+      dispatched: true,
+      dispatchedDate: new Date('2024-01-17'),
+      fulfillmentDate: new Date('2024-01-18'),
       justification: 'Urgent requirement for upcoming mining phase',
       notes: 'Please ensure delivery before 25th Jan',
       approvalDate: new Date('2024-01-16'),
@@ -125,6 +135,7 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
       requestDate: new Date('2024-01-20'),
       requiredDate: new Date('2024-02-05'),
       status: StockRequestStatus.PENDING,
+      dispatched: false,
       justification: 'Routine stock replenishment',
       notes: 'Standard delivery schedule',
       createdAt: new Date('2024-01-20'),
@@ -155,6 +166,8 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
       requestDate: new Date('2024-01-18'),
       requiredDate: new Date('2024-01-30'),
       status: StockRequestStatus.FULFILLED,
+      dispatched: true,
+      dispatchedDate: new Date('2024-01-19'),
       justification: 'Critical component for scheduled blast',
       notes: 'Handle with extreme care',
       fulfillmentDate: new Date('2024-01-19'),
@@ -164,7 +177,8 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
   ];
 
   constructor(
-    private stockRequestService: StockRequestService
+    private stockRequestService: StockRequestService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -178,14 +192,20 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
 
   loadRequests(): void {
     this.isLoading = true;
-    
-    // For demonstration, using sample data
-    // In real implementation, this would call the service
-    setTimeout(() => {
-      this.requests = [...this.sampleRequests];
-      this.filteredRequests = [...this.requests];
-      this.isLoading = false;
-    }, 1000);
+    this.stockRequestService.getStockRequests()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (requests) => {
+          this.requests = requests;
+          this.applyFilters();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading requests:', error);
+          this.errorMessage = 'Failed to load request history';
+          this.isLoading = false;
+        }
+      });
   }
 
   applyFilters(): void {
@@ -217,6 +237,10 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
     this.filterDateTo = '';
     this.searchTerm = '';
     this.filteredRequests = [...this.requests];
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(this.searchTerm || this.filterStatus || this.filterType || this.filterDateFrom || this.filterDateTo);
   }
 
   getStatusClass(status: StockRequestStatus): string {
@@ -277,5 +301,27 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
   closeViewDetails(): void {
     this.showViewDetails = false;
     this.selectedRequest = null;
+  }
+  
+  openDispatchInfo(request: StockRequest): void {
+    this.router.navigate(['/store-manager/dispatch-info', request.id]);
+  }
+  
+  closeDispatchInfo(): void {
+    this.showDispatchInfo = false;
+    this.selectedDispatchRequest = null;
+  }
+
+  // Helper method to determine received status
+  isReceived(request: StockRequest): boolean {
+    return !!request.fulfillmentDate;
+  }
+
+  getReceivedStatusClass(request: StockRequest): string {
+    return this.isReceived(request) ? 'badge-success' : 'badge-secondary';
+  }
+
+  getReceivedStatusText(request: StockRequest): string {
+    return this.isReceived(request) ? 'Received' : 'Not Received';
   }
 }
