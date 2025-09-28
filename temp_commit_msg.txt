@@ -1,6 +1,8 @@
-feat(requests): add per-item approval in dispatch form and remove expected receipt date
+feat(stock-requests): add dispatch tracking and store type management
 
-- Implement per-item approval functionality in dispatch request form
-- Remove expected receipt date field from all request models and forms
-- Update request service to handle per-item decisions during dispatch
-- Improve dispatch form UI with material components and responsive layout
+- Add dispatched and dispatchedDate fields to StockRequest model
+- Implement dispatch info component with detailed tracking UI
+- Add storeType field to Store model and related interfaces
+- Centralize mock data management with new MockDataService
+- Enhance request history with dispatch and received status tracking
+- Improve UI with new status badges and action buttons
