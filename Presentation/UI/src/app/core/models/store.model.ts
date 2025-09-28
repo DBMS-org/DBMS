@@ -5,6 +5,7 @@ export interface Store {
   storeManagerName: string;
   storeManagerContact: string;
   storeManagerEmail?: string;
+  storeType: StoreType;
   explosiveTypesAvailable: ExplosiveType[];
   storageCapacity: number;
   currentOccupancy?: number;
@@ -90,6 +91,7 @@ export interface StoreStatistics {
 
 export interface StoreFilters {
   status?: StoreStatus | 'ALL';
+  storeType?: StoreType | 'ALL';
   location?: string | 'ALL';
   storeManager?: string | 'ALL';
   isActive?: boolean | null;
@@ -102,6 +104,7 @@ export interface CreateStoreRequest {
   storeManagerName: string;
   storeManagerContact: string;
   storeManagerEmail?: string;
+  storeType: StoreType;
   explosiveTypesAvailable: ExplosiveType[];
   storageCapacity: number;
   location: StoreLocation;

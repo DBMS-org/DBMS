@@ -4,15 +4,21 @@ import { delay, map } from 'rxjs/operators';
 import { ExplosiveRequest, ExplosiveType, RequestStatus, RequestSearchCriteria } from '../models/explosive-request.model';
 import { ApprovalForm } from '../models/approval.model';
 import { DispatchForm } from '../models/dispatch.model';
+import { MockDataService } from '../../../../core/services/mock-data/mock-data.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RequestService {
-  private requestsSubject = new BehaviorSubject<ExplosiveRequest[]>(this.getMockRequests());
+  private requestsSubject = new BehaviorSubject<ExplosiveRequest[]>([]);
   public requests$ = this.requestsSubject.asObservable();
 
-  constructor() { }
+  constructor(private mockDataService: MockDataService) {
+    // Initialize with centralized mock data
+    this.mockDataService.getExplosiveRequestMockData().subscribe(data => {
+      this.requestsSubject.next(data);
+    });
+  }
 
   getRequests(criteria?: RequestSearchCriteria): Observable<ExplosiveRequest[]> {
     return this.requests$.pipe(
@@ -108,113 +114,6 @@ export class RequestService {
     }
 
     return filtered;
-  }
-
-  private getMockRequests(): ExplosiveRequest[] {
-    return [
-      {
-        id: '1',
-        requesterId: 'SM001',
-        requesterName: 'John Smith',
-        requesterRole: 'Store Manager',
-        // single-item kept for compatibility
-        explosiveType: ExplosiveType.ANFO,
-        quantity: 0.5,
-        unit: 'tons',
-        requestDate: new Date('2024-01-15'),
-        requiredDate: new Date('2024-01-20'),
-        status: RequestStatus.APPROVED,
-        approvalDate: new Date('2024-01-16'),
-        approvedBy: 'Safety Manager',
-        storeLocation: 'Warehouse A',
-        purpose: 'Mining operation - Sector 7',
-        notes: 'Urgent requirement for scheduled blasting',
-        requestedItems: [
-          { explosiveType: ExplosiveType.ANFO, quantity: 0.3, unit: 'tons', purpose: 'Primary blasting', specifications: 'Bulk ANFO' },
-          { explosiveType: ExplosiveType.EMULSION, quantity: 60, unit: 'kg', purpose: 'Initiation charges', specifications: 'Cartridges 32mm' }
-        ]
-      },
-      {
-        id: '2',
-        requesterId: 'SM002',
-        requesterName: 'Sarah Johnson',
-        requesterRole: 'Store Manager',
-        explosiveType: ExplosiveType.EMULSION,
-        quantity: 0.3,
-        unit: 'tons',
-        requestDate: new Date('2024-01-14'),
-        requiredDate: new Date('2024-01-25'),
-        status: RequestStatus.PENDING,
-        storeLocation: 'Warehouse B',
-        purpose: 'Quarry expansion project',
-        notes: 'Weather dependent operation',
-        requestedItems: [
-          { explosiveType: ExplosiveType.EMULSION, quantity: 0.25, unit: 'tons', purpose: 'Bulk loading', specifications: 'Pumpable' },
-          { explosiveType: ExplosiveType.ANFO, quantity: 20, unit: 'kg', purpose: 'Stemming tests' }
-        ]
-      },
-      {
-        id: '3',
-        requesterId: 'SM001',
-        requesterName: 'John Smith',
-        requesterRole: 'Store Manager',
-        explosiveType: ExplosiveType.ANFO,
-        quantity: 0.75,
-        unit: 'tons',
-        requestDate: new Date('2024-01-12'),
-        requiredDate: new Date('2024-01-18'),
-        status: RequestStatus.COMPLETED,
-        approvalDate: new Date('2024-01-13'),
-        approvedBy: 'Operations Manager',
-        storeLocation: 'Warehouse A',
-        purpose: 'Emergency road construction',
-        notes: 'Completed successfully',
-        requestedItems: [
-          { explosiveType: ExplosiveType.ANFO, quantity: 0.5, unit: 'tons', purpose: 'Blast pattern A' },
-          { explosiveType: ExplosiveType.ANFO, quantity: 0.25, unit: 'tons', purpose: 'Blast pattern B' }
-        ]
-      },
-      {
-        id: '4',
-        requesterId: 'SM003',
-        requesterName: 'Mike Wilson',
-        requesterRole: 'Store Manager',
-        explosiveType: ExplosiveType.EMULSION,
-        quantity: 0.2,
-        unit: 'tons',
-        requestDate: new Date('2024-01-10'),
-        requiredDate: new Date('2024-01-22'),
-        status: RequestStatus.REJECTED,
-        rejectionReason: 'Insufficient safety clearance',
-        storeLocation: 'Warehouse C',
-        purpose: 'Demolition project',
-        notes: 'Resubmit with proper safety documentation',
-        requestedItems: [
-          { explosiveType: ExplosiveType.EMULSION, quantity: 0.2, unit: 'tons', purpose: 'Structure demolition', specifications: 'Cartridges 40mm' }
-        ]
-      },
-      {
-        id: '5',
-        requesterId: 'SM002',
-        requesterName: 'Sarah Johnson',
-        requesterRole: 'Store Manager',
-        explosiveType: ExplosiveType.ANFO,
-        quantity: 0.4,
-        unit: 'tons',
-        requestDate: new Date('2024-01-08'),
-        requiredDate: new Date('2024-01-30'),
-        status: RequestStatus.IN_PROGRESS,
-        approvalDate: new Date('2024-01-09'),
-        approvedBy: 'Safety Manager',
-        storeLocation: 'Warehouse B',
-        purpose: 'Tunnel excavation',
-        notes: 'Preparation in progress',
-        requestedItems: [
-          { explosiveType: ExplosiveType.ANFO, quantity: 0.35, unit: 'tons', purpose: 'Main tunnel blasting' },
-          { explosiveType: ExplosiveType.EMULSION, quantity: 15, unit: 'kg', purpose: 'Secondary blasting' }
-        ]
-      }
-    ];
   }
 
   approveRequest(id: string, approvalData: {

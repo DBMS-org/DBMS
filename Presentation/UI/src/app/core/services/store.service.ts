@@ -166,6 +166,7 @@ export class StoreService {
         storeManagerName: 'John Smith',
         storeManagerContact: '+1-555-0123',
         storeManagerEmail: 'john.smith@company.com',
+        storeType: StoreType.MAIN_WAREHOUSE,
         explosiveTypesAvailable: [ExplosiveType.ANFO, ExplosiveType.EMULSION],
         storageCapacity: 10000,
         currentOccupancy: 7500,
