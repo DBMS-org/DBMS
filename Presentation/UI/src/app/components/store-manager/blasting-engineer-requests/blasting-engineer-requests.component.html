@@ -7,10 +7,32 @@
         Blasting Engineer Requests
       </h2>
       <p class="page-subtitle">Manage explosive material requests from blasting engineers in your region</p>
-      @if (currentUserRegion) {
-        <div class="region-info">
-          <i class="material-icons">location_on</i>
-          <span>Region: {{ currentUserRegion }}</span>
+      @if (currentUserRegion || currentUserCountry || currentUserName) {
+        <div class="user-info-section">
+          @if (currentUserName) {
+            <div class="user-info">
+              <i class="material-icons">person</i>
+              <span>{{ getUserDisplayInfo() }}</span>
+            </div>
+          }
+          @if (currentUserRegion) {
+            <div class="region-info">
+              <i class="material-icons">location_on</i>
+              <span>Region: {{ currentUserRegion }}</span>
+            </div>
+          }
+          @if (currentUserCountry) {
+            <div class="country-info">
+              <i class="material-icons">public</i>
+              <span>Country: {{ currentUserCountry }}</span>
+            </div>
+          }
+          @if (lastRefreshTime) {
+            <div class="refresh-info">
+              <i class="material-icons">refresh</i>
+              <span>Last updated: {{ getFormattedRefreshTime() }}</span>
+            </div>
+          }
         </div>
       }
     </div>
@@ -119,8 +141,19 @@
                     <span class="project-name">{{ request.projectSite?.project?.name || '' }}</span>
                   </div>
                 </td>
-                <td class="expected-date">{{ formatDate(request.expectedUsageDate) }}</td>
-                <td class="request-date">{{ formatDate(request.createdAt) }}</td>
+                <td class="expected-date">
+                  <div class="date-info">
+                    <span class="date-value">{{ formatDate(request.expectedUsageDate) }}</span>
+                  </div>
+                </td>
+                <td class="request-date">
+                  <div class="date-info">
+                    <span class="date-value">{{ formatDate(request.createdAt) }}</span>
+                    @if (getProcessedByInfo(request)) {
+                      <span class="processed-info">{{ getProcessedByInfo(request) }}</span>
+                    }
+                  </div>
+                </td>
                 <td class="status">
                   <span class="status-badge" [class]="getStatusClass(request.status)">
                     {{ request.status }}
@@ -195,7 +228,7 @@
       <div class="summary-stats">
         <div class="stat-item">
           <span class="stat-label">Total Requests:</span>
-          <span class="stat-value">{{ filteredRequests.length }}</span>
+          <span class="stat-value">{{ getTotalRequestsCount() }}</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Pending:</span>
@@ -204,6 +237,10 @@
         <div class="stat-item">
           <span class="stat-label">Approved:</span>
           <span class="stat-value approved">{{ getApprovedCount() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Rejected:</span>
+          <span class="stat-value rejected">{{ getRejectedCount() }}</span>
         </div>
       </div>
     </div>
