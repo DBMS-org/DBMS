@@ -212,7 +212,8 @@
   .requests-table-container {
     background: white;
     border-radius: 12px;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     
     .table-header {
@@ -228,6 +229,7 @@
     
     .requests-table {
       width: 100%;
+      min-width: 1200px; // Ensure table has minimum width to trigger horizontal scrolling
       border-collapse: collapse;
       
       thead {
