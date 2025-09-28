@@ -18,6 +18,10 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   statusFilter: string = 'ALL';
   isLoading: boolean = false;
   currentUserRegion: string | null = null;
+  currentUserCountry: string | null = null;
+  currentUserName: string | null = null;
+  currentUserRole: string | null = null;
+  lastRefreshTime: Date | null = null;
   errorMessage: string = '';
 
   constructor(
@@ -26,8 +30,16 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.currentUserRegion = this.authService.getUserRegion();
+    this.loadUserInfo();
     this.loadRequests();
+  }
+
+  private loadUserInfo(): void {
+    const currentUser = this.authService.getCurrentUser();
+    this.currentUserRegion = this.authService.getUserRegion();
+    this.currentUserCountry = this.authService.getUserCountry();
+    this.currentUserName = currentUser?.name || null;
+    this.currentUserRole = this.authService.getUserRole();
   }
 
   loadRequests(): void {
@@ -45,6 +57,7 @@ export class BlastingEngineerRequestsComponent implements OnInit {
         next: (requests) => {
           this.requests = requests;
           this.filteredRequests = [...this.requests];
+          this.lastRefreshTime = new Date();
           this.isLoading = false;
         },
         error: (error) => {
@@ -55,6 +68,11 @@ export class BlastingEngineerRequestsComponent implements OnInit {
           this.filteredRequests = [];
         }
       });
+  }
+
+  refreshRequests(): void {
+    this.loadUserInfo(); // Refresh user info as well
+    this.loadRequests();
   }
 
   onSearch(): void {
@@ -91,12 +109,18 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   }
 
   onApprove(request: ExplosiveApprovalRequest): void {
-    this.explosiveApprovalService.approveExplosiveApprovalRequest(request.id, 'Approved by store manager')
+    const currentUser = this.authService.getCurrentUser();
+    const approvalComment = `Approved by ${currentUser?.name || 'Store Manager'} from ${this.currentUserRegion || 'Unknown Region'}`;
+    
+    this.explosiveApprovalService.approveExplosiveApprovalRequest(request.id, approvalComment)
       .subscribe({
         next: (success) => {
           if (success) {
             request.status = 'Approved';
+            request.processedByUserId = currentUser?.id;
+            request.processedAt = new Date().toISOString();
             console.log('Approved request:', request.id);
+            this.errorMessage = ''; // Clear any previous errors
           }
         },
         error: (error) => {
@@ -109,12 +133,19 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   onReject(request: ExplosiveApprovalRequest): void {
     const rejectionReason = prompt('Please provide a reason for rejection:');
     if (rejectionReason) {
-      this.explosiveApprovalService.rejectExplosiveApprovalRequest(request.id, rejectionReason)
+      const currentUser = this.authService.getCurrentUser();
+      const detailedReason = `Rejected by ${currentUser?.name || 'Store Manager'} from ${this.currentUserRegion || 'Unknown Region'}: ${rejectionReason}`;
+      
+      this.explosiveApprovalService.rejectExplosiveApprovalRequest(request.id, detailedReason)
         .subscribe({
           next: (success) => {
             if (success) {
               request.status = 'Rejected';
+              request.processedByUserId = currentUser?.id;
+              request.processedAt = new Date().toISOString();
+              request.rejectionReason = detailedReason;
               console.log('Rejected request:', request.id);
+              this.errorMessage = ''; // Clear any previous errors
             }
           },
           error: (error) => {
@@ -130,12 +161,6 @@ export class BlastingEngineerRequestsComponent implements OnInit {
     // TODO: Implement modal or navigation to detailed view
   }
 
-  clearFilters(): void {
-    this.searchTerm = '';
-    this.statusFilter = 'ALL';
-    this.filteredRequests = [...this.requests];
-  }
-
   getPendingCount(): number {
     return this.filteredRequests.filter(request => request.status === 'Pending').length;
   }
@@ -144,15 +169,58 @@ export class BlastingEngineerRequestsComponent implements OnInit {
     return this.filteredRequests.filter(request => request.status === 'Approved').length;
   }
 
+  getRejectedCount(): number {
+    return this.filteredRequests.filter(request => request.status === 'Rejected').length;
+  }
+
+  getTotalRequestsCount(): number {
+    return this.filteredRequests.length;
+  }
+
+  getFormattedRefreshTime(): string {
+    if (!this.lastRefreshTime) return 'Never';
+    return this.lastRefreshTime.toLocaleString();
+  }
+
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   }
 
-  refreshRequests(): void {
-    this.loadRequests();
+  formatDateTime(dateString: string): string {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getProcessedByInfo(request: ExplosiveApprovalRequest): string {
+    if (request.processedAt && request.processedByUserId) {
+      return `Processed on ${this.formatDateTime(request.processedAt)}`;
+    }
+    return '';
+  }
+
+  getUserDisplayInfo(): string {
+    const parts = [];
+    if (this.currentUserName) parts.push(this.currentUserName);
+    if (this.currentUserRole) parts.push(`(${this.currentUserRole})`);
+    return parts.join(' ');
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.statusFilter = 'ALL';
+    this.filteredRequests = [...this.requests];
   }
 }

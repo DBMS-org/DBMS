@@ -1,8 +1,5 @@
-feat(stock-requests): add dispatch tracking and store type management
+fix(ui): adjust layout overflow and scrolling behavior
 
-- Add dispatched and dispatchedDate fields to StockRequest model
-- Implement dispatch info component with detailed tracking UI
-- Add storeType field to Store model and related interfaces
-- Centralize mock data management with new MockDataService
-- Enhance request history with dispatch and received status tracking
-- Improve UI with new status badges and action buttons
+- Update sidebar height to account for navbar and add scrolling controls
+- Modify table container to enable horizontal scrolling with minimum width
+- Prevent horizontal overflow in layout and main content areas
