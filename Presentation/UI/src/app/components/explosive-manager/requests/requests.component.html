@@ -166,6 +166,7 @@
             </i>
           </th>
           <th>Dispatch Status</th>
+          <th>Received</th>
           <th>Purpose</th>
           <th>Actions</th>
         </tr>
@@ -200,6 +201,11 @@
                 {{ getDispatchStatusText(request) }}
               </span>
             </td>
+            <td>
+              <span class="status-badge" [class]="getReceivedStatusClass(request)">
+                {{ getReceivedStatusText(request) }}
+              </span>
+            </td>
             <td class="purpose-cell">{{request.purpose}}</td>
             <td class="actions-cell">
               <div class="action-buttons">
@@ -229,7 +235,7 @@
 
           <tr *ngIf="isExpanded(request)" class="expanded-row">
             <td></td>
-            <td colspan="8">
+            <td colspan="9">
               <table class="nested-items-table">
                 <thead>
                   <tr>

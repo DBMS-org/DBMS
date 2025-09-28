@@ -11,6 +11,7 @@ import {
   StockRequestItem
 } from '../models/stock-request.model';
 import { ExplosiveType } from '../models/store.model';
+import { MockDataService } from './mock-data/mock-data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,72 +19,15 @@ import { ExplosiveType } from '../models/store.model';
 export class StockRequestService {
   private apiUrl = `${environment.apiUrl}/stock-requests`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private mockDataService: MockDataService
+  ) {}
 
   // Get all stock requests for current user's store
   getStockRequests(): Observable<StockRequest[]> {
-    // Mock data for development
-    const mockRequests: StockRequest[] = [
-      {
-        id: '1',
-        requesterId: 'user1',
-        requesterName: 'Ahmed Al-Rashid',
-        requesterStoreId: 'store1',
-        requesterStoreName: 'Muscat Field Storage',
-        explosiveManagerId: 'mgr1',
-        explosiveManagerName: 'Omar Al-Balushi',
-        requestedItems: [
-          {
-            explosiveType: ExplosiveType.ANFO,
-            requestedQuantity: 0.5,
-            unit: 'tons',
-            purpose: 'Mining operations - Phase 2',
-            specifications: 'Standard grade ANFO for surface mining'
-          },
-          {
-            explosiveType: ExplosiveType.BLASTING_CAPS,
-            requestedQuantity: 100,
-            unit: 'pieces',
-            purpose: 'Detonation sequence',
-            specifications: 'Electric blasting caps, delay 0-9'
-          }
-        ],
-        requestDate: new Date('2024-01-15'),
-        requiredDate: new Date('2024-01-25'),
-        status: StockRequestStatus.APPROVED,
-
-        justification: 'Urgent requirement for upcoming mining phase. Current stock levels are critically low.',
-        notes: 'Please ensure delivery before 25th Jan as operations are scheduled to begin.',
-        approvalDate: new Date('2024-01-16'),
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-01-16')
-      },
-      {
-        id: '2',
-        requesterId: 'user1',
-        requesterName: 'Ahmed Al-Rashid',
-        requesterStoreId: 'store1',
-        requesterStoreName: 'Muscat Field Storage',
-        requestedItems: [
-          {
-            explosiveType: ExplosiveType.EMULSION,
-            requestedQuantity: 0.2,
-            unit: 'tons',
-            purpose: 'Underground blasting',
-            specifications: 'Water-resistant emulsion for wet conditions'
-          }
-        ],
-        requestDate: new Date('2024-01-20'),
-        requiredDate: new Date('2024-02-05'),
-        status: StockRequestStatus.PENDING,
-
-        justification: 'Routine stock replenishment for underground operations.',
-        createdAt: new Date('2024-01-20'),
-        updatedAt: new Date('2024-01-20')
-      }
-    ];
-
-    return of(mockRequests);
+    // Use centralized mock data service
+    return this.mockDataService.getStockRequestMockData();
     // return this.http.get<StockRequest[]>(this.apiUrl);
   }
 
@@ -100,6 +44,7 @@ export class StockRequestService {
       requestDate: new Date(),
       requiredDate: request.requiredDate,
       status: StockRequestStatus.PENDING,
+      dispatched: false,
 
       justification: request.justification,
       notes: request.notes,

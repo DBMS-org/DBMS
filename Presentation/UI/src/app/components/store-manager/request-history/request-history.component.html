@@ -43,19 +43,37 @@
 
       <div class="filters-content" [class.collapsed]="isFiltersCollapsed" *ngIf="!isFiltersCollapsed">
         <div class="form-section-group">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Search</label>
-              <input 
-                type="text" 
-                class="form-control"
-                [(ngModel)]="searchTerm"
-                (input)="applyFilters()"
-                placeholder="Search by ID or purpose...">
+          <div class="filter-grid">
+            <!-- Search Input with Icon -->
+            <div class="form-group search-group">
+              <label>
+                <i class="material-icons">search</i>
+                Search
+              </label>
+              <div class="search-input-wrapper">
+                <i class="material-icons search-icon">search</i>
+                <input 
+                  type="text" 
+                  class="form-control search-input"
+                  [(ngModel)]="searchTerm"
+                  (input)="applyFilters()"
+                  placeholder="Search by ID, requester, or purpose...">
+                <button 
+                  *ngIf="searchTerm" 
+                  class="clear-search-btn"
+                  (click)="searchTerm = ''; applyFilters()"
+                  type="button">
+                  <i class="material-icons">close</i>
+                </button>
+              </div>
             </div>
             
+            <!-- Status Filter -->
             <div class="form-group">
-              <label>Status</label>
+              <label>
+                <i class="material-icons">assignment</i>
+                Status
+              </label>
               <select
                 title="Filter by status"
                 class="form-select"
@@ -69,8 +87,12 @@
               </select>
             </div>
             
+            <!-- Explosive Type Filter -->
             <div class="form-group">
-              <label>Explosive Type</label>
+              <label>
+                <i class="material-icons">science</i>
+                Explosive Type
+              </label>
               <select
                 title="Filter by explosive type"
                 class="form-select"
@@ -83,48 +105,87 @@
                 <option value="SLURRY">Slurry</option>
               </select>
             </div>
-          </div>
-          
-          <div class="form-row">
+            
+            <!-- Date From -->
             <div class="form-group">
-              <label>Date From</label>
+              <label>
+                <i class="material-icons">date_range</i>
+                Date From
+              </label>
               <input 
                 type="date" 
                 class="form-control"
                 [(ngModel)]="filterDateFrom"
                 (change)="applyFilters()"
-                title="Filter from date"
-                placeholder="yyyy-mm-dd">
-                type="date" 
-                class="form-control"
-                [(ngModel)]="filterDateFrom"
-                (change)="applyFilters()">
+                title="Filter from date">
             </div>
             
+            <!-- Date To -->
             <div class="form-group">
-              <label>Date To</label>
+              <label>
+                <i class="material-icons">date_range</i>
+                Date To
+              </label>
               <input 
                 type="date" 
                 class="form-control"
                 [(ngModel)]="filterDateTo"
                 (change)="applyFilters()"
-                title="Filter to date"
-                placeholder="yyyy-mm-dd">
-                type="date" 
-                class="form-control"
-                [(ngModel)]="filterDateTo"
-                (change)="applyFilters()">
+                title="Filter to date">
             </div>
             
-            <div class="form-group">
+            <!-- Clear Filters Button -->
+            <div class="form-group clear-filters-group">
               <label>&nbsp;</label>
               <button 
                 type="button" 
-                class="btn btn-secondary"
+                class="btn btn-clear-filters"
                 (click)="clearFilters()">
-                <i class="material-icons">clear</i>
-                Clear Filters
+                <i class="material-icons">clear_all</i>
+                Clear All Filters
               </button>
+            </div>
+          </div>
+          
+          <!-- Active Filters Display -->
+          <div class="active-filters" *ngIf="hasActiveFilters()">
+            <span class="active-filters-label">Active Filters:</span>
+            <div class="filter-tags">
+              <span class="filter-tag" *ngIf="searchTerm">
+                <i class="material-icons">search</i>
+                Search: "{{ searchTerm }}"
+                <button (click)="searchTerm = ''; applyFilters()" class="remove-filter">
+                  <i class="material-icons">close</i>
+                </button>
+              </span>
+              <span class="filter-tag" *ngIf="filterStatus">
+                <i class="material-icons">assignment</i>
+                Status: {{ filterStatus }}
+                <button (click)="filterStatus = ''; applyFilters()" class="remove-filter">
+                  <i class="material-icons">close</i>
+                </button>
+              </span>
+              <span class="filter-tag" *ngIf="filterType">
+                <i class="material-icons">science</i>
+                Type: {{ filterType }}
+                <button (click)="filterType = ''; applyFilters()" class="remove-filter">
+                  <i class="material-icons">close</i>
+                </button>
+              </span>
+              <span class="filter-tag" *ngIf="filterDateFrom">
+                <i class="material-icons">date_range</i>
+                From: {{ filterDateFrom }}
+                <button (click)="filterDateFrom = ''; applyFilters()" class="remove-filter">
+                  <i class="material-icons">close</i>
+                </button>
+              </span>
+              <span class="filter-tag" *ngIf="filterDateTo">
+                <i class="material-icons">date_range</i>
+                To: {{ filterDateTo }}
+                <button (click)="filterDateTo = ''; applyFilters()" class="remove-filter">
+                  <i class="material-icons">close</i>
+                </button>
+              </span>
             </div>
           </div>
         </div>
@@ -163,6 +224,8 @@
                   <th>Date</th>
                   <th>Required Date</th>
                   <th>Status</th>
+                  <th>Dispatched</th>
+                  <th>Received</th>
                   <th>Requested Items</th>
                   <th>Items</th>
                   <th>Justification</th>
@@ -188,6 +251,22 @@
                       </span>
                     </td>
                     <td>
+                      <span class="badge" [class]="request.dispatched ? 'badge-success' : 'badge-warning'">
+                        {{ request.dispatched ? 'Dispatched' : 'Not Dispatched' }}
+                      </span>
+                      <div *ngIf="request.dispatched && request.dispatchedDate" class="text-muted small mt-1">
+                        {{ formatDate(request.dispatchedDate) }}
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [class]="request.fulfillmentDate ? 'badge-success' : 'badge-secondary'">
+                        {{ request.fulfillmentDate ? 'Received' : 'Not Received' }}
+                      </span>
+                      <div *ngIf="request.fulfillmentDate" class="text-muted small mt-1">
+                        {{ formatDate(request.fulfillmentDate) }}
+                      </div>
+                    </td>
+                    <td>
                       <div *ngFor="let item of request.requestedItems; let i = index">
                         <small class="text-muted">{{ i + 1 }}.</small> {{ item.explosiveType }} 
                         <span class="text-muted">({{ item.requestedQuantity }} {{ item.unit }})</span>
@@ -203,6 +282,13 @@
                           (click)="openViewDetails(request)"
                           title="View Details">
                           <i class="material-icons">visibility</i>
+                        </button>
+                        <button 
+                          class="action-btn dispatch-btn" 
+                          (click)="openDispatchInfo(request)"
+                          *ngIf="request.dispatched"
+                          title="View Dispatch Information">
+                          <mat-icon>local_shipping</mat-icon>
                         </button>
                         <button 
                           *ngIf="request.status === StockRequestStatus.PENDING"
@@ -222,7 +308,7 @@
                   
                   <!-- Expanded row: nested items table -->
                   <tr *ngIf="isExpanded(request.id)">
-                    <td colspan="9" class="nested-row">
+                    <td colspan="11" class="nested-row">
                       <div class="nested-table-wrapper">
                         <table class="table table-sm table-bordered nested-table">
                           <thead>

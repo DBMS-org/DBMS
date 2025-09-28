@@ -5,7 +5,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { RequestService } from '../services/request.service';
-import { ExplosiveRequest, RequestItem } from '../models/explosive-request.model';
+import { ExplosiveRequest, RequestItem, RequestStatus } from '../models/explosive-request.model';
 import { DispatchForm } from '../models/dispatch.model';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,18 +15,21 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-dispatch-request',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatSelectModule, MatInputModule, MatDatepickerModule, MatNativeDateModule, MatTableModule],
+  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatSelectModule, MatInputModule, MatDatepickerModule, MatNativeDateModule, MatTableModule, MatProgressSpinnerModule, MatTooltipModule],
   templateUrl: './dispatch-request.component.html',
-  styleUrls: ['./dispatch-request.component.scss']
+  styleUrl: './dispatch-request.component.scss'
 })
 export class DispatchRequestComponent implements OnInit {
   dispatchForm!: FormGroup;
   request!: ExplosiveRequest | undefined;
   isSubmitting = false;
+  isLoading = true;
   // Expose items to template for per-item approval
   viewItems: RequestItem[] = [];
   // Columns for the mat-table in the template
@@ -51,6 +54,7 @@ export class DispatchRequestComponent implements OnInit {
     if (id) {
       this.requestService.getRequestById(id).subscribe({
         next: (req) => {
+          this.isLoading = false;
           this.request = req;
           if (!this.request) {
             this.snackBar.open('Request not found', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
@@ -60,11 +64,13 @@ export class DispatchRequestComponent implements OnInit {
           }
         },
         error: (err) => {
+          this.isLoading = false;
           this.snackBar.open('Error loading request: ' + err.message, 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
           this.goBack();
         }
       });
     } else {
+      this.isLoading = false;
       this.snackBar.open('No request ID provided', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
       this.goBack();
     }
@@ -129,12 +135,33 @@ export class DispatchRequestComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.isSubmitting = false;
+        this.snackBar.open('Request dispatched successfully!', 'Close', { 
+          duration: 3000, 
+          panelClass: ['success-snackbar'] 
+        });
         this.goBack();
       },
-      error: () => {
+      error: (err) => {
         this.isSubmitting = false;
+        this.snackBar.open('Error dispatching request: ' + err.message, 'Close', { 
+          duration: 3000, 
+          panelClass: ['error-snackbar'] 
+        });
       }
     });
+  }
+
+  getStatusIcon(status: RequestStatus): string {
+    const iconMap: Record<RequestStatus, string> = {
+      [RequestStatus.PENDING]: 'schedule',
+      [RequestStatus.APPROVED]: 'check_circle',
+      [RequestStatus.REJECTED]: 'cancel',
+      [RequestStatus.IN_PROGRESS]: 'hourglass_empty',
+      [RequestStatus.COMPLETED]: 'task_alt',
+      [RequestStatus.CANCELLED]: 'block',
+      [RequestStatus.DISPATCHED]: 'local_shipping'
+    };
+    return iconMap[status] || 'help';
   }
 
   getError(fieldName: string): string | null {
