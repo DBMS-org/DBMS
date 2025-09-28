@@ -270,4 +270,21 @@ export class RequestsComponent implements OnInit, OnDestroy {
   getItemsCount(request: ExplosiveRequest): number {
     return this.getItemsForRequest(request).length;
   }
+
+  // Helper methods for received status
+  isReceived(request: ExplosiveRequest): boolean {
+    // Consider a request as received if it's completed or has been dispatched for a reasonable time
+    return request.status === RequestStatus.COMPLETED || 
+           (request.status === RequestStatus.DISPATCHED && 
+            request.dispatchDate != null && 
+            new Date().getTime() - new Date(request.dispatchDate).getTime() > 24 * 60 * 60 * 1000); // 24 hours
+  }
+
+  getReceivedStatusClass(request: ExplosiveRequest): string {
+    return this.isReceived(request) ? 'status-completed' : 'status-pending';
+  }
+
+  getReceivedStatusText(request: ExplosiveRequest): string {
+    return this.isReceived(request) ? 'Received' : 'Not Received';
+  }
 }
