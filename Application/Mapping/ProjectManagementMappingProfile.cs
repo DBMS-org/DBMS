@@ -52,6 +52,15 @@ namespace Application.Mapping
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)));
 
+            // ExplosiveApprovalRequest mappings
+            CreateMap<ExplosiveApprovalRequest, ExplosiveApprovalRequestDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
+                .ForMember(dest => dest.ApprovalType, opt => opt.MapFrom(src => src.ApprovalType.ToString()))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)))
+                .ForMember(dest => dest.ProcessedAt, opt => opt.MapFrom(src => src.ProcessedAt.HasValue ? DateTime.SpecifyKind(src.ProcessedAt.Value, DateTimeKind.Utc) : (DateTime?)null));
+
             // Coordinates mappings
             CreateMap<CoordinatesDto, string>()
                 .ConvertUsing(src => $"{src.Latitude},{src.Longitude}");
@@ -69,4 +78,4 @@ namespace Application.Mapping
                 });
         }
     }
-} 
+}

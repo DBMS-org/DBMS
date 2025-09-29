@@ -1,0 +1,172 @@
+<div class="proposal-details-container" *ngIf="proposalData">
+  <!-- Header Section -->
+  <div class="details-header">
+    <div class="header-content">
+      <h2 class="details-title">
+        <span class="title-icon">ℹ️</span>
+        Request Details
+      </h2>
+      <div class="proposal-id">ID: {{ proposalData.id }}</div>
+    </div>
+    <button class="close-btn" (click)="closeDetails()">
+      <span>✖️</span>
+    </button>
+  </div>
+
+  <!-- Status Section -->
+  <div class="details-section">
+    <div class="section-header">
+      <span class="section-icon">ℹ️</span>
+      <h3>Status</h3>
+    </div>
+    <div class="section-content">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Status:</label>
+          <span class="status-badge" [ngClass]="'status-' + proposalData.status?.toLowerCase()">
+            {{ proposalData.status }}
+          </span>
+        </div>
+ 
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Information Section -->
+  <div class="details-section">
+    <div class="section-header">
+      <span class="section-icon">📋</span>
+      <h3>Request Information</h3>
+    </div>
+    <div class="section-content">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Expected Usage Date:</label>
+          <span>{{ proposalData.expectedUsageDate | date:'MMMM d, yyyy' }}</span>
+        </div>
+        <div class="info-item full-width">
+          <label>Comments:</label>
+          <span class="comments-text">{{ proposalData.comments || 'No comments provided' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Requester Information Section -->
+  <div class="details-section">
+    <div class="section-header">
+      <span class="section-icon">👤</span>
+      <h3>Requester Information</h3>
+    </div>
+    <div class="section-content">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Name:</label>
+          <span>{{ proposalData.requesterName }}</span>
+        </div>
+        <div class="info-item">
+          <label>Email:</label>
+          <span class="email-text">{{ proposalData.requesterEmail }}</span>
+        </div>
+        <div class="info-item">
+          <label>User ID:</label>
+          <span>{{ proposalData.requesterId }}</span>
+        </div>
+        <div class="info-item">
+          <label>Region:</label>
+          <span>{{ proposalData.requesterRegion }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project & Site Information Section -->
+  <div class="details-section">
+    <div class="section-header">
+      <span class="section-icon">📍</span>
+      <h3>Project & Site Information</h3>
+    </div>
+    <div class="section-content">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Project Site:</label>
+          <span>{{ proposalData.projectSite }}</span>
+        </div>
+
+        <div class="info-item">
+          <label>Project Name:</label>
+          <span>{{ proposalData.projectName || 'Unknown Project' }}</span>
+        </div>
+
+        <div class="info-item">
+          <label>Project Region:</label>
+          <span>{{ proposalData.projectRegion || 'N/A' }}</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Processing Information Section -->
+  <div class="details-section">
+    <div class="section-header">
+      <span class="section-icon">⚙️</span>
+      <h3>Processing Information</h3>
+    </div>
+    <div class="section-content">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Processed By:</label>
+          <span>{{ proposalData.processedBy || 'Not processed yet' }}</span>
+        </div>
+        <div class="info-item">
+          <label>Processor Email:</label>
+          <span class="email-text">{{ proposalData.processorEmail || 'N/A' }}</span>
+        </div>
+
+        <div class="info-item">
+          <label>Processed At:</label>
+          <span>{{ proposalData.processedAt | date:'MMMM d, yyyy \'at\' hh:mm:ss a' }}</span>
+        </div>
+        <div class="info-item full-width" *ngIf="proposalData.rejectionReason">
+          <label>Rejection Reason:</label>
+          <span class="rejection-reason">{{ proposalData.rejectionReason }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timestamps Section -->
+  <div class="details-section">
+    <div class="section-header">
+      <span class="section-icon">🕒</span>
+      <h3>Timestamps</h3>
+    </div>
+    <div class="section-content">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Created At:</label>
+          <span>{{ proposalData.createdAt | date:'MMMM d, yyyy \'at\' hh:mm:ss a' }}</span>
+        </div>
+        <div class="info-item">
+          <label>Updated At:</label>
+          <span>{{ proposalData.updatedAt | date:'MMMM d, yyyy \'at\' hh:mm:ss a' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="!proposalData && isLoading">
+  <div class="loading-spinner"></div>
+  <p>Loading proposal details...</p>
+</div>
+
+<!-- Error State -->
+<div class="error-container" *ngIf="!proposalData && !isLoading && hasError">
+  <span class="error-icon">⚠️</span>
+  <p>Failed to load proposal details. Please try again.</p>
+  <button class="retry-btn" (click)="retryLoad()">Retry</button>
+</div>

@@ -68,7 +68,13 @@ export class ExplosiveApprovalRequestService {
    * Get explosive approval request by ID
    */
   getExplosiveApprovalRequest(id: number): Observable<ExplosiveApprovalRequest> {
-    return this.http.get<ExplosiveApprovalRequest>(`${this.apiUrl}/${id}`).pipe(
+    const headers = {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+    
+    return this.http.get<ExplosiveApprovalRequest>(`${this.apiUrl}/${id}`, { headers }).pipe(
       catchError(this.handleError)
     );
   }
@@ -77,7 +83,13 @@ export class ExplosiveApprovalRequestService {
    * Get explosive approval requests by project site ID
    */
   getExplosiveApprovalRequestsByProjectSite(projectSiteId: number): Observable<ExplosiveApprovalRequest[]> {
-    return this.http.get<ExplosiveApprovalRequest[]>(`${this.apiUrl}/project-site/${projectSiteId}`).pipe(
+    const headers = {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+    
+    return this.http.get<ExplosiveApprovalRequest[]>(`${this.apiUrl}/project-site/${projectSiteId}`, { headers }).pipe(
       catchError(this.handleError)
     );
   }
@@ -86,7 +98,13 @@ export class ExplosiveApprovalRequestService {
    * Get explosive approval requests for store manager by region
    */
   getExplosiveApprovalRequestsByRegion(region: string): Observable<ExplosiveApprovalRequest[]> {
-    return this.http.get<ExplosiveApprovalRequest[]>(`${this.apiUrl}/store-manager/region/${encodeURIComponent(region)}`).pipe(
+    const headers = {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+    
+    return this.http.get<ExplosiveApprovalRequest[]>(`${this.apiUrl}/store-manager/region/${encodeURIComponent(region)}`, { headers }).pipe(
       catchError(this.handleError)
     );
   }
@@ -95,7 +113,13 @@ export class ExplosiveApprovalRequestService {
    * Get current user's explosive approval requests
    */
   getMyExplosiveApprovalRequests(): Observable<ExplosiveApprovalRequest[]> {
-    return this.http.get<ExplosiveApprovalRequest[]>(`${this.apiUrl}/my-requests`).pipe(
+    const headers = {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+    
+    return this.http.get<ExplosiveApprovalRequest[]>(`${this.apiUrl}/my-requests`, { headers }).pipe(
       catchError(this.handleError)
     );
   }
@@ -104,7 +128,13 @@ export class ExplosiveApprovalRequestService {
    * Get all pending explosive approval requests
    */
   getPendingExplosiveApprovalRequests(): Observable<ExplosiveApprovalRequest[]> {
-    return this.http.get<ExplosiveApprovalRequest[]>(`${this.apiUrl}/pending`).pipe(
+    const headers = {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+    
+    return this.http.get<ExplosiveApprovalRequest[]>(`${this.apiUrl}/pending`, { headers }).pipe(
       catchError(this.handleError)
     );
   }
@@ -122,7 +152,7 @@ export class ExplosiveApprovalRequestService {
    * Approve an explosive approval request
    */
   approveExplosiveApprovalRequest(requestId: number, comments?: string): Observable<boolean> {
-    return this.http.patch<boolean>(`${this.apiUrl}/${requestId}/approve`, { comments }).pipe(
+    return this.http.post<boolean>(`${this.apiUrl}/${requestId}/approve`, { comments }).pipe(
       catchError(this.handleError)
     );
   }
@@ -131,7 +161,7 @@ export class ExplosiveApprovalRequestService {
    * Reject an explosive approval request
    */
   rejectExplosiveApprovalRequest(requestId: number, rejectionReason: string): Observable<boolean> {
-    return this.http.patch<boolean>(`${this.apiUrl}/${requestId}/reject`, { rejectionReason }).pipe(
+    return this.http.post<boolean>(`${this.apiUrl}/${requestId}/reject`, { rejectionReason }).pipe(
       catchError(this.handleError)
     );
   }
@@ -140,7 +170,7 @@ export class ExplosiveApprovalRequestService {
    * Cancel an explosive approval request
    */
   cancelExplosiveApprovalRequest(requestId: number): Observable<boolean> {
-    return this.http.patch<boolean>(`${this.apiUrl}/${requestId}/cancel`, {}).pipe(
+    return this.http.post<boolean>(`${this.apiUrl}/${requestId}/cancel`, {}).pipe(
       catchError(this.handleError)
     );
   }
