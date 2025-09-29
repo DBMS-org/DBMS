@@ -4,6 +4,7 @@ import { ProposalHistoryService, ProposalHistoryItem, ExplosiveApprovalStatus } 
 import { SiteService, ProjectSite } from '../../../core/services/site.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { UserService } from '../../../core/services/user.service';
+import { ExplosiveCalculationsService, ExplosiveCalculationResultDto } from '../../../core/services/explosive-calculations.service';
 import { Subscription } from 'rxjs';
 import { forkJoin, of, Observable } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -26,6 +27,8 @@ export interface ProposalDetailsData {
   rejectionReason?: string;
   createdAt: Date;
   updatedAt: Date;
+  totalAnfo?: number;
+  totalEmulsion?: number;
 }
 
 @Component({
@@ -48,7 +51,8 @@ export class ProposalDetailsComponent implements OnInit, OnDestroy {
     private proposalHistoryService: ProposalHistoryService,
     private siteService: SiteService,
     private projectService: ProjectService,
-    private userService: UserService
+    private userService: UserService,
+    private explosiveCalculationsService: ExplosiveCalculationsService
   ) {}
 
   ngOnInit(): void {
@@ -134,16 +138,23 @@ export class ProposalDetailsComponent implements OnInit, OnDestroy {
             catchError(() => of(null))
           ) : of(null);
 
+        // Add explosive calculations request
+        const explosiveCalculationsRequest = (site?.projectId && proposal.projectSiteId) ?
+          this.explosiveCalculationsService.getByProjectAndSite(site.projectId, proposal.projectSiteId).pipe(
+            catchError(() => of([]))
+          ) : of([]);
+
         return forkJoin({
           site: of(site),
           project: projectRequest,
           requester: requesterRequest,
-          processor: processorRequest
+          processor: processorRequest,
+          explosiveCalculations: explosiveCalculationsRequest
         });
       }),
-      map(({ site, project, requester, processor }) => {
-        console.log('📊 Enriched data:', { site, project, requester, processor });
-        return this.mapToEnrichedProposalDetailsData(proposal, site, project, requester, processor);
+      map(({ site, project, requester, processor, explosiveCalculations }) => {
+        console.log('📊 Enriched data:', { site, project, requester, processor, explosiveCalculations });
+        return this.mapToEnrichedProposalDetailsData(proposal, site, project, requester, processor, explosiveCalculations);
       }),
       catchError(() => {
         // If enrichment fails, fall back to basic mapping
@@ -169,8 +180,18 @@ export class ProposalDetailsComponent implements OnInit, OnDestroy {
     site: ProjectSite | null, 
     project: any, 
     requester: any, 
-    processor: any
+    processor: any,
+    explosiveCalculations: ExplosiveCalculationResultDto[]
   ): ProposalDetailsData {
+    // Calculate total ANFO and total emulsion from explosive calculations
+    let totalAnfo = 0;
+    let totalEmulsion = 0;
+
+    if (explosiveCalculations && explosiveCalculations.length > 0) {
+      totalAnfo = explosiveCalculations.reduce((sum, calc) => sum + (calc.totalAnfo || 0), 0);
+      totalEmulsion = explosiveCalculations.reduce((sum, calc) => sum + (calc.totalEmulsion || 0), 0);
+    }
+
     return {
       id: proposal.id,
       status: this.getStatusText(proposal.status),
@@ -195,7 +216,11 @@ export class ProposalDetailsComponent implements OnInit, OnDestroy {
       rejectionReason: proposal.rejectionReason,
       
       createdAt: proposal.createdAt,
-      updatedAt: proposal.updatedAt
+      updatedAt: proposal.updatedAt,
+      
+      // Explosive calculations totals
+      totalAnfo: totalAnfo,
+      totalEmulsion: totalEmulsion
     };
   }
 

@@ -108,6 +108,30 @@
     </div>
   </div>
 
+  <!-- Explosive Totals Section -->
+  <div class="details-section">
+    <div class="section-header">
+      <span class="section-icon">💥</span>
+      <h3>Explosive Totals</h3>
+    </div>
+    <div class="section-content">
+      <div class="explosive-totals-summary">
+        <div class="explosive-item">
+          <div class="explosive-label">Total ANFO:</div>
+          <div class="explosive-value">{{ (proposalData.totalAnfo || 0).toFixed(2) }} kg</div>
+        </div>
+        <div class="explosive-item">
+          <div class="explosive-label">Total Emulsion:</div>
+          <div class="explosive-value">{{ (proposalData.totalEmulsion || 0).toFixed(2) }} kg</div>
+        </div>
+        <div class="explosive-item total-combined">
+          <div class="explosive-label">Combined Total:</div>
+          <div class="explosive-value">{{ ((proposalData.totalAnfo || 0) + (proposalData.totalEmulsion || 0)).toFixed(2) }} kg</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Processing Information Section -->
   <div class="details-section">
     <div class="section-header">

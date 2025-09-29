@@ -359,6 +359,25 @@
       </div>
       
       <div class="modal-body">
+        <!-- Explosive Totals Summary -->
+        <div class="explosive-summary">
+          <h4>Explosive Requirements Summary</h4>
+          <div class="explosive-totals">
+            <div class="explosive-item">
+              <div class="explosive-label">Total ANFO Required:</div>
+              <div class="explosive-value">{{ totalAnfo | number:'1.2-2' }} kg</div>
+            </div>
+            <div class="explosive-item">
+              <div class="explosive-label">Total Emulsion Required:</div>
+              <div class="explosive-value">{{ totalEmulsion | number:'1.2-2' }} kg</div>
+            </div>
+            <div class="explosive-item total-row">
+              <div class="explosive-label">Total Explosives:</div>
+              <div class="explosive-value">{{ (totalAnfo + totalEmulsion) | number:'1.2-2' }} kg</div>
+            </div>
+          </div>
+        </div>
+        
         <div class="form-group">
           <label for="expectedUsageDate">Expected Usage Date *</label>
           <input 
