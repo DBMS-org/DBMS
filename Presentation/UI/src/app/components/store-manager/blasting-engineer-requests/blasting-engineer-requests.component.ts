@@ -60,6 +60,64 @@ export class BlastingEngineerRequestsComponent implements OnInit {
     this.explosiveApprovalService.getExplosiveApprovalRequestsByRegion(this.currentUserRegion)
       .subscribe({
         next: (requests) => {
+          console.log('=== EXPLOSIVE APPROVAL REQUESTS DATA FROM DATABASE ===');
+          console.log('Total requests received:', requests.length);
+          console.log('Full requests array:', requests);
+          
+          // Log each request in detail
+          requests.forEach((request, index) => {
+            console.log(`\n--- Request ${index + 1} (ID: ${request.id}) ---`);
+            console.log('Full request object:', request);
+            console.log('Request ID:', request.id);
+            console.log('Status:', request.status);
+            console.log('Priority:', request.priority);
+            console.log('Approval Type:', request.approvalType);
+            console.log('Comments:', request.comments);
+            console.log('Expected Usage Date:', request.expectedUsageDate);
+            console.log('Created At:', request.createdAt);
+            console.log('Processed At:', request.processedAt);
+            
+            // Log user information
+            console.log('Requested By User:', request.requestedByUser);
+            if (request.requestedByUser) {
+              console.log('  - User ID:', request.requestedByUser.id);
+              console.log('  - User Name:', request.requestedByUser.name);
+              console.log('  - User Email:', request.requestedByUser.email);
+              console.log('  - User Region:', request.requestedByUser.region);
+            }
+            
+            console.log('Processed By User:', request.processedByUser);
+            if (request.processedByUser) {
+              console.log('  - Processed User ID:', request.processedByUser.id);
+              console.log('  - Processed User Name:', request.processedByUser.name);
+              console.log('  - Processed User Email:', request.processedByUser.email);
+            }
+            
+            // Log project site information
+            console.log('Project Site:', request.projectSite);
+            if (request.projectSite) {
+              console.log('  - Site ID:', request.projectSite.id);
+              console.log('  - Site Name:', request.projectSite.name);
+              
+              // Log project information within project site
+              console.log('  - Project:', request.projectSite.project);
+              if (request.projectSite.project) {
+                console.log('    - Project ID:', request.projectSite.project.id);
+                console.log('    - Project Name:', request.projectSite.project.name);
+                console.log('    - Project Region:', request.projectSite.project.region);
+                console.log('    - Project Region ID:', request.projectSite.project.regionId);
+              } else {
+                console.log('    - Project: NULL or UNDEFINED');
+              }
+            } else {
+              console.log('  - Project Site: NULL or UNDEFINED');
+            }
+            
+            console.log('--- End Request Details ---\n');
+          });
+          
+          console.log('=== END DATABASE DATA LOGGING ===\n');
+          
           this.requests = requests;
           this.filteredRequests = [...this.requests];
           this.lastRefreshTime = new Date();
