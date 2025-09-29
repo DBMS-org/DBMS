@@ -117,12 +117,7 @@ export class SiteDashboardComponent implements OnInit {
     this.stateService.setProjectId(projectId);
     this.stateService.setSiteId(siteId);
 
-    // Debug: Check user role and authentication
-    const currentUser = this.authService.getCurrentUser();
-    console.log('Current user:', currentUser);
-    console.log('User role:', this.authService.getUserRole());
-    console.log('Is blasting engineer:', this.authService.isBlastingEngineer());
-    console.log('Is authenticated:', this.authService.isAuthenticated());
+
 
     if (projectId && siteId) {
       this.loadProject();
