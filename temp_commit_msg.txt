@@ -1,5 +1,6 @@
-fix(ui): adjust layout overflow and scrolling behavior
+feat(blasting-engineer-requests): enhance user info display and request processing
 
-- Update sidebar height to account for navbar and add scrolling controls
-- Modify table container to enable horizontal scrolling with minimum width
-- Prevent horizontal overflow in layout and main content areas
+- Add comprehensive user information section with name, region, country and last refresh time
+- Improve request processing with detailed approval/rejection info and timestamps
+- Add rejected requests count to summary stats
+- Implement formatted date/time display utilities
