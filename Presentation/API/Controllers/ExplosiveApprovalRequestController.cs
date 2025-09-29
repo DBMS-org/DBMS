@@ -1,4 +1,6 @@
 using Application.Interfaces.ProjectManagement;
+using Application.Interfaces.Infrastructure;
+using Application.DTOs.ProjectManagement;
 using Domain.Entities.ProjectManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,13 +13,16 @@ namespace Presentation.API.Controllers
     public class ExplosiveApprovalRequestController : ControllerBase
     {
         private readonly IExplosiveApprovalRequestService _explosiveApprovalRequestService;
+        private readonly IMappingService _mappingService;
         private readonly ILogger<ExplosiveApprovalRequestController> _logger;
 
         public ExplosiveApprovalRequestController(
             IExplosiveApprovalRequestService explosiveApprovalRequestService,
+            IMappingService mappingService,
             ILogger<ExplosiveApprovalRequestController> logger)
         {
             _explosiveApprovalRequestService = explosiveApprovalRequestService;
+            _mappingService = mappingService;
             _logger = logger;
         }
 
@@ -155,7 +160,7 @@ namespace Presentation.API.Controllers
         }
 
         [HttpPost("{id}/approve")]
-        [Authorize(Policy = "ManageProjectSites")]
+        [Authorize(Policy = "ManageExplosiveRequests")]
         public async Task<IActionResult> ApproveExplosiveApprovalRequest(int id, [FromBody] ApprovalActionDto dto)
         {
             try
@@ -182,7 +187,7 @@ namespace Presentation.API.Controllers
         }
 
         [HttpPost("{id}/reject")]
-        [Authorize(Policy = "ManageProjectSites")]
+        [Authorize(Policy = "ManageExplosiveRequests")]
         public async Task<IActionResult> RejectExplosiveApprovalRequest(int id, [FromBody] RejectionActionDto dto)
         {
             try
@@ -327,7 +332,8 @@ namespace Presentation.API.Controllers
                 }
 
                 var requests = await _explosiveApprovalRequestService.GetExplosiveApprovalRequestsByRegionAsync(region);
-                return Ok(requests);
+                var requestDtos = _mappingService.Map<IEnumerable<ExplosiveApprovalRequestDto>>(requests);
+                return Ok(requestDtos);
             }
             catch (Exception ex)
             {
