@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExplosiveApprovalRequestService, ExplosiveApprovalRequest } from '../../../core/services/explosive-approval-request.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { RequestDetailsComponent } from './request-details/request-details.component';
 
 @Component({
   selector: 'app-blasting-engineer-requests',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RequestDetailsComponent],
   templateUrl: './blasting-engineer-requests.component.html',
   styleUrl: './blasting-engineer-requests.component.scss'
 })
@@ -23,6 +24,10 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   currentUserRole: string | null = null;
   lastRefreshTime: Date | null = null;
   errorMessage: string = '';
+  
+  // Modal properties
+  selectedRequest: ExplosiveApprovalRequest | null = null;
+  isDetailsModalVisible: boolean = false;
 
   constructor(
     private explosiveApprovalService: ExplosiveApprovalRequestService,
@@ -116,11 +121,10 @@ export class BlastingEngineerRequestsComponent implements OnInit {
       .subscribe({
         next: (success) => {
           if (success) {
-            request.status = 'Approved';
-            request.processedByUserId = currentUser?.id;
-            request.processedAt = new Date().toISOString();
             console.log('Approved request:', request.id);
             this.errorMessage = ''; // Clear any previous errors
+            // Refresh the data from server to get the updated status
+            this.loadRequests();
           }
         },
         error: (error) => {
@@ -140,12 +144,10 @@ export class BlastingEngineerRequestsComponent implements OnInit {
         .subscribe({
           next: (success) => {
             if (success) {
-              request.status = 'Rejected';
-              request.processedByUserId = currentUser?.id;
-              request.processedAt = new Date().toISOString();
-              request.rejectionReason = detailedReason;
               console.log('Rejected request:', request.id);
               this.errorMessage = ''; // Clear any previous errors
+              // Refresh the data from server to get the updated status
+              this.loadRequests();
             }
           },
           error: (error) => {
@@ -158,7 +160,23 @@ export class BlastingEngineerRequestsComponent implements OnInit {
 
   onViewDetails(request: ExplosiveApprovalRequest): void {
     console.log('View details for request:', request.id);
-    // TODO: Implement modal or navigation to detailed view
+    this.selectedRequest = request;
+    this.isDetailsModalVisible = true;
+  }
+
+  onCloseDetailsModal(): void {
+    this.isDetailsModalVisible = false;
+    this.selectedRequest = null;
+  }
+
+  onApproveFromModal(request: ExplosiveApprovalRequest): void {
+    this.onApprove(request);
+    this.onCloseDetailsModal();
+  }
+
+  onRejectFromModal(request: ExplosiveApprovalRequest): void {
+    this.onReject(request);
+    this.onCloseDetailsModal();
   }
 
   getPendingCount(): number {

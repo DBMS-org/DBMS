@@ -42,7 +42,16 @@
         Refresh
       </button>
     </div>
-  </div>
+</div>
+
+<!-- Request Details Modal -->
+<app-request-details
+  [request]="selectedRequest"
+  [isVisible]="isDetailsModalVisible"
+  (close)="onCloseDetailsModal()"
+  (approve)="onApproveFromModal($event)"
+  (reject)="onRejectFromModal($event)">
+</app-request-details>
 
   <!-- Error Message -->
   @if (errorMessage) {
