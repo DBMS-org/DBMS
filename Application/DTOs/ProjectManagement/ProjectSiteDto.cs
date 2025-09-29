@@ -18,5 +18,6 @@ namespace Application.DTOs.ProjectManagement
         // Navigation properties (optional, for detailed views)
         public string? ProjectName { get; set; }
         public string? ProjectRegion { get; set; }
+        public ProjectDto? Project { get; set; }
     }
-} 
+}

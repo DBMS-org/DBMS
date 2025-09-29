@@ -10,6 +10,7 @@ import { SiteBlastingService } from '../../../../core/services/site-blasting.ser
 import { UnifiedDrillDataService } from '../../../../core/services/unified-drill-data.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { StateService } from '../../../../core/services/state.service';
+import { ExplosiveCalculationsService, ExplosiveCalculationResultDto } from '../../../../core/services/explosive-calculations.service';
 import { Observable } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../shared/shared/components/confirm-dialog/confirm-dialog.component';
@@ -48,6 +49,11 @@ export class SiteDashboardComponent implements OnInit {
     expectedUsageDate: '',
     comments: ''
   };
+  
+  // Explosive calculations data
+  explosiveCalculations: ExplosiveCalculationResultDto | null = null;
+  totalAnfo: number = 0;
+  totalEmulsion: number = 0;
   
   minDate: string = new Date().toISOString().split('T')[0];
 
@@ -105,7 +111,8 @@ export class SiteDashboardComponent implements OnInit {
     public authService: AuthService, // Made public for template access
     private stateService: StateService,
     private dialog: MatDialog,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private explosiveCalculationsService: ExplosiveCalculationsService
   ) {
     this.state$ = this.stateService.state$;
   }
@@ -122,6 +129,7 @@ export class SiteDashboardComponent implements OnInit {
     if (projectId && siteId) {
       this.loadProject();
       this.loadSite();
+      this.loadExplosiveCalculations();
       // loadWorkflowProgress() is now called from loadSite() after data is loaded
     }
   }
@@ -931,6 +939,34 @@ export class SiteDashboardComponent implements OnInit {
           });
         }, 1000); // Wait 1 second for cleanup to complete
       });
+    });
+  }
+
+  loadExplosiveCalculations() {
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
+    
+    if (!projectId || !siteId) return;
+
+    this.explosiveCalculationsService.getByProjectAndSite(projectId, siteId).subscribe({
+      next: (calculations) => {
+        if (calculations && calculations.length > 0) {
+          // Get the latest calculation result
+          this.explosiveCalculations = calculations[calculations.length - 1];
+          this.totalAnfo = this.explosiveCalculations.totalAnfo || 0;
+          this.totalEmulsion = this.explosiveCalculations.totalEmulsion || 0;
+        } else {
+          // No calculations found, set defaults
+          this.totalAnfo = 0;
+          this.totalEmulsion = 0;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading explosive calculations:', error);
+        // Set defaults on error
+        this.totalAnfo = 0;
+        this.totalEmulsion = 0;
+      }
     });
   }
 }

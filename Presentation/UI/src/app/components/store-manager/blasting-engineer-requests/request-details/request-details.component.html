@@ -24,10 +24,10 @@
     <!-- Modal Body -->
     <div class="modal-body" *ngIf="request">
       
-      <!-- Status and Priority Section -->
-      <div class="section status-priority-section">
+      <!-- Status Section -->
+      <div class="section status-section">
         <div class="section-header">
-          <h3><i class="material-icons">info</i> Status & Priority</h3>
+          <h3><i class="material-icons">info</i> Status</h3>
         </div>
         <div class="section-content">
           <div class="info-grid">
@@ -35,24 +35,6 @@
               <label>Status:</label>
               <span class="status-badge" [class]="getStatusClass(request.status)">
                 {{ request.status }}
-              </span>
-            </div>
-            <div class="info-item">
-              <label>Priority:</label>
-              <span class="priority-badge" [class]="getPriorityClass(request.priority)">
-                {{ request.priority }}
-              </span>
-            </div>
-            <div class="info-item">
-              <label>Approval Type:</label>
-              <span class="type-badge" [class]="getApprovalTypeClass(request.approvalType)">
-                {{ request.approvalType }}
-              </span>
-            </div>
-            <div class="info-item">
-              <label>Active:</label>
-              <span class="boolean-value" [class]="getBooleanClass(request.isActive)">
-                {{ getBooleanDisplay(request.isActive) }}
               </span>
             </div>
           </div>
@@ -136,9 +118,28 @@
               <label>Project Region:</label>
               <span class="project-region">{{ request.projectSite?.project?.region || 'N/A' }}</span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explosive Calculations Section -->
+      <div class="section">
+        <div class="section-header">
+          <h3><i class="material-icons">calculate</i> Explosive Calculations</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
             <div class="info-item">
-              <label>Region ID:</label>
-              <span class="region-id">{{ request.projectSite?.project?.regionId || 'N/A' }}</span>
+              <label>Total ANFO:</label>
+              <span class="explosive-total" [class.loading]="isLoadingCalculations">
+                {{ isLoadingCalculations ? 'Loading...' : (totalAnfo | number:'1.2-2') + ' kg' }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Total Emulsion:</label>
+              <span class="explosive-total" [class.loading]="isLoadingCalculations">
+                {{ isLoadingCalculations ? 'Loading...' : (totalEmulsion | number:'1.2-2') + ' kg' }}
+              </span>
             </div>
           </div>
         </div>

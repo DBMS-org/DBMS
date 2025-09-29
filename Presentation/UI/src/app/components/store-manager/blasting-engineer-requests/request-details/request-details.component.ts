@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExplosiveApprovalRequest } from '../../../../core/services/explosive-approval-request.service';
+import { ExplosiveCalculationsService, ExplosiveCalculationResultDto } from '../../../../core/services/explosive-calculations.service';
 
 @Component({
   selector: 'app-request-details',
@@ -9,16 +10,31 @@ import { ExplosiveApprovalRequest } from '../../../../core/services/explosive-ap
   templateUrl: './request-details.component.html',
   styleUrl: './request-details.component.scss'
 })
-export class RequestDetailsComponent implements OnInit {
+export class RequestDetailsComponent implements OnInit, OnChanges {
   @Input() request: ExplosiveApprovalRequest | null = null;
   @Input() isVisible: boolean = false;
   @Output() close = new EventEmitter<void>();
   @Output() approve = new EventEmitter<ExplosiveApprovalRequest>();
   @Output() reject = new EventEmitter<ExplosiveApprovalRequest>();
 
+  // Explosive calculations data
+  explosiveCalculations: ExplosiveCalculationResultDto[] = [];
+  totalAnfo: number = 0;
+  totalEmulsion: number = 0;
+  isLoadingCalculations: boolean = false;
+
+  constructor(private explosiveCalculationsService: ExplosiveCalculationsService) {}
+
   ngOnInit(): void {
     // Handle escape key to close modal
     document.addEventListener('keydown', this.handleEscapeKey.bind(this));
+    this.loadExplosiveCalculations();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['request'] && this.request) {
+      this.loadExplosiveCalculations();
+    }
   }
 
   ngOnDestroy(): void {
@@ -114,5 +130,42 @@ export class RequestDetailsComponent implements OnInit {
     if (event.target === event.currentTarget) {
       this.onClose();
     }
+  }
+
+  private loadExplosiveCalculations(): void {
+    if (!this.request?.projectSite?.id) {
+      this.resetCalculations();
+      return;
+    }
+
+    this.isLoadingCalculations = true;
+    
+    this.explosiveCalculationsService.getByProjectAndSite(
+      this.request.projectSite.project.id,
+      this.request.projectSite.id
+    ).subscribe({
+      next: (calculations) => {
+        this.explosiveCalculations = calculations;
+        this.calculateTotals();
+        this.isLoadingCalculations = false;
+      },
+      error: (error) => {
+        console.error('Error loading explosive calculations:', error);
+        this.resetCalculations();
+        this.isLoadingCalculations = false;
+      }
+    });
+  }
+
+  private calculateTotals(): void {
+    this.totalAnfo = this.explosiveCalculations.reduce((sum, calc) => sum + (calc.totalAnfo || 0), 0);
+    this.totalEmulsion = this.explosiveCalculations.reduce((sum, calc) => sum + (calc.totalEmulsion || 0), 0);
+  }
+
+  private resetCalculations(): void {
+    this.explosiveCalculations = [];
+    this.totalAnfo = 0;
+    this.totalEmulsion = 0;
+    this.isLoadingCalculations = false;
   }
 }

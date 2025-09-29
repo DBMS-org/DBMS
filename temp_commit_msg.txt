@@ -1,7 +1,4 @@
-feat(blasting-engineer): add request details modal and improve proposal history
+refactor(site-dashboard): remove debug code and enhance modal styling
 
-refactor(site-service): enhance cache control headers
-feat(blasting-engineer-requests): implement request details modal
-refactor(proposal-history): simplify table and add details modal
-feat(explosive-approval): add DTO and mapping for approval requests
-style(proposal-history): update styles for new modal and table
+Remove debug console logs and HTML debug section that were used during development.
+Enhance modal styling with improved gradients, animations, and responsive design.
