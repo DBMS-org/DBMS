@@ -1,1 +1,6 @@
-docs(admin): fix typo in add-machine component template
+feat(dashboard): implement machine maintenance management functionality
+
+- Add machine status tracking and maintenance scheduling features
+- Implement maintenance activity logging with validation
+- Update dashboard UI to display machine status and quick actions
+- Remove unused maintenance dashboard and calendar components
