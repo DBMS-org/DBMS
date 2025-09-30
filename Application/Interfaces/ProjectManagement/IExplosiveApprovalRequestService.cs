@@ -69,5 +69,10 @@ namespace Application.Interfaces.ProjectManagement
         /// Gets the latest explosive approval request for a project site
         /// </summary>
         Task<ExplosiveApprovalRequest?> GetLatestExplosiveApprovalRequestAsync(int projectSiteId);
+        
+        /// <summary>
+        /// Retrieves explosive approval requests filtered by store manager's region
+        /// </summary>
+        Task<IEnumerable<ExplosiveApprovalRequest>> GetExplosiveApprovalRequestsByRegionAsync(string region);
     }
 }

@@ -1,0 +1,236 @@
+<!-- Modal Backdrop -->
+<div class="modal-backdrop" 
+     [class.show]="isVisible" 
+     (click)="onBackdropClick($event)"
+     *ngIf="isVisible">
+  
+  <!-- Modal Content -->
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-info">
+        <h2 class="modal-title">
+          <i class="material-icons">description</i>
+          Request Details
+        </h2>
+        <span class="request-id">ID: {{ request?.id }}</span>
+      </div>
+      <button class="close-btn" (click)="onClose()" title="Close">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body" *ngIf="request">
+      
+      <!-- Status Section -->
+      <div class="section status-section">
+        <div class="section-header">
+          <h3><i class="material-icons">info</i> Status</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Status:</label>
+              <span class="status-badge" [class]="getStatusClass(request.status)">
+                {{ request.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request Information Section -->
+      <div class="section request-info-section">
+        <div class="section-header">
+          <h3><i class="material-icons">assignment</i> Request Information</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item full-width">
+              <label>Expected Usage Date:</label>
+              <span class="date-value">{{ formatDate(request.expectedUsageDate) }}</span>
+            </div>
+            <div class="info-item full-width" *ngIf="request.estimatedDurationHours">
+              <label>Estimated Duration:</label>
+              <span class="duration-value">{{ formatDuration(request.estimatedDurationHours) }}</span>
+            </div>
+            <div class="info-item full-width" *ngIf="request.comments">
+              <label>Comments:</label>
+              <div class="comments-box">{{ request.comments }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requester Information Section -->
+      <div class="section requester-section">
+        <div class="section-header">
+          <h3><i class="material-icons">person</i> Requester Information</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Name:</label>
+              <span class="user-name">{{ request.requestedByUser?.name || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Email:</label>
+              <span class="user-email">{{ request.requestedByUser?.email || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <label>User ID:</label>
+              <span class="user-id">{{ request.requestedByUserId }}</span>
+            </div>
+            <div class="info-item">
+              <label>Region:</label>
+              <span class="user-region">{{ request.requestedByUser?.region || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project & Site Information Section -->
+      <div class="section project-site-section">
+        <div class="section-header">
+          <h3><i class="material-icons">location_on</i> Project & Site Information</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Project Site:</label>
+              <span class="project-site">{{ request.projectSite?.name || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Site ID:</label>
+              <span class="site-id">{{ request.projectSiteId }}</span>
+            </div>
+            <div class="info-item">
+              <label>Project Name:</label>
+              <span class="project-name">{{ request.projectSite?.project?.name || 'Unknown Project' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Project ID:</label>
+              <span class="project-id">{{ request.projectSite?.project?.id || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Project Region:</label>
+              <span class="project-region">{{ request.projectSite?.project?.region || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explosive Calculations Section -->
+      <div class="section">
+        <div class="section-header">
+          <h3><i class="material-icons">calculate</i> Explosive Calculations</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Total ANFO:</label>
+              <span class="explosive-total" [class.loading]="isLoadingCalculations">
+                {{ isLoadingCalculations ? 'Loading...' : (totalAnfo | number:'1.2-2') + ' kg' }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Total Emulsion:</label>
+              <span class="explosive-total" [class.loading]="isLoadingCalculations">
+                {{ isLoadingCalculations ? 'Loading...' : (totalEmulsion | number:'1.2-2') + ' kg' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- Processing Information Section -->
+      <div class="section processing-section" *ngIf="request.processedByUserId || request.processedAt || request.rejectionReason">
+        <div class="section-header">
+          <h3><i class="material-icons">admin_panel_settings</i> Processing Information</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item" *ngIf="request.processedByUser?.name">
+              <label>Processed By:</label>
+              <span class="processor-name">{{ request.processedByUser?.name || 'N/A' }}</span>
+            </div>
+            <div class="info-item" *ngIf="request.processedByUser?.email">
+              <label>Processor Email:</label>
+              <span class="processor-email">{{ request.processedByUser?.email || 'N/A' }}</span>
+            </div>
+            <div class="info-item" *ngIf="request.processedByUserId">
+              <label>Processor ID:</label>
+              <span class="processor-id">{{ request.processedByUserId }}</span>
+            </div>
+            <div class="info-item full-width" *ngIf="request.processedAt">
+              <label>Processed At:</label>
+              <span class="processed-date">{{ formatDateTime(request.processedAt) }}</span>
+            </div>
+            <div class="info-item full-width" *ngIf="request.rejectionReason">
+              <label>Rejection Reason:</label>
+              <div class="rejection-reason-box">{{ request.rejectionReason }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Data Section -->
+      <div class="section additional-section" *ngIf="request.additionalData">
+        <div class="section-header">
+          <h3><i class="material-icons">data_object</i> Additional Data</h3>
+        </div>
+        <div class="section-content">
+          <div class="additional-data-box">
+            <pre>{{ request.additionalData }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timestamps Section -->
+      <div class="section timestamps-section">
+        <div class="section-header">
+          <h3><i class="material-icons">schedule</i> Timestamps</h3>
+        </div>
+        <div class="section-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Created At:</label>
+              <span class="timestamp">{{ formatDateTime(request.createdAt) }}</span>
+            </div>
+            <div class="info-item">
+              <label>Updated At:</label>
+              <span class="timestamp">{{ formatDateTime(request.updatedAt) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <div class="footer-actions">
+        <button class="btn btn-secondary" (click)="onClose()">
+          <i class="material-icons">close</i>
+          Close
+        </button>
+        
+        <div class="action-buttons" *ngIf="request?.status === 'Pending'">
+          <button class="btn btn-success" (click)="onApprove()" title="Approve Request">
+            <i class="material-icons">check</i>
+            Approve
+          </button>
+          <button class="btn btn-danger" (click)="onReject()" title="Reject Request">
+            <i class="material-icons">close</i>
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

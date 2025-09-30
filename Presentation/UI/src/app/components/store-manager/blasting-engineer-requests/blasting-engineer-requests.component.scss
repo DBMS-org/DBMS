@@ -26,8 +26,96 @@
     
     .page-subtitle {
       color: #6c757d;
+      font-size: 0.9rem;
+      margin: 0 0 0.75rem 0;
+    }
+  }
+  
+  .user-info-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    
+    .user-info, .region-info, .country-info, .refresh-info {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.85rem;
+      color: #495057;
+      
+      i {
+        font-size: 1rem;
+        color: #667eea;
+      }
+      
+      span {
+        font-weight: 500;
+      }
+    }
+    
+    .refresh-info {
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: #6c757d;
+      
+      i {
+        color: #28a745;
+      }
+    }
+  }
+}
+
+// Error Message Section
+.error-section {
+  background: linear-gradient(135deg, #ffebee, #fce4ec);
+  border: 1px solid #f8bbd9;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  i {
+    color: #d32f2f;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+  
+  .error-content {
+    flex: 1;
+    
+    .error-title {
+      color: #c62828;
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0 0 0.25rem 0;
+    }
+    
+    .error-message {
+      color: #d32f2f;
       font-size: 0.875rem;
       margin: 0;
+      line-height: 1.4;
+    }
+  }
+  
+  .close-error {
+    background: none;
+    border: none;
+    color: #d32f2f;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    font-size: 1.25rem;
+    
+    &:hover {
+      background-color: rgba(211, 47, 47, 0.1);
     }
   }
 }
@@ -192,9 +280,23 @@
             vertical-align: middle;
             font-size: 0.75rem;
             
-            &.request-id {
-              font-weight: normal;
-              color: inherit;
+            &.expected-date, &.request-date {
+              .date-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+                
+                .date-value {
+                  font-weight: 500;
+                  color: #495057;
+                }
+                
+                .processed-info {
+                  font-size: 0.7rem;
+                  color: #6c757d;
+                  font-style: italic;
+                }
+              }
             }
             
             &.engineer-info {
@@ -232,6 +334,38 @@
                 &.type-emulsion {
                   background: linear-gradient(135deg, #a8edea, #fed6e3);
                   color: #2c5aa0;
+                }
+              }
+            }
+            
+            &.priority {
+              .priority-badge {
+                padding: 0.25rem 0.75rem;
+                border-radius: 15px;
+                font-weight: 600;
+                font-size: 0.8rem;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                
+                &.priority-high {
+                  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+                  color: white;
+                  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+                }
+                
+                &.priority-medium {
+                  background: linear-gradient(135deg, #feca57, #ff9ff3);
+                  color: #8b4513;
+                }
+                
+                &.priority-low {
+                  background: linear-gradient(135deg, #48dbfb, #0abde3);
+                  color: white;
+                }
+                
+                &.priority-normal {
+                  background: linear-gradient(135deg, #a8e6cf, #88d8a3);
+                  color: #2d5016;
                 }
               }
             }
@@ -379,8 +513,9 @@
           color: #d68910;
         }
         
-        &.approved {
-          color: #155724;
+        &.rejected {
+          color: #dc3545;
+          background-color: rgba(220, 53, 69, 0.1);
         }
       }
     }

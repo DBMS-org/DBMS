@@ -62,12 +62,55 @@ export class AddStockComponent implements OnInit, OnDestroy {
 
   private initializeForm(): void {
     this.stockRequestForm = this.fb.group({
-      explosiveType: ['', Validators.required],
-      quantity: ['', [Validators.required, Validators.min(0.1)]],
-      purpose: ['', [Validators.required, Validators.minLength(5)]],
       requiredDate: ['', Validators.required],
-      notes: ['']
+      notes: [''],
+      items: this.fb.array([this.buildItemGroup()])
     });
+  }
+
+  // Getter for items FormArray
+  get items(): FormArray {
+    return this.stockRequestForm.get('items') as FormArray;
+  }
+
+  // Helper to get a specific item FormGroup
+  getItemGroup(index: number): FormGroup {
+    return this.items.at(index) as FormGroup;
+  }
+
+  // Build a single item form group
+  private buildItemGroup(): FormGroup {
+    return this.fb.group({
+      explosiveType: ['', Validators.required],
+      requestedQuantity: ['', [Validators.required, Validators.min(0.1)]],
+      unit: ['', Validators.required],
+      purpose: ['', [Validators.required, Validators.minLength(5)]],
+      specifications: ['']
+    });
+  }
+
+  // Add a new item row
+  addItem(): void {
+    this.items.push(this.buildItemGroup());
+  }
+
+  // Remove an item row by index
+  removeItem(index: number): void {
+    if (this.items.length > 1) {
+      this.items.removeAt(index);
+    }
+  }
+
+  // When explosive type changes, reset the unit so user selects a valid one for that type
+  onExplosiveTypeChange(index: number): void {
+    const group = this.getItemGroup(index);
+    group.get('unit')?.reset('');
+  }
+
+  // Get units list for an item based on its explosive type
+  getUnitsForItem(index: number): string[] {
+    const type = this.getItemGroup(index).get('explosiveType')?.value as ExplosiveType | undefined;
+    return type ? this.getUnitsForExplosiveType(type) : [];
   }
 
   getCurrentDateTime(): string {
@@ -92,21 +135,37 @@ export class AddStockComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.stockRequestForm.valid) {
       this.isSubmitting = true;
-      
+
+      const requestedItems = this.items.controls.map(ctrl => {
+        const v = (ctrl as FormGroup).value as {
+          explosiveType: ExplosiveType;
+          requestedQuantity: number | string;
+          unit: string;
+          purpose: string;
+          specifications?: string;
+        };
+        return {
+          explosiveType: v.explosiveType,
+          requestedQuantity: typeof v.requestedQuantity === 'string' ? parseFloat(v.requestedQuantity) : v.requestedQuantity,
+          unit: v.unit,
+          purpose: v.purpose,
+          specifications: v.specifications || ''
+        };
+      });
+
+      const justification = requestedItems
+        .map(it => it.purpose)
+        .filter(p => !!p && p.trim().length > 0)
+        .join('; ');
+
       // Create the request in the expected format
       const request: CreateStockRequestRequest = {
-         requesterStoreId: this.currentStore.id,
-         requestedItems: [{
-           explosiveType: this.stockRequestForm.value.explosiveType,
-           requestedQuantity: this.stockRequestForm.value.quantity,
-           unit: 'tons', // Always use tons as the unit
-           purpose: this.stockRequestForm.value.purpose,
-           specifications: ''
-         }],
-         requiredDate: this.stockRequestForm.value.requiredDate,
-         justification: this.stockRequestForm.value.purpose, // Use purpose as justification
-         notes: this.stockRequestForm.value.notes || ''
-       };
+        requesterStoreId: this.currentStore.id,
+        requestedItems,
+        requiredDate: this.stockRequestForm.value.requiredDate,
+        justification: justification || 'Multiple items request',
+        notes: this.stockRequestForm.value.notes || ''
+      };
 
       this.stockRequestService.createStockRequest(request)
         .pipe(takeUntil(this.destroy$))
@@ -203,6 +262,4 @@ export class AddStockComponent implements OnInit, OnDestroy {
     this.successMessage = '';
     this.errorMessage = '';
   }
-
-
 }

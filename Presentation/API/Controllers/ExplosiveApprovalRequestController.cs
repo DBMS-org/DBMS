@@ -1,4 +1,6 @@
 using Application.Interfaces.ProjectManagement;
+using Application.Interfaces.Infrastructure;
+using Application.DTOs.ProjectManagement;
 using Domain.Entities.ProjectManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,13 +13,16 @@ namespace Presentation.API.Controllers
     public class ExplosiveApprovalRequestController : ControllerBase
     {
         private readonly IExplosiveApprovalRequestService _explosiveApprovalRequestService;
+        private readonly IMappingService _mappingService;
         private readonly ILogger<ExplosiveApprovalRequestController> _logger;
 
         public ExplosiveApprovalRequestController(
             IExplosiveApprovalRequestService explosiveApprovalRequestService,
+            IMappingService mappingService,
             ILogger<ExplosiveApprovalRequestController> logger)
         {
             _explosiveApprovalRequestService = explosiveApprovalRequestService;
+            _mappingService = mappingService;
             _logger = logger;
         }
 
@@ -155,7 +160,7 @@ namespace Presentation.API.Controllers
         }
 
         [HttpPost("{id}/approve")]
-        [Authorize(Policy = "ManageProjectSites")]
+        [Authorize(Policy = "ManageExplosiveRequests")]
         public async Task<IActionResult> ApproveExplosiveApprovalRequest(int id, [FromBody] ApprovalActionDto dto)
         {
             try
@@ -182,7 +187,7 @@ namespace Presentation.API.Controllers
         }
 
         [HttpPost("{id}/reject")]
-        [Authorize(Policy = "ManageProjectSites")]
+        [Authorize(Policy = "ManageExplosiveRequests")]
         public async Task<IActionResult> RejectExplosiveApprovalRequest(int id, [FromBody] RejectionActionDto dto)
         {
             try
@@ -291,9 +296,9 @@ namespace Presentation.API.Controllers
             }
         }
 
-        [HttpGet("user-requests")]
+        [HttpGet("my-requests")]
         [Authorize(Policy = "ManageProjectSites")]
-        public async Task<IActionResult> GetUserExplosiveApprovalRequests()
+        public async Task<IActionResult> GetMyExplosiveApprovalRequests()
         {
             try
             {
@@ -309,6 +314,30 @@ namespace Presentation.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving explosive approval requests for current user");
+                return StatusCode(500, "An error occurred while retrieving the explosive approval requests");
+            }
+        }
+
+        [HttpGet("store-manager/region/{region}")]
+        [Authorize(Policy = "ManageExplosiveRequests")]
+        public async Task<IActionResult> GetExplosiveApprovalRequestsByRegion(string region)
+        {
+            try
+            {
+                // Verify that the current user is a store manager and can only access their own region
+                var currentUserRegion = User.FindFirst("region")?.Value;
+                if (!User.IsInRole("Admin") && !User.IsInRole("Administrator") && currentUserRegion != region)
+                {
+                    return StatusCode(403, new { message = "You can only access explosive approval requests from your assigned region." });
+                }
+
+                var requests = await _explosiveApprovalRequestService.GetExplosiveApprovalRequestsByRegionAsync(region);
+                var requestDtos = _mappingService.Map<IEnumerable<ExplosiveApprovalRequestDto>>(requests);
+                return Ok(requestDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving explosive approval requests for region {Region}", region);
                 return StatusCode(500, "An error occurred while retrieving the explosive approval requests");
             }
         }
