@@ -1,4 +1,13 @@
+/**
+ * Machine Manager Component Styles
+ * 
+ * Root container styles for the machine manager module providing:
+ * - Full viewport height layout foundation
+ * - Consistent light gray background matching application theme
+ * - Base container for all machine management interfaces
+ */
+
 .machine-manager-container {
-  min-height: 100vh;
-  background-color: #f8f9fa;
+  min-height: 100vh; // Ensure full viewport height coverage
+  background-color: #f8f9fa; // Light gray background for professional appearance
 }

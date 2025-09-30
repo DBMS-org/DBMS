@@ -17,6 +17,16 @@ import {
   AssignmentRequestStatus 
 } from '../../../core/models/machine.model';
 
+/**
+ * Machine Inventory Component
+ * 
+ * Comprehensive management interface for drilling machine inventory including:
+ * - Machine listing with advanced filtering and search capabilities
+ * - Real-time statistics dashboard for machine status overview
+ * - CRUD operations for machine records (add, edit, delete, view details)
+ * - Assignment request monitoring and management
+ * - Project-based machine allocation tracking
+ */
 @Component({
   selector: 'app-machine-inventory',
   standalone: true,
@@ -32,22 +42,23 @@ import {
   styleUrl: './machine-inventory.component.scss'
 })
 export class MachineInventoryComponent implements OnInit, OnDestroy {
+  // Core data collections
   machines: Machine[] = [];
   filteredMachines: Machine[] = [];
   assignmentRequests: MachineAssignmentRequest[] = [];
   isLoading = false;
   error: string | null = null;
   
-  // Filter and search properties
+  // Advanced filtering and search properties
   searchTerm = '';
   selectedStatus: MachineStatus | 'ALL' = 'ALL';
   selectedType: MachineType | 'ALL' = 'ALL';
   selectedProject: string | 'ALL' | 'UNASSIGNED' = 'ALL';
   
-  // Available options for filters
+  // Dynamic filter options extracted from current machine data
   projectOptions: string[] = [];
   
-  // Modal states
+  // Modal dialog states for various operations
   showDeleteConfirmModal = false;
   showMachineDetailsModal = false;
   showAddMachineModal = false;
@@ -55,12 +66,12 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   selectedMachine: Machine | null = null;
   machineToDelete: Machine | null = null;
   
-  // Enums for template
+  // Enum references for template usage
   MachineStatus = MachineStatus;
   MachineType = MachineType;
   AssignmentRequestStatus = AssignmentRequestStatus;
   
-  // Statistics
+  // Real-time dashboard statistics
   statistics = {
     total: 0,
     available: 0,
@@ -70,6 +81,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     pendingRequests: 0
   };
   
+  // Subscription management for memory leak prevention
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -84,9 +96,14 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Clean up all subscriptions to prevent memory leaks
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
+  /**
+   * Loads all machines from the backend and initializes filtering options
+   * Updates project options and applies current filters after loading
+   */
   private loadMachines(): void {
     this.isLoading = true;
     const sub = this.machineService.getAllMachines().subscribe({
@@ -106,6 +123,10 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
+  /**
+   * Loads pending assignment requests for dashboard statistics
+   * Filters to show only pending requests that require attention
+   */
   private loadAssignmentRequests(): void {
     const sub = this.machineService.getAllAssignmentRequests().subscribe({
       next: (requests) => {
@@ -121,6 +142,10 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
+  /**
+   * Calculates and updates dashboard statistics
+   * Attempts to fetch from backend, falls back to local calculation if needed
+   */
   private calculateStatistics(): void {
     const sub = this.machineService.getMachineStatistics().subscribe({
       next: (stats) => {
@@ -135,7 +160,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading statistics:', error);
-        // Fallback to local calculation
+        // Fallback to local calculation when backend statistics are unavailable
         this.statistics = {
           total: this.machines.length,
           available: this.machines.filter(m => m.status === MachineStatus.AVAILABLE).length,
@@ -151,8 +176,13 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
+  /**
+   * Applies all active filters to the machine list
+   * Supports multi-field search and multiple filter criteria simultaneously
+   */
   applyFilters(): void {
     this.filteredMachines = this.machines.filter(machine => {
+      // Multi-field text search across machine properties
       const matchesSearch = !this.searchTerm || 
         machine.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         machine.manufacturer.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -164,6 +194,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
       const matchesStatus = this.selectedStatus === 'ALL' || machine.status === this.selectedStatus;
       const matchesType = this.selectedType === 'ALL' || machine.type === this.selectedType;
       
+      // Project filter with special handling for unassigned machines
       const matchesProject = this.selectedProject === 'ALL' || 
         (this.selectedProject === 'UNASSIGNED' && (!machine.assignedToProject && !machine.projectName)) ||
         (machine.assignedToProject && machine.assignedToProject === this.selectedProject) ||
@@ -173,6 +204,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Filter event handlers that trigger re-filtering
   onSearchChange(): void {
     this.applyFilters();
   }
@@ -189,6 +221,10 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  /**
+   * Extracts unique project names from machine assignments
+   * Creates dynamic filter options based on current machine data
+   */
   private extractProjectOptions(): void {
     const projects = new Set<string>();
     this.machines.forEach(machine => {
@@ -202,6 +238,7 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.projectOptions = Array.from(projects).sort();
   }
 
+  // Modal dialog management methods
   openAddMachineModal(): void {
     this.selectedMachine = null;
     this.showAddMachineModal = true;
@@ -222,6 +259,9 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.showDeleteConfirmModal = true;
   }
 
+  /**
+   * Closes all modal dialogs and resets selected machine references
+   */
   closeModals(): void {
     this.showDeleteConfirmModal = false;
     this.showMachineDetailsModal = false;
@@ -231,11 +271,19 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     this.machineToDelete = null;
   }
 
+  /**
+   * Handles successful machine save operations
+   * Refreshes the machine list and closes modal dialogs
+   */
   onMachineSaved(machine: Machine): void {
     this.loadMachines();
     this.closeModals();
   }
 
+  /**
+   * Confirms and executes machine deletion
+   * Refreshes the machine list after successful deletion
+   */
   confirmDelete(): void {
     if (this.machineToDelete) {
       const sub = this.machineService.deleteMachine(this.machineToDelete.id).subscribe({
@@ -253,6 +301,10 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Returns appropriate Bootstrap CSS class for machine status badges
+   * Provides visual status indicators in the machine list
+   */
   getStatusClass(status: MachineStatus): string {
     switch (status) {
       case MachineStatus.AVAILABLE:
@@ -272,10 +324,14 @@ export class MachineInventoryComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Navigates to the assignment requests management page
+   */
   navigateToAssignmentRequests(): void {
     this.router.navigate(['/machine-manager/assignment-requests']);
   }
 
+  // Getter methods for template dropdown options
   get machineTypeOptions() {
     return Object.values(MachineType);
   }

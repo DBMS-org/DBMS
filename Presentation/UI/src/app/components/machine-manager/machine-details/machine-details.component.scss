@@ -1,4 +1,17 @@
-// Modal Overlay and Container
+/**
+ * Machine Details Component Styles
+ * 
+ * Modal dialog for displaying comprehensive machine information including:
+ * - Full-screen overlay with backdrop blur effect
+ * - Animated modal with slide-in transition
+ * - Organized card-based layout for different information sections
+ * - Color-coded status indicators for machine states
+ * - Responsive grid layout for detail items
+ * - Interactive hover effects and smooth animations
+ * - Mobile-responsive design adaptations
+ */
+
+/* Modal overlay with backdrop blur and gradient */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -6,7 +19,7 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px); // Modern blur effect for overlay
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,6 +27,7 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Main modal content container */
 .modal-content {
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
@@ -25,7 +39,10 @@
   animation: slideInUp 0.3s ease-out;
 }
 
-// Modal Header
+/**
+ * Modal Header Section
+ * Gradient header with machine icon, title, and close button
+ */
 .modal-header {
   display: flex;
   align-items: center;
@@ -41,6 +58,7 @@
     align-items: center;
     gap: var(--space-md);
 
+    /* Icon container with semi-transparent background */
     .header-icon {
       width: 48px;
       height: 48px;
@@ -56,6 +74,7 @@
       }
     }
 
+    /* Header text content */
     .header-text {
       h2 {
         margin: 0;
@@ -71,6 +90,7 @@
     }
   }
 
+  /* Close button with hover effects */
   .close-btn {
     background: rgba(255, 255, 255, 0.2);
     border: none;
@@ -95,11 +115,18 @@
   }
 }
 
-// Form Styles
+/**
+ * Form Container
+ * Main content area with padding
+ */
 .machine-details-form {
   padding: var(--space-lg);
 }
 
+/**
+ * Details Card Component
+ * Reusable card component for organizing information sections
+ */
 .details-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -108,11 +135,13 @@
   overflow: hidden;
   transition: var(--transition-base);
 
+  /* Subtle hover effect for interactivity */
   &:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
   }
 
+  /* Card header with gradient background */
   .card-header {
     background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
     padding: var(--space-md);
@@ -126,6 +155,7 @@
       align-items: center;
       gap: var(--space-sm);
 
+      /* Card icon with primary color background */
       .card-icon {
         width: 40px;
         height: 40px;
@@ -141,6 +171,7 @@
         }
       }
 
+      /* Card title and subtitle */
       .card-title-section {
         h3 {
           margin: 0;
@@ -157,6 +188,10 @@
       }
     }
 
+    /**
+     * Status Indicator Component
+     * Color-coded badges for different machine statuses
+     */
     .status-indicator {
       display: flex;
       align-items: center;
@@ -170,6 +205,7 @@
         font-size: 16px;
       }
 
+      /* Status-specific color schemes */
       &.status-available {
         background: rgba(var(--success-rgb), 0.1);
         color: var(--success-color);
@@ -214,22 +250,31 @@
     }
   }
 
+  /* Card body content area */
   .card-body {
     padding: var(--space-lg);
   }
 }
 
-// Details Grid
+/**
+ * Details Grid Layout
+ * Responsive grid for organizing detail items
+ */
 .details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: var(--space-md);
 
+  /* Full-width items that span all columns */
   .detail-item.full-width {
     grid-column: 1 / -1;
   }
 }
 
+/**
+ * Detail Item Component
+ * Individual information display units with labels and values
+ */
 .detail-item {
   display: flex;
   flex-direction: column;
@@ -240,12 +285,14 @@
   border: 1px solid var(--border-color);
   transition: var(--transition-base);
 
+  /* Interactive hover effects */
   &:hover {
     background: var(--bg-tertiary);
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
   }
 
+  /* Label with icon and text */
   .detail-label {
     display: flex;
     align-items: center;
@@ -260,12 +307,14 @@
     }
   }
 
+  /* Value display with special formatting options */
   .detail-value {
     font-size: var(--font-size-sm);
     color: var(--text-primary);
     font-weight: var(--font-weight-medium);
     word-break: break-word;
 
+    /* Special styling for chassis/technical details */
     &.chassis-details {
       background: var(--bg-primary);
       padding: var(--space-sm);
@@ -278,13 +327,17 @@
   }
 }
 
-// Actions
+/**
+ * Actions Section
+ * Footer area with action buttons
+ */
 .details-actions {
   display: flex;
   justify-content: center;
   padding-top: var(--space-md);
   border-top: 1px solid var(--border-color);
 
+  /* Close button with ripple effect */
   .close-btn-action {
     display: flex;
     align-items: center;
@@ -300,6 +353,7 @@
     border: 2px solid var(--border-color);
     color: var(--text-secondary);
 
+    /* Ripple effect on click */
     &::before {
       content: '';
       position: absolute;
@@ -318,6 +372,7 @@
       height: 300px;
     }
 
+    /* Hover effects */
     &:hover {
       background: var(--bg-tertiary);
       border-color: var(--text-secondary);
@@ -332,7 +387,10 @@
   }
 }
 
-// Animations
+/**
+ * Animation Keyframes
+ * Smooth entrance animations for modal
+ */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -349,7 +407,10 @@
   }
 }
 
-// Responsive Design
+/**
+ * Responsive Design
+ * Mobile-friendly adaptations
+ */
 @media (max-width: 768px) {
   .modal-content {
     width: 95%;
@@ -379,6 +440,7 @@
     padding: var(--space-md);
   }
 
+  /* Single column layout on mobile */
   .details-grid {
     grid-template-columns: 1fr;
     gap: var(--space-sm);
