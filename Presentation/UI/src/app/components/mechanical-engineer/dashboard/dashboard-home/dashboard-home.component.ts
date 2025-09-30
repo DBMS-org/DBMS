@@ -68,6 +68,13 @@ interface MaintenanceLogRequest {
   cost?: number;
 }
 
+interface Accessory {
+  id: string;
+  name: string;
+  stock: number;
+  lowStockThreshold: number;
+}
+
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
@@ -81,6 +88,21 @@ export class DashboardHomeComponent implements OnInit {
 
   currentUser: any = null;
   isLoading = signal(true);
+  
+  // Accessories inventory (mock) with low-stock thresholds
+  accessories = signal<Accessory[]>([
+    { id: 'acc-1', name: 'Oil Filter', stock: 10, lowStockThreshold: 3 },
+    { id: 'acc-2', name: 'Air Filter', stock: 8, lowStockThreshold: 2 },
+    { id: 'acc-3', name: 'Hydraulic Hose', stock: 5, lowStockThreshold: 2 },
+    { id: 'acc-4', name: 'Brake Pads', stock: 12, lowStockThreshold: 4 },
+    { id: 'acc-5', name: 'Engine Oil', stock: 20, lowStockThreshold: 6 }
+  ]);
+
+  // Per-machine maintenance form data (type, date, notes)
+  maintenanceForms = signal<Record<string, { type?: MaintenanceLogRequest['maintenanceType']; date?: string; notes?: string }>>({});
+
+  // Per-machine accessory usage entries
+  selectedAccessoryUsage = signal<Record<string, { partName: string; quantity: number }[]>>({});
   
   // Machine data
   machines = signal<Machine[]>([
@@ -235,6 +257,41 @@ export class DashboardHomeComponent implements OnInit {
     }, 1000);
   }
 
+  // Form helpers
+  setMaintenanceForm(machineId: string, field: 'type' | 'date' | 'notes', value: string) {
+    this.maintenanceForms.update(forms => ({
+      ...forms,
+      [machineId]: { ...(forms[machineId] || {}), [field]: value }
+    }));
+  }
+
+  addAccessoryUsage(machineId: string, partName: string, quantity: number) {
+    if (!partName || !quantity || quantity <= 0 || !Number.isFinite(quantity)) {
+      this.snackBar.open('Please select a part and valid quantity', 'Close', { duration: 4000, panelClass: ['error-snackbar'] });
+      return;
+    }
+
+    const partExists = this.accessories().find(a => a.name === partName);
+    if (!partExists) {
+      this.snackBar.open(`Unknown accessory: ${partName}`, 'Close', { duration: 4000, panelClass: ['error-snackbar'] });
+      return;
+    }
+
+    this.selectedAccessoryUsage.update(map => {
+      const list = map[machineId] ? [...map[machineId]] : [];
+      list.push({ partName, quantity });
+      return { ...map, [machineId]: list };
+    });
+  }
+
+  removeAccessoryUsage(machineId: string, index: number) {
+    this.selectedAccessoryUsage.update(map => {
+      const list = map[machineId] ? [...map[machineId]] : [];
+      if (index >= 0 && index < list.length) list.splice(index, 1);
+      return { ...map, [machineId]: list };
+    });
+  }
+
   refreshDashboard() {
     this.loadDashboardData();
   }
@@ -277,17 +334,7 @@ export class DashboardHomeComponent implements OnInit {
     this.router.navigate(['/mechanical-engineer/maintenance']);
   }
 
-  navigateToSchedule() {
-    this.router.navigate(['/mechanical-engineer/schedule']);
-  }
-
-  navigateToInventory() {
-    this.router.navigate(['/mechanical-engineer/inventory']);
-  }
-
-  navigateToAlerts() {
-    this.router.navigate(['/mechanical-engineer/alerts']);
-  }
+  // Irrelevant routes removed: schedule, inventory, alerts
 
   logout() {
     this.authService.logout();
@@ -355,25 +402,65 @@ export class DashboardHomeComponent implements OnInit {
     }
 
     try {
-      // In a real implementation, this would open a dialog for maintenance details
+      // Collect form data for this machine
+      const form = this.maintenanceForms()[machine.id] || {};
+      const usage = this.selectedAccessoryUsage()[machine.id] || [];
+
       const maintenanceLog: MaintenanceLogRequest = {
         machineId: machine.id,
-        maintenanceType: 'Preventive',
-        completedDate: new Date().toISOString().split('T')[0],
-        notes: 'Maintenance completed successfully',
+        maintenanceType: (form.type || 'Preventive'),
+        completedDate: (form.date || new Date().toISOString().split('T')[0]),
+        notes: (form.notes || '').trim(),
         actualDuration: 3.5,
-        partsUsed: ['Oil Filter', 'Air Filter'],
+        partsUsed: usage.map(u => u.partName),
         cost: 250
       };
 
-      // Validate required fields (simulated)
-      if (!maintenanceLog.notes || !maintenanceLog.completedDate) {
+      // Validation: mandatory fields
+      if (!maintenanceLog.maintenanceType || !maintenanceLog.completedDate || !maintenanceLog.notes) {
         this.snackBar.open(
           'All fields are mandatory',
           'Close',
           { duration: 5000, panelClass: ['error-snackbar'] }
         );
         return;
+      }
+
+      // Validation: accessory stock levels
+      for (const item of usage) {
+        const acc = this.accessories().find(a => a.name === item.partName);
+        if (!acc) {
+          this.snackBar.open(`Unknown accessory: ${item.partName}`, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+          return;
+        }
+        if (item.quantity > acc.stock) {
+          this.snackBar.open(`Insufficient stock for part: ${item.partName}`, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+          return;
+        }
+      }
+
+      // Deduct accessory stock and record usage
+      if (usage.length > 0) {
+        this.accessories.update(list => list.map(acc => {
+          const used = usage.find(u => u.partName === acc.name);
+          if (used) {
+            const newStock = acc.stock - used.quantity;
+            const updated = { ...acc, stock: newStock };
+            // Generate low-stock alert if threshold crossed
+            if (newStock <= acc.lowStockThreshold) {
+              this.maintenanceAlerts.unshift({
+                id: `${Date.now()}-${acc.id}`,
+                machine: machine.name,
+                message: `Low stock: ${acc.name} at ${newStock} (threshold ${acc.lowStockThreshold})`,
+                priority: 'HIGH',
+                timestamp: 'Just now',
+                icon: 'inventory_2'
+              });
+            }
+            return updated;
+          }
+          return acc;
+        }));
       }
 
       // Update machine status back to Available
@@ -395,16 +482,30 @@ export class DashboardHomeComponent implements OnInit {
         { duration: 3000, panelClass: ['success-snackbar'] }
       );
 
+      // Notify Machine Manager (simulated in-app notification)
+      this.recentActivities.unshift({
+        title: 'Maintenance Logged',
+        description: `Maintenance completed for ${machine.name} by ${this.currentUser?.name || 'Mechanical Engineer'}`,
+        timestamp: 'Just now',
+        icon: 'assignment_turned_in'
+      });
+
+      // Record accessory usage entries
+      for (const item of usage) {
+        this.recentActivities.unshift({
+          title: 'Accessory Used',
+          description: `${item.quantity} × ${item.partName} used on ${machine.name}`,
+          timestamp: 'Just now',
+          icon: 'inventory_2'
+        });
+      }
+
       // Update stats
       this.updateMaintenanceStats();
 
-      // Add to recent activities
-      this.recentActivities.unshift({
-        title: 'Maintenance Completed',
-        description: `Logged maintenance activity for ${machine.name}`,
-        timestamp: 'Just now',
-        icon: 'build'
-      });
+      // Clear form and accessory usage for this machine
+      this.maintenanceForms.update(forms => ({ ...forms, [machine.id]: {} }));
+      this.selectedAccessoryUsage.update(map => ({ ...map, [machine.id]: [] }));
 
     } catch (error) {
       this.snackBar.open(

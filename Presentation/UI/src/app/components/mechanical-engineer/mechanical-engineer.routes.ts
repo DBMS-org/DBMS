@@ -13,7 +13,7 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
         path: '',
         component: MechanicalEngineerLayoutComponent,
         children: [
-            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+            { path: '', redirectTo: 'maintenance', pathMatch: 'full' },
             { path: 'dashboard', component: MechanicalEngineerDashboardComponent },
             { path: 'profile', component: UserProfileComponent },
             { 
@@ -26,13 +26,7 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
                     { path: 'settings', component: MaintenanceSettingsComponent }
                 ]
             },
-            // Placeholder routes for future implementation
-            { path: 'schedule', component: MechanicalEngineerDashboardComponent },
-            { path: 'inventory', component: MechanicalEngineerDashboardComponent },
-            { path: 'alerts', component: MechanicalEngineerDashboardComponent },
-            { path: 'status', component: MechanicalEngineerDashboardComponent },
-            { path: 'reports', component: MechanicalEngineerDashboardComponent },
-            { path: 'settings', component: MechanicalEngineerDashboardComponent }
+            // Irrelevant placeholder routes removed
         ]
     }
 ];
