@@ -1,0 +1,174 @@
+<div class="dispatch-info-container" *ngIf="request">
+  <!-- Header Section -->
+  <div class="dispatch-header">
+    <div class="header-content">
+      <div class="icon-wrapper">
+        <mat-icon>local_shipping</mat-icon>
+      </div>
+      <div class="header-text">
+        <h3>Dispatch Information</h3>
+        <div class="subtitle">Request ID: {{ request.id }}</div>
+      </div>
+    </div>
+    <div class="status-badge" [ngClass]="getDispatchStatusClass()">
+      <mat-icon>local_shipping</mat-icon>
+      {{ getDispatchStatus() }}
+    </div>
+    <button class="close-btn" (click)="onClose()" *ngIf="!isStandalonePage">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Dispatch Details -->
+  <div class="dispatch-details">
+    <div class="details-grid">
+      <!-- Timeline Section -->
+      <div class="detail-card">
+        <div class="card-header">
+          <mat-icon>schedule</mat-icon>
+          Dispatch Timeline
+        </div>
+        <div class="card-content">
+          <div class="detail-item">
+            <label>Request Date:</label>
+            <span class="value">{{ formatDate(request.requestDate) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Required Date:</label>
+            <span class="value">{{ formatDate(request.requiredDate) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Dispatch Date:</label>
+            <span class="value">{{ formatDate(request.dispatchedDate) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requester Information -->
+      <div class="detail-card">
+        <div class="card-header">
+          <mat-icon>person</mat-icon>
+          Requester Information
+        </div>
+        <div class="card-content">
+          <div class="detail-item">
+            <label>Requester Name:</label>
+            <span class="value">{{ request.requesterName }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Store Location:</label>
+            <span class="value">{{ request.requesterStoreName }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Store ID:</label>
+            <span class="value">{{ request.requesterStoreId }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transportation Information -->
+      <div class="detail-card">
+        <div class="card-header">
+          <mat-icon>local_shipping</mat-icon>
+          Transportation Details
+        </div>
+        <div class="card-content">
+          <div class="detail-item">
+            <label>Truck Number:</label>
+            <span class="value">TRK-2024-001</span>
+          </div>
+          <div class="detail-item">
+            <label>Driver Name:</label>
+            <span class="value">Mohammed Al-Balushi</span>
+          </div>
+          <div class="detail-item">
+            <label>Route:</label>
+            <span class="value">Muscat Central → {{ request.requesterStoreName }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Estimated Travel Time:</label>
+            <span class="value">2.5 hours</span>
+          </div>
+      </div>
+    </div>
+
+      <!-- Items Summary -->
+      <div class="detail-card full-width">
+        <div class="card-header">
+          <mat-icon>inventory</mat-icon>
+          Dispatched Items
+        </div>
+        <div class="card-content">
+          <div class="items-table">
+            <div class="table-header">
+              <div>Explosive Type</div>
+              <div>Quantity</div>
+              <div>Unit</div>
+              <div>Purpose</div>
+            </div>
+            <div class="table-row" *ngFor="let item of request.requestedItems">
+              <div class="item-type">{{ item.explosiveType }}</div>
+              <div class="item-quantity">{{ item.requestedQuantity }}</div>
+              <div class="item-unit">{{ item.unit }}</div>
+              <div class="item-purpose">{{ item.purpose }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="info-section">
+      <div class="section-header">
+        <mat-icon>info</mat-icon>
+        Additional Information
+      </div>
+      <div class="section-content">
+        <div class="info-item">
+          <strong>Dispatch Date:</strong>
+          <span class="value">{{ request.dispatchedDate | date:'medium' }}</span>
+        </div>
+        <div class="info-item">
+          <strong>Notes:</strong>
+          <span class="value">{{ request.notes || 'No additional notes' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Section -->
+  <div class="action-section">
+    <div class="action-info">
+      <mat-icon>info</mat-icon>
+      <span>Materials ready for collection</span>
+    </div>
+    <div class="action-buttons">
+      <button class="receive-btn" (click)="onReceive()">
+        <mat-icon>check_circle</mat-icon>
+        Receive Materials
+      </button>
+      <button class="back-btn" (click)="onClose()" *ngIf="isStandalonePage">
+        <mat-icon>arrow_back</mat-icon>
+        Back to Request History
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State -->
+<div class="no-request" *ngIf="!request && !isStandalonePage">
+  <div class="empty-state">
+    <mat-icon>local_shipping</mat-icon>
+    <h4>No Request Selected</h4>
+    <p>Select a dispatched request to view dispatch information</p>
+  </div>
+</div>
+
+<!-- Not Dispatched State -->
+<div class="not-dispatched" *ngIf="request && !request.dispatched">
+  <div class="empty-state">
+    <mat-icon>schedule</mat-icon>
+    <h4>Request Not Yet Dispatched</h4>
+    <p>This request has not been dispatched yet. Dispatch information will be available once the request is processed.</p>
+  </div>
+</div>

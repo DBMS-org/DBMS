@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ProposalHistoryService, ProposalHistoryItem, ExplosiveApprovalStatus } from '../../../core/services/proposal-history.service';
 import { SiteService, ProjectSite } from '../../../core/services/site.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { ProposalDetailsComponent } from '../proposal-details/proposal-details.component';
 import { forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
@@ -13,16 +14,12 @@ interface DisplayProposalItem {
   proposalType: string;
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   submittedDate: Date;
-  submittedBy: string;
-  reviewedDate?: Date;
-  reviewedBy?: string;
-  comments?: string;
 }
 
 @Component({
   selector: 'app-proposal-history',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ProposalDetailsComponent],
   templateUrl: './proposal-history.component.html',
   styleUrl: './proposal-history.component.scss'
 })
@@ -33,6 +30,15 @@ export class ProposalHistoryComponent implements OnInit {
   searchTerm: string = '';
   isLoading: boolean = false;
   errorMessage: string = '';
+
+  // Delete modal properties
+  showDeleteModal: boolean = false;
+  deleteProposalData: { id: number; projectName: string; siteName: string } | null = null;
+  isDeleting: boolean = false;
+
+  // Details modal properties
+  showDetailsModal: boolean = false;
+  selectedProposalId: number | null = null;
 
   constructor(
     private proposalHistoryService: ProposalHistoryService,
@@ -48,13 +54,14 @@ export class ProposalHistoryComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     
+    console.log('📋 Loading proposal history...');
+    
     this.proposalHistoryService.getUserProposals().subscribe({
       next: (proposals: ProposalHistoryItem[]) => {
         // Create an array of observables to fetch site details for each proposal
         const siteRequests = proposals.map(proposal => 
           this.siteService.getSite(proposal.projectSiteId).pipe(
             catchError(error => {
-              console.error(`Error fetching site ${proposal.projectSiteId}:`, error);
               // Return a fallback site object if fetch fails
               return of({
                 id: proposal.projectSiteId,
@@ -82,7 +89,6 @@ export class ProposalHistoryComponent implements OnInit {
               site.projectId > 0 ? 
                 this.projectService.getProject(site.projectId).pipe(
                   catchError(error => {
-                    console.error(`Error fetching project ${site.projectId}:`, error);
                     return of({ id: site.projectId, name: `Project ${site.projectId}` });
                   })
                 ) : 
@@ -92,35 +98,58 @@ export class ProposalHistoryComponent implements OnInit {
             // Execute all project requests in parallel
             forkJoin(projectRequests).subscribe({
               next: (projects: any[]) => {
+                
                 // Map proposals with their corresponding site and project data
                 this.proposalHistory = proposals.map((proposal, index) => 
                   this.mapToDisplayItem(proposal, sites[index], projects[index])
                 );
+                
+                console.log('✅ Proposal history loaded successfully:', {
+                  count: this.proposalHistory.length,
+                  items: this.proposalHistory.map(item => ({
+                    id: item.id,
+                    projectName: item.projectName,
+                    siteName: item.siteName,
+                    status: item.status,
+                    submittedDate: item.submittedDate
+                  }))
+                });
+                
                 this.filteredHistory = [...this.proposalHistory];
                 this.isLoading = false;
               },
               error: (error) => {
-                console.error('Error loading project details:', error);
+                console.error('❌ Error loading project details:', error);
+                console.log('🔄 Falling back to mapping with site data only...');
                 // Fallback to mapping with site data only
                 this.proposalHistory = proposals.map((proposal, index) => 
                   this.mapToDisplayItem(proposal, sites[index])
                 );
+                console.log('⚠️ Fallback proposal history loaded (no projects):', {
+                  count: this.proposalHistory.length,
+                  items: this.proposalHistory.map(item => ({ id: item.id, projectName: item.projectName, siteName: item.siteName, status: item.status }))
+                });
                 this.filteredHistory = [...this.proposalHistory];
                 this.isLoading = false;
               }
             });
           },
           error: (error) => {
-            console.error('Error loading site details:', error);
+            console.error('❌ Error loading site details:', error);
+            console.log('🔄 Falling back to original mapping without site/project data...');
             // Fallback to original mapping without site/project data
             this.proposalHistory = proposals.map(proposal => this.mapToDisplayItem(proposal));
+            console.log('⚠️ Fallback proposal history loaded (no sites/projects):', {
+              count: this.proposalHistory.length,
+              items: this.proposalHistory.map(item => ({ id: item.id, projectName: item.projectName, siteName: item.siteName, status: item.status }))
+            });
             this.filteredHistory = [...this.proposalHistory];
             this.isLoading = false;
           }
         });
       },
       error: (error) => {
-        console.error('Error loading proposal history:', error);
+        console.error('❌ Error loading proposal history:', error);
         this.errorMessage = 'Failed to load proposal history. Please try again.';
         this.isLoading = false;
         // Fallback to empty array on error
@@ -137,11 +166,7 @@ export class ProposalHistoryComponent implements OnInit {
       siteName: site?.name || proposal.projectSiteName || `Site ${proposal.projectSiteId}`,
       proposalType: 'Explosive Approval Request',
       status: this.mapStatus(proposal.status),
-      submittedDate: proposal.createdAt,
-      submittedBy: proposal.requestedByUserName || `User ${proposal.requestedByUserId}`,
-      reviewedDate: proposal.approvedAt || proposal.rejectedAt,
-      reviewedBy: proposal.approvedByUserName || proposal.rejectedByUserName,
-      comments: proposal.approvalComments || proposal.rejectionReason || proposal.comments
+      submittedDate: proposal.createdAt
     };
   }
 
@@ -175,26 +200,86 @@ export class ProposalHistoryComponent implements OnInit {
       const matchesStatus = this.selectedStatus === 'all' || item.status === this.selectedStatus;
       const matchesSearch = this.searchTerm === '' || 
         item.projectName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        item.siteName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        item.submittedBy.toLowerCase().includes(this.searchTerm.toLowerCase());
+        item.siteName.toLowerCase().includes(this.searchTerm.toLowerCase());
       
       return matchesStatus && matchesSearch;
     });
   }
 
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'approved':
-        return 'status-approved';
-      case 'rejected':
-        return 'status-rejected';
-      case 'pending':
-        return 'status-pending';
-      case 'cancelled':
-        return 'status-cancelled';
-      default:
-        return 'status-pending';
-    }
+  /**
+   * Check if a proposal can be deleted (only pending proposals can be deleted)
+   */
+  canDeleteProposal(status: string): boolean {
+    return status === 'pending';
+  }
+
+  /**
+   * Show delete confirmation modal
+   */
+  confirmDeleteProposal(id: number, projectName: string, siteName: string): void {
+    this.deleteProposalData = { id, projectName, siteName };
+    this.showDeleteModal = true;
+  }
+
+  /**
+   * Cancel delete operation
+   */
+  cancelDelete(): void {
+    this.showDeleteModal = false;
+    this.deleteProposalData = null;
+    this.isDeleting = false;
+  }
+
+  /**
+   * Delete the proposal
+   */
+  deleteProposal(): void {
+    if (!this.deleteProposalData) return;
+
+    this.isDeleting = true;
+    const proposalId = this.deleteProposalData.id;
+
+    this.proposalHistoryService.deleteProposal(proposalId).subscribe({
+      next: () => {
+        // Remove the deleted proposal from the arrays
+        this.proposalHistory = this.proposalHistory.filter(p => p.id !== proposalId);
+        this.filteredHistory = this.filteredHistory.filter(p => p.id !== proposalId);
+        
+        // Close the modal
+        this.cancelDelete();
+        
+        // Show success message (you could implement a toast notification here)
+        console.log('Proposal deleted successfully');
+      },
+      error: (error) => {
+        console.error('Error deleting proposal:', error);
+        this.isDeleting = false;
+        
+        // Handle specific error cases
+        let errorMessage = 'Failed to delete proposal. Please try again.';
+        if (error.status === 404) {
+          errorMessage = 'Proposal not found. It may have already been deleted.';
+        } else if (error.status === 403) {
+          errorMessage = 'You are not authorized to delete this proposal.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        // You could implement a toast notification here instead of alert
+        alert(errorMessage);
+      }
+    });
+  }
+
+  // Details modal methods
+  viewProposalDetails(proposalId: number): void {
+    this.selectedProposalId = proposalId;
+    this.showDetailsModal = true;
+  }
+
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.selectedProposalId = null;
   }
 
 }

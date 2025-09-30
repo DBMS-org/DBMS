@@ -1,0 +1,157 @@
+<div class="approval-page-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-text">
+        <h1>Review Explosive Request</h1>
+        <p>Please review the request details and make your decision</p>
+      </div>
+    </div>
+
+  <div class="approval-form-container">
+    <!-- Request Summary Card -->
+    <div class="request-summary-card">
+      <div class="card-header">
+        <mat-icon>info</mat-icon>
+        <h3>Request Details</h3>
+      </div>
+      <div class="request-details">
+        <div class="detail-row">
+          <mat-icon class="detail-icon">tag</mat-icon>
+          <span class="label">Request ID:</span>
+          <span class="value">{{request.id}}</span>
+        </div>
+        <div class="detail-row">
+          <mat-icon class="detail-icon">person</mat-icon>
+          <span class="label">Requester:</span>
+          <span class="value">{{request.requesterName}} ({{request.requesterRole}})</span>
+        </div>
+        <div class="detail-row">
+          <mat-icon class="detail-icon">location_on</mat-icon>
+          <span class="label">Store Location:</span>
+          <span class="value">{{request.storeLocation}}</span>
+        </div>
+        <div class="detail-row">
+          <mat-icon class="detail-icon">science</mat-icon>
+          <span class="label">Explosive Type:</span>
+          <span class="value">
+            <mat-chip-listbox>
+              <mat-chip [ngClass]="request?.explosiveType ? (request.explosiveType | lowercase) : ''">{{ request?.explosiveType || '-' }}</mat-chip>
+            </mat-chip-listbox>
+          </span>
+        </div>
+        <div class="detail-row">
+          <mat-icon class="detail-icon">scale</mat-icon>
+          <span class="label">Requested Quantity:</span>
+          <span class="value">{{request.quantity}} {{request.unit}}</span>
+        </div>
+        <div class="detail-row">
+          <mat-icon class="detail-icon">schedule</mat-icon>
+          <span class="label">Required By:</span>
+          <span class="value">{{request.requiredDate | date:'mediumDate'}}</span>
+        </div>
+        <div class="detail-row">
+          <mat-icon class="detail-icon">description</mat-icon>
+          <span class="label">Purpose:</span>
+          <span class="value">{{request.purpose}}</span>
+        </div>
+      </div>
+    </div>
+    <form [formGroup]="approvalForm" (ngSubmit)="onSubmit()">
+      <!-- Decision Section Card -->
+      <div class="decision-card">
+        <div class="card-header">
+          <mat-icon>how_to_vote</mat-icon>
+          <h3>Make Decision</h3>
+        </div>
+        <div class="decision-section">
+          <mat-radio-group formControlName="decision" class="decision-group">
+            <mat-radio-button value="approve" class="decision-option approve">
+              <div class="decision-content">
+                <mat-icon>check_circle</mat-icon>
+                <span>Approve Request</span>
+              </div>
+            </mat-radio-button>
+            <mat-radio-button value="reject" class="decision-option reject">
+              <div class="decision-content">
+                <mat-icon>cancel</mat-icon>
+                <span>Reject Request</span>
+              </div>
+            </mat-radio-button>
+            <mat-radio-button value="pending" class="decision-option pending">
+              <div class="decision-content">
+                <mat-icon>schedule</mat-icon>
+                <span>Keep Pending</span>
+              </div>
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+      </div>
+
+      <!-- Approval Fields Card - REMOVED -->
+      <!-- This section has been removed as per user request -->
+
+      <!-- Rejection Fields Card -->
+      <div class="conditional-card rejection-fields" *ngIf="approvalForm.get('decision')?.value === 'reject'">
+        <div class="card-header">
+          <mat-icon>error_outline</mat-icon>
+          <h3>Rejection Details</h3>
+        </div>
+        <div class="conditional-fields">
+          <mat-form-field appearance="outline">
+            <mat-label>Rejection Reason</mat-label>
+            <textarea matInput formControlName="rejectionReason" rows="4" placeholder="Please provide a detailed reason for rejection"></textarea>
+            <mat-icon matSuffix>comment</mat-icon>
+            <mat-hint>Minimum 10 characters required</mat-hint>
+            <mat-error *ngIf="approvalForm.get('rejectionReason')?.hasError('required')">
+              Rejection reason is required
+            </mat-error>
+            <mat-error *ngIf="approvalForm.get('rejectionReason')?.hasError('minlength')">
+              Rejection reason must be at least 10 characters
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Comments Field Card - Only for pending decisions -->
+      <div class="conditional-card comments-card" *ngIf="approvalForm.get('decision')?.value === 'pending'">
+        <div class="card-header">
+          <mat-icon>comment</mat-icon>
+          <h3>Additional Comments</h3>
+        </div>
+        <div class="conditional-fields">
+          <mat-form-field appearance="outline" class="comments-field">
+            <mat-label>Comments</mat-label>
+            <textarea matInput formControlName="approvalComments" rows="4" placeholder="Enter any additional comments or notes"></textarea>
+            <mat-icon matSuffix>notes</mat-icon>
+            <mat-hint>Required. Between 5 and 500 characters.</mat-hint>
+            <mat-error *ngIf="approvalForm.get('approvalComments')?.hasError('required')">
+              Comments are required
+            </mat-error>
+            <mat-error *ngIf="approvalForm.get('approvalComments')?.hasError('minlength')">
+              Comments must be at least 5 characters
+            </mat-error>
+            <mat-error *ngIf="approvalForm.get('approvalComments')?.hasError('maxlength')">
+              Comments cannot exceed 500 characters
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="page-actions">
+        <button mat-raised-button type="button" (click)="goBack()" class="cancel-button">
+          <mat-icon>close</mat-icon>
+          Cancel
+        </button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="!approvalForm.valid" class="submit-button">
+          <mat-icon>check</mat-icon>
+          Submit Decision
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

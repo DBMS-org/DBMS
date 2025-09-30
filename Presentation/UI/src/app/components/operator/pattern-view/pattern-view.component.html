@@ -27,67 +27,6 @@
 
 <!-- Main Content -->
 <div class="pattern-view-content" *ngIf="!loading && !error" role="main" aria-label="Drill Pattern View">
-  <!-- Pattern Overview Card -->
-  <section class="pattern-overview">
-    <div class="pattern-card">
-      <div class="pattern-header">
-        <div class="pattern-icon">
-          <i class="material-icons">grid_on</i>
-        </div>
-        <div class="pattern-info">
-          <h2>Drilling Pattern</h2>
-          <p class="pattern-subtitle">Site {{ siteId }} - Approved Pattern</p>
-        </div>
-        <div class="pattern-status">
-          <span class="status-badge status-approved">
-            <i class="material-icons">verified</i>
-            Approved
-          </span>
-        </div>
-      </div>
-
-      <!-- Pattern Statistics -->
-      <div class="pattern-stats">
-        <div class="stat-item">
-          <div class="stat-icon spacing">
-            <i class="material-icons">straighten</i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">Spacing</span>
-            <span class="stat-value">{{ settings.spacing }}m</span>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon burden">
-            <i class="material-icons">height</i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">Burden</span>
-            <span class="stat-value">{{ settings.burden }}m</span>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon depth">
-            <i class="material-icons">vertical_align_bottom</i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">Depth</span>
-            <span class="stat-value">{{ settings.depth }}m</span>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon points">
-            <i class="material-icons">place</i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-label">Drill Points</span>
-            <span class="stat-value">{{ drillPoints.length }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Control Panel -->
   <section class="control-panel">
     <div class="panel-card">
@@ -107,11 +46,10 @@
 
         <button 
           class="btn btn-outline-secondary help-button"
-          (mouseenter)="showInstructions = true"
-          (mouseleave)="showInstructions = false"
+          (click)="toggleInstructions()"
           [attr.aria-expanded]="showInstructions">
           <i class="material-icons">help_outline</i>
-          <span>Show Help</span>
+          <span>{{ showInstructions ? 'Hide Help' : 'Show Help' }}</span>
         </button>
 
         <button 
@@ -244,4 +182,4 @@
       </button>
     </div>
   </div>
-</div> 
+</div>

@@ -43,7 +43,7 @@ export class DrillDataTableComponent implements OnInit {
   // Density inputs for calculations
   emulsionDensity: number = 1.2; // g/cm³
   anfoeDensity: number = 0.8; // g/cm³
-  emulsionPerHole: number = 50; // kg
+  emulsionPerHole: number = 1.5; // kg
   holeDiameter: number = 89; // mm
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<DrillDataRow[]>();
@@ -147,6 +147,22 @@ export class DrillDataTableComponent implements OnInit {
         anfo: anfo,
         emulsion: emulsion
       };
+    }).sort((a, b) => {
+      // Sort by holeId in ascending order
+      // Handle both numeric and string hole IDs
+      const aId = a.holeId;
+      const bId = b.holeId;
+      
+      // If both are numeric, compare as numbers
+      const aNum = parseFloat(aId);
+      const bNum = parseFloat(bId);
+      
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+      }
+      
+      // Otherwise, compare as strings
+      return aId.localeCompare(bId, undefined, { numeric: true, sensitivity: 'base' });
     });
     
     // Calculate totals after generating data
@@ -161,23 +177,28 @@ export class DrillDataTableComponent implements OnInit {
 
   calculateExplosives(depth: number, stemming: number): { anfo: number, emulsion: number } {
     // Use the exact formulas provided by the user
-    // Emulsion per meter = 22/7000(diameter/2)^2 * Density
+    
+    // Step 1: Calculate emulsion per meter = 22/7000*(diameter/2)^2 * emulsion density
     const emulsionPerMeter = (22/7000) * Math.pow(this.holeDiameter/2, 2) * this.emulsionDensity;
     
-    // ANFO per meter = 22/7000(diameter/2)^2 * Density
+    // Step 2: Calculate ANFO per meter = 22/7000*(diameter/2)^2 * ANFO density
     const anfoPerMeter = (22/7000) * Math.pow(this.holeDiameter/2, 2) * this.anfoeDensity;
     
-    // Emulsion Covering space = Emulsion per Hole / Emulsion per meter
+    // Step 3: Calculate emulsionCoveringSpace = emulsion per hole / emulsion per meter
     const emulsionCoveringSpace = emulsionPerMeter > 0 ? this.emulsionPerHole / emulsionPerMeter : 0;
     
-    // Remaining Space = Depth - (stemming + Emulsion Covering space)
+    // Step 4: Calculate remainingSpace = Average depth - (stemming + Emulsion covering space)
     const remainingSpace = depth - (stemming + emulsionCoveringSpace);
     
-    // Anfo = ANFO PER METER * Remaining space
-    const anfo = anfoPerMeter * Math.max(0, remainingSpace);
+    // Step 5: Calculate AnfoCoveringSpace = ANFO per meter * remaining space
+    const anfoCoveringSpace = anfoPerMeter * Math.max(0, remainingSpace);
     
-    // Emulsion = Emulsion Covering space
-    const emulsion = emulsionCoveringSpace;
+    // Step 6: Final results
+    // ANFO = AnfoCoveringSpace
+    const anfo = anfoCoveringSpace;
+    
+    // Emulsion = emulsionCoveringSpace (this represents the actual emulsion amount per hole)
+    const emulsion = this.emulsionPerHole; // Use the actual emulsion per hole value
     
     return {
       anfo: Number(anfo.toFixed(2)),

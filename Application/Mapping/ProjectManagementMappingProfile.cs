@@ -39,7 +39,10 @@ namespace Application.Mapping
             CreateMap<ProjectSite, ProjectSiteDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)));
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)))
+                .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project != null ? src.Project.Name : null))
+                .ForMember(dest => dest.ProjectRegion, opt => opt.MapFrom(src => src.Project != null ? src.Project.Region : null))
+                .ForMember(dest => dest.Project, opt => opt.MapFrom(src => src.Project));
 
             CreateMap<CreateProjectSiteRequest, ProjectSite>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ProjectSiteStatus.Planned))
@@ -51,6 +54,18 @@ namespace Application.Mapping
             CreateMap<Region, RegionDto>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)));
+
+            // ExplosiveApprovalRequest mappings
+            CreateMap<ExplosiveApprovalRequest, ExplosiveApprovalRequestDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
+                .ForMember(dest => dest.ApprovalType, opt => opt.MapFrom(src => src.ApprovalType.ToString()))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)))
+                .ForMember(dest => dest.ProcessedAt, opt => opt.MapFrom(src => src.ProcessedAt.HasValue ? DateTime.SpecifyKind(src.ProcessedAt.Value, DateTimeKind.Utc) : (DateTime?)null))
+                .ForMember(dest => dest.ProjectSite, opt => opt.MapFrom(src => src.ProjectSite))
+                .ForMember(dest => dest.RequestedByUser, opt => opt.MapFrom(src => src.RequestedByUser))
+                .ForMember(dest => dest.ProcessedByUser, opt => opt.MapFrom(src => src.ProcessedByUser));
 
             // Coordinates mappings
             CreateMap<CoordinatesDto, string>()
@@ -69,4 +84,4 @@ namespace Application.Mapping
                 });
         }
     }
-} 
+}

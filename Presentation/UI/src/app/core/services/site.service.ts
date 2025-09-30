@@ -50,8 +50,9 @@ export class SiteService {
     return {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       })
     };
   }
