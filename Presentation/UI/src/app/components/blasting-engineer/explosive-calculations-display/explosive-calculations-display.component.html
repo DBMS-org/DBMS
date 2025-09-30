@@ -1,611 +1,133 @@
 <div class="calculations-container" role="main" aria-label="Explosive Calculations Display">
-  <!-- Header Section -->
-  <header class="calculations-header">
-    <div class="header-content">
-      <div class="header-title-section">
-        <h1>
-          <span class="material-icons" aria-hidden="true">calculate</span>
-          Explosive Calculations
-        </h1>
-        <p class="header-subtitle">Advanced blast design and optimization platform</p>
+  <!-- Compact Professional Header -->
+  <header class="compact-header">
+    <div class="header-left">
+      <div class="title-section">
+        <span class="material-icons title-icon">calculate</span>
+        <div class="title-text">
+          <h1>Explosive Calculations</h1>
+          <span class="context-info">Project {{ projectId }} • Site {{ siteId }}</span>
+        </div>
       </div>
-      <div class="header-actions">
-        <!-- Navigation Buttons -->
-        <div class="navigation-buttons">
-          <button class="nav-btn back-btn" (click)="navigateToPatternCreator()" title="Go back to Pattern Creator">
-            <span class="material-icons" aria-hidden="true">arrow_back</span>
-            Pattern Creator
-          </button>
-          <button class="nav-btn forward-btn" (click)="navigateToSequenceDesigner()" title="Continue to Sequence Designer">
-            <span class="material-icons" aria-hidden="true">arrow_forward</span>
-            Sequence Designer
-          </button>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="action-buttons" *ngIf="calculationResults">
-          <button class="refresh-btn" (click)="refreshBackendData()" title="Refresh data from backend" *ngIf="isBackendDataLoaded()">
-            <span class="material-icons" aria-hidden="true">sync</span>
-            Refresh Data
-          </button>
-          <button class="recalculate-btn" (click)="performCalculations()" title="Recalculate results">
-            <span class="material-icons" aria-hidden="true">refresh</span>
-            Recalculate
-          </button>
-          <button class="save-btn" (click)="saveCalculationResults()" title="Save results to backend" *ngIf="isBackendDataLoaded()">
-            <span class="material-icons" aria-hidden="true">save</span>
-            Save Results
-          </button>
-          <button class="input-form-toggle-btn" (click)="toggleInputForm()" title="Toggle input form">
-            <span class="material-icons" aria-hidden="true">{{ showInputForm ? 'visibility_off' : 'input' }}</span>
-            {{ showInputForm ? 'Hide Form' : 'Input Form' }}
-          </button>
-        </div>
+    </div>
+    <div class="header-right">
+      <div class="navigation-controls">
+        <button class="nav-btn secondary" (click)="navigateToPatternCreator()" title="Pattern Creator">
+          <span class="material-icons">arrow_back</span>
+          <span class="btn-text">Pattern</span>
+        </button>
+        <button class="nav-btn primary" (click)="navigateToSequenceDesigner()" title="Sequence Designer">
+          <span class="btn-text">Sequence</span>
+          <span class="material-icons">arrow_forward</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- Input Form Section -->
-  <div class="input-form-section" *ngIf="showInputForm">
-    <div class="input-form-container">
-      <div class="form-header">
-        <h2>
-          <span class="material-icons" aria-hidden="true">input</span>
-          Explosive Calculation Parameters
-        </h2>
-        <p class="form-description">Enter the parameters for explosive calculations. All fields are required for accurate results.</p>
+  <!-- Main Content Grid -->
+  <div class="main-content-grid" *ngIf="!isLoading && !hasError">
+    
+    <!-- Left Column: Detailed Results -->
+    <div class="results-column">
+      <div class="results-card" *ngIf="calculationResults">
+        <div class="card-header">
+          <span class="material-icons">analytics</span>
+          <h2>Calculation Results</h2>
+          <div class="data-badge" *ngIf="isBackendDataLoaded()">
+            <span class="material-icons">cloud_done</span>
+            <span>Live Data</span>
+          </div>
+        </div>
+        
+        <div class="results-grid">
+          <div class="result-item" *ngFor="let item of getDetailedResults(); let i = index">
+            <div class="result-icon">
+              <span class="material-icons">{{ item.icon }}</span>
+            </div>
+            <div class="result-content">
+              <span class="result-label">{{ item.parameter }}</span>
+              <div class="result-value-unit">
+                <span class="result-value">{{ item.value }}</span>
+                <span class="result-unit">{{ item.unit }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Saved Calculations -->
+    <div class="saved-column">
+      <div class="saved-card" *ngIf="savedCalculations.length > 0">
+        <div class="card-header">
+          <span class="material-icons">history</span>
+          <h2>Saved Calculations</h2>
+          <span class="count-badge">{{ savedCalculations.length }}</span>
+        </div>
+        
+        <div class="saved-list">
+          <div class="saved-item" 
+               *ngFor="let calculation of savedCalculations; let i = index"
+               [class.active]="currentCalculationId === calculation.id">
+            <div class="saved-info">
+              <div class="saved-header">
+                <span class="calc-id">{{ calculation.calculationId }}</span>
+                <span class="calc-date">{{ calculation.createdAt | date:'MMM d, y' }}</span>
+              </div>
+              <div class="calc-metrics">
+                <div class="metric">
+                  <span class="metric-value">{{ calculation.numberOfFilledHoles }}</span>
+                  <span class="metric-label">holes</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value">{{ calculation.totalEmulsion | number:'1.1-1' }}</span>
+                  <span class="metric-label">kg</span>
+                </div>
+              </div>
+            </div>
+            <div class="saved-actions">
+              <button class="action-btn load" 
+                      (click)="loadSavedCalculation(calculation.id)"
+                      [disabled]="isLoading"
+                      title="Load calculation">
+                <span class="material-icons">download</span>
+              </button>
+              <button class="action-btn delete" 
+                      (click)="deleteSavedCalculation(calculation.id)"
+                      [disabled]="isLoading"
+                      title="Delete calculation">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <form [formGroup]="explosiveForm" (ngSubmit)="onFormSubmit()" class="explosive-form">
-        <!-- Basic Hole Parameters Section -->
-        <div class="form-section">
-          <h3 class="section-title">
-            <span class="material-icons" aria-hidden="true">architecture</span>
-            Hole Configuration
-          </h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="numberOfHoles" class="form-label">Number of Holes</label>
-              <input 
-                type="number" 
-                id="numberOfHoles" 
-                formControlName="numberOfHoles"
-                class="form-input"
-                placeholder="Enter number of holes"
-                min="1"
-                max="1000"
-              >
-              <div class="form-error" *ngIf="hasFormError('numberOfHoles', 'required')">
-                Number of holes is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('numberOfHoles', 'min')">
-                Minimum value is 1
-              </div>
-              <div class="form-error" *ngIf="hasFormError('numberOfHoles', 'max')">
-                Maximum value is 1000
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="numberOfColumns" class="form-label">Number of Columns</label>
-              <input 
-                type="number" 
-                id="numberOfColumns" 
-                formControlName="numberOfColumns"
-                class="form-input"
-                placeholder="Enter number of columns"
-                min="1"
-                max="100"
-              >
-              <div class="form-error" *ngIf="hasFormError('numberOfColumns', 'required')">
-                Number of columns is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('numberOfColumns', 'min')">
-                Minimum value is 1
-              </div>
-              <div class="form-error" *ngIf="hasFormError('numberOfColumns', 'max')">
-                Maximum value is 100
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="holeDiameter" class="form-label">Hole Diameter (m)</label>
-              <input 
-                type="number" 
-                id="holeDiameter" 
-                formControlName="holeDiameter"
-                class="form-input"
-                placeholder="Enter hole diameter"
-                step="0.001"
-                min="0.05"
-                max="1.0"
-              >
-              <div class="form-error" *ngIf="hasFormError('holeDiameter', 'required')">
-                Hole diameter is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('holeDiameter', 'min')">
-                Minimum diameter is 0.05m
-              </div>
-              <div class="form-error" *ngIf="hasFormError('holeDiameter', 'max')">
-                Maximum diameter is 1.0m
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="stemming" class="form-label">Stemming (m)</label>
-              <input 
-                type="number" 
-                id="stemming" 
-                formControlName="stemming"
-                class="form-input"
-                placeholder="Enter stemming length"
-                step="0.1"
-                min="0.5"
-                max="10.0"
-              >
-              <div class="form-error" *ngIf="hasFormError('stemming', 'required')">
-                Stemming length is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('stemming', 'min')">
-                Minimum stemming is 0.5m
-              </div>
-              <div class="form-error" *ngIf="hasFormError('stemming', 'max')">
-                Maximum stemming is 10.0m
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="spacing" class="form-label">Spacing (m)</label>
-              <input 
-                type="number" 
-                id="spacing" 
-                formControlName="spacing"
-                class="form-input"
-                placeholder="Enter hole spacing"
-                step="0.1"
-                min="1.0"
-                max="20.0"
-              >
-              <div class="form-error" *ngIf="hasFormError('spacing', 'required')">
-                Spacing is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('spacing', 'min')">
-                Minimum spacing is 1.0m
-              </div>
-              <div class="form-error" *ngIf="hasFormError('spacing', 'max')">
-                Maximum spacing is 20.0m
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="burden" class="form-label">Burden (m)</label>
-              <input 
-                type="number" 
-                id="burden" 
-                formControlName="burden"
-                class="form-input"
-                placeholder="Enter burden distance"
-                step="0.1"
-                min="1.0"
-                max="15.0"
-              >
-              <div class="form-error" *ngIf="hasFormError('burden', 'required')">
-                Burden is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('burden', 'min')">
-                Minimum burden is 1.0m
-              </div>
-              <div class="form-error" *ngIf="hasFormError('burden', 'max')">
-                Maximum burden is 15.0m
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Explosive Parameters Section -->
-        <div class="form-section">
-          <h3 class="section-title">
-            <span class="material-icons" aria-hidden="true">science</span>
-            Explosive Properties
-          </h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="emulsionDensity" class="form-label">Emulsion Density (g/cm³)</label>
-              <input 
-                type="number" 
-                id="emulsionDensity" 
-                formControlName="emulsionDensity"
-                class="form-input"
-                placeholder="Enter emulsion density"
-                step="0.01"
-                min="0.1"
-                max="10.0"
-              >
-              <div class="form-error" *ngIf="hasFormError('emulsionDensity', 'required')">
-                Emulsion density is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('emulsionDensity', 'min')">
-                Minimum density is 0.1 g/cm³
-              </div>
-              <div class="form-error" *ngIf="hasFormError('emulsionDensity', 'max')">
-                Maximum density is 10.0 g/cm³
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="anfoeDensity" class="form-label">ANFO Density (g/cm³)</label>
-              <input 
-                type="number" 
-                id="anfoeDensity" 
-                formControlName="anfoeDensity"
-                class="form-input"
-                placeholder="Enter ANFO density"
-                step="0.01"
-                min="0.1"
-                max="10.0"
-              >
-              <div class="form-error" *ngIf="hasFormError('anfoeDensity', 'required')">
-                ANFO density is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('anfoeDensity', 'min')">
-                Minimum density is 0.1 g/cm³
-              </div>
-              <div class="form-error" *ngIf="hasFormError('anfoeDensity', 'max')">
-                Maximum density is 10.0 g/cm³
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="emulsionPerHole" class="form-label">Emulsion per Hole (tons)</label>
-              <input 
-                type="number" 
-                id="emulsionPerHole" 
-                formControlName="emulsionPerHole"
-                class="form-input"
-                placeholder="Enter emulsion amount"
-                step="0.1"
-                min="0"
-                max="200"
-              >
-              <div class="form-error" *ngIf="hasFormError('emulsionPerHole', 'required')">
-                Emulsion amount is required
-              </div>
-              <div class="form-error" *ngIf="hasFormError('emulsionPerHole', 'min')">
-                Minimum amount is 0 tons
-              </div>
-              <div class="form-error" *ngIf="hasFormError('emulsionPerHole', 'max')">
-                Maximum amount is 0.2 tons
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hole Depths Section -->
-        <div class="form-section">
-          <h3 class="section-title">
-            <span class="material-icons" aria-hidden="true">height</span>
-            Hole Depths
-          </h3>
-          <div class="form-group full-width">
-            <label for="holeDepths" class="form-label">Hole Depths (m)</label>
-            <textarea 
-              id="holeDepths" 
-              formControlName="holeDepths"
-              class="form-textarea"
-              placeholder="Enter hole depths separated by commas (e.g., 10,12,11,13,10,12)"
-              rows="3"
-            ></textarea>
-            <div class="form-help">
-              Enter the depth of each hole in meters, separated by commas. The number of depths should match the number of holes.
-            </div>
-            <div class="form-error" *ngIf="hasFormError('holeDepths', 'required')">
-              Hole depths are required
-            </div>
-          </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" (click)="toggleInputForm()">
-            <span class="material-icons" aria-hidden="true">cancel</span>
-            Cancel
-          </button>
-          <button type="submit" class="btn btn-primary" [disabled]="explosiveForm.invalid">
-            <span class="material-icons" aria-hidden="true">calculate</span>
-            Calculate Results
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Calculating explosive requirements...</p>
-  </div>
-
-  <!-- Error State -->
-  <div class="error-container" *ngIf="hasError">
-    <div class="error-card">
-      <span class="material-icons error-icon" aria-hidden="true">error</span>
-      <div class="error-content">
-        <h3>Calculation Error</h3>
-        <p>{{ errorMessage }}</p>
-        <button class="retry-btn" (click)="performCalculations()">
-          <span class="material-icons" aria-hidden="true">refresh</span>
-          Retry Calculation
-        </button>
+      <!-- No saved calculations state -->
+      <div class="empty-state" *ngIf="savedCalculations.length === 0">
+        <span class="material-icons">folder_open</span>
+        <h3>No Saved Calculations</h3>
+        <p>No calculations found for this project and site.</p>
       </div>
     </div>
-  </div>
-
-  <!-- Results Display -->
-  <div class="calculations-content" *ngIf="!isLoading && !hasError && calculationResults">
-    
-    <!-- Data Source Information -->
-    <div class="data-source-section" *ngIf="isBackendDataLoaded()">
-      <div class="data-source-card">
-        <div class="data-source-icon">
-          <span class="material-icons" aria-hidden="true">cloud_done</span>
-        </div>
-        <div class="data-source-content">
-          <h3>Data Source</h3>
-          <p class="data-source-info">{{ getDataSourceInfo() }}</p>
-          <p class="data-context">Project: {{ projectId }} | Site: {{ siteId }}</p>
-        </div>
-      </div>
+  
+  <!-- Loading & Error States -->
+  <div class="status-overlay" *ngIf="isLoading || hasError">
+    <div class="status-card loading" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <h3>Loading Calculations</h3>
+      <p>Retrieving data from database...</p>
     </div>
     
-    <!-- Compact Layout Container -->
-    <div class="compact-layout">
-      <!-- Left Column -->
-      <div class="left-column">
-        <!-- Input Summary Section -->
-        <div class="input-summary-section" *ngIf="calculationInputs">
-          <div class="section-header-compact">
-            <h3>
-              <span class="material-icons" aria-hidden="true">input</span>
-              Input Parameters
-            </h3>
-          </div>
-          <div class="input-grid-compact">
-            <div class="input-card-compact">
-              <span class="input-label">Holes</span>
-              <span class="input-value">{{ calculationInputs.numberOfHoles }}</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Diameter</span>
-              <span class="input-value">{{ formatNumber(calculationInputs.holeDiameter, 3) }}m</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Stemming</span>
-              <span class="input-value">{{ formatNumber(calculationInputs.stemming, 2) }}m</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Spacing</span>
-              <span class="input-value">{{ formatNumber(calculationInputs.spacing, 2) }}m</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Burden</span>
-              <span class="input-value">{{ formatNumber(calculationInputs.burden, 2) }}m</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Emulsion ρ</span>
-              <span class="input-value">{{ formatNumber(calculationInputs.emulsionDensity, 0) }}</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">ANFO ρ</span>
-              <span class="input-value">{{ formatNumber(calculationInputs.anfoeDensity, 0) }}</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Emulsion</span>
-              <span class="input-value">{{ formatNumber(calculationInputs.emulsionPerHole, 1) }}tons</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Key Results Section -->
-        <div class="key-results-section">
-          <div class="section-header-compact">
-            <h3>
-              <span class="material-icons" aria-hidden="true">analytics</span>
-              Key Results
-            </h3>
-          </div>
-          <div class="input-grid-compact">
-            <div class="input-card-compact">
-              <span class="input-label">Total Depth</span>
-              <span class="input-value">{{ formatNumber(calculationResults.totalDepth, 2) }}</span>
-              <span class="input-unit">m</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Avg Depth</span>
-              <span class="input-value">{{ formatNumber(calculationResults.averageDepth, 2) }}</span>
-              <span class="input-unit">m</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Filled Holes</span>
-              <span class="input-value">{{ calculationResults.numberOfFilledHoles }}</span>
-              <span class="input-unit"></span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Total Volume</span>
-              <span class="input-value">{{ formatNumber(calculationResults.totalVolume, 2) }}</span>
-              <span class="input-unit">m³</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Total ANFO</span>
-              <span class="input-value">{{ formatNumber(calculationResults.totalAnfo, 2) }}</span>
-              <span class="input-unit">tons</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Total Emulsion</span>
-              <span class="input-value">{{ formatNumber(calculationResults.totalEmulsion, 2) }}</span>
-              <span class="input-unit">tons</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">ANFO/Meter</span>
-              <span class="input-value">{{ formatNumber(calculationResults.anfoPerMeter, 3) }}</span>
-              <span class="input-unit">tons/m</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Emulsion/Meter</span>
-              <span class="input-value">{{ formatNumber(calculationResults.emulsionPerMeter, 3) }}</span>
-              <span class="input-unit">tons/m</span>
-            </div>
-            <div class="input-card-compact">
-              <span class="input-label">Remaining Space</span>
-              <span class="input-value">{{ formatNumber(calculationResults.remainingSpace, 2) }}</span>
-              <span class="input-unit">m</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column -->
-      <div class="right-column">
-        <!-- Additional Results Section -->
-        <div class="additional-results-section">
-          <div class="section-header-compact">
-            <h3>
-              <span class="material-icons" aria-hidden="true">analytics</span>
-              Additional Calculations
-            </h3>
-          </div>
-          <div class="input-grid-compact">
-            <div class="input-card-compact">
-                <span class="input-label">ANFO Coverage</span>
-                <span class="input-value">{{ formatNumber(calculationResults.anfoCoveringSpace, 2) }}</span>
-                <span class="input-unit">tons</span>
-              </div>
-              <div class="input-card-compact">
-                <span class="input-label">Emulsion Coverage</span>
-                <span class="input-value">{{ formatNumber(calculationResults.emulsionCoveringSpace, 2) }}</span>
-                <span class="input-unit">m</span>
-              </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Detailed Results Table -->
-    <div class="detailed-results-section">
-      <div class="section-header-compact">
-        <h3>
-          <span class="material-icons" aria-hidden="true">table_chart</span>
-          Detailed Results
-        </h3>
-      </div>
-      <div class="results-table-container">
-        <div class="table-wrapper">
-          <table class="results-table">
-            <thead>
-              <tr>
-                <th class="parameter-header">
-                  <span class="material-icons" aria-hidden="true">label</span>
-                  Parameter
-                </th>
-                <th class="value-header">
-                  <span class="material-icons" aria-hidden="true">numbers</span>
-                  Value
-                </th>
-                <th class="unit-header">
-                  <span class="material-icons" aria-hidden="true">straighten</span>
-                  Unit
-                </th>
-                <th class="description-header">
-                  <span class="material-icons" aria-hidden="true">description</span>
-                  Description
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of getDetailedResults(); let i = index" 
-                  [class.highlight]="item.isHighlight"
-                  [class.even]="i % 2 === 0"
-                  [class.odd]="i % 2 === 1">
-                <td class="parameter-name">
-                  <span class="parameter-icon material-icons" aria-hidden="true">{{ getParameterIcon(item.name) }}</span>
-                  {{ item.name }}
-                </td>
-                <td class="parameter-value">{{ item.value }}</td>
-                <td class="parameter-unit">{{ item.unit }}</td>
-                <td class="parameter-description">{{ item.description }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="status-card error" *ngIf="hasError">
+      <span class="material-icons">error_outline</span>
+      <h3>Loading Error</h3>
+      <p>{{ errorMessage }}</p>
+      <button class="retry-btn" (click)="loadSavedCalculations()">
+        <span class="material-icons">refresh</span>
+        Retry
+      </button>
     </div>
   </div>
 
-
-
-  <!-- Saved Calculations Section -->
-  <div class="saved-calculations-container" *ngIf="savedCalculations.length > 0">
-    <div class="saved-calculations-card">
-      <div class="saved-calculations-header">
-        <h3>
-          <span class="material-icons" aria-hidden="true">history</span>
-          Saved Calculations ({{ savedCalculations.length }})
-        </h3>
-      </div>
-      
-      <div class="saved-calculations-list">
-        <div class="calculation-item" 
-             *ngFor="let calculation of savedCalculations; let i = index"
-             [class.active]="currentCalculationId === calculation.id">
-          <div class="calculation-info">
-            <div class="calculation-header">
-              <span class="calculation-id">{{ calculation.calculationId }}</span>
-              <span class="calculation-date">{{ calculation.createdAt | date:'short' }}</span>
-            </div>
-            <div class="calculation-summary">
-              <span class="summary-item">
-                <span class="material-icons" aria-hidden="true">construction</span>
-                {{ calculation.numberOfFilledHoles }} holes
-              </span>
-              <span class="summary-item">
-                <span class="material-icons" aria-hidden="true">straighten</span>
-                {{ calculation.emulsionPerHole }}L emulsion/hole
-              </span>
-              <span class="summary-item">
-                <span class="material-icons" aria-hidden="true">science</span>
-                {{ calculation.totalEmulsion | number:'1.2-2' }}tons emulsion
-              </span>
-            </div>
-          </div>
-          <div class="calculation-actions">
-            <button type="button" 
-                    class="action-btn load-btn"
-                    (click)="loadSavedCalculation(calculation.id)"
-                    [disabled]="isLoading"
-                    title="Load this calculation">
-              <span class="material-icons" aria-hidden="true">download</span>
-              Load
-            </button>
-            <button type="button" 
-                    class="action-btn delete-btn"
-                    (click)="deleteSavedCalculation(calculation.id)"
-                    [disabled]="isLoading"
-                    title="Delete this calculation">
-              <span class="material-icons" aria-hidden="true">delete</span>
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- No Data State -->
-  <div class="no-data-container" *ngIf="!isLoading && !hasError && !calculationResults">
-    <div class="no-data-card">
-      <span class="material-icons no-data-icon" aria-hidden="true">calculate</span>
-      <h3>No Calculation Data</h3>
-      <p>Please provide calculation inputs to display explosive requirements.</p>
-    </div>
-  </div>
 </div>

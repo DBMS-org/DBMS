@@ -25,6 +25,15 @@ export interface ProposalHistoryItem {
   rejectedByUserName?: string;
   rejectionReason?: string;
   approvalComments?: string;
+  
+  // Additional properties that may be returned by the API
+  processedByUserId?: number;
+  processedAt?: Date;
+  processedByUser?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
 
 
@@ -70,7 +79,10 @@ export class ProposalHistoryService {
     return {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
+        'Authorization': token ? `Bearer ${token}` : '',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       })
     };
   }
@@ -80,7 +92,7 @@ export class ProposalHistoryService {
    */
   getUserProposals(): Observable<ProposalHistoryItem[]> {
     return this.http.get<ProposalHistoryItem[]>(
-      `${this.apiUrl}/user-requests`,
+      `${this.apiUrl}/my-requests`,
       this.getHttpOptions()
     ).pipe(
       map(proposals => proposals.map(proposal => ({

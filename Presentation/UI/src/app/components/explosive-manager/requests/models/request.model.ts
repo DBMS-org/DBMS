@@ -13,9 +13,18 @@ export interface ExplosiveRequest {
   approvedBy?: string;
   rejectionReason?: string;
   notes?: string;
-
+  approvedQuantity?: number;
+  departureDate?: Date;
+  // expectedReceiptDate removed
   storeLocation: string;
   purpose: string;
+  // Dispatch-related fields
+  dispatchDate?: Date;
+  truckNumber?: string;
+  driverName?: string;
+  routeInformation?: string;
+  dispatchNotes?: string;
+  dispatchedBy?: string;
 }
 
 export enum ExplosiveType {
@@ -29,7 +38,8 @@ export enum RequestStatus {
   REJECTED = 'REJECTED',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
+  DISPATCHED = 'DISPATCHED'
 }
 
 
@@ -37,7 +47,6 @@ export enum RequestStatus {
 export interface RequestFilter {
   explosiveType?: ExplosiveType;
   status?: RequestStatus;
-
   requesterName?: string;
   dateFrom?: Date;
   dateTo?: Date;

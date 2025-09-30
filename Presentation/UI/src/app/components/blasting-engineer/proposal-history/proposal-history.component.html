@@ -8,7 +8,7 @@
     <div class="search-box">
       <input 
         type="text" 
-        placeholder="Search by project, site, or submitter..." 
+        placeholder="Search by project or site..." 
         (input)="onSearchChange($event)"
         class="search-input">
     </div>
@@ -47,12 +47,8 @@
           <th>Project</th>
           <th>Site</th>
           <th>Type</th>
-          <th>Status</th>
           <th>Submitted Date</th>
-          <th>Submitted By</th>
-          <th>Reviewed Date</th>
-          <th>Reviewed By</th>
-          <th>Comments</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -61,20 +57,11 @@
           <td>{{ item.projectName }}</td>
           <td>{{ item.siteName }}</td>
           <td>{{ item.proposalType }}</td>
-          <td>
-            <span [class]="getStatusClass(item.status)" class="status-badge">
-              {{ item.status | titlecase }}
-            </span>
-          </td>
           <td>{{ item.submittedDate | date:'short' }}</td>
-          <td>{{ item.submittedBy }}</td>
-          <td>{{ item.reviewedDate ? (item.reviewedDate | date:'short') : '-' }}</td>
-          <td>{{ item.reviewedBy || '-' }}</td>
-          <td class="comments-cell">
-            <span *ngIf="item.comments" [title]="item.comments">
-              {{ item.comments.length > 50 ? (item.comments | slice:0:50) + '...' : item.comments }}
-            </span>
-            <span *ngIf="!item.comments">-</span>
+          <td class="actions-cell">
+            <button class="view-detail-btn" type="button" (click)="viewProposalDetails(item.id)">
+              View Details
+            </button>
           </td>
         </tr>
       </tbody>
@@ -87,5 +74,15 @@
     <div *ngIf="filteredHistory.length === 0 && proposalHistory.length > 0" class="no-data">
       <p>No proposals match your current filter criteria.</p>
     </div>
+  </div>
+</div>
+
+<!-- Proposal Details Modal -->
+<div *ngIf="showDetailsModal" class="modal-overlay" (click)="closeDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <app-proposal-details 
+      [proposalId]="selectedProposalId" 
+      (closeEvent)="closeDetailsModal()">
+    </app-proposal-details>
   </div>
 </div>

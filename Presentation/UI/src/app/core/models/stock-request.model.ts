@@ -12,12 +12,14 @@ export interface StockRequest {
   requestDate: Date;
   requiredDate: Date;
   status: StockRequestStatus;
+  dispatched: boolean;
 
   justification: string;
   notes?: string;
   approvalDate?: Date;
   rejectionReason?: string;
   fulfillmentDate?: Date;
+  dispatchedDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

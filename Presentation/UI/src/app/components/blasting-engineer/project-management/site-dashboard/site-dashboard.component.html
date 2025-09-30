@@ -187,14 +187,7 @@
         </div>
       </div>
 
-      <!-- Debug Info -->
-      <div class="debug-info" style="background: #f0f0f0; padding: 10px; margin: 10px 0; border: 1px solid #ccc;">
-        <h5>Debug Information:</h5>
-        <p>Is Blasting Engineer: {{ isBlastingEngineer }}</p>
-        <p>User Role: {{ authService.getUserRole() }}</p>
-        <p>Is Authenticated: {{ authService.isAuthenticated() }}</p>
-        <p>Current User: {{ authService.getCurrentUser()?.name || 'No user' }}</p>
-      </div>
+
 
       <!-- Enhanced Approval Sections -->
 <div class="approval-sections-container" *ngIf="isBlastingEngineer">
@@ -366,6 +359,25 @@
       </div>
       
       <div class="modal-body">
+        <!-- Explosive Totals Summary -->
+        <div class="explosive-summary">
+          <h4>Explosive Requirements Summary</h4>
+          <div class="explosive-totals">
+            <div class="explosive-item">
+              <div class="explosive-label">Total ANFO Required:</div>
+              <div class="explosive-value">{{ totalAnfo | number:'1.2-2' }} kg</div>
+            </div>
+            <div class="explosive-item">
+              <div class="explosive-label">Total Emulsion Required:</div>
+              <div class="explosive-value">{{ totalEmulsion | number:'1.2-2' }} kg</div>
+            </div>
+            <div class="explosive-item total-row">
+              <div class="explosive-label">Total Explosives:</div>
+              <div class="explosive-value">{{ (totalAnfo + totalEmulsion) | number:'1.2-2' }} kg</div>
+            </div>
+          </div>
+        </div>
+        
         <div class="form-group">
           <label for="expectedUsageDate">Expected Usage Date *</label>
           <input 

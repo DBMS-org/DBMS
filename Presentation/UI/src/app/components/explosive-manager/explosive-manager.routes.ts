@@ -11,6 +11,8 @@ import { EmulsionAddComponent } from './inventory/emulsion-inventory/emulsion-ad
 import { EmulsionEditComponent } from './inventory/emulsion-inventory/emulsion-edit/emulsion-edit.component';
 import { RequestsComponent } from './requests/requests.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
+import { ApprovalFormComponent } from './requests/approval-form/approval-form.component';
+import { DispatchRequestComponent } from './requests/dispatch-request/dispatch-request.component';
 
 export const EXPLOSIVE_MANAGER_ROUTES: Routes = [
     {
@@ -28,7 +30,9 @@ export const EXPLOSIVE_MANAGER_ROUTES: Routes = [
             { path: 'inventory/emulsion', component: EmulsionInventoryComponent },
             { path: 'inventory/emulsion/add', component: EmulsionAddComponent },
             { path: 'inventory/emulsion/edit/:id', component: EmulsionEditComponent },
-            { path: 'requests', component: RequestsComponent }
+            { path: 'requests', component: RequestsComponent },
+            { path: 'requests/approval/:id', component: ApprovalFormComponent },
+            { path: 'requests/dispatch/:id', component: DispatchRequestComponent }
         ]
     }
 ];
