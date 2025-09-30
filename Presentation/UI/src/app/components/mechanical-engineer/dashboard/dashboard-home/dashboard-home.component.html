@@ -134,18 +134,64 @@
             <h5>{{ machine.name }}</h5>
             <span class="machine-status scheduled">{{ machine.status }}</span>
           </div>
-          <div class="machine-details">
-            <p><strong>Model:</strong> {{ machine.model }}</p>
-            <p><strong>Rig No:</strong> {{ machine.rigNo }}</p>
-            <p><strong>Location:</strong> {{ machine.location }}</p>
-            <p *ngIf="machine.lastMaintenance"><strong>Last Maintenance:</strong> {{ machine.lastMaintenance }}</p>
+        <div class="machine-details">
+          <p><strong>Model:</strong> {{ machine.model }}</p>
+          <p><strong>Rig No:</strong> {{ machine.rigNo }}</p>
+          <p><strong>Location:</strong> {{ machine.location }}</p>
+          <p *ngIf="machine.lastMaintenance"><strong>Last Maintenance:</strong> {{ machine.lastMaintenance }}</p>
+        </div>
+        <!-- UC-37 Form: Required fields and accessory usage -->
+        <div class="maintenance-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label>Maintenance Type</label>
+              <select (change)="setMaintenanceForm(machine.id, 'type', $any($event.target).value)">
+                <option value="">Select Type</option>
+                <option value="Preventive">Preventive</option>
+                <option value="Corrective">Corrective</option>
+                <option value="Emergency">Emergency</option>
+                <option value="Inspection">Inspection</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Date</label>
+              <input type="date" (change)="setMaintenanceForm(machine.id, 'date', $any($event.target).value)" />
+            </div>
           </div>
-          <div class="machine-actions">
-            <button class="log-btn" (click)="logMaintenanceActivity(machine)">
-              <i class="material-icons">assignment_turned_in</i>
-              Log Maintenance Activity
-            </button>
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label>Notes</label>
+              <textarea rows="2" placeholder="Enter maintenance notes" (input)="setMaintenanceForm(machine.id, 'notes', $any($event.target).value)"></textarea>
+            </div>
           </div>
+
+          <!-- Accessory usage section -->
+          <div class="accessory-usage">
+            <label>Add Accessory Usage</label>
+            <div class="usage-inputs">
+              <select #partSel>
+                <option value="">Select Part</option>
+                <option *ngFor="let acc of accessories()" [value]="acc.name">{{ acc.name }} (Stock: {{ acc.stock }})</option>
+              </select>
+              <input #qtyInput type="number" min="1" placeholder="Qty" />
+              <button class="add-usage-btn" (click)="addAccessoryUsage(machine.id, partSel.value, qtyInput.valueAsNumber)">
+                Add
+              </button>
+            </div>
+            <ul class="usage-list">
+              <li *ngFor="let item of (selectedAccessoryUsage()[machine.id] || []); let i = index">
+                {{ item.partName }} × {{ item.quantity }}
+                <button class="remove-usage" (click)="removeAccessoryUsage(machine.id, i)">Remove</button>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="machine-actions">
+          <button class="log-btn" (click)="logMaintenanceActivity(machine)">
+            <i class="material-icons">assignment_turned_in</i>
+            Log Maintenance Activity
+          </button>
+        </div>
         </div>
       </div>
     </div>
@@ -256,16 +302,6 @@
         <h4>Maintenance Analytics</h4>
         <p>View maintenance performance metrics</p>
         <div class="action-status">View reports</div>
-      </div>
-
-      <!-- View and manage maintenance alerts -->
-      <div class="action-card alerts-action" (click)="navigateToAlerts()">
-        <div class="action-icon">
-          <i class="material-icons">notifications_active</i>
-        </div>
-        <h4>Maintenance Alerts</h4>
-        <p>View and manage maintenance alerts</p>
-        <div class="action-status">{{ maintenanceAlerts.length }} active alerts</div>
       </div>
     </div>
   </div>
