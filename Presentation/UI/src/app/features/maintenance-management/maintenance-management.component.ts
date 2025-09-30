@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-// Interfaces
+// Data model interfaces for maintenance management system
 interface MaintenanceRecord {
   id: string;
   machineId: string;
@@ -69,6 +69,18 @@ interface ConfirmModalData {
   onConfirm: () => void;
 }
 
+/**
+ * Maintenance Management Component
+ * 
+ * Comprehensive maintenance scheduling and tracking system that provides:
+ * - Complete maintenance record lifecycle management (schedule, track, complete)
+ * - Advanced filtering and search capabilities across multiple criteria
+ * - Real-time statistics dashboard for maintenance operations overview
+ * - Multi-modal interface for scheduling, editing, and completing maintenance tasks
+ * - Technician assignment and workload management
+ * - Cost tracking and duration estimation vs actual reporting
+ * - Pagination and sorting for large maintenance record datasets
+ */
 @Component({
   selector: 'app-maintenance-management',
   standalone: true,
@@ -77,7 +89,7 @@ interface ConfirmModalData {
   styleUrls: ['./maintenance-management.component.scss']
 })
 export class MaintenanceManagementComponent implements OnInit {
-  // Data properties
+  // Core data collections for maintenance operations
   maintenanceRecords: MaintenanceRecord[] = [];
   filteredMaintenanceRecords: MaintenanceRecord[] = [];
   paginatedMaintenanceRecords: MaintenanceRecord[] = [];
@@ -90,35 +102,35 @@ export class MaintenanceManagementComponent implements OnInit {
     completed: 0
   };
 
-  // UI state
+  // Application state management
   isLoading = false;
   isSaving = false;
   isExporting = false;
   errorMessage = '';
   lastUpdated = new Date();
 
-  // Filtering and search
+  // Advanced filtering and search capabilities
   searchTerm = '';
   selectedStatus = '';
   selectedType = '';
   selectedPriority = '';
 
-  // Sorting
+  // Data sorting configuration
   sortField = 'scheduledDate';
   sortDirection: 'asc' | 'desc' = 'asc';
 
-  // Pagination
+  // Pagination controls for large datasets
   currentPage = 1;
   pageSize = 25;
   totalPages = 0;
 
-  // Modal states
+  // Modal dialog states for various operations
   showScheduleModal = false;
   showDetailsModal = false;
   showCompleteModal = false;
   showConfirmModal = false;
 
-  // Form data
+  // Form data objects for maintenance operations
   maintenanceFormData: MaintenanceFormData = this.getEmptyFormData();
   completionData: CompletionData = {
     actualDuration: 0,
@@ -133,7 +145,7 @@ export class MaintenanceManagementComponent implements OnInit {
     onConfirm: () => {}
   };
 
-  // Selected items
+  // Currently selected maintenance records for operations
   selectedMaintenance: MaintenanceRecord | null = null;
   editingMaintenance: MaintenanceRecord | null = null;
 
@@ -143,12 +155,16 @@ export class MaintenanceManagementComponent implements OnInit {
     this.loadAvailableTechnicians();
   }
 
-  // Data loading methods
+  // Data loading methods for initializing component state
+  /**
+   * Loads all maintenance records from the backend
+   * Applies current filters and calculates statistics after loading
+   */
   loadMaintenanceData(): void {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Simulate API call
+    // Simulate API call with mock data for development
     setTimeout(() => {
       try {
         this.maintenanceRecords = this.generateMockMaintenanceData();
@@ -164,8 +180,12 @@ export class MaintenanceManagementComponent implements OnInit {
     }, 1000);
   }
 
+  /**
+   * Loads available machines for maintenance scheduling
+   * Provides dropdown options in the maintenance form
+   */
   loadAvailableMachines(): void {
-    // Simulate loading machines
+    // Simulate loading machines from backend service
     this.availableMachines = [
       { id: '1', name: 'Excavator CAT-320', model: 'CAT-320D', rigNo: 'RIG-001', status: 'available' },
       { id: '2', name: 'Bulldozer CAT-D6', model: 'CAT-D6T', rigNo: 'RIG-002', status: 'assigned' },
@@ -175,6 +195,10 @@ export class MaintenanceManagementComponent implements OnInit {
     ];
   }
 
+  /**
+   * Loads available technicians for maintenance assignment
+   * Provides dropdown options for technician selection
+   */
   loadAvailableTechnicians(): void {
     this.availableTechnicians = [
       'John Smith',
@@ -188,6 +212,10 @@ export class MaintenanceManagementComponent implements OnInit {
     ];
   }
 
+  /**
+   * Generates mock maintenance data for development and testing
+   * Creates realistic maintenance records with varied statuses and types
+   */
   generateMockMaintenanceData(): MaintenanceRecord[] {
     const records: MaintenanceRecord[] = [];
     const types: MaintenanceRecord['type'][] = ['preventive', 'corrective', 'emergency', 'inspection'];
