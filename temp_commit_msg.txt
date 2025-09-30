@@ -1,3 +1,1 @@
-Merge pull request #12 from SaadDev-01/master
-
-6 week.
+docs(admin): fix typo in add-machine component template

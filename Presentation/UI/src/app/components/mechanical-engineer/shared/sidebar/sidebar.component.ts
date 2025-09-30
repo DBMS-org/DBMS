@@ -29,18 +29,6 @@ export class SidebarComponent {
       route: '/mechanical-engineer/dashboard' 
     },
     { 
-      icon: 'build_circle', 
-      label: 'Maintenance Dashboard', 
-      route: '/mechanical-engineer/maintenance/dashboard',
-      matchPattern: '/mechanical-engineer/maintenance/dashboard'
-    },
-    { 
-      icon: 'calendar_month', 
-      label: 'Maintenance Calendar', 
-      route: '/mechanical-engineer/maintenance/calendar',
-      matchPattern: '/mechanical-engineer/maintenance/calendar'
-    },
-    { 
       icon: 'assignment', 
       label: 'Maintenance Jobs', 
       route: '/mechanical-engineer/maintenance/jobs',
