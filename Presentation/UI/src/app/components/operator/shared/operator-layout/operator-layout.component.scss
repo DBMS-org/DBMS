@@ -1,3 +1,4 @@
+// Main operator layout container
 .operator-layout {
   min-height: 100vh;
   display: flex;
@@ -5,20 +6,22 @@
   background-color: #f8f9fa;
 }
 
+// Content area below navbar
 .operator-content {
   display: flex;
   flex: 1;
   position: relative;
-  margin-top: 64px; // Height of navbar
+  margin-top: 64px; // Account for fixed navbar height
 }
 
+// Main content area with sidebar spacing
 .main-content {
   flex: 1;
   padding: 1.25rem 1.5rem;
   margin-left: 250px;
 
   transition: margin-left 0.3s ease, padding 0.2s ease;
-  overscroll-behavior: contain; // improve mobile scroll UX
+  overscroll-behavior: contain; // Improve mobile scroll experience
   width: calc(100vw - 250px);
   max-width: calc(100vw - 250px);
   overflow-x: hidden;
@@ -27,6 +30,7 @@
 
 }
 
+// Layout when sidebar is collapsed
 .sidebar-collapsed {
   .main-content {
     margin-left: 70px;
@@ -35,7 +39,7 @@
   }
 }
 
-/* Backdrop for mobile when sidebar overlays content */
+// Mobile overlay backdrop when sidebar is open
 .backdrop {
   position: fixed;
   inset: 64px 0 0 0;
@@ -43,8 +47,8 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
-  z-index: 800; // below navbar(1000) and sidebar(900)
-  display: none; // hidden by default (desktop)
+  z-index: 800; // Below navbar(1000) and sidebar(900)
+  display: none; // Hidden by default on desktop
 
   &.visible {
     opacity: 1;
@@ -52,16 +56,17 @@
   }
 }
 
-/* Responsive tweaks */
+// Tablet and smaller desktop adjustments
 @media (max-width: 1024px) {
   .main-content { padding: 1rem; }
 }
 
+// Mobile responsive layout
 @media (max-width: 768px) {
-  .operator-content { margin-top: 64px; } // keep in sync with navbar height
+  .operator-content { margin-top: 64px; } // Keep navbar spacing consistent
   .main-content {
     padding: 0.75rem;
-    margin-left: 0; // sidebar overlays content on mobile
+    margin-left: 0; // Sidebar overlays content on mobile
   }
-  .backdrop { display: block; } // enable backdrop on mobile only
+  .backdrop { display: block; } // Enable backdrop for mobile overlay
 }

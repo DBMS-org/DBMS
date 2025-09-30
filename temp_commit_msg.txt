@@ -1,7 +1,5 @@
-feat(mechanical-engineer): enhance maintenance logging with form and accessories
+refactor(mechanical-engineer): improve code comments and signal naming
 
-- Add maintenance form with type, date and notes fields
-- Implement accessory usage tracking with stock validation
-- Update dashboard styling with theme variables
-- Remove unused routes and quick actions
-- Improve responsive layout for mechanical engineer UI
+Update comments to better describe functionality and purpose of code sections
+Rename signals to be more descriptive of their actual purpose
+Standardize comment style across components
