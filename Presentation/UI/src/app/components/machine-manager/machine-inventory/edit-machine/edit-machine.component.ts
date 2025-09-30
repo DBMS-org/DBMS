@@ -13,6 +13,20 @@ import {
 import { Project } from '../../../../core/models/project.model';
 import { REGIONS } from '../../../../core/constants/regions';
 
+/**
+ * Edit Machine Component
+ * 
+ * Modal component for editing existing drilling machine records with comprehensive features:
+ * - Pre-populated form with current machine data
+ * - Dynamic region-project relationship management
+ * - Location parsing and reconstruction from current machine location
+ * - Smart project assignment handling (delete/recreate when project changes)
+ * - Real-time form validation with visual feedback
+ * - Cascading dropdowns for region and project selection
+ * 
+ * Handles complex scenarios like project reassignment which requires machine recreation
+ * due to database constraints and maintains data integrity throughout the process.
+ */
 @Component({
   selector: 'app-edit-machine',
   standalone: true,
@@ -21,20 +35,22 @@ import { REGIONS } from '../../../../core/constants/regions';
   styleUrl: './edit-machine.component.scss'
 })
 export class EditMachineComponent implements OnInit {
-  @Input() machine!: Machine;
-  @Output() machineSaved = new EventEmitter<Machine>();
-  @Output() close = new EventEmitter<void>();
+  // Input/Output properties for parent-child communication
+  @Input() machine!: Machine; // Machine data to edit
+  @Output() machineSaved = new EventEmitter<Machine>(); // Emits updated machine data
+  @Output() close = new EventEmitter<void>(); // Emits close modal request
 
+  // Form management and loading states
   machineForm: FormGroup;
   isLoading = false;
   error: string | null = null;
 
-  // Data arrays
-  regions = REGIONS;
-  availableProjects: Project[] = [];
-  isLoadingProjects = false;
+  // Dynamic data collections for dropdowns
+  regions = REGIONS; // Static regions list from constants
+  availableProjects: Project[] = []; // Projects filtered by selected region
+  isLoadingProjects = false; // Loading state for project dropdown
 
-  // Enums for template
+  // Enum references for template usage
   MachineType = MachineType;
   MachineStatus = MachineStatus;
 
@@ -43,6 +59,7 @@ export class EditMachineComponent implements OnInit {
     private machineService: MachineService,
     private projectService: ProjectService
   ) {
+    // Initialize reactive form with validation rules
     this.machineForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       type: [MachineType.DRILL_RIG, Validators.required],
@@ -59,21 +76,30 @@ export class EditMachineComponent implements OnInit {
     });
   }
 
+  /**
+   * Component initialization
+   * Sets up form with machine data and establishes region-project relationship
+   */
   ngOnInit(): void {
     if (this.machine) {
       this.initializeForm();
     }
 
-    // Watch for region changes to load projects
+    // Watch for region changes to dynamically load corresponding projects
     this.machineForm.get('region')?.valueChanges.subscribe(regionValue => {
       this.onRegionChange(regionValue);
     });
   }
 
+  /**
+   * Initialize form with existing machine data
+   * Handles complex location parsing and project assignment logic
+   */
   private initializeForm(): void {
-    // Parse current location to extract region and project
+    // Parse current location to extract region and project information
     const locationParts = this.parseLocation(this.machine.currentLocation);
     
+    // Populate form with basic machine data
     this.machineForm.patchValue({
       name: this.machine.name,
       type: this.machine.type,
@@ -88,35 +114,39 @@ export class EditMachineComponent implements OnInit {
       status: this.machine.status
     });
 
-    // If machine has a projectId, use it directly to set the project
+    // Handle project assignment - prefer projectId over location parsing
     if (this.machine.projectId) {
-      // First, we need to determine which region this project belongs to
+      // Load all projects to find the machine's current project and determine its region
       this.projectService.getAllProjects().subscribe({
         next: (projects) => {
           const machineProject = projects.find(p => p.id === this.machine.projectId);
           if (machineProject) {
-            // Set the region based on the project
+            // Set region and project based on current assignment
             this.machineForm.patchValue({ 
               region: machineProject.region,
               projectId: this.machine.projectId?.toString() || ''
             });
             
-            // Load all projects for this region
+            // Load all projects for this region to populate dropdown
             this.loadProjectsByRegion(machineProject.region);
           }
         },
         error: (error) => {
           console.error('Error loading project for machine:', error);
-          // Fallback to location parsing
+          // Fallback to location parsing if project loading fails
           this.initializeFromLocation(locationParts);
         }
       });
     } else {
-      // Fallback to location parsing if no projectId
+      // Use location parsing if no direct project assignment
       this.initializeFromLocation(locationParts);
     }
   }
 
+  /**
+   * Initialize form using parsed location data as fallback
+   * Used when machine has no direct project assignment
+   */
   private initializeFromLocation(locationParts: { region?: string; projectName?: string }): void {
     // Load projects for the current region if it exists
     if (locationParts.region) {
@@ -134,6 +164,10 @@ export class EditMachineComponent implements OnInit {
     }
   }
 
+  /**
+   * Parse machine location string to extract region and project information
+   * Handles various location formats: "Region - Project", "Region", or fallback
+   */
   private parseLocation(location: string | undefined): { region?: string; projectName?: string } {
     if (!location || location === 'Default Location') {
       return {};
@@ -160,6 +194,10 @@ export class EditMachineComponent implements OnInit {
     return {};
   }
 
+  /**
+   * Handle region selection change
+   * Resets project selection and loads projects for the new region
+   */
   onRegionChange(region: string): void {
     // Reset project selection when region changes
     this.machineForm.get('projectId')?.setValue('');
@@ -170,12 +208,17 @@ export class EditMachineComponent implements OnInit {
     }
   }
 
+  /**
+   * Load projects filtered by region
+   * Returns promise for synchronization with form initialization
+   */
   private loadProjectsByRegion(region: string): Promise<void> {
     return new Promise((resolve) => {
       this.isLoadingProjects = true;
       
       this.projectService.getAllProjects().subscribe({
         next: (projects) => {
+          // Filter projects by selected region (case-insensitive)
           this.availableProjects = projects.filter(project => 
             project.region && project.region.toLowerCase() === region.toLowerCase()
           );
@@ -192,6 +235,10 @@ export class EditMachineComponent implements OnInit {
     });
   }
 
+  /**
+   * Generate location preview string for display
+   * Combines region and project name in standardized format
+   */
   get locationPreview(): string {
     const region = this.machineForm.get('region')?.value;
     const projectId = this.machineForm.get('projectId')?.value;
@@ -208,15 +255,22 @@ export class EditMachineComponent implements OnInit {
     return region;
   }
 
+  /**
+   * Get the final location value for machine record
+   */
   private getLocationValue(): string {
     return this.locationPreview;
   }
 
+  /**
+   * Map region name to region ID for database storage
+   * Uses predefined mapping for Oman regions
+   */
   private getRegionId(): number | undefined {
     const regionName = this.machineForm.get('region')?.value;
     if (!regionName) return undefined;
     
-    // Find the region ID based on the region name
+    // Static mapping of region names to IDs
     const regionMapping: { [key: string]: number } = {
       'Muscat': 1,
       'Dhofar': 2,
@@ -234,6 +288,10 @@ export class EditMachineComponent implements OnInit {
     return regionMapping[regionName];
   }
 
+  /**
+   * Handle form submission
+   * Determines whether to update or delete/recreate based on project changes
+   */
   onSubmit(): void {
     if (this.machineForm.valid) {
       this.isLoading = true;
@@ -241,16 +299,16 @@ export class EditMachineComponent implements OnInit {
 
       const formValue = this.machineForm.value;
       
-      // Check if project has changed
+      // Check if project assignment has changed
       const originalProjectId = this.machine.projectId;
       const newProjectId = formValue.projectId ? parseInt(formValue.projectId) : undefined;
       const projectChanged = originalProjectId !== newProjectId;
       
       if (projectChanged) {
-        // If project changed, delete and recreate machine
+        // Project change requires delete/recreate due to database constraints
         this.deleteAndRecreate(formValue);
       } else {
-        // If project is the same, do normal update
+        // Standard update for same project
         this.updateMachine(formValue);
       }
     } else {
@@ -258,6 +316,10 @@ export class EditMachineComponent implements OnInit {
     }
   }
 
+  /**
+   * Perform standard machine update
+   * Used when project assignment hasn't changed
+   */
   private updateMachine(formValue: any): void {
     const request: UpdateMachineRequest = {
       name: formValue.name,
@@ -290,6 +352,10 @@ export class EditMachineComponent implements OnInit {
     });
   }
 
+  /**
+   * Delete existing machine and recreate with new data
+   * Required when project assignment changes due to database constraints
+   */
   private deleteAndRecreate(formValue: any): void {
     // First delete the existing machine
     this.machineService.deleteMachine(this.machine.id).subscribe({
@@ -331,10 +397,16 @@ export class EditMachineComponent implements OnInit {
     });
   }
 
+  /**
+   * Handle modal close request
+   */
   onCancel(): void {
     this.close.emit();
   }
 
+  /**
+   * Mark all form controls as touched to trigger validation display
+   */
   private markFormGroupTouched(): void {
     Object.keys(this.machineForm.controls).forEach(key => {
       const control = this.machineForm.get(key);
@@ -342,6 +414,7 @@ export class EditMachineComponent implements OnInit {
     });
   }
 
+  // Getter methods for template dropdown options
   get machineTypeOptions() {
     return Object.values(MachineType);
   }
@@ -349,4 +422,4 @@ export class EditMachineComponent implements OnInit {
   get machineStatusOptions() {
     return Object.values(MachineStatus);
   }
-} 
+}

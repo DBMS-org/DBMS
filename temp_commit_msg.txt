@@ -1,5 +1,7 @@
-refactor(mechanical-engineer): improve code comments and signal naming
+refactor(operator): improve code clarity and documentation
 
-Update comments to better describe functionality and purpose of code sections
-Rename signals to be more descriptive of their actual purpose
-Standardize comment style across components
+- Update comments and variable descriptions for better readability
+- Consolidate project sites navigation into My Project page
+- Enhance maintenance report service method names and docs
+- Improve operator layout SCSS organization and comments
+- Streamline dashboard component loading logic and messages
