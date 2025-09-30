@@ -1,4 +1,4 @@
-/* Theme tokens for Mechanical Engineer section */
+/* Design system colors and spacing for mechanical engineer dashboard */
 :host {
   --me-bg: #f8f9fa;
   --me-card-bg: #ffffff;
@@ -13,7 +13,7 @@
   --me-muted: #666;
 }
 
-/* Dashboard header */
+/* Main header with gradient background */
 .dashboard-header {
   background: linear-gradient(135deg, var(--me-primary) 0%, var(--me-primary-2) 100%);
   color: white;
@@ -23,7 +23,7 @@
   box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
 }
 
-/*  Header content */
+/* Header layout with title and user info */
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -38,7 +38,7 @@
   }
 }
 
-/*  User info */
+/* User profile section in header */
 .user-info {
   display: flex;
   align-items: center;
@@ -46,7 +46,7 @@
   flex-wrap: wrap;
 }
 
-/*  User details */
+/* User name and role display */
 .user-details {
   text-align: right;
 
