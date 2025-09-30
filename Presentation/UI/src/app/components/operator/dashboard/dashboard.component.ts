@@ -80,7 +80,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
 
-    // Load assigned project
+    // Get the project assigned to this operator
     const projectSub = this.projectService.getProjectByOperator(this.currentUser.id).subscribe({
       next: (project) => {
         this.assignedProject = project;
@@ -89,7 +89,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
         } else {
           console.log('No project assigned to this operator');
           this.isLoading = false;
-          // Set a more informative message for the user
+          // Show helpful message when no project is assigned
           this.error = 'No project is currently assigned to you. Please contact your administrator.';
         }
       },
@@ -104,7 +104,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadProjectDetails(projectId: number): void {
-    // Load project sites first
+    // Get all sites for this project
     const sitesSub = this.siteService.getProjectSites(projectId).subscribe({
       next: (sites) => {
         this.projectSites = sites.map(s => ({
@@ -116,16 +116,16 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
         // Load drill holes for all sites
         this.loadDrillHolesForSites(projectId, sites);
         
-        // Update statistics with sites data
+        // Calculate dashboard statistics
         this.updateStatistics(sites, []);
         
-        // Load additional site-specific data
+        // Load site-specific drilling data
         this.loadSiteSpecificData();
         
-        // Update recent activities
+        // Populate recent activity feed
         this.updateRecentActivities();
         
-        // Update system metrics
+        // Update system status metrics
         this.updateSystemMetrics();
         
         this.isLoading = false;
@@ -160,9 +160,9 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   private loadSiteSpecificData(): void {
     if (!this.assignedProject || this.projectSites.length === 0) return;
 
-    // Load drill points and blast sequences for each site
+    // Get drilling patterns and blast data for each site
     this.projectSites.forEach(site => {
-      // Load drill points instead of drill patterns
+      // Get drill points for pattern statistics
       const drillPointsSub = this.unifiedDrillDataService.getDrillPoints(this.assignedProject!.id, site.id).subscribe({
         next: (drillPoints) => {
           if (drillPoints.length > 0) {

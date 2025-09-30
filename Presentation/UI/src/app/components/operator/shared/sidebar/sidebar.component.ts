@@ -21,7 +21,7 @@ export class OperatorSidebarComponent {
   navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/operator/dashboard' },
     { icon: 'assignment', label: 'My Assigned Project', route: '/operator/my-project' },
-    // Removed separate Project Sites entry since sites are now available within My Project page
+    // Project Sites are now embedded within My Project page
     { icon: 'precision_manufacturing', label: 'My Machines', route: '/operator/my-machines' },
     { icon: 'report_problem', label: 'Maintenance Reports', route: '/operator/maintenance-reports' },
     
