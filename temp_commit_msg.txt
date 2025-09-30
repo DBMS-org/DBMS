@@ -1,4 +1,10 @@
-refactor(site-dashboard): remove debug code and enhance modal styling
+feat(explosives): add explosive calculations and display across components
 
-Remove debug console logs and HTML debug section that were used during development.
-Enhance modal styling with improved gradients, animations, and responsive design.
+Add explosive calculations service and integrate totals display in proposal details, site dashboard, and request details components. Include styling for explosive totals sections and update mapping profiles to support new functionality.
+
+- Implement explosive calculations service with project/site specific methods
+- Add explosive totals display to proposal details component
+- Include explosive summary in site dashboard modal
+- Show calculations in request details for store managers
+- Update ProjectSiteDto and mapping profiles to support related data
+- Add comprehensive styling for explosive totals sections
