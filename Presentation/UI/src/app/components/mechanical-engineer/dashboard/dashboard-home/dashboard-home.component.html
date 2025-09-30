@@ -24,13 +24,13 @@
 </header>
 
 <!-- Global loading indicator while data is fetched -->
-<div class="loading-container" *ngIf="isLoading">
+<div class="loading-container" *ngIf="isLoading()">
   <div class="spinner"></div>
   <p>Loading maintenance dashboard...</p>
 </div>
 
 <!-- Main dashboard content (visible when not loading) -->
-<div class="dashboard-content" *ngIf="!isLoading">
+<div class="dashboard-content" *ngIf="!isLoading()">
   <!-- Critical Maintenance Alerts. Show alerts only if any exist -->
   <div class="alerts-section" *ngIf="maintenanceAlerts.length > 0">
     <h3>
@@ -93,87 +93,169 @@
     </div>
   </div>
 
+  <!-- Machine Management Section - UC-36 & UC-37 Implementation -->
+  <div class="machine-management-section">
+    <h3>
+      <i class="material-icons">build</i>
+      Machine Maintenance Management
+    </h3>
+    
+    <!-- Available Machines for Scheduling -->
+    <div class="machine-category" *ngIf="availableMachines().length > 0">
+      <h4>Available Machines - Schedule Maintenance</h4>
+      <div class="machine-cards">
+        <div class="machine-card available" *ngFor="let machine of availableMachines()">
+          <div class="machine-header">
+            <h5>{{ machine.name }}</h5>
+            <span class="machine-status">{{ machine.status }}</span>
+          </div>
+          <div class="machine-details">
+            <p><strong>Model:</strong> {{ machine.model }}</p>
+            <p><strong>Rig No:</strong> {{ machine.rigNo }}</p>
+            <p><strong>Location:</strong> {{ machine.location }}</p>
+            <p *ngIf="machine.nextMaintenance"><strong>Next Maintenance:</strong> {{ machine.nextMaintenance }}</p>
+          </div>
+          <div class="machine-actions">
+            <button class="schedule-btn" (click)="scheduleMaintenance(machine)">
+              <i class="material-icons">schedule</i>
+              Schedule Maintenance
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machines Scheduled for Maintenance -->
+    <div class="machine-category" *ngIf="scheduledForMaintenance().length > 0">
+      <h4>Scheduled for Maintenance - Log Activity</h4>
+      <div class="machine-cards">
+        <div class="machine-card scheduled" *ngFor="let machine of scheduledForMaintenance()">
+          <div class="machine-header">
+            <h5>{{ machine.name }}</h5>
+            <span class="machine-status scheduled">{{ machine.status }}</span>
+          </div>
+          <div class="machine-details">
+            <p><strong>Model:</strong> {{ machine.model }}</p>
+            <p><strong>Rig No:</strong> {{ machine.rigNo }}</p>
+            <p><strong>Location:</strong> {{ machine.location }}</p>
+            <p *ngIf="machine.lastMaintenance"><strong>Last Maintenance:</strong> {{ machine.lastMaintenance }}</p>
+          </div>
+          <div class="machine-actions">
+            <button class="log-btn" (click)="logMaintenanceActivity(machine)">
+              <i class="material-icons">assignment_turned_in</i>
+              Log Maintenance Activity
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machines Under Maintenance -->
+    <div class="machine-category" *ngIf="underMaintenance().length > 0">
+      <h4>Under Maintenance - Complete Activity</h4>
+      <div class="machine-cards">
+        <div class="machine-card under-maintenance" *ngFor="let machine of underMaintenance()">
+          <div class="machine-header">
+            <h5>{{ machine.name }}</h5>
+            <span class="machine-status under-maintenance">{{ machine.status }}</span>
+          </div>
+          <div class="machine-details">
+            <p><strong>Model:</strong> {{ machine.model }}</p>
+            <p><strong>Rig No:</strong> {{ machine.rigNo }}</p>
+            <p><strong>Location:</strong> {{ machine.location }}</p>
+            <p *ngIf="machine.lastMaintenance"><strong>Last Maintenance:</strong> {{ machine.lastMaintenance }}</p>
+          </div>
+          <div class="machine-actions">
+            <button class="complete-btn" (click)="logMaintenanceActivity(machine)">
+              <i class="material-icons">check_circle</i>
+              Complete Maintenance
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Machine Operational Status Panel -->
   <div class="analysis-panel">
     <h3>
       <i class="material-icons">analytics</i>
       Machine Operational Status Overview
     </h3>
-    <!-- Distribution of machines by real-time status -->
-    <div class="metrics-grid">
-      <div class="metric-item">
-        <span class="metric-label">
+    <div class="status-breakdown">
+      <div class="status-item running">
+        <div class="status-icon">
           <i class="material-icons">play_circle</i>
-          Running Machines:
-        </span>
-        <span class="metric-value status-running">{{ operationalStatus.running }}</span>
+        </div>
+        <div class="status-info">
+          <span class="status-label">Running</span>
+          <span class="status-count">{{ operationalStatus.running }}</span>
+        </div>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
+      <div class="status-item idle">
+        <div class="status-icon">
           <i class="material-icons">pause_circle</i>
-          Idle Machines:
-        </span>
-        <span class="metric-value status-idle">{{ operationalStatus.idle }}</span>
+        </div>
+        <div class="status-info">
+          <span class="status-label">Idle</span>
+          <span class="status-count">{{ operationalStatus.idle }}</span>
+        </div>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">build</i>
-          Under Maintenance:
-        </span>
-        <span class="metric-value status-maintenance">{{ operationalStatus.underMaintenance }}</span>
+      <div class="status-item maintenance">
+        <div class="status-icon">
+          <i class="material-icons">build_circle</i>
+        </div>
+        <div class="status-info">
+          <span class="status-label">Under Maintenance</span>
+          <span class="status-count">{{ operationalStatus.underMaintenance }}</span>
+        </div>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">error_outline</i>
-          Breakdown:
-        </span>
-        <span class="metric-value status-breakdown">{{ operationalStatus.breakdown }}</span>
+      <div class="status-item breakdown">
+        <div class="status-icon">
+          <i class="material-icons">error</i>
+        </div>
+        <div class="status-info">
+          <span class="status-label">Breakdown</span>
+          <span class="status-count">{{ operationalStatus.breakdown }}</span>
+        </div>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">check_circle_outline</i>
-          Available:
-        </span>
-        <span class="metric-value status-available">{{ operationalStatus.available }}</span>
+      <div class="status-item available">
+        <div class="status-icon">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <div class="status-info">
+          <span class="status-label">Available</span>
+          <span class="status-count">{{ operationalStatus.available }}</span>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Quick Actions Panel -->
-  <div class="actions-panel">
+  <div class="quick-actions-panel">
     <h3>
-      <i class="material-icons">build</i>
-      Maintenance Quick Actions
+      <i class="material-icons">flash_on</i>
+      Quick Actions
     </h3>
     <div class="action-cards">
-      <!-- Navigate to maintenance management module -->
-      <div class="action-card maintenance-action" (click)="navigateToMaintenanceManagement()">
+      <!-- Navigate to maintenance jobs -->
+      <div class="action-card jobs-action" (click)="navigateToMaintenanceJobs()">
         <div class="action-icon">
-          <i class="material-icons">build_circle</i>
+          <i class="material-icons">assignment</i>
         </div>
-        <h4>Maintenance Management</h4>
-        <p>Manage maintenance activities for all machines</p>
+        <h4>Maintenance Jobs</h4>
+        <p>View and manage maintenance jobs</p>
         <div class="action-status">{{ maintenanceStats.pendingTasks }} pending tasks</div>
       </div>
-      
-      <!-- Create and view maintenance schedules -->
-      <div class="action-card schedule-action" (click)="navigateToSchedule()">
-        <div class="action-icon">
-          <i class="material-icons">schedule</i>
-        </div>
-        <h4>Schedule Maintenance</h4>
-        <p>Schedule new maintenance for machines</p>
-        <div class="action-status">{{ maintenanceStats.scheduledToday }} scheduled today</div>
-      </div>
 
-      <!-- Go to machine inventory list and status -->
-      <div class="action-card inventory-action" (click)="navigateToInventory()">
+      <!-- Navigate to maintenance analytics -->
+      <div class="action-card analytics-action" (click)="navigateToMaintenanceAnalytics()">
         <div class="action-icon">
-          <i class="material-icons">inventory_2</i>
+          <i class="material-icons">analytics</i>
         </div>
-        <h4>Machine Inventory</h4>
-        <p>View and manage machine inventory status</p>
-        <div class="action-status">{{ maintenanceStats.totalMachines }} machines</div>
+        <h4>Maintenance Analytics</h4>
+        <p>View maintenance performance metrics</p>
+        <div class="action-status">View reports</div>
       </div>
 
       <!-- View and manage maintenance alerts -->
@@ -184,6 +266,26 @@
         <h4>Maintenance Alerts</h4>
         <p>View and manage maintenance alerts</p>
         <div class="action-status">{{ maintenanceAlerts.length }} active alerts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activities Panel -->
+  <div class="activities-panel">
+    <h3>
+      <i class="material-icons">history</i>
+      Recent Maintenance Activities
+    </h3>
+    <div class="activity-list">
+      <div class="activity-item" *ngFor="let activity of recentActivities">
+        <div class="activity-icon">
+          <i class="material-icons">{{ activity.icon }}</i>
+        </div>
+        <div class="activity-content">
+          <h4>{{ activity.title }}</h4>
+          <p>{{ activity.description }}</p>
+          <span class="activity-time">{{ activity.timestamp }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -200,49 +302,26 @@
         <div class="profile-avatar">
           <span class="avatar-initials">{{ getInitials() }}</span>
         </div>
-        <div class="profile-main-info">
+        <div class="profile-info">
           <h4>{{ currentUser.name }}</h4>
-          <p class="profile-email">{{ currentUser.email }}</p>
-          <div class="profile-role-badge">
-            <span class="role-badge">Mechanical Engineer</span>
-          </div>
+          <p class="profile-role">{{ currentUser.role }}</p>
+          <p class="profile-location" *ngIf="getUserLocationInfo()">{{ getUserLocationInfo() }}</p>
         </div>
       </div>
-      
-      <!-- Key profile attributes for quick reference -->
-      <div class="profile-details-grid">
-        <div class="profile-detail-item">
-          <div class="detail-label">Specialization:</div>
-          <div class="detail-value">Maintenance Management</div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <span class="stat-label">Machines Managed</span>
+          <span class="stat-value">{{ maintenanceStats.totalMachines }}</span>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Operating Region:</div>
-          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
+        <div class="profile-stat">
+          <span class="stat-label">Active Alerts</span>
+          <span class="stat-value">{{ maintenanceAlerts.length }}</span>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Country:</div>
-          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Contact:</div>
-          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Status:</div>
-          <div class="detail-value">
-            <!-- Badge color depends on user status -->
-            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
-              {{ currentUser.status || 'ACTIVE' }}
-            </span>
-          </div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Data Sets:</div>
-          <div class="detail-value">{{ maintenanceStats.totalMachines }} machines managed</div>
+        <div class="profile-stat">
+          <span class="stat-label">Pending Tasks</span>
+          <span class="stat-value">{{ maintenanceStats.pendingTasks }}</span>
         </div>
       </div>
     </div>
   </div>
-
-
 </div>
