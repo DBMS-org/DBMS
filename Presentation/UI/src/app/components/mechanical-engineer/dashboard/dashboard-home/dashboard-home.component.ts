@@ -89,7 +89,7 @@ export class DashboardHomeComponent implements OnInit {
   currentUser: any = null;
   isLoading = signal(true);
   
-  // Accessories inventory (mock) with low-stock thresholds
+  // Mock inventory data - tracks spare parts with stock levels and alerts
   accessories = signal<Accessory[]>([
     { id: 'acc-1', name: 'Oil Filter', stock: 10, lowStockThreshold: 3 },
     { id: 'acc-2', name: 'Air Filter', stock: 8, lowStockThreshold: 2 },
@@ -98,10 +98,10 @@ export class DashboardHomeComponent implements OnInit {
     { id: 'acc-5', name: 'Engine Oil', stock: 20, lowStockThreshold: 6 }
   ]);
 
-  // Per-machine maintenance form data (type, date, notes)
+  // Tracks form data for each machine's maintenance logging
   maintenanceForms = signal<Record<string, { type?: MaintenanceLogRequest['maintenanceType']; date?: string; notes?: string }>>({});
 
-  // Per-machine accessory usage entries
+  // Tracks which parts and quantities are used for each machine
   selectedAccessoryUsage = signal<Record<string, { partName: string; quantity: number }[]>>({});
   
   // Machine data
