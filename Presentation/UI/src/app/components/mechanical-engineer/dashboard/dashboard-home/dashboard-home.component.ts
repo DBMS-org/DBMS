@@ -5,74 +5,78 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../../core/services/auth.service';
 
-interface MaintenanceStats {
+interface MechanicalEngineerStats {
   totalMachines: number;
   operational: number;
   underMaintenance: number;
   breakdown: number;
   pendingTasks: number;
   scheduledToday: number;
+  completedThisWeek: number;
+  averageUptime: number;
 }
 
-interface OperationalStatus {
-  running: number;
-  idle: number;
-  underMaintenance: number;
-  breakdown: number;
-  available: number;
+interface EquipmentPerformance {
+  machineId: string;
+  machineName: string;
+  uptime: number;
+  efficiency: number;
+  lastService: string;
+  nextService: string;
+  status: 'Excellent' | 'Good' | 'Fair' | 'Poor';
 }
 
 interface MaintenanceAlert {
   id: string;
-  machine: string;
+  machineId: string;
+  machineName: string;
   message: string;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   timestamp: string;
+  type: 'OVERDUE' | 'DUE_SOON' | 'BREAKDOWN' | 'INSPECTION';
   icon: string;
 }
 
-interface Activity {
+interface MaintenanceActivity {
+  id: string;
   title: string;
   description: string;
   timestamp: string;
+  machineId: string;
+  type: 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
   icon: string;
 }
 
 interface Machine {
   id: string;
   name: string;
+  type: string;
   model: string;
-  rigNo: string;
-  status: 'Available' | 'In Use' | 'Scheduled for Maintenance' | 'Under Maintenance' | 'Breakdown';
+  serialNumber: string;
+  status: 'OPERATIONAL' | 'IN_USE' | 'MAINTENANCE_SCHEDULED' | 'UNDER_MAINTENANCE' | 'BREAKDOWN' | 'OFFLINE';
   location: string;
+  assignedProject?: string;
   lastMaintenance?: string;
   nextMaintenance?: string;
-  assignedProject?: string;
+  nextMaintenanceType?: string;
+  nextMaintenanceDate?: string;
+  priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+  hoursOperated: number;
+  fuelConsumption: number;
+  efficiency: number;
 }
 
-interface MaintenanceScheduleRequest {
-  machineId: string;
-  maintenanceType: 'Preventive' | 'Corrective' | 'Emergency' | 'Inspection';
-  scheduledDate: string;
-  notes?: string;
-  estimatedDuration: number;
-}
-
-interface MaintenanceLogRequest {
-  machineId: string;
-  maintenanceType: 'Preventive' | 'Corrective' | 'Emergency' | 'Inspection';
-  completedDate: string;
-  notes: string;
-  actualDuration: number;
-  partsUsed?: string[];
-  cost?: number;
-}
-
-interface Accessory {
+interface SparePart {
   id: string;
   name: string;
-  stock: number;
-  lowStockThreshold: number;
+  partNumber: string;
+  currentStock: number;
+  minimumStock: number;
+  minStock: number;
+  maxStock: number;
+  unitCost: number;
+  supplier: string;
+  category: 'ENGINE' | 'HYDRAULIC' | 'ELECTRICAL' | 'CONSUMABLE' | 'SAFETY';
 }
 
 @Component({
@@ -85,214 +89,358 @@ interface Accessory {
 export class DashboardHomeComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
+  // Component state
   currentUser: any = null;
   isLoading = signal(true);
-  
-  // Mock inventory data - tracks spare parts with stock levels and alerts
-  accessories = signal<Accessory[]>([
-    { id: 'acc-1', name: 'Oil Filter', stock: 10, lowStockThreshold: 3 },
-    { id: 'acc-2', name: 'Air Filter', stock: 8, lowStockThreshold: 2 },
-    { id: 'acc-3', name: 'Hydraulic Hose', stock: 5, lowStockThreshold: 2 },
-    { id: 'acc-4', name: 'Brake Pads', stock: 12, lowStockThreshold: 4 },
-    { id: 'acc-5', name: 'Engine Oil', stock: 20, lowStockThreshold: 6 }
-  ]);
+  error = signal<string | null>(null);
 
-  // Tracks form data for each machine's maintenance logging
-  maintenanceForms = signal<Record<string, { type?: MaintenanceLogRequest['maintenanceType']; date?: string; notes?: string }>>({});
+  // Dashboard data signals
+  stats = signal<MechanicalEngineerStats>({
+    totalMachines: 0,
+    operational: 0,
+    underMaintenance: 0,
+    breakdown: 0,
+    pendingTasks: 0,
+    scheduledToday: 0,
+    completedThisWeek: 0,
+    averageUptime: 0
+  });
 
-  // Tracks which parts and quantities are used for each machine
-  selectedAccessoryUsage = signal<Record<string, { partName: string; quantity: number }[]>>({});
-  
-  // Machine data
-  machines = signal<Machine[]>([
-    {
-      id: '1',
-      name: 'Excavator EX-001',
-      model: 'CAT 320D',
-      rigNo: 'EX-001',
-      status: 'Available',
-      location: 'Site A',
-      lastMaintenance: '2024-01-15',
-      nextMaintenance: '2024-02-15'
-    },
-    {
-      id: '2',
-      name: 'Drill Rig DR-205',
-      model: 'Atlas Copco ROC D7',
-      rigNo: 'DR-205',
-      status: 'In Use',
-      location: 'Site B',
-      assignedProject: 'Project Alpha',
-      lastMaintenance: '2024-01-10',
-      nextMaintenance: '2024-02-10'
-    },
-    {
-      id: '3',
-      name: 'Loader LD-103',
-      model: 'CAT 966M',
-      rigNo: 'LD-103',
-      status: 'Scheduled for Maintenance',
-      location: 'Site C',
-      lastMaintenance: '2024-01-05',
-      nextMaintenance: '2024-02-05'
-    },
-    {
-      id: '4',
-      name: 'Excavator EX-005',
-      model: 'Komatsu PC200',
-      rigNo: 'EX-005',
-      status: 'Under Maintenance',
-      location: 'Maintenance Bay 1',
-      lastMaintenance: '2024-01-20'
-    }
-  ]);
+  equipmentPerformance = signal<EquipmentPerformance[]>([]);
+  maintenanceAlerts = signal<MaintenanceAlert[]>([]);
+  recentActivities = signal<MaintenanceActivity[]>([]);
+  machines = signal<Machine[]>([]);
+  spareParts = signal<SparePart[]>([]);
 
-  // Computed values
-  availableMachines = computed(() => 
-    this.machines().filter(m => m.status === 'Available')
-  );
-  
-  scheduledForMaintenance = computed(() => 
-    this.machines().filter(m => m.status === 'Scheduled for Maintenance')
-  );
-  
-  underMaintenance = computed(() => 
-    this.machines().filter(m => m.status === 'Under Maintenance')
+  // Computed properties
+  criticalAlerts = computed(() => 
+    this.maintenanceAlerts().filter(alert => alert.priority === 'CRITICAL')
   );
 
-  maintenanceStats: MaintenanceStats = {
-    totalMachines: 42,
-    operational: 28,
-    underMaintenance: 8,
-    breakdown: 3,
-    pendingTasks: 15,
-    scheduledToday: 6
-  };
+  lowStockParts = computed(() => 
+    this.spareParts().filter(part => part.currentStock <= part.minimumStock)
+  );
 
-  operationalStatus: OperationalStatus = {
-    running: 18,
-    idle: 10,
-    underMaintenance: 8,
-    breakdown: 3,
-    available: 3
-  };
+  machinesNeedingMaintenance = computed(() => 
+    this.machines().filter(machine => 
+      machine.status === 'MAINTENANCE_SCHEDULED' || machine.status === 'UNDER_MAINTENANCE'
+    )
+  );
 
-  maintenanceAlerts: MaintenanceAlert[] = [
-    {
-      id: '1',
-      machine: 'Excavator EX-001',
-      message: 'Service threshold reached - 8 hours remaining',
-      priority: 'HIGH',
-      timestamp: '2 hours ago',
-      icon: 'error'
-    },
-    {
-      id: '2',
-      machine: 'Drill Rig DR-205',
-      message: 'Scheduled maintenance due in 24 hours',
-      priority: 'MEDIUM',
-      timestamp: '4 hours ago',
-      icon: 'schedule'
-    },
-    {
-      id: '3',
-      machine: 'Loader LD-103',
-      message: 'Oil change required - overdue by 2 days',
-      priority: 'HIGH',
-      timestamp: '6 hours ago',
-      icon: 'warning'
-    }
-  ];
+  operationalMachines = computed(() => 
+    this.machines().filter(machine => 
+      machine.status === 'OPERATIONAL' || machine.status === 'IN_USE'
+    )
+  );
 
-  recentActivities: Activity[] = [
-    {
-      title: 'Scheduled Maintenance',
-      description: 'Scheduled preventive maintenance for Excavator EX-005',
-      timestamp: '30 minutes ago',
-      icon: 'schedule'
-    },
-    {
-      title: 'Maintenance Alert Resolved',
-      description: 'Resolved hydraulic system alert for Drill Rig DR-102',
-      timestamp: '2 hours ago',
-      icon: 'check_circle'
-    },
-    {
-      title: 'Machine Status Update',
-      description: 'Updated operational status for 5 machines',
-      timestamp: '4 hours ago',
-      icon: 'update'
-    },
-    {
-      title: 'Service Completed',
-      description: 'Completed routine service for Loader LD-201',
-      timestamp: '1 day ago',
-      icon: 'build'
-    },
-    {
-      title: 'Inventory Check',
-      description: 'Performed inventory check on spare parts',
-      timestamp: '2 days ago',
-      icon: 'inventory'
-    }
-  ];
+  // Computed properties for the new data structure
+  mechanicalStats = computed(() => ({
+    totalEquipment: this.machines().length,
+    operationalEquipment: this.operationalMachines().length,
+    underMaintenance: this.machinesNeedingMaintenance().length,
+    efficiencyRate: this.calculateAverageEfficiency(),
+    pendingMaintenance: this.machinesNeedingMaintenance().length
+  }));
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  ngOnInit() {
+  ngOnInit(): void {
     this.loadDashboardData();
   }
 
-  loadDashboardData() {
-    this.isLoading.set(true);
-    this.currentUser = this.authService.getCurrentUser();
-    
-    // Simulate loading time
-    setTimeout(() => {
+  private async loadDashboardData(): Promise<void> {
+    try {
+      console.log('Starting dashboard data load...');
+      this.isLoading.set(true);
+      this.error.set(null);
+      this.currentUser = this.authService.getCurrentUser();
+      console.log('Current user:', this.currentUser);
+
+      // Load all dashboard data
+      console.log('Loading dashboard data components...');
+      await Promise.all([
+        this.loadMachineData(),
+        this.loadMaintenanceAlerts(),
+        this.loadRecentActivities(),
+        this.loadSparePartsInventory(),
+        this.loadEquipmentPerformance()
+      ]);
+      console.log('All data loaded successfully');
+
+      this.updateStats();
+      console.log('Stats updated');
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      this.error.set('Failed to load dashboard data');
+    } finally {
+      console.log('Setting loading to false');
       this.isLoading.set(false);
-    }, 1000);
+    }
   }
 
-  // Form helpers
-  setMaintenanceForm(machineId: string, field: 'type' | 'date' | 'notes', value: string) {
-    this.maintenanceForms.update(forms => ({
-      ...forms,
-      [machineId]: { ...(forms[machineId] || {}), [field]: value }
-    }));
-  }
-
-  addAccessoryUsage(machineId: string, partName: string, quantity: number) {
-    if (!partName || !quantity || quantity <= 0 || !Number.isFinite(quantity)) {
-      this.snackBar.open('Please select a part and valid quantity', 'Close', { duration: 4000, panelClass: ['error-snackbar'] });
-      return;
-    }
-
-    const partExists = this.accessories().find(a => a.name === partName);
-    if (!partExists) {
-      this.snackBar.open(`Unknown accessory: ${partName}`, 'Close', { duration: 4000, panelClass: ['error-snackbar'] });
-      return;
-    }
-
-    this.selectedAccessoryUsage.update(map => {
-      const list = map[machineId] ? [...map[machineId]] : [];
-      list.push({ partName, quantity });
-      return { ...map, [machineId]: list };
+  private async loadMachineData(): Promise<void> {
+    return new Promise((resolve) => {
+      // Mock data for machines
+      const mockMachines: Machine[] = [
+        {
+          id: 'DR-102',
+          name: 'Drill Rig Atlas Copco',
+          type: 'Drill Rig',
+          model: 'Atlas Copco ROC L8',
+          serialNumber: 'AC-ROC-L8-102',
+          status: 'OPERATIONAL',
+          location: 'Site A - Block 3',
+          assignedProject: 'Project Alpha',
+          lastMaintenance: '2024-01-15',
+          nextMaintenance: '2024-02-15',
+          nextMaintenanceType: 'Scheduled Service',
+          nextMaintenanceDate: '2024-02-15',
+          priority: 'MEDIUM',
+          hoursOperated: 1250,
+          fuelConsumption: 18.5,
+          efficiency: 92
+        },
+        {
+          id: 'LD-201',
+          name: 'Loader Caterpillar 980M',
+          type: 'Loader',
+          model: 'CAT 980M',
+          serialNumber: 'CAT980M201',
+          status: 'IN_USE',
+          location: 'Site B - Loading Zone',
+          assignedProject: 'Project Beta',
+          lastMaintenance: '2024-01-10',
+          nextMaintenance: '2024-02-10',
+          nextMaintenanceType: 'Oil Change',
+          nextMaintenanceDate: '2024-02-10',
+          priority: 'LOW',
+          hoursOperated: 980,
+          fuelConsumption: 22.3,
+          efficiency: 88
+        },
+        {
+          id: 'LD-103',
+          name: 'Loader CAT 966M',
+          type: 'Loader',
+          model: 'CAT 966M',
+          serialNumber: 'CAT966M103',
+          status: 'MAINTENANCE_SCHEDULED',
+          location: 'Maintenance Bay 2',
+          lastMaintenance: '2024-01-05',
+          nextMaintenance: '2024-02-05',
+          nextMaintenanceType: 'Hydraulic System Check',
+          nextMaintenanceDate: '2024-02-05',
+          priority: 'HIGH',
+          hoursOperated: 1450,
+          fuelConsumption: 25.1,
+          efficiency: 85
+        },
+        {
+          id: 'EX-005',
+          name: 'Excavator Komatsu PC200',
+          type: 'Excavator',
+          model: 'PC200',
+          serialNumber: 'PC200-005',
+          status: 'UNDER_MAINTENANCE',
+          location: 'Maintenance Bay 1',
+          lastMaintenance: '2024-01-20',
+          nextMaintenanceType: 'Engine Overhaul',
+          nextMaintenanceDate: '2024-02-25',
+          priority: 'HIGH',
+          hoursOperated: 2100,
+          fuelConsumption: 28.7,
+          efficiency: 78
+        }
+      ];
+      this.machines.set(mockMachines);
+      resolve();
     });
   }
 
-  removeAccessoryUsage(machineId: string, index: number) {
-    this.selectedAccessoryUsage.update(map => {
-      const list = map[machineId] ? [...map[machineId]] : [];
-      if (index >= 0 && index < list.length) list.splice(index, 1);
-      return { ...map, [machineId]: list };
+  private async loadMaintenanceAlerts(): Promise<void> {
+    return new Promise((resolve) => {
+      const mockAlerts: MaintenanceAlert[] = [
+        {
+          id: '1',
+          machineId: 'DR-102',
+          machineName: 'Drill Rig Atlas Copco',
+          message: 'Hydraulic system pressure low - requires immediate attention',
+          priority: 'CRITICAL',
+          timestamp: '2 hours ago',
+          type: 'BREAKDOWN',
+          icon: 'error'
+        },
+        {
+          id: '2',
+          machineId: 'LD-201',
+          machineName: 'Loader Caterpillar 980M',
+          message: 'Scheduled maintenance due in 2 days',
+          priority: 'HIGH',
+          timestamp: '4 hours ago',
+          type: 'DUE_SOON',
+          icon: 'schedule'
+        },
+        {
+          id: '3',
+          machineId: 'LD-103',
+          machineName: 'Loader CAT 966M',
+          message: 'Oil change required - overdue by 2 days',
+          priority: 'HIGH',
+          timestamp: '6 hours ago',
+          type: 'OVERDUE',
+          icon: 'warning'
+        }
+      ];
+      this.maintenanceAlerts.set(mockAlerts);
+      resolve();
     });
   }
 
-  refreshDashboard() {
+  private async loadRecentActivities(): Promise<void> {
+    return new Promise((resolve) => {
+      const mockActivities: MaintenanceActivity[] = [
+        {
+          id: '1',
+          title: 'Scheduled Maintenance',
+          description: 'Scheduled preventive maintenance for Excavator EX-005',
+          timestamp: '30 minutes ago',
+          machineId: 'EX-005',
+          type: 'SCHEDULED',
+          icon: 'schedule'
+        },
+        {
+          id: '2',
+          title: 'Maintenance Alert Resolved',
+          description: 'Resolved hydraulic system alert for Drill Rig DR-102',
+          timestamp: '2 hours ago',
+          machineId: 'DR-102',
+          type: 'COMPLETED',
+          icon: 'check_circle'
+        },
+        {
+          id: '3',
+          title: 'Service Completed',
+          description: 'Completed routine service for Loader LD-201',
+          timestamp: '1 day ago',
+          machineId: 'LD-201',
+          type: 'COMPLETED',
+          icon: 'build'
+        }
+      ];
+      this.recentActivities.set(mockActivities);
+      resolve();
+    });
+  }
+
+  private async loadSparePartsInventory(): Promise<void> {
+    return new Promise((resolve) => {
+      const mockSpareParts: SparePart[] = [
+        {
+          id: 'SP-001',
+          name: 'Hydraulic Filter',
+          partNumber: 'HF-2024-001',
+          currentStock: 5,
+          minimumStock: 10,
+          minStock: 10,
+          maxStock: 50,
+          unitCost: 125.50,
+          supplier: 'Caterpillar Inc.',
+          category: 'HYDRAULIC'
+        },
+        {
+          id: 'SP-002',
+          name: 'Engine Oil Filter',
+          partNumber: 'EOF-2024-002',
+          currentStock: 8,
+          minimumStock: 15,
+          minStock: 15,
+          maxStock: 60,
+          unitCost: 45.75,
+          supplier: 'Atlas Copco',
+          category: 'ENGINE'
+        },
+        {
+          id: 'SP-003',
+          name: 'Brake Pads',
+          partNumber: 'BP-2024-003',
+          currentStock: 3,
+          minimumStock: 8,
+          minStock: 8,
+          maxStock: 40,
+          unitCost: 89.25,
+          supplier: 'Komatsu Parts',
+          category: 'SAFETY'
+        }
+      ];
+      this.spareParts.set(mockSpareParts);
+      resolve();
+    });
+  }
+
+  private async loadEquipmentPerformance(): Promise<void> {
+    return new Promise((resolve) => {
+      const mockPerformance: EquipmentPerformance[] = [
+        {
+          machineId: 'DR-102',
+          machineName: 'Drill Rig Atlas Copco',
+          uptime: 92.5,
+          efficiency: 92,
+          lastService: '2024-01-15',
+          nextService: '2024-02-15',
+          status: 'Excellent'
+        },
+        {
+          machineId: 'LD-201',
+          machineName: 'Loader Caterpillar 980M',
+          uptime: 88.2,
+          efficiency: 88,
+          lastService: '2024-01-10',
+          nextService: '2024-02-10',
+          status: 'Good'
+        },
+        {
+          machineId: 'LD-103',
+          machineName: 'Loader CAT 966M',
+          uptime: 85.1,
+          efficiency: 85,
+          lastService: '2024-01-05',
+          nextService: '2024-02-05',
+          status: 'Good'
+        },
+        {
+          machineId: 'EX-005',
+          machineName: 'Excavator Komatsu PC200',
+          uptime: 78.3,
+          efficiency: 78,
+          lastService: '2024-01-20',
+          nextService: '2024-02-20',
+          status: 'Fair'
+        }
+      ];
+      this.equipmentPerformance.set(mockPerformance);
+      resolve();
+    });
+  }
+
+  private updateStats(): void {
+    const machines = this.machines();
+    const alerts = this.maintenanceAlerts();
+    const activities = this.recentActivities();
+
+    this.stats.set({
+      totalMachines: machines.length,
+      operational: machines.filter(m => m.status === 'OPERATIONAL' || m.status === 'IN_USE').length,
+      underMaintenance: machines.filter(m => m.status === 'UNDER_MAINTENANCE').length,
+      breakdown: machines.filter(m => m.status === 'BREAKDOWN').length,
+      pendingTasks: machines.filter(m => m.status === 'MAINTENANCE_SCHEDULED').length,
+      scheduledToday: machines.filter(m => m.status === 'MAINTENANCE_SCHEDULED').length,
+      completedThisWeek: activities.filter(a => a.type === 'COMPLETED').length,
+      averageUptime: Math.round(machines.reduce((acc, m) => acc + m.efficiency, 0) / machines.length)
+    });
+  }
+
+  refreshDashboard(): void {
     this.loadDashboardData();
   }
 
@@ -322,7 +470,7 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   getUserLocationInfo(): string {
-    return this.currentUser?.region || '';
+    return this.currentUser?.region || 'Mining Site';
   }
 
   getLastLoginInfo(): string {
@@ -330,21 +478,27 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   // Navigation methods
-  navigateToMaintenanceManagement() {
+  navigateToMaintenanceManagement(): void {
     this.router.navigate(['/mechanical-engineer/maintenance']);
   }
 
-  // Irrelevant routes removed: schedule, inventory, alerts
+  navigateToEquipmentMonitoring(): void {
+    this.router.navigate(['/mechanical-engineer/equipment']);
+  }
 
-  logout() {
+  navigateToSparePartsInventory(): void {
+    this.router.navigate(['/mechanical-engineer/spare-parts']);
+  }
+
+  logout(): void {
     this.authService.logout();
     this.router.navigate(['/auth/login']);
   }
 
-  // UC-36: Schedule Maintenance for Machine
-  async scheduleMaintenance(machine: Machine) {
+  // Maintenance management methods
+  scheduleMaintenance(machine: Machine): void {
     // Check if machine is currently in use and cannot be pulled out
-    if (machine.status === 'In Use' && machine.assignedProject) {
+    if (machine.status === 'IN_USE' && machine.assignedProject) {
       this.snackBar.open(
         'Machine currently in use – cannot schedule maintenance',
         'Close',
@@ -353,187 +507,88 @@ export class DashboardHomeComponent implements OnInit {
       return;
     }
 
-    try {
-      // In a real implementation, this would open a dialog for maintenance details
-      const maintenanceRequest: MaintenanceScheduleRequest = {
-        machineId: machine.id,
-        maintenanceType: 'Preventive',
-        scheduledDate: new Date().toISOString().split('T')[0],
-        notes: 'Scheduled maintenance',
-        estimatedDuration: 4
-      };
+    // Update machine status
+    this.machines.update(machines => 
+      machines.map(m => 
+        m.id === machine.id 
+          ? { ...m, status: 'MAINTENANCE_SCHEDULED' as const }
+          : m
+      )
+    );
 
-      // Update machine status
-      this.machines.update(machines => 
-        machines.map(m => 
-          m.id === machine.id 
-            ? { ...m, status: 'Scheduled for Maintenance' as const }
-            : m
-        )
-      );
+    this.snackBar.open(
+      `Maintenance scheduled for ${machine.name}`,
+      'Close',
+      { duration: 3000, panelClass: ['success-snackbar'] }
+    );
 
-      this.snackBar.open(
-        `Maintenance scheduled for ${machine.name}`,
-        'Close',
-        { duration: 3000, panelClass: ['success-snackbar'] }
-      );
-
-      // Update stats
-      this.updateMaintenanceStats();
-
-    } catch (error) {
-      this.snackBar.open(
-        'Failed to schedule maintenance',
-        'Close',
-        { duration: 5000, panelClass: ['error-snackbar'] }
-      );
-    }
+    // Update stats
+    this.updateStats();
   }
 
-  // UC-37: Log Maintenance Activity
-  async logMaintenanceActivity(machine: Machine) {
-    if (machine.status !== 'Scheduled for Maintenance' && machine.status !== 'Under Maintenance') {
-      this.snackBar.open(
-        'Machine must be scheduled for maintenance to log activity',
-        'Close',
-        { duration: 5000, panelClass: ['error-snackbar'] }
-      );
-      return;
-    }
-
-    try {
-      // Collect form data for this machine
-      const form = this.maintenanceForms()[machine.id] || {};
-      const usage = this.selectedAccessoryUsage()[machine.id] || [];
-
-      const maintenanceLog: MaintenanceLogRequest = {
-        machineId: machine.id,
-        maintenanceType: (form.type || 'Preventive'),
-        completedDate: (form.date || new Date().toISOString().split('T')[0]),
-        notes: (form.notes || '').trim(),
-        actualDuration: 3.5,
-        partsUsed: usage.map(u => u.partName),
-        cost: 250
-      };
-
-      // Validation: mandatory fields
-      if (!maintenanceLog.maintenanceType || !maintenanceLog.completedDate || !maintenanceLog.notes) {
-        this.snackBar.open(
-          'All fields are mandatory',
-          'Close',
-          { duration: 5000, panelClass: ['error-snackbar'] }
-        );
-        return;
-      }
-
-      // Validation: accessory stock levels
-      for (const item of usage) {
-        const acc = this.accessories().find(a => a.name === item.partName);
-        if (!acc) {
-          this.snackBar.open(`Unknown accessory: ${item.partName}`, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
-          return;
-        }
-        if (item.quantity > acc.stock) {
-          this.snackBar.open(`Insufficient stock for part: ${item.partName}`, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
-          return;
-        }
-      }
-
-      // Deduct accessory stock and record usage
-      if (usage.length > 0) {
-        this.accessories.update(list => list.map(acc => {
-          const used = usage.find(u => u.partName === acc.name);
-          if (used) {
-            const newStock = acc.stock - used.quantity;
-            const updated = { ...acc, stock: newStock };
-            // Generate low-stock alert if threshold crossed
-            if (newStock <= acc.lowStockThreshold) {
-              this.maintenanceAlerts.unshift({
-                id: `${Date.now()}-${acc.id}`,
-                machine: machine.name,
-                message: `Low stock: ${acc.name} at ${newStock} (threshold ${acc.lowStockThreshold})`,
-                priority: 'HIGH',
-                timestamp: 'Just now',
-                icon: 'inventory_2'
-              });
-            }
-            return updated;
-          }
-          return acc;
-        }));
-      }
-
-      // Update machine status back to Available
-      this.machines.update(machines => 
-        machines.map(m => 
-          m.id === machine.id 
-            ? { 
-                ...m, 
-                status: 'Available' as const,
-                lastMaintenance: maintenanceLog.completedDate
-              }
-            : m
-        )
-      );
-
-      this.snackBar.open(
-        `Maintenance activity logged for ${machine.name}`,
-        'Close',
-        { duration: 3000, panelClass: ['success-snackbar'] }
-      );
-
-      // Notify Machine Manager (simulated in-app notification)
-      this.recentActivities.unshift({
-        title: 'Maintenance Logged',
-        description: `Maintenance completed for ${machine.name} by ${this.currentUser?.name || 'Mechanical Engineer'}`,
-        timestamp: 'Just now',
-        icon: 'assignment_turned_in'
-      });
-
-      // Record accessory usage entries
-      for (const item of usage) {
-        this.recentActivities.unshift({
-          title: 'Accessory Used',
-          description: `${item.quantity} × ${item.partName} used on ${machine.name}`,
-          timestamp: 'Just now',
-          icon: 'inventory_2'
-        });
-      }
-
-      // Update stats
-      this.updateMaintenanceStats();
-
-      // Clear form and accessory usage for this machine
-      this.maintenanceForms.update(forms => ({ ...forms, [machine.id]: {} }));
-      this.selectedAccessoryUsage.update(map => ({ ...map, [machine.id]: [] }));
-
-    } catch (error) {
-      this.snackBar.open(
-        'Failed to log maintenance activity',
-        'Close',
-        { duration: 5000, panelClass: ['error-snackbar'] }
-      );
-    }
+  viewMachineDetails(machine: Machine): void {
+    this.router.navigate(['/mechanical-engineer/machines', machine.id]);
   }
 
-  private updateMaintenanceStats() {
-    const machines = this.machines();
-    this.maintenanceStats = {
-      totalMachines: machines.length,
-      operational: machines.filter(m => m.status === 'Available' || m.status === 'In Use').length,
-      underMaintenance: machines.filter(m => m.status === 'Under Maintenance').length,
-      breakdown: machines.filter(m => m.status === 'Breakdown').length,
-      pendingTasks: machines.filter(m => m.status === 'Scheduled for Maintenance').length,
-      scheduledToday: machines.filter(m => m.status === 'Scheduled for Maintenance').length
-    };
+  viewAlertDetails(alert: MaintenanceAlert): void {
+    this.router.navigate(['/mechanical-engineer/alerts', alert.id]);
   }
 
   // Navigation methods for maintenance management
-  navigateToMaintenanceJobs() {
+  navigateToMaintenanceJobs(): void {
     this.router.navigate(['/mechanical-engineer/maintenance/jobs']);
   }
 
-  navigateToMaintenanceAnalytics() {
+  navigateToMaintenanceAnalytics(): void {
     this.router.navigate(['/mechanical-engineer/maintenance/analytics']);
+  }
+
+  private calculateAverageEfficiency(): number {
+    const machines = this.machines();
+    if (machines.length === 0) return 0;
+    const totalEfficiency = machines.reduce((sum, machine) => sum + machine.efficiency, 0);
+    return Math.round(totalEfficiency / machines.length);
+  }
+
+  // Helper methods for template
+  getEfficiencyClass(efficiency: number): string {
+    if (efficiency >= 90) return 'efficiency-excellent';
+    if (efficiency >= 80) return 'efficiency-good';
+    if (efficiency >= 70) return 'efficiency-fair';
+    return 'efficiency-poor';
+  }
+
+  getStockLevelClass(part: SparePart): string {
+    const ratio = part.currentStock / part.minimumStock;
+    if (ratio <= 0.5) return 'stock-critical';
+    if (ratio <= 1) return 'stock-low';
+    return 'stock-normal';
+  }
+
+  getStockStatusClass(part: SparePart): string {
+    const ratio = part.currentStock / part.minimumStock;
+    if (ratio <= 0.5) return 'status-critical';
+    if (ratio <= 1) return 'status-low';
+    return 'status-normal';
+  }
+
+  getStockStatus(part: SparePart): string {
+    const ratio = part.currentStock / part.minimumStock;
+    if (ratio <= 0.5) return 'Critical';
+    if (ratio <= 1) return 'Low Stock';
+    return 'Normal';
+  }
+
+  // Navigation methods
+  navigateToMaintenance(): void {
+    this.router.navigate(['/mechanical-engineer/maintenance']);
+  }
+
+  navigateToEquipment(): void {
+    this.router.navigate(['/mechanical-engineer/equipment']);
+  }
+
+  navigateToAnalytics(): void {
+    this.router.navigate(['/mechanical-engineer/analytics']);
   }
 }
