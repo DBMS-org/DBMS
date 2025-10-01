@@ -15,6 +15,17 @@ import {
   RequestUrgency 
 } from '../models/machine.model';
 
+/**
+ * Machine Service
+ * 
+ * Comprehensive service for managing drilling machine operations including:
+ * - Complete CRUD operations for machine inventory management
+ * - Advanced search and filtering capabilities across machine properties
+ * - Real-time statistics and reporting for machine utilization
+ * - Assignment request workflow management (submit, approve, reject)
+ * - Machine assignment lifecycle tracking (assign, return, status updates)
+ * - Data transformation and mapping between backend and frontend models
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -24,28 +35,44 @@ export class MachineService {
   constructor(private http: HttpClient) {}
 
   // Machine Inventory Operations
+  /**
+   * Retrieves all machines from the backend with proper data transformation
+   * Maps backend response to frontend model with date conversions
+   */
   getAllMachines(): Observable<Machine[]> {
     return this.http.get<Machine[]>(this.apiUrl).pipe(
       map(machines => machines.map(machine => this.mapMachine(machine)))
     );
   }
 
+  /**
+   * Retrieves a specific machine by ID with complete details
+   * Includes maintenance history and assignment information
+   */
   getMachineById(id: number): Observable<Machine> {
     return this.http.get<Machine>(`${this.apiUrl}/${id}`).pipe(
       map(machine => this.mapMachine(machine))
     );
   }
 
+  /**
+   * Creates a new machine record in the system
+   * Validates required fields and applies business rules
+   */
   addMachine(request: CreateMachineRequest): Observable<Machine> {
     return this.http.post<Machine>(this.apiUrl, request).pipe(
       map(machine => this.mapMachine(machine))
     );
   }
 
+  /**
+   * Updates an existing machine record with new information
+   * Handles region ID assignment based on location if not provided
+   */
   updateMachine(id: number, request: UpdateMachineRequest): Observable<Machine> {
-    // Ensure regionId is set if missing
+    // Ensure regionId is set if missing - auto-detect from location
     if (!request.regionId && request.currentLocation) {
-      // Try to find a matching region
+      // Try to find a matching region based on location string
       const regions = environment.regions as Record<string, number>;
       const regionMatch = Object.entries(regions).find(
         ([key]) => request.currentLocation?.toLowerCase().includes(key.toLowerCase())
@@ -61,15 +88,27 @@ export class MachineService {
     );
   }
 
+  /**
+   * Permanently removes a machine from the system
+   * Validates that machine is not currently assigned before deletion
+   */
   deleteMachine(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  /**
+   * Updates the operational status of a machine
+   * Triggers workflow notifications for status changes
+   */
   updateMachineStatus(id: number, status: MachineStatus): Observable<void> {
     return this.http.patch<void>(`${this.apiUrl}/${id}/status`, { status });
   }
 
-  // Search and Statistics
+  // Search and Statistics Operations
+  /**
+   * Performs advanced search across multiple machine properties
+   * Supports partial matching and multiple filter criteria
+   */
   searchMachines(params: {
     name?: string;
     type?: string;
@@ -79,6 +118,7 @@ export class MachineService {
   }): Observable<Machine[]> {
     const queryParams = new URLSearchParams();
     
+    // Build query parameters dynamically based on provided filters
     if (params.name) queryParams.append('name', params.name);
     if (params.type) queryParams.append('type', params.type);
     if (params.status) queryParams.append('status', params.status);
@@ -90,19 +130,35 @@ export class MachineService {
     );
   }
 
+  /**
+   * Retrieves comprehensive machine statistics for dashboard display
+   * Includes utilization rates, maintenance schedules, and availability metrics
+   */
   getMachineStatistics(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/statistics`);
   }
 
-  // Machine Assignment Operations (Mock for now)
+  // Machine Assignment Operations (Mock implementation for development)
+  /**
+   * Retrieves all pending and processed assignment requests
+   * Currently uses mock data for development purposes
+   */
   getAllAssignmentRequests(): Observable<MachineAssignmentRequest[]> {
     return of(this.getMockAssignmentRequests());
   }
 
+  /**
+   * Submits a new machine assignment request for approval
+   * Validates request details and business rules before submission
+   */
   submitAssignmentRequest(request: MachineAssignmentRequest): Observable<MachineAssignmentRequest> {
     return this.http.post<MachineAssignmentRequest>(`${this.apiUrl}/assignment-requests`, request);
   }
 
+  /**
+   * Approves an assignment request and assigns specified machines
+   * Updates machine status and creates assignment records
+   */
   approveAssignmentRequest(requestId: string, assignedMachines: string[], comments?: string): Observable<MachineAssignmentRequest> {
     return this.http.patch<MachineAssignmentRequest>(`${this.apiUrl}/assignment-requests/${requestId}/approve`, {
       assignedMachines,
@@ -110,25 +166,44 @@ export class MachineService {
     });
   }
 
+  /**
+   * Rejects an assignment request with mandatory comments
+   * Notifies requester and logs rejection reason
+   */
   rejectAssignmentRequest(requestId: string, comments: string): Observable<MachineAssignmentRequest> {
     return this.http.patch<MachineAssignmentRequest>(`${this.apiUrl}/assignment-requests/${requestId}/reject`, {
       comments
     });
   }
 
+  /**
+   * Retrieves all currently active machine assignments
+   * Includes assignment details, duration, and return dates
+   */
   getActiveAssignments(): Observable<MachineAssignment[]> {
     return this.http.get<MachineAssignment[]>(`${this.apiUrl}/assignments/active`);
   }
 
+  /**
+   * Creates a new machine assignment record
+   * Updates machine status and tracks assignment lifecycle
+   */
   assignMachine(assignment: MachineAssignment): Observable<MachineAssignment> {
     return this.http.post<MachineAssignment>(`${this.apiUrl}/assignments`, assignment);
   }
 
+  /**
+   * Processes machine return from assignment
+   * Updates machine status and closes assignment record
+   */
   returnMachine(assignmentId: string): Observable<MachineAssignment> {
     return this.http.patch<MachineAssignment>(`${this.apiUrl}/assignments/${assignmentId}/return`, {});
   }
 
-  // Helper method to map backend response to frontend model
+  /**
+   * Helper method to map backend response to frontend model
+   * Handles date conversions and data type transformations
+   */
   private mapMachine(machine: any): Machine {
     return {
       ...machine,
@@ -139,6 +214,10 @@ export class MachineService {
     };
   }
 
+  /**
+   * Provides mock assignment request data for development and testing
+   * Simulates realistic assignment scenarios with various statuses
+   */
   private getMockAssignmentRequests(): MachineAssignmentRequest[] {
     return [
       {
@@ -171,4 +250,4 @@ export class MachineService {
       }
     ];
   }
-} 
+}

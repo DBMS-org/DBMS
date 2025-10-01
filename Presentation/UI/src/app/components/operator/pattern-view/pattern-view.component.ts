@@ -163,7 +163,7 @@ export class PointsTableDialogComponent {
   sortedPoints: any[] = [];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: { points: any[] }) {
-    // Sort points by ID in ascending order
+    // Sort drill points by ID for organized display
     this.sortedPoints = [...data.points].sort((a, b) => a.id - b.id);
   }
 }
@@ -190,7 +190,7 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
   private gridGroup!: Konva.Group;
   private rulerGroup!: Konva.Group;
 
-  // Canvas state
+  // Canvas pan and zoom state
   private offsetX = 0;
   private offsetY = 0;
   private panStartX = 0;
@@ -199,10 +199,10 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
   private panOffsetY = 0;
   private isPanning = false;
 
-  // Pattern settings (spacing, burden, depth)
+  // Drilling pattern configuration
   settings: PatternSettings = { ...CANVAS_CONSTANTS.DEFAULT_SETTINGS };
 
-  // UI state
+  // Component UI state
   showInstructions = false;
   isCompleted = false;
 
@@ -242,7 +242,7 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
   }
 
   ngAfterViewInit() {
-    // Delay canvas initialization to ensure container is fully rendered
+    // Wait for DOM to fully render before creating canvas
     setTimeout(() => {
       this.initializeCanvas();
     }, 100);
