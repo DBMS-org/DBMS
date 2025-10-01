@@ -1,7 +1,3 @@
-refactor(machine-manager): improve component documentation and styling
+chore(migrations): update schema snapshot with new timestamps
 
-feat(machine-details): enhance modal styling and add animations
-feat(machine-inventory): add comprehensive documentation for components
-refactor(machine-service): improve service documentation and type safety
-style(machine-manager): update scss files with better comments and structure
-docs(maintenance-management): add detailed component documentation
+Update the ApplicationDbContextModelSnapshot and add new migration file to reflect updated timestamps for seed data across multiple tables (Regions, Permissions, Roles, RolePermissions). The changes maintain data consistency with the new migration timestamp.

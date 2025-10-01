@@ -62,17 +62,7 @@ export class BreadcrumbComponent {
       });
       
       // Add specific maintenance section
-      if (url.includes('/maintenance/dashboard')) {
-        items.push({
-          label: 'Dashboard',
-          isActive: true
-        });
-      } else if (url.includes('/maintenance/calendar')) {
-        items.push({
-          label: 'Calendar',
-          isActive: true
-        });
-      } else if (url.includes('/maintenance/jobs')) {
+      if (url.includes('/maintenance/jobs')) {
         items.push({
           label: 'Jobs',
           isActive: true
@@ -88,9 +78,9 @@ export class BreadcrumbComponent {
           isActive: true
         });
       } else {
-        // Default to dashboard if just /maintenance
+        // Default to jobs if just /maintenance
         items.push({
-          label: 'Dashboard',
+          label: 'Jobs',
           isActive: true
         });
       }

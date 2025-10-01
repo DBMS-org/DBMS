@@ -1,26 +1,40 @@
+/**
+ * Machine Manager Layout Component Styles
+ * 
+ * Layout structure for the machine manager module providing:
+ * - Full-height flexbox layout with vertical column arrangement
+ * - Responsive sidebar and main content area positioning
+ * - Smooth transitions for sidebar collapse/expand functionality
+ * - Proper spacing and margins for navigation components
+ */
+
+/* Main layout container with full viewport height */
 .machine-manager-layout {
-  min-height: 100vh;
+  min-height: 100vh; // Ensure full screen coverage
   display: flex;
-  flex-direction: column;
-  background-color: #f8f9fa;
+  flex-direction: column; // Stack navbar and content vertically
+  background-color: #f8f9fa; // Consistent light background
 }
 
+/* Content area below the navbar */
 .machine-manager-content {
-  display: flex;
-  flex: 1;
-  position: relative;
-  margin-top: 64px; // Height of navbar
+  display: flex; // Horizontal layout for sidebar and main content
+  flex: 1; // Take remaining space after navbar
+  position: relative; // For absolute positioning of child elements
+  margin-top: 64px; // Account for fixed navbar height
 }
 
+/* Main content area with sidebar spacing */
 .main-content {
-  flex: 1;
-  padding: 2rem;
-  margin-left: 250px;
-  transition: margin-left 0.3s ease;
+  flex: 1; // Take remaining space after sidebar
+  padding: 2rem; // Consistent padding for content
+  margin-left: 250px; // Default sidebar width spacing
+  transition: margin-left 0.3s ease; // Smooth transition for sidebar toggle
 }
 
+/* Responsive layout when sidebar is collapsed */
 .sidebar-collapsed {
   .main-content {
-    margin-left: 70px;
+    margin-left: 70px; // Reduced margin for collapsed sidebar width
   }
 }

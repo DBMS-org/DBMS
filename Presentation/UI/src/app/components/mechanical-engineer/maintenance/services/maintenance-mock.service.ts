@@ -663,7 +663,7 @@ export class MaintenanceMockService {
 
 
   getPartsUsageData(): Observable<PartsUsageData[]> {
-    // Generate realistic parts usage data
+    // Mock data showing which parts are used most often and their costs
     const partsData: PartsUsageData[] = [
       {
         partName: 'Oil Filter',
@@ -883,4 +883,4 @@ export class MaintenanceMockService {
     // For now, just return the updated preferences
     return of(preferences).pipe(delay(400));
   }
-} 
+}
