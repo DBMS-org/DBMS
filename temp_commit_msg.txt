@@ -1,3 +1,1 @@
-chore(migrations): update schema snapshot with new timestamps
-
-Update the ApplicationDbContextModelSnapshot and add new migration file to reflect updated timestamps for seed data across multiple tables (Regions, Permissions, Roles, RolePermissions). The changes maintain data consistency with the new migration timestamp.
+Merge branch 'master' of https://github.com/DBMS-org/DBMS

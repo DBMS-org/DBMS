@@ -9,10 +9,8 @@ import {
   StoreFilters, 
   CreateStoreRequest, 
   UpdateStoreRequest,
-  StoreType,
   ExplosiveType,
-  StoreStatus,
-  SecurityLevel
+  StoreStatus
 } from '../models/store.model';
 
 @Injectable({
@@ -100,11 +98,6 @@ export class StoreService {
         return false;
       }
 
-      // Store type filter
-      if (filters.storeType && filters.storeType !== 'ALL' && store.storeType !== filters.storeType) {
-        return false;
-      }
-
       // Location filter
       if (filters.location && filters.location !== 'ALL' && store.location.city !== filters.location) {
         return false;
@@ -128,7 +121,6 @@ export class StoreService {
           store.storeManagerName,
           store.location.city,
           store.storeAddress,
-          store.storeType,
           store.status
         ].join(' ').toLowerCase();
         
@@ -154,36 +146,5 @@ export class StoreService {
     
     console.error('StoreService Error:', errorMessage);
     return throwError(() => new Error(errorMessage));
-  }
-
-  // Mock data method for development (can be removed in production)
-  private getMockStores(): Store[] {
-    return [
-      {
-        id: '1',
-        storeName: 'Main Explosive Store',
-        storeAddress: '123 Industrial Ave, Mining City, MC 12345',
-        storeManagerName: 'John Smith',
-        storeManagerContact: '+1-555-0123',
-        storeManagerEmail: 'john.smith@company.com',
-        storeType: StoreType.MAIN_WAREHOUSE,
-        explosiveTypesAvailable: [ExplosiveType.ANFO, ExplosiveType.EMULSION],
-        storageCapacity: 10000,
-        currentOccupancy: 7500,
-        status: StoreStatus.OPERATIONAL,
-        isActive: true,
-        location: {
-          city: 'Mining City',
-          region: 'MC Region'
-        },
-        securityLevel: SecurityLevel.LEVEL_4,
-        lastInspectionDate: new Date('2024-01-01'),
-        nextInspectionDate: new Date('2024-04-01'),
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-15'),
-        createdBy: 'admin',
-        updatedBy: 'admin'
-      }
-    ];
   }
 }
