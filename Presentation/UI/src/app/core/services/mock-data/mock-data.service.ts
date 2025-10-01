@@ -29,15 +29,6 @@ export class MockDataService {
     ]
   };
 
-  // Centralized store data
-  private readonly mockStores = [
-    { id: 'store1', name: 'Muscat Field Storage', location: 'Warehouse A', manager: 'Ahmed Al-Rashid' },
-    { id: 'store2', name: 'Sohar Industrial Storage', location: 'Warehouse B', manager: 'Fatima Al-Zahra' },
-    { id: 'store3', name: 'Nizwa Distribution Center', location: 'Warehouse C', manager: 'John Smith' },
-    { id: 'store4', name: 'Salalah Regional Storage', location: 'Warehouse D', manager: 'Sarah Johnson' },
-    { id: 'store5', name: 'Buraimi Field Storage', location: 'Warehouse E', manager: 'Mike Wilson' }
-  ];
-
   // Centralized request items data
   private readonly mockRequestItems = [
     // ANFO items
@@ -312,12 +303,7 @@ export class MockDataService {
     return this.mockUsers;
   }
 
-  /**
-   * Get mock store data
-   */
-  getMockStores() {
-    return this.mockStores;
-  }
+
 
   /**
    * Get mock request items
