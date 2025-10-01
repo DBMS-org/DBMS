@@ -1,3 +1,7 @@
-refactor(stores): simplify store model and remove security level
+refactor(mechanical-engineer): simplify dashboard component and remove artificial delays
 
-Remove security level field and related enum from store model. Simplify store interface by removing unnecessary fields like storeType, inspection dates, and audit fields. Update components and services to reflect these changes. Also clean up mock data and validation services.
+- Remove DashboardComponent and move DashboardHomeComponent to root route
+- Eliminate artificial delays in maintenance mock service
+- Streamline dashboard layout and remove redundant documentation
+- Update routing to directly use DashboardHomeComponent
+- Clean up unused styles and comments

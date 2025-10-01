@@ -4,51 +4,18 @@ export interface Store {
   storeAddress: string;
   storeManagerName: string;
   storeManagerContact: string;
-  storeManagerEmail?: string;
-  storeType: StoreType;
+  storeManagerEmail: string;
   explosiveTypesAvailable: ExplosiveType[];
   storageCapacity: number;
   currentOccupancy?: number;
+  location: StoreLocation;
   status: StoreStatus;
   isActive: boolean;
-  location: StoreLocation;
-  securityLevel: SecurityLevel;
-  lastInspectionDate?: Date;
-  nextInspectionDate?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: string;
-  updatedBy: string;
 }
 
 export interface StoreLocation {
   city: string;
   region: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-}
-
-export interface StoreInventoryRecord {
-  id: string;
-  storeId: string;
-  explosiveType: ExplosiveType;
-  quantity: number;
-  unit: string;
-  batchNumber: string;
-  manufacturingDate: Date;
-  expiryDate: Date;
-  supplier: string;
-  lastUpdated: Date;
-}
-
-export enum StoreType {
-  MAIN_WAREHOUSE = 'Main Warehouse',
-  FIELD_STORAGE = 'Field Storage',
-  TEMPORARY_STORAGE = 'Temporary Storage',
-  DISTRIBUTION_CENTER = 'Distribution Center',
-  MOBILE_STORAGE = 'Mobile Storage'
 }
 
 export enum ExplosiveType {
@@ -70,13 +37,6 @@ export enum StoreStatus {
   DECOMMISSIONED = 'Decommissioned'
 }
 
-export enum SecurityLevel {
-  LEVEL_1 = 'Level 1 - Basic',
-  LEVEL_2 = 'Level 2 - Standard',
-  LEVEL_3 = 'Level 3 - High',
-  LEVEL_4 = 'Level 4 - Maximum'
-}
-
 export interface StoreStatistics {
   totalStores: number;
   activeStores: number;
@@ -91,7 +51,6 @@ export interface StoreStatistics {
 
 export interface StoreFilters {
   status?: StoreStatus | 'ALL';
-  storeType?: StoreType | 'ALL';
   location?: string | 'ALL';
   storeManager?: string | 'ALL';
   isActive?: boolean | null;
@@ -103,12 +62,11 @@ export interface CreateStoreRequest {
   storeAddress: string;
   storeManagerName: string;
   storeManagerContact: string;
-  storeManagerEmail?: string;
-  storeType: StoreType;
+  storeManagerEmail: string;
   explosiveTypesAvailable: ExplosiveType[];
   storageCapacity: number;
   location: StoreLocation;
-  securityLevel: SecurityLevel;
+  status: StoreStatus;
 }
 
 export interface UpdateStoreRequest extends Partial<CreateStoreRequest> {
