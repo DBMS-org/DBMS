@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { MechanicalEngineerLayoutComponent } from './shared/mechanical-engineer-layout/mechanical-engineer-layout.component';
-import { DashboardComponent as MechanicalEngineerDashboardComponent } from './dashboard/dashboard.component';
+import { DashboardHomeComponent } from './dashboard/dashboard-home/dashboard-home.component';
 import { MaintenanceComponent } from './maintenance/maintenance.component';
 import { MaintenanceDashboardComponent } from './maintenance/maintenance-dashboard/maintenance-dashboard.component';
 import { MaintenanceJobsComponent } from './maintenance/maintenance-jobs/maintenance-jobs.component';
@@ -13,8 +13,8 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
         path: '',
         component: MechanicalEngineerLayoutComponent,
         children: [
-            { path: '', redirectTo: 'maintenance', pathMatch: 'full' },
-            { path: 'dashboard', component: MechanicalEngineerDashboardComponent },
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+            { path: 'dashboard', component: DashboardHomeComponent },
             { path: 'profile', component: UserProfileComponent },
             { 
                 path: 'maintenance', 

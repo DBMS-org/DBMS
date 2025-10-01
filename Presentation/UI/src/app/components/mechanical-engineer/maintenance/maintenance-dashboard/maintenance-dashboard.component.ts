@@ -65,9 +65,6 @@ export class MaintenanceDashboardComponent implements OnInit {
       //   this.maintenanceService.getOverdueAlerts().toPromise()
       // ]);
 
-      // Simulate loading time for better UX
-      await new Promise(resolve => setTimeout(resolve, 1200));
-
       const mockStats: MaintenanceStats = {
         totalMachines: 42,
         scheduledJobs: 15,

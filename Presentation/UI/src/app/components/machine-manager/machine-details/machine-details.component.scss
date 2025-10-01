@@ -1,16 +1,3 @@
-/**
- * Machine Details Component Styles
- * 
- * Modal dialog for displaying comprehensive machine information including:
- * - Full-screen overlay with backdrop blur effect
- * - Animated modal with slide-in transition
- * - Organized card-based layout for different information sections
- * - Color-coded status indicators for machine states
- * - Responsive grid layout for detail items
- * - Interactive hover effects and smooth animations
- * - Mobile-responsive design adaptations
- */
-
 /* Modal overlay with backdrop blur and gradient */
 .modal-overlay {
   position: fixed;
@@ -19,7 +6,7 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
-  backdrop-filter: blur(8px); // Modern blur effect for overlay
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
