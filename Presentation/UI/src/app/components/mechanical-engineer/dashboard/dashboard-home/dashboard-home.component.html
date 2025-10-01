@@ -1,9 +1,8 @@
 <!-- Dashboard Header: title, current user info, and global actions -->
 <header class="dashboard-header">
   <div class="header-content">
-    <h1>Maintenance Management Dashboard</h1>
+    <h1>Mechanical Engineering Dashboard</h1>
     <div class="user-info">
-      <!-- Show user details only when a user is loaded -->
       <div class="user-details" *ngIf="currentUser">
         <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
         <div class="user-metadata">
@@ -12,269 +11,161 @@
           <span class="last-login">{{ getLastLoginInfo() }}</span>
         </div>
       </div>
-      <!-- Manual refresh to reload dashboard data from services -->
       <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
         <i class="material-icons">refresh</i>
         Refresh
       </button>
-      <!-- End session for the current user -->
       <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>
 </header>
 
-<!-- Global loading indicator while data is fetched -->
-<div class="loading-container" *ngIf="isLoading()">
+<div class="loading-container" *ngIf="isLoading">
   <div class="spinner"></div>
-  <p>Loading maintenance dashboard...</p>
+  <p>Loading mechanical engineering dashboard...</p>
 </div>
 
-<!-- Main dashboard content (visible when not loading) -->
-<div class="dashboard-content" *ngIf="!isLoading()">
-  <!-- Critical Maintenance Alerts. Show alerts only if any exist -->
-  <div class="alerts-section" *ngIf="maintenanceAlerts.length > 0">
+<div class="dashboard-content" *ngIf="!isLoading">
+  <!-- Critical Maintenance Alerts -->
+  <div class="alerts-section" *ngIf="criticalAlerts.length > 0">
     <h3>
       <i class="material-icons alert-icon">warning</i>
-      Critical Maintenance Alerts
+      Critical Equipment Alerts
     </h3>
-    <div class="alert-cards">
-      <!-- Render one card per alert; class set by priority for styling -->
-      <div class="alert-card" *ngFor="let alert of maintenanceAlerts" [class]="'alert-' + alert.priority.toLowerCase()">
+    <div class="alert-list">
+      <div class="alert-card" *ngFor="let alert of criticalAlerts()" [class]="'alert-' + alert.priority.toLowerCase()">
         <div class="alert-icon">
           <i class="material-icons">{{ alert.icon }}</i>
         </div>
         <div class="alert-content">
-          <h4>{{ alert.machine }}</h4>
+          <h4>{{ alert.machineName }}</h4>
           <p>{{ alert.message }}</p>
           <span class="alert-time">{{ alert.timestamp }}</span>
         </div>
-        <div class="alert-priority">{{ alert.priority }}</div>
+        <div class="alert-priority" [class]="'priority-' + alert.priority.toLowerCase()">
+          {{ alert.priority }}
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- KPI Cards -->
   <div class="stats-grid">
-    <!-- High-level machine counts summary -->
     <div class="stat-card machines">
-      <div class="stat-icon">
-        <i class="material-icons">precision_manufacturing</i>
-      </div>
+      <div class="stat-icon"><i class="material-icons">precision_manufacturing</i></div>
       <div class="stat-content">
-        <h3>Total Machines</h3>
-        <p class="stat-number">{{ maintenanceStats.totalMachines }}</p>
+        <h3>Total Equipment</h3>
+        <p class="stat-number">{{ mechanicalStats().totalEquipment }}</p>
       </div>
     </div>
     <div class="stat-card operational">
-      <div class="stat-icon">
-        <i class="material-icons">check_circle</i>
-      </div>
+      <div class="stat-icon"><i class="material-icons">check_circle</i></div>
       <div class="stat-content">
         <h3>Operational</h3>
-        <p class="stat-number">{{ maintenanceStats.operational }}</p>
+        <p class="stat-number">{{ mechanicalStats().operationalEquipment }}</p>
       </div>
     </div>
     <div class="stat-card maintenance">
-      <div class="stat-icon">
-        <i class="material-icons">build_circle</i>
-      </div>
+      <div class="stat-icon"><i class="material-icons">build_circle</i></div>
       <div class="stat-content">
         <h3>Under Maintenance</h3>
-        <p class="stat-number">{{ maintenanceStats.underMaintenance }}</p>
+        <p class="stat-number">{{ mechanicalStats().underMaintenance }}</p>
       </div>
     </div>
-    <div class="stat-card breakdown">
-      <div class="stat-icon">
-        <i class="material-icons">error</i>
-      </div>
+    <div class="stat-card efficiency">
+      <div class="stat-icon"><i class="material-icons">trending_up</i></div>
       <div class="stat-content">
-        <h3>Breakdown</h3>
-        <p class="stat-number">{{ maintenanceStats.breakdown }}</p>
+        <h3>Efficiency Rate</h3>
+        <p class="stat-number">{{ mechanicalStats().efficiencyRate }}%</p>
       </div>
     </div>
   </div>
 
-  <!-- Machine Management Section - UC-36 & UC-37 Implementation -->
-  <div class="machine-management-section">
-    <h3>
-      <i class="material-icons">build</i>
-      Machine Maintenance Management
-    </h3>
-    
-    <!-- Available Machines for Scheduling -->
-    <div class="machine-category" *ngIf="availableMachines().length > 0">
-      <h4>Available Machines - Schedule Maintenance</h4>
-      <div class="machine-cards">
-        <div class="machine-card available" *ngFor="let machine of availableMachines()">
-          <div class="machine-header">
-            <h5>{{ machine.name }}</h5>
-            <span class="machine-status">{{ machine.status }}</span>
-          </div>
-          <div class="machine-details">
-            <p><strong>Model:</strong> {{ machine.model }}</p>
-            <p><strong>Rig No:</strong> {{ machine.rigNo }}</p>
-            <p><strong>Location:</strong> {{ machine.location }}</p>
-            <p *ngIf="machine.nextMaintenance"><strong>Next Maintenance:</strong> {{ machine.nextMaintenance }}</p>
-          </div>
-          <div class="machine-actions">
-            <button class="schedule-btn" (click)="scheduleMaintenance(machine)">
-              <i class="material-icons">schedule</i>
-              Schedule Maintenance
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Machines Scheduled for Maintenance -->
-    <div class="machine-category" *ngIf="scheduledForMaintenance().length > 0">
-      <h4>Scheduled for Maintenance - Log Activity</h4>
-      <div class="machine-cards">
-        <div class="machine-card scheduled" *ngFor="let machine of scheduledForMaintenance()">
-          <div class="machine-header">
-            <h5>{{ machine.name }}</h5>
-            <span class="machine-status scheduled">{{ machine.status }}</span>
-          </div>
-        <div class="machine-details">
-          <p><strong>Model:</strong> {{ machine.model }}</p>
-          <p><strong>Rig No:</strong> {{ machine.rigNo }}</p>
-          <p><strong>Location:</strong> {{ machine.location }}</p>
-          <p *ngIf="machine.lastMaintenance"><strong>Last Maintenance:</strong> {{ machine.lastMaintenance }}</p>
-        </div>
-        <!-- UC-37 Form: Required fields and accessory usage -->
-        <div class="maintenance-form">
-          <div class="form-row">
-            <div class="form-field">
-              <label>Maintenance Type</label>
-              <select (change)="setMaintenanceForm(machine.id, 'type', $any($event.target).value)">
-                <option value="">Select Type</option>
-                <option value="Preventive">Preventive</option>
-                <option value="Corrective">Corrective</option>
-                <option value="Emergency">Emergency</option>
-                <option value="Inspection">Inspection</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label>Date</label>
-              <input type="date" (change)="setMaintenanceForm(machine.id, 'date', $any($event.target).value)" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-field full-width">
-              <label>Notes</label>
-              <textarea rows="2" placeholder="Enter maintenance notes" (input)="setMaintenanceForm(machine.id, 'notes', $any($event.target).value)"></textarea>
-            </div>
-          </div>
-
-          <!-- Accessory usage section -->
-          <div class="accessory-usage">
-            <label>Add Accessory Usage</label>
-            <div class="usage-inputs">
-              <select #partSel>
-                <option value="">Select Part</option>
-                <option *ngFor="let acc of accessories()" [value]="acc.name">{{ acc.name }} (Stock: {{ acc.stock }})</option>
-              </select>
-              <input #qtyInput type="number" min="1" placeholder="Qty" />
-              <button class="add-usage-btn" (click)="addAccessoryUsage(machine.id, partSel.value, qtyInput.valueAsNumber)">
-                Add
-              </button>
-            </div>
-            <ul class="usage-list">
-              <li *ngFor="let item of (selectedAccessoryUsage()[machine.id] || []); let i = index">
-                {{ item.partName }} × {{ item.quantity }}
-                <button class="remove-usage" (click)="removeAccessoryUsage(machine.id, i)">Remove</button>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="machine-actions">
-          <button class="log-btn" (click)="logMaintenanceActivity(machine)">
-            <i class="material-icons">assignment_turned_in</i>
-            Log Maintenance Activity
-          </button>
-        </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Machines Under Maintenance -->
-    <div class="machine-category" *ngIf="underMaintenance().length > 0">
-      <h4>Under Maintenance - Complete Activity</h4>
-      <div class="machine-cards">
-        <div class="machine-card under-maintenance" *ngFor="let machine of underMaintenance()">
-          <div class="machine-header">
-            <h5>{{ machine.name }}</h5>
-            <span class="machine-status under-maintenance">{{ machine.status }}</span>
-          </div>
-          <div class="machine-details">
-            <p><strong>Model:</strong> {{ machine.model }}</p>
-            <p><strong>Rig No:</strong> {{ machine.rigNo }}</p>
-            <p><strong>Location:</strong> {{ machine.location }}</p>
-            <p *ngIf="machine.lastMaintenance"><strong>Last Maintenance:</strong> {{ machine.lastMaintenance }}</p>
-          </div>
-          <div class="machine-actions">
-            <button class="complete-btn" (click)="logMaintenanceActivity(machine)">
-              <i class="material-icons">check_circle</i>
-              Complete Maintenance
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Machine Operational Status Panel -->
-  <div class="analysis-panel">
+  <!-- Equipment Performance Overview -->
+  <div class="performance-panel">
     <h3>
       <i class="material-icons">analytics</i>
-      Machine Operational Status Overview
+      Equipment Performance Overview
     </h3>
-    <div class="status-breakdown">
-      <div class="status-item running">
-        <div class="status-icon">
-          <i class="material-icons">play_circle</i>
+    <div class="performance-grid">
+      <div class="performance-card" *ngFor="let equipment of equipmentPerformance()">
+        <div class="performance-header">
+          <h4>{{ equipment.machineName }}</h4>
+          <span class="efficiency-badge" [class]="getEfficiencyClass(equipment.efficiency)">
+            {{ equipment.efficiency }}%
+          </span>
         </div>
-        <div class="status-info">
-          <span class="status-label">Running</span>
-          <span class="status-count">{{ operationalStatus.running }}</span>
-        </div>
-      </div>
-      <div class="status-item idle">
-        <div class="status-icon">
-          <i class="material-icons">pause_circle</i>
-        </div>
-        <div class="status-info">
-          <span class="status-label">Idle</span>
-          <span class="status-count">{{ operationalStatus.idle }}</span>
-        </div>
-      </div>
-      <div class="status-item maintenance">
-        <div class="status-icon">
-          <i class="material-icons">build_circle</i>
-        </div>
-        <div class="status-info">
-          <span class="status-label">Under Maintenance</span>
-          <span class="status-count">{{ operationalStatus.underMaintenance }}</span>
-        </div>
-      </div>
-      <div class="status-item breakdown">
-        <div class="status-icon">
-          <i class="material-icons">error</i>
-        </div>
-        <div class="status-info">
-          <span class="status-label">Breakdown</span>
-          <span class="status-count">{{ operationalStatus.breakdown }}</span>
-        </div>
-      </div>
-      <div class="status-item available">
-        <div class="status-icon">
-          <i class="material-icons">check_circle</i>
-        </div>
-        <div class="status-info">
-          <span class="status-label">Available</span>
-          <span class="status-count">{{ operationalStatus.available }}</span>
+        <div class="performance-metrics">
+          <div class="metric">
+            <span class="metric-label">Uptime</span>
+            <span class="metric-value">{{ equipment.uptime }}%</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Last Service</span>
+            <span class="metric-value">{{ equipment.lastService }}</span>
+          </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Maintenance Schedule -->
+  <div class="maintenance-schedule-panel">
+    <h3>
+      <i class="material-icons">event_note</i>
+      Upcoming Maintenance Schedule
+    </h3>
+    <div *ngIf="machinesNeedingMaintenance().length > 0; else noUpcoming">
+      <div class="maintenance-list">
+        <div class="maintenance-item" *ngFor="let machine of machinesNeedingMaintenance()">
+          <div class="machine-info">
+            <h4>{{ machine.name }}</h4>
+            <p>{{ machine.type }}</p>
+          </div>
+          <div class="maintenance-details">
+            <span class="maintenance-type">{{ machine.nextMaintenanceType }}</span>
+            <span class="maintenance-date">{{ machine.nextMaintenanceDate }}</span>
+          </div>
+          <div class="maintenance-priority" [class]="'priority-' + machine.priority">
+            {{ machine.priority }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <ng-template #noUpcoming>
+      <p>No equipment scheduled for maintenance.</p>
+    </ng-template>
+  </div>
+
+  <!-- Spare Parts Inventory -->
+  <div class="inventory-panel">
+    <h3>
+      <i class="material-icons">inventory_2</i>
+      Spare Parts Inventory
+    </h3>
+    <div *ngIf="lowStockParts().length > 0; else noLowStock">
+      <div class="parts-grid">
+        <div class="part-card" *ngFor="let part of lowStockParts()" [class]="getStockLevelClass(part)">
+          <div class="part-info">
+            <h4>{{ part.name }}</h4>
+            <span class="part-code">{{ part.partNumber }}</span>
+          </div>
+          <div class="stock-info">
+            <div class="stock-level">
+              <span class="current-stock">{{ part.currentStock }}</span>
+              <span class="stock-separator">/</span>
+              <span class="min-stock">{{ part.minStock }}</span>
+            </div>
+            <div class="stock-status" [class]="getStockStatusClass(part)">
+              {{ getStockStatus(part) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ng-template #noLowStock>
+      <p>All spare parts are adequately stocked.</p>
+    </ng-template>
   </div>
 
   <!-- Quick Actions Panel -->
@@ -284,23 +175,22 @@
       Quick Actions
     </h3>
     <div class="action-cards">
-      <!-- Navigate to maintenance jobs -->
-      <div class="action-card jobs-action" (click)="navigateToMaintenanceJobs()">
-        <div class="action-icon">
-          <i class="material-icons">assignment</i>
-        </div>
-        <h4>Maintenance Jobs</h4>
-        <p>View and manage maintenance jobs</p>
-        <div class="action-status">{{ maintenanceStats.pendingTasks }} pending tasks</div>
+      <div class="action-card maintenance-action" (click)="navigateToMaintenance()">
+        <div class="action-icon"><i class="material-icons">build</i></div>
+        <h4>Maintenance Management</h4>
+        <p>Schedule and track maintenance activities</p>
+        <div class="action-status">{{ mechanicalStats().pendingMaintenance }} pending</div>
       </div>
-
-      <!-- Navigate to maintenance analytics -->
-      <div class="action-card analytics-action" (click)="navigateToMaintenanceAnalytics()">
-        <div class="action-icon">
-          <i class="material-icons">analytics</i>
-        </div>
-        <h4>Maintenance Analytics</h4>
-        <p>View maintenance performance metrics</p>
+      <div class="action-card equipment-action" (click)="navigateToEquipment()">
+        <div class="action-icon"><i class="material-icons">precision_manufacturing</i></div>
+        <h4>Equipment Management</h4>
+        <p>Monitor and manage equipment status</p>
+        <div class="action-status">{{ mechanicalStats().totalEquipment }} units</div>
+      </div>
+      <div class="action-card analytics-action" (click)="navigateToAnalytics()">
+        <div class="action-icon"><i class="material-icons">analytics</i></div>
+        <h4>Performance Analytics</h4>
+        <p>View equipment performance reports</p>
         <div class="action-status">View reports</div>
       </div>
     </div>
@@ -313,7 +203,7 @@
       Recent Maintenance Activities
     </h3>
     <div class="activity-list">
-      <div class="activity-item" *ngFor="let activity of recentActivities">
+      <div class="activity-item" *ngFor="let activity of recentActivities()">
         <div class="activity-icon">
           <i class="material-icons">{{ activity.icon }}</i>
         </div>
@@ -322,40 +212,8 @@
           <p>{{ activity.description }}</p>
           <span class="activity-time">{{ activity.timestamp }}</span>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- User Profile Section -->
-  <div class="user-profile-section">
-    <h3>
-      <i class="material-icons">account_circle</i>
-      Mechanical Engineer Profile
-    </h3>
-    <!-- Show profile only when user data is available -->
-    <div class="profile-card" *ngIf="currentUser">
-      <div class="profile-header">
-        <div class="profile-avatar">
-          <span class="avatar-initials">{{ getInitials() }}</span>
-        </div>
-        <div class="profile-info">
-          <h4>{{ currentUser.name }}</h4>
-          <p class="profile-role">{{ currentUser.role }}</p>
-          <p class="profile-location" *ngIf="getUserLocationInfo()">{{ getUserLocationInfo() }}</p>
-        </div>
-      </div>
-      <div class="profile-stats">
-        <div class="profile-stat">
-          <span class="stat-label">Machines Managed</span>
-          <span class="stat-value">{{ maintenanceStats.totalMachines }}</span>
-        </div>
-        <div class="profile-stat">
-          <span class="stat-label">Active Alerts</span>
-          <span class="stat-value">{{ maintenanceAlerts.length }}</span>
-        </div>
-        <div class="profile-stat">
-          <span class="stat-label">Pending Tasks</span>
-          <span class="stat-value">{{ maintenanceStats.pendingTasks }}</span>
+        <div class="activity-status" [class]="'status-' + activity.type">
+          {{ activity.type }}
         </div>
       </div>
     </div>
