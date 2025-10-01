@@ -26,26 +26,6 @@ export class MaintenanceQuickActionsComponent {
 
   quickActions: QuickAction[] = [
     {
-      id: 'schedule',
-      title: 'Schedule Maintenance',
-      description: 'Create and schedule new maintenance jobs for machines',
-      icon: 'add_task',
-      route: '/mechanical-engineer/maintenance/schedule',
-      statusText: 'pending tasks',
-      statusCount: 15,
-      colorClass: 'schedule-action'
-    },
-    {
-      id: 'calendar',
-      title: 'View Calendar',
-      description: 'See maintenance schedule in calendar and timeline views',
-      icon: 'calendar_view_month',
-      route: '/mechanical-engineer/maintenance/calendar',
-      statusText: 'scheduled today',
-      statusCount: 6,
-      colorClass: 'calendar-action'
-    },
-    {
       id: 'jobs',
       title: 'Manage Jobs',
       description: 'View, filter, and update maintenance job statuses',
@@ -64,16 +44,6 @@ export class MaintenanceQuickActionsComponent {
       statusText: 'machines tracked',
       statusCount: 42,
       colorClass: 'analytics-action'
-    },
-    {
-      id: 'inventory',
-      title: 'Machine Inventory',
-      description: 'View and manage machine inventory and status',
-      icon: 'inventory_2',
-      route: '/mechanical-engineer/maintenance/inventory',
-      statusText: 'machines',
-      statusCount: 42,
-      colorClass: 'inventory-action'
     },
     {
       id: 'settings',

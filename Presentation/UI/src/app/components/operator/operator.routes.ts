@@ -18,7 +18,7 @@ export const OPERATOR_ROUTES: Routes = [
             { path: 'dashboard', component: OperatorDashboardComponent },
             { path: 'profile', component: UserProfileComponent },
             { path: 'my-project', component: MyProjectComponent },
-            // Removed separate project sites list route; sites are now embedded within My Project page
+            // Sites are embedded in My Project page instead of separate routes
             { path: 'my-project/sites/:siteId/pattern-view', component: OperatorPatternViewComponent },
             { path: 'my-project/sites/:siteId/details', component: SiteDetailsComponent },
             { path: 'maintenance-reports', component: MaintenanceReportsComponent },
