@@ -36,9 +36,6 @@ export class MaintenanceComponent implements OnInit {
       // Initialize maintenance data - this will trigger loading of dashboard data
       // The actual data loading will be handled by child components
       
-      // Simulate initial setup time
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
       this.isLoading.set(false);
     } catch (err) {
       console.error('Error loading maintenance data:', err);

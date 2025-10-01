@@ -67,10 +67,11 @@
   [errorMessage]="errorMessage"
   [storeStatuses]="storeStatuses"
   [explosiveTypes]="explosiveTypes"
+  [securityLevels]="securityLevels"
   [uniqueLocations]="uniqueLocations"
   [uniqueManagers]="uniqueManagers"
   (formSubmit)="onAddStore($event)"
-  (formCancel)="closeAllModals()">
+  (closeModal)="closeAllModals()">
 </app-store-form>
 
 <!-- Store Form Component for Edit -->
@@ -82,10 +83,11 @@
   [errorMessage]="errorMessage"
   [storeStatuses]="storeStatuses"
   [explosiveTypes]="explosiveTypes"
+  [securityLevels]="securityLevels"
   [uniqueLocations]="uniqueLocations"
   [uniqueManagers]="uniqueManagers"
   (formSubmit)="onEditStore($event)"
-  (formCancel)="closeAllModals()">
+  (closeModal)="closeAllModals()">
 </app-store-form>
 
 <!-- View Store Modal -->

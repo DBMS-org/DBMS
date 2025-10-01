@@ -254,14 +254,16 @@ export class MockDataValidatorService {
       stockRequests: this.mockDataService.getStockRequestMockData(),
       explosiveRequests: this.mockDataService.getExplosiveRequestMockData(),
       users: of(this.mockDataService.getMockUsers()),
+      stores: of(this.mockDataService.getMockStores()),
       items: of(this.mockDataService.getMockRequestItems())
     }).pipe(
-      map(({ stockRequests, explosiveRequests, users, items }) => {
+      map(({ stockRequests, explosiveRequests, users, stores, items }) => {
         // Validate that all methods return data
         return stockRequests.length > 0 &&
                explosiveRequests.length > 0 &&
                users.storeManagers.length > 0 &&
                users.explosiveManagers.length > 0 &&
+               stores.length > 0 &&
                items.length > 0;
       })
     );

@@ -16,8 +16,9 @@ export class StoreFormComponent implements OnInit, OnChanges {
   @Input() isEditMode: boolean = false;
   @Input() successMessage: string = '';
   @Input() errorMessage: string = '';
-  @Input() explosiveTypes: string[] = [];
   @Input() storeStatuses: string[] = [];
+  @Input() explosiveTypes: string[] = [];
+  @Input() securityLevels: string[] = [];
   @Input() uniqueLocations: string[] = [];
   @Input() uniqueManagers: string[] = [];
 

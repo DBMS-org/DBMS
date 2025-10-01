@@ -12,8 +12,10 @@ import {
   StoreFilters, 
   CreateStoreRequest, 
   UpdateStoreRequest,
+  StoreType,
   ExplosiveType,
-  StoreStatus
+  StoreStatus,
+  SecurityLevel
 } from '../../../core/models/store.model';
 
 @Component({
@@ -64,10 +66,12 @@ export class StoresComponent implements OnInit, OnDestroy {
   // Enums for templates
   ExplosiveType = ExplosiveType;
   StoreStatus = StoreStatus;
+  SecurityLevel = SecurityLevel;
 
   // Enum arrays for dropdowns
   explosiveTypes = Object.values(ExplosiveType);
   storeStatuses = Object.values(StoreStatus);
+  securityLevels = Object.values(SecurityLevel);
 
   // Unique values for filters
   uniqueLocations: string[] = [];
@@ -121,15 +125,22 @@ export class StoresComponent implements OnInit, OnDestroy {
         storeManagerName: 'John Smith',
         storeManagerContact: '+1-555-0101',
         storeManagerEmail: 'john.smith@company.com',
+        storeType: StoreType.MAIN_WAREHOUSE,
         explosiveTypesAvailable: [ExplosiveType.ANFO, ExplosiveType.EMULSION, ExplosiveType.BLASTING_CAPS],
         storageCapacity: 500,
         currentOccupancy: 350,
         location: {
           city: 'Denver',
-          region: 'Colorado'
+          region: 'Colorado',
+          coordinates: { latitude: 39.7392, longitude: -104.9903 }
         },
+        securityLevel: SecurityLevel.LEVEL_3,
         status: StoreStatus.OPERATIONAL,
-        isActive: true
+        isActive: true,
+        createdAt: new Date('2023-01-15'),
+        updatedAt: new Date('2024-01-10'),
+        createdBy: 'admin',
+        updatedBy: 'admin'
       },
       {
         id: '2',
@@ -138,15 +149,22 @@ export class StoresComponent implements OnInit, OnDestroy {
         storeManagerName: 'Sarah Johnson',
         storeManagerContact: '+1-555-0102',
         storeManagerEmail: 'sarah.johnson@company.com',
+        storeType: StoreType.FIELD_STORAGE,
         explosiveTypesAvailable: [ExplosiveType.ANFO, ExplosiveType.BOOSTER],
         storageCapacity: 200,
         currentOccupancy: 120,
         location: {
           city: 'Boulder',
-          region: 'Colorado'
+          region: 'Colorado',
+          coordinates: { latitude: 40.0150, longitude: -105.2705 }
         },
+        securityLevel: SecurityLevel.LEVEL_2,
         status: StoreStatus.OPERATIONAL,
-        isActive: true
+        isActive: true,
+        createdAt: new Date('2023-03-20'),
+        updatedAt: new Date('2024-01-08'),
+        createdBy: 'admin',
+        updatedBy: 'manager'
       },
       {
         id: '3',
@@ -155,15 +173,22 @@ export class StoresComponent implements OnInit, OnDestroy {
         storeManagerName: 'Mike Wilson',
         storeManagerContact: '+1-555-0103',
         storeManagerEmail: 'mike.wilson@company.com',
+        storeType: StoreType.TEMPORARY_STORAGE,
         explosiveTypesAvailable: [ExplosiveType.BLASTING_CAPS, ExplosiveType.SHAPED_CHARGES],
         storageCapacity: 50,
         currentOccupancy: 25,
         location: {
           city: 'Aurora',
-          region: 'Colorado'
+          region: 'Colorado',
+          coordinates: { latitude: 39.7294, longitude: -104.8319 }
         },
+        securityLevel: SecurityLevel.LEVEL_4,
         status: StoreStatus.OPERATIONAL,
-        isActive: true
+        isActive: true,
+        createdAt: new Date('2023-06-10'),
+        updatedAt: new Date('2024-01-05'),
+        createdBy: 'admin',
+        updatedBy: 'supervisor'
       },
       {
         id: '4',
@@ -172,15 +197,22 @@ export class StoresComponent implements OnInit, OnDestroy {
         storeManagerName: 'Lisa Brown',
         storeManagerContact: '+1-555-0104',
         storeManagerEmail: 'lisa.brown@company.com',
+        storeType: StoreType.DISTRIBUTION_CENTER,
         explosiveTypesAvailable: [ExplosiveType.EMULSION, ExplosiveType.ANFO],
         storageCapacity: 300,
         currentOccupancy: 180,
         location: {
           city: 'Lakewood',
-          region: 'Colorado'
+          region: 'Colorado',
+          coordinates: { latitude: 39.7047, longitude: -105.0814 }
         },
+        securityLevel: SecurityLevel.LEVEL_3,
         status: StoreStatus.UNDER_MAINTENANCE,
-        isActive: true
+        isActive: true,
+        createdAt: new Date('2023-02-28'),
+        updatedAt: new Date('2024-01-12'),
+        createdBy: 'admin',
+        updatedBy: 'inspector'
       },
       {
         id: '5',
@@ -189,15 +221,22 @@ export class StoresComponent implements OnInit, OnDestroy {
         storeManagerName: 'David Garcia',
         storeManagerContact: '+1-555-0105',
         storeManagerEmail: 'david.garcia@company.com',
+        storeType: StoreType.MOBILE_STORAGE,
         explosiveTypesAvailable: [ExplosiveType.ANFO],
         storageCapacity: 100,
-        currentOccupancy: 45,
+        currentOccupancy: 0,
         location: {
           city: 'Westminster',
-          region: 'Colorado'
+          region: 'Colorado',
+          coordinates: { latitude: 39.8367, longitude: -105.0372 }
         },
+        securityLevel: SecurityLevel.LEVEL_1,
         status: StoreStatus.TEMPORARILY_CLOSED,
-        isActive: false
+        isActive: false,
+        createdAt: new Date('2023-09-15'),
+        updatedAt: new Date('2024-01-01'),
+        createdBy: 'admin',
+        updatedBy: 'manager'
       }
     ];
 
@@ -268,7 +307,8 @@ export class StoresComponent implements OnInit, OnDestroy {
       location: this.fb.group({
         city: ['', Validators.required],
         region: ['', Validators.required]
-      })
+      }),
+      securityLevel: ['', Validators.required]
     });
 
     this.editStoreForm = this.fb.group({
@@ -283,7 +323,8 @@ export class StoresComponent implements OnInit, OnDestroy {
       location: this.fb.group({
         city: ['', Validators.required],
         region: ['', Validators.required]
-      })
+      }),
+      securityLevel: ['', Validators.required]
     });
   }
 
@@ -305,8 +346,8 @@ export class StoresComponent implements OnInit, OnDestroy {
   }
 
   private updateUniqueValues(): void {
-    this.uniqueLocations = Array.from(new Set(this.stores.map(s => s.location.city)));
-    this.uniqueManagers = Array.from(new Set(this.stores.map(s => s.storeManagerName)));
+    this.uniqueLocations = [...new Set(this.stores.map(s => s.location.city))];
+    this.uniqueManagers = [...new Set(this.stores.map(s => s.storeManagerName))];
   }
 
   // Filter and search methods
@@ -414,17 +455,20 @@ export class StoresComponent implements OnInit, OnDestroy {
   // Form methods
   private populateEditForm(store: Store): void {
     this.editStoreForm.patchValue({
+      id: store.id,
       storeName: store.storeName,
       storeAddress: store.storeAddress,
       storeManagerName: store.storeManagerName,
       storeManagerContact: store.storeManagerContact,
       storeManagerEmail: store.storeManagerEmail,
+
       storageCapacity: store.storageCapacity,
       location: {
         city: store.location.city,
-        region: store.location.region
+        region: store.location.region,
+
       },
-      status: store.status
+      securityLevel: store.securityLevel
     });
 
     this.setExplosiveTypesArray('edit', store.explosiveTypesAvailable);
@@ -484,10 +528,15 @@ export class StoresComponent implements OnInit, OnDestroy {
     
     // Create new store with mock data
     const newStore: Store = {
-      id: this.generateId(),
       ...request,
+      id: (this.mockStores.length + 1).toString(),
+      status: StoreStatus.OPERATIONAL,
       currentOccupancy: 0,
-      isActive: true
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: 'current-user',
+      updatedBy: 'current-user'
     };
     
     // Add to mock stores
@@ -511,7 +560,8 @@ export class StoresComponent implements OnInit, OnDestroy {
       if (storeIndex !== -1) {
         this.mockStores[storeIndex] = {
           ...this.mockStores[storeIndex],
-          ...request
+          ...request,
+          updatedAt: new Date()
         };
         
         // Update statistics
@@ -555,7 +605,8 @@ export class StoresComponent implements OnInit, OnDestroy {
         this.mockStores[storeIndex] = {
           ...this.mockStores[storeIndex],
           isActive: false,
-          status: StoreStatus.TEMPORARILY_CLOSED
+          status: StoreStatus.TEMPORARILY_CLOSED,
+          updatedAt: new Date()
         };
         
         // Update statistics
@@ -616,6 +667,7 @@ export class StoresComponent implements OnInit, OnDestroy {
       storeManagerEmail: 'Store Manager Email',
       explosiveTypesAvailable: 'Explosive Types',
       storageCapacity: 'Storage Capacity',
+      securityLevel: 'Security Level',
       city: 'City',
       region: 'Region'
     };
@@ -689,9 +741,5 @@ export class StoresComponent implements OnInit, OnDestroy {
 
   get currentYear(): number {
     return new Date().getFullYear();
-  }
-
-  private generateId(): string {
-    return 'store_' + Math.random().toString(36).substr(2, 9);
   }
 }
