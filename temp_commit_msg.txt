@@ -1,7 +1,7 @@
-refactor(operator): improve code clarity and documentation
+refactor(machine-manager): improve component documentation and styling
 
-- Update comments and variable descriptions for better readability
-- Consolidate project sites navigation into My Project page
-- Enhance maintenance report service method names and docs
-- Improve operator layout SCSS organization and comments
-- Streamline dashboard component loading logic and messages
+feat(machine-details): enhance modal styling and add animations
+feat(machine-inventory): add comprehensive documentation for components
+refactor(machine-service): improve service documentation and type safety
+style(machine-manager): update scss files with better comments and structure
+docs(maintenance-management): add detailed component documentation

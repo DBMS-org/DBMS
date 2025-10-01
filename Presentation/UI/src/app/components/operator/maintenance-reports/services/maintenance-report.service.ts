@@ -22,7 +22,7 @@ export class MaintenanceReportService {
   private readonly machinesApiUrl = `${this.baseUrl}/api/machines`;
 
   /**
-   * Create a new maintenance problem report
+   * Submit a new problem report
    * @param reportData - The problem report data to submit
    * @returns Promise<ProblemReport> - The created problem report with generated ID and ticket number
    */
@@ -44,7 +44,7 @@ export class MaintenanceReportService {
   }
 
   /**
-   * Get all maintenance reports submitted by an operator
+   * Get all problem reports for a specific operator
    * @param operatorId - The ID of the operator
    * @returns Observable<ProblemReport[]> - List of operator's problem reports
    */
@@ -54,7 +54,7 @@ export class MaintenanceReportService {
         catchError(error => {
           console.error('Failed to fetch operator reports:', error);
           
-          // Return empty array for development when no reports exist
+          // Return empty array for development/testing purposes if not found
           if (error.status === 404) {
             console.log('Creating default empty reports array since none were found');
             return of([]);

@@ -34,19 +34,19 @@ import { UsageMetricsChartComponent } from './usage-metrics-chart/usage-metrics-
 export class MaintenanceAnalyticsComponent implements OnInit {
   private maintenanceService = inject(MaintenanceMockService);
 
-  // Loading and error states
+  // Signals for state management
   isLoading = signal(false);
   hasError = signal(false);
   errorMessage = signal('');
   lastUpdated = signal(new Date());
 
-  // Analytics data from the service
+  // Data signals
   serviceComplianceData = signal<ServiceComplianceData | null>(null);
   mtbfMetrics = signal<MTBFMetrics[] | null>(null);
   partsUsageData = signal<PartsUsageData[] | null>(null);
   usageMetrics = signal<UsageMetrics[] | null>(null);
 
-  // Quick calculations for dashboard cards
+  // Computed values
   topPartsUsage = computed(() => {
     const data = this.partsUsageData();
     return data ? data.slice(0, 5) : [];
@@ -67,7 +67,7 @@ export class MaintenanceAnalyticsComponent implements OnInit {
     return metrics ? metrics.reduce((sum, m) => sum + m.idleHours, 0) : 0;
   });
 
-  // Controls which analytics section to show
+  // View filter for separating sections (default to Service Compliance)
   viewFilter = signal<'all' | 'compliance' | 'mtbf' | 'parts' | 'usage'>('compliance');
 
   setView(view: 'all' | 'compliance' | 'mtbf' | 'parts' | 'usage') {

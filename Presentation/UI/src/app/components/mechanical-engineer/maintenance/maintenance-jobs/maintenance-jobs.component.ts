@@ -111,7 +111,7 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
   private snackBar = inject(MatSnackBar);
   private destroy$ = new Subject<void>();
 
-  // Component state
+  // Signals
   allJobs = signal<MaintenanceJob[]>([]);
   currentFilters = signal<JobFilters>({});
   searchTerm = signal<string>('');
@@ -119,11 +119,11 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
   isDetailPanelOpen = signal<boolean>(false);
   isLoading = signal<boolean>(false);
 
-  // Debounced search and filter handling
+  // Performance tracking
   private searchSubject = new Subject<string>();
   private filterSubject = new Subject<JobFilters>();
 
-  // Jobs filtered by search term and active filters
+  // Computed values with performance optimization
   filteredJobs = computed(() => {
     const jobs = this.allJobs();
     const filters = this.currentFilters();
