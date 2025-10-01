@@ -121,11 +121,11 @@
           <div class="details-grid">
             <div class="detail-item">
               <label><i class="fas fa-city"></i> City *</label>
-              <span>{{ selectedStore.location?.city }}</span>
+              <span>{{ selectedStore.city }}</span>
             </div>
             <div class="detail-item">
               <label><i class="fas fa-globe-americas"></i> Region *</label>
-              <span>{{ selectedStore.location?.region }}</span>
+              <span>{{ selectedStore.regionId }}</span>
             </div>
           </div>
         </div>
@@ -143,11 +143,10 @@
 
         <!-- Explosive Types Available -->
         <div class="details-section">
-          <h4><i class="fas fa-bomb"></i> Explosive Types Available *</h4>
-          <div class="explosive-types-list">
-            <span *ngFor="let type of selectedStore.explosiveTypesAvailable" class="badge bg-primary">
-              <i class="fas fa-fire"></i> {{ type }}
-            </span>
+          <h4><i class="fas fa-user-tie"></i> Manager Information</h4>
+          <div class="manager-info">
+            <p><strong>Manager ID:</strong> {{ selectedStore.managerUserId }}</p>
+            <p><strong>Project ID:</strong> {{ selectedStore.projectId }}</p>
           </div>
         </div>
 

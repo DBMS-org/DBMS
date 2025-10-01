@@ -44,10 +44,11 @@ export class StoreFormComponent implements OnInit, OnChanges {
       storeName: ['', [Validators.required, Validators.minLength(2)]],
       storeAddress: ['', [Validators.required]],
       storageCapacity: ['', [Validators.required, Validators.min(1)]],
-      locationCity: ['', [Validators.required]],
-      locationRegion: ['', [Validators.required]],
-      status: [StoreStatus.OPERATIONAL, [Validators.required]],
-      explosiveTypes: this.fb.array([])
+      city: ['', [Validators.required]],
+      status: [StoreStatus.Operational, [Validators.required]],
+      regionId: ['', [Validators.required]],
+      projectId: ['', [Validators.required]],
+      managerUserId: ['', [Validators.required]]
     });
 
     if (this.store) {
@@ -61,19 +62,12 @@ export class StoreFormComponent implements OnInit, OnChanges {
         storeName: this.store.storeName,
         storeAddress: this.store.storeAddress,
         storageCapacity: this.store.storageCapacity,
-        locationCity: this.store.location.city,
-        locationRegion: this.store.location.region,
-        status: this.store.status
+        city: this.store.city,
+        status: this.store.status,
+        regionId: this.store.regionId,
+        projectId: this.store.projectId,
+        managerUserId: this.store.managerUserId
       });
-      
-      // Populate explosive types array
-      const explosiveTypesArray = this.storeForm.get('explosiveTypes') as FormArray;
-      explosiveTypesArray.clear();
-      if (this.store.explosiveTypesAvailable && this.store.explosiveTypesAvailable.length > 0) {
-        this.store.explosiveTypesAvailable.forEach((type: string) => {
-          explosiveTypesArray.push(this.fb.control(type));
-        });
-      }
     }
   }
 

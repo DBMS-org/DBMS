@@ -16,8 +16,8 @@
       <option *ngFor="let status of storeStatuses" [value]="status">{{ status }}</option>
     </select>
     
-    <select class="form-select" [(ngModel)]="filters.location" (change)="onFilterChange()" title="Filter by location" aria-label="Filter by location">
-      <option value="ALL">All Locations</option>
+    <select class="form-select" [(ngModel)]="filters.city" (change)="onFilterChange()" title="Filter by city" aria-label="Filter by city">
+      <option value="ALL">All Cities</option>
       <option *ngFor="let location of uniqueLocations" [value]="location">{{ location }}</option>
     </select>
     

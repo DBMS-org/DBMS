@@ -28,5 +28,6 @@ namespace Domain.Entities.ProjectManagement
         public virtual Region? RegionNavigation { get; set; }
         public virtual ICollection<ProjectSite> ProjectSites { get; set; } = new List<ProjectSite>();
         public virtual ICollection<Machine> Machines { get; set; } = new List<Machine>();
+        public virtual ICollection<StoreManagement.Store> Stores { get; set; } = new List<StoreManagement.Store>();
     }
-} 
+}
