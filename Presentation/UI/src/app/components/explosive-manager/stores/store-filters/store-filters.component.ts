@@ -13,12 +13,12 @@ import { StoreFilters, StoreStatus } from '../../../../core/models/store.model';
 export class StoreFiltersComponent {
   @Input() filters: StoreFilters = {
     status: 'ALL',
-    location: 'ALL',
+    regionId: 'ALL',
+    city: 'ALL',
     storeManager: 'ALL',
-    isActive: null,
     searchTerm: ''
   };
-  @Input() storeStatuses: StoreStatus[] = [];
+  @Input() storeStatuses: string[] = [];
   @Input() uniqueLocations: string[] = [];
   @Input() uniqueManagers: string[] = [];
 

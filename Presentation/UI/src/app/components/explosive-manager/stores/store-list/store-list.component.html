@@ -18,7 +18,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let store of stores" class="machine-row" [class.inactive]="!store.isActive">
+      <tr *ngFor="let store of stores" class="machine-row" [class.inactive]="store.status !== StoreStatus.Operational">
         <td class="machine-details">
           <div class="machine-info">
             <h5>{{ store.storeName }}</h5>
@@ -37,8 +37,8 @@
         
         <td class="machine-location">
           <div class="location-details">
-            <strong>{{ store.location.city }}</strong>
-            <p class="text-muted">{{ store.location.region }}</p>
+            <strong>{{ store.city }}</strong>
+            <p class="text-muted">Region ID: {{ store.regionId }}</p>
           </div>
         </td>
         
@@ -78,7 +78,7 @@
               <i class="material-icons">edit</i>
             </button>
             <button 
-              *ngIf="store.isActive"
+              *ngIf="store.status === StoreStatus.Operational"
               class="btn btn-sm btn-warning action-btn" 
               (click)="onDeactivateStore(store)"
               title="Deactivate Store">

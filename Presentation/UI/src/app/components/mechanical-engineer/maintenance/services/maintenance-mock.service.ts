@@ -447,7 +447,7 @@ export class MaintenanceMockService {
         return daysDiff <= 3 && daysDiff >= 0 && j.status === MaintenanceStatus.SCHEDULED;
       }).length
     };
-    return of(stats);
+    return of(stats).pipe(delay(300));
   }
 
   getServiceDueAlerts(): Observable<MaintenanceAlert[]> {
@@ -470,7 +470,7 @@ export class MaintenanceMockService {
         };
       });
     
-    return of(alerts);
+    return of(alerts).pipe(delay(200));
   }
 
   getOverdueAlerts(): Observable<MaintenanceAlert[]> {
@@ -490,7 +490,7 @@ export class MaintenanceMockService {
         };
       });
     
-    return of(alerts);
+    return of(alerts).pipe(delay(200));
   }
 
   // Maintenance Jobs
@@ -519,13 +519,13 @@ export class MaintenanceMockService {
       }
     }
     
-    return of(filteredJobs);
+    return of(filteredJobs).pipe(delay(400));
   }
 
   getMaintenanceJob(jobId: string): Observable<MaintenanceJob> {
     const job = this.mockJobs.find(j => j.id === jobId);
     if (job) {
-      return of(job);
+      return of(job).pipe(delay(200));
     }
     throw new Error('Maintenance job not found');
   }
@@ -551,14 +551,14 @@ export class MaintenanceMockService {
     };
     
     this.mockJobs.push(newJob);
-    return of(newJob);
+    return of(newJob).pipe(delay(500));
   }
 
   updateMaintenanceJob(jobId: string, job: Partial<MaintenanceJob>): Observable<MaintenanceJob> {
     const index = this.mockJobs.findIndex(j => j.id === jobId);
     if (index !== -1) {
       this.mockJobs[index] = { ...this.mockJobs[index], ...job, updatedAt: new Date() };
-      return of(this.mockJobs[index]);
+      return of(this.mockJobs[index]).pipe(delay(400));
     }
     throw new Error('Maintenance job not found');
   }
@@ -568,7 +568,7 @@ export class MaintenanceMockService {
     if (job) {
       job.status = status;
       job.updatedAt = new Date();
-      return of(void 0);
+      return of(void 0).pipe(delay(300));
     }
     throw new Error('Maintenance job not found');
   }
@@ -577,7 +577,7 @@ export class MaintenanceMockService {
     const index = this.mockJobs.findIndex(j => j.id === jobId);
     if (index !== -1) {
       this.mockJobs.splice(index, 1);
-      return of(void 0);
+      return of(void 0).pipe(delay(300));
     }
     throw new Error('Maintenance job not found');
   }
@@ -587,7 +587,7 @@ export class MaintenanceMockService {
     const filteredJobs = this.mockJobs.filter(job => 
       job.scheduledDate >= startDate && job.scheduledDate <= endDate
     );
-    return of(filteredJobs);
+    return of(filteredJobs).pipe(delay(300));
   }
 
   // Search and Filtering
@@ -597,7 +597,7 @@ export class MaintenanceMockService {
       job.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.reason.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    return of(filteredJobs);
+    return of(filteredJobs).pipe(delay(300));
   }
 
   // Analytics Methods
@@ -621,7 +621,7 @@ export class MaintenanceMockService {
       percentage: total > 0 ? Math.round((onTimeJobs / total) * 100) : 0
     };
     
-    return of(complianceData);
+    return of(complianceData).pipe(delay(400));
   }
 
   getMTBFMetrics(): Observable<MTBFMetrics[]> {
@@ -657,7 +657,7 @@ export class MaintenanceMockService {
     // Sort by MTBF hours descending (better performing machines first)
     mtbfMetrics.sort((a, b) => b.mtbfHours - a.mtbfHours);
 
-    return of(mtbfMetrics);
+    return of(mtbfMetrics).pipe(delay(500));
   }
 
 
@@ -790,7 +790,7 @@ export class MaintenanceMockService {
     // Sort by usage count descending
     partsData.sort((a, b) => b.usageCount - a.usageCount);
 
-    return of(partsData);
+    return of(partsData).pipe(delay(450));
   }
 
   getUsageMetrics(machineId?: string): Observable<UsageMetrics[]> {
@@ -838,7 +838,7 @@ export class MaintenanceMockService {
       };
     });
 
-    return of(usageMetrics);
+    return of(usageMetrics).pipe(delay(350));
   }
 
   // Notification Preferences
@@ -875,12 +875,12 @@ export class MaintenanceMockService {
       escalationRecipients: []
     };
     
-    return of(preferences);
+    return of(preferences).pipe(delay(300));
   }
 
   updateNotificationPreferences(preferences: NotificationPreferences): Observable<NotificationPreferences> {
     // In a real implementation, this would save to the backend
     // For now, just return the updated preferences
-    return of(preferences);
+    return of(preferences).pipe(delay(400));
   }
 }

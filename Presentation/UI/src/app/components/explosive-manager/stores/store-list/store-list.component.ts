@@ -13,6 +13,9 @@ export class StoreListComponent {
   @Input() stores: Store[] = [];
   @Input() isLoading = false;
 
+  // Expose enum for template
+  StoreStatus = StoreStatus;
+
   @Output() viewStore = new EventEmitter<Store>();
   @Output() editStore = new EventEmitter<Store>();
   @Output() deleteStore = new EventEmitter<Store>();
@@ -46,15 +49,15 @@ export class StoreListComponent {
 
   getStatusBadgeClass(status: StoreStatus): string {
     switch (status) {
-      case StoreStatus.OPERATIONAL:
+      case StoreStatus.Operational:
         return 'badge-success';
-      case StoreStatus.UNDER_MAINTENANCE:
+      case StoreStatus.UnderMaintenance:
         return 'badge-warning';
-      case StoreStatus.TEMPORARILY_CLOSED:
+      case StoreStatus.TemporarilyClosed:
         return 'badge-danger';
-      case StoreStatus.INSPECTION_REQUIRED:
+      case StoreStatus.InspectionRequired:
         return 'badge-info';
-      case StoreStatus.DECOMMISSIONED:
+      case StoreStatus.Decommissioned:
         return 'badge-secondary';
       default:
         return 'badge-secondary';
@@ -63,15 +66,15 @@ export class StoreListComponent {
 
   getStatusClass(status: StoreStatus): string {
     switch (status) {
-      case StoreStatus.OPERATIONAL:
+      case StoreStatus.Operational:
         return 'text-success';
-      case StoreStatus.UNDER_MAINTENANCE:
+      case StoreStatus.UnderMaintenance:
         return 'text-warning';
-      case StoreStatus.TEMPORARILY_CLOSED:
+      case StoreStatus.TemporarilyClosed:
         return 'text-danger';
-      case StoreStatus.INSPECTION_REQUIRED:
+      case StoreStatus.InspectionRequired:
         return 'text-info';
-      case StoreStatus.DECOMMISSIONED:
+      case StoreStatus.Decommissioned:
         return 'text-secondary';
       default:
         return 'text-secondary';

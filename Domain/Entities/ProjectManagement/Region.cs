@@ -14,5 +14,6 @@ namespace Domain.Entities.ProjectManagement
         // Navigation properties
         public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
         public virtual ICollection<Machine> Machines { get; set; } = new List<Machine>();
+        public virtual ICollection<StoreManagement.Store> Stores { get; set; } = new List<StoreManagement.Store>();
     }
-} 
+}

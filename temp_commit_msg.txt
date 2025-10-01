@@ -1,7 +1,1 @@
-refactor(mechanical-engineer): simplify dashboard component and remove artificial delays
-
-- Remove DashboardComponent and move DashboardHomeComponent to root route
-- Eliminate artificial delays in maintenance mock service
-- Streamline dashboard layout and remove redundant documentation
-- Update routing to directly use DashboardHomeComponent
-- Clean up unused styles and comments
+Merge branch 'master' of https://github.com/DBMS-org/DBMS

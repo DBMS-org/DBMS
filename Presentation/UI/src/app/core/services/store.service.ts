@@ -17,7 +17,7 @@ import {
   providedIn: 'root'
 })
 export class StoreService {
-  private readonly apiUrl = `${environment.apiUrl}/api/stores`;
+  private readonly apiUrl = `${environment.apiUrl}/api/storemanagement`;
 
   constructor(private http: HttpClient) {}
 
@@ -30,7 +30,7 @@ export class StoreService {
   }
 
   // Get store by ID
-  getStoreById(id: string): Observable<Store> {
+  getStoreById(id: number): Observable<Store> {
     return this.http.get<Store>(`${this.apiUrl}/${id}`).pipe(
       map(store => this.mapStore(store)),
       catchError(this.handleError)
@@ -46,7 +46,7 @@ export class StoreService {
   }
 
   // Update store
-  updateStore(id: string, request: UpdateStoreRequest): Observable<Store> {
+  updateStore(id: number, request: UpdateStoreRequest): Observable<Store> {
     return this.http.put<Store>(`${this.apiUrl}/${id}`, request).pipe(
       map(store => this.mapStore(store)),
       catchError(this.handleError)
@@ -54,16 +54,15 @@ export class StoreService {
   }
 
   // Delete store
-  deleteStore(id: string): Observable<void> {
+  deleteStore(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
 
-  // Deactivate store
-  deactivateStore(id: string): Observable<Store> {
-    return this.http.patch<Store>(`${this.apiUrl}/${id}/deactivate`, {}).pipe(
-      map(store => this.mapStore(store)),
+  // Update store status
+  updateStoreStatus(id: number, status: StoreStatus): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${id}/status`, { status }).pipe(
       catchError(this.handleError)
     );
   }
@@ -98,18 +97,18 @@ export class StoreService {
         return false;
       }
 
-      // Location filter
-      if (filters.location && filters.location !== 'ALL' && store.location.city !== filters.location) {
+      // Region filter
+      if (filters.regionId && filters.regionId !== 'ALL' && store.regionId !== filters.regionId) {
+        return false;
+      }
+
+      // City filter
+      if (filters.city && filters.city !== 'ALL' && store.city !== filters.city) {
         return false;
       }
 
       // Store manager filter
       if (filters.storeManager && filters.storeManager !== 'ALL' && store.storeManagerName !== filters.storeManager) {
-        return false;
-      }
-
-      // Active status filter
-      if (filters.isActive !== null && store.isActive !== filters.isActive) {
         return false;
       }
 
@@ -119,9 +118,9 @@ export class StoreService {
         const searchableText = [
           store.storeName,
           store.storeManagerName,
-          store.location.city,
+          store.city,
           store.storeAddress,
-          store.status
+          store.status.toString()
         ].join(' ').toLowerCase();
         
         if (!searchableText.includes(searchTerm)) {

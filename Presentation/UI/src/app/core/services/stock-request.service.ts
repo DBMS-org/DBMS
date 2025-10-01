@@ -94,20 +94,20 @@ export class StockRequestService {
 
   // Get available explosive types from explosive manager's inventory
   getAvailableExplosiveTypes(): Observable<ExplosiveType[]> {
-    return of(Object.values(ExplosiveType));
+    return of(Object.values(ExplosiveType).filter(value => typeof value === 'number') as ExplosiveType[]);
   }
 
   // Get common units for different explosive types
   getUnitsForExplosiveType(explosiveType: ExplosiveType): string[] {
     const unitMap: { [key in ExplosiveType]: string[] } = {
       [ExplosiveType.ANFO]: ['tons', 'kg'],
-      [ExplosiveType.EMULSION]: ['tons', 'kg'],
-      [ExplosiveType.DYNAMITE]: ['tons', 'boxes'],
-      [ExplosiveType.BLASTING_CAPS]: ['pieces', 'boxes'],
-      [ExplosiveType.DETONATING_CORD]: ['meters', 'rolls'],
-      [ExplosiveType.PRIMER]: ['pieces', 'boxes'],
-      [ExplosiveType.BOOSTER]: ['pieces', 'tons'],
-      [ExplosiveType.SHAPED_CHARGES]: ['pieces', 'sets']
+      [ExplosiveType.Emulsion]: ['tons', 'kg'],
+      [ExplosiveType.Dynamite]: ['tons', 'boxes'],
+      [ExplosiveType.BlastingCaps]: ['pieces', 'boxes'],
+      [ExplosiveType.DetonatingCord]: ['meters', 'rolls'],
+      [ExplosiveType.Primer]: ['pieces', 'boxes'],
+      [ExplosiveType.Booster]: ['pieces', 'tons'],
+      [ExplosiveType.ShapedCharges]: ['pieces', 'sets']
     };
 
     return unitMap[explosiveType] || ['tons', 'pieces'];
