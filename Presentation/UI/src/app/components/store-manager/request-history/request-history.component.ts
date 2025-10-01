@@ -36,7 +36,7 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
   
   // Filter properties
   filterStatus = '';
-  filterType = '';
+  filterType: ExplosiveType | '' = '';
   filterDateFrom = '';
   filterDateTo = '';
   searchTerm = '';
@@ -84,14 +84,14 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
           specifications: 'Standard grade ANFO for surface mining'
         },
         {
-          explosiveType: ExplosiveType.DETONATING_CORD,
+          explosiveType: ExplosiveType.DetonatingCord,
           requestedQuantity: 250,
           unit: 'meters',
           purpose: 'Surface blast connections',
           specifications: '10 g/m detonating cord'
         },
         {
-          explosiveType: ExplosiveType.BLASTING_CAPS,
+          explosiveType: ExplosiveType.BlastingCaps,
           requestedQuantity: 60,
           unit: 'pieces',
           purpose: 'Detonation sequence setup',
@@ -118,14 +118,14 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
       requesterStoreName: 'Sohar Industrial Storage',
       requestedItems: [
         {
-          explosiveType: ExplosiveType.EMULSION,
+          explosiveType: ExplosiveType.Emulsion,
           requestedQuantity: 0.3,
           unit: 'tons',
           purpose: 'Underground blasting operations',
           specifications: 'Water-resistant emulsion for wet conditions'
         },
         {
-          explosiveType: ExplosiveType.PRIMER,
+          explosiveType: ExplosiveType.Primer,
           requestedQuantity: 40,
           unit: 'pieces',
           purpose: 'Primer cartridges for emulsion shots',
@@ -149,14 +149,14 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
       requesterStoreName: 'Muscat Field Storage',
       requestedItems: [
         {
-          explosiveType: ExplosiveType.BLASTING_CAPS,
+          explosiveType: ExplosiveType.BlastingCaps,
           requestedQuantity: 100,
           unit: 'pieces',
           purpose: 'Detonation sequence setup',
           specifications: 'Electric blasting caps, delay 0-9'
         },
         {
-          explosiveType: ExplosiveType.BOOSTER,
+          explosiveType: ExplosiveType.Booster,
           requestedQuantity: 20,
           unit: 'pieces',
           purpose: 'Boosters for large diameter holes',

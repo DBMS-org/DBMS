@@ -38,17 +38,17 @@ export class MockDataService {
     { explosiveType: ExplosiveType.ANFO, requestedQuantity: 20, unit: 'kg', purpose: 'Stemming tests', specifications: 'Test grade ANFO' },
     
     // Emulsion items
-    { explosiveType: ExplosiveType.EMULSION, requestedQuantity: 0.3, unit: 'tons', purpose: 'Underground blasting operations', specifications: 'Water-resistant emulsion for wet conditions' },
-    { explosiveType: ExplosiveType.EMULSION, requestedQuantity: 60, unit: 'kg', purpose: 'Initiation charges', specifications: 'Cartridges 32mm' },
-    { explosiveType: ExplosiveType.EMULSION, requestedQuantity: 0.25, unit: 'tons', purpose: 'Bulk loading', specifications: 'Pumpable emulsion' },
-    { explosiveType: ExplosiveType.EMULSION, requestedQuantity: 0.2, unit: 'tons', purpose: 'Structure demolition', specifications: 'Cartridges 40mm' },
+    { explosiveType: ExplosiveType.Emulsion, requestedQuantity: 0.3, unit: 'tons', purpose: 'Underground blasting operations', specifications: 'Water-resistant emulsion for wet conditions' },
+    { explosiveType: ExplosiveType.Emulsion, requestedQuantity: 60, unit: 'kg', purpose: 'Initiation charges', specifications: 'Cartridges 32mm' },
+    { explosiveType: ExplosiveType.Emulsion, requestedQuantity: 0.25, unit: 'tons', purpose: 'Bulk loading', specifications: 'Pumpable emulsion' },
+    { explosiveType: ExplosiveType.Emulsion, requestedQuantity: 0.2, unit: 'tons', purpose: 'Structure demolition', specifications: 'Cartridges 40mm' },
     
     // Other explosive types
-    { explosiveType: ExplosiveType.DETONATING_CORD, requestedQuantity: 250, unit: 'meters', purpose: 'Surface blast connections', specifications: '10 g/m detonating cord' },
-    { explosiveType: ExplosiveType.BLASTING_CAPS, requestedQuantity: 60, unit: 'pieces', purpose: 'Detonation sequence setup', specifications: 'Electric blasting caps, delay 0-9' },
-    { explosiveType: ExplosiveType.BLASTING_CAPS, requestedQuantity: 100, unit: 'pieces', purpose: 'Detonation sequence', specifications: 'Electric blasting caps, delay 0-9' },
-    { explosiveType: ExplosiveType.PRIMER, requestedQuantity: 40, unit: 'pieces', purpose: 'Primer cartridges for emulsion shots', specifications: 'Suitable for 32-40mm boreholes' },
-    { explosiveType: ExplosiveType.BOOSTER, requestedQuantity: 20, unit: 'pieces', purpose: 'Boosters for large diameter holes', specifications: '400g boosters for 76-89mm holes' }
+    { explosiveType: ExplosiveType.DetonatingCord, requestedQuantity: 250, unit: 'meters', purpose: 'Surface blast connections', specifications: '10 g/m detonating cord' },
+    { explosiveType: ExplosiveType.BlastingCaps, requestedQuantity: 60, unit: 'pieces', purpose: 'Detonation sequence setup', specifications: 'Electric blasting caps, delay 0-9' },
+    { explosiveType: ExplosiveType.BlastingCaps, requestedQuantity: 100, unit: 'pieces', purpose: 'Detonation sequence', specifications: 'Electric blasting caps, delay 0-9' },
+    { explosiveType: ExplosiveType.Primer, requestedQuantity: 40, unit: 'pieces', purpose: 'Primer cartridges for emulsion shots', specifications: 'Suitable for 32-40mm boreholes' },
+    { explosiveType: ExplosiveType.Booster, requestedQuantity: 20, unit: 'pieces', purpose: 'Boosters for large diameter holes', specifications: '400g boosters for 76-89mm holes' }
   ];
 
   constructor() {}
@@ -174,7 +174,7 @@ export class MockDataService {
     switch (storeType) {
       case ExplosiveType.ANFO:
         return ExplosiveManagerExplosiveType.ANFO;
-      case ExplosiveType.EMULSION:
+      case ExplosiveType.Emulsion:
         return ExplosiveManagerExplosiveType.EMULSION;
       default:
         return ExplosiveManagerExplosiveType.ANFO; // Default fallback
@@ -213,7 +213,7 @@ export class MockDataService {
         requesterId: 'SM002',
         requesterName: 'Fatima Al-Zahra',
         requesterRole: 'Store Manager',
-        explosiveType: this.mapExplosiveType(ExplosiveType.EMULSION),
+        explosiveType: this.mapExplosiveType(ExplosiveType.Emulsion),
         quantity: 0.3,
         unit: 'tons',
         requestDate: new Date('2024-01-20'),
@@ -276,7 +276,7 @@ export class MockDataService {
         requesterId: 'SM004',
         requesterName: 'Sarah Johnson',
         requesterRole: 'Store Manager',
-        explosiveType: this.mapExplosiveType(ExplosiveType.EMULSION),
+        explosiveType: this.mapExplosiveType(ExplosiveType.Emulsion),
         quantity: 0.25,
         unit: 'tons',
         requestDate: new Date('2024-01-10'),

@@ -1,40 +1,45 @@
 export interface Store {
-  id: string;
+  id: number;
   storeName: string;
   storeAddress: string;
   storeManagerName: string;
   storeManagerContact: string;
   storeManagerEmail: string;
-  explosiveTypesAvailable: ExplosiveType[];
   storageCapacity: number;
-  currentOccupancy?: number;
-  location: StoreLocation;
-  status: StoreStatus;
-  isActive: boolean;
-}
-
-export interface StoreLocation {
+  currentOccupancy: number;
   city: string;
-  region: string;
+  status: StoreStatus;
+  regionId: number;
+  projectId?: number;
+  managerUserId?: number;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Navigation properties (for detailed views)
+  regionName?: string;
+  projectName?: string;
+  managerUserName?: string;
+  inventoryItemsCount?: number;
+  utilizationPercentage?: number;
 }
 
 export enum ExplosiveType {
-  ANFO = 'ANFO',
-  EMULSION = 'Emulsion',
-  DYNAMITE = 'Dynamite',
-  BLASTING_CAPS = 'Blasting Caps',
-  DETONATING_CORD = 'Detonating Cord',
-  PRIMER = 'Primer',
-  BOOSTER = 'Booster',
-  SHAPED_CHARGES = 'Shaped Charges'
+  ANFO = 1,
+  Emulsion = 2,
+  Dynamite = 3,
+  BlastingCaps = 4,
+  DetonatingCord = 5,
+  Primer = 6,
+  Booster = 7,
+  ShapedCharges = 8
 }
 
 export enum StoreStatus {
-  OPERATIONAL = 'Operational',
-  UNDER_MAINTENANCE = 'Under Maintenance',
-  TEMPORARILY_CLOSED = 'Temporarily Closed',
-  INSPECTION_REQUIRED = 'Inspection Required',
-  DECOMMISSIONED = 'Decommissioned'
+  Operational = 1,
+  UnderMaintenance = 2,
+  TemporarilyClosed = 3,
+  InspectionRequired = 4,
+  Decommissioned = 5
 }
 
 export interface StoreStatistics {
@@ -51,9 +56,9 @@ export interface StoreStatistics {
 
 export interface StoreFilters {
   status?: StoreStatus | 'ALL';
-  location?: string | 'ALL';
+  regionId?: number | 'ALL';
+  city?: string | 'ALL';
   storeManager?: string | 'ALL';
-  isActive?: boolean | null;
   searchTerm?: string;
 }
 
@@ -63,12 +68,22 @@ export interface CreateStoreRequest {
   storeManagerName: string;
   storeManagerContact: string;
   storeManagerEmail: string;
-  explosiveTypesAvailable: ExplosiveType[];
   storageCapacity: number;
-  location: StoreLocation;
-  status: StoreStatus;
+  city: string;
+  regionId: number;
+  projectId?: number;
+  managerUserId?: number;
 }
 
-export interface UpdateStoreRequest extends Partial<CreateStoreRequest> {
-  id: string;
+export interface UpdateStoreRequest {
+  storeName: string;
+  storeAddress: string;
+  storeManagerName: string;
+  storeManagerContact: string;
+  storeManagerEmail: string;
+  storageCapacity: number;
+  city: string;
+  status: StoreStatus;
+  projectId?: number;
+  managerUserId?: number;
 }

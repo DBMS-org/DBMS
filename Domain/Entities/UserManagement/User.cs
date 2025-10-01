@@ -29,5 +29,6 @@ namespace Domain.Entities.UserManagement
         
         // Navigation properties
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public virtual ICollection<StoreManagement.Store> ManagedStores { get; set; } = new List<StoreManagement.Store>();
     }
-} 
+}

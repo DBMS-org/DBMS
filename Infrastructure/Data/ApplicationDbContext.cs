@@ -4,6 +4,7 @@ using Domain.Entities.ProjectManagement;
 using Domain.Entities.DrillingOperations;
 using Domain.Entities.BlastingOperations;
 using Domain.Entities.MachineManagement;
+using Domain.Entities.StoreManagement;
 using Domain.Common;
 using Application.Interfaces.Infrastructure;
 using System.Threading;
@@ -40,6 +41,9 @@ namespace Infrastructure.Data
         public DbSet<BlastConnection> BlastConnections { get; set; }
         public DbSet<DetonatorInfo> DetonatorInfos { get; set; }
         public DbSet<ExplosiveApprovalRequest> ExplosiveApprovalRequests { get; set; }
+        public DbSet<Store> Stores { get; set; }
+        public DbSet<StoreInventory> StoreInventories { get; set; }
+        public DbSet<StoreTransaction> StoreTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
