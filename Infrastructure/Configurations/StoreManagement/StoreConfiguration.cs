@@ -21,28 +21,23 @@ namespace Infrastructure.Configurations.StoreManagement
             entity.Property(e => e.StorageCapacity)
                   .IsRequired()
                   .HasColumnType("decimal(18,2)");
-            
+
+            // CurrentOccupancy is now a computed property - ignore it in EF Core mapping
+            entity.Ignore(e => e.CurrentOccupancy);
+
+            entity.Property(e => e.AllowedExplosiveTypes)
+                  .HasMaxLength(200);
+
             entity.Property(e => e.Status)
                   .HasConversion<string>()
                   .IsRequired()
                   .HasMaxLength(20);
-            
-            entity.Property(e => e.StoreManagerContact)
-                  .HasMaxLength(20);
-            
-            entity.Property(e => e.StoreManagerEmail)
-                  .HasMaxLength(100);
 
             // Relationships
             entity.HasOne(e => e.Region)
                   .WithMany(r => r.Stores)
                   .HasForeignKey(e => e.RegionId)
-                  .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(e => e.Project)
-                  .WithMany(p => p.Stores)
-                  .HasForeignKey(e => e.ProjectId)
-                  .OnDelete(DeleteBehavior.SetNull);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.ManagerUser)
                   .WithMany()
@@ -52,7 +47,6 @@ namespace Infrastructure.Configurations.StoreManagement
             // Indexes
             entity.HasIndex(e => e.StoreName);
             entity.HasIndex(e => e.RegionId);
-            entity.HasIndex(e => e.ProjectId);
             entity.HasIndex(e => e.ManagerUserId);
             entity.HasIndex(e => e.Status);
         }

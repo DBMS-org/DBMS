@@ -2,23 +2,21 @@ export interface Store {
   id: number;
   storeName: string;
   storeAddress: string;
-  storeManagerName: string;
-  storeManagerContact: string;
-  storeManagerEmail: string;
   storageCapacity: number;
   currentOccupancy: number;
   city: string;
   status: StoreStatus;
+  allowedExplosiveTypes?: string; // Comma-separated: "ANFO,Emulsion"
   regionId: number;
-  projectId?: number;
   managerUserId?: number;
   createdAt: Date;
   updatedAt: Date;
-  
-  // Navigation properties (for detailed views)
+
+  // Additional properties for display
   regionName?: string;
-  projectName?: string;
   managerUserName?: string;
+  managerUserEmail?: string;
+  managerUserContact?: string;
   inventoryItemsCount?: number;
   utilizationPercentage?: number;
 }
@@ -65,25 +63,19 @@ export interface StoreFilters {
 export interface CreateStoreRequest {
   storeName: string;
   storeAddress: string;
-  storeManagerName: string;
-  storeManagerContact: string;
-  storeManagerEmail: string;
   storageCapacity: number;
   city: string;
+  allowedExplosiveTypes?: string; // Comma-separated: "ANFO,Emulsion"
   regionId: number;
-  projectId?: number;
   managerUserId?: number;
 }
 
 export interface UpdateStoreRequest {
   storeName: string;
   storeAddress: string;
-  storeManagerName: string;
-  storeManagerContact: string;
-  storeManagerEmail: string;
   storageCapacity: number;
   city: string;
+  allowedExplosiveTypes?: string; // Comma-separated: "ANFO,Emulsion"
   status: StoreStatus;
-  projectId?: number;
   managerUserId?: number;
 }

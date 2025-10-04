@@ -4,15 +4,18 @@ using Application.Interfaces.UserManagement;
 using Application.Interfaces.ProjectManagement;
 using Application.Interfaces.DrillingOperations;
 using Application.Interfaces.BlastingOperations;
+using Application.Interfaces.StoreManagement;
 using Application.Services.UserManagement;
 using Application.Services.ProjectManagement;
 using Application.Services.DrillingOperations;
 using Application.Services.BlastingOperations;
+using Application.Services.StoreManagement;
 using Domain.Services;
 using Infrastructure.Repositories.UserManagement;
 using Infrastructure.Repositories.ProjectManagement;
 using Infrastructure.Repositories.DrillingOperations;
 using Infrastructure.Repositories.BlastingOperations;
+using Infrastructure.Repositories.StoreManagement;
 using Infrastructure.Data;
 using Infrastructure.Services;
 using Infrastructure.Extensions;
@@ -170,6 +173,14 @@ builder.Services.AddScoped<IExplosiveApprovalRequestService, ExplosiveApprovalRe
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserApplicationService>();
 builder.Services.AddScoped<IAuthService, AuthApplicationService>();
+
+// Register Store Management services
+builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreRepository, Infrastructure.Repositories.StoreManagement.StoreRepository>();
+builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreService, Application.Services.StoreManagement.StoreApplicationService>();
+builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreInventoryRepository, Infrastructure.Repositories.StoreManagement.StoreInventoryRepository>();
+builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreInventoryService, Application.Services.StoreManagement.StoreInventoryApplicationService>();
+builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreTransactionRepository, Infrastructure.Repositories.StoreManagement.StoreTransactionRepository>();
+builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreTransactionService, Application.Services.StoreManagement.StoreTransactionApplicationService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, Infrastructure.Services.UserContext>();

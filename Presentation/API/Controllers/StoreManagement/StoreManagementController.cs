@@ -7,19 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers.StoreManagement
 {
     [ApiController]
-    [Route("api/stores")]
-    [Authorize(Roles = "Admin,Administrator,Explosive Manager")]
+    [Route("api/storemanagement")]
+    [Authorize(Roles = "Admin,ExplosiveManager,StoreManager")]
     public class StoreManagementController : BaseApiController
     {
         private readonly IStoreService _storeService;
-        private readonly ILogger<StoreManagementController> _logger;
 
-        public StoreManagementController(
-            IStoreService storeService,
-            ILogger<StoreManagementController> logger)
+        public StoreManagementController(IStoreService storeService)
         {
             _storeService = storeService;
-            _logger = logger;
         }
 
         /// <summary>
@@ -28,22 +24,14 @@ namespace API.Controllers.StoreManagement
         [HttpGet]
         public async Task<IActionResult> GetAllStores()
         {
-            try
+            var result = await _storeService.GetAllStoresAsync();
+
+            if (result.IsSuccess)
             {
-                var result = await _storeService.GetAllStoresAsync();
-                
-                if (result.IsSuccess)
-                {
-                    return Ok(result.Value);
-                }
-                
-                return BadRequest(result.Error);
+                return Ok(result.Value);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while getting all stores");
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+
+            return BadRequest(result.Error);
         }
 
         /// <summary>
@@ -52,82 +40,59 @@ namespace API.Controllers.StoreManagement
         [HttpGet("{id}")]
         public async Task<IActionResult> GetStoreById(int id)
         {
-            try
+            var result = await _storeService.GetStoreByIdAsync(id);
+
+            if (result.IsSuccess)
             {
-                var result = await _storeService.GetStoreByIdAsync(id);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok(result.Value);
-                }
-                
-                return NotFound(result.Error);
+                return Ok(result.Value);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while getting store with ID: {StoreId}", id);
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+
+            return NotFound(result.Error);
         }
 
         /// <summary>
         /// Create a new store
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin,Administrator,Explosive Manager")]
+        [Authorize(Roles = "Admin,Administrator,ExplosiveManager")]
         public async Task<IActionResult> CreateStore([FromBody] CreateStoreRequest request)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                return BadRequest(ModelState);
+            }
 
-                var result = await _storeService.CreateStoreAsync(request);
-                
-                if (result.IsSuccess)
-                {
-                    return CreatedAtAction(nameof(GetStoreById), new { id = result.Value!.Id }, result.Value);
-                }
-                
-                return BadRequest(result.Error);
-            }
-            catch (Exception ex)
+            var result = await _storeService.CreateStoreAsync(request);
+
+            if (result.IsSuccess)
             {
-                _logger.LogError(ex, "Error occurred while creating store");
-                return StatusCode(500, "An error occurred while processing your request");
+                return CreatedAtAction(nameof(GetStoreById), new { id = result.Value!.Id }, result.Value);
             }
+
+            return BadRequest(result.Error);
         }
 
         /// <summary>
         /// Update an existing store
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Administrator,Explosive Manager")]
+        [Authorize(Roles = "Admin,Administrator,ExplosiveManager")]
         public async Task<IActionResult> UpdateStore(int id, [FromBody] UpdateStoreRequest request)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                return BadRequest(ModelState);
+            }
 
-                var result = await _storeService.UpdateStoreAsync(id, request);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok();
-                }
-                
-                return BadRequest(result.Error);
-            }
-            catch (Exception ex)
+            var result = await _storeService.UpdateStoreAsync(id, request);
+
+            if (result.IsSuccess)
             {
-                _logger.LogError(ex, "Error occurred while updating store with ID: {StoreId}", id);
-                return StatusCode(500, "An error occurred while processing your request");
+                var updatedStore = await _storeService.GetStoreByIdAsync(id);
+                return Ok(updatedStore.Value);
             }
+
+            return BadRequest(result.Error);
         }
 
         /// <summary>
@@ -137,22 +102,14 @@ namespace API.Controllers.StoreManagement
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> DeleteStore(int id)
         {
-            try
+            var result = await _storeService.DeleteStoreAsync(id);
+
+            if (result.IsSuccess)
             {
-                var result = await _storeService.DeleteStoreAsync(id);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok();
-                }
-                
-                return NotFound(result.Error);
+                return Ok();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while deleting store with ID: {StoreId}", id);
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+
+            return NotFound(result.Error);
         }
 
         /// <summary>
@@ -161,22 +118,14 @@ namespace API.Controllers.StoreManagement
         [HttpGet("statistics")]
         public async Task<IActionResult> GetStoreStatistics()
         {
-            try
+            var result = await _storeService.GetStoreStatisticsAsync();
+
+            if (result.IsSuccess)
             {
-                var result = await _storeService.GetStoreStatisticsAsync();
-                
-                if (result.IsSuccess)
-                {
-                    return Ok(result.Value);
-                }
-                
-                return BadRequest(result.Error);
+                return Ok(result.Value);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while getting store statistics");
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+
+            return BadRequest(result.Error);
         }
 
         /// <summary>
@@ -188,22 +137,14 @@ namespace API.Controllers.StoreManagement
             [FromQuery] string? city = null,
             [FromQuery] string? status = null)
         {
-            try
+            var result = await _storeService.SearchStoresAsync(storeName, city, status);
+
+            if (result.IsSuccess)
             {
-                var result = await _storeService.SearchStoresAsync(storeName, city, status);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok(result.Value);
-                }
-                
-                return BadRequest(result.Error);
+                return Ok(result.Value);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while searching stores");
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+
+            return BadRequest(result.Error);
         }
 
         /// <summary>
@@ -212,47 +153,17 @@ namespace API.Controllers.StoreManagement
         [HttpGet("region/{regionId}")]
         public async Task<IActionResult> GetStoresByRegion(int regionId)
         {
-            try
+            var result = await _storeService.GetStoresByRegionAsync(regionId);
+
+            if (result.IsSuccess)
             {
-                var result = await _storeService.GetStoresByRegionAsync(regionId);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok(result.Value);
-                }
-                
-                return BadRequest(result.Error);
+                return Ok(result.Value);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while getting stores by region: {RegionId}", regionId);
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+
+            return BadRequest(result.Error);
         }
 
-        /// <summary>
-        /// Get stores by project
-        /// </summary>
-        [HttpGet("project/{projectId}")]
-        public async Task<IActionResult> GetStoresByProject(int projectId)
-        {
-            try
-            {
-                var result = await _storeService.GetStoresByProjectAsync(projectId);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok(result.Value);
-                }
-                
-                return BadRequest(result.Error);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while getting stores by project: {ProjectId}", projectId);
-                return StatusCode(500, "An error occurred while processing your request");
-            }
-        }
+
 
         /// <summary>
         /// Get store by manager
@@ -260,52 +171,36 @@ namespace API.Controllers.StoreManagement
         [HttpGet("manager/{userId}")]
         public async Task<IActionResult> GetStoreByManager(int userId)
         {
-            try
+            var result = await _storeService.GetStoreByManagerAsync(userId);
+
+            if (result.IsSuccess)
             {
-                var result = await _storeService.GetStoreByManagerAsync(userId);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok(result.Value);
-                }
-                
-                return NotFound(result.Error);
+                return Ok(result.Value);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while getting store by manager: {UserId}", userId);
-                return StatusCode(500, "An error occurred while processing your request");
-            }
+
+            return NotFound(result.Error);
         }
 
         /// <summary>
         /// Update store status
         /// </summary>
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Admin,Administrator,Explosive Manager")]
+        [Authorize(Roles = "Admin,Administrator,ExplosiveManager")]
         public async Task<IActionResult> UpdateStoreStatus(int id, [FromBody] UpdateStoreStatusRequest request)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                return BadRequest(ModelState);
+            }
 
-                var result = await _storeService.UpdateStoreStatusAsync(id, request.Status);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok();
-                }
-                
-                return BadRequest(result.Error);
-            }
-            catch (Exception ex)
+            var result = await _storeService.UpdateStoreStatusAsync(id, request.Status);
+
+            if (result.IsSuccess)
             {
-                _logger.LogError(ex, "Error occurred while updating store status for ID: {StoreId}", id);
-                return StatusCode(500, "An error occurred while processing your request");
+                return Ok();
             }
+
+            return BadRequest(result.Error);
         }
 
         /// <summary>
@@ -314,30 +209,14 @@ namespace API.Controllers.StoreManagement
         [HttpGet("{id}/utilization")]
         public async Task<IActionResult> GetStoreUtilization(int id)
         {
-            try
-            {
-                var result = await _storeService.GetStoreUtilizationAsync(id);
-                
-                if (result.IsSuccess)
-                {
-                    return Ok(new { UtilizationPercentage = result.Value });
-                }
-                
-                return NotFound(result.Error);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while getting store utilization for ID: {StoreId}", id);
-                return StatusCode(500, "An error occurred while processing your request");
-            }
-        }
-    }
+            var result = await _storeService.GetStoreUtilizationAsync(id);
 
-    /// <summary>
-    /// Request model for updating store status
-    /// </summary>
-    public class UpdateStoreStatusRequest
-    {
-        public StoreStatus Status { get; set; }
+            if (result.IsSuccess)
+            {
+                return Ok(new { UtilizationPercentage = result.Value });
+            }
+
+            return NotFound(result.Error);
+        }
     }
 }

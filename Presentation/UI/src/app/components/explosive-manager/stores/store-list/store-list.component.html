@@ -23,15 +23,15 @@
           <div class="machine-info">
             <h5>{{ store.storeName }}</h5>
             <p class="text-muted">{{ store.storeAddress }}</p>
-            <small class="text-secondary">Manager: {{ store.storeManagerName }}</small>
+            <small class="text-secondary">Manager: {{ store.managerUserName || 'N/A' }}</small>
           </div>
         </td>
         
         <td class="machine-manager">
           <div class="manager-info">
-            <strong>{{ store.storeManagerName }}</strong>
-            <p class="text-muted">{{ store.storeManagerContact }}</p>
-            <small *ngIf="store.storeManagerEmail" class="text-secondary">{{ store.storeManagerEmail }}</small>
+            <strong>{{ store.managerUserName || 'N/A' }}</strong>
+            <p class="text-muted">{{ store.managerUserContact || 'N/A' }}</p>
+            <small *ngIf="store.managerUserEmail" class="text-secondary">{{ store.managerUserEmail }}</small>
           </div>
         </td>
         

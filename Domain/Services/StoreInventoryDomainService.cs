@@ -64,12 +64,12 @@ namespace Domain.Services
                 destinationStore.Status != StoreStatus.Operational)
                 return false;
 
-            // Check if source store has the explosive type available
-            if (!sourceStore.ExplosiveTypesAvailable.Contains(explosiveType))
+            // Check if source store has the explosive type available in inventory
+            if (!sourceStore.Inventories.Any(i => i.ExplosiveType == explosiveType))
                 return false;
 
-            // Check if destination store can handle this explosive type
-            if (!destinationStore.ExplosiveTypesAvailable.Contains(explosiveType))
+            // Check if destination store can handle this explosive type (has inventory for it)
+            if (!destinationStore.Inventories.Any(i => i.ExplosiveType == explosiveType))
                 return false;
 
             // Check if destination store can accommodate the quantity

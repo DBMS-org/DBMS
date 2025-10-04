@@ -24,7 +24,6 @@ namespace Infrastructure.Repositories.StoreManagement
             {
                 return await _context.Stores
                     .Include(s => s.Region)
-                    .Include(s => s.Project)
                     .Include(s => s.ManagerUser)
                     .Include(s => s.Inventories)
                     .ToListAsync();
@@ -42,7 +41,6 @@ namespace Infrastructure.Repositories.StoreManagement
             {
                 return await _context.Stores
                     .Include(s => s.Region)
-                    .Include(s => s.Project)
                     .Include(s => s.ManagerUser)
                     .Include(s => s.Inventories)
                     .FirstOrDefaultAsync(s => s.Id == id);
@@ -50,24 +48,6 @@ namespace Infrastructure.Repositories.StoreManagement
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting store {StoreId} from database", id);
-                throw;
-            }
-        }
-
-        public async Task<Store?> GetByIdWithDetailsAsync(int id)
-        {
-            try
-            {
-                return await _context.Stores
-                    .Include(s => s.Region)
-                    .Include(s => s.Project)
-                    .Include(s => s.ManagerUser)
-                    .Include(s => s.Inventories)
-                    .FirstOrDefaultAsync(s => s.Id == id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting store {StoreId} with details from database", id);
                 throw;
             }
         }
@@ -120,19 +100,6 @@ namespace Infrastructure.Repositories.StoreManagement
             }
         }
 
-        public async Task<bool> ExistsAsync(int id)
-        {
-            try
-            {
-                return await _context.Stores.AnyAsync(s => s.Id == id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error checking if store {StoreId} exists in database", id);
-                throw;
-            }
-        }
-
         public async Task<IEnumerable<Store>> GetByRegionIdAsync(int regionId)
         {
             try
@@ -140,7 +107,6 @@ namespace Infrastructure.Repositories.StoreManagement
                 return await _context.Stores
                     .Where(s => s.RegionId == regionId)
                     .Include(s => s.Region)
-                    .Include(s => s.Project)
                     .Include(s => s.ManagerUser)
                     .ToListAsync();
             }
@@ -151,117 +117,72 @@ namespace Infrastructure.Repositories.StoreManagement
             }
         }
 
-        public async Task<IEnumerable<Store>> GetByProjectIdAsync(int projectId)
+        public async Task<Store?> GetStoreByManagerAsync(int managerUserId)
         {
             try
             {
                 return await _context.Stores
-                    .Where(s => s.ProjectId == projectId)
+                    .Where(s => s.ManagerUserId == managerUserId)
                     .Include(s => s.Region)
-                    .Include(s => s.Project)
                     .Include(s => s.ManagerUser)
-                    .ToListAsync();
+                    .FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting stores by project {ProjectId} from database", projectId);
+                _logger.LogError(ex, "Error getting store by manager {ManagerUserId} from database", managerUserId);
                 throw;
             }
         }
 
-        public async Task<IEnumerable<Store>> GetByManagerIdAsync(int managerId)
+        public async Task<decimal> GetStoreUtilizationAsync(int storeId)
         {
             try
             {
-                return await _context.Stores
-                    .Where(s => s.ManagerUserId == managerId)
-                    .Include(s => s.Region)
-                    .Include(s => s.Project)
-                    .Include(s => s.ManagerUser)
-                    .ToListAsync();
+                var store = await _context.Stores
+                    .Include(s => s.Inventories)
+                    .FirstOrDefaultAsync(s => s.Id == storeId);
+
+                if (store == null)
+                    return 0;
+
+                return store.GetUtilizationRate();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting stores by manager {ManagerId} from database", managerId);
+                _logger.LogError(ex, "Error calculating store utilization for store {StoreId}", storeId);
                 throw;
             }
         }
 
-        public async Task<IEnumerable<Store>> GetByStatusAsync(StoreStatus status)
-        {
-            try
-            {
-                return await _context.Stores
-                    .Where(s => s.Status == status)
-                    .Include(s => s.Region)
-                    .Include(s => s.Project)
-                    .Include(s => s.ManagerUser)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting stores by status {Status} from database", status);
-                throw;
-            }
-        }
-
-        public async Task<IEnumerable<Store>> SearchAsync(string? name = null, int? regionId = null, int? projectId = null, StoreStatus? status = null)
+        public async Task<IEnumerable<Store>> SearchAsync(string? storeName = null, string? city = null, int? regionId = null, int? managerUserId = null, StoreStatus? status = null)
         {
             try
             {
                 var query = _context.Stores.AsQueryable();
-                
-                if (!string.IsNullOrWhiteSpace(name))
-                    query = query.Where(s => s.StoreName.Contains(name));
-                
+
+                if (!string.IsNullOrWhiteSpace(storeName))
+                    query = query.Where(s => s.StoreName.Contains(storeName));
+
+                if (!string.IsNullOrWhiteSpace(city))
+                    query = query.Where(s => s.City.Contains(city));
+
                 if (regionId.HasValue)
                     query = query.Where(s => s.RegionId == regionId.Value);
-                
-                if (projectId.HasValue)
-                    query = query.Where(s => s.ProjectId == projectId.Value);
-                
+
+                if (managerUserId.HasValue)
+                    query = query.Where(s => s.ManagerUserId == managerUserId.Value);
+
                 if (status.HasValue)
                     query = query.Where(s => s.Status == status.Value);
-                
+
                 return await query
                     .Include(s => s.Region)
-                    .Include(s => s.Project)
                     .Include(s => s.ManagerUser)
                     .ToListAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching stores from database");
-                throw;
-            }
-        }
-
-        public async Task<Store?> GetByLicenseNumberAsync(string licenseNumber)
-        {
-            try
-            {
-                // Since Store entity doesn't have LicenseNumber property, this method should be removed
-                // or the Store entity should be updated to include LicenseNumber
-                throw new NotImplementedException("LicenseNumber property does not exist in Store entity");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting store by license number {LicenseNumber} from database", licenseNumber);
-                throw;
-            }
-        }
-
-        public async Task<bool> IsLicenseNumberUniqueAsync(string licenseNumber, int? excludeStoreId = null)
-        {
-            try
-            {
-                // Since Store entity doesn't have LicenseNumber property, this method should be removed
-                // or the Store entity should be updated to include LicenseNumber
-                throw new NotImplementedException("LicenseNumber property does not exist in Store entity");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error checking license number uniqueness for {LicenseNumber}", licenseNumber);
                 throw;
             }
         }
@@ -290,12 +211,8 @@ namespace Infrastructure.Repositories.StoreManagement
                     .Where(s => s.Status == StoreStatus.Operational)
                     .ToListAsync();
 
-                return stores.Where(s =>
-                {
-                    var totalUsed = s.Inventories.Sum(i => i.Quantity);
-                    var utilizationPercentage = s.StorageCapacity > 0 ? totalUsed / s.StorageCapacity : 0;
-                    return utilizationPercentage >= thresholdPercentage;
-                });
+                // Note: Must filter in-memory as EF Core cannot translate GetUtilizationRate() to SQL
+                return stores.Where(s => s.GetUtilizationRate() >= thresholdPercentage);
             }
             catch (Exception ex)
             {
@@ -330,17 +247,89 @@ namespace Infrastructure.Repositories.StoreManagement
             }
         }
 
-        public async Task<bool> ProjectExistsAsync(int projectId)
+        public async Task<bool> StoreExistsAsync(int id)
         {
             try
             {
-                return await _context.Projects.AnyAsync(p => p.Id == projectId);
+                return await _context.Stores.AnyAsync(s => s.Id == id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking if project {ProjectId} exists in database", projectId);
+                _logger.LogError(ex, "Error checking if store {StoreId} exists in database", id);
                 throw;
             }
         }
+
+        public async Task<bool> StoreNameExistsAsync(string storeName, int? excludeId = null)
+        {
+            try
+            {
+                var query = _context.Stores.Where(s => s.StoreName == storeName);
+                if (excludeId.HasValue)
+                {
+                    query = query.Where(s => s.Id != excludeId.Value);
+                }
+                return await query.AnyAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if store name {StoreName} exists in database", storeName);
+                throw;
+            }
+        }
+
+        public async Task<int> GetTotalStoresCountAsync()
+        {
+            try
+            {
+                return await _context.Stores.CountAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting total stores count from database");
+                throw;
+            }
+        }
+
+        public async Task<int> GetActiveStoresCountAsync()
+        {
+            try
+            {
+                return await _context.Stores.CountAsync(s => s.Status == Domain.Entities.StoreManagement.Enums.StoreStatus.Operational);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting active stores count from database");
+                throw;
+            }
+        }
+
+        public async Task<decimal> GetTotalStorageCapacityAsync()
+        {
+            try
+            {
+                return await _context.Stores.SumAsync(s => s.StorageCapacity);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting total storage capacity from database");
+                throw;
+            }
+        }
+
+        public async Task<decimal> GetTotalCurrentOccupancyAsync()
+        {
+            try
+            {
+                return await _context.StoreInventories.SumAsync(i => i.Quantity);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting total current occupancy from database");
+                throw;
+            }
+        }
+
+
     }
 }

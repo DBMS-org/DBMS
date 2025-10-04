@@ -1,9 +1,20 @@
-# DBMS – Clean Architecture Monorepo  
+# DBMS – Clean Architecture Monorepo
 
-A production-ready DBMS (Drilling & Blasting Management System) built with **ASP.NET Core 8** + **Angular 17** following Clean Architecture.  
+A production-ready DBMS (Drilling & Blasting Management System) built with **ASP.NET Core 8** + **Angular 19** following Clean Architecture.
 This repository contains **four isolated layers** (Domain, Application, Infrastructure, Presentation) and an Angular SPA – all wired together with Dependency Injection.
 
-👉 For the full technical deep-dive see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+👉 For the full technical deep-dive see **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Clean Architecture principles & design patterns |
+| [API.md](docs/API.md) | Complete REST API endpoint reference |
+| [DATABASE.md](docs/DATABASE.md) | Database schema, migrations & queries |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and solutions |
+| [CLAUDE.md](docs/CLAUDE.md) | AI assistant context & guidelines |
+| [STORE_MANAGEMENT_REVIEW.md](docs/STORE_MANAGEMENT_REVIEW.md) | Store Management module code review |
 
 ---
 
@@ -21,8 +32,14 @@ DBMS/
 │  └─ Repositories/
 ├─ Presentation/
 │  ├─ API/                 # ASP.NET Core Web API
-│  └─ UI/                  # Angular 17 client (src/…)
-├─ ARCHITECTURE.md         # Detailed design document
+│  └─ UI/                  # Angular 19 client (src/…)
+├─ docs/                   # Documentation files
+│  ├─ ARCHITECTURE.md
+│  ├─ API.md
+│  ├─ DATABASE.md
+│  ├─ TROUBLESHOOTING.md
+│  ├─ CLAUDE.md
+│  └─ STORE_MANAGEMENT_REVIEW.md
 └─ README.md               # This file
 ```
 

@@ -70,7 +70,7 @@
   [uniqueLocations]="uniqueLocations"
   [uniqueManagers]="uniqueManagers"
   (formSubmit)="onAddStore($event)"
-  (formCancel)="closeAllModals()">
+  (closeModal)="closeAllModals()">
 </app-store-form>
 
 <!-- Store Form Component for Edit -->
@@ -85,7 +85,7 @@
   [uniqueLocations]="uniqueLocations"
   [uniqueManagers]="uniqueManagers"
   (formSubmit)="onEditStore($event)"
-  (formCancel)="closeAllModals()">
+  (closeModal)="closeAllModals()">
 </app-store-form>
 
 <!-- View Store Modal -->
@@ -146,7 +146,9 @@
           <h4><i class="fas fa-user-tie"></i> Manager Information</h4>
           <div class="manager-info">
             <p><strong>Manager ID:</strong> {{ selectedStore.managerUserId }}</p>
-            <p><strong>Project ID:</strong> {{ selectedStore.projectId }}</p>
+            <p><strong>Manager Name:</strong> {{ selectedStore.managerUserName || 'N/A' }}</p>
+            <p><strong>Manager Email:</strong> {{ selectedStore.managerUserEmail || 'N/A' }}</p>
+            <p><strong>Manager Contact:</strong> {{ selectedStore.managerUserContact || 'N/A' }}</p>
           </div>
         </div>
 
@@ -156,15 +158,15 @@
           <div class="details-grid">
             <div class="detail-item">
               <label>Manager Name</label>
-              <span>{{ selectedStore.storeManagerName }}</span>
+              <span>{{ selectedStore.managerUserName || 'N/A' }}</span>
             </div>
             <div class="detail-item">
               <label>Contact</label>
-              <span>{{ selectedStore.storeManagerContact }}</span>
+              <span>{{ selectedStore.managerUserContact || 'N/A' }}</span>
             </div>
-            <div class="detail-item full-width" *ngIf="selectedStore.storeManagerEmail">
+            <div class="detail-item full-width" *ngIf="selectedStore.managerUserEmail">
               <label>Email</label>
-              <span>{{ selectedStore.storeManagerEmail }}</span>
+              <span>{{ selectedStore.managerUserEmail }}</span>
             </div>
           </div>
         </div>
