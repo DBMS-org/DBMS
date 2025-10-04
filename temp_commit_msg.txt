@@ -1,5 +1,1 @@
-feat(store-management): implement store management module with entities, services and UI
-
-Add new StoreManagement module with entities (Store, StoreInventory, StoreTransaction), enums (StoreStatus, ExplosiveType), DTOs, validators, repositories and services. Implement UI components for store listing, filtering and management. Add relationships to User, Region and Project entities. Include comprehensive validation and mapping configurations.
-
-The implementation provides full CRUD operations for stores, inventory management with stock tracking, and transaction history. UI components support filtering by status, region and manager. Statistics and reporting features are included for store utilization and inventory levels.
+Merge branch 'master' of https://github.com/DBMS-org/DBMS

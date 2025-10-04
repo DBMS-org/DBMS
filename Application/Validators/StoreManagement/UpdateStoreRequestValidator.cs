@@ -13,15 +13,6 @@ namespace Application.Validators.StoreManagement
             RuleFor(x => x.StoreAddress)
                 .RequiredString("Store address", 1, 200);
 
-            RuleFor(x => x.StoreManagerName)
-                .RequiredString("Store manager name", 1, 100);
-
-            RuleFor(x => x.StoreManagerContact)
-                .RequiredString("Store manager contact", 1, 20);
-
-            RuleFor(x => x.StoreManagerEmail)
-                .ValidEmail();
-
             RuleFor(x => x.StorageCapacity)
                 .GreaterThan(0)
                 .WithMessage("Storage capacity must be greater than 0");
@@ -32,11 +23,6 @@ namespace Application.Validators.StoreManagement
             RuleFor(x => x.Status)
                 .IsInEnum()
                 .WithMessage("Invalid store status");
-
-            RuleFor(x => x.ProjectId)
-                .GreaterThan(0)
-                .WithMessage("Project ID must be greater than 0")
-                .When(x => x.ProjectId.HasValue);
 
             RuleFor(x => x.ManagerUserId)
                 .GreaterThan(0)

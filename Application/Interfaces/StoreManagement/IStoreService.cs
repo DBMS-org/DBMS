@@ -1,6 +1,6 @@
 using Application.DTOs.StoreManagement;
 using Application.DTOs.Shared;
-using Domain.Entities.StoreManagement;
+using Domain.Entities.StoreManagement.Enums;
 
 namespace Application.Interfaces.StoreManagement
 {
@@ -12,11 +12,10 @@ namespace Application.Interfaces.StoreManagement
         Task<Result> UpdateStoreAsync(int id, UpdateStoreRequest request);
         Task<Result> DeleteStoreAsync(int id);
         Task<Result<IEnumerable<StoreDto>>> GetStoresByRegionAsync(int regionId);
-        Task<Result<IEnumerable<StoreDto>>> GetStoresByProjectAsync(int projectId);
         Task<Result<IEnumerable<StoreDto>>> SearchStoresAsync(string? storeName = null, string? city = null, string? status = null);
-        Task<Result<StoreDto>> GetStoreByManagerAsync(int managerUserId);
-        Task<Result> UpdateStoreStatusAsync(int id, Domain.Entities.StoreManagement.Enums.StoreStatus status);
-        Task<Result<decimal>> GetStoreUtilizationAsync(int id);
         Task<Result<StoreStatisticsDto>> GetStoreStatisticsAsync();
+        Task<Result<StoreDto>> GetStoreByManagerAsync(int managerUserId);
+        Task<Result> UpdateStoreStatusAsync(int id, StoreStatus status);
+        Task<Result<decimal>> GetStoreUtilizationAsync(int storeId);
     }
 }

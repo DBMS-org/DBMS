@@ -7,31 +7,27 @@ namespace Domain.Entities.StoreManagement
 {
     public class Store : BaseAuditableEntity
     {
-        private readonly List<ExplosiveType> _explosiveTypesAvailable = new();
         private readonly List<StoreInventory> _inventories = new();
 
         public string StoreName { get; private set; } = string.Empty;
         public string StoreAddress { get; private set; } = string.Empty;
-        public string StoreManagerName { get; private set; } = string.Empty;
-        public string StoreManagerContact { get; private set; } = string.Empty;
-        public string StoreManagerEmail { get; private set; } = string.Empty;
         public decimal StorageCapacity { get; private set; }
-        public decimal CurrentOccupancy { get; private set; }
         public string City { get; private set; } = string.Empty;
         public StoreStatus Status { get; private set; } = StoreStatus.Operational;
-        
+        public string AllowedExplosiveTypes { get; private set; } = string.Empty; // Comma-separated: "ANFO,Emulsion"
+
+        // Computed property - calculated from Inventories
+        public decimal CurrentOccupancy => Inventories?.Sum(i => i.Quantity) ?? 0;
+
         // Foreign Keys
         public int RegionId { get; private set; }
-        public int? ProjectId { get; private set; }
         public int? ManagerUserId { get; private set; }
 
         // Navigation Properties
         public virtual Region Region { get; private set; } = null!;
-        public virtual Project? Project { get; private set; }
         public virtual User? ManagerUser { get; private set; }
         
         // Collections
-        public virtual IReadOnlyCollection<ExplosiveType> ExplosiveTypesAvailable => _explosiveTypesAvailable.AsReadOnly();
         public virtual IReadOnlyCollection<StoreInventory> Inventories => _inventories.AsReadOnly();
 
         // Private constructor for EF Core
@@ -40,45 +36,39 @@ namespace Domain.Entities.StoreManagement
         public Store(
             string storeName,
             string storeAddress,
-            string storeManagerName,
-            string storeManagerContact,
-            string storeManagerEmail,
             decimal storageCapacity,
             string city,
-            int regionId)
+            int regionId,
+            string? allowedExplosiveTypes = null)
         {
-            ValidateStoreCreation(storeName, storeAddress, storeManagerName, storeManagerContact, storeManagerEmail, storageCapacity, city);
-            
+            ValidateStoreCreation(storeName, storeAddress, storageCapacity, city);
+
             StoreName = storeName;
             StoreAddress = storeAddress;
-            StoreManagerName = storeManagerName;
-            StoreManagerContact = storeManagerContact;
-            StoreManagerEmail = storeManagerEmail;
             StorageCapacity = storageCapacity;
             City = city;
             RegionId = regionId;
-            CurrentOccupancy = 0;
             Status = StoreStatus.Operational;
+            AllowedExplosiveTypes = allowedExplosiveTypes ?? string.Empty;
         }
 
         public void UpdateStoreDetails(
             string storeName,
             string storeAddress,
-            string storeManagerName,
-            string storeManagerContact,
-            string storeManagerEmail,
             decimal storageCapacity,
-            string city)
+            string city,
+            string? allowedExplosiveTypes = null)
         {
-            ValidateStoreCreation(storeName, storeAddress, storeManagerName, storeManagerContact, storeManagerEmail, storageCapacity, city);
-            
+            ValidateStoreCreation(storeName, storeAddress, storageCapacity, city);
+
             StoreName = storeName;
             StoreAddress = storeAddress;
-            StoreManagerName = storeManagerName;
-            StoreManagerContact = storeManagerContact;
-            StoreManagerEmail = storeManagerEmail;
             StorageCapacity = storageCapacity;
             City = city;
+            if (allowedExplosiveTypes != null)
+            {
+                AllowedExplosiveTypes = allowedExplosiveTypes;
+            }
         }
 
         public void ChangeStatus(StoreStatus newStatus)
@@ -91,52 +81,14 @@ namespace Domain.Entities.StoreManagement
             Status = newStatus;
         }
 
-        public void AssignToProject(int projectId)
-        {
-            if (Status != StoreStatus.Operational)
-            {
-                throw new InvalidOperationException("Can only assign operational stores to projects");
-            }
-            
-            ProjectId = projectId;
-        }
-
-        public void RemoveFromProject()
-        {
-            ProjectId = null;
-        }
-
         public void AssignManager(int managerUserId)
         {
             ManagerUserId = managerUserId;
         }
 
-        public void AddExplosiveType(ExplosiveType explosiveType)
+        public void RemoveManager()
         {
-            if (!_explosiveTypesAvailable.Contains(explosiveType))
-            {
-                _explosiveTypesAvailable.Add(explosiveType);
-            }
-        }
-
-        public void RemoveExplosiveType(ExplosiveType explosiveType)
-        {
-            _explosiveTypesAvailable.Remove(explosiveType);
-        }
-
-        public void UpdateOccupancy(decimal newOccupancy)
-        {
-            if (newOccupancy < 0)
-            {
-                throw new ArgumentException("Occupancy cannot be negative");
-            }
-            
-            if (newOccupancy > StorageCapacity)
-            {
-                throw new ArgumentException("Occupancy cannot exceed storage capacity");
-            }
-            
-            CurrentOccupancy = newOccupancy;
+            ManagerUserId = null;
         }
 
         public decimal GetUtilizationRate()
@@ -152,30 +104,18 @@ namespace Domain.Entities.StoreManagement
         private static void ValidateStoreCreation(
             string storeName,
             string storeAddress,
-            string storeManagerName,
-            string storeManagerContact,
-            string storeManagerEmail,
             decimal storageCapacity,
             string city)
         {
             if (string.IsNullOrWhiteSpace(storeName))
                 throw new ArgumentException("Store name is required", nameof(storeName));
-            
+
             if (string.IsNullOrWhiteSpace(storeAddress))
                 throw new ArgumentException("Store address is required", nameof(storeAddress));
-            
-            if (string.IsNullOrWhiteSpace(storeManagerName))
-                throw new ArgumentException("Store manager name is required", nameof(storeManagerName));
-            
-            if (string.IsNullOrWhiteSpace(storeManagerContact))
-                throw new ArgumentException("Store manager contact is required", nameof(storeManagerContact));
-            
-            if (string.IsNullOrWhiteSpace(storeManagerEmail))
-                throw new ArgumentException("Store manager email is required", nameof(storeManagerEmail));
-            
+
             if (storageCapacity <= 0)
                 throw new ArgumentException("Storage capacity must be greater than zero", nameof(storageCapacity));
-            
+
             if (string.IsNullOrWhiteSpace(city))
                 throw new ArgumentException("City is required", nameof(city));
         }

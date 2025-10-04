@@ -102,26 +102,18 @@ export class StoresComponent implements OnInit, OnDestroy {
     this.addStoreForm = this.fb.group({
       storeName: ['', [Validators.required, Validators.minLength(3)]],
       storeAddress: ['', [Validators.required, Validators.minLength(10)]],
-      storeManagerName: ['', [Validators.required, Validators.minLength(2)]],
-      storeManagerContact: ['', [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]{10,}$/)]],
-      storeManagerEmail: ['', [Validators.email]],
       storageCapacity: ['', [Validators.required, Validators.min(1)]],
       city: ['', Validators.required],
       regionId: ['', Validators.required],
-      projectId: ['', Validators.required],
       managerUserId: ['']
     });
 
     this.editStoreForm = this.fb.group({
       storeName: ['', [Validators.required, Validators.minLength(3)]],
       storeAddress: ['', [Validators.required, Validators.minLength(10)]],
-      storeManagerName: ['', [Validators.required, Validators.minLength(2)]],
-      storeManagerContact: ['', [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]{10,}$/)]],
-      storeManagerEmail: ['', [Validators.email]],
       storageCapacity: ['', [Validators.required, Validators.min(1)]],
       city: ['', Validators.required],
       status: ['', Validators.required],
-      projectId: [''],
       managerUserId: ['']
     });
   }
@@ -130,7 +122,8 @@ export class StoresComponent implements OnInit, OnDestroy {
   private loadStores(): void {
     this.isLoading = true;
     this.error = null;
-    
+    this.clearMessages();
+
     this.storeService.getAllStores()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -142,7 +135,11 @@ export class StoresComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading stores:', error);
-          this.error = 'Failed to load stores. Please try again.';
+          const errorMsg = this.getErrorMessage(error);
+          this.error = errorMsg;
+          this.showError(errorMsg);
+          this.stores = [];
+          this.filteredStores = [];
           this.isLoading = false;
         }
       });
@@ -157,7 +154,7 @@ export class StoresComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading statistics:', error);
-          // Use default statistics if API fails
+          // Use default statistics if API fails - silent fallback
           this.statistics = {
             totalStores: 0,
             activeStores: 0,
@@ -175,7 +172,7 @@ export class StoresComponent implements OnInit, OnDestroy {
 
   private updateUniqueValues(): void {
     this.uniqueLocations = Array.from(new Set(this.stores.map(s => s.city)));
-    this.uniqueManagers = Array.from(new Set(this.stores.map(s => s.storeManagerName)));
+    this.uniqueManagers = Array.from(new Set(this.stores.map(s => s.managerUserName).filter((name): name is string => !!name)));
   }
 
   // Filter and search methods
@@ -187,7 +184,7 @@ export class StoresComponent implements OnInit, OnDestroy {
       }
 
       // Location filter (using regionId and city)
-      if (this.filters.regionId && store.regionId !== this.filters.regionId) {
+      if (this.filters.regionId && this.filters.regionId !== 'ALL' && store.regionId !== this.filters.regionId) {
         return false;
       }
 
@@ -196,7 +193,7 @@ export class StoresComponent implements OnInit, OnDestroy {
       }
 
       // Store manager filter
-      if (this.filters.storeManager && this.filters.storeManager !== 'ALL' && store.storeManagerName !== this.filters.storeManager) {
+      if (this.filters.storeManager && this.filters.storeManager !== 'ALL' && store.managerUserName !== this.filters.storeManager) {
         return false;
       }
 
@@ -205,12 +202,12 @@ export class StoresComponent implements OnInit, OnDestroy {
         const searchTerm = this.filters.searchTerm.toLowerCase();
         const searchableText = [
           store.storeName,
-          store.storeManagerName,
+          store.managerUserName,
           store.city,
           store.storeAddress,
           store.status?.toString()
         ].join(' ').toLowerCase();
-        
+
         if (!searchableText.includes(searchTerm)) {
           return false;
         }
@@ -281,13 +278,9 @@ export class StoresComponent implements OnInit, OnDestroy {
     this.editStoreForm.patchValue({
       storeName: store.storeName,
       storeAddress: store.storeAddress,
-      storeManagerName: store.storeManagerName,
-      storeManagerContact: store.storeManagerContact,
-      storeManagerEmail: store.storeManagerEmail,
       storageCapacity: store.storageCapacity,
       city: store.city,
       status: store.status,
-      projectId: store.projectId,
       managerUserId: store.managerUserId
     });
   }
@@ -295,8 +288,10 @@ export class StoresComponent implements OnInit, OnDestroy {
   // CRUD operations
   onAddStore(formData?: any): void {
     const request: CreateStoreRequest = formData || this.addStoreForm.value;
-    
+
     this.isLoading = true;
+    this.clearMessages();
+
     this.storeService.createStore(request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -308,7 +303,9 @@ export class StoresComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error adding store:', error);
-          this.showError('Failed to add store. Please try again.');
+          const errorMsg = this.getErrorMessage(error, 'Failed to add store');
+          this.showError(errorMsg);
+          this.isLoading = false;
         },
         complete: () => {
           this.isLoading = false;
@@ -317,87 +314,104 @@ export class StoresComponent implements OnInit, OnDestroy {
   }
 
   onEditStore(formData?: any): void {
-    if (this.selectedStore) {
-      const request: UpdateStoreRequest = formData || this.editStoreForm.value;
-      
-      this.isLoading = true;
-      this.storeService.updateStore(this.selectedStore.id, request)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (store) => {
-            this.showSuccess('Store updated successfully');
-            this.loadStores();
-            this.loadStatistics();
-            setTimeout(() => this.closeAllModals(), 2000);
-          },
-          error: (error) => {
-            console.error('Error updating store:', error);
-            this.showError('Failed to update store. Please try again.');
-          },
-          complete: () => {
-            this.isLoading = false;
-          }
-        });
+    if (!this.selectedStore) {
+      this.showError('No store selected for editing');
+      return;
     }
+
+    const request: UpdateStoreRequest = formData || this.editStoreForm.value;
+
+    this.isLoading = true;
+    this.clearMessages();
+
+    this.storeService.updateStore(this.selectedStore.id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (store) => {
+          this.showSuccess('Store updated successfully');
+          this.loadStores();
+          this.loadStatistics();
+          setTimeout(() => this.closeAllModals(), 2000);
+        },
+        error: (error) => {
+          console.error('Error updating store:', error);
+          const errorMsg = this.getErrorMessage(error, 'Failed to update store');
+          this.showError(errorMsg);
+          this.isLoading = false;
+        },
+        complete: () => {
+          this.isLoading = false;
+        }
+      });
   }
 
   onDeleteStore(): void {
-    if (this.selectedStore) {
-      this.isLoading = true;
-      this.storeService.deleteStore(this.selectedStore.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.showSuccess('Store deleted successfully');
-            this.loadStores();
-            this.loadStatistics();
-            this.closeAllModals();
-          },
-          error: (error) => {
-            console.error('Error deleting store:', error);
-            this.showError('Failed to delete store. Please try again.');
-          },
-          complete: () => {
-            this.isLoading = false;
-          }
-        });
+    if (!this.selectedStore) {
+      this.showError('No store selected for deletion');
+      return;
     }
+
+    this.isLoading = true;
+    this.clearMessages();
+
+    this.storeService.deleteStore(this.selectedStore.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.showSuccess('Store deleted successfully');
+          this.loadStores();
+          this.loadStatistics();
+          this.closeAllModals();
+        },
+        error: (error) => {
+          console.error('Error deleting store:', error);
+          const errorMsg = this.getErrorMessage(error, 'Failed to delete store');
+          this.showError(errorMsg);
+          this.isLoading = false;
+        },
+        complete: () => {
+          this.isLoading = false;
+        }
+      });
   }
 
   onDeactivateStore(): void {
-    if (this.selectedStore) {
-      const request: UpdateStoreRequest = {
-        storeName: this.selectedStore.storeName,
-        storeAddress: this.selectedStore.storeAddress,
-        storeManagerName: this.selectedStore.storeManagerName,
-        storeManagerContact: this.selectedStore.storeManagerContact,
-        storeManagerEmail: this.selectedStore.storeManagerEmail,
-        storageCapacity: this.selectedStore.storageCapacity,
-        city: this.selectedStore.city,
-        status: StoreStatus.TemporarilyClosed,
-        projectId: this.selectedStore.projectId,
-        managerUserId: this.selectedStore.managerUserId
-      };
-      
-      this.isLoading = true;
-      this.storeService.updateStore(this.selectedStore.id, request)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (store) => {
-            this.showSuccess('Store deactivated successfully');
-            this.loadStores();
-            this.loadStatistics();
-            this.closeAllModals();
-          },
-          error: (error) => {
-            console.error('Error deactivating store:', error);
-            this.showError('Failed to deactivate store. Please try again.');
-          },
-          complete: () => {
-            this.isLoading = false;
-          }
-        });
+    if (!this.selectedStore) {
+      this.showError('No store selected for deactivation');
+      return;
     }
+
+    const request: UpdateStoreRequest = {
+      storeName: this.selectedStore.storeName,
+      storeAddress: this.selectedStore.storeAddress,
+      storageCapacity: this.selectedStore.storageCapacity,
+      city: this.selectedStore.city,
+      status: StoreStatus.TemporarilyClosed,
+      managerUserId: this.selectedStore.managerUserId
+    };
+
+    this.isLoading = true;
+    this.clearMessages();
+
+    this.storeService.updateStore(this.selectedStore.id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (store) => {
+          this.showSuccess('Store deactivated successfully');
+          this.loadStores();
+          this.loadStatistics();
+          this.closeAllModals();
+        },
+        error: (error) => {
+          console.error('Error deactivating store:', error);
+          const errorMsg = this.getErrorMessage(error, 'Failed to deactivate store');
+          this.showError(errorMsg);
+          this.isLoading = false;
+        },
+        complete: () => {
+          this.isLoading = false;
+        }
+      });
   }
 
   // Utility methods
@@ -440,13 +454,9 @@ export class StoresComponent implements OnInit, OnDestroy {
     const displayNames: { [key: string]: string } = {
       storeName: 'Store Name',
       storeAddress: 'Store Address',
-      storeManagerName: 'Store Manager Name',
-      storeManagerContact: 'Store Manager Contact',
-      storeManagerEmail: 'Store Manager Email',
       storageCapacity: 'Storage Capacity',
       city: 'City',
       regionId: 'Region',
-      projectId: 'Project',
       managerUserId: 'Manager',
       status: 'Status'
     };
@@ -471,6 +481,66 @@ export class StoresComponent implements OnInit, OnDestroy {
     this.successMessage = '';
     this.errorMessage = '';
     this.error = null;
+  }
+
+  private getErrorMessage(error: any, defaultMessage: string = 'An error occurred'): string {
+    if (!error) return defaultMessage;
+
+    // Handle HTTP error response
+    if (error.error) {
+      // If error.error is a string
+      if (typeof error.error === 'string') {
+        return error.error;
+      }
+
+      // If error.error has a message property
+      if (error.error.message) {
+        return error.error.message;
+      }
+
+      // If error.error has errors property (validation errors)
+      if (error.error.errors) {
+        const errors = error.error.errors;
+        const firstErrorKey = Object.keys(errors)[0];
+        if (firstErrorKey && errors[firstErrorKey]?.length > 0) {
+          return errors[firstErrorKey][0];
+        }
+      }
+
+      // If error.error has title property
+      if (error.error.title) {
+        return error.error.title;
+      }
+    }
+
+    // Handle error message directly
+    if (error.message) {
+      return error.message;
+    }
+
+    // Handle status codes
+    if (error.status) {
+      switch (error.status) {
+        case 400:
+          return 'Invalid request. Please check your input.';
+        case 401:
+          return 'Unauthorized. Please log in again.';
+        case 403:
+          return 'You do not have permission to perform this action.';
+        case 404:
+          return 'Store not found.';
+        case 409:
+          return 'A conflict occurred. The store may already exist.';
+        case 500:
+          return 'Server error. Please try again later.';
+        case 0:
+          return 'Network error. Please check your connection.';
+        default:
+          return `${defaultMessage} (Error ${error.status})`;
+      }
+    }
+
+    return defaultMessage;
   }
 
   // Helper methods for template

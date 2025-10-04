@@ -25,16 +25,44 @@ export class EmulsionAddComponent implements OnInit {
 
   private initializeForm(): void {
     this.emulsionForm = this.fb.group({
-      batchId: ['', [Validators.required]],
+      // Core Information
+      batchId: ['', [Validators.required, Validators.pattern(/^EMU-\d{4}-\d{3}$/)]],
       manufacturingDate: ['', [Validators.required]],
       expiryDate: ['', [Validators.required]],
-      location: ['', [Validators.required]],
+      supplier: ['', [Validators.required]],
       quantity: ['', [Validators.required, Validators.min(0.001)]],
-      storageTemperature: [''],
-      density: ['', [Validators.required, Validators.min(0.8), Validators.max(1.5)]],
-      viscosity: [''],
-      waterContent: [''],
-      grade: [''],
+      unit: ['kg', [Validators.required]],
+
+      // Quality Parameters
+      densityUnsensitized: ['', [Validators.required, Validators.min(1.30), Validators.max(1.45)]],
+      densitySensitized: ['', [Validators.required, Validators.min(1.10), Validators.max(1.30)]],
+      viscosity: ['', [Validators.required, Validators.min(50000), Validators.max(200000)]],
+      waterContent: ['', [Validators.required, Validators.min(12), Validators.max(16)]],
+      pH: ['', [Validators.required, Validators.min(4.5), Validators.max(6.5)]],
+      detonationVelocity: ['', [Validators.min(4500), Validators.max(6000)]],
+      bubbleSize: ['', [Validators.min(10), Validators.max(100)]],
+
+      // Temperature
+      storageTemperature: ['', [Validators.required, Validators.min(-20), Validators.max(50)]],
+      applicationTemperature: ['', [Validators.min(0), Validators.max(45)]],
+
+      // Manufacturing
+      grade: ['Standard', [Validators.required]],
+      manufacturerBatchNumber: [''],
+      color: ['White', [Validators.required]],
+
+      // Sensitization
+      sensitizationType: ['Chemical', [Validators.required]],
+      sensitizerContent: ['', [Validators.min(0), Validators.max(100)]],
+
+      // Storage
+      storageLocation: ['', [Validators.required]],
+
+      // Quality Control
+      fumeClass: [1, [Validators.required]],
+      qualityStatus: ['Pending', [Validators.required]],
+
+      // Additional
       notes: ['']
     });
   }

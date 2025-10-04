@@ -1,7 +1,7 @@
 <div class="emulsion-add-container">
   <div class="form-header">
-    <h3>Add New Emulsion Stock</h3>
-    <p>Enter details for new Emulsion inventory item</p>
+    <h3>Add New Emulsion Batch to Central Warehouse</h3>
+    <p>Enter technical specifications for new Emulsion batch based on industry standards</p>
   </div>
 
   <form class="emulsion-form" [formGroup]="emulsionForm" (ngSubmit)="onSubmit()">
@@ -51,27 +51,21 @@
         </div>
       </div>
 
-      <!-- Storage Information -->
+      <!-- Manufacturing & Central Warehouse Storage -->
       <div class="form-section">
-        <h4>Storage Information</h4>
-        
+        <h4><i class="material-icons">warehouse</i> Manufacturing & Central Warehouse Storage</h4>
+
         <div class="form-group">
-          <label for="location">Storage Location *</label>
-          <select 
-            id="location" 
+          <label for="location">Central Warehouse Location * <small>(Bay/Section/Zone)</small></label>
+          <input
+            type="text"
+            id="location"
             formControlName="location"
+            placeholder="e.g., Cold Storage A-1, Temperature Controlled Zone 2, Section B-3"
             class="form-control"
             [class.error]="emulsionForm.get('location')?.invalid && emulsionForm.get('location')?.touched">
-            <option value="">Select Location</option>
-            <option value="Cold Storage A - Section 1">Cold Storage A - Section 1</option>
-            <option value="Cold Storage A - Section 2">Cold Storage A - Section 2</option>
-            <option value="Cold Storage B - Section 1">Cold Storage B - Section 1</option>
-            <option value="Cold Storage B - Section 2">Cold Storage B - Section 2</option>
-            <option value="Temperature Controlled - Zone 1">Temperature Controlled - Zone 1</option>
-            <option value="Temperature Controlled - Zone 2">Temperature Controlled - Zone 2</option>
-          </select>
           <div class="error-message" *ngIf="emulsionForm.get('location')?.invalid && emulsionForm.get('location')?.touched">
-            Storage location is required
+            Storage location within central warehouse is required
           </div>
         </div>
 
@@ -184,7 +178,7 @@
       </button>
       <button type="submit" class="btn btn-primary" [disabled]="emulsionForm.invalid || isSubmitting">
         <i class="material-icons">save</i>
-        <span *ngIf="!isSubmitting">Add Emulsion Stock</span>
+        <span *ngIf="!isSubmitting">Add Emulsion Batch</span>
         <span *ngIf="isSubmitting">Adding...</span>
       </button>
     </div>

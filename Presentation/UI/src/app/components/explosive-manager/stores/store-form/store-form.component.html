@@ -63,38 +63,30 @@
           <div class="form-row">
             <div class="form-group">
               <label><i class="fas fa-city"></i> City *</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 class="form-control"
-                formControlName="locationCity"
-                [class.is-invalid]="isFieldInvalid('locationCity')"
+                formControlName="city"
+                [class.is-invalid]="isFieldInvalid('city')"
                 placeholder="Enter city name">
-              <div *ngIf="isFieldInvalid('locationCity')" class="error-message">
+              <div *ngIf="isFieldInvalid('city')" class="error-message">
                 <i class="fas fa-exclamation-circle"></i> City is required
               </div>
             </div>
-            
+
             <div class="form-group">
               <label><i class="fas fa-globe-americas"></i> Region *</label>
               <select
                 title="Region"
                 class="form-select"
-                formControlName="locationRegion"
-                [class.is-invalid]="isFieldInvalid('locationRegion')">
+                formControlName="regionId"
+                [class.is-invalid]="isFieldInvalid('regionId')">
                 <option value="" disabled selected>Select a region</option>
-                <option value="Muscat">Muscat</option>
-                <option value="Dhofar">Dhofar</option>
-                <option value="Musandam">Musandam</option>
-                <option value="Al Buraimi">Al Buraimi</option>
-                <option value="Al Dakhiliyah">Al Dakhiliyah</option>
-                <option value="Al Dhahirah">Al Dhahirah</option>
-                <option value="Al Wusta">Al Wusta</option>
-                <option value="Al Batinah North">Al Batinah North</option>
-                <option value="Al Batinah South">Al Batinah South</option>
-                <option value="Ash Sharqiyah North">Ash Sharqiyah North</option>
-                <option value="Ash Sharqiyah South">Ash Sharqiyah South</option>
+                <option *ngFor="let region of regions; let i = index" [value]="i + 1">
+                  {{ region }}
+                </option>
               </select>
-              <div *ngIf="isFieldInvalid('locationRegion')" class="error-message">
+              <div *ngIf="isFieldInvalid('regionId')" class="error-message">
                 <i class="fas fa-exclamation-circle"></i> Region is required
               </div>
             </div>
@@ -107,8 +99,8 @@
           <div class="form-row">
             <div class="form-group">
               <label><i class="fas fa-weight-hanging"></i> Storage Capacity (tons) *</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 class="form-control"
                 formControlName="storageCapacity"
                 [class.is-invalid]="isFieldInvalid('storageCapacity')"
@@ -120,13 +112,13 @@
             </div>
           </div>
         </div>
-        
-        <!-- Explosive Types -->
+
+        <!-- Allowed Explosive Types -->
         <div class="form-section">
-          <h4><i class="fas fa-bomb"></i> Explosive Types Available *</h4>
+          <h4><i class="fas fa-bomb"></i> Allowed Explosive Types</h4>
           <div class="explosive-types-grid">
-            <div *ngFor="let type of explosiveTypes" class="form-check">
-              <input 
+            <div *ngFor="let type of explosiveTypesList" class="form-check">
+              <input
                 type="checkbox"
                 class="form-check-input"
                 [checked]="isExplosiveTypeSelected(type)"
@@ -137,11 +129,9 @@
               </label>
             </div>
           </div>
-          <div *ngIf="isFieldInvalid('explosiveTypes')" class="error-message">
-            <i class="fas fa-exclamation-circle"></i> Please select at least one explosive type
-          </div>
         </div>
-        
+
+
         <!-- Status (only for edit mode) -->
         <div class="form-section" *ngIf="isEditMode">
           <h4><i class="fas fa-toggle-on"></i> Store Status</h4>
@@ -154,11 +144,11 @@
                 formControlName="status"
                 [class.is-invalid]="isFieldInvalid('status')">
                 <option value="" disabled>Select current status</option>
-                <option value="Operational">🟢 Operational</option>
-                <option value="Under Maintenance">🟡 Under Maintenance</option>
-                <option value="Temporarily Closed">🔴 Temporarily Closed</option>
-                <option value="Inspection Required">🟠 Inspection Required</option>
-                <option value="Decommissioned">⚫ Decommissioned</option>
+                <option [value]="1">🟢 Operational</option>
+                <option [value]="2">🟡 Under Maintenance</option>
+                <option [value]="3">🔴 Temporarily Closed</option>
+                <option [value]="4">🟠 Inspection Required</option>
+                <option [value]="5">⚫ Decommissioned</option>
               </select>
               <div *ngIf="isFieldInvalid('status')" class="error-message">
                 <i class="fas fa-exclamation-circle"></i> Status is required

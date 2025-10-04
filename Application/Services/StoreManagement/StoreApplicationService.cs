@@ -4,6 +4,7 @@ using Application.Exceptions;
 using Application.Interfaces.Infrastructure;
 using Application.Interfaces.StoreManagement;
 using Application.Utilities;
+using Application.DTOs.Shared;
 using AutoMapper;
 using Domain.Entities.StoreManagement;
 using Domain.Entities.StoreManagement.Enums;
@@ -30,6 +31,25 @@ namespace Application.Services.StoreManagement
             _validationService = validationService;
             _mapper = mapper;
             _logger = logger;
+        }
+
+        public async Task<Result<IEnumerable<StoreDto>>> GetStoresByRegionAsync(int regionId)
+        {
+            try
+            {
+                _logger.LogInformation("Retrieving stores for region {RegionId}", regionId);
+
+                var stores = await _storeRepository.GetByRegionIdAsync(regionId);
+                var storeDtos = _mapper.Map<IEnumerable<StoreDto>>(stores);
+
+                _logger.LogInformation("Successfully retrieved {Count} stores for region {RegionId}", storeDtos.Count(), regionId);
+                return Result.Success(storeDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while retrieving stores for region {RegionId}", regionId);
+                return Result.Failure<IEnumerable<StoreDto>>("An error occurred while retrieving stores for the region");
+            }
         }
 
         public async Task<Result<IEnumerable<StoreDto>>> GetAllStoresAsync()
@@ -61,7 +81,7 @@ namespace Application.Services.StoreManagement
         {
             try
             {
-                var store = await _storeRepository.GetByIdWithDetailsAsync(id);
+                var store = await _storeRepository.GetByIdAsync(id);
                 if (store == null)
                 {
                     _logger.LogWarning("Store not found with ID {StoreId}", id);
@@ -90,47 +110,13 @@ namespace Application.Services.StoreManagement
                     return Result.Failure<StoreDto>(validationResult.Errors);
                 }
 
-                // Validate manager user exists if provided
-                if (request.ManagerUserId.HasValue)
-                {
-                    var userExists = await _storeRepository.UserExistsAsync(request.ManagerUserId.Value);
-                    if (!userExists)
-                    {
-                        return Result.Failure<StoreDto>($"User with ID {request.ManagerUserId.Value} not found");
-                    }
-                }
-
-                // Validate region exists
-                var regionExists = await _storeRepository.RegionExistsAsync(request.RegionId);
-                if (!regionExists)
-                {
-                    return Result.Failure<StoreDto>($"Region with ID {request.RegionId} not found");
-                }
-
-                // Validate project exists if provided
-                if (request.ProjectId.HasValue)
-                {
-                    var projectExists = await _storeRepository.ProjectExistsAsync(request.ProjectId.Value);
-                    if (!projectExists)
-                    {
-                        return Result.Failure<StoreDto>($"Project with ID {request.ProjectId.Value} not found");
-                    }
-                }
-
                 var store = new Store(
                     request.StoreName,
                     request.StoreAddress,
-                    request.StoreManagerName,
-                    request.StoreManagerContact,
-                    request.StoreManagerEmail,
                     request.StorageCapacity,
                     request.City,
-                    request.RegionId);
-
-                if (request.ProjectId.HasValue)
-                {
-                    store.AssignToProject(request.ProjectId.Value);
-                }
+                    request.RegionId,
+                    request.AllowedExplosiveTypes);
 
                 if (request.ManagerUserId.HasValue)
                 {
@@ -138,7 +124,7 @@ namespace Application.Services.StoreManagement
                 }
 
                 var createdStore = await _storeRepository.CreateAsync(store);
-                var storeWithDetails = await _storeRepository.GetByIdWithDetailsAsync(createdStore.Id);
+                var storeWithDetails = await _storeRepository.GetByIdAsync(createdStore.Id);
                 var storeDto = _mapper.Map<StoreDto>(storeWithDetails ?? createdStore);
                 
                 _logger.LogInformation("Successfully created store {StoreName} with ID {StoreId}", request.StoreName, createdStore.Id);
@@ -158,7 +144,7 @@ namespace Application.Services.StoreManagement
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error creating store {StoreName}", request.StoreName);
-                return Result.Failure<StoreDto>("An error occurred while creating the store");
+                return Result.Failure<StoreDto>(ErrorCodes.Messages.InternalError);
             }
         }
 
@@ -180,53 +166,23 @@ namespace Application.Services.StoreManagement
                     return Result.Failure($"Store with ID {id} not found");
                 }
 
-                // Validate manager user exists if provided
-                if (request.ManagerUserId.HasValue)
-                {
-                    var userExists = await _storeRepository.UserExistsAsync(request.ManagerUserId.Value);
-                    if (!userExists)
-                    {
-                        return Result.Failure($"User with ID {request.ManagerUserId.Value} not found");
-                    }
-                }
-
-                // Validate project exists if provided
-                if (request.ProjectId.HasValue)
-                {
-                    var projectExists = await _storeRepository.ProjectExistsAsync(request.ProjectId.Value);
-                    if (!projectExists)
-                    {
-                        return Result.Failure($"Project with ID {request.ProjectId.Value} not found");
-                    }
-                }
-
                 store.UpdateStoreDetails(
                     request.StoreName,
                     request.StoreAddress,
-                    request.StoreManagerName,
-                    request.StoreManagerContact,
-                    request.StoreManagerEmail,
                     request.StorageCapacity,
-                    request.City);
+                    request.City,
+                    request.AllowedExplosiveTypes);
 
                 store.ChangeStatus(request.Status);
-
-                if (request.ProjectId.HasValue)
-                {
-                    store.AssignToProject(request.ProjectId.Value);
-                }
-                else
-                {
-                    store.RemoveFromProject();
-                }
 
                 if (request.ManagerUserId.HasValue)
                 {
                     store.AssignManager(request.ManagerUserId.Value);
                 }
-                // Note: Since ManagerUserId is nullable and there's no RemoveManager method,
-                // we'll need to directly set it to null if needed. This might require adding
-                // a RemoveManager method to the Store entity or handling it differently.
+                else
+                {
+                    store.RemoveManager();
+                }
 
                 await _storeRepository.UpdateAsync(store);
                 
@@ -279,44 +235,6 @@ namespace Application.Services.StoreManagement
             }
         }
 
-        public async Task<Result<IEnumerable<StoreDto>>> GetStoresByRegionAsync(int regionId)
-        {
-            try
-            {
-                _logger.LogInformation("Retrieving stores for region {RegionId}", regionId);
-
-                var stores = await _storeRepository.GetByRegionIdAsync(regionId);
-                var storeDtos = _mapper.Map<IEnumerable<StoreDto>>(stores);
-
-                _logger.LogInformation("Successfully retrieved {Count} stores for region {RegionId}", storeDtos.Count(), regionId);
-                return Result.Success(storeDtos);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while retrieving stores for region {RegionId}", regionId);
-                return Result.Failure<IEnumerable<StoreDto>>("An error occurred while retrieving stores for the region");
-            }
-        }
-
-        public async Task<Result<IEnumerable<StoreDto>>> GetStoresByProjectAsync(int projectId)
-        {
-            try
-            {
-                _logger.LogInformation("Retrieving stores for project {ProjectId}", projectId);
-
-                var stores = await _storeRepository.GetByProjectIdAsync(projectId);
-                var storeDtos = _mapper.Map<IEnumerable<StoreDto>>(stores);
-
-                _logger.LogInformation("Successfully retrieved {Count} stores for project {ProjectId}", storeDtos.Count(), projectId);
-                return Result.Success(storeDtos);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while retrieving stores for project {ProjectId}", projectId);
-                return Result.Failure<IEnumerable<StoreDto>>("An error occurred while retrieving stores for the project");
-            }
-        }
-
         public async Task<Result<IEnumerable<StoreDto>>> SearchStoresAsync(string? storeName = null, string? city = null, string? status = null)
         {
             try
@@ -330,13 +248,7 @@ namespace Application.Services.StoreManagement
                     storeStatus = parsedStatus;
                 }
 
-                var stores = await _storeRepository.SearchAsync(storeName, null, null, storeStatus);
-                
-                // Apply city filter if provided (assuming it's not in the repository method)
-                if (!string.IsNullOrEmpty(city))
-                {
-                    stores = stores.Where(s => s.City.Contains(city, StringComparison.OrdinalIgnoreCase));
-                }
+                var stores = await _storeRepository.SearchAsync(storeName, city, null, null, storeStatus);
 
                 var storeDtos = _mapper.Map<IEnumerable<StoreDto>>(stores);
 
@@ -356,8 +268,7 @@ namespace Application.Services.StoreManagement
             {
                 _logger.LogInformation("Getting store by manager with ID: {ManagerId}", managerUserId);
 
-                var stores = await _storeRepository.GetByManagerIdAsync(managerUserId);
-                var store = stores.FirstOrDefault();
+                var store = await _storeRepository.GetStoreByManagerAsync(managerUserId);
                 if (store == null)
                 {
                     _logger.LogWarning("No store found for manager with ID: {ManagerId}", managerUserId);
@@ -388,9 +299,9 @@ namespace Application.Services.StoreManagement
                 }
 
                 store.ChangeStatus(status);
-                var result = await _storeRepository.UpdateAsync(store);
+                var updateResult = await _storeRepository.UpdateAsync(store);
 
-                if (result)
+                if (updateResult)
                 {
                     _logger.LogInformation("Successfully updated store status for store ID: {StoreId}", id);
                     return Result.Success();
@@ -414,21 +325,14 @@ namespace Application.Services.StoreManagement
             {
                 _logger.LogInformation("Getting store utilization for store ID: {StoreId}", storeId);
 
-                var store = await _storeRepository.GetByIdWithDetailsAsync(storeId);
+                var store = await _storeRepository.GetByIdAsync(storeId);
                 if (store == null)
                 {
                     _logger.LogWarning("Store not found with ID: {StoreId}", storeId);
                     return Result.Failure<decimal>($"Store with ID {storeId} not found");
                 }
 
-                if (store.StorageCapacity <= 0)
-                {
-                    _logger.LogWarning("Store with ID: {StoreId} has invalid storage capacity", storeId);
-                    return Result.Failure<decimal>("Store has invalid storage capacity");
-                }
-
-                var totalUsedCapacity = store.Inventories?.Sum(i => i.Quantity) ?? 0;
-                var utilization = (decimal)totalUsedCapacity / store.StorageCapacity * 100;
+                var utilization = store.GetUtilizationRate();
 
                 _logger.LogInformation("Store utilization for store ID: {StoreId} is {Utilization}%", storeId, utilization);
                 return Result.Success(utilization);
