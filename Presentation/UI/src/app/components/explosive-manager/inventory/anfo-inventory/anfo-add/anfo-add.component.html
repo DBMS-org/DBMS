@@ -1,143 +1,306 @@
 <div class="anfo-add-container">
   <div class="form-header">
-    <h3>Add New ANFO Stock</h3>
-    <p>Enter details for new ANFO inventory item</p>
+    <h3>Add New ANFO Batch to Central Warehouse</h3>
+    <p>Enter technical specifications for new ANFO batch based on industry standards</p>
   </div>
 
   <form class="anfo-form" [formGroup]="anfoForm" (ngSubmit)="onSubmit()">
     <div class="form-grid">
-      <!-- Batch Information -->
+
+      <!-- Core Information -->
       <div class="form-section">
-        <h4>Batch Information</h4>
-        
+        <h4><i class="material-icons">info</i> Core Information</h4>
+
         <div class="form-group">
-          <label for="batchId">Batch ID *</label>
-          <input 
-            type="text" 
-            id="batchId" 
+          <label for="batchId">Batch ID * <small>(Format: ANFO-YYYY-XXX)</small></label>
+          <input
+            type="text"
+            id="batchId"
             formControlName="batchId"
-            placeholder="e.g., ANF-2024-001"
+            placeholder="e.g., ANFO-2025-001"
             class="form-control"
             [class.error]="anfoForm.get('batchId')?.invalid && anfoForm.get('batchId')?.touched">
           <div class="error-message" *ngIf="anfoForm.get('batchId')?.invalid && anfoForm.get('batchId')?.touched">
-            Batch ID is required
+            <span *ngIf="anfoForm.get('batchId')?.errors?.['required']">Batch ID is required</span>
+            <span *ngIf="anfoForm.get('batchId')?.errors?.['pattern']">Format must be ANFO-YYYY-XXX</span>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="manufacturingDate">Manufacturing Date *</label>
-          <input 
-            type="date" 
-            id="manufacturingDate" 
-            formControlName="manufacturingDate"
-            class="form-control"
-            [class.error]="anfoForm.get('manufacturingDate')?.invalid && anfoForm.get('manufacturingDate')?.touched">
-          <div class="error-message" *ngIf="anfoForm.get('manufacturingDate')?.invalid && anfoForm.get('manufacturingDate')?.touched">
-            Manufacturing date is required
+        <div class="form-row">
+          <div class="form-group">
+            <label for="manufacturingDate">Manufacturing Date *</label>
+            <input
+              type="date"
+              id="manufacturingDate"
+              formControlName="manufacturingDate"
+              class="form-control"
+              [class.error]="anfoForm.get('manufacturingDate')?.invalid && anfoForm.get('manufacturingDate')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('manufacturingDate')?.invalid && anfoForm.get('manufacturingDate')?.touched">
+              Manufacturing date is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="expiryDate">Expiry Date * <small>(+12 months from manufacturing)</small></label>
+            <input
+              type="date"
+              id="expiryDate"
+              formControlName="expiryDate"
+              class="form-control"
+              [class.error]="anfoForm.get('expiryDate')?.invalid && anfoForm.get('expiryDate')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('expiryDate')?.invalid && anfoForm.get('expiryDate')?.touched">
+              Expiry date is required
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="expiryDate">Expiry Date *</label>
-          <input 
-            type="date" 
-            id="expiryDate" 
-            formControlName="expiryDate"
-            class="form-control"
-            [class.error]="anfoForm.get('expiryDate')?.invalid && anfoForm.get('expiryDate')?.touched">
-          <div class="error-message" *ngIf="anfoForm.get('expiryDate')?.invalid && anfoForm.get('expiryDate')?.touched">
-            Expiry date is required
+        <div class="form-row">
+          <div class="form-group">
+            <label for="supplier">Supplier *</label>
+            <input
+              type="text"
+              id="supplier"
+              formControlName="supplier"
+              placeholder="Enter supplier name"
+              class="form-control"
+              [class.error]="anfoForm.get('supplier')?.invalid && anfoForm.get('supplier')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('supplier')?.invalid && anfoForm.get('supplier')?.touched">
+              Supplier is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="manufacturerBatchNumber">Manufacturer Batch Number</label>
+            <input
+              type="text"
+              id="manufacturerBatchNumber"
+              formControlName="manufacturerBatchNumber"
+              placeholder="Optional batch number"
+              class="form-control">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity">Quantity *</label>
+            <input
+              type="number"
+              id="quantity"
+              formControlName="quantity"
+              placeholder="Enter quantity"
+              step="0.001"
+              class="form-control"
+              [class.error]="anfoForm.get('quantity')?.invalid && anfoForm.get('quantity')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('quantity')?.invalid && anfoForm.get('quantity')?.touched">
+              Quantity must be greater than 0
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="unit">Unit *</label>
+            <select id="unit" formControlName="unit" class="form-control">
+              <option value="kg">Kilograms (kg)</option>
+              <option value="tons">Tons</option>
+            </select>
           </div>
         </div>
       </div>
 
-      <!-- Storage Information -->
+      <!-- Quality Parameters -->
       <div class="form-section">
-        <h4>Storage Information</h4>
-        
-        <div class="form-group">
-          <label for="location">Storage Location *</label>
-          <select 
-            id="location" 
-            formControlName="location"
-            class="form-control"
-            [class.error]="anfoForm.get('location')?.invalid && anfoForm.get('location')?.touched">
-            <option value="">Select Location</option>
-            <option value="Store A - Section 1">Store A - Section 1</option>
-            <option value="Store A - Section 2">Store A - Section 2</option>
-            <option value="Store B - Section 1">Store B - Section 1</option>
-            <option value="Store B - Section 2">Store B - Section 2</option>
-            <option value="Store C - Section 1">Store C - Section 1</option>
-            <option value="Store C - Section 2">Store C - Section 2</option>
-          </select>
-          <div class="error-message" *ngIf="anfoForm.get('location')?.invalid && anfoForm.get('location')?.touched">
-            Storage location is required
+        <h4><i class="material-icons">science</i> Quality Parameters</h4>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="density">Density (g/cm³) * <small>(Range: 0.8-0.9)</small></label>
+            <input
+              type="number"
+              id="density"
+              formControlName="density"
+              placeholder="e.g., 0.85"
+              step="0.01"
+              class="form-control"
+              [class.error]="anfoForm.get('density')?.invalid && anfoForm.get('density')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('density')?.invalid && anfoForm.get('density')?.touched">
+              <span *ngIf="anfoForm.get('density')?.errors?.['required']">Density is required</span>
+              <span *ngIf="anfoForm.get('density')?.errors?.['min'] || anfoForm.get('density')?.errors?.['max']">Must be between 0.8-0.9 g/cm³</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="fuelOilContent">Fuel Oil Content (%) * <small>(Range: 5.5-6.0)</small></label>
+            <input
+              type="number"
+              id="fuelOilContent"
+              formControlName="fuelOilContent"
+              placeholder="e.g., 5.7"
+              step="0.1"
+              class="form-control"
+              [class.error]="anfoForm.get('fuelOilContent')?.invalid && anfoForm.get('fuelOilContent')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('fuelOilContent')?.invalid && anfoForm.get('fuelOilContent')?.touched">
+              <span *ngIf="anfoForm.get('fuelOilContent')?.errors?.['required']">Fuel oil content is required</span>
+              <span *ngIf="anfoForm.get('fuelOilContent')?.errors?.['min'] || anfoForm.get('fuelOilContent')?.errors?.['max']">Must be between 5.5-6.0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="moistureContent">Moisture Content (%) <small>(Max: 0.2)</small></label>
+            <input
+              type="number"
+              id="moistureContent"
+              formControlName="moistureContent"
+              placeholder="e.g., 0.1"
+              step="0.01"
+              class="form-control"
+              [class.error]="anfoForm.get('moistureContent')?.invalid && anfoForm.get('moistureContent')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('moistureContent')?.invalid && anfoForm.get('moistureContent')?.touched">
+              Must be less than 0.2%
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prillSize">Prill Size (mm) <small>(Range: 1-3)</small></label>
+            <input
+              type="number"
+              id="prillSize"
+              formControlName="prillSize"
+              placeholder="e.g., 2"
+              step="0.1"
+              class="form-control"
+              [class.error]="anfoForm.get('prillSize')?.invalid && anfoForm.get('prillSize')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('prillSize')?.invalid && anfoForm.get('prillSize')?.touched">
+              Must be between 1-3 mm
+            </div>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="quantity">Quantity (tons) *</label>
-          <input 
-            type="number" 
-            id="quantity" 
-            formControlName="quantity"
-            placeholder="Enter quantity in tons"
-            min="1"
+          <label for="detonationVelocity">Detonation Velocity (m/s) <small>(Range: 3000-3500)</small></label>
+          <input
+            type="number"
+            id="detonationVelocity"
+            formControlName="detonationVelocity"
+            placeholder="e.g., 3200"
+            step="10"
             class="form-control"
-            [class.error]="anfoForm.get('quantity')?.invalid && anfoForm.get('quantity')?.touched">
-          <div class="error-message" *ngIf="anfoForm.get('quantity')?.invalid && anfoForm.get('quantity')?.touched">
-            <span *ngIf="anfoForm.get('quantity')?.errors?.['required']">Quantity is required</span>
-            <span *ngIf="anfoForm.get('quantity')?.errors?.['min']">Quantity must be at least 0.001 tons</span>
+            [class.error]="anfoForm.get('detonationVelocity')?.invalid && anfoForm.get('detonationVelocity')?.touched">
+          <div class="error-message" *ngIf="anfoForm.get('detonationVelocity')?.invalid && anfoForm.get('detonationVelocity')?.touched">
+            Must be between 3000-3500 m/s
           </div>
         </div>
       </div>
 
-      <!-- Technical Specifications -->
+      <!-- Manufacturing & Storage -->
       <div class="form-section">
-        <h4>Technical Specifications</h4>
-        
-        <div class="form-group">
-          <label for="density">Density (g/cm³) *</label>
-          <input 
-            type="number" 
-            id="density" 
-            formControlName="density"
-            placeholder="e.g., 0.85"
-            step="0.01"
-            min="0.1"
-            max="2.0"
-            class="form-control"
-            [class.error]="anfoForm.get('density')?.invalid && anfoForm.get('density')?.touched">
-          <div class="error-message" *ngIf="anfoForm.get('density')?.invalid && anfoForm.get('density')?.touched">
-            <span *ngIf="anfoForm.get('density')?.errors?.['required']">Density is required</span>
-            <span *ngIf="anfoForm.get('density')?.errors?.['min'] || anfoForm.get('density')?.errors?.['max']">Density must be between 0.1 and 2.0 g/cm³</span>
+        <h4><i class="material-icons">warehouse</i> Manufacturing & Central Warehouse Storage</h4>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="grade">Grade *</label>
+            <select
+              id="grade"
+              formControlName="grade"
+              class="form-control"
+              [class.error]="anfoForm.get('grade')?.invalid && anfoForm.get('grade')?.touched">
+              <option value="TGAN">TGAN (Technical Grade)</option>
+              <option value="Standard">Standard</option>
+            </select>
+            <div class="error-message" *ngIf="anfoForm.get('grade')?.invalid && anfoForm.get('grade')?.touched">
+              Grade is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="storageLocation">Central Warehouse Location * <small>(Bay/Section/Zone)</small></label>
+            <input
+              type="text"
+              id="storageLocation"
+              formControlName="storageLocation"
+              placeholder="e.g., Bay A-1, Section B-3, Zone 5"
+              class="form-control"
+              [class.error]="anfoForm.get('storageLocation')?.invalid && anfoForm.get('storageLocation')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('storageLocation')?.invalid && anfoForm.get('storageLocation')?.touched">
+              Storage location within central warehouse is required
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="grade">ANFO Grade</label>
-          <select 
-            id="grade" 
-            formControlName="grade"
-            class="form-control">
-            <option value="">Select Grade</option>
-            <option value="Standard">Standard</option>
-            <option value="Heavy">Heavy</option>
-            <option value="Light">Light</option>
-            <option value="Premium">Premium</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="storageTemperature">Storage Temperature (°C) * <small>(Range: 5-35)</small></label>
+            <input
+              type="number"
+              id="storageTemperature"
+              formControlName="storageTemperature"
+              placeholder="e.g., 20"
+              class="form-control"
+              [class.error]="anfoForm.get('storageTemperature')?.invalid && anfoForm.get('storageTemperature')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('storageTemperature')?.invalid && anfoForm.get('storageTemperature')?.touched">
+              <span *ngIf="anfoForm.get('storageTemperature')?.errors?.['required']">Temperature is required</span>
+              <span *ngIf="anfoForm.get('storageTemperature')?.errors?.['min'] || anfoForm.get('storageTemperature')?.errors?.['max']">Must be between 5-35°C</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="storageHumidity">Storage Humidity (%) * <small>(Max: 50)</small></label>
+            <input
+              type="number"
+              id="storageHumidity"
+              formControlName="storageHumidity"
+              placeholder="e.g., 30"
+              class="form-control"
+              [class.error]="anfoForm.get('storageHumidity')?.invalid && anfoForm.get('storageHumidity')?.touched">
+            <div class="error-message" *ngIf="anfoForm.get('storageHumidity')?.invalid && anfoForm.get('storageHumidity')?.touched">
+              <span *ngIf="anfoForm.get('storageHumidity')?.errors?.['required']">Humidity is required</span>
+              <span *ngIf="anfoForm.get('storageHumidity')?.errors?.['max']">Must be below 50%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quality Control -->
+      <div class="form-section">
+        <h4><i class="material-icons">verified</i> Quality Control</h4>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fumeClass">Fume Class *</label>
+            <select
+              id="fumeClass"
+              formControlName="fumeClass"
+              class="form-control">
+              <option [value]="1">Class 1 (Properly Balanced)</option>
+              <option [value]="2">Class 2 (Minor Issues)</option>
+              <option [value]="3">Class 3 (Needs Attention)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="qualityStatus">Quality Status *</label>
+            <select
+              id="qualityStatus"
+              formControlName="qualityStatus"
+              class="form-control">
+              <option value="Pending">Pending Inspection</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group">
           <label for="notes">Additional Notes</label>
-          <textarea 
-            id="notes" 
+          <textarea
+            id="notes"
             formControlName="notes"
-            placeholder="Enter any additional notes or specifications"
+            placeholder="Enter any additional notes, observations, or quality remarks"
             rows="3"
             class="form-control"></textarea>
         </div>
       </div>
+
     </div>
 
     <!-- Form Actions -->
@@ -148,7 +311,7 @@
       </button>
       <button type="submit" class="btn btn-primary" [disabled]="anfoForm.invalid || isSubmitting">
         <i class="material-icons">save</i>
-        <span *ngIf="!isSubmitting">Add ANFO Stock</span>
+        <span *ngIf="!isSubmitting">Add ANFO Batch</span>
         <span *ngIf="isSubmitting">Adding...</span>
       </button>
     </div>

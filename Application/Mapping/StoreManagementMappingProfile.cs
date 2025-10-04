@@ -15,14 +15,19 @@ namespace Application.Mapping
             CreateMap<Store, StoreDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)));
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)))
+                .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Region != null ? src.Region.Name : null))
+                .ForMember(dest => dest.ManagerUserName, opt => opt.MapFrom(src => src.ManagerUser != null ? src.ManagerUser.Name : null))
+                .ForMember(dest => dest.ManagerUserEmail, opt => opt.MapFrom(src => src.ManagerUser != null ? src.ManagerUser.Email.Value : null))
+                .ForMember(dest => dest.ManagerUserContact, opt => opt.MapFrom(src => src.ManagerUser != null ? src.ManagerUser.OmanPhone : null))
+                .ForMember(dest => dest.InventoryItemsCount, opt => opt.MapFrom(src => src.Inventories != null ? src.Inventories.Count : 0))
+                .ForMember(dest => dest.UtilizationPercentage, opt => opt.MapFrom(src => src.GetUtilizationRate()));
 
             CreateMap<CreateStoreRequest, Store>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore()) // Will be set by service
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.Project, opt => opt.Ignore())
                 .ForMember(dest => dest.ManagerUser, opt => opt.Ignore())
                 .ForMember(dest => dest.Inventories, opt => opt.Ignore());
 
@@ -30,7 +35,6 @@ namespace Application.Mapping
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.Project, opt => opt.Ignore())
                 .ForMember(dest => dest.ManagerUser, opt => opt.Ignore())
                 .ForMember(dest => dest.Inventories, opt => opt.Ignore());
 

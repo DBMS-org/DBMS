@@ -108,7 +108,7 @@ export class StoreService {
       }
 
       // Store manager filter
-      if (filters.storeManager && filters.storeManager !== 'ALL' && store.storeManagerName !== filters.storeManager) {
+      if (filters.storeManager && filters.storeManager !== 'ALL' && store.managerUserName !== filters.storeManager) {
         return false;
       }
 
@@ -117,7 +117,7 @@ export class StoreService {
         const searchTerm = filters.searchTerm.toLowerCase();
         const searchableText = [
           store.storeName,
-          store.storeManagerName,
+          store.managerUserName,
           store.city,
           store.storeAddress,
           store.status.toString()
@@ -134,16 +134,44 @@ export class StoreService {
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An unknown error occurred';
-    
+
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
-      errorMessage = `Error: ${error.error.message}`;
+      // Client-side or network error
+      errorMessage = `Network error: ${error.error.message}`;
     } else {
       // Server-side error
-      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+      if (error.status === 0) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+      } else if (error.error) {
+        // Try to extract error message from response
+        if (typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.error.title) {
+          errorMessage = error.error.title;
+        } else if (error.error.errors) {
+          // Handle validation errors
+          const errors = error.error.errors;
+          const firstKey = Object.keys(errors)[0];
+          if (firstKey && errors[firstKey]?.length > 0) {
+            errorMessage = errors[firstKey][0];
+          }
+        } else {
+          errorMessage = `Server error: ${error.status} ${error.statusText}`;
+        }
+      } else {
+        errorMessage = `Server error: ${error.status} ${error.statusText}`;
+      }
     }
-    
-    console.error('StoreService Error:', errorMessage);
-    return throwError(() => new Error(errorMessage));
+
+    console.error('StoreService Error:', {
+      status: error.status,
+      message: errorMessage,
+      url: error.url,
+      error: error.error
+    });
+
+    return throwError(() => error);
   }
 }

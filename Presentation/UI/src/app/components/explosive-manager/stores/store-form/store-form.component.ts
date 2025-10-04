@@ -1,7 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Store, StoreStatus } from '../../../../core/models/store.model';
+import { StoreService } from '../../../../core/services/store.service';
+import { REGIONS } from '../../../../core/constants/regions';
 
 @Component({
   selector: 'app-store-form',
@@ -26,8 +29,13 @@ export class StoreFormComponent implements OnInit, OnChanges {
 
   storeForm!: FormGroup;
   isSubmitting: boolean = false;
+  regions = REGIONS;
+  explosiveTypesList = ['ANFO', 'Emulsion'];
+  selectedExplosiveTypes: string[] = [];
 
-  constructor(private fb: FormBuilder) {}
+  private fb = inject(FormBuilder);
+  private storeService = inject(StoreService);
+  private router = inject(Router);
 
   ngOnInit() {
     this.initializeForm();
@@ -47,8 +55,7 @@ export class StoreFormComponent implements OnInit, OnChanges {
       city: ['', [Validators.required]],
       status: [StoreStatus.Operational, [Validators.required]],
       regionId: ['', [Validators.required]],
-      projectId: ['', [Validators.required]],
-      managerUserId: ['', [Validators.required]]
+      managerUserId: ['']
     });
 
     if (this.store) {
@@ -65,60 +72,74 @@ export class StoreFormComponent implements OnInit, OnChanges {
         city: this.store.city,
         status: this.store.status,
         regionId: this.store.regionId,
-        projectId: this.store.projectId,
         managerUserId: this.store.managerUserId
       });
+
+      // Populate explosive types checkboxes
+      if (this.store.allowedExplosiveTypes) {
+        this.selectedExplosiveTypes = this.store.allowedExplosiveTypes.split(',').map(t => t.trim());
+      }
     }
   }
 
   onSubmit() {
+    if (!this.storeForm) {
+      console.error('Form not initialized');
+      return;
+    }
+
     if (this.storeForm.valid) {
-      this.isSubmitting = true;
-      const formData = this.storeForm.value;
-      const storeData = {
-        ...formData,
-        location: {
-          city: formData.locationCity,
-          region: formData.locationRegion
+      try {
+        const formValue = {
+          ...this.storeForm.value,
+          regionId: Number(this.storeForm.value.regionId),
+          storageCapacity: Number(this.storeForm.value.storageCapacity),
+          status: this.storeForm.value.status ? Number(this.storeForm.value.status) : undefined,
+          managerUserId: this.storeForm.value.managerUserId ? Number(this.storeForm.value.managerUserId) : undefined,
+          allowedExplosiveTypes: this.selectedExplosiveTypes.join(',')
+        };
+
+        // Validate converted values
+        if (isNaN(formValue.regionId) || formValue.regionId <= 0) {
+          console.error('Invalid region ID');
+          return;
         }
-      };
-      
-      // Remove the separate location fields
-      delete storeData.locationCity;
-      delete storeData.locationRegion;
-      
-      this.formSubmit.emit(storeData);
-      
-      // Reset submitting state after a delay
-      setTimeout(() => {
-        this.isSubmitting = false;
-      }, 1000);
+
+        if (isNaN(formValue.storageCapacity) || formValue.storageCapacity <= 0) {
+          console.error('Invalid storage capacity');
+          return;
+        }
+
+        this.formSubmit.emit(formValue);
+      } catch (error) {
+        console.error('Error preparing form data:', error);
+      }
     } else {
       this.markFormGroupTouched();
     }
   }
 
-  onClose() {
-    this.closeModal.emit();
-  }
-
   onExplosiveTypeChange(event: Event, type: string): void {
     const target = event.target as HTMLInputElement;
-    const explosiveTypesArray = this.storeForm.get('explosiveTypes') as FormArray;
-    
+
     if (target.checked) {
-      explosiveTypesArray.push(this.fb.control(type));
+      if (!this.selectedExplosiveTypes.includes(type)) {
+        this.selectedExplosiveTypes.push(type);
+      }
     } else {
-      const index = explosiveTypesArray.controls.findIndex(control => control.value === type);
+      const index = this.selectedExplosiveTypes.indexOf(type);
       if (index !== -1) {
-        explosiveTypesArray.removeAt(index);
+        this.selectedExplosiveTypes.splice(index, 1);
       }
     }
   }
 
   isExplosiveTypeSelected(type: string): boolean {
-    const explosiveTypesArray = this.storeForm.get('explosiveTypes') as FormArray;
-    return explosiveTypesArray.controls.some(control => control.value === type);
+    return this.selectedExplosiveTypes.includes(type);
+  }
+
+  onClose() {
+    this.closeModal.emit();
   }
 
   onModalClick(event: Event) {
@@ -126,11 +147,17 @@ export class StoreFormComponent implements OnInit, OnChanges {
   }
 
   isFieldInvalid(fieldName: string): boolean {
+    if (!this.storeForm) {
+      return false;
+    }
     const field = this.storeForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
   private markFormGroupTouched() {
+    if (!this.storeForm) {
+      return;
+    }
     Object.keys(this.storeForm.controls).forEach(key => {
       const control = this.storeForm.get(key);
       if (control) {
@@ -138,4 +165,5 @@ export class StoreFormComponent implements OnInit, OnChanges {
       }
     });
   }
+
 }
