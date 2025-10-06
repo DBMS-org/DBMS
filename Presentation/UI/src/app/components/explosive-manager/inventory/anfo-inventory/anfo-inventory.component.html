@@ -1,127 +1,274 @@
 <div class="anfo-inventory-container">
-  <!-- Header Section -->
-  <div class="inventory-header">
-    <div class="header-info">
-      <h3>ANFO Inventory Management</h3>
-      <p>Ammonium Nitrate/Fuel Oil explosive inventory tracking</p>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-primary" (click)="navigateToAdd()">
-        <i class="material-icons">add</i>
-        Add Inventory
-      </button>
-    </div>
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <p>Loading ANFO inventory...</p>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="summary-cards">
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="material-icons">inventory_2</i>
-      </div>
-      <div class="card-content">
-        <h4>Total Stock</h4>
-        <p class="value">1.25 tons</p>
-      </div>
-    </div>
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="material-icons">trending_down</i>
-      </div>
-      <div class="card-content">
-        <h4>Used This Month</h4>
-        <p class="value">0.34 tons</p>
-      </div>
-    </div>
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="material-icons">warning</i>
-      </div>
-      <div class="card-content">
-        <h4>Low Stock Items</h4>
-        <p class="value">2</p>
-      </div>
-    </div>
+  <!-- Error State -->
+  <div *ngIf="errorMessage" class="error-state">
+    <p>{{ errorMessage }}</p>
+    <button (click)="loadInventory()">Retry</button>
   </div>
 
-  <!-- Inventory Table -->
-  <div class="inventory-table-container">
-    <div class="table-header">
-      <h4>ANFO Stock Details</h4>
-      <div class="table-actions">
-        <button class="btn btn-secondary">
-          <i class="material-icons">file_download</i>
-          Export
-        </button>
-        <button class="btn btn-secondary">
-          <i class="material-icons">refresh</i>
-          Refresh
+  <!-- Content -->
+  <div *ngIf="!isLoading && !errorMessage">
+    <!-- Header Section -->
+    <div class="inventory-header">
+      <div class="header-info">
+        <h3>ANFO Inventory Management</h3>
+        <p>Ammonium Nitrate/Fuel Oil explosive inventory tracking</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="navigateToAdd()">
+          <i class="material-icons">add</i>
+          Add Inventory
         </button>
       </div>
     </div>
-    
-    <table class="inventory-table">
-      <thead>
-        <tr>
-          <th>Batch ID</th>
-          <th>Location</th>
-          <th>Quantity (tons)</th>
-          <th>Manufacturing Date</th>
-          <th>Expiry Date</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>ANFO-2024-001</td>
-          <td>Store A - Section 1</td>
-          <td>0.5</td>
-          <td>2024-01-15</td>
-          <td>2025-01-15</td>
-          <td><span class="status-badge good">Good</span></td>
-          <td>
-            <button class="action-btn" title="Edit" (click)="navigateToEdit('ANFO-2024-001')">
-              <i class="material-icons">edit</i>
-            </button>
-            <button class="action-btn" title="Use">
-              <i class="material-icons">remove_circle</i>
-            </button>
-          </td>
-        </tr>
-        <tr>
-          <td>ANFO-2024-002</td>
-          <td>Store B - Section 2</td>
-          <td>0.75</td>
-          <td>2024-02-10</td>
-          <td>2025-02-10</td>
-          <td><span class="status-badge good">Good</span></td>
-          <td>
-            <button class="action-btn" title="Edit" (click)="navigateToEdit('ANFO-2024-002')">
-              <i class="material-icons">edit</i>
-            </button>
-            <button class="action-btn" title="Use">
-              <i class="material-icons">remove_circle</i>
-            </button>
-          </td>
-        </tr>
-        <tr>
-          <td>ANFO-2023-045</td>
-          <td>Store A - Section 3</td>
-          <td>0.15</td>
-          <td>2023-11-20</td>
-          <td>2024-11-20</td>
-          <td><span class="status-badge warning">Expiring Soon</span></td>
-          <td>
-            <button class="action-btn" title="Edit" (click)="navigateToEdit('ANFO-2023-045')">
-              <i class="material-icons">edit</i>
-            </button>
-            <button class="action-btn" title="Use">
-              <i class="material-icons">remove_circle</i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="material-icons">inventory_2</i>
+        </div>
+        <div class="card-content">
+          <h4>Total Stock</h4>
+          <p class="value">{{ (totalStock / 1000) | number:'1.2-2' }} tons</p>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="material-icons">inventory</i>
+        </div>
+        <div class="card-content">
+          <h4>Total Batches</h4>
+          <p class="value">{{ inventory.length }}</p>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="material-icons">warning</i>
+        </div>
+        <div class="card-content">
+          <h4>Low Stock Items</h4>
+          <p class="value">{{ lowStockCount }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="inventory-table-container">
+      <div class="table-header">
+        <h4>ANFO Stock Details</h4>
+        <div class="table-actions">
+          <button class="btn btn-secondary">
+            <i class="material-icons">file_download</i>
+            Export
+          </button>
+          <button class="btn btn-secondary" (click)="loadInventory()">
+            <i class="material-icons">refresh</i>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th>Batch ID</th>
+            <th>Location</th>
+            <th>Quantity (kg)</th>
+            <th>Available (kg)</th>
+            <th>Manufacturing Date</th>
+            <th>Expiry Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of inventory">
+            <td>{{ item.batchId }}</td>
+            <td>{{ item.storageLocation }}</td>
+            <td>{{ item.quantity | number:'1.2-2' }}</td>
+            <td>{{ item.availableQuantity | number:'1.2-2' }}</td>
+            <td>{{ item.manufacturingDate | date:'yyyy-MM-dd' }}</td>
+            <td>{{ item.expiryDate | date:'yyyy-MM-dd' }}</td>
+            <td><span class="status-badge" [ngClass]="getStatusClass(item)">{{ getStatusText(item) }}</span></td>
+            <td>
+              <button class="action-btn" title="View Details" (click)="viewDetails(item)">
+                <i class="material-icons">visibility</i>
+              </button>
+              <button class="action-btn" title="Edit" (click)="navigateToEdit(item.id)">
+                <i class="material-icons">edit</i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="inventory.length === 0">
+            <td colspan="8" style="text-align: center;">No ANFO inventory found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()" *ngIf="selectedItem">
+      <div class="modal-header">
+        <h3>ANFO Batch Details</h3>
+        <button class="close-btn" (click)="closeDetailsModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Core Information -->
+        <div class="detail-section">
+          <h4><i class="material-icons">info</i> Core Information</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Batch ID:</label>
+              <span>{{ selectedItem.batchId }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Status:</label>
+              <span class="status-badge" [ngClass]="getStatusClass(selectedItem)">{{ selectedItem.status }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Supplier:</label>
+              <span>{{ selectedItem.supplier }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Manufacturer Batch:</label>
+              <span>{{ selectedItem.manufacturerBatchNumber || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quantity Information -->
+        <div class="detail-section">
+          <h4><i class="material-icons">inventory_2</i> Quantity Information</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Total Quantity:</label>
+              <span>{{ selectedItem.quantity | number:'1.2-2' }} {{ selectedItem.unit }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Allocated:</label>
+              <span>{{ selectedItem.allocatedQuantity | number:'1.2-2' }} {{ selectedItem.unit }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Available:</label>
+              <span>{{ selectedItem.availableQuantity | number:'1.2-2' }} {{ selectedItem.unit }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date Information -->
+        <div class="detail-section">
+          <h4><i class="material-icons">event</i> Date Information</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Manufacturing Date:</label>
+              <span>{{ selectedItem.manufacturingDate | date:'yyyy-MM-dd' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Expiry Date:</label>
+              <span>{{ selectedItem.expiryDate | date:'yyyy-MM-dd' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Created At:</label>
+              <span>{{ selectedItem.createdAt | date:'yyyy-MM-dd HH:mm' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Last Updated:</label>
+              <span>{{ selectedItem.updatedAt | date:'yyyy-MM-dd HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storage Information -->
+        <div class="detail-section">
+          <h4><i class="material-icons">warehouse</i> Storage Information</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Storage Location:</label>
+              <span>{{ selectedItem.storageLocation }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Warehouse Store:</label>
+              <span>{{ selectedItem.centralWarehouseStoreName || 'Store #' + selectedItem.centralWarehouseStoreId }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Technical Specifications (ANFO Properties) -->
+        <div class="detail-section" *ngIf="selectedItem.anfoProperties">
+          <h4><i class="material-icons">science</i> Technical Specifications</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Density:</label>
+              <span>{{ selectedItem.anfoProperties.density | number:'1.2-2' }} g/cm³</span>
+            </div>
+            <div class="detail-item">
+              <label>Fuel Oil Content:</label>
+              <span>{{ selectedItem.anfoProperties.fuelOilContent | number:'1.2-2' }}%</span>
+            </div>
+            <div class="detail-item">
+              <label>Moisture Content:</label>
+              <span>{{ selectedItem.anfoProperties.moistureContent ? (selectedItem.anfoProperties.moistureContent | number:'1.2-2') + '%' : 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Prill Size:</label>
+              <span>{{ selectedItem.anfoProperties.prillSize ? (selectedItem.anfoProperties.prillSize | number:'1.2-2') + ' mm' : 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Detonation Velocity:</label>
+              <span>{{ selectedItem.anfoProperties.detonationVelocity ? (selectedItem.anfoProperties.detonationVelocity | number:'1.0-0') + ' m/s' : 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Grade:</label>
+              <span>{{ selectedItem.anfoProperties.grade }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Fume Class:</label>
+              <span>{{ selectedItem.anfoProperties.fumeClass }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Quality Status:</label>
+              <span class="status-badge">{{ selectedItem.anfoProperties.qualityStatus }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Water Resistance:</label>
+              <span>{{ selectedItem.anfoProperties.waterResistance }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Storage Temperature:</label>
+              <span>{{ selectedItem.anfoProperties.storageTemperature }}°C</span>
+            </div>
+            <div class="detail-item">
+              <label>Storage Humidity:</label>
+              <span>{{ selectedItem.anfoProperties.storageHumidity }}%</span>
+            </div>
+            <div class="detail-item" *ngIf="selectedItem.anfoProperties.qualityCheckDate">
+              <label>Quality Check Date:</label>
+              <span>{{ selectedItem.anfoProperties.qualityCheckDate | date:'yyyy-MM-dd' }}</span>
+            </div>
+          </div>
+          <div class="detail-item full-width" *ngIf="selectedItem.anfoProperties.notes">
+            <label>Notes:</label>
+            <p class="notes-text">{{ selectedItem.anfoProperties.notes }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
+        <button class="btn btn-primary" (click)="navigateToEdit(selectedItem.id); closeDetailsModal()">
+          <i class="material-icons">edit</i> Edit
+        </button>
+      </div>
+    </div>
   </div>
 </div>

@@ -1,1 +1,9 @@
-Merge branch 'master' of https://github.com/DBMS-org/DBMS
+feat: Add technical specifications for explosive materials including ANFO and Emulsion
+
+- Created detailed documentation for explosive materials specifications.
+- Added data model specifications for ANFO and Emulsion inventory.
+- Implemented validation rules for both explosive types.
+- Updated frontend inventory module to reflect new data models and validation.
+- Established architecture for a single central warehouse with multiple local stores.
+- Defined API endpoints for warehouse inventory and transfer requests.
+- Clarified storage location terminology within the central warehouse.

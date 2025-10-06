@@ -34,82 +34,39 @@
     </button>
   </div>
 
-  <!-- Search and Filters -->
+  <!-- Filters -->
   <div class="filters-section">
-    <div class="search-bar">
-      <input 
-        type="text" 
-        placeholder="Search by requester, purpose, or location..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearchChange()"
-        class="search-input">
-      <i class="material-icons search-icon">search</i>
-    </div>
-
-
-
     <form [formGroup]="filterForm" class="filters-form" [class.expanded]="filtersExpanded">
       <div class="filter-row">
-        <div class="filter-group">
-          <label>Explosive Type</label>
-          <select formControlName="explosiveType" class="filter-select" title="Select explosive type" aria-label="Filter by explosive type">
-            <option value="">All Types</option>
-            <option [value]="ExplosiveType.ANFO">ANFO</option>
-            <option [value]="ExplosiveType.EMULSION">Emulsion</option>
-          </select>
-        </div>
-
         <div class="filter-group">
           <label>Status</label>
           <select formControlName="status" class="filter-select" title="Filter by status" aria-label="Filter by request status">
             <option value="">All Statuses</option>
-            <option [value]="RequestStatus.PENDING">Pending</option>
-            <option [value]="RequestStatus.APPROVED">Approved</option>
-            <option [value]="RequestStatus.REJECTED">Rejected</option>
-            <option [value]="RequestStatus.IN_PROGRESS">In Progress</option>
-            <option [value]="RequestStatus.COMPLETED">Completed</option>
-            <option [value]="RequestStatus.CANCELLED">Cancelled</option>
+            <option [value]="TransferRequestStatus.Pending">Pending</option>
+            <option [value]="TransferRequestStatus.Approved">Approved</option>
+            <option [value]="TransferRequestStatus.Rejected">Rejected</option>
+            <option [value]="TransferRequestStatus.InProgress">In Progress</option>
+            <option [value]="TransferRequestStatus.Completed">Completed</option>
+            <option [value]="TransferRequestStatus.Cancelled">Cancelled</option>
           </select>
         </div>
 
-
-
         <div class="filter-group">
-          <label>Requester</label>
-          <input 
-            type="text" 
-            formControlName="requesterName" 
-            placeholder="Requester name"
-            class="filter-input">
-        </div>
-      </div>
-
-      <div class="filter-row">
-        <div class="filter-group">
-          <label>Store Location</label>
-          <input 
-            type="text" 
-            formControlName="storeLocation" 
-            placeholder="Store location"
-            class="filter-input">
+          <label>Show Overdue Only</label>
+          <select formControlName="isOverdue" class="filter-select" title="Filter by overdue status">
+            <option [value]="null">All</option>
+            <option [value]="'true'">Yes</option>
+            <option [value]="'false'">No</option>
+          </select>
         </div>
 
         <div class="filter-group">
-          <label>Date From</label>
-          <input 
-            type="date" 
-            formControlName="dateFrom" 
-            class="filter-input"
-            title="Filter start date">
-        </div>
-
-        <div class="filter-group">
-          <label>Date To</label>
-          <input 
-            type="date" 
-            formControlName="dateTo" 
-            class="filter-input"
-            title="Filter end date">
+          <label>Show Urgent Only</label>
+          <select formControlName="isUrgent" class="filter-select" title="Filter by urgent status">
+            <option [value]="null">All</option>
+            <option [value]="'true'">Yes</option>
+            <option [value]="'false'">No</option>
+          </select>
         </div>
 
         <div class="filter-actions">
@@ -137,63 +94,59 @@
     <table class="requests-table">
       <thead>
         <tr>
-          <th></th>
+          <th>Request #</th>
           <th (click)="onSortChange('requestDate')" class="sortable">
             Request Date
-            <i class="material-icons sort-icon" 
+            <i class="material-icons sort-icon"
                [class.active]="sortBy === 'requestDate'"
-               [class.desc]="sortBy === 'requestDate' && sortOrder === 'desc'">
+               [class.desc]="sortBy === 'requestDate' && sortOrder">
               arrow_upward
             </i>
           </th>
           <th>Requester</th>
-          <th>Items</th>
-          <th (click)="onSortChange('requiredDate')" class="sortable">
+          <th>Explosive Type</th>
+          <th>Quantity</th>
+          <th>Destination</th>
+          <th (click)="onSortChange('requiredByDate')" class="sortable">
             Required Date
-            <i class="material-icons sort-icon" 
-               [class.active]="sortBy === 'requiredDate'"
-               [class.desc]="sortBy === 'requiredDate' && sortOrder === 'desc'">
+            <i class="material-icons sort-icon"
+               [class.active]="sortBy === 'requiredByDate'"
+               [class.desc]="sortBy === 'requiredByDate' && sortOrder">
               arrow_upward
             </i>
           </th>
-
           <th (click)="onSortChange('status')" class="sortable">
             Status
-            <i class="material-icons sort-icon" 
+            <i class="material-icons sort-icon"
                [class.active]="sortBy === 'status'"
-               [class.desc]="sortBy === 'status' && sortOrder === 'desc'">
+               [class.desc]="sortBy === 'status' && sortOrder">
               arrow_upward
             </i>
           </th>
           <th>Dispatch Status</th>
-          <th>Received</th>
-          <th>Purpose</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <ng-container *ngFor="let request of paginatedRequests">
           <tr class="request-row">
-            <td class="expander-cell">
-              <button class="expand-btn" (click)="toggleExpanded(request.id)" [attr.aria-expanded]="isExpanded(request)">
-                <i class="material-icons">{{ isExpanded(request) ? 'expand_less' : 'expand_more' }}</i>
-              </button>
-            </td>
+            <td><strong>{{request.requestNumber}}</strong></td>
             <td>{{request.requestDate | date:'short'}}</td>
             <td>
               <div class="requester-info">
-                <strong>{{request.requesterName}}</strong>
-                <small>{{request.requesterRole}}</small>
+                <strong>{{request.requestedByUserName}}</strong>
               </div>
             </td>
+            <td>{{request.explosiveTypeName}}</td>
+            <td>{{request.finalQuantity}} {{request.unit}}</td>
+            <td>{{request.destinationStoreName}}</td>
             <td>
-              <span class="items-count">{{ getItemsCount(request) }}</span>
+              <span *ngIf="request.requiredByDate">{{request.requiredByDate | date:'short'}}</span>
+              <span *ngIf="!request.requiredByDate">-</span>
             </td>
-            <td>{{request.requiredDate | date:'short'}}</td>
-
             <td>
               <span class="status-badge" [class]="getStatusClass(request.status)">
-                {{request.status}}
+                {{request.statusName}}
               </span>
             </td>
             <td>
@@ -201,65 +154,36 @@
                 {{ getDispatchStatusText(request) }}
               </span>
             </td>
-            <td>
-              <span class="status-badge" [class]="getReceivedStatusClass(request)">
-                {{ getReceivedStatusText(request) }}
-              </span>
-            </td>
-            <td class="purpose-cell">{{request.purpose}}</td>
             <td class="actions-cell">
               <div class="action-buttons">
-                <button 
-                  *ngIf="request.status === RequestStatus.PENDING"
+                <button
+                  *ngIf="canApprove(request)"
                   (click)="openApprovalForm(request)"
                   class="action-btn review-btn"
                   matTooltip="Review Request">
                   <i class="material-icons">rate_review</i>
                 </button>
-                <button 
+                <button
+                  *ngIf="canDispatch(request)"
+                  (click)="openDispatchForm(request)"
+                  class="action-btn dispatch-btn"
+                  matTooltip="Dispatch Request">
+                  <i class="material-icons">local_shipping</i>
+                </button>
+                <button
+                  *ngIf="canConfirmDelivery(request)"
+                  (click)="confirmDelivery(request)"
+                  class="action-btn delivery-btn"
+                  matTooltip="Confirm Delivery">
+                  <i class="material-icons">done_all</i>
+                </button>
+                <button
                   (click)="viewRequestDetails(request)"
                   class="action-btn view-btn"
                   matTooltip="View Details">
                   <i class="material-icons">visibility</i>
                 </button>
-                <button 
-                  *ngIf="request.status === RequestStatus.APPROVED"
-                  (click)="goToDispatch(request)"
-                  class="action-btn dispatch-btn"
-                  matTooltip="Go to Dispatch">
-                  <i class="material-icons">local_shipping</i>
-                </button>
               </div>
-            </td>
-          </tr>
-
-          <tr *ngIf="isExpanded(request)" class="expanded-row">
-            <td></td>
-            <td colspan="9">
-              <table class="nested-items-table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Quantity</th>
-                    <th>Unit</th>
-                    <th>Purpose</th>
-                    <th>Specifications</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let item of getItemsForRequest(request)">
-                    <td>
-                      <span class="explosive-type" [ngClass]="item.explosiveType ? 'type-' + (item.explosiveType | lowercase) : ''">
-                        {{ item.explosiveType }}
-                      </span>
-                    </td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.unit }}</td>
-                    <td>{{ item.purpose }}</td>
-                    <td>{{ item.specifications || '-' }}</td>
-                  </tr>
-                </tbody>
-              </table>
             </td>
           </tr>
         </ng-container>
@@ -322,8 +246,12 @@
         <h3>Request Information</h3>
         <div class="details-grid">
           <div class="detail-item">
-            <label>Request ID:</label>
-            <span>{{ selectedRequest.id }}</span>
+            <label>Request Number:</label>
+            <span><strong>{{ selectedRequest.requestNumber }}</strong></span>
+          </div>
+          <div class="detail-item">
+            <label>Batch ID:</label>
+            <span>{{ selectedRequest.batchId }}</span>
           </div>
           <div class="detail-item">
             <label>Request Date:</label>
@@ -331,91 +259,78 @@
           </div>
           <div class="detail-item">
             <label>Required Date:</label>
-            <span>{{ selectedRequest.requiredDate | date:'medium' }}</span>
+            <span>{{ selectedRequest.requiredByDate ? (selectedRequest.requiredByDate | date:'medium') : 'Not specified' }}</span>
           </div>
           <div class="detail-item">
             <label>Status:</label>
             <span class="status-badge" [class]="getStatusClass(selectedRequest.status)">
-              {{ selectedRequest.status }}
+              {{ selectedRequest.statusName }}
             </span>
           </div>
-          <!-- Overall Purpose at request level (optional) -->
-          <div class="detail-item" *ngIf="selectedRequest.purpose">
-            <label>Overall Purpose:</label>
-            <span>{{ selectedRequest.purpose }}</span>
+          <div class="detail-item" *ngIf="selectedRequest.isOverdue">
+            <label>Overdue:</label>
+            <span class="status-badge status-rejected">Yes</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.isUrgent">
+            <label>Urgent:</label>
+            <span class="status-badge status-in-progress">Yes</span>
           </div>
         </div>
       </div>
-      
+
       <!-- Requester Information -->
       <div class="details-section">
         <h3>Requester Information</h3>
         <div class="details-grid">
           <div class="detail-item">
             <label>Name:</label>
-            <span>{{ selectedRequest.requesterName }}</span>
+            <span>{{ selectedRequest.requestedByUserName }}</span>
           </div>
           <div class="detail-item">
-            <label>Role:</label>
-            <span>{{ selectedRequest.requesterRole }}</span>
-          </div>
-          <div class="detail-item">
-            <label>ID:</label>
-            <span>{{ selectedRequest.requesterId }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Store Location:</label>
-            <span>{{ selectedRequest.storeLocation }}</span>
+            <label>User ID:</label>
+            <span>{{ selectedRequest.requestedByUserId }}</span>
           </div>
         </div>
       </div>
-      
-      <!-- Explosive Items -->
+
+      <!-- Explosive Information -->
       <div class="details-section">
-        <h3>Explosive Items</h3>
-        <table class="nested-items-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Type</th>
-              <th>Quantity</th>
-              <th>Unit</th>
-              <th>Purpose</th>
-              <th>Specifications / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of getItemsForRequest(selectedRequest); let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>
-                <span class="explosive-type" [ngClass]="item.explosiveType ? 'type-' + (item.explosiveType | lowercase) : ''">
-                  {{ item.explosiveType }}
-                </span>
-              </td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ item.unit }}</td>
-              <td>{{ item.purpose }}</td>
-              <td>{{ item.specifications || '-' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <!-- Approval Information -->
-      <div class="details-section" *ngIf="selectedRequest.status !== RequestStatus.PENDING">
-        <h3>Approval Information</h3>
+        <h3>Explosive Information</h3>
         <div class="details-grid">
-          <div class="detail-item" *ngIf="selectedRequest.approvalDate">
-            <label>Approval Date:</label>
-            <span>{{ selectedRequest.approvalDate | date:'medium' }}</span>
+          <div class="detail-item">
+            <label>Type:</label>
+            <span class="explosive-type">{{ selectedRequest.explosiveTypeName }}</span>
           </div>
-          <div class="detail-item" *ngIf="selectedRequest.approvedBy">
-            <label>Approved By:</label>
-            <span>{{ selectedRequest.approvedBy }}</span>
+          <div class="detail-item">
+            <label>Requested Quantity:</label>
+            <span>{{ selectedRequest.requestedQuantity }} {{ selectedRequest.unit }}</span>
           </div>
           <div class="detail-item" *ngIf="selectedRequest.approvedQuantity">
             <label>Approved Quantity:</label>
-            <span>{{ selectedRequest.approvedQuantity }}</span>
+            <span>{{ selectedRequest.approvedQuantity }} {{ selectedRequest.unit }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Final Quantity:</label>
+            <span><strong>{{ selectedRequest.finalQuantity }} {{ selectedRequest.unit }}</strong></span>
+          </div>
+          <div class="detail-item">
+            <label>Destination Store:</label>
+            <span>{{ selectedRequest.destinationStoreName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approval Information -->
+      <div class="details-section" *ngIf="selectedRequest.status !== TransferRequestStatus.Pending">
+        <h3>Approval Information</h3>
+        <div class="details-grid">
+          <div class="detail-item" *ngIf="selectedRequest.approvedDate">
+            <label>Approval Date:</label>
+            <span>{{ selectedRequest.approvedDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.approvedByUserName">
+            <label>Approved By:</label>
+            <span>{{ selectedRequest.approvedByUserName }}</span>
           </div>
           <div class="detail-item" *ngIf="selectedRequest.rejectionReason">
             <label>Rejection Reason:</label>
@@ -423,48 +338,50 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Dispatch Information -->
-      <div class="details-section" *ngIf="selectedRequest.dispatchDate || selectedRequest.departureDate || selectedRequest.truckNumber || selectedRequest.driverName || selectedRequest.routeInformation || selectedRequest.dispatchNotes || selectedRequest.dispatchedBy">
-        <h3>Dispatch Information</h3>
+      <div class="details-section" *ngIf="selectedRequest.dispatchDate || selectedRequest.truckNumber || selectedRequest.driverName">
+        <h3>Dispatch & Delivery Information</h3>
         <div class="details-grid">
           <div class="detail-item" *ngIf="selectedRequest.dispatchDate">
             <label>Dispatch Date:</label>
             <span>{{ selectedRequest.dispatchDate | date:'medium' }}</span>
           </div>
-          <div class="detail-item" *ngIf="selectedRequest.departureDate">
-            <label>Departure Date:</label>
-            <span>{{ selectedRequest.departureDate | date:'medium' }}</span>
-          </div>
-          <!-- Expected Receipt Date removed -->
           <div class="detail-item" *ngIf="selectedRequest.truckNumber">
             <label>Truck Number:</label>
-            <span>{{ selectedRequest.truckNumber }}</span>
+            <span><strong>{{ selectedRequest.truckNumber }}</strong></span>
           </div>
           <div class="detail-item" *ngIf="selectedRequest.driverName">
             <label>Driver Name:</label>
             <span>{{ selectedRequest.driverName }}</span>
           </div>
-          <div class="detail-item" *ngIf="selectedRequest.routeInformation">
-            <label>Route Information:</label>
-            <span>{{ selectedRequest.routeInformation }}</span>
+          <div class="detail-item" *ngIf="selectedRequest.driverContactNumber">
+            <label>Driver Contact:</label>
+            <span>{{ selectedRequest.driverContactNumber }}</span>
           </div>
-          <div class="detail-item" *ngIf="selectedRequest.dispatchNotes">
+          <div class="detail-item" *ngIf="selectedRequest.dispatchedByUserName">
+            <label>Dispatched By:</label>
+            <span>{{ selectedRequest.dispatchedByUserName }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedRequest.deliveryConfirmedDate">
+            <label>Delivery Confirmed:</label>
+            <span class="status-badge status-completed">{{ selectedRequest.deliveryConfirmedDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item full-width" *ngIf="selectedRequest.dispatchNotes">
             <label>Dispatch Notes:</label>
             <span>{{ selectedRequest.dispatchNotes }}</span>
           </div>
-          <div class="detail-item" *ngIf="selectedRequest.dispatchedBy">
-            <label>Dispatched By:</label>
-            <span>{{ selectedRequest.dispatchedBy }}</span>
-          </div>
         </div>
       </div>
-      
+
       <!-- Notes -->
-      <div class="details-section" *ngIf="selectedRequest.notes">
+      <div class="details-section" *ngIf="selectedRequest.requestNotes || selectedRequest.approvalNotes">
         <h3>Notes</h3>
-        <div class="notes-content">
-          {{ selectedRequest.notes }}
+        <div class="notes-content" *ngIf="selectedRequest.requestNotes">
+          <strong>Request Notes:</strong> {{ selectedRequest.requestNotes }}
+        </div>
+        <div class="notes-content" *ngIf="selectedRequest.approvalNotes">
+          <strong>Approval Notes:</strong> {{ selectedRequest.approvalNotes }}
         </div>
       </div>
     </div>
@@ -476,3 +393,11 @@
     </div>
   </div>
 </div>
+
+<!-- Dispatch Modal -->
+<app-dispatch-modal
+  *ngIf="showDispatchModal && selectedRequest"
+  [request]="selectedRequest"
+  (close)="closeDispatchModal()"
+  (dispatchComplete)="onDispatchComplete()">
+</app-dispatch-modal>
