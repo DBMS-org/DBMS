@@ -1,13 +1,24 @@
 <div class="overview-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <p>Loading dashboard...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage" class="error-state">
+    <p>{{ errorMessage }}</p>
+    <button (click)="loadDashboard()">Retry</button>
+  </div>
+
   <!-- Statistics Cards -->
-  <div class="stats-grid">
+  <div *ngIf="!isLoading && !errorMessage" class="stats-grid">
     <div class="stat-card">
       <div class="stat-icon anfo">
         <i class="material-icons">science</i>
       </div>
       <div class="stat-content">
         <h3>ANFO Inventory</h3>
-        <p class="stat-value">1.25 tons</p>
+        <p class="stat-value">{{ (totalANFO / 1000) | number:'1.2-2' }} tons</p>
         <p class="stat-label">Total Available</p>
       </div>
     </div>
@@ -18,7 +29,7 @@
       </div>
       <div class="stat-content">
         <h3>Emulsion Inventory</h3>
-        <p class="stat-value">0.85 tons</p>
+        <p class="stat-value">{{ (totalEmulsion / 1000) | number:'1.2-2' }} tons</p>
         <p class="stat-label">Total Available</p>
       </div>
     </div>
@@ -29,7 +40,7 @@
       </div>
       <div class="stat-content">
         <h3>Total Explosives</h3>
-        <p class="stat-value">2.1 tons</p>
+        <p class="stat-value">{{ (totalInventory / 1000) | number:'1.2-2' }} tons</p>
         <p class="stat-label">Combined Inventory</p>
       </div>
     </div>
@@ -40,65 +51,62 @@
       </div>
       <div class="stat-content">
         <h3>Low Stock Alerts</h3>
-        <p class="stat-value">3</p>
+        <p class="stat-value">{{ lowStockCount }}</p>
         <p class="stat-label">Items Need Attention</p>
       </div>
     </div>
   </div>
 
   <!-- Quick Actions -->
-  <div class="quick-actions">
+  <div *ngIf="!isLoading && !errorMessage" class="quick-actions">
     <h3>Quick Actions</h3>
     <div class="action-buttons">
-      <button class="action-btn">
-        <i class="material-icons">add_circle</i>
-        Add New Stock
-      </button>
-      <button class="action-btn">
+      <div class="dropdown-wrapper">
+        <button class="action-btn" (click)="toggleAddStockMenu()">
+          <i class="material-icons">add_circle</i>
+          Add New Stock
+          <i class="material-icons dropdown-arrow">{{ showAddStockMenu ? 'arrow_drop_up' : 'arrow_drop_down' }}</i>
+        </button>
+        <div class="dropdown-menu" *ngIf="showAddStockMenu">
+          <button class="dropdown-item anfo" (click)="addANFOStock()">
+            <i class="material-icons">science</i>
+            <span>Add ANFO Batch</span>
+          </button>
+          <button class="dropdown-item emulsion" (click)="addEmulsionStock()">
+            <i class="material-icons">water_drop</i>
+            <span>Add Emulsion Batch</span>
+          </button>
+        </div>
+      </div>
+      <button class="action-btn" (click)="recordUsage()">
         <i class="material-icons">remove_circle</i>
         Record Usage
       </button>
-      <button class="action-btn">
+      <button class="action-btn" (click)="generateReport()">
         <i class="material-icons">assessment</i>
         Generate Report
       </button>
-      <button class="action-btn">
+      <button class="action-btn" (click)="syncInventory()">
         <i class="material-icons">sync</i>
         Sync Inventory
       </button>
     </div>
   </div>
 
-  <!-- Recent Activity -->
-  <div class="recent-activity">
-    <h3>Recent Activity</h3>
-    <div class="activity-list">
-      <div class="activity-item">
-        <div class="activity-icon">
-          <i class="material-icons">add</i>
-        </div>
-        <div class="activity-content">
-          <p><strong>ANFO Stock Added</strong></p>
-          <p class="activity-details">0.5 tons added to Store A - 2 hours ago</p>
-        </div>
+  <!-- Additional Info Section (if needed in future) -->
+  <div *ngIf="!isLoading && !errorMessage && dashboard" class="additional-info">
+    <div class="info-cards">
+      <div class="info-card">
+        <h4>Expiring Soon</h4>
+        <p>{{ expiringBatchesCount }} batches expiring in 30 days</p>
       </div>
-      <div class="activity-item">
-        <div class="activity-icon">
-          <i class="material-icons">remove</i>
-        </div>
-        <div class="activity-content">
-          <p><strong>Emulsion Used</strong></p>
-          <p class="activity-details">0.15 tons used for Project X - 4 hours ago</p>
-        </div>
+      <div class="info-card">
+        <h4>Pending Transfers</h4>
+        <p>{{ pendingTransfersCount }} transfer requests awaiting approval</p>
       </div>
-      <div class="activity-item">
-        <div class="activity-icon">
-          <i class="material-icons">warning</i>
-        </div>
-        <div class="activity-content">
-          <p><strong>Low Stock Alert</strong></p>
-          <p class="activity-details">ANFO below minimum threshold - 6 hours ago</p>
-        </div>
+      <div class="info-card">
+        <h4>Quarantined Items</h4>
+        <p>{{ dashboard.quarantinedBatches }} batches currently quarantined</p>
       </div>
     </div>
   </div>

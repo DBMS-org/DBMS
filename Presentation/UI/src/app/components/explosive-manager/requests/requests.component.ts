@@ -9,8 +9,13 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { RequestService } from './services/request.service';
-import { ExplosiveRequest, ExplosiveType, RequestStatus, RequestSearchCriteria } from './models/explosive-request.model';
+import { InventoryTransferService } from '../../../core/services/inventory-transfer.service';
+import {
+  InventoryTransferRequest,
+  TransferRequestStatus,
+  TransferRequestFilter
+} from '../../../core/models/inventory-transfer.model';
+import { DispatchModalComponent } from './dispatch-modal/dispatch-modal.component';
 
 @Component({
   selector: 'app-requests',
@@ -24,139 +29,134 @@ import { ExplosiveRequest, ExplosiveType, RequestStatus, RequestSearchCriteria }
     MatIconModule,
     MatCardModule,
     MatChipsModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    DispatchModalComponent
   ],
   templateUrl: './requests.component.html',
   styleUrls: ['./requests.component.scss']
 })
 export class RequestsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
-  requests: ExplosiveRequest[] = [];
-  filteredRequests: ExplosiveRequest[] = [];
+
+  requests: InventoryTransferRequest[] = [];
+  filteredRequests: InventoryTransferRequest[] = [];
   loading = false;
-  
+  errorMessage: string | null = null;
+
   // Filter form
   filterForm: FormGroup;
   searchTerm = '';
   filtersExpanded = false;
-  
-  // Enums for template
-  ExplosiveType = ExplosiveType;
-  RequestStatus = RequestStatus;
 
-  
+  // Enums for template
+  TransferRequestStatus = TransferRequestStatus;
+
   // View options
   currentView: 'all' | 'anfo' | 'emulsion' = 'all';
-  sortBy: 'requestDate' | 'requiredDate' | 'status' = 'requestDate';
-  sortOrder: 'asc' | 'desc' = 'desc';
-  
+  sortBy: string = 'requestDate';
+  sortOrder: boolean = true; // true = descending
+
   // Pagination
   currentPage = 1;
   pageSize = 10;
+  totalCount = 0;
   totalPages = 0;
-  
+
   // Modal state
   showDetailsModal = false;
-  selectedRequest: ExplosiveRequest | null = null;
+  showDispatchModal = false;
+  selectedRequest: InventoryTransferRequest | null = null;
 
-  // Row expansion state
-  expandedRows = new Set<string>();
   constructor(
-    private requestService: RequestService,
+    private transferService: InventoryTransferService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private snackBar: MatSnackBar
   ) {
     this.filterForm = this.fb.group({
-      explosiveType: [''],
       status: [''],
-      /* priority removed */
-      requesterName: [''],
-      storeLocation: [''],
-      dateFrom: [''],
-      dateTo: ['']
+      isOverdue: [null],
+      isUrgent: [null]
     });
   }
-  
+
   ngOnInit(): void {
     this.loadRequests();
     this.setupFilterSubscription();
   }
-  
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-  
+
   private setupFilterSubscription(): void {
     this.filterForm.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.applyFilters();
+        this.currentPage = 1;
+        this.loadRequests();
       });
   }
-  
+
   loadRequests(): void {
     this.loading = true;
-    const criteria: RequestSearchCriteria = {
-      searchTerm: this.searchTerm,
-      filters: this.filterForm.value,
+    this.errorMessage = null;
+
+    const filter: TransferRequestFilter = {
+      pageNumber: this.currentPage,
+      pageSize: this.pageSize,
+      ...this.filterForm.value,
       sortBy: this.sortBy,
-      sortOrder: this.sortOrder
+      sortDescending: this.sortOrder
     };
-    
-    this.requestService.getRequests(criteria)
+
+    this.transferService.getTransferRequests(filter)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (requests) => {
-          this.requests = requests;
+        next: (pagedData) => {
+          this.requests = pagedData.items;
+          this.totalCount = pagedData.totalCount;
+          this.totalPages = pagedData.totalPages;
           this.applyViewFilter();
           this.loading = false;
         },
         error: (error) => {
           console.error('Error loading requests:', error);
+          this.errorMessage = error.message || 'Failed to load transfer requests';
           this.loading = false;
+          this.snackBar.open('Error loading requests', 'Close', { duration: 3000 });
         }
       });
   }
-  
-  applyFilters(): void {
-    this.currentPage = 1;
-    this.loadRequests();
-  }
-  
+
   applyViewFilter(): void {
     let filtered = [...this.requests];
-    
+
     if (this.currentView === 'anfo') {
-      filtered = filtered.filter(req => (req.requestedItems?.some(i => i.explosiveType === ExplosiveType.ANFO)) || req.explosiveType === ExplosiveType.ANFO);
+      filtered = filtered.filter(req => req.explosiveTypeName === 'ANFO');
     } else if (this.currentView === 'emulsion') {
-      filtered = filtered.filter(req => (req.requestedItems?.some(i => i.explosiveType === ExplosiveType.EMULSION)) || req.explosiveType === ExplosiveType.EMULSION);
+      filtered = filtered.filter(req => req.explosiveTypeName === 'Emulsion');
     }
-    
+
     this.filteredRequests = filtered;
-    this.calculatePagination();
   }
-  
-  onSearchChange(): void {
-    this.applyFilters();
-  }
-  
-  onSortChange(field: 'requestDate' | 'requiredDate' | 'status'): void {
+
+  onSortChange(field: string): void {
     if (this.sortBy === field) {
-      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      this.sortOrder = !this.sortOrder;
     } else {
       this.sortBy = field;
-      this.sortOrder = 'desc';
+      this.sortOrder = true;
     }
     this.loadRequests();
   }
-  
+
   onViewChange(view: 'all' | 'anfo' | 'emulsion'): void {
     this.currentView = view;
     this.applyViewFilter();
   }
-  
+
   clearFilters(): void {
     this.filterForm.reset();
     this.searchTerm = '';
@@ -167,124 +167,107 @@ export class RequestsComponent implements OnInit, OnDestroy {
   toggleFilters(): void {
     this.filtersExpanded = !this.filtersExpanded;
   }
-  
-  getStatusClass(status: RequestStatus): string {
+
+  getStatusClass(status: TransferRequestStatus): string {
     switch (status) {
-      case RequestStatus.APPROVED: return 'status-approved';
-      case RequestStatus.PENDING: return 'status-pending';
-      case RequestStatus.REJECTED: return 'status-rejected';
-      case RequestStatus.IN_PROGRESS: return 'status-in-progress';
-      case RequestStatus.COMPLETED: return 'status-completed';
-      case RequestStatus.CANCELLED: return 'status-cancelled';
+      case TransferRequestStatus.Approved: return 'status-approved';
+      case TransferRequestStatus.Pending: return 'status-pending';
+      case TransferRequestStatus.Rejected: return 'status-rejected';
+      case TransferRequestStatus.InProgress: return 'status-in-progress';
+      case TransferRequestStatus.Completed: return 'status-completed';
+      case TransferRequestStatus.Cancelled: return 'status-cancelled';
       default: return '';
     }
   }
-  
 
-  private calculatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredRequests.length / this.pageSize);
-  }
-  
-  get paginatedRequests(): ExplosiveRequest[] {
-    const startIndex = (this.currentPage - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    return this.filteredRequests.slice(startIndex, endIndex);
-  }
-  
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
+      this.loadRequests();
     }
   }
-  
+
   get pageNumbers(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
-  
-  viewRequestDetails(request: ExplosiveRequest): void {
+
+  viewRequestDetails(request: InventoryTransferRequest): void {
     this.selectedRequest = request;
     this.showDetailsModal = true;
   }
-  
+
   closeDetailsModal(): void {
     this.showDetailsModal = false;
     this.selectedRequest = null;
   }
 
-  openApprovalForm(request: ExplosiveRequest): void {
+  openApprovalForm(request: InventoryTransferRequest): void {
     this.router.navigate(['/explosive-manager/requests/approval', request.id]);
   }
 
-  goToDispatch(request: ExplosiveRequest): void {
-    this.router.navigate(['/explosive-manager/requests/dispatch', request.id]);
+  openDispatchForm(request: InventoryTransferRequest): void {
+    this.selectedRequest = request;
+    this.showDispatchModal = true;
   }
 
-  getDispatchStatusText(request: ExplosiveRequest): string {
-    if (request.status === RequestStatus.DISPATCHED) return 'Dispatched';
-    if (request.dispatchDate) return 'Scheduled';
+  closeDispatchModal(): void {
+    this.showDispatchModal = false;
+    this.selectedRequest = null;
+  }
+
+  onDispatchComplete(): void {
+    this.closeDispatchModal();
+    this.loadRequests();
+    this.snackBar.open('Request dispatched successfully', 'Close', { duration: 3000 });
+  }
+
+  confirmDelivery(request: InventoryTransferRequest): void {
+    if (confirm(`Confirm delivery for request ${request.requestNumber}?`)) {
+      this.transferService.confirmDelivery(request.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Delivery confirmed successfully', 'Close', { duration: 3000 });
+            this.loadRequests();
+          },
+          error: (error) => {
+            this.snackBar.open(error.message || 'Failed to confirm delivery', 'Close', { duration: 3000 });
+          }
+        });
+    }
+  }
+
+  canApprove(request: InventoryTransferRequest): boolean {
+    return request.status === TransferRequestStatus.Pending;
+  }
+
+  canDispatch(request: InventoryTransferRequest): boolean {
+    return request.status === TransferRequestStatus.Approved && !request.dispatchDate;
+  }
+
+  canConfirmDelivery(request: InventoryTransferRequest): boolean {
+    return request.dispatchDate != null && !request.deliveryConfirmedDate;
+  }
+
+  getDispatchStatusText(request: InventoryTransferRequest): string {
+    if (request.deliveryConfirmedDate) return 'Delivered';
+    if (request.dispatchDate) return 'Dispatched';
+    if (request.status === TransferRequestStatus.Approved) return 'Ready to Dispatch';
     return 'Not Dispatched';
   }
 
-  getDispatchStatusClass(request: ExplosiveRequest): string {
-    const text = this.getDispatchStatusText(request);
-    switch (text) {
-      case 'Dispatched':
-        return 'status-completed';
-      case 'Scheduled':
-        return 'status-in-progress';
-      default:
-        return 'status-pending';
-    }
+  getDispatchStatusClass(request: InventoryTransferRequest): string {
+    if (request.deliveryConfirmedDate) return 'status-completed';
+    if (request.dispatchDate) return 'status-in-progress';
+    return 'status-pending';
   }
 
-  // Helpers for multi-item display
-  isExpanded(request: ExplosiveRequest): boolean {
-    return this.expandedRows.has(request.id);
+  // For template compatibility
+  get paginatedRequests(): InventoryTransferRequest[] {
+    return this.filteredRequests;
   }
 
-  toggleExpanded(requestId: string): void {
-    if (this.expandedRows.has(requestId)) {
-      this.expandedRows.delete(requestId);
-    } else {
-      this.expandedRows.add(requestId);
-    }
-  }
-
-  getItemsForRequest(request: ExplosiveRequest) {
-    if (request.requestedItems && request.requestedItems.length > 0) {
-      return request.requestedItems;
-    }
-    // Fallback to single-item fields if multi-item array is not present
-    if (request.explosiveType && request.quantity != null && request.unit) {
-      return [{
-        explosiveType: request.explosiveType,
-        quantity: request.quantity,
-        unit: request.unit,
-        purpose: request.purpose,
-        specifications: undefined
-      }];
-    }
-    return [];
-  }
-
-  getItemsCount(request: ExplosiveRequest): number {
-    return this.getItemsForRequest(request).length;
-  }
-
-  // Helper methods for received status
-  isReceived(request: ExplosiveRequest): boolean {
-    // Consider a request as received if it's completed or has been dispatched for a reasonable time
-    return request.status === RequestStatus.COMPLETED || 
-           (request.status === RequestStatus.DISPATCHED && 
-            request.dispatchDate != null && 
-            new Date().getTime() - new Date(request.dispatchDate).getTime() > 24 * 60 * 60 * 1000); // 24 hours
-  }
-
-  getReceivedStatusClass(request: ExplosiveRequest): string {
-    return this.isReceived(request) ? 'status-completed' : 'status-pending';
-  }
-
-  getReceivedStatusText(request: ExplosiveRequest): string {
-    return this.isReceived(request) ? 'Received' : 'Not Received';
+  onSearchChange(): void {
+    this.loadRequests();
   }
 }

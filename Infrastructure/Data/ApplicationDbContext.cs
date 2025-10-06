@@ -5,6 +5,7 @@ using Domain.Entities.DrillingOperations;
 using Domain.Entities.BlastingOperations;
 using Domain.Entities.MachineManagement;
 using Domain.Entities.StoreManagement;
+using Domain.Entities.ExplosiveInventory;
 using Domain.Common;
 using Application.Interfaces.Infrastructure;
 using System.Threading;
@@ -44,6 +45,13 @@ namespace Infrastructure.Data
         public DbSet<Store> Stores { get; set; }
         public DbSet<StoreInventory> StoreInventories { get; set; }
         public DbSet<StoreTransaction> StoreTransactions { get; set; }
+
+        // Explosive Inventory DbSets
+        public DbSet<CentralWarehouseInventory> CentralWarehouseInventories { get; set; }
+        public DbSet<ANFOTechnicalProperties> ANFOTechnicalProperties { get; set; }
+        public DbSet<EmulsionTechnicalProperties> EmulsionTechnicalProperties { get; set; }
+        public DbSet<InventoryTransferRequest> InventoryTransferRequests { get; set; }
+        public DbSet<QualityCheckRecord> QualityCheckRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

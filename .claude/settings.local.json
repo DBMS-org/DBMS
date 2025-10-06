@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(dotnet run:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(dotnet build:*)",
+      "Bash(npx ng build:*)"
     ],
     "deny": [],
     "ask": []

@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { CentralInventoryService } from '../../../../../core/services/central-inventory.service';
+import { CreateANFOInventoryRequest, ANFOGrade, FumeClass, QualityStatus } from '../../../../../core/models/central-inventory.model';
 
 @Component({
   selector: 'app-anfo-add',
@@ -13,10 +15,12 @@ import { Router } from '@angular/router';
 export class AnfoAddComponent implements OnInit {
   anfoForm!: FormGroup;
   isSubmitting = false;
+  errorMessage: string | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private inventoryService: CentralInventoryService
   ) {}
 
   ngOnInit(): void {
@@ -32,6 +36,7 @@ export class AnfoAddComponent implements OnInit {
       supplier: ['', [Validators.required]],
       quantity: ['', [Validators.required, Validators.min(0.001)]],
       unit: ['kg', [Validators.required]],
+      centralWarehouseStoreId: [1, [Validators.required]], // Default to central warehouse
 
       // Quality Parameters
       density: ['', [Validators.required, Validators.min(0.8), Validators.max(0.9)]],
@@ -41,37 +46,52 @@ export class AnfoAddComponent implements OnInit {
       detonationVelocity: ['', [Validators.min(3000), Validators.max(3500)]],
 
       // Manufacturing
-      grade: ['TGAN', [Validators.required]],
+      grade: ['Standard', [Validators.required]],
       manufacturerBatchNumber: [''],
+      fumeClass: ['Class1', [Validators.required]],
+      qualityStatus: ['Approved', [Validators.required]],
+      waterResistance: ['None'],
+      notes: [''],
 
       // Storage
       storageLocation: ['', [Validators.required]],
       storageTemperature: ['', [Validators.required, Validators.min(5), Validators.max(35)]],
-      storageHumidity: ['', [Validators.required, Validators.max(50)]],
-
-      // Quality Control
-      fumeClass: [1, [Validators.required]],
-      qualityStatus: ['Pending', [Validators.required]],
-
-      // Additional
-      notes: ['']
+      storageHumidity: ['', [Validators.required, Validators.max(50)]]
     });
   }
 
   onSubmit(): void {
     if (this.anfoForm.valid) {
       this.isSubmitting = true;
-      
-      // Simulate API call
+      this.errorMessage = null;
+
       const formData = this.anfoForm.value;
-      console.log('Adding ANFO stock:', formData);
-      
-      // Simulate async operation
-      setTimeout(() => {
-        this.isSubmitting = false;
-        // Navigate back to inventory list
-        this.router.navigate(['/explosive-manager/inventory/anfo']);
-      }, 1500);
+
+      // Convert dates to proper format
+      const request: CreateANFOInventoryRequest = {
+        ...formData,
+        manufacturingDate: new Date(formData.manufacturingDate),
+        expiryDate: new Date(formData.expiryDate),
+        grade: formData.grade as ANFOGrade,
+        fumeClass: formData.fumeClass as FumeClass,
+        qualityStatus: formData.qualityStatus as QualityStatus
+      };
+
+      console.log('Creating ANFO batch:', request);
+
+      this.inventoryService.createANFOBatch(request).subscribe({
+        next: (response) => {
+          console.log('ANFO batch created successfully:', response);
+          this.isSubmitting = false;
+          // Navigate back to inventory list
+          this.router.navigate(['/explosive-manager/inventory/anfo']);
+        },
+        error: (error) => {
+          console.error('Error creating ANFO batch:', error);
+          this.errorMessage = error.message || 'Failed to create ANFO batch';
+          this.isSubmitting = false;
+        }
+      });
     } else {
       // Mark all fields as touched to show validation errors
       Object.keys(this.anfoForm.controls).forEach(key => {

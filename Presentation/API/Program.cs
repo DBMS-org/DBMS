@@ -129,6 +129,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ManageMachines", policy => policy.RequireRole("Admin", "Administrator", "MachineManager"));
     options.AddPolicy("ReadProjectData", policy => policy.RequireRole("Admin", "Administrator", "BlastingEngineer", "Operator", "MachineManager"));
     options.AddPolicy("ManageExplosiveRequests", policy => policy.RequireRole("Admin", "Administrator", "StoreManager", "BlastingEngineer"));
+    options.AddPolicy("ReadInventoryData", policy => policy.RequireRole("Admin", "Administrator", "StoreManager", "BlastingEngineer", "Operator"));
+    options.AddPolicy("ManageInventory", policy => policy.RequireRole("Admin", "Administrator", "StoreManager"));
+    options.AddPolicy("ApproveTransfers", policy => policy.RequireRole("Admin", "Administrator", "StoreManager"));
     });
 
 // Register DrillHole services (split into focused services)
@@ -181,6 +184,13 @@ builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreInventor
 builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreInventoryService, Application.Services.StoreManagement.StoreInventoryApplicationService>();
 builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreTransactionRepository, Infrastructure.Repositories.StoreManagement.StoreTransactionRepository>();
 builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreTransactionService, Application.Services.StoreManagement.StoreTransactionApplicationService>();
+
+// Register Explosive Inventory Management services
+builder.Services.AddScoped<Application.Interfaces.ExplosiveInventory.ICentralWarehouseInventoryRepository, Infrastructure.Repositories.ExplosiveInventory.CentralWarehouseInventoryRepository>();
+builder.Services.AddScoped<Application.Interfaces.ExplosiveInventory.IInventoryTransferRequestRepository, Infrastructure.Repositories.ExplosiveInventory.InventoryTransferRequestRepository>();
+builder.Services.AddScoped<Application.Interfaces.ExplosiveInventory.ICentralInventoryService, Application.Services.ExplosiveInventory.CentralInventoryApplicationService>();
+builder.Services.AddScoped<Application.Interfaces.ExplosiveInventory.IInventoryTransferService, Application.Services.ExplosiveInventory.InventoryTransferApplicationService>();
+builder.Services.AddScoped<Domain.Services.ExplosiveInventory.InventoryValidationDomainService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, Infrastructure.Services.UserContext>();
