@@ -123,6 +123,13 @@
                 class="form-check-input"
                 [checked]="isExplosiveTypeSelected(type)"
                 (change)="onExplosiveTypeChange($event, type)"
+                [id]="'explosive-' + type"
+                title="Select explosive type: {{ type }}"
+                placeholder="Select explosive type">
+                type="checkbox"
+                class="form-check-input"
+                [checked]="isExplosiveTypeSelected(type)"
+                (change)="onExplosiveTypeChange($event, type)"
                 [id]="'explosive-' + type">
               <label class="form-check-label" [for]="'explosive-' + type">
                 <i class="fas fa-fire"></i> {{ type }}
