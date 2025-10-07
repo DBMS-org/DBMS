@@ -1,9 +1,11 @@
-feat: Add technical specifications for explosive materials including ANFO and Emulsion
+feat(explosive-inventory): add central inventory and transfer management
 
-- Created detailed documentation for explosive materials specifications.
-- Added data model specifications for ANFO and Emulsion inventory.
-- Implemented validation rules for both explosive types.
-- Updated frontend inventory module to reflect new data models and validation.
-- Established architecture for a single central warehouse with multiple local stores.
-- Defined API endpoints for warehouse inventory and transfer requests.
-- Clarified storage location terminology within the central warehouse.
+Add comprehensive explosive inventory management system including:
+- Central warehouse inventory for ANFO and Emulsion explosives
+- Inventory transfer request workflow with approval process
+- Quality control status tracking
+- Dashboard and reporting components
+- Angular UI components for inventory management
+- API endpoints and services for inventory operations
+- Database models and configurations
+- Validators and DTOs for inventory operations
