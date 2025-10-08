@@ -1,0 +1,14 @@
+<div class="notifications-container">
+  <h2>Notifications</h2>
+  <ul class="notification-list">
+    @for (notif of notifications; track notif.id) {
+      <li class="notification-item">
+        <span class="message">{{ notif.message }}</span>
+        <span class="date">{{ notif.date }}</span>
+      </li>
+    }
+    @empty {
+      <li>No notifications available.</li>
+    }
+  </ul>
+</div>

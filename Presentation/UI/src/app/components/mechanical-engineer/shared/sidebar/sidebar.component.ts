@@ -35,16 +35,10 @@ export class SidebarComponent {
       matchPattern: '/mechanical-engineer/maintenance/jobs'
     },
     { 
-      icon: 'analytics', 
-      label: 'Maintenance Analytics', 
-      route: '/mechanical-engineer/maintenance/analytics',
-      matchPattern: '/mechanical-engineer/maintenance/analytics'
-    },
-    { 
-      icon: 'settings', 
-      label: 'Maintenance Settings', 
-      route: '/mechanical-engineer/maintenance/settings',
-      matchPattern: '/mechanical-engineer/maintenance/settings'
+      icon: 'notifications', 
+      label: 'Notifications', 
+      route: '/mechanical-engineer/maintenance/notifications',
+      matchPattern: '/mechanical-engineer/maintenance/notifications'
     }
   ];
 
