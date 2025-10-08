@@ -20,12 +20,12 @@
   </div>
 </header>
 
-<div class="loading-container" *ngIf="isLoading">
+<div class="loading-container" *ngIf="isLoading()">
   <div class="spinner"></div>
   <p>Loading mechanical engineering dashboard...</p>
 </div>
 
-<div class="dashboard-content" *ngIf="!isLoading">
+<div class="dashboard-content" *ngIf="!isLoading()">
   <!-- Critical Maintenance Alert -->
   <div class="alerts-section" *ngIf="criticalAlerts.length > 0">
     <h3>
