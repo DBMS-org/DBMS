@@ -7,6 +7,7 @@ import { MaintenanceJobsComponent } from './maintenance/maintenance-jobs/mainten
 import { MaintenanceAnalyticsComponent } from './maintenance/maintenance-analytics/maintenance-analytics.component';
 import { MaintenanceSettingsComponent } from './maintenance/maintenance-settings/maintenance-settings.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
+import { MaintenanceNotificationsComponent } from './maintenance/maintenance-notifications/maintenance-notifications.component';
 
 export const MECHANICAL_ENGINEER_ROUTES: Routes = [
     {
@@ -22,8 +23,7 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
                 children: [
                     { path: '', redirectTo: 'jobs', pathMatch: 'full' },
                     { path: 'jobs', component: MaintenanceJobsComponent },
-                    { path: 'analytics', component: MaintenanceAnalyticsComponent },
-                    { path: 'settings', component: MaintenanceSettingsComponent }
+                    { path: 'notifications', component: MaintenanceNotificationsComponent }
                 ]
             },
             // Irrelevant placeholder routes removed
