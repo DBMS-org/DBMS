@@ -1,0 +1,376 @@
+<div class="reports-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h2>Reports</h2>
+      <p>Generate, schedule, and manage maintenance reports</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="setActiveTab('builder')">
+        <mat-icon>add</mat-icon>
+        Create Custom Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'prebuilt'"
+      (click)="setActiveTab('prebuilt')">
+      <mat-icon>dashboard</mat-icon>
+      Pre-built Reports
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'builder'"
+      (click)="setActiveTab('builder')">
+      <mat-icon>build</mat-icon>
+      Report Builder
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'scheduled'"
+      (click)="setActiveTab('scheduled')">
+      <mat-icon>schedule</mat-icon>
+      Scheduled Reports
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'history'"
+      (click)="setActiveTab('history')">
+      <mat-icon>history</mat-icon>
+      Report History
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Pre-built Reports Tab -->
+    @if (activeTab() === 'prebuilt') {
+      <div class="prebuilt-reports">
+        <div class="reports-grid">
+          @for (report of prebuiltReports(); track report.id) {
+            <mat-card class="report-card">
+              <mat-card-header>
+                <div mat-card-avatar class="report-icon">
+                  <mat-icon>{{ report.icon }}</mat-icon>
+                </div>
+                <mat-card-title>{{ report.name }}</mat-card-title>
+                <mat-card-subtitle>{{ report.category | titlecase }}</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <p>{{ report.description }}</p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-button (click)="generatePrebuiltReport(report, 'csv')">
+                  <mat-icon>table_chart</mat-icon>
+                  CSV
+                </button>
+                <button mat-button (click)="generatePrebuiltReport(report, 'excel')">
+                  <mat-icon>grid_on</mat-icon>
+                  Excel
+                </button>
+                <button mat-button (click)="generatePrebuiltReport(report, 'pdf')">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                  PDF
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          }
+        </div>
+
+        @if (isGenerating()) {
+          <div class="generating-overlay">
+            <mat-spinner diameter="48"></mat-spinner>
+            <p>Generating report...</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Report Builder Tab -->
+    @if (activeTab() === 'builder') {
+      <div class="report-builder">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Custom Report Builder</mat-card-title>
+            <mat-card-subtitle>Create a custom report with specific filters and parameters</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="reportBuilderForm" class="builder-form">
+              <!-- Report Name -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Report Name</mat-label>
+                <input matInput formControlName="reportName" placeholder="Enter report name">
+                <mat-icon matPrefix>description</mat-icon>
+              </mat-form-field>
+
+              <!-- Date Range -->
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>From Date</mat-label>
+                  <input matInput [matDatepicker]="pickerFrom" formControlName="dateFrom">
+                  <mat-datepicker-toggle matSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerFrom></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>To Date</mat-label>
+                  <input matInput [matDatepicker]="pickerTo" formControlName="dateTo">
+                  <mat-datepicker-toggle matSuffix [for]="pickerTo"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerTo></mat-datepicker>
+                </mat-form-field>
+              </div>
+
+              <!-- Filters -->
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Machine</mat-label>
+                  <mat-select formControlName="machineId">
+                    <mat-option value="">All Machines</mat-option>
+                    @for (machine of machines(); track machine.id) {
+                      <mat-option [value]="machine.id">{{ machine.name }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matPrefix>precision_manufacturing</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Priority</mat-label>
+                  <mat-select formControlName="priority">
+                    <mat-option value="">All Priorities</mat-option>
+                    @for (priority of priorities; track priority) {
+                      <mat-option [value]="priority">{{ priority }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matPrefix>flag</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Status</mat-label>
+                  <mat-select formControlName="status">
+                    <mat-option value="">All Statuses</mat-option>
+                    @for (status of statuses; track status) {
+                      <mat-option [value]="status">{{ status }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matPrefix>info</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Assignee</mat-label>
+                  <mat-select formControlName="assignee">
+                    <mat-option value="">All Assignees</mat-option>
+                    @for (assignee of assignees(); track assignee) {
+                      <mat-option [value]="assignee">{{ assignee }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matPrefix>person</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <!-- Aggregation -->
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Aggregate Function</mat-label>
+                  <mat-select formControlName="aggregateFunction">
+                    <mat-option value="">None</mat-option>
+                    @for (func of aggregateFunctions; track func) {
+                      <mat-option [value]="func">{{ func }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matPrefix>functions</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Group By</mat-label>
+                  <mat-select formControlName="groupBy">
+                    <mat-option value="">None</mat-option>
+                    <mat-option value="machine">Machine</mat-option>
+                    <mat-option value="priority">Priority</mat-option>
+                    <mat-option value="status">Status</mat-option>
+                    <mat-option value="assignee">Assignee</mat-option>
+                    <mat-option value="date">Date</mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>group_work</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <!-- Export Format -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Export Format</mat-label>
+                <mat-select formControlName="exportFormat">
+                  @for (format of exportFormats; track format) {
+                    <mat-option [value]="format">{{ format | uppercase }}</mat-option>
+                  }
+                </mat-select>
+                <mat-icon matPrefix>file_download</mat-icon>
+              </mat-form-field>
+            </form>
+          </mat-card-content>
+          <mat-card-actions>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="generateCustomReport()"
+              [disabled]="isGenerating()">
+              @if (isGenerating()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <mat-icon>play_arrow</mat-icon>
+              }
+              Generate Report
+            </button>
+            <button mat-button (click)="reportBuilderForm.reset()">
+              <mat-icon>clear</mat-icon>
+              Reset
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    }
+
+    <!-- Scheduled Reports Tab -->
+    @if (activeTab() === 'scheduled') {
+      <div class="scheduled-reports">
+        <div class="section-header">
+          <h3>Scheduled Reports</h3>
+          <button mat-raised-button color="primary" (click)="createScheduledReport()">
+            <mat-icon>add</mat-icon>
+            Schedule New Report
+          </button>
+        </div>
+
+        @if (scheduledReports().length === 0) {
+          <div class="empty-state">
+            <mat-icon>schedule</mat-icon>
+            <h4>No Scheduled Reports</h4>
+            <p>Create a scheduled report to automatically generate and send reports</p>
+            <button mat-raised-button color="primary" (click)="createScheduledReport()">
+              <mat-icon>add</mat-icon>
+              Create Scheduled Report
+            </button>
+          </div>
+        } @else {
+          <div class="scheduled-list">
+            @for (report of scheduledReports(); track report.id) {
+              <mat-card class="scheduled-card">
+                <mat-card-header>
+                  <div mat-card-avatar class="schedule-icon">
+                    <mat-icon>schedule</mat-icon>
+                  </div>
+                  <mat-card-title>{{ report.reportName }}</mat-card-title>
+                  <mat-card-subtitle>
+                    <mat-chip [class.active-chip]="report.active" [class.inactive-chip]="!report.active">
+                      {{ report.active ? 'Active' : 'Inactive' }}
+                    </mat-chip>
+                  </mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="schedule-details">
+                    <div class="detail-item">
+                      <mat-icon>repeat</mat-icon>
+                      <span>Frequency: {{ report.frequency | titlecase }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <mat-icon>{{ getFormatIcon(report.format) }}</mat-icon>
+                      <span>Format: {{ report.format | uppercase }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <mat-icon>event</mat-icon>
+                      <span>Next Run: {{ report.nextRun | date:'short' }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <mat-icon>email</mat-icon>
+                      <span>Recipients: {{ report.recipients.length }}</span>
+                    </div>
+                  </div>
+                </mat-card-content>
+                <mat-card-actions>
+                  <button mat-button (click)="toggleScheduledReport(report)">
+                    <mat-icon>{{ report.active ? 'pause' : 'play_arrow' }}</mat-icon>
+                    {{ report.active ? 'Deactivate' : 'Activate' }}
+                  </button>
+                  <button mat-button color="warn" (click)="deleteScheduledReport(report)">
+                    <mat-icon>delete</mat-icon>
+                    Delete
+                  </button>
+                </mat-card-actions>
+              </mat-card>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Report History Tab -->
+    @if (activeTab() === 'history') {
+      <div class="report-history">
+        <div class="section-header">
+          <h3>Generated Reports</h3>
+        </div>
+
+        @if (generatedReports().length === 0) {
+          <div class="empty-state">
+            <mat-icon>history</mat-icon>
+            <h4>No Reports Generated</h4>
+            <p>Generate a report to see it here</p>
+          </div>
+        } @else {
+          <div class="history-list">
+            @for (report of generatedReports(); track report.id) {
+              <mat-card class="history-card">
+                <mat-card-header>
+                  <div mat-card-avatar class="report-type-icon">
+                    <mat-icon>{{ getFormatIcon(report.format) }}</mat-icon>
+                  </div>
+                  <mat-card-title>{{ report.name }}</mat-card-title>
+                  <mat-card-subtitle>
+                    Generated {{ report.generatedAt | date:'short' }}
+                  </mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="report-info">
+                    <div class="info-item">
+                      <mat-icon>insert_drive_file</mat-icon>
+                      <span>{{ report.format | uppercase }}</span>
+                    </div>
+                    <div class="info-item">
+                      <mat-icon>storage</mat-icon>
+                      <span>{{ report.fileSize }}</span>
+                    </div>
+                    <div class="info-item">
+                      <mat-icon
+                        [class.status-ready]="report.status === 'ready'"
+                        [class.status-generating]="report.status === 'generating'"
+                        [class.status-failed]="report.status === 'failed'">
+                        {{ report.status === 'ready' ? 'check_circle' : report.status === 'generating' ? 'sync' : 'error' }}
+                      </mat-icon>
+                      <span [class]="getStatusClass(report.status)">{{ report.status | titlecase }}</span>
+                    </div>
+                  </div>
+                </mat-card-content>
+                <mat-card-actions>
+                  @if (report.status === 'ready') {
+                    <button mat-raised-button color="primary" (click)="downloadReport(report)">
+                      <mat-icon>download</mat-icon>
+                      Download
+                    </button>
+                  }
+                  <button mat-button color="warn" (click)="deleteReport(report)">
+                    <mat-icon>delete</mat-icon>
+                    Delete
+                  </button>
+                </mat-card-actions>
+              </mat-card>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

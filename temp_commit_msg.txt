@@ -1,1 +1,1 @@
-feat(reports): implement reports component with prebuilt, scheduled, and custom report functionalities
+feat(reports): add styles for reports component including layout and responsive design
