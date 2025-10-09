@@ -1,1 +1,1 @@
-feat(notifications): redesign notifications component with enhanced layout, styling, and responsiveness
+feat(notifications): overhaul maintenance notifications component with enhanced layout, real-time indicators, and customizable settings

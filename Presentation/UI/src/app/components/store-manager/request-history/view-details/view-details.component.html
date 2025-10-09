@@ -13,7 +13,7 @@
 
     <!-- Modal Content -->
     <div class="modal-content" *ngIf="request">
-      
+
       <!-- Request Information Section -->
       <div class="info-section">
         <h3 class="section-title">
@@ -22,8 +22,8 @@
         </h3>
         <div class="info-grid">
           <div class="info-item">
-            <label>Request ID:</label>
-            <span class="value">{{ request?.id }}</span>
+            <label>Request Number:</label>
+            <span class="value">{{ request?.requestNumber }}</span>
           </div>
           <div class="info-item">
             <label>Request Date:</label>
@@ -31,12 +31,12 @@
           </div>
           <div class="info-item">
             <label>Required Date:</label>
-            <span class="value">{{ formatDate(request?.requiredDate) }}</span>
+            <span class="value">{{ formatDate(request?.requiredByDate) }}</span>
           </div>
           <div class="info-item">
             <label>Status:</label>
-            <span class="badge" [class]="getStatusClass(request?.status || '')">
-              {{ request?.status }}
+            <span class="badge" [class]="getStatusClass(request?.statusName || '')">
+              {{ request?.statusName }}
             </span>
           </div>
         </div>
@@ -51,19 +51,11 @@
         <div class="info-grid">
           <div class="info-item">
             <label>Requester Name:</label>
-            <span class="value">{{ request?.requesterName }}</span>
+            <span class="value">{{ request?.requestedByUserName }}</span>
           </div>
           <div class="info-item">
-            <label>Requester ID:</label>
-            <span class="value">{{ request?.requesterId }}</span>
-          </div>
-          <div class="info-item">
-            <label>Store Name:</label>
-            <span class="value">{{ request?.requesterStoreName }}</span>
-          </div>
-          <div class="info-item">
-            <label>Store ID:</label>
-            <span class="value">{{ request?.requesterStoreId }}</span>
+            <label>Destination Store:</label>
+            <span class="value">{{ request?.destinationStoreName }}</span>
           </div>
         </div>
       </div>
@@ -71,49 +63,77 @@
       <!-- Explosive Details Section -->
       <div class="info-section">
         <h3 class="section-title">
-          <i class="material-icons">warning</i>
+          <i class="material-icons">science</i>
           Explosive Details
         </h3>
         <div class="info-grid">
-          <table class="table table-sm table-bordered">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Unit</th>
-                <th>Purpose</th>
-                <th>Specifications</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of request?.requestedItems; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ item.explosiveType }}</td>
-                <td>{{ item.requestedQuantity }}</td>
-                <td>{{ item.unit }}</td>
-                <td>{{ item.purpose }}</td>
-                <td>{{ item.specifications || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="info-item">
+            <label>Explosive Type:</label>
+            <span class="value">{{ request?.explosiveTypeName }}</span>
+          </div>
+          <div class="info-item">
+            <label>Requested Quantity:</label>
+            <span class="value">{{ request?.requestedQuantity }} {{ request?.unit }}</span>
+          </div>
+          <div class="info-item">
+            <label>Approved Quantity:</label>
+            <span class="value">{{ request?.approvedQuantity || '-' }} {{ request?.approvedQuantity ? request?.unit : '' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Final Quantity:</label>
+            <span class="value">{{ request?.finalQuantity }} {{ request?.unit }}</span>
+          </div>
         </div>
       </div>
 
       <!-- Approval Information Section -->
-      <div class="info-section">
+      <div class="info-section" *ngIf="request?.approvedDate">
         <h3 class="section-title">
-          <i class="material-icons">check_circle</i>
+          <i class="material-icons">verified</i>
           Approval Information
         </h3>
         <div class="info-grid">
           <div class="info-item">
             <label>Approval Date:</label>
-            <span class="value">{{ request?.approvalDate ? formatDate(request.approvalDate) : 'Not yet approved' }}</span>
+            <span class="value">{{ request?.approvedDate ? formatDate(request.approvedDate) : 'Not yet approved' }}</span>
           </div>
           <div class="info-item">
-            <label>Fulfillment Date:</label>
-            <span class="value">{{ request?.fulfillmentDate ? formatDate(request.fulfillmentDate) : 'Not yet fulfilled' }}</span>
+            <label>Approved By:</label>
+            <span class="value">{{ request?.approvedByUserName || '-' }}</span>
+          </div>
+          <div class="info-item" *ngIf="request?.deliveryConfirmedDate">
+            <label>Delivery Confirmed:</label>
+            <span class="value">{{ request?.deliveryConfirmedDate ? formatDate(request.deliveryConfirmedDate) : 'Not yet fulfilled' }}</span>
+          </div>
+          <div class="info-item" *ngIf="request?.rejectionReason">
+            <label>Rejection Reason:</label>
+            <span class="value text-danger">{{ request?.rejectionReason }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dispatch Information Section -->
+      <div class="info-section" *ngIf="request?.dispatchDate">
+        <h3 class="section-title">
+          <i class="material-icons">local_shipping</i>
+          Dispatch Information
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Dispatch Date:</label>
+            <span class="value">{{ formatDate(request?.dispatchDate) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Truck Number:</label>
+            <span class="value">{{ request?.truckNumber || '-' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Driver Name:</label>
+            <span class="value">{{ request?.driverName || '-' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Driver Contact:</label>
+            <span class="value">{{ request?.driverContactNumber || '-' }}</span>
           </div>
         </div>
       </div>
@@ -125,12 +145,15 @@
           Notes
         </h3>
         <div class="notes-content">
-          <p>{{ request?.notes || 'No additional notes provided.' }}</p>
+          <p>{{ request?.requestNotes || 'No additional notes provided.' }}</p>
         </div>
-        
-        <div class="info-item full-width" style="margin-top: 1rem;">
-          <label>Justification:</label>
-          <span class="value">{{ request?.justification }}</span>
+        <div class="notes-content" *ngIf="request?.approvalNotes">
+          <strong>Approval Notes:</strong>
+          <p>{{ request?.approvalNotes }}</p>
+        </div>
+        <div class="notes-content" *ngIf="request?.dispatchNotes">
+          <strong>Dispatch Notes:</strong>
+          <p>{{ request?.dispatchNotes }}</p>
         </div>
       </div>
 
@@ -139,7 +162,6 @@
     <!-- Modal Footer -->
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="onClose()">
-        <i class="material-icons">close</i>
         Close
       </button>
     </div>
