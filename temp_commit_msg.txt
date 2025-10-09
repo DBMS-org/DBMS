@@ -1,1 +1,1 @@
-feat: add stores component with styling, data loading, filtering, and modal functionality
+style: format navItems for better readability in sidebar component
