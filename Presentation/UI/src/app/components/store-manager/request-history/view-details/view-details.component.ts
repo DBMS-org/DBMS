@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { InventoryTransferRequest } from '../../../../core/models/inventory-transfer.model';
+import { StockRequest } from '../../../../core/models/stock-request.model';
 
 @Component({
   selector: 'app-view-details',
@@ -10,7 +10,7 @@ import { InventoryTransferRequest } from '../../../../core/models/inventory-tran
   styleUrls: ['./view-details.component.scss']
 })
 export class ViewDetailsComponent {
-  @Input() request: InventoryTransferRequest | null = null;
+  @Input() request: StockRequest | null = null;
   @Output() close = new EventEmitter<void>();
 
   constructor() { }

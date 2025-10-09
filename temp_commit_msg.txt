@@ -1,1 +1,1 @@
-feat: Update Dispatch Info and Request History components for improved data handling and UI enhancements - Refactor dispatch-info.component.html and dispatch-info.component.ts to include new fields and loading states - Modify request-history.component.html and request-history.component.ts to streamline request filtering and display - Enhance view-details.component.html and view-details.component.ts for better request detail presentation
+feat: add stores component with styling, data loading, filtering, and modal functionality
