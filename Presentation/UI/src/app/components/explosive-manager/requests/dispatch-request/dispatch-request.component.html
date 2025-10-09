@@ -12,7 +12,7 @@
   <div class="page-header slide-in-up">
     <div class="header-top">
       <div class="header-left">
-        <button mat-icon-button (click)="goBack()" class="back-button" matTooltip="Go back to requests">
+        <button type="button" mat-icon-button (click)="goBack()" class="back-button" matTooltip="Go back to requests">
           <mat-icon>arrow_back</mat-icon>
         </button>
         <div class="header-content">
@@ -25,7 +25,7 @@
               <div class="request-meta">
                 <div class="meta-item">
                   <mat-icon>tag</mat-icon>
-                  <span class="request-id">{{request.id}}</span>
+                  <span class="request-id">{{request.requestNumber}}</span>
                 </div>
                 <div class="meta-item">
                   <mat-icon>event</mat-icon>
@@ -33,7 +33,7 @@
                 </div>
                 <div class="meta-item">
                   <mat-icon>person</mat-icon>
-                  <span class="requester">{{request.requesterName}}</span>
+                  <span class="requester">{{request.requestedByUserName}}</span>
                 </div>
               </div>
             </div>
@@ -44,14 +44,14 @@
       <div class="header-right">
         <div class="status-section">
           <span class="status-label">Current Status</span>
-          <div class="status-chip" [ngClass]="'status-' + (request?.status | lowercase)" *ngIf="request?.status">
-            <mat-icon class="status-icon">{{getStatusIcon(request.status)}}</mat-icon>
-            <span class="status-text">{{ request?.status }}</span>
+          <div class="status-chip" [ngClass]="'status-' + (request?.statusName | lowercase)" *ngIf="request?.status">
+            <mat-icon class="status-icon">local_shipping</mat-icon>
+            <span class="status-text">{{ request?.statusName }}</span>
           </div>
         </div>
-        <div class="priority-badge">
+        <div class="priority-badge" *ngIf="request?.isUrgent">
           <mat-icon>priority_high</mat-icon>
-          <span>High Priority</span>
+          <span>Urgent</span>
         </div>
       </div>
     </div>
@@ -74,17 +74,17 @@
         </div>
         <div class="step-content">
           <span class="step-title">Approved</span>
-          <span class="step-subtitle">{{request.approvalDate | date:'MMM dd'}}</span>
+          <span class="step-subtitle">{{request.approvedDate | date:'MMM dd'}}</span>
         </div>
       </div>
-      <div class="progress-line" [ngClass]="{'completed': request?.status === 'DISPATCHED'}"></div>
-      <div class="progress-step" [ngClass]="{'active': request?.status !== 'DISPATCHED', 'completed': request?.status === 'DISPATCHED'}">
+      <div class="progress-line" [ngClass]="{'completed': request?.dispatchDate}"></div>
+      <div class="progress-step" [ngClass]="{'active': !request?.dispatchDate, 'completed': request?.dispatchDate}">
         <div class="step-circle">
-          <mat-icon>{{request?.status === 'DISPATCHED' ? 'check_circle' : 'local_shipping'}}</mat-icon>
+          <mat-icon>{{request?.dispatchDate ? 'check_circle' : 'local_shipping'}}</mat-icon>
         </div>
         <div class="step-content">
-          <span class="step-title">{{request?.status === 'DISPATCHED' ? 'Dispatched' : 'Ready for Dispatch'}}</span>
-          <span class="step-subtitle">{{request?.status === 'DISPATCHED' ? (request.dispatchDate | date:'MMM dd') : 'In Progress'}}</span>
+          <span class="step-title">{{request?.dispatchDate ? 'Dispatched' : 'Ready for Dispatch'}}</span>
+          <span class="step-subtitle">{{request?.dispatchDate ? (request.dispatchDate | date:'MMM dd') : 'In Progress'}}</span>
         </div>
       </div>
     </div>
@@ -114,8 +114,8 @@
           <div class="summary-item">
             <div class="item-icon"><mat-icon>location_on</mat-icon></div>
             <div class="item-content">
-              <label>Store Location</label>
-              <span class="value">{{request.storeLocation}}</span>
+              <label>Destination Store</label>
+              <span class="value">{{request.destinationStoreName}}</span>
             </div>
           </div>
           
@@ -123,7 +123,7 @@
             <div class="item-icon"><mat-icon>science</mat-icon></div>
             <div class="item-content">
               <label>Explosive Type</label>
-              <span class="value explosive-type" [ngClass]="'type-' + (request.explosiveType | lowercase)">{{request.explosiveType}}</span>
+              <span class="value explosive-type" [ngClass]="'type-' + (request.explosiveTypeName | lowercase)">{{request.explosiveTypeName}}</span>
             </div>
           </div>
           
@@ -133,7 +133,7 @@
             <div class="item-icon"><mat-icon>schedule</mat-icon></div>
             <div class="item-content">
               <label>Required Date</label>
-              <span class="value">{{ request?.requiredDate | date: 'MMM dd, yyyy' }}</span>
+              <span class="value">{{ request?.requiredByDate | date: 'MMM dd, yyyy' }}</span>
             </div>
           </div>
           
@@ -141,35 +141,35 @@
             <div class="item-icon"><mat-icon>person</mat-icon></div>
             <div class="item-content">
               <label>Requester</label>
-              <span class="value">{{ request?.requesterName }}</span>
+              <span class="value">{{ request?.requestedByUserName }}</span>
             </div>
           </div>
           
-          <div class="summary-item" *ngIf="request.departureDate">
+          <div class="summary-item" *ngIf="request.dispatchDate">
             <div class="item-icon"><mat-icon>flight_takeoff</mat-icon></div>
             <div class="item-content">
-              <label>Departure Date</label>
-              <span class="value">{{request.departureDate | date:'MMM dd, yyyy'}}</span>
+              <label>Dispatch Date</label>
+              <span class="value">{{request.dispatchDate | date:'MMM dd, yyyy'}}</span>
             </div>
           </div>
         </div>
         
         <!-- Purpose Section -->
-        <div class="purpose-section" *ngIf="request.purpose">
+        <div class="purpose-section" *ngIf="request.requestNotes">
           <div class="section-header">
             <mat-icon>description</mat-icon>
-            <span>Purpose & Usage</span>
+            <span>Request Notes</span>
           </div>
-          <p class="purpose-text">{{request.purpose}}</p>
+          <p class="purpose-text">{{request.requestNotes}}</p>
         </div>
 
         <!-- Additional Info -->
-        <div class="additional-info" *ngIf="request.notes">
+        <div class="additional-info" *ngIf="request.approvalNotes">
           <div class="section-header">
             <mat-icon>note</mat-icon>
-            <span>Additional Notes</span>
+            <span>Approval Notes</span>
           </div>
-          <p class="notes-text">{{request.notes}}</p>
+          <p class="notes-text">{{request.approvalNotes}}</p>
         </div>
       </div>
     </div>
@@ -191,28 +191,6 @@
       </div>
       
       <form [formGroup]="dispatchForm" (ngSubmit)="submit()" class="dispatch-form">
-        <!-- Dispatch Date Section -->
-        <div class="form-section">
-          <div class="section-title">
-            <div class="title-icon">
-              <mat-icon>event</mat-icon>
-            </div>
-            <div class="title-content">
-              <span class="title-text">Schedule</span>
-              <span class="title-subtitle">When will the materials be dispatched?</span>
-            </div>
-          </div>
-          <mat-form-field appearance="outline" class="full-width enhanced-field">
-            <mat-label>Dispatch Date</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="dispatchDate" 
-                   placeholder="Select dispatch date" [disabled]="isSubmitting" />
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-            <mat-hint>Choose the date when materials will be dispatched</mat-hint>
-            <mat-error *ngIf="hasError('dispatchDate')">{{ getError('dispatchDate') }}</mat-error>
-          </mat-form-field>
-        </div>
-
         <!-- Transportation Section -->
         <div class="form-section">
           <div class="section-title">
@@ -238,151 +216,26 @@
               <input matInput formControlName="driverName" placeholder="Enter driver's full name" [disabled]="isSubmitting" />
               <mat-icon matPrefix>person</mat-icon>
               <mat-hint>Authorized driver for this dispatch</mat-hint>
-            </mat-form-field>
-          </div>
-        </div>
-
-        <!-- Route & Notes Section -->
-        <div class="form-section">
-          <div class="section-title">
-            <div class="title-icon">
-              <mat-icon>route</mat-icon>
-            </div>
-            <div class="title-content">
-              <span class="title-text">Route & Additional Information</span>
-              <span class="title-subtitle">Delivery route and special instructions</span>
-            </div>
-          </div>
-          <div class="form-grid">
-            <mat-form-field appearance="outline" class="full-width enhanced-field">
-              <mat-label>Route Information</mat-label>
-              <textarea matInput formControlName="routeInformation" rows="3"
-                        placeholder="Describe the route, checkpoints, and any special instructions" 
-                        [disabled]="isSubmitting"></textarea>
-              <mat-icon matPrefix>route</mat-icon>
-              <mat-hint>Include route details, checkpoints, and safety considerations</mat-hint>
+              <mat-error *ngIf="hasError('driverName')">{{ getError('driverName') }}</mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width enhanced-field">
-              <mat-label>Dispatch Notes</mat-label>
-              <textarea matInput formControlName="additionalNotes" rows="3"
-                        placeholder="Any additional notes or special instructions" 
-                        [disabled]="isSubmitting"></textarea>
-              <mat-icon matPrefix>note</mat-icon>
-              <mat-hint>Optional: Add any special handling or delivery instructions</mat-hint>
+            <mat-form-field appearance="outline" class="enhanced-field">
+              <mat-label>Driver Contact Number</mat-label>
+              <input matInput formControlName="driverContactNumber" placeholder="Phone number (optional)" [disabled]="isSubmitting" />
+              <mat-icon matPrefix>phone</mat-icon>
+              <mat-hint>Contact number for driver</mat-hint>
+              <mat-error *ngIf="hasError('driverContactNumber')">{{ getError('driverContactNumber') }}</mat-error>
             </mat-form-field>
           </div>
-        </div>
 
-        <!-- Enhanced Per-item Decisions -->
-        <div class="per-item-section" *ngIf="viewItems.length">
-          <div class="section-title">
-            <div class="title-icon">
-              <mat-icon>playlist_add_check</mat-icon>
-            </div>
-            <div class="title-content">
-              <span class="title-text">Item-wise Approval</span>
-              <span class="title-subtitle">Review and approve individual items</span>
-            </div>
-            <div class="items-badge">{{ viewItems.length }} item(s)</div>
-          </div>
-          
-          <div formArrayName="items" class="items-container">
-            <div class="items-table-wrapper">
-              <table class="modern-table">
-                <thead>
-                  <tr>
-                    <th class="col-index">
-                      <div class="header-content">
-                        <mat-icon>tag</mat-icon>
-                        <span>#</span>
-                      </div>
-                    </th>
-                    <th class="col-type">
-                      <div class="header-content">
-                        <mat-icon>science</mat-icon>
-                        <span>Type</span>
-                      </div>
-                    </th>
-                    <th class="col-requested">
-                      <div class="header-content">
-                        <mat-icon>inventory</mat-icon>
-                        <span>Requested</span>
-                      </div>
-                    </th>
-                    <th class="col-approved">
-                      <div class="header-content">
-                        <mat-icon>check_circle</mat-icon>
-                        <span>Approved Quantity</span>
-                      </div>
-                    </th>
-                    <th class="col-remarks">
-                      <div class="header-content">
-                        <mat-icon>comment</mat-icon>
-                        <span>Remarks</span>
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let item of viewItems; let i = index" [formGroupName]="i" class="item-row">
-                    <td class="col-index">
-                      <div class="index-badge">{{ i + 1 }}</div>
-                    </td>
-                    <td class="col-type">
-                      <div class="type-badge" [ngClass]="'type-' + (item.explosiveType | lowercase)">
-                        <mat-icon class="type-icon">science</mat-icon>
-                        <span>{{ item.explosiveType }}</span>
-                      </div>
-                    </td>
-                    <td class="col-requested">
-                      <div class="quantity-display">
-                        <span class="quantity">{{ item.quantity }}</span>
-                        <span class="unit">{{ item.unit }}</span>
-                      </div>
-                    </td>
-                    <td class="col-approved">
-                      <mat-form-field appearance="outline" class="quantity-field">
-                        <mat-label>Approved</mat-label>
-                        <input matInput type="number" formControlName="approvedQuantity" 
-                               [attr.max]="item.quantity" min="0" step="any" 
-                               placeholder="0" [disabled]="isSubmitting" />
-                        <span matSuffix class="unit-suffix">{{ item.unit }}</span>
-                        <mat-hint align="end">Max: {{ item.quantity }}</mat-hint>
-                        <mat-error *ngIf="(dispatchForm.get('items')?.get(i.toString())?.get('approvedQuantity')?.errors?.['max'])">
-                          Cannot exceed {{ item.quantity }} {{ item.unit }}
-                        </mat-error>
-                      </mat-form-field>
-                    </td>
-                    <td class="col-remarks">
-                      <mat-form-field appearance="outline" class="remarks-field">
-                        <mat-label>Remarks</mat-label>
-                        <input matInput type="text" formControlName="remarks" 
-                               placeholder="Optional notes" [disabled]="isSubmitting" />
-                        <mat-icon matSuffix>edit_note</mat-icon>
-                      </mat-form-field>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <!-- Table Summary -->
-            <div class="table-summary">
-              <div class="summary-stats">
-                <div class="stat-item">
-                  <mat-icon>inventory</mat-icon>
-                  <span class="stat-label">Total Items:</span>
-                  <span class="stat-value">{{ viewItems.length }}</span>
-                </div>
-                <div class="stat-item">
-                  <mat-icon>check_circle</mat-icon>
-                  <span class="stat-label">Ready for Dispatch:</span>
-                  <span class="stat-value">{{ viewItems.length }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <mat-form-field appearance="outline" class="full-width enhanced-field">
+            <mat-label>Dispatch Notes</mat-label>
+            <textarea matInput formControlName="dispatchNotes" rows="3"
+                      placeholder="Any additional notes or special instructions"
+                      [disabled]="isSubmitting"></textarea>
+            <mat-icon matPrefix>note</mat-icon>
+            <mat-hint>Optional: Add any special handling or delivery instructions</mat-hint>
+          </mat-form-field>
         </div>
 
         <!-- Enhanced Action Buttons -->
