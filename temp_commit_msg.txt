@@ -1,1 +1,1 @@
-feat(reports): implement reports component with tab navigation and report generation features
+feat(notifications): enhance maintenance notifications component with real-time updates and filtering capabilities
