@@ -1,1 +1,1 @@
-mech
+fix: correct isLoading usage in dashboard component
