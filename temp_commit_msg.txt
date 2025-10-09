@@ -1,1 +1,1 @@
-style: format navItems for better readability in sidebar component
+feat(reports): implement reports component with prebuilt, scheduled, and custom report functionalities
