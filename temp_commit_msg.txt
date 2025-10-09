@@ -1,1 +1,9 @@
-fix: correct isLoading usage in dashboard component
+Refactor Dispatch Request Component and Update Add Stock Component
+
+- Refactored DispatchRequestComponent to integrate InventoryTransferService and handle dispatch requests for inventory transfers.
+- Updated form structure in DispatchRequestComponent to include new fields and validation.
+- Enhanced error handling and loading states in DispatchRequestComponent.
+- Modified AddStockComponent to request stock from Central Warehouse instead of Explosive Manager.
+- Updated form fields and validation in AddStockComponent to reflect new inventory transfer logic.
+- Improved user feedback with success and error messages in both components.
+- Adjusted service methods in InventoryTransferService to handle new request parameters.
