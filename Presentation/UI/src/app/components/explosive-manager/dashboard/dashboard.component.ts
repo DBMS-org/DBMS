@@ -19,8 +19,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   stats = {
     totalInventory: 24,
     safetyProtocols: 12,
-    activeOperations: 8,
-    pendingAlerts: 3,
     monthlyUsage: 156,
     safetyIncidents: 0
   };
@@ -111,14 +109,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   navigateToSafety(): void {
     this.router.navigate(['/explosive-manager/safety']);
-  }
-
-  navigateToOperations(): void {
-    this.router.navigate(['/explosive-manager/operations']);
-  }
-
-  navigateToAlerts(): void {
-    this.router.navigate(['/explosive-manager/alerts']);
   }
 
   refreshDashboard(): void {
