@@ -1,0 +1,379 @@
+<div class="stores-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">Store Management</h2>
+  </div>
+
+  <!-- Error Alert -->
+  @if (errorMessage) {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="material-icons">error</i>
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''" title="Close error message" aria-label="Close error message"></button>
+    </div>
+  }
+
+  <!-- Success Alert -->
+  @if (successMessage) {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="material-icons">check_circle</i>
+      {{ successMessage }}
+      <button type="button" class="btn-close" (click)="successMessage = ''" title="Close success message" aria-label="Close success message"></button>
+    </div>
+  }
+
+  <!-- Statistics Section -->
+  @if (statistics) {
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-icon">
+          <i class="material-icons">store</i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ statistics.totalStores }}</h3>
+          <p>Total Stores</p>
+        </div>
+      </div>
+      <div class="stat-card active">
+        <div class="stat-icon">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ statistics.activeStores }}</h3>
+          <p>Active Stores</p>
+        </div>
+      </div>
+      <div class="stat-card operational">
+        <div class="stat-icon">
+          <i class="material-icons">settings</i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ statistics.operationalStores }}</h3>
+          <p>Operational</p>
+        </div>
+      </div>
+      <div class="stat-card capacity">
+        <div class="stat-icon">
+          <i class="material-icons">inventory_2</i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ statistics.totalCapacity | number:'1.0-0' }}</h3>
+          <p>Total Capacity (tons)</p>
+        </div>
+      </div>
+      <div class="stat-card utilization">
+        <div class="stat-icon">
+          <i class="material-icons">pie_chart</i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ statistics.utilizationRate | number:'1.0-1' }}%</h3>
+          <p>Utilization Rate</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Search and Filters -->
+  <div class="search-filter-section">
+    <div class="search-box">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search stores by name, location, manager..."
+        [(ngModel)]="filters.searchTerm"
+        (input)="onSearchChange(filters.searchTerm || '')">
+    </div>
+
+    <div class="filter-section">
+      <select class="form-select" [(ngModel)]="filters.status" (change)="onFilterChange(filters)">
+        <option value="ALL">All Status</option>
+        @for (status of storeStatuses; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+
+      <select class="form-select" [(ngModel)]="filters.city" (change)="onFilterChange(filters)">
+        <option value="ALL">All Locations</option>
+        @for (location of uniqueLocations; track location) {
+          <option [value]="location">{{ location }}</option>
+        }
+      </select>
+
+      <select class="form-select" [(ngModel)]="filters.storeManager" (change)="onFilterChange(filters)">
+        <option value="ALL">All Managers</option>
+        @for (manager of uniqueManagers; track manager) {
+          <option [value]="manager">{{ manager }}</option>
+        }
+      </select>
+
+      <button class="filter-btn" (click)="clearFilters()">
+        <i class="material-icons">clear</i>
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading stores...</p>
+    </div>
+  }
+
+  <!-- Stores Table -->
+  @if (!isLoading && filteredStores.length > 0) {
+    <div class="table-container">
+      <table class="machines-table">
+        <thead>
+          <tr>
+            <th>Store Details</th>
+            <th>Location</th>
+            <th>Manager</th>
+            <th>Capacity</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (store of filteredStores; track store.id) {
+            <tr class="machine-row">
+              <td class="machine-details">
+                <div class="machine-info">
+                  <h5>{{ store.storeName }}</h5>
+                  <p>{{ store.storeAddress }}</p>
+                  <small>ID: {{ store.id }}</small>
+                </div>
+              </td>
+              <td class="machine-location">
+                <div class="location-details">
+                  <strong>{{ store.city }}</strong>
+                  <p>Region: {{ store.regionId }}</p>
+                </div>
+              </td>
+              <td class="machine-manager">
+                <div class="manager-info">
+                  <strong>{{ store.managerUserName || 'N/A' }}</strong>
+                  @if (store.managerUserContact) {
+                    <small>{{ store.managerUserContact }}</small>
+                  }
+                </div>
+              </td>
+              <td class="machine-capacity">
+                <div class="capacity-info">
+                  <strong>{{ store.storageCapacity | number:'1.0-0' }} tons</strong>
+                  <p>Occupancy: {{ store.currentOccupancy || 0 | number:'1.0-0' }} tons</p>
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill"
+                      [class]="getUtilizationClass(getUtilizationPercentage(store))"
+                      [style.width.%]="getUtilizationPercentage(store)">
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="machine-status">
+                <span class="badge" [class]="getStatusClass(store.status)">
+                  {{ store.status }}
+                </span>
+              </td>
+              <td class="machine-actions">
+                <div class="action-buttons">
+                  <button
+                    class="action-btn btn-info"
+                    (click)="openViewStoreModal(store)"
+                    title="View details">
+                    <i class="material-icons">visibility</i>
+                  </button>
+                  <button
+                    class="action-btn btn-primary"
+                    (click)="openAssignManagerModal(store)"
+                    title="Assign manager">
+                    <i class="material-icons">person_add</i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- No Stores State -->
+  @if (!isLoading && filteredStores.length === 0) {
+    <div class="no-machines">
+      <div class="empty-state">
+        <i class="material-icons">store</i>
+        <h4>No Stores Found</h4>
+        <p>{{ stores.length === 0 ? 'No stores available' : 'No stores match your current filters' }}</p>
+        @if (stores.length > 0) {
+          <button class="btn btn-secondary" (click)="clearFilters()">
+            <i class="material-icons">clear</i>
+            Clear Filters
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+
+<!-- Assign Manager Modal -->
+@if (showAssignManagerModal && selectedStore) {
+  <div class="modal-overlay" (click)="closeAllModals()">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="material-icons">person_add</i> Assign Manager</h3>
+        <button class="btn-close" (click)="closeAllModals()" title="Close" aria-label="Close">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="store-info-box">
+          <h4>{{ selectedStore.storeName }}</h4>
+          <p>{{ selectedStore.storeAddress }}</p>
+          <p><strong>Current Manager:</strong> {{ selectedStore.managerUserName || 'Not Assigned' }}</p>
+        </div>
+
+        <form [formGroup]="assignManagerForm">
+          <div class="form-group">
+            <label>Select Manager *</label>
+            <select
+              class="form-select"
+              formControlName="managerUserId"
+              [class.is-invalid]="isFieldInvalid(assignManagerForm, 'managerUserId')">
+              <option value="">-- Select Manager --</option>
+              @for (manager of availableManagers; track manager.id) {
+                <option [value]="manager.id">{{ manager.name }} ({{ manager.email }})</option>
+              }
+            </select>
+            @if (isFieldInvalid(assignManagerForm, 'managerUserId')) {
+              <div class="error-message">{{ getFieldError(assignManagerForm, 'managerUserId') }}</div>
+            }
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAllModals()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="onAssignManager()"
+          [disabled]="assignManagerForm.invalid || isLoading">
+          <i class="material-icons">person_add</i>
+          Assign Manager
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- View Store Modal -->
+@if (showViewStoreModal && selectedStore) {
+  <div class="modal-overlay" (click)="closeAllModals()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="material-icons">visibility</i> Store Details</h3>
+        <button class="btn-close" (click)="closeAllModals()" title="Close" aria-label="Close">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="store-details">
+          <div class="details-section">
+            <h4>Basic Information</h4>
+            <div class="details-grid">
+              <div class="detail-item">
+                <label>Store Name</label>
+                <span>{{ selectedStore.storeName }}</span>
+              </div>
+              <div class="detail-item full-width">
+                <label>Store Address</label>
+                <span>{{ selectedStore.storeAddress }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h4>Location Information</h4>
+            <div class="details-grid">
+              <div class="detail-item">
+                <label>City</label>
+                <span>{{ selectedStore.city }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Region</label>
+                <span>{{ selectedStore.regionId }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h4>Storage Information</h4>
+            <div class="details-grid">
+              <div class="detail-item">
+                <label>Storage Capacity</label>
+                <span>{{ selectedStore.storageCapacity | number:'1.0-0' }} tons</span>
+              </div>
+              <div class="detail-item">
+                <label>Current Occupancy</label>
+                <span>{{ selectedStore.currentOccupancy || 0 | number:'1.0-0' }} tons</span>
+              </div>
+              <div class="detail-item">
+                <label>Utilization Rate</label>
+                <span class="utilization-value" [class]="getUtilizationClass(getUtilizationPercentage(selectedStore))">
+                  {{ getUtilizationPercentage(selectedStore) }}%
+                </span>
+              </div>
+              <div class="detail-item">
+                <label>Status</label>
+                <span class="badge" [class]="getStatusClass(selectedStore.status)">
+                  {{ selectedStore.status }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h4>Manager Information</h4>
+            <div class="details-grid">
+              <div class="detail-item">
+                <label>Manager Name</label>
+                <span>{{ selectedStore.managerUserName || 'N/A' }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Manager ID</label>
+                <span>{{ selectedStore.managerUserId || 'N/A' }}</span>
+              </div>
+              @if (selectedStore.managerUserEmail) {
+                <div class="detail-item">
+                  <label>Email</label>
+                  <span>{{ selectedStore.managerUserEmail }}</span>
+                </div>
+              }
+              @if (selectedStore.managerUserContact) {
+                <div class="detail-item">
+                  <label>Contact</label>
+                  <span>{{ selectedStore.managerUserContact }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAllModals()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+}
+

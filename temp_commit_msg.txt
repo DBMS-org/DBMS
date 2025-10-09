@@ -1,9 +1,1 @@
-Refactor Dispatch Request Component and Update Add Stock Component
-
-- Refactored DispatchRequestComponent to integrate InventoryTransferService and handle dispatch requests for inventory transfers.
-- Updated form structure in DispatchRequestComponent to include new fields and validation.
-- Enhanced error handling and loading states in DispatchRequestComponent.
-- Modified AddStockComponent to request stock from Central Warehouse instead of Explosive Manager.
-- Updated form fields and validation in AddStockComponent to reflect new inventory transfer logic.
-- Improved user feedback with success and error messages in both components.
-- Adjusted service methods in InventoryTransferService to handle new request parameters.
+feat: Update Dispatch Info and Request History components for improved data handling and UI enhancements - Refactor dispatch-info.component.html and dispatch-info.component.ts to include new fields and loading states - Modify request-history.component.html and request-history.component.ts to streamline request filtering and display - Enhance view-details.component.html and view-details.component.ts for better request detail presentation
