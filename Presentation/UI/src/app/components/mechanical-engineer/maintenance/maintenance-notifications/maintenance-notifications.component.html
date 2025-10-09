@@ -1,14 +1,275 @@
 <div class="notifications-container">
-  <h2>Notifications</h2>
-  <ul class="notification-list">
-    @for (notif of notifications; track notif.id) {
-      <li class="notification-item">
-        <span class="message">{{ notif.message }}</span>
-        <span class="date">{{ notif.date }}</span>
-      </li>
+  <!-- Header -->
+  <div class="notifications-header">
+    <div class="header-content">
+      <h2>
+        <mat-icon>notifications</mat-icon>
+        Notifications
+        @if (getUnreadCount() > 0) {
+          <span class="unread-badge">{{ getUnreadCount() }}</span>
+        }
+      </h2>
+      <p>Stay updated with job assignments, urgent breakdowns, and system notifications</p>
+    </div>
+    <div class="header-actions">
+      <button mat-button (click)="markAllAsRead()" [disabled]="getUnreadCount() === 0">
+        <mat-icon>done_all</mat-icon>
+        Mark All as Read
+      </button>
+      <button mat-icon-button (click)="toggleSettings()" [class.active]="showSettings()">
+        <mat-icon>settings</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Real-time indicator -->
+  <div class="status-bar">
+    <div class="status-indicator" [class.online]="isOnline()">
+      <mat-icon>{{ isOnline() ? 'wifi' : 'wifi_off' }}</mat-icon>
+      <span>{{ isOnline() ? 'Connected' : 'Offline' }}</span>
+    </div>
+    <div class="last-update">
+      Last updated: {{ lastUpdate() | date:'short' }}
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  @if (showSettings()) {
+    <div class="settings-panel">
+      <h3>Notification Settings</h3>
+      <div class="settings-grid">
+        <div class="setting-group">
+          <h4>New Assignment</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().newAssignmentPush"
+                (change)="updateSetting('newAssignmentPush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().newAssignmentEmail"
+                (change)="updateSetting('newAssignmentEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Urgent Breakdown</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().urgentBreakdownPush"
+                (change)="updateSetting('urgentBreakdownPush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().urgentBreakdownEmail"
+                (change)="updateSetting('urgentBreakdownEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Overdue Jobs</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().overdueJobsPush"
+                (change)="updateSetting('overdueJobsPush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().overdueJobsEmail"
+                (change)="updateSetting('overdueJobsEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Job Completion</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().jobCompletionPush"
+                (change)="updateSetting('jobCompletionPush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().jobCompletionEmail"
+                (change)="updateSetting('jobCompletionEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Verification Required</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().verificationRequiredPush"
+                (change)="updateSetting('verificationRequiredPush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().verificationRequiredEmail"
+                (change)="updateSetting('verificationRequiredEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Urgency Level Filter</h4>
+          <div class="setting-item">
+            <select
+              [value]="settings().urgencyLevel"
+              (change)="updateSetting('urgencyLevel', $any($event.target).value)">
+              <option value="ALL">All notifications</option>
+              <option value="HIGH">High priority only</option>
+              <option value="CRITICAL">Critical only</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'all'"
+      (click)="setFilter('all')">
+      All
+      <span class="count">{{ notifications().length }}</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'unread'"
+      (click)="setFilter('unread')">
+      Unread
+      <span class="count">{{ getUnreadCount() }}</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'assignment'"
+      (click)="setFilter('assignment')">
+      <mat-icon>assignment</mat-icon>
+      Assignments
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'urgent'"
+      (click)="setFilter('urgent')">
+      <mat-icon>error</mat-icon>
+      Urgent
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'overdue'"
+      (click)="setFilter('overdue')">
+      <mat-icon>schedule</mat-icon>
+      Overdue
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'completion'"
+      (click)="setFilter('completion')">
+      <mat-icon>check_circle</mat-icon>
+      Completed
+    </button>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-list">
+    @if (filteredNotifications().length === 0) {
+      <div class="empty-state">
+        <mat-icon>notifications_none</mat-icon>
+        <h3>No Notifications</h3>
+        <p>You're all caught up!</p>
+      </div>
+    } @else {
+      @for (notification of filteredNotifications(); track notification.id) {
+        <div
+          class="notification-item"
+          [class]="getNotificationClass(notification)"
+          [class.unread]="!notification.read"
+          (click)="navigateToContext(notification)">
+          <div class="notification-icon">
+            <mat-icon>{{ notification.icon }}</mat-icon>
+          </div>
+          <div class="notification-content">
+            <div class="notification-header">
+              <h4>{{ notification.title }}</h4>
+              <span class="notification-time">{{ getTimeAgo(notification.date) }}</span>
+            </div>
+            <p>{{ notification.message }}</p>
+            <div class="notification-meta">
+              <mat-chip class="priority-chip" [class]="'priority-' + notification.priority.toLowerCase()">
+                {{ notification.priority }}
+              </mat-chip>
+              @if (notification.relatedJobId) {
+                <span class="meta-info">
+                  <mat-icon>assignment</mat-icon>
+                  {{ notification.relatedJobId }}
+                </span>
+              }
+              @if (notification.relatedMachineId) {
+                <span class="meta-info">
+                  <mat-icon>precision_manufacturing</mat-icon>
+                  {{ notification.relatedMachineId }}
+                </span>
+              }
+            </div>
+          </div>
+          <div class="notification-actions">
+            @if (!notification.read) {
+              <button
+                mat-icon-button
+                (click)="markAsRead(notification); $event.stopPropagation()"
+                title="Mark as read">
+                <mat-icon>done</mat-icon>
+              </button>
+            }
+            <button
+              mat-icon-button
+              (click)="deleteNotification(notification); $event.stopPropagation()"
+              title="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
     }
-    @empty {
-      <li>No notifications available.</li>
-    }
-  </ul>
+  </div>
 </div>
