@@ -87,25 +87,6 @@
               </select>
             </div>
             
-            <!-- Explosive Type Filter -->
-            <div class="form-group">
-              <label>
-                <i class="material-icons">science</i>
-                Explosive Type
-              </label>
-              <select
-                title="Filter by explosive type"
-                class="form-select"
-                [(ngModel)]="filterType"
-                (change)="applyFilters()">
-                <option value="">All Types</option>
-                <option value="ANFO">ANFO</option>
-                <option value="EMULSION">Emulsion</option>
-                <option value="DYNAMITE">Dynamite</option>
-                <option value="SLURRY">Slurry</option>
-              </select>
-            </div>
-            
             <!-- Date From -->
             <div class="form-group">
               <label>
@@ -165,13 +146,6 @@
                   <i class="material-icons">close</i>
                 </button>
               </span>
-              <span class="filter-tag" *ngIf="filterType">
-                <i class="material-icons">science</i>
-                Type: {{ filterType }}
-                <button (click)="filterType = ''; applyFilters()" class="remove-filter">
-                  <i class="material-icons">close</i>
-                </button>
-              </span>
               <span class="filter-tag" *ngIf="filterDateFrom">
                 <i class="material-icons">date_range</i>
                 From: {{ filterDateFrom }}
@@ -219,16 +193,15 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th></th>
-                  <th>Request ID</th>
-                  <th>Date</th>
+                  <th>Request Number</th>
+                  <th>Request Date</th>
                   <th>Required Date</th>
                   <th>Status</th>
-                  <th>Dispatched</th>
-                  <th>Received</th>
-                  <th>Requested Items</th>
-                  <th>Items</th>
-                  <th>Justification</th>
+                  <th>Dispatch Status</th>
+                  <th>Delivery Status</th>
+                  <th>Explosive Type</th>
+                  <th>Final Quantity</th>
+                  <th>Notes</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -236,45 +209,37 @@
                 <ng-container *ngFor="let request of filteredRequests">
                   <tr>
                     <td>
-                      <button class="btn btn-sm btn-outline-secondary" (click)="toggleExpanded(request.id)" [attr.aria-expanded]="isExpanded(request.id)">
-                        <i class="material-icons">{{ isExpanded(request.id) ? 'expand_less' : 'expand_more' }}</i>
-                      </button>
-                    </td>
-                    <td>
-                      <strong>{{ request.id }}</strong>
+                      <strong>{{ request.requestNumber }}</strong>
                     </td>
                     <td>{{ formatDate(request.requestDate) }}</td>
-                    <td>{{ formatDate(request.requiredDate) }}</td>
+                    <td>{{ formatDate(request.requiredByDate) }}</td>
                     <td>
                       <span class="badge" [class]="getStatusClass(request.status)">
-                        {{ request.status }}
+                        {{ request.statusName }}
                       </span>
                     </td>
                     <td>
-                      <span class="badge" [class]="request.dispatched ? 'badge-success' : 'badge-warning'">
-                        {{ request.dispatched ? 'Dispatched' : 'Not Dispatched' }}
+                      <span class="badge" [class]="request.dispatchDate ? 'badge-success' : 'badge-warning'">
+                        {{ request.dispatchDate ? 'Dispatched' : 'Not Dispatched' }}
                       </span>
-                      <div *ngIf="request.dispatched && request.dispatchedDate" class="text-muted small mt-1">
-                        {{ formatDate(request.dispatchedDate) }}
+                      <div *ngIf="request.dispatchDate" class="text-muted small mt-1">
+                        {{ formatDate(request.dispatchDate) }}
                       </div>
                     </td>
                     <td>
-                      <span class="badge" [class]="request.fulfillmentDate ? 'badge-success' : 'badge-secondary'">
-                        {{ request.fulfillmentDate ? 'Received' : 'Not Received' }}
+                      <span class="badge" [class]="request.deliveryConfirmedDate ? 'badge-success' : 'badge-secondary'">
+                        {{ request.deliveryConfirmedDate ? 'Received' : 'Not Received' }}
                       </span>
-                      <div *ngIf="request.fulfillmentDate" class="text-muted small mt-1">
-                        {{ formatDate(request.fulfillmentDate) }}
+                      <div *ngIf="request.deliveryConfirmedDate" class="text-muted small mt-1">
+                        {{ formatDate(request.deliveryConfirmedDate) }}
                       </div>
                     </td>
                     <td>
-                      <div *ngFor="let item of request.requestedItems; let i = index">
-                        <small class="text-muted">{{ i + 1 }}.</small> {{ item.explosiveType }} 
-                        <span class="text-muted">({{ item.requestedQuantity }} {{ item.unit }})</span>
-                        <div *ngIf="request.requestedItems.length > 1" class="mt-1"></div>
-                      </div>
+                      {{ request.explosiveTypeName }}
+                      <span class="text-muted">({{ request.requestedQuantity }} {{ request.unit }})</span>
                     </td>
-                    <td>{{ request.requestedItems.length }} item(s)</td>
-                    <td class="purpose-cell">{{ request.justification }}</td>
+                    <td>{{ request.finalQuantity }} {{ request.unit }}</td>
+                    <td class="purpose-cell">{{ request.requestNotes || '-' }}</td>
                     <td>
                       <div class="action-buttons">
                         <button 
@@ -283,55 +248,25 @@
                           title="View Details">
                           <i class="material-icons">visibility</i>
                         </button>
-                        <button 
-                          class="action-btn dispatch-btn" 
+                        <button
+                          class="action-btn dispatch-btn"
                           (click)="openDispatchInfo(request)"
-                          *ngIf="request.dispatched"
+                          *ngIf="request.dispatchDate"
                           title="View Dispatch Information">
                           <mat-icon>local_shipping</mat-icon>
                         </button>
-                        <button 
-                          *ngIf="request.status === StockRequestStatus.PENDING"
+                        <button
+                          *ngIf="request.status === TransferRequestStatus.Pending"
                           class="btn btn-sm btn-outline-warning"
                           title="Edit Request">
                           <i class="material-icons">edit</i>
                         </button>
-                        <button 
-                          *ngIf="request.status === StockRequestStatus.PENDING"
+                        <button
+                          *ngIf="request.status === TransferRequestStatus.Pending"
                           class="btn btn-sm btn-outline-danger"
                           title="Cancel Request">
                           <i class="material-icons">cancel</i>
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                  
-                  <!-- Expanded row: nested items table -->
-                  <tr *ngIf="isExpanded(request.id)">
-                    <td colspan="11" class="nested-row">
-                      <div class="nested-table-wrapper">
-                        <table class="table table-sm table-bordered nested-table">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>Type</th>
-                              <th>Quantity</th>
-                              <th>Unit</th>
-                              <th>Purpose</th>
-                              <th>Specifications</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr *ngFor="let item of request.requestedItems; let idx = index">
-                              <td>{{ idx + 1 }}</td>
-                              <td>{{ item.explosiveType }}</td>
-                              <td>{{ item.requestedQuantity }}</td>
-                              <td>{{ item.unit }}</td>
-                              <td>{{ item.purpose }}</td>
-                              <td>{{ item.specifications || '-' }}</td>
-                            </tr>
-                          </tbody>
-                        </table>
                       </div>
                     </td>
                   </tr>
