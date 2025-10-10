@@ -1,1 +1,1 @@
-refactor(notifications): update notification types and settings for maintenance alerts
+refactor(notifications): update notification settings and filter tabs for clarity and consistency
