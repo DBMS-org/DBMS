@@ -1,1 +1,1 @@
-refactor(routes): clean up maintenance routes and restore notifications path
+refactor(sidebar): remove outdated comment and tidy up navigation items
