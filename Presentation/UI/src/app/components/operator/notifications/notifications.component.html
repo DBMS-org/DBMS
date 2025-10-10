@@ -1,0 +1,122 @@
+<div class="notifications-container">
+  <!-- Header -->
+  <div class="notifications-header">
+    <div class="header-content">
+      <h2>
+        <mat-icon>notifications</mat-icon>
+        Notifications
+        @if (getUnreadCount() > 0) {
+          <span class="unread-badge">{{ getUnreadCount() }}</span>
+        }
+      </h2>
+      <p>Stay updated with drill patterns, site assignments, and project updates</p>
+    </div>
+    <div class="header-actions">
+      <button mat-button (click)="markAllAsRead()" [disabled]="getUnreadCount() === 0">
+        <mat-icon>done_all</mat-icon>
+        Mark All as Read
+      </button>
+    </div>
+  </div>
+
+  <!-- Real-time indicator -->
+  <div class="status-bar">
+    <div class="status-indicator" [class.online]="isOnline()">
+      <mat-icon>{{ isOnline() ? 'wifi' : 'wifi_off' }}</mat-icon>
+      <span>{{ isOnline() ? 'Connected' : 'Offline' }}</span>
+    </div>
+    <div class="last-update">
+      Last updated: {{ lastUpdate() | date:'short' }}
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'all'"
+      (click)="setFilter('all')">
+      All
+      <span class="count">{{ notifications().length }}</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'unread'"
+      (click)="setFilter('unread')">
+      Unread
+      <span class="count">{{ getUnreadCount() }}</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'pattern'"
+      (click)="setFilter('pattern')">
+      <mat-icon>grid_on</mat-icon>
+      Drill Patterns
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'maintenance'"
+      (click)="setFilter('maintenance')">
+      <mat-icon>build</mat-icon>
+      Maintenance
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'project'"
+      (click)="setFilter('project')">
+      <mat-icon>assignment</mat-icon>
+      Project Updates
+    </button>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-list">
+    @if (filteredNotifications().length === 0) {
+      <div class="empty-state">
+        <mat-icon>notifications_none</mat-icon>
+        <h3>No Notifications</h3>
+        <p>You're all caught up!</p>
+      </div>
+    } @else {
+      @for (notification of filteredNotifications(); track notification.id) {
+        <div
+          class="notification-item"
+          [class]="getNotificationClass(notification)"
+          [class.unread]="!notification.read"
+          (click)="navigateToContext(notification)">
+          <div class="notification-icon">
+            <mat-icon>{{ notification.icon }}</mat-icon>
+          </div>
+          <div class="notification-content">
+            <div class="notification-header">
+              <h4>{{ notification.title }}</h4>
+              <span class="notification-time">{{ getTimeAgo(notification.date) }}</span>
+            </div>
+            <p>{{ notification.message }}</p>
+            <div class="notification-meta">
+              <mat-chip class="priority-chip" [class]="'priority-' + notification.priority.toLowerCase()">
+                {{ notification.priority }}
+              </mat-chip>
+            </div>
+          </div>
+          <div class="notification-actions">
+            @if (!notification.read) {
+              <button
+                mat-icon-button
+                (click)="markAsRead(notification); $event.stopPropagation()"
+                title="Mark as read">
+                <mat-icon>done</mat-icon>
+              </button>
+            }
+            <button
+              mat-icon-button
+              (click)="deleteNotification(notification); $event.stopPropagation()"
+              title="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
