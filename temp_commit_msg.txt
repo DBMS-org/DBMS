@@ -1,1 +1,1 @@
-feat(notifications): add operator notifications component with filtering and real-time updates
+feat(notifications): add styles for notifications component including layout and interactive elements
