@@ -1,1 +1,1 @@
-refactor(reports): streamline report interfaces and enhance filter functionality
+refactor(reports): simplify reports component by removing unused tabs and enhancing filter functionality
