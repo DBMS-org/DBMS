@@ -1,3 +1,1 @@
-refactor(explosive-manager): remove operations and alerts functionality
-
-The operations and alerts features were removed from the sidebar, dashboard stats, and navigation as they are no longer needed in the application. This simplifies the UI and reduces unnecessary code.
+fix(sidebar): correct route and matchPattern for Maintenance Jobs and Notifications
