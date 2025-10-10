@@ -1,1 +1,1 @@
-refactor(dashboard): enhance layout and update terminology for clarity
+refactor(routes): clean up maintenance routes and restore notifications path
