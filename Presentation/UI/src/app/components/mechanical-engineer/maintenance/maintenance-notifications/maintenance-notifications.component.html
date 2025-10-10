@@ -39,13 +39,13 @@
       <h3>Notification Settings</h3>
       <div class="settings-grid">
         <div class="setting-group">
-          <h4>New Assignment</h4>
+          <h4>Scheduled Maintenance</h4>
           <div class="setting-item">
             <label>
               <input
                 type="checkbox"
-                [checked]="settings().newAssignmentPush"
-                (change)="updateSetting('newAssignmentPush', $any($event.target).checked)">
+                [checked]="settings().scheduledMaintenancePush"
+                (change)="updateSetting('scheduledMaintenancePush', $any($event.target).checked)">
               Push Notification
             </label>
           </div>
@@ -53,21 +53,21 @@
             <label>
               <input
                 type="checkbox"
-                [checked]="settings().newAssignmentEmail"
-                (change)="updateSetting('newAssignmentEmail', $any($event.target).checked)">
+                [checked]="settings().scheduledMaintenanceEmail"
+                (change)="updateSetting('scheduledMaintenanceEmail', $any($event.target).checked)">
               Email Notification
             </label>
           </div>
         </div>
 
         <div class="setting-group">
-          <h4>Urgent Breakdown</h4>
+          <h4>Service Alerts</h4>
           <div class="setting-item">
             <label>
               <input
                 type="checkbox"
-                [checked]="settings().urgentBreakdownPush"
-                (change)="updateSetting('urgentBreakdownPush', $any($event.target).checked)">
+                [checked]="settings().serviceAlertPush"
+                (change)="updateSetting('serviceAlertPush', $any($event.target).checked)">
               Push Notification
             </label>
           </div>
@@ -75,21 +75,21 @@
             <label>
               <input
                 type="checkbox"
-                [checked]="settings().urgentBreakdownEmail"
-                (change)="updateSetting('urgentBreakdownEmail', $any($event.target).checked)">
+                [checked]="settings().serviceAlertEmail"
+                (change)="updateSetting('serviceAlertEmail', $any($event.target).checked)">
               Email Notification
             </label>
           </div>
         </div>
 
         <div class="setting-group">
-          <h4>Overdue Jobs</h4>
+          <h4>Low Stock Alerts</h4>
           <div class="setting-item">
             <label>
               <input
                 type="checkbox"
-                [checked]="settings().overdueJobsPush"
-                (change)="updateSetting('overdueJobsPush', $any($event.target).checked)">
+                [checked]="settings().lowStockPush"
+                (change)="updateSetting('lowStockPush', $any($event.target).checked)">
               Push Notification
             </label>
           </div>
@@ -97,21 +97,21 @@
             <label>
               <input
                 type="checkbox"
-                [checked]="settings().overdueJobsEmail"
-                (change)="updateSetting('overdueJobsEmail', $any($event.target).checked)">
+                [checked]="settings().lowStockEmail"
+                (change)="updateSetting('lowStockEmail', $any($event.target).checked)">
               Email Notification
             </label>
           </div>
         </div>
 
         <div class="setting-group">
-          <h4>Job Completion</h4>
+          <h4>Maintenance Completion</h4>
           <div class="setting-item">
             <label>
               <input
                 type="checkbox"
-                [checked]="settings().jobCompletionPush"
-                (change)="updateSetting('jobCompletionPush', $any($event.target).checked)">
+                [checked]="settings().maintenanceCompletionPush"
+                (change)="updateSetting('maintenanceCompletionPush', $any($event.target).checked)">
               Push Notification
             </label>
           </div>
@@ -119,30 +119,8 @@
             <label>
               <input
                 type="checkbox"
-                [checked]="settings().jobCompletionEmail"
-                (change)="updateSetting('jobCompletionEmail', $any($event.target).checked)">
-              Email Notification
-            </label>
-          </div>
-        </div>
-
-        <div class="setting-group">
-          <h4>Verification Required</h4>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().verificationRequiredPush"
-                (change)="updateSetting('verificationRequiredPush', $any($event.target).checked)">
-              Push Notification
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().verificationRequiredEmail"
-                (change)="updateSetting('verificationRequiredEmail', $any($event.target).checked)">
+                [checked]="settings().maintenanceCompletionEmail"
+                (change)="updateSetting('maintenanceCompletionEmail', $any($event.target).checked)">
               Email Notification
             </label>
           </div>
@@ -182,24 +160,24 @@
     </button>
     <button
       class="filter-tab"
-      [class.active]="selectedFilter() === 'assignment'"
-      (click)="setFilter('assignment')">
-      <mat-icon>assignment</mat-icon>
-      Assignments
+      [class.active]="selectedFilter() === 'scheduled'"
+      (click)="setFilter('scheduled')">
+      <mat-icon>event</mat-icon>
+      Scheduled
     </button>
     <button
       class="filter-tab"
-      [class.active]="selectedFilter() === 'urgent'"
-      (click)="setFilter('urgent')">
-      <mat-icon>error</mat-icon>
-      Urgent
+      [class.active]="selectedFilter() === 'service-alert'"
+      (click)="setFilter('service-alert')">
+      <mat-icon>warning</mat-icon>
+      Service Alerts
     </button>
     <button
       class="filter-tab"
-      [class.active]="selectedFilter() === 'overdue'"
-      (click)="setFilter('overdue')">
-      <mat-icon>schedule</mat-icon>
-      Overdue
+      [class.active]="selectedFilter() === 'low-stock'"
+      (click)="setFilter('low-stock')">
+      <mat-icon>inventory_2</mat-icon>
+      Low Stock
     </button>
     <button
       class="filter-tab"

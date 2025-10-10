@@ -1,1 +1,1 @@
-refactor(reports): simplify reports component by removing unused tabs and enhancing filter functionality
+refactor(notifications): update notification types and settings for maintenance alerts
