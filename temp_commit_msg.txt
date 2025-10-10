@@ -1,1 +1,1 @@
-refactor(maintenance): remove header and navigation for a cleaner layout
+refactor(dashboard): enhance layout and update terminology for clarity
