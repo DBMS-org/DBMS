@@ -1,1 +1,1 @@
-refactor(notifications): update notification settings and filter tabs for clarity and consistency
+refactor(maintenance): remove header and navigation for a cleaner layout
