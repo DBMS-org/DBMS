@@ -1,1 +1,1 @@
-fix(sidebar): correct route and matchPattern for Maintenance Jobs and Notifications
+refactor(reports): streamline report interfaces and enhance filter functionality
