@@ -29,10 +29,10 @@ export class SidebarComponent {
       route: '/mechanical-engineer/dashboard'
     },
     {
-      icon: 'assignment',
+      icon: 'build',
       label: 'Maintenance Jobs',
       route: '/mechanical-engineer/maintenance/jobs',
-      matchPattern: '/mechanical-engineer/maintenance/jobs'
+      matchPattern: '/mechanical-engineer/maintenance'
     },
     {
       icon: 'assessment',
@@ -43,8 +43,8 @@ export class SidebarComponent {
     {
       icon: 'notifications',
       label: 'Notifications',
-      route: '/mechanical-engineer/maintenance/notifications',
-      matchPattern: '/mechanical-engineer/maintenance/notifications'
+      route: '/mechanical-engineer/notifications',
+      matchPattern: '/mechanical-engineer/notifications'
     }
   ];
 
