@@ -9,8 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
 
 interface Notification {
   id: string;
-  type: 'ASSIGNMENT' | 'URGENT' | 'OVERDUE' | 'COMPLETION' | 'VERIFICATION' | 'GENERAL';
-  trigger: 'NEW_ASSIGNMENT' | 'URGENT_BREAKDOWN' | 'OVERDUE_JOB' | 'JOB_COMPLETED' | 'VERIFICATION_REQUIRED' | 'GENERAL_UPDATE';
+  type: 'SCHEDULED_MAINTENANCE' | 'SERVICE_ALERT' | 'LOW_STOCK' | 'MAINTENANCE_COMPLETION';
   title: string;
   message: string;
   date: Date;
@@ -18,23 +17,21 @@ interface Notification {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   relatedJobId?: string;
   relatedMachineId?: string;
-  relatedReportId?: string;
+  relatedAccessoryId?: string;
   actionUrl?: string;
   icon: string;
   color: string;
 }
 
 interface NotificationSettings {
-  newAssignmentPush: boolean;
-  newAssignmentEmail: boolean;
-  urgentBreakdownPush: boolean;
-  urgentBreakdownEmail: boolean;
-  overdueJobsPush: boolean;
-  overdueJobsEmail: boolean;
-  jobCompletionPush: boolean;
-  jobCompletionEmail: boolean;
-  verificationRequiredPush: boolean;
-  verificationRequiredEmail: boolean;
+  scheduledMaintenancePush: boolean;
+  scheduledMaintenanceEmail: boolean;
+  serviceAlertPush: boolean;
+  serviceAlertEmail: boolean;
+  lowStockPush: boolean;
+  lowStockEmail: boolean;
+  maintenanceCompletionPush: boolean;
+  maintenanceCompletionEmail: boolean;
   urgencyLevel: 'ALL' | 'HIGH' | 'CRITICAL';
 }
 
@@ -60,20 +57,18 @@ export class MaintenanceNotificationsComponent implements OnInit {
   filteredNotifications = signal<Notification[]>([]);
 
   // Filter state
-  selectedFilter = signal<'all' | 'unread' | 'assignment' | 'urgent' | 'overdue' | 'completion'>('all');
+  selectedFilter = signal<'all' | 'unread' | 'scheduled' | 'service-alert' | 'low-stock' | 'completion'>('all');
 
   // Settings
   settings = signal<NotificationSettings>({
-    newAssignmentPush: true,
-    newAssignmentEmail: true,
-    urgentBreakdownPush: true,
-    urgentBreakdownEmail: true,
-    overdueJobsPush: true,
-    overdueJobsEmail: false,
-    jobCompletionPush: true,
-    jobCompletionEmail: false,
-    verificationRequiredPush: true,
-    verificationRequiredEmail: true,
+    scheduledMaintenancePush: true,
+    scheduledMaintenanceEmail: true,
+    serviceAlertPush: true,
+    serviceAlertEmail: true,
+    lowStockPush: true,
+    lowStockEmail: false,
+    maintenanceCompletionPush: true,
+    maintenanceCompletionEmail: false,
     urgencyLevel: 'ALL'
   });
 
@@ -97,91 +92,84 @@ export class MaintenanceNotificationsComponent implements OnInit {
     const mockNotifications: Notification[] = [
       {
         id: 'notif-001',
-        type: 'URGENT',
-        trigger: 'URGENT_BREAKDOWN',
-        title: 'Urgent Breakdown - Drill Rig DR-102',
-        message: 'Hydraulic system failure detected on Drill Rig DR-102. Immediate attention required.',
+        type: 'SCHEDULED_MAINTENANCE',
+        title: 'Maintenance Scheduled',
+        message: 'Machine Drill Rig DR-102 scheduled for maintenance on 2024-02-15.',
         date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
         read: false,
-        priority: 'HIGH',
+        priority: 'MEDIUM',
         relatedJobId: 'JOB-001',
         relatedMachineId: 'DR-102',
         actionUrl: '/mechanical-engineer/maintenance/jobs',
-        icon: 'error',
-        color: 'critical'
-      },
-      {
-        id: 'notif-002',
-        type: 'ASSIGNMENT',
-        trigger: 'NEW_ASSIGNMENT',
-        title: 'New Job Assigned',
-        message: 'You have been assigned to maintenance job MNT-2024-002 for Loader CAT 966M.',
-        date: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-        read: false,
-        priority: 'MEDIUM',
-        relatedJobId: 'JOB-002',
-        relatedMachineId: 'LD-103',
-        actionUrl: '/mechanical-engineer/maintenance/jobs',
-        icon: 'assignment',
+        icon: 'event',
         color: 'primary'
       },
       {
-        id: 'notif-003',
-        type: 'OVERDUE',
-        trigger: 'OVERDUE_JOB',
-        title: 'Overdue Maintenance Job',
-        message: 'Job MNT-2024-101 for Excavator EX-005 is overdue by 2 days.',
-        date: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+        id: 'notif-002',
+        type: 'SERVICE_ALERT',
+        title: 'Service Alert',
+        message: 'Loader CAT 966M approaching service threshold. Maintenance required soon.',
+        date: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
         read: false,
         priority: 'HIGH',
-        relatedJobId: 'JOB-101',
-        relatedMachineId: 'EX-005',
+        relatedMachineId: 'LD-103',
         actionUrl: '/mechanical-engineer/maintenance/jobs',
-        icon: 'schedule',
+        icon: 'warning',
         color: 'warning'
       },
       {
-        id: 'notif-004',
-        type: 'VERIFICATION',
-        trigger: 'VERIFICATION_REQUIRED',
-        title: 'Verification Required',
-        message: 'Job MNT-2024-095 requires QA verification before closure.',
-        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-        read: true,
-        priority: 'MEDIUM',
-        relatedJobId: 'JOB-095',
-        actionUrl: '/mechanical-engineer/maintenance/jobs',
-        icon: 'verified',
-        color: 'accent'
+        id: 'notif-003',
+        type: 'LOW_STOCK',
+        title: 'Low Stock Alert',
+        message: 'Low stock alert: Hydraulic Filter below threshold. Only 5 units remaining.',
+        date: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+        read: false,
+        priority: 'HIGH',
+        relatedAccessoryId: 'SP-001',
+        actionUrl: '/mechanical-engineer/dashboard',
+        icon: 'inventory_2',
+        color: 'critical'
       },
       {
-        id: 'notif-005',
-        type: 'COMPLETION',
-        trigger: 'JOB_COMPLETED',
-        title: 'Job Completed',
-        message: 'Sarah Johnson completed maintenance job MNT-2024-102 for Drill Rig DR-102.',
-        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        id: 'notif-004',
+        type: 'MAINTENANCE_COMPLETION',
+        title: 'Maintenance Completed',
+        message: 'Maintenance completed for Excavator Komatsu PC200.',
+        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
         read: true,
         priority: 'LOW',
-        relatedJobId: 'JOB-102',
-        relatedMachineId: 'DR-102',
+        relatedJobId: 'JOB-095',
+        relatedMachineId: 'EX-005',
         actionUrl: '/mechanical-engineer/maintenance/jobs',
         icon: 'check_circle',
         color: 'success'
       },
       {
+        id: 'notif-005',
+        type: 'SCHEDULED_MAINTENANCE',
+        title: 'Maintenance Scheduled',
+        message: 'Machine Loader Caterpillar 980M scheduled for maintenance on 2024-02-10.',
+        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        read: true,
+        priority: 'MEDIUM',
+        relatedJobId: 'JOB-102',
+        relatedMachineId: 'LD-201',
+        actionUrl: '/mechanical-engineer/maintenance/jobs',
+        icon: 'event',
+        color: 'primary'
+      },
+      {
         id: 'notif-006',
-        type: 'GENERAL',
-        trigger: 'GENERAL_UPDATE',
-        title: 'System Notification',
-        message: 'Weekly maintenance report is now available for download.',
+        type: 'LOW_STOCK',
+        title: 'Low Stock Alert',
+        message: 'Low stock alert: Engine Oil Filter below threshold.',
         date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
         read: true,
-        priority: 'LOW',
-        relatedReportId: 'RPT-001',
-        actionUrl: '/mechanical-engineer/reports',
-        icon: 'info',
-        color: 'info'
+        priority: 'MEDIUM',
+        relatedAccessoryId: 'SP-002',
+        actionUrl: '/mechanical-engineer/dashboard',
+        icon: 'inventory_2',
+        color: 'warning'
       }
     ];
 
@@ -201,17 +189,17 @@ export class MaintenanceNotificationsComponent implements OnInit {
       case 'unread':
         filtered = allNotifications.filter(n => !n.read);
         break;
-      case 'assignment':
-        filtered = allNotifications.filter(n => n.type === 'ASSIGNMENT');
+      case 'scheduled':
+        filtered = allNotifications.filter(n => n.type === 'SCHEDULED_MAINTENANCE');
         break;
-      case 'urgent':
-        filtered = allNotifications.filter(n => n.type === 'URGENT');
+      case 'service-alert':
+        filtered = allNotifications.filter(n => n.type === 'SERVICE_ALERT');
         break;
-      case 'overdue':
-        filtered = allNotifications.filter(n => n.type === 'OVERDUE');
+      case 'low-stock':
+        filtered = allNotifications.filter(n => n.type === 'LOW_STOCK');
         break;
       case 'completion':
-        filtered = allNotifications.filter(n => n.type === 'COMPLETION');
+        filtered = allNotifications.filter(n => n.type === 'MAINTENANCE_COMPLETION');
         break;
       default:
         filtered = allNotifications;
@@ -220,7 +208,7 @@ export class MaintenanceNotificationsComponent implements OnInit {
     this.filteredNotifications.set(filtered);
   }
 
-  setFilter(filter: 'all' | 'unread' | 'assignment' | 'urgent' | 'overdue' | 'completion') {
+  setFilter(filter: 'all' | 'unread' | 'scheduled' | 'service-alert' | 'low-stock' | 'completion') {
     this.selectedFilter.set(filter);
     this.applyFilter();
   }
