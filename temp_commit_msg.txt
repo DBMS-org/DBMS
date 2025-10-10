@@ -1,1 +1,1 @@
-refactor(sidebar): remove outdated comment and tidy up navigation items
+feat(notifications): add operator notifications component with filtering and real-time updates
