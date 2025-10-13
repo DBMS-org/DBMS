@@ -1144,3 +1144,110 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Maintenance Schedule Table */
+.maintenance-schedule-panel {
+  background: var(--me-card-bg);
+  border-radius: var(--me-card-radius);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--me-shadow);
+  border: 1px solid #e9ecef;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1.5rem 0;
+    color: var(--me-text);
+    font-size: 1.3rem;
+    font-weight: 600;
+
+    i {
+      color: var(--me-primary);
+    }
+  }
+
+  .empty-message {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-size: 1rem;
+  }
+}
+
+.maintenance-table {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    thead {
+      background: linear-gradient(135deg, var(--me-primary) 0%, var(--me-primary-2) 100%);
+      color: white;
+
+      th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        &:first-child {
+          border-top-left-radius: 10px;
+        }
+
+        &:last-child {
+          border-top-right-radius: 10px;
+        }
+      }
+    }
+
+    tbody {
+      tr {
+        background: white;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+          transform: translateX(2px);
+        }
+
+        td {
+          padding: 1rem;
+          border-bottom: 1px solid #f1f3f4;
+          color: #495057;
+          font-size: 0.95rem;
+        }
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+    }
+
+    .status-badge {
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      display: inline-block;
+
+      &.maintenance_scheduled {
+        background: #fff7ed;
+        color: #d97706;
+        border: 1px solid #fed7aa;
+      }
+
+      &.under_maintenance {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #93c5fd;
+      }
+    }
+  }
+}

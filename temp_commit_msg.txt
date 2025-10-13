@@ -1,1 +1,1 @@
-changes in frontend of machine manager and mechanical engineer
+some html,css .json updates
