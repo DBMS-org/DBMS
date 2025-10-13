@@ -1,1 +1,1 @@
-refactor(machine-manager): enhance dashboard with refined cards and animations
+refactor(operator): modernize navbar with glassmorphism and improved spacing
