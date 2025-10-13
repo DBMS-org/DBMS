@@ -1,1 +1,1 @@
-refactor(operator): modernize navbar with glassmorphism and improved spacing
+refactor(operator): enhance dashboard with modern cards, shadows, and hover effects
