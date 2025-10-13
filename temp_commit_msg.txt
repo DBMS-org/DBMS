@@ -1,1 +1,1 @@
-refactor(machine-manager): modernize navbar with glassmorphism effects
+refactor(mechanical-engineer): modernize navbar with glassmorphism
