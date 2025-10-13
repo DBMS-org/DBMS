@@ -1,1 +1,1 @@
-some html,css .json updates
+refactor(operator): redesign sidebar with gradient active states and animations
