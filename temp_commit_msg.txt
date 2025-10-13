@@ -1,1 +1,1 @@
-refactor(operator): redesign sidebar with gradient active states and animations
+refactor(machine-manager): enhance dashboard with refined cards and animations
