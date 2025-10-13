@@ -1,1 +1,1 @@
-refactor(machine-manager): redesign sidebar with gradient active states
+refactor(machine-manager): modernize navbar with glassmorphism effects
