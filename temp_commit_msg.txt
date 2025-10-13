@@ -1,1 +1,1 @@
-refactor(operator): enhance dashboard with modern cards, shadows, and hover effects
+refactor(machine-manager): redesign sidebar with gradient active states
