@@ -1,7 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
 
-// Import shared utilities
+// Import shared utilities (must be first in SCSS)
 @use 'styles/shared.scss' as shared;
+
+// Import Icon Libraries
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+@import 'material-icons/iconfont/material-icons.css';
 
 // CSS Reset
 * {
@@ -164,7 +168,6 @@ body {
     cursor: pointer;
     transition: var(--transition-base);
     font-weight: var(--font-weight-semibold);
-    backdrop-filter: blur(10px);
     
     &:hover {
       background: rgba(255, 255, 255, 0.25);
