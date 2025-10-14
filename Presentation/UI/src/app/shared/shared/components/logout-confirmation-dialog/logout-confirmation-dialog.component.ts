@@ -1,8 +1,8 @@
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
 
 export interface LogoutDialogData {
   userName?: string;
@@ -11,112 +11,128 @@ export interface LogoutDialogData {
 @Component({
   selector: 'app-logout-confirmation-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, ButtonModule, RippleModule],
   template: `
-    <div class="logout-dialog">
-      <div class="dialog-header">
-        <mat-icon class="warning-icon">warning</mat-icon>
-        <h2 mat-dialog-title>Confirm Logout</h2>
+    <div class="p-6 animate-fade-in">
+      <!-- Icon and Message -->
+      <div class="flex items-start gap-4 mb-6">
+        <div class="flex-shrink-0">
+          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center animate-pulse-scale shadow-lg">
+            <i class="pi pi-sign-out text-orange-600 text-3xl"></i>
+          </div>
+        </div>
+        <div class="flex-1 pt-2">
+          <h3 class="text-lg font-bold text-gray-800 mb-2">
+            Confirm Logout
+          </h3>
+          <p class="text-gray-700 text-base leading-relaxed" *ngIf="data.userName; else genericMessage">
+            Are you sure you want to logout, <strong class="text-purple-600">{{data.userName}}</strong>?
+          </p>
+          <ng-template #genericMessage>
+            <p class="text-gray-700 text-base leading-relaxed">
+              Are you sure you want to logout?
+            </p>
+          </ng-template>
+          <div class="mt-3 flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+            <i class="pi pi-info-circle text-blue-500"></i>
+            <span>You will need to login again to continue using the application.</span>
+          </div>
+        </div>
       </div>
-      
-      <div mat-dialog-content class="dialog-content">
-        <p *ngIf="data.userName; else genericMessage">
-          Are you sure you want to logout, <strong>{{data.userName}}</strong>?
-        </p>
-        <ng-template #genericMessage>
-          <p>Are you sure you want to logout?</p>
-        </ng-template>
-        <p class="warning-text">
-          You will need to login again to continue using the application.
-        </p>
-      </div>
-      
-      <div mat-dialog-actions class="dialog-actions">
-        <button mat-button (click)="onCancel()" class="cancel-btn">
-          Cancel
-        </button>
-        <button mat-raised-button color="warn" (click)="onConfirm()" class="logout-btn">
-          <mat-icon>logout</mat-icon>
-          Logout
-        </button>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <button
+          pButton
+          pRipple
+          type="button"
+          label="Cancel"
+          icon="pi pi-times"
+          (click)="onCancel()"
+          class="p-button-outlined p-button-secondary"
+        ></button>
+        <button
+          pButton
+          pRipple
+          type="button"
+          label="Logout"
+          icon="pi pi-sign-out"
+          (click)="onConfirm()"
+          class="p-button-danger"
+        ></button>
       </div>
     </div>
   `,
   styles: [`
-    .logout-dialog {
-      min-width: 400px;
-      padding: 20px;
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
-    
-    .dialog-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
+
+    @keyframes pulse-scale {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
     }
-    
-    .warning-icon {
-      color: #ff9800;
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
+
+    .animate-fade-in {
+      animation: fade-in 0.3s ease-out;
     }
-    
-    h2 {
-      margin: 0;
-      color: #333;
+
+    .animate-pulse-scale {
+      animation: pulse-scale 2s ease-in-out infinite;
+    }
+
+    /* Ensure buttons have proper styling */
+    button {
+      min-width: 100px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
       font-weight: 500;
     }
-    
-    .dialog-content {
-      margin-bottom: 24px;
+
+    .p-button-outlined {
+      background-color: transparent !important;
+      border: 2px solid #6c757d !important;
+      color: #6c757d !important;
     }
-    
-    .dialog-content p {
-      margin: 0 0 12px 0;
-      color: #666;
-      line-height: 1.5;
+
+    .p-button-outlined:hover {
+      background-color: #f8f9fa !important;
+      border-color: #5a6268 !important;
+      color: #5a6268 !important;
     }
-    
-    .warning-text {
-      font-size: 0.9em;
-      color: #999;
-      font-style: italic;
+
+    .p-button-danger {
+      background-color: #dc3545 !important;
+      border: 2px solid #dc3545 !important;
+      color: white !important;
     }
-    
-    .dialog-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 24px;
-    }
-    
-    .cancel-btn {
-      color: #666;
-    }
-    
-    .logout-btn {
-      background-color: #f44336;
-      color: white;
-    }
-    
-    .logout-btn:hover {
-      background-color: #d32f2f;
-    }
-    
-    .logout-btn mat-icon {
-      margin-right: 8px;
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
+
+    .p-button-danger:hover {
+      background-color: #c82333 !important;
+      border-color: #bd2130 !important;
     }
   `]
 })
 export class LogoutConfirmationDialogComponent {
+  data: LogoutDialogData;
+
   constructor(
-    public dialogRef: MatDialogRef<LogoutConfirmationDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: LogoutDialogData
-  ) {}
+    private dialogRef: DynamicDialogRef,
+    private config: DynamicDialogConfig
+  ) {
+    this.data = this.config.data as LogoutDialogData;
+  }
 
   onCancel(): void {
     this.dialogRef.close(false);

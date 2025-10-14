@@ -2,8 +2,6 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { Subject, takeUntil } from 'rxjs';
 import { InventoryTransferService } from '../../../core/services/inventory-transfer.service';
 import {
@@ -11,11 +9,38 @@ import {
   TransferRequestStatus
 } from '../../../core/models/inventory-transfer.model';
 import { ViewDetailsComponent } from './view-details/view-details.component';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { CalendarModule } from 'primeng/calendar';
+import { TagModule } from 'primeng/tag';
+import { PanelModule } from 'primeng/panel';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-request-history',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ViewDetailsComponent, MatIconModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    ViewDetailsComponent,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    CalendarModule,
+    TagModule,
+    PanelModule,
+    IconFieldModule,
+    InputIconModule,
+    TooltipModule,
+    MatIconModule
+  ],
   templateUrl: './request-history.component.html',
   styleUrls: ['./request-history.component.scss']
 })
@@ -51,6 +76,17 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
   // Dispatch Info Modal
   showDispatchInfo = false;
   selectedDispatchRequest: InventoryTransferRequest | null = null;
+
+  // Dropdown options
+  statusOptions = [
+    { label: 'All Statuses', value: '' },
+    { label: 'Pending', value: TransferRequestStatus.Pending },
+    { label: 'Approved', value: TransferRequestStatus.Approved },
+    { label: 'Rejected', value: TransferRequestStatus.Rejected },
+    { label: 'In Progress', value: TransferRequestStatus.InProgress },
+    { label: 'Completed', value: TransferRequestStatus.Completed },
+    { label: 'Cancelled', value: TransferRequestStatus.Cancelled }
+  ];
 
   constructor(
     private transferService: InventoryTransferService,
@@ -198,5 +234,22 @@ export class RequestHistoryComponent implements OnInit, OnDestroy {
 
   getReceivedStatusText(request: InventoryTransferRequest): string {
     return this.isReceived(request) ? 'Received' : 'Not Received';
+  }
+
+  getStatusSeverity(status: TransferRequestStatus): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | undefined {
+    switch (status) {
+      case TransferRequestStatus.Approved:
+        return 'success';
+      case TransferRequestStatus.Pending:
+        return 'warning';
+      case TransferRequestStatus.Rejected:
+        return 'danger';
+      case TransferRequestStatus.Completed:
+        return 'info';
+      case TransferRequestStatus.InProgress:
+        return 'info';
+      default:
+        return 'secondary';
+    }
   }
 }

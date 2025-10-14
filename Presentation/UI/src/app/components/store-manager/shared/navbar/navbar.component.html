@@ -1,19 +1,36 @@
-<nav class="navbar">
-  <div class="navbar-left">
-    <button class="menu-btn" (click)="onToggleSidebar()">
-      <i class="material-icons">menu</i>
-    </button>
-    <h1 class="brand">Store Manager Dashboard</h1>
-  </div>
-  <div class="navbar-right">
-    <div class="user-menu">
-      <div class="user-info" (click)="navigateToProfile()" title="View Profile">
-        <i class="material-icons">account_circle</i>
-        <span class="user-name">{{ getUserDisplayName() }}</span>
-        <span class="user-role" *ngIf="currentUser">{{ currentUser.role }}</span>
+<nav class="bg-white shadow-md px-6 py-4">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <button
+        type="button"
+        class="p-2 rounded-md hover:bg-gray-100 transition-colors"
+        (click)="onToggleSidebar()"
+        title="Toggle Sidebar"
+        aria-label="Toggle Sidebar">
+        <i class="pi pi-bars text-xl text-gray-700"></i>
+      </button>
+      <h1 class="text-xl font-bold text-gray-800">Store Manager Dashboard</h1>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <div
+        class="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
+        (click)="navigateToProfile()"
+        title="View Profile">
+        <i class="pi pi-user text-xl text-gray-700"></i>
+        <div class="flex flex-col">
+          <span class="text-sm font-medium text-gray-800">{{ getUserDisplayName() }}</span>
+          <span class="text-xs text-gray-600" *ngIf="currentUser">{{ currentUser.role }}</span>
+        </div>
       </div>
-      <button class="logout-btn" (click)="logout()" title="Logout">
-        <i class="material-icons">logout</i>
+
+      <button
+        type="button"
+        class="p-2 rounded-md hover:bg-red-50 transition-colors"
+        (click)="logout()"
+        title="Logout"
+        aria-label="Logout">
+        <i class="pi pi-sign-out text-xl text-red-600"></i>
       </button>
     </div>
   </div>

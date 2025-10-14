@@ -1,68 +1,122 @@
-<div class="verify-code-container">
-  <div class="verify-code-card">
-    <div class="header">
-      <h2>Enter Verification Code</h2>
-      <p>We've sent a 6-digit code to <strong>{{ email }}</strong></p>
-      <p class="timer" [class.expired]="timeLeft <= 0">
-        <i class="material-icons">timer</i>
-        Code expires in: {{ getFormattedTime() }}
-      </p>
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 p-4 relative overflow-hidden">
+  <!-- Background Decoration -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-[20%] left-[8%] w-40 h-40 bg-white/10 rounded-full animate-float blur-3xl"></div>
+    <div class="absolute bottom-[25%] right-[12%] w-32 h-32 bg-white/10 rounded-full animate-float animation-delay-2000 blur-2xl"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full animate-pulse blur-3xl"></div>
+  </div>
+
+  <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-md p-8 animate-slide-up relative z-10 border border-white/30">
+    <!-- Top Accent Bar -->
+    <div class="h-1 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-900 rounded-t-2xl -mt-8 -mx-8 mb-8"></div>
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="relative inline-block mb-4">
+        <div class="w-20 h-20 mx-auto bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 rounded-2xl flex items-center justify-center shadow-2xl relative animate-pulse-glow">
+          <div class="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+          <div class="absolute -inset-1 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl blur-md opacity-50 animate-pulse"></div>
+          <i class="pi pi-shield text-white text-3xl relative z-10"></i>
+        </div>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-3">Enter Verification Code</h2>
+      <p class="text-gray-600 text-sm mb-2">We've sent a 6-digit code to</p>
+      <div class="inline-flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg">
+        <i class="pi pi-envelope text-purple-600 text-sm"></i>
+        <p class="text-purple-600 font-semibold text-sm">{{ email }}</p>
+      </div>
+
+      <!-- Timer -->
+      <div
+        class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
+        [ngClass]="{
+          'bg-green-50 text-green-700': timeLeft > 300,
+          'bg-yellow-50 text-yellow-700': timeLeft <= 300 && timeLeft > 60,
+          'bg-red-50 text-red-700': timeLeft <= 60
+        }"
+      >
+        <i class="pi pi-clock"></i>
+        <span>Code expires in: {{ getFormattedTime() }}</span>
+      </div>
     </div>
 
-    <form [formGroup]="verifyCodeForm" (ngSubmit)="onSubmit()" class="verify-code-form">
-      <div class="form-group">
-        <label for="code">6-Digit Code</label>
-        <input 
-          type="text" 
-          id="code" 
-          formControlName="code" 
+    <!-- Form -->
+    <form [formGroup]="verifyCodeForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Code Field -->
+      <div class="flex flex-col gap-2">
+        <label for="code" class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+          <i class="pi pi-key text-purple-600"></i>
+          6-Digit Code
+        </label>
+        <input
+          pInputText
+          type="text"
+          id="code"
+          formControlName="code"
           placeholder="000000"
           maxlength="6"
           (input)="onCodeInput($event)"
-          [class.is-invalid]="verifyCodeForm.get('code')?.invalid && verifyCodeForm.get('code')?.touched"
-          class="code-input"
+          class="w-full text-center text-2xl tracking-widest font-mono"
+          [ngClass]="{'ng-invalid ng-dirty': verifyCodeForm.get('code')?.invalid && verifyCodeForm.get('code')?.touched}"
+        />
+        <small
+          class="text-red-500 text-xs font-medium flex items-center gap-1"
+          *ngIf="verifyCodeForm.get('code')?.invalid && verifyCodeForm.get('code')?.touched"
         >
-        <div class="error-message" *ngIf="verifyCodeForm.get('code')?.invalid && verifyCodeForm.get('code')?.touched">
+          <i class="pi pi-exclamation-circle text-xs"></i>
           <span *ngIf="verifyCodeForm.get('code')?.errors?.['required']">Code is required</span>
           <span *ngIf="verifyCodeForm.get('code')?.errors?.['pattern']">Code must be exactly 6 digits</span>
-        </div>
+        </small>
       </div>
 
-      <div class="message" *ngIf="message" [class]="messageType">
-        <i class="material-icons">{{ messageType === 'success' ? 'check_circle' : 'error' }}</i>
-        {{ message }}
-      </div>
-
-      <button 
-        type="submit" 
-        class="verify-button" 
-        [disabled]="!verifyCodeForm.valid || isLoading || timeLeft <= 0"
+      <!-- Success/Error Message -->
+      <div
+        *ngIf="message"
+        [ngClass]="{
+          'bg-green-50 border-green-200 text-green-700': messageType === 'success',
+          'bg-red-50 border-red-200 text-red-700': messageType === 'error'
+        }"
+        class="border rounded-lg p-4 text-sm font-medium flex items-center gap-2"
       >
-        <span *ngIf="!isLoading">Verify Code</span>
-        <span *ngIf="isLoading">
-          <i class="material-icons spinning">sync</i>
-          Verifying...
-        </span>
-      </button>
-
-      <div class="resend-section">
-        <p>Didn't receive the code?</p>
-        <button 
-          type="button" 
-          class="resend-button" 
-          (click)="resendCode()"
-          [disabled]="isLoading"
-        >
-          <i class="material-icons">refresh</i>
-          Resend Code
-        </button>
+        <i [ngClass]="{
+          'pi pi-check-circle': messageType === 'success',
+          'pi pi-times-circle': messageType === 'error'
+        }"></i>
+        <span>{{ message }}</span>
       </div>
 
-      <div class="back-to-forgot">
-        <button type="button" class="back-button" (click)="goBackToForgotPassword()">
-          <i class="material-icons">arrow_back</i>
-          Back to Email Entry
-        </button>
+      <!-- Verify Button -->
+      <p-button
+        type="submit"
+        label="Verify Code"
+        icon="pi pi-check"
+        [loading]="isLoading"
+        [disabled]="!verifyCodeForm.valid || isLoading || timeLeft <= 0"
+        styleClass="w-full"
+      ></p-button>
+
+      <!-- Resend Section -->
+      <div class="text-center pt-4 border-t border-gray-200">
+        <p class="text-gray-600 text-sm mb-3">Didn't receive the code?</p>
+        <p-button
+          type="button"
+          label="Resend Code"
+          icon="pi pi-refresh"
+          (onClick)="resendCode()"
+          [disabled]="isLoading"
+          styleClass="p-button-outlined p-button-sm"
+        ></p-button>
+      </div>
+
+      <!-- Back Button -->
+      <div class="text-center">
+        <p-button
+          type="button"
+          label="Back to Email Entry"
+          icon="pi pi-arrow-left"
+          (onClick)="goBackToForgotPassword()"
+          styleClass="p-button-text p-button-secondary"
+        ></p-button>
       </div>
     </form>
   </div>

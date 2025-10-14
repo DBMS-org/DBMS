@@ -1,7 +1,7 @@
 <div class="user-profile-container">
   <div class="profile-header">
     <button class="back-btn" routerLink="/store-manager/dashboard">
-      <i class="material-icons">arrow_back</i>
+      <i class="pi pi-arrow-left"></i>
       Back to Dashboard
     </button>
     <h1>User Profile</h1>
@@ -17,7 +17,7 @@
           <h2>{{ currentUser.name }}</h2>
           <p class="profile-email">{{ currentUser.email }}</p>
           <div class="role-badge">
-            <i class="material-icons">store</i>
+            <i class="pi pi-briefcase"></i>
             <span>{{ formatRole(currentUser.role) }}</span>
           </div>
         </div>
@@ -25,7 +25,7 @@
 
       <div class="profile-details">
         <h3>
-          <i class="material-icons">info</i>
+          <i class="pi pi-info-circle"></i>
           Profile Information
         </h3>
         
@@ -86,11 +86,11 @@
 
       <div class="profile-actions">
         <button class="action-btn secondary" routerLink="/store-manager/dashboard">
-          <i class="material-icons">dashboard</i>
+          <i class="pi pi-home"></i>
           Go to Dashboard
         </button>
         <button class="action-btn danger" (click)="logout()">
-          <i class="material-icons">logout</i>
+          <i class="pi pi-sign-out"></i>
           Logout
         </button>
       </div>
