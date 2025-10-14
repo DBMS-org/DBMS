@@ -84,11 +84,25 @@
   }
 
   <!-- Filters Section -->
-  <p-panel styleClass="mb-3">
+  <p-panel [toggleable]="true" [(collapsed)]="isFiltersPanelCollapsed" styleClass="mb-3">
     <ng-template pTemplate="header">
-      <div class="flex items-center gap-2 p-2">
-        <i class="pi pi-filter text-blue-600 text-sm"></i>
-        <span class="font-semibold text-sm">Filters</span>
+      <div class="flex items-center justify-between w-full p-2">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-filter text-blue-600 text-sm"></i>
+          <span class="font-semibold text-sm">Filters</span>
+          @if (isFiltersPanelCollapsed && (searchTerm || statusFilter !== 'ALL')) {
+            <p-tag value="Active" severity="info" [rounded]="true" styleClass="text-xs"></p-tag>
+          }
+        </div>
+        <p-button
+          [icon]="isFiltersPanelCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
+          (onClick)="toggleFiltersPanel()"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          severity="secondary"
+          [pTooltip]="isFiltersPanelCollapsed ? 'Show Filters' : 'Hide Filters'">
+        </p-button>
       </div>
     </ng-template>
     <div class="flex flex-col gap-2">

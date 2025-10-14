@@ -57,6 +57,9 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   selectedRequest: ExplosiveApprovalRequest | null = null;
   isDetailsModalVisible: boolean = false;
 
+  // Filter panel toggle
+  isFiltersPanelCollapsed: boolean = false;
+
   // Rejection dialog properties
   showRejectDialog = false;
   rejectionReason = '';
@@ -398,5 +401,9 @@ export class BlastingEngineerRequestsComponent implements OnInit {
       case 'emergency': return 'contrast';
       default: return 'secondary';
     }
+  }
+
+  toggleFiltersPanel(): void {
+    this.isFiltersPanelCollapsed = !this.isFiltersPanelCollapsed;
   }
 }
