@@ -1,236 +1,259 @@
-<!-- Modal Backdrop -->
-<div class="modal-backdrop" 
-     [class.show]="isVisible" 
-     (click)="onBackdropClick($event)"
-     *ngIf="isVisible">
-  
-  <!-- Modal Content -->
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    
-    <!-- Modal Header -->
-    <div class="modal-header">
-      <div class="header-info">
-        <h2 class="modal-title">
-          <i class="pi pi-file"></i>
-          Request Details
-        </h2>
-        <span class="request-id">ID: {{ request?.id }}</span>
-      </div>
-      <button class="close-btn" (click)="onClose()" title="Close">
-        <i class="pi pi-times"></i>
-      </button>
+<p-dialog
+  [(visible)]="isVisible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width: '90vw', maxWidth: '1200px', maxHeight: '90vh'}"
+  styleClass="request-details-dialog"
+  (onHide)="onClose()">
+
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-3">
+      <i class="pi pi-file-edit text-2xl text-indigo-600"></i>
+      <h2 class="text-xl font-bold text-gray-800 m-0">Request Details</h2>
+      @if (request) {
+        <p-tag [value]="'ID: ' + request.id" severity="info" [rounded]="true"></p-tag>
+      }
     </div>
+  </ng-template>
 
-    <!-- Modal Body -->
-    <div class="modal-body" *ngIf="request">
-      
-      <!-- Status Section -->
-      <div class="section status-section">
-        <div class="section-header">
-          <h3><i class="pi pi-info-circle"></i> Status</h3>
+  <div *ngIf="request" class="space-y-4">
+
+    <!-- Status Section -->
+    <p-panel header="Status" [toggleable]="true" styleClass="shadow-sm">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-info-circle text-indigo-600"></i>
+          <span class="font-semibold">Status</span>
         </div>
-        <div class="section-content">
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Status:</label>
-              <span class="status-badge" [class]="getStatusClass(request.status)">
-                {{ request.status }}
-              </span>
-            </div>
+      </ng-template>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Current Status:</label>
+          <p-tag [value]="request.status" [severity]="getStatusSeverity(request.status)" [rounded]="true"></p-tag>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Priority:</label>
+          <p-tag [value]="request.priority" [severity]="getPrioritySeverity(request.priority)" [rounded]="true"></p-tag>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Approval Type:</label>
+          <p-tag [value]="request.approvalType" [severity]="getApprovalTypeSeverity(request.approvalType)" [rounded]="true"></p-tag>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- Request Information Section -->
+    <p-panel header="Request Information" [toggleable]="true" styleClass="shadow-sm">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-calendar text-indigo-600"></i>
+          <span class="font-semibold">Request Information</span>
+        </div>
+      </ng-template>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Expected Usage Date:</label>
+          <span class="text-base text-gray-800">{{ formatDate(request.expectedUsageDate) }}</span>
+        </div>
+        <div class="flex flex-col gap-1" *ngIf="request.estimatedDurationHours">
+          <label class="text-sm font-semibold text-gray-600">Estimated Duration:</label>
+          <span class="text-base text-gray-800">{{ formatDuration(request.estimatedDurationHours) }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Created At:</label>
+          <span class="text-base text-gray-800">{{ formatDateTime(request.createdAt) }}</span>
+        </div>
+        <div class="flex flex-col gap-1" *ngIf="request.updatedAt">
+          <label class="text-sm font-semibold text-gray-600">Last Updated:</label>
+          <span class="text-base text-gray-800">{{ formatDateTime(request.updatedAt) }}</span>
+        </div>
+        <div class="flex flex-col gap-1 md:col-span-2" *ngIf="request.comments">
+          <label class="text-sm font-semibold text-gray-600">Comments:</label>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p class="m-0 text-sm text-gray-800">{{ request.comments }}</p>
           </div>
         </div>
       </div>
+    </p-panel>
 
-      <!-- Request Information Section -->
-      <div class="section request-info-section">
-        <div class="section-header">
-          <h3><i class="pi assignment"></i> Request Information</h3>
+    <!-- Requester Information Section -->
+    <p-panel header="Requester Information" [toggleable]="true" styleClass="shadow-sm">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-user text-indigo-600"></i>
+          <span class="font-semibold">Requester Information</span>
         </div>
-        <div class="section-content">
-          <div class="info-grid">
-            <div class="info-item full-width">
-              <label>Expected Usage Date:</label>
-              <span class="date-value">{{ formatDate(request.expectedUsageDate) }}</span>
+      </ng-template>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Name:</label>
+          <span class="text-base text-gray-800">{{ request.requestedByUser?.name || 'N/A' }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Email:</label>
+          <span class="text-base text-gray-800">{{ request.requestedByUser?.email || 'N/A' }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">User ID:</label>
+          <span class="text-base text-gray-800">{{ request.requestedByUserId }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Region:</label>
+          <span class="text-base text-gray-800">{{ request.requestedByUser?.region || 'N/A' }}</span>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- Project & Site Information Section -->
+    <p-panel header="Project & Site Information" [toggleable]="true" styleClass="shadow-sm">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-map-marker text-indigo-600"></i>
+          <span class="font-semibold">Project & Site Information</span>
+        </div>
+      </ng-template>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Project Site:</label>
+          <span class="text-base text-gray-800">{{ request.projectSite?.name || 'N/A' }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Site ID:</label>
+          <span class="text-base text-gray-800">{{ request.projectSiteId }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Project Name:</label>
+          <span class="text-base text-gray-800">{{ request.projectSite?.project?.name || 'Unknown Project' }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Project ID:</label>
+          <span class="text-base text-gray-800">{{ request.projectSite?.project?.id || 'N/A' }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-gray-600">Project Region:</label>
+          <span class="text-base text-gray-800">{{ request.projectSite?.project?.region || 'N/A' }}</span>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- Explosive Calculations Section -->
+    <p-panel header="Explosive Calculations" [toggleable]="true" styleClass="shadow-sm">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-calculator text-indigo-600"></i>
+          <span class="font-semibold">Explosive Calculations</span>
+        </div>
+      </ng-template>
+      <div class="p-3">
+        @if (isLoadingCalculations) {
+          <div class="flex items-center justify-center py-8">
+            <i class="pi pi-spin pi-spinner text-3xl text-indigo-600"></i>
+            <span class="ml-3 text-gray-600">Loading calculations...</span>
+          </div>
+        } @else {
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold text-gray-600">Total ANFO:</label>
+              <span class="text-2xl font-bold text-indigo-600">{{ totalAnfo | number:'1.2-2' }} kg</span>
             </div>
-            <div class="info-item full-width" *ngIf="request.estimatedDurationHours">
-              <label>Estimated Duration:</label>
-              <span class="duration-value">{{ formatDuration(request.estimatedDurationHours) }}</span>
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold text-gray-600">Total Emulsion:</label>
+              <span class="text-2xl font-bold text-purple-600">{{ totalEmulsion | number:'1.2-2' }} kg</span>
             </div>
-            <div class="info-item full-width" *ngIf="request.comments">
-              <label>Comments:</label>
-              <div class="comments-box">{{ request.comments }}</div>
+          </div>
+
+          @if (explosiveCalculations.length > 0) {
+            <div class="mt-4">
+              <h4 class="text-sm font-semibold text-gray-700 mb-2">Calculation Details:</h4>
+              <p-table [value]="explosiveCalculations" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th class="text-xs">Calculation ID</th>
+                    <th class="text-xs">ANFO (kg)</th>
+                    <th class="text-xs">Emulsion (kg)</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-calc>
+                  <tr>
+                    <td class="text-xs">{{ calc.id }}</td>
+                    <td class="text-xs font-semibold">{{ calc.totalAnfo | number:'1.2-2' }}</td>
+                    <td class="text-xs font-semibold">{{ calc.totalEmulsion | number:'1.2-2' }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
             </div>
+          }
+        }
+      </div>
+    </p-panel>
+
+    <!-- Processing Information Section -->
+    <p-panel header="Processing Information" [toggleable]="true" styleClass="shadow-sm" *ngIf="request.processedByUserId || request.processedAt || request.rejectionReason">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-verified text-indigo-600"></i>
+          <span class="font-semibold">Processing Information</span>
+        </div>
+      </ng-template>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3">
+        <div class="flex flex-col gap-1" *ngIf="request.processedByUser?.name">
+          <label class="text-sm font-semibold text-gray-600">Processed By:</label>
+          <span class="text-base text-gray-800">{{ request.processedByUser?.name }}</span>
+        </div>
+        <div class="flex flex-col gap-1" *ngIf="request.processedByUser?.email">
+          <label class="text-sm font-semibold text-gray-600">Processor Email:</label>
+          <span class="text-base text-gray-800">{{ request.processedByUser?.email }}</span>
+        </div>
+        <div class="flex flex-col gap-1" *ngIf="request.processedAt">
+          <label class="text-sm font-semibold text-gray-600">Processed At:</label>
+          <span class="text-base text-gray-800">{{ formatDateTime(request.processedAt) }}</span>
+        </div>
+        <div class="flex flex-col gap-1 md:col-span-2" *ngIf="request.rejectionReason">
+          <label class="text-sm font-semibold text-gray-600">Rejection Reason:</label>
+          <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+            <p class="m-0 text-sm text-red-800">{{ request.rejectionReason }}</p>
           </div>
         </div>
       </div>
+    </p-panel>
 
-      <!-- Requester Information Section -->
-      <div class="section requester-section">
-        <div class="section-header">
-          <h3><i class="pi pi-user"></i> Requester Information</h3>
+    <!-- Additional Data Section -->
+    <p-panel header="Additional Data" [toggleable]="true" [collapsed]="true" styleClass="shadow-sm" *ngIf="request.additionalData">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-database text-indigo-600"></i>
+          <span class="font-semibold">Additional Data</span>
         </div>
-        <div class="section-content">
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Name:</label>
-              <span class="user-name">{{ request.requestedByUser?.name || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <label>Email:</label>
-              <span class="user-email">{{ request.requestedByUser?.email || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <label>User ID:</label>
-              <span class="user-id">{{ request.requestedByUserId }}</span>
-            </div>
-            <div class="info-item">
-              <label>Region:</label>
-              <span class="user-region">{{ request.requestedByUser?.region || 'N/A' }}</span>
-            </div>
-          </div>
-        </div>
+      </ng-template>
+      <div class="p-3">
+        <pre class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs overflow-x-auto">{{ request.additionalData }}</pre>
       </div>
-
-      <!-- Project & Site Information Section -->
-      <div class="section project-site-section">
-        <div class="section-header">
-          <h3><i class="pi pi-map-marker"></i> Project & Site Information</h3>
-        </div>
-        <div class="section-content">
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Project Site:</label>
-              <span class="project-site">{{ request.projectSite?.name || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <label>Site ID:</label>
-              <span class="site-id">{{ request.projectSiteId }}</span>
-            </div>
-            <div class="info-item">
-              <label>Project Name:</label>
-              <span class="project-name">{{ request.projectSite?.project?.name || 'Unknown Project' }}</span>
-            </div>
-            <div class="info-item">
-              <label>Project ID:</label>
-              <span class="project-id">{{ request.projectSite?.project?.id || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <label>Project Region:</label>
-              <span class="project-region">{{ request.projectSite?.project?.region || 'N/A' }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Explosive Calculations Section -->
-      <div class="section">
-        <div class="section-header">
-          <h3><i class="pi calculate"></i> Explosive Calculations</h3>
-        </div>
-        <div class="section-content">
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Total ANFO:</label>
-              <span class="explosive-total" [class.loading]="isLoadingCalculations">
-                {{ isLoadingCalculations ? 'Loading...' : (totalAnfo | number:'1.2-2') + ' kg' }}
-              </span>
-            </div>
-            <div class="info-item">
-              <label>Total Emulsion:</label>
-              <span class="explosive-total" [class.loading]="isLoadingCalculations">
-                {{ isLoadingCalculations ? 'Loading...' : (totalEmulsion | number:'1.2-2') + ' kg' }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-
-      <!-- Processing Information Section -->
-      <div class="section processing-section" *ngIf="request.processedByUserId || request.processedAt || request.rejectionReason">
-        <div class="section-header">
-          <h3><i class="pi admin_panel_settings"></i> Processing Information</h3>
-        </div>
-        <div class="section-content">
-          <div class="info-grid">
-            <div class="info-item" *ngIf="request.processedByUser?.name">
-              <label>Processed By:</label>
-              <span class="processor-name">{{ request.processedByUser?.name || 'N/A' }}</span>
-            </div>
-            <div class="info-item" *ngIf="request.processedByUser?.email">
-              <label>Processor Email:</label>
-              <span class="processor-email">{{ request.processedByUser?.email || 'N/A' }}</span>
-            </div>
-            <div class="info-item" *ngIf="request.processedByUserId">
-              <label>Processor ID:</label>
-              <span class="processor-id">{{ request.processedByUserId }}</span>
-            </div>
-            <div class="info-item full-width" *ngIf="request.processedAt">
-              <label>Processed At:</label>
-              <span class="processed-date">{{ formatDateTime(request.processedAt) }}</span>
-            </div>
-            <div class="info-item full-width" *ngIf="request.rejectionReason">
-              <label>Rejection Reason:</label>
-              <div class="rejection-reason-box">{{ request.rejectionReason }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Additional Data Section -->
-      <div class="section additional-section" *ngIf="request.additionalData">
-        <div class="section-header">
-          <h3><i class="pi data_object"></i> Additional Data</h3>
-        </div>
-        <div class="section-content">
-          <div class="additional-data-box">
-            <pre>{{ request.additionalData }}</pre>
-          </div>
-        </div>
-      </div>
-
-      <!-- Timestamps Section -->
-      <div class="section timestamps-section">
-        <div class="section-header">
-          <h3><i class="pi pi-clock"></i> Timestamps</h3>
-        </div>
-        <div class="section-content">
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Created At:</label>
-              <span class="timestamp">{{ formatDateTime(request.createdAt) }}</span>
-            </div>
-            <div class="info-item">
-              <label>Updated At:</label>
-              <span class="timestamp">{{ formatDateTime(request.updatedAt) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Modal Footer -->
-    <div class="modal-footer">
-      <div class="footer-actions">
-        <button class="btn btn-secondary" (click)="onClose()">
-          <i class="pi pi-times"></i>
-          Close
-        </button>
-        
-        <div class="action-buttons" *ngIf="request?.status === 'Pending'">
-          <button class="btn btn-success" (click)="onApprove()" title="Approve Request">
-            <i class="pi pi-check"></i>
-            Approve
-          </button>
-          <button class="btn btn-danger" (click)="onReject()" title="Reject Request">
-            <i class="pi pi-times"></i>
-            Reject
-          </button>
-        </div>
-      </div>
-    </div>
+    </p-panel>
 
   </div>
-</div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between items-center w-full">
+      <p-button
+        label="Close"
+        icon="pi pi-times"
+        (onClick)="onClose()"
+        severity="secondary"></p-button>
+
+      <div class="flex gap-2" *ngIf="request?.status === 'Pending'">
+        <p-button
+          label="Reject"
+          icon="pi pi-times-circle"
+          (onClick)="onReject()"
+          severity="danger"></p-button>
+        <p-button
+          label="Approve"
+          icon="pi pi-check-circle"
+          (onClick)="onApprove()"
+          severity="success"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,17 +1,30 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject, takeUntil } from 'rxjs';
 import { InventoryTransferRequest } from '../../../../core/models/inventory-transfer.model';
 import { InventoryTransferService } from '../../../../core/services/inventory-transfer.service';
+import { MessageService } from 'primeng/api';
+import { PanelModule } from 'primeng/panel';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { TableModule } from 'primeng/table';
+import { MessageModule } from 'primeng/message';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-dispatch-info',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatSnackBarModule],
+  imports: [
+    CommonModule,
+    PanelModule,
+    ButtonModule,
+    TagModule,
+    TableModule,
+    MessageModule,
+    ToastModule
+  ],
+  providers: [MessageService],
   templateUrl: './dispatch-info.component.html',
   styleUrls: ['./dispatch-info.component.scss']
 })
@@ -30,7 +43,7 @@ export class DispatchInfoComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private transferService: InventoryTransferService,
-    private snackBar: MatSnackBar
+    private messageService: MessageService
   ) {}
 
   ngOnInit() {
@@ -61,7 +74,7 @@ export class DispatchInfoComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading request:', error);
-          this.snackBar.open('Error loading request details', 'Close', { duration: 3000 });
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error loading request details' });
           this.isLoading = false;
           this.router.navigate(['/store-manager/request-history']);
         }
@@ -76,7 +89,7 @@ export class DispatchInfoComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.snackBar.open('Delivery confirmed successfully!', 'Close', { duration: 3000 });
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Delivery confirmed successfully!' });
           this.isLoading = false;
           // Reload the request data
           if (this.request) {
@@ -85,7 +98,7 @@ export class DispatchInfoComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error confirming delivery:', error);
-          this.snackBar.open('Error confirming delivery', 'Close', { duration: 3000 });
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error confirming delivery' });
           this.isLoading = false;
         }
       });

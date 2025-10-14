@@ -160,4 +160,81 @@ export class ProjectSitesComponent implements OnInit {
     if (this.sites.length === 0) return 0;
     return Math.round((this.getCompletedSitesCount() / this.sites.length) * 100);
   }
+
+  // Site completion functionality
+  canCompleteSite(site: ProjectSite): boolean {
+    // A site can be completed if:
+    // 1. Pattern is approved (isPatternApproved = true)
+    // 2. Simulation is confirmed (isSimulationConfirmed = true)
+    // 3. Explosive approval has been requested (isExplosiveApprovalRequested = true)
+    // 4. Site is not already completed by operator
+    return site.isPatternApproved && 
+           site.isSimulationConfirmed && 
+           site.isExplosiveApprovalRequested && 
+           !site.isOperatorCompleted;
+  }
+
+  getCompleteButtonTooltip(site: ProjectSite): string {
+    if (site.isOperatorCompleted) {
+      return 'Site is already completed by operator';
+    }
+
+    const missingRequirements: string[] = [];
+    
+    if (!site.isPatternApproved) {
+      missingRequirements.push('Pattern approval');
+    }
+    
+    if (!site.isSimulationConfirmed) {
+      missingRequirements.push('Simulation confirmation');
+    }
+    
+    if (!site.isExplosiveApprovalRequested) {
+      missingRequirements.push('Explosive approval request');
+    }
+
+    if (missingRequirements.length > 0) {
+      return `Missing requirements: ${missingRequirements.join(', ')}`;
+    }
+
+    return 'Mark site as complete';
+  }
+
+  completeSite(site: ProjectSite) {
+    if (!this.canCompleteSite(site)) {
+      return;
+    }
+
+    // Show confirmation dialog before completing
+    const confirmMessage = `Are you sure you want to mark "${site.name}" as complete?\n\nThis action will:\n- Mark the site as completed by the operator\n- Update the completion status\n- This action cannot be undone`;
+    
+    if (confirm(confirmMessage)) {
+      this.loading = true;
+      this.error = null;
+
+      this.siteService.completeSite(site.id).subscribe({
+        next: () => {
+          // Update the local site data
+          const siteIndex = this.sites.findIndex(s => s.id === site.id);
+          if (siteIndex !== -1) {
+            this.sites[siteIndex] = {
+              ...this.sites[siteIndex],
+              isOperatorCompleted: true,
+              updatedAt: new Date()
+            };
+          }
+          this.loading = false;
+          // Show success message (you can replace this with a toast notification)
+          alert('Site marked as complete successfully!');
+        },
+        error: (error) => {
+          console.error('Error completing site:', error);
+          this.error = 'Failed to complete site. Please try again.';
+          this.loading = false;
+          // Show error message (you can replace this with a toast notification)
+          alert('Failed to complete site. Please try again.');
+        }
+      });
+    }
+  }
 }
