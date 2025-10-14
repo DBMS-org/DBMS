@@ -1,290 +1,316 @@
-<div class="request-history-container">
+<div class="p-4 min-h-screen bg-gray-50 relative">
+
   <!-- Header Section -->
-  <div class="header-section">
-    <div class="page-title-section">
-      <h1 class="page-title">
-        <i class="material-icons">history</i>
-        Request History
-      </h1>
-      <p class="page-subtitle">View and manage your explosive stock request history</p>
-    </div>
-  </div>
+  <p-panel styleClass="mb-3">
+    <ng-template pTemplate="header">
+      <div class="text-center w-full p-2">
+        <h1 class="text-base font-bold text-gray-800 flex items-center justify-center gap-2 m-0">
+          <i class="pi pi-history text-blue-600 text-base"></i>
+          Request History
+        </h1>
+        <p class="text-gray-600 text-xs mt-0.5 mb-0">View and manage your explosive stock request history</p>
+      </div>
+    </ng-template>
+  </p-panel>
 
   <!-- Alert Messages -->
-  <div *ngIf="successMessage" class="alert alert-success">
-    <i class="material-icons">check_circle</i>
-    {{ successMessage }}
-    <button class="btn-close" (click)="clearMessages()">
-      <i class="material-icons">close</i>
-    </button>
-  </div>
-
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    <i class="material-icons">error</i>
-    {{ errorMessage }}
-    <button class="btn-close" (click)="clearMessages()">
-      <i class="material-icons">close</i>
-    </button>
-  </div>
-
-  <div class="content-layout">
-    <!-- Main Content Card -->
-    <div class="main-content-card">
-      <!-- Filters Section -->
-      <div class="filters-header" (click)="toggleFilters()" style="cursor: pointer;">
-        <h3>
-          <i class="material-icons">filter_list</i>
-          Filter Requests
-          <i class="material-icons toggle-icon" [class.rotated]="!isFiltersCollapsed">
-            expand_more
-          </i>
-        </h3>
+  <p-message *ngIf="successMessage" severity="success" styleClass="mb-3 w-full">
+    <ng-template pTemplate>
+      <div class="flex items-center justify-between w-full gap-2">
+        <span class="flex-1 text-sm">{{ successMessage }}</span>
+        <p-button
+          icon="pi pi-times"
+          (onClick)="clearMessages()"
+          severity="success"
+          [text]="true"
+          [rounded]="true"
+          size="small">
+        </p-button>
       </div>
+    </ng-template>
+  </p-message>
 
-      <div class="filters-content" [class.collapsed]="isFiltersCollapsed" *ngIf="!isFiltersCollapsed">
-        <div class="form-section-group">
-          <div class="filter-grid">
-            <!-- Search Input with Icon -->
-            <div class="form-group search-group">
-              <label>
-                <i class="material-icons">search</i>
-                Search
-              </label>
-              <div class="search-input-wrapper">
-                <i class="material-icons search-icon">search</i>
-                <input 
-                  type="text" 
-                  class="form-control search-input"
-                  [(ngModel)]="searchTerm"
-                  (input)="applyFilters()"
-                  placeholder="Search by ID, requester, or purpose...">
-                <button 
-                  *ngIf="searchTerm" 
-                  class="clear-search-btn"
-                  (click)="searchTerm = ''; applyFilters()"
-                  type="button">
-                  <i class="material-icons">close</i>
-                </button>
-              </div>
-            </div>
-            
-            <!-- Status Filter -->
-            <div class="form-group">
-              <label>
-                <i class="material-icons">assignment</i>
-                Status
-              </label>
-              <select
-                title="Filter by status"
-                class="form-select"
-                [(ngModel)]="filterStatus"
-                (change)="applyFilters()">
-                <option value="">All Statuses</option>
-                <option value="PENDING">Pending</option>
-                <option value="APPROVED">Approved</option>
-                <option value="REJECTED">Rejected</option>
-                <option value="DISPATCHED">Dispatched</option>
-              </select>
-            </div>
-            
-            <!-- Date From -->
-            <div class="form-group">
-              <label>
-                <i class="material-icons">date_range</i>
-                Date From
-              </label>
-              <input 
-                type="date" 
-                class="form-control"
-                [(ngModel)]="filterDateFrom"
-                (change)="applyFilters()"
-                title="Filter from date">
-            </div>
-            
-            <!-- Date To -->
-            <div class="form-group">
-              <label>
-                <i class="material-icons">date_range</i>
-                Date To
-              </label>
-              <input 
-                type="date" 
-                class="form-control"
-                [(ngModel)]="filterDateTo"
-                (change)="applyFilters()"
-                title="Filter to date">
-            </div>
-            
-            <!-- Clear Filters Button -->
-            <div class="form-group clear-filters-group">
-              <label>&nbsp;</label>
-              <button 
-                type="button" 
-                class="btn btn-clear-filters"
-                (click)="clearFilters()">
-                <i class="material-icons">clear_all</i>
-                Clear All Filters
-              </button>
-            </div>
-          </div>
-          
-          <!-- Active Filters Display -->
-          <div class="active-filters" *ngIf="hasActiveFilters()">
-            <span class="active-filters-label">Active Filters:</span>
-            <div class="filter-tags">
-              <span class="filter-tag" *ngIf="searchTerm">
-                <i class="material-icons">search</i>
-                Search: "{{ searchTerm }}"
-                <button (click)="searchTerm = ''; applyFilters()" class="remove-filter">
-                  <i class="material-icons">close</i>
-                </button>
-              </span>
-              <span class="filter-tag" *ngIf="filterStatus">
-                <i class="material-icons">assignment</i>
-                Status: {{ filterStatus }}
-                <button (click)="filterStatus = ''; applyFilters()" class="remove-filter">
-                  <i class="material-icons">close</i>
-                </button>
-              </span>
-              <span class="filter-tag" *ngIf="filterDateFrom">
-                <i class="material-icons">date_range</i>
-                From: {{ filterDateFrom }}
-                <button (click)="filterDateFrom = ''; applyFilters()" class="remove-filter">
-                  <i class="material-icons">close</i>
-                </button>
-              </span>
-              <span class="filter-tag" *ngIf="filterDateTo">
-                <i class="material-icons">date_range</i>
-                To: {{ filterDateTo }}
-                <button (click)="filterDateTo = ''; applyFilters()" class="remove-filter">
-                  <i class="material-icons">close</i>
-                </button>
-              </span>
-            </div>
-          </div>
+  <p-message *ngIf="errorMessage" severity="error" styleClass="mb-3 w-full">
+    <ng-template pTemplate>
+      <div class="flex items-center justify-between w-full gap-2">
+        <span class="flex-1 text-sm">{{ errorMessage }}</span>
+        <p-button
+          icon="pi pi-times"
+          (onClick)="clearMessages()"
+          severity="danger"
+          [text]="true"
+          [rounded]="true"
+          size="small">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-message>
+
+  <!-- Filters Panel -->
+  <p-panel styleClass="mb-3" [toggleable]="true" [(collapsed)]="isFiltersCollapsed">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2 p-2">
+        <i class="pi pi-filter text-blue-600 text-sm"></i>
+        <span class="font-semibold text-sm">Filter Requests</span>
+      </div>
+    </ng-template>
+
+    <div class="p-2">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+        <!-- Search Input -->
+        <div class="flex flex-col md:col-span-2">
+          <label class="text-xs font-medium text-gray-600 mb-1">Search</label>
+          <span class="p-input-icon-left w-full">
+            <i class="pi pi-search text-sm"></i>
+            <input
+              type="text"
+              pInputText
+              class="w-full text-sm pl-8"
+              [(ngModel)]="searchTerm"
+              (input)="applyFilters()"
+              placeholder="Search by ID, requester..." />
+          </span>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="flex flex-col">
+          <label class="text-xs font-medium text-gray-600 mb-1">Status</label>
+          <p-dropdown
+            [options]="statusOptions"
+            [(ngModel)]="filterStatus"
+            (onChange)="applyFilters()"
+            placeholder="All Statuses"
+            styleClass="w-full text-sm"
+            [showClear]="true">
+          </p-dropdown>
+        </div>
+
+        <!-- Date From -->
+        <div class="flex flex-col">
+          <label class="text-xs font-medium text-gray-600 mb-1">Date From</label>
+          <p-calendar
+            [(ngModel)]="filterDateFrom"
+            (onSelect)="applyFilters()"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            inputId="dateFrom"
+            styleClass="w-full text-sm">
+          </p-calendar>
+        </div>
+
+        <!-- Date To -->
+        <div class="flex flex-col md:col-span-2 lg:col-span-1">
+          <label class="text-xs font-medium text-gray-600 mb-1">Date To</label>
+          <p-calendar
+            [(ngModel)]="filterDateTo"
+            (onSelect)="applyFilters()"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            inputId="dateTo"
+            styleClass="w-full text-sm">
+          </p-calendar>
+        </div>
+
+        <!-- Clear Filters Button -->
+        <div class="flex items-end md:col-span-2 lg:col-span-1">
+          <p-button
+            label="Clear"
+            icon="pi pi-filter-slash"
+            (onClick)="clearFilters()"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            styleClass="w-full">
+          </p-button>
         </div>
       </div>
 
-      <!-- Request History Section -->
-      <div class="history-section">
-        <div class="history-header">
-          <h3>
-            <i class="material-icons">list</i>
-            Request History ({{ filteredRequests.length }} requests)
-          </h3>
-        </div>
-
-        <div class="history-content">
-          <!-- Loading State -->
-          <div *ngIf="isLoading" class="loading-state">
-            <div class="spinner"></div>
-            <p>Loading request history...</p>
-          </div>
-
-          <!-- Empty State -->
-          <div *ngIf="!isLoading && filteredRequests.length === 0" class="empty-state">
-            <i class="material-icons">inbox</i>
-            <h3>No requests found</h3>
-            <p>No requests match your current filters. Try adjusting your search criteria.</p>
-          </div>
-
-          <!-- Requests Table -->
-          <div *ngIf="!isLoading && filteredRequests.length > 0" class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Request Number</th>
-                  <th>Request Date</th>
-                  <th>Required Date</th>
-                  <th>Status</th>
-                  <th>Dispatch Status</th>
-                  <th>Delivery Status</th>
-                  <th>Explosive Type</th>
-                  <th>Final Quantity</th>
-                  <th>Notes</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <ng-container *ngFor="let request of filteredRequests">
-                  <tr>
-                    <td>
-                      <strong>{{ request.requestNumber }}</strong>
-                    </td>
-                    <td>{{ formatDate(request.requestDate) }}</td>
-                    <td>{{ formatDate(request.requiredByDate) }}</td>
-                    <td>
-                      <span class="badge" [class]="getStatusClass(request.status)">
-                        {{ request.statusName }}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge" [class]="request.dispatchDate ? 'badge-success' : 'badge-warning'">
-                        {{ request.dispatchDate ? 'Dispatched' : 'Not Dispatched' }}
-                      </span>
-                      <div *ngIf="request.dispatchDate" class="text-muted small mt-1">
-                        {{ formatDate(request.dispatchDate) }}
-                      </div>
-                    </td>
-                    <td>
-                      <span class="badge" [class]="request.deliveryConfirmedDate ? 'badge-success' : 'badge-secondary'">
-                        {{ request.deliveryConfirmedDate ? 'Received' : 'Not Received' }}
-                      </span>
-                      <div *ngIf="request.deliveryConfirmedDate" class="text-muted small mt-1">
-                        {{ formatDate(request.deliveryConfirmedDate) }}
-                      </div>
-                    </td>
-                    <td>
-                      {{ request.explosiveTypeName }}
-                      <span class="text-muted">({{ request.requestedQuantity }} {{ request.unit }})</span>
-                    </td>
-                    <td>{{ request.finalQuantity }} {{ request.unit }}</td>
-                    <td class="purpose-cell">{{ request.requestNotes || '-' }}</td>
-                    <td>
-                      <div class="action-buttons">
-                        <button 
-                          class="btn btn-sm btn-outline-primary"
-                          (click)="openViewDetails(request)"
-                          title="View Details">
-                          <i class="material-icons">visibility</i>
-                        </button>
-                        <button
-                          class="action-btn dispatch-btn"
-                          (click)="openDispatchInfo(request)"
-                          *ngIf="request.dispatchDate"
-                          title="View Dispatch Information">
-                          <mat-icon>local_shipping</mat-icon>
-                        </button>
-                        <button
-                          *ngIf="request.status === TransferRequestStatus.Pending"
-                          class="btn btn-sm btn-outline-warning"
-                          title="Edit Request">
-                          <i class="material-icons">edit</i>
-                        </button>
-                        <button
-                          *ngIf="request.status === TransferRequestStatus.Pending"
-                          class="btn btn-sm btn-outline-danger"
-                          title="Cancel Request">
-                          <i class="material-icons">cancel</i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </ng-container>
-              </tbody>
-            </table>
-          </div>
-
-
+      <!-- Active Filters Display -->
+      <div *ngIf="hasActiveFilters()" class="mt-2 p-2 bg-blue-50 rounded border-l-4 border-blue-500">
+        <div class="flex flex-wrap gap-1.5">
+          <p-tag *ngIf="searchTerm" severity="info" [rounded]="true">
+            <span class="flex items-center gap-1.5 text-xs">
+              Search: "{{ searchTerm }}"
+              <i class="pi pi-times cursor-pointer hover:text-red-600" (click)="searchTerm = ''; applyFilters()"></i>
+            </span>
+          </p-tag>
+          <p-tag *ngIf="filterStatus" severity="info" [rounded]="true">
+            <span class="flex items-center gap-1.5 text-xs">
+              Status: {{ filterStatus }}
+              <i class="pi pi-times cursor-pointer hover:text-red-600" (click)="filterStatus = ''; applyFilters()"></i>
+            </span>
+          </p-tag>
+          <p-tag *ngIf="filterDateFrom" severity="info" [rounded]="true">
+            <span class="flex items-center gap-1.5 text-xs">
+              From: {{ filterDateFrom }}
+              <i class="pi pi-times cursor-pointer hover:text-red-600" (click)="filterDateFrom = ''; applyFilters()"></i>
+            </span>
+          </p-tag>
+          <p-tag *ngIf="filterDateTo" severity="info" [rounded]="true">
+            <span class="flex items-center gap-1.5 text-xs">
+              To: {{ filterDateTo }}
+              <i class="pi pi-times cursor-pointer hover:text-red-600" (click)="filterDateTo = ''; applyFilters()"></i>
+            </span>
+          </p-tag>
         </div>
       </div>
     </div>
-  </div>
+  </p-panel>
+
+  <!-- Table Panel -->
+  <p-panel>
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2 p-2">
+        <i class="pi pi-list text-blue-600 text-sm"></i>
+        <span class="font-semibold text-sm">Request History</span>
+        <span class="text-xs text-gray-500 ml-1">({{ filteredRequests.length }} requests)</span>
+      </div>
+    </ng-template>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-8">
+      <i class="pi pi-spin pi-spinner text-2xl text-blue-600 mb-2"></i>
+      <p class="text-gray-600 text-xs">Loading request history...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredRequests.length === 0" class="text-center py-8 bg-gray-50 rounded">
+      <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
+      <h3 class="text-gray-700 mb-1 font-semibold text-sm">No requests found</h3>
+      <p class="text-gray-600 text-xs">No requests match your current filters.</p>
+    </div>
+
+    <!-- Requests Table -->
+    <p-table
+      *ngIf="!isLoading && filteredRequests.length > 0"
+      [value]="filteredRequests"
+      styleClass="p-datatable-sm p-datatable-striped"
+      responsiveLayout="scroll"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} requests">
+
+            <ng-template pTemplate="header">
+              <tr class="bg-blue-600 text-white">
+                <th class="text-xs uppercase py-2">Request #</th>
+                <th class="text-xs uppercase py-2">Request Date</th>
+                <th class="text-xs uppercase py-2">Required Date</th>
+                <th class="text-xs uppercase py-2">Status</th>
+                <th class="text-xs uppercase py-2">Dispatch</th>
+                <th class="text-xs uppercase py-2">Delivery</th>
+                <th class="text-xs uppercase py-2">Explosive Type</th>
+                <th class="text-xs uppercase py-2">Final Qty</th>
+                <th class="text-xs uppercase py-2">Notes</th>
+                <th class="text-xs uppercase py-2">Actions</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-request>
+              <tr class="hover:bg-blue-50 transition-colors text-sm">
+                <td class="text-xs py-2">
+                  <span class="font-semibold text-blue-600">{{ request.requestNumber }}</span>
+                </td>
+                <td class="text-xs text-gray-700 py-2">{{ formatDate(request.requestDate) }}</td>
+                <td class="text-xs text-gray-700 py-2">{{ formatDate(request.requiredByDate) }}</td>
+                <td class="py-2">
+                  <p-tag
+                    [value]="request.statusName"
+                    [severity]="getStatusSeverity(request.status)"
+                    styleClass="text-xs">
+                  </p-tag>
+                </td>
+                <td class="py-2">
+                  <p-tag
+                    [value]="request.dispatchDate ? 'Dispatched' : 'Pending'"
+                    [severity]="request.dispatchDate ? 'success' : 'warning'"
+                    styleClass="text-xs">
+                  </p-tag>
+                  <div *ngIf="request.dispatchDate" class="text-gray-400 text-xs mt-0.5">
+                    {{ formatDate(request.dispatchDate) }}
+                  </div>
+                </td>
+                <td class="py-2">
+                  <p-tag
+                    [value]="request.deliveryConfirmedDate ? 'Received' : 'Pending'"
+                    [severity]="request.deliveryConfirmedDate ? 'success' : 'secondary'"
+                    styleClass="text-xs">
+                  </p-tag>
+                  <div *ngIf="request.deliveryConfirmedDate" class="text-gray-400 text-xs mt-0.5">
+                    {{ formatDate(request.deliveryConfirmedDate) }}
+                  </div>
+                </td>
+                <td class="text-xs py-2">
+                  <div class="font-semibold text-gray-800">{{ request.explosiveTypeName }}</div>
+                  <div class="text-gray-500 text-xs">Req: {{ request.requestedQuantity }} {{ request.unit }}</div>
+                </td>
+                <td class="text-xs font-bold text-green-600 py-2">{{ request.finalQuantity }} {{ request.unit }}</td>
+                <td class="text-xs text-gray-600 max-w-xs truncate py-2" [pTooltip]="request.requestNotes || 'No notes'">
+                  {{ request.requestNotes || '-' }}
+                </td>
+                <td class="py-2">
+                  <div class="flex gap-0.5">
+                    <p-button
+                      icon="pi pi-eye"
+                      (onClick)="openViewDetails(request)"
+                      pTooltip="View Details"
+                      severity="info"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small">
+                    </p-button>
+                    <p-button
+                      icon="pi pi-truck"
+                      *ngIf="request.dispatchDate"
+                      (onClick)="openDispatchInfo(request)"
+                      pTooltip="Dispatch Info"
+                      severity="help"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small">
+                    </p-button>
+                    <p-button
+                      icon="pi pi-pencil"
+                      *ngIf="request.status === TransferRequestStatus.Pending"
+                      pTooltip="Edit"
+                      severity="warning"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small">
+                    </p-button>
+                    <p-button
+                      icon="pi pi-times"
+                      *ngIf="request.status === TransferRequestStatus.Pending"
+                      pTooltip="Cancel"
+                      severity="danger"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small">
+                    </p-button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="10" class="text-center py-8">
+                  <div class="flex flex-col items-center gap-2">
+                    <i class="pi pi-inbox text-4xl text-gray-300"></i>
+                    <h4 class="text-gray-700 m-0 font-semibold text-sm">No Requests Found</h4>
+                    <p class="text-gray-600 m-0 text-xs">No requests match your current filters.</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+    </p-table>
+  </p-panel>
 </div>
 
 <!-- View Details Modal -->
 <app-view-details
-  *ngIf="showViewDetails && selectedRequest"
   [request]="selectedRequest"
+  [isVisible]="showViewDetails"
   (close)="closeViewDetails()">
 </app-view-details>

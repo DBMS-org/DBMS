@@ -14,6 +14,8 @@ import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextareaModule } from 'primeng/inputtextarea';
+import { PanelModule } from 'primeng/panel';
+import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-blasting-engineer-requests',
@@ -31,7 +33,9 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
     InputIconModule,
     TooltipModule,
     DialogModule,
-    InputTextareaModule
+    InputTextareaModule,
+    PanelModule,
+    MessageModule
   ],
   templateUrl: './blasting-engineer-requests.component.html',
   styleUrl: './blasting-engineer-requests.component.scss'
@@ -60,7 +64,7 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   isRejectingRequest = false;
 
   // Dropdown options
-  statusOptions = [
+  statusOptions: Array<{label: string, value: string}> = [
     { label: 'All Statuses', value: 'ALL' },
     { label: 'Pending', value: 'Pending' },
     { label: 'Approved', value: 'Approved' },
