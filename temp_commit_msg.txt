@@ -1,10 +1,1 @@
-feat(UI): migrate to PrimeNG and TailwindCSS for styling
-
-refactor(admin): replace Material components with PrimeNG equivalents
-feat(auth): implement PrimeNG components in auth forms
-refactor(store-manager): update layout and components with TailwindCSS
-chore: add PrimeNG and TailwindCSS dependencies
-style: remove deprecated SCSS files and migrate to utility classes
-build: update angular.json with PrimeNG styles
-feat: add ToastModule for global notifications
-refactor: replace MatDialog with PrimeNG DialogService
+updated some stylings in the store manager request
