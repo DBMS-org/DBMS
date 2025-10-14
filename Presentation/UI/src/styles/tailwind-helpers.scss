@@ -1,0 +1,440 @@
+// ==========================================
+// TAILWIND HELPER UTILITIES
+// Migration helpers for gradual transition from custom SCSS to Tailwind
+// ==========================================
+
+@layer components {
+
+  // ==========================================
+  // GRADIENT BACKGROUNDS (Matching existing design)
+  // ==========================================
+
+  .gradient-primary {
+    @apply bg-gradient-to-br from-primary to-primary-dark;
+  }
+
+  .gradient-success {
+    @apply bg-gradient-to-br from-success to-success-dark;
+  }
+
+  .gradient-warning {
+    @apply bg-gradient-to-br from-warning to-warning-dark;
+  }
+
+  .gradient-danger {
+    @apply bg-gradient-to-br from-danger to-danger-dark;
+  }
+
+  .gradient-info {
+    @apply bg-gradient-to-br from-info to-info-dark;
+  }
+
+  // ==========================================
+  // CARD COMPONENTS (Matching existing card styles)
+  // ==========================================
+
+  .card-modern {
+    @apply bg-white rounded-lg shadow-md border border-gray-100 p-6 transition-all;
+
+    &:hover {
+      @apply shadow-lg -translate-y-1;
+    }
+  }
+
+  .card-gradient-header {
+    @apply bg-gradient-to-br from-primary to-primary-dark text-white rounded-t-lg p-6 relative overflow-hidden;
+
+    &::before {
+      content: '';
+      @apply absolute inset-0 pointer-events-none;
+      background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+    }
+  }
+
+  // ==========================================
+  // BUTTON COMPONENTS (Matching existing button styles)
+  // ==========================================
+
+  .btn-modern {
+    @apply inline-flex items-center gap-2 px-6 py-3 rounded-md font-medium transition-all cursor-pointer border-none;
+
+    &:disabled {
+      @apply opacity-60 cursor-not-allowed pointer-events-none;
+    }
+  }
+
+  .btn-modern-primary {
+    @apply btn-modern bg-gradient-to-br from-primary to-primary-dark text-white;
+
+    &:hover:not(:disabled) {
+      @apply -translate-y-0.5 shadow-lg;
+      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+    }
+  }
+
+  .btn-modern-success {
+    @apply btn-modern bg-success text-white;
+
+    &:hover:not(:disabled) {
+      @apply bg-success-dark -translate-y-0.5 shadow-lg;
+    }
+  }
+
+  .btn-modern-danger {
+    @apply btn-modern bg-danger text-white;
+
+    &:hover:not(:disabled) {
+      @apply bg-danger-dark -translate-y-0.5 shadow-lg;
+    }
+  }
+
+  .btn-modern-warning {
+    @apply btn-modern bg-warning text-white;
+
+    &:hover:not(:disabled) {
+      @apply bg-warning-dark -translate-y-0.5 shadow-lg;
+    }
+  }
+
+  .btn-modern-outline {
+    @apply btn-modern bg-transparent border-2 border-primary text-primary;
+
+    &:hover:not(:disabled) {
+      @apply bg-primary text-white;
+    }
+  }
+
+  // ==========================================
+  // STAT CARDS (Matching existing dashboard stats)
+  // ==========================================
+
+  .stat-card-modern {
+    @apply bg-white p-6 rounded-lg shadow-md border border-gray-100 flex items-center gap-4 transition-all;
+
+    &:hover {
+      @apply shadow-lg -translate-y-1 border-primary;
+    }
+
+    .stat-icon {
+      @apply w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl relative overflow-hidden;
+
+      &::before {
+        content: '';
+        @apply absolute inset-0 opacity-0 transition-opacity;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.3) 100%);
+      }
+    }
+
+    &:hover .stat-icon::before {
+      @apply opacity-100;
+    }
+  }
+
+  // ==========================================
+  // FORM INPUTS (Matching existing form styles)
+  // ==========================================
+
+  .input-modern {
+    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-md text-base transition-all;
+
+    &:hover {
+      @apply border-primary;
+    }
+
+    &:focus {
+      @apply outline-none border-primary;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    &.is-invalid {
+      @apply border-danger;
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+      }
+    }
+  }
+
+  .label-modern {
+    @apply block mb-2 font-semibold text-gray-700 text-sm;
+  }
+
+  .form-group-modern {
+    @apply flex flex-col gap-2 mb-4;
+  }
+
+  // ==========================================
+  // BADGES & TAGS (Matching existing status badges)
+  // ==========================================
+
+  .badge-modern {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .badge-success {
+    @apply badge-modern bg-success/10 text-success border border-success/20;
+  }
+
+  .badge-warning {
+    @apply badge-modern bg-warning/10 text-warning border border-warning/20;
+  }
+
+  .badge-danger {
+    @apply badge-modern bg-danger/10 text-danger border border-danger/20;
+  }
+
+  .badge-info {
+    @apply badge-modern bg-info/10 text-info border border-info/20;
+  }
+
+  .badge-primary {
+    @apply badge-modern bg-primary/10 text-primary border border-primary/20;
+  }
+
+  // ==========================================
+  // LOADING STATES (Matching existing spinners)
+  // ==========================================
+
+  .loading-spinner {
+    @apply w-10 h-10 border-4 border-gray-200 border-t-primary rounded-full animate-spin;
+  }
+
+  .loading-container-modern {
+    @apply flex flex-col items-center justify-center p-8 text-center;
+
+    .loading-text {
+      @apply mt-4 text-gray-600 text-lg;
+    }
+  }
+
+  // ==========================================
+  // DASHBOARD HEADER (Matching existing header)
+  // ==========================================
+
+  .dashboard-header-modern {
+    @apply bg-gradient-to-br from-primary to-primary-dark text-white p-6 lg:p-8 rounded-lg mb-8 shadow-lg;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+  }
+
+  // ==========================================
+  // TABLE STYLES (For custom tables before migration to PrimeNG)
+  // ==========================================
+
+  .table-modern {
+    @apply w-full border-collapse bg-white rounded-lg overflow-hidden shadow-md;
+
+    thead {
+      @apply bg-gradient-to-br from-primary to-primary-dark text-white;
+
+      th {
+        @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider;
+      }
+    }
+
+    tbody {
+      tr {
+        @apply transition-colors border-b border-gray-200;
+
+        &:hover {
+          @apply bg-primary/5;
+        }
+
+        td {
+          @apply px-4 py-3 text-sm text-gray-700;
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // SIDEBAR STYLES
+  // ==========================================
+
+  .sidebar-modern {
+    @apply fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 shadow-md;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 text-gray-700 transition-all cursor-pointer;
+
+    &:hover {
+      @apply bg-primary/5 text-primary;
+    }
+
+    &.active {
+      @apply bg-primary/10 text-primary border-r-4 border-primary;
+    }
+  }
+
+  // ==========================================
+  // MODAL/DIALOG OVERLAY
+  // ==========================================
+
+  .modal-overlay-modern {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+  }
+
+  .modal-content-modern {
+    @apply bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden;
+  }
+
+  .modal-header-modern {
+    @apply bg-gradient-to-br from-primary to-primary-dark text-white px-6 py-4 flex items-center justify-between;
+  }
+
+  .modal-body-modern {
+    @apply p-6 overflow-y-auto;
+  }
+
+  .modal-footer-modern {
+    @apply px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3 justify-end;
+  }
+
+  // ==========================================
+  // ALERTS & NOTIFICATIONS
+  // ==========================================
+
+  .alert-modern {
+    @apply p-4 rounded-lg border flex items-center gap-3 mb-4;
+  }
+
+  .alert-success {
+    @apply alert-modern bg-success/10 border-success/20 text-success;
+  }
+
+  .alert-danger {
+    @apply alert-modern bg-danger/10 border-danger/20 text-danger;
+  }
+
+  .alert-warning {
+    @apply alert-modern bg-warning/10 border-warning/20 text-warning;
+  }
+
+  .alert-info {
+    @apply alert-modern bg-info/10 border-info/20 text-info;
+  }
+
+  // ==========================================
+  // UTILITY ANIMATIONS
+  // ==========================================
+
+  .slide-in-up {
+    animation: slideInUp 0.3s ease-out;
+  }
+
+  .slide-in-down {
+    animation: slideInDown 0.3s ease-out;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  // ==========================================
+  // TEXT GRADIENT
+  // ==========================================
+
+  .text-gradient-primary {
+    @apply bg-gradient-to-br from-primary to-primary-dark bg-clip-text text-transparent;
+  }
+
+  // ==========================================
+  // GLASSMORPHISM EFFECTS
+  // ==========================================
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20 rounded-lg shadow-lg;
+  }
+
+  // ==========================================
+  // HOVER EFFECTS
+  // ==========================================
+
+  .hover-lift {
+    @apply transition-transform duration-300;
+
+    &:hover {
+      @apply -translate-y-1;
+    }
+  }
+
+  .hover-grow {
+    @apply transition-transform duration-300;
+
+    &:hover {
+      @apply scale-105;
+    }
+  }
+}
+
+// ==========================================
+// UTILITY CLASSES
+// ==========================================
+
+@layer utilities {
+  // Custom scrollbar
+  .scrollbar-custom {
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      @apply bg-gray-100 rounded;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      @apply bg-gray-300 rounded;
+
+      &:hover {
+        @apply bg-gray-400;
+      }
+    }
+  }
+
+  // Text truncate with multiple lines
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

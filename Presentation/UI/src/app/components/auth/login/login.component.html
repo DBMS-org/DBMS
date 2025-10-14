@@ -1,103 +1,128 @@
-<div class="login-container">
-  <div class="login-card">
-    <!-- Logo/Brand Section -->
-    <div class="brand-section">
-      <div class="brand-icon">
-        <i class="fas fa-mining"></i>
-      </div>
-      <h1 class="brand-title">DBMS Portal</h1>
-      <p class="brand-subtitle">Drilling & Blasting Management System</p>
-    </div>
-
-    <!-- Login Form -->
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-      <div class="form-group">
-        <label for="username">
-          <i class="fas fa-user"></i>
-          Username
-        </label>
-        <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="username" 
-            formControlName="username" 
-            placeholder="Enter your username"
-            [class.is-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
-          >
-          <div class="input-icon">
-            <i class="fas fa-user"></i>
-          </div>
-        </div>
-        <div class="error-message" *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
-          <i class="fas fa-exclamation-circle"></i>
-          Username is required
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="password">
-          <i class="fas fa-lock"></i>
-          Password
-        </label>
-        <div class="input-wrapper">
-          <input 
-            type="password" 
-            id="password" 
-            formControlName="password" 
-            placeholder="Enter your password"
-            [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-          >
-          <div class="input-icon">
-            <i class="fas fa-lock"></i>
-          </div>
-        </div>
-        <div class="error-message" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-          <i class="fas fa-exclamation-circle"></i>
-          Password is required
-        </div>
-      </div>
-
-      <!-- Global Error Message -->
-      <div class="global-error" *ngIf="errorMessage">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span>{{ errorMessage }}</span>
-      </div>
-
-      <!-- Login Button -->
-      <button 
-        type="submit" 
-        class="login-button" 
-        [disabled]="!loginForm.valid || isLoading"
-      >
-        <span *ngIf="!isLoading" class="button-content">
-          <i class="fas fa-sign-in-alt"></i>
-          Sign In
-        </span>
-        <span *ngIf="isLoading" class="button-content loading">
-          <div class="spinner"></div>
-          Signing in...
-        </span>
-      </button>
-
-      <!-- Additional Actions -->
-      <div class="form-actions">
-        <a routerLink="/forgot-password" class="forgot-password-link">
-          <i class="fas fa-key"></i>
-          Forgot your password?
-        </a>
-      </div>
-    </form>
-
-    <!-- Footer -->
-    <div class="login-footer">
-      <p>&copy; 2024 DBMS Portal. All rights reserved.</p>
-    </div>
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 p-4 relative overflow-hidden">
+  <!-- Background Decoration -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-[10%] left-[10%] w-48 h-48 bg-white/10 rounded-full animate-float blur-3xl"></div>
+    <div class="absolute top-[60%] right-[15%] w-36 h-36 bg-white/10 rounded-full animate-float animation-delay-2000 blur-2xl"></div>
+    <div class="absolute bottom-[20%] left-[30%] w-24 h-24 bg-white/10 rounded-full animate-float animation-delay-4000 blur-xl"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/20 rounded-full animate-pulse blur-3xl"></div>
   </div>
 
-  <!-- Background Decoration -->
-  <div class="background-decoration">
-    <div class="decoration-circle circle-1"></div>
-    <div class="decoration-circle circle-2"></div>
-    <div class="decoration-circle circle-3"></div>
+  <!-- Login Card -->
+  <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-width-400 border border-white/30 relative z-10 animate-slide-up overflow-hidden">
+    <!-- Top Accent Bar -->
+    <div class="h-1 bg-gradient-to-r from-purple-600 to-purple-900 rounded-t-2xl"></div>
+
+    <div class="p-8">
+      <!-- Logo/Brand Section -->
+      <div class="text-center mb-8">
+        <div class="relative inline-block mb-4">
+          <div class="w-20 h-20 mx-auto bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 rounded-2xl flex items-center justify-center shadow-2xl relative animate-logo-float">
+            <div class="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-2xl"></div>
+            <div class="absolute -inset-1 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl blur-md opacity-50 animate-pulse"></div>
+            <i class="pi pi-box text-white text-3xl relative z-10"></i>
+          </div>
+        </div>
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-600 via-purple-700 to-purple-900 bg-clip-text text-transparent mb-2 tracking-tight">
+          DBMS Portal
+        </h1>
+        <p class="text-gray-600 text-sm font-medium">
+          Drilling & Blasting Management System
+        </p>
+        <div class="mt-3 flex items-center justify-center gap-2">
+          <span class="h-px w-8 bg-gradient-to-r from-transparent to-purple-300"></span>
+          <span class="text-xs text-purple-600 font-semibold uppercase tracking-wider">Secure Login</span>
+          <span class="h-px w-8 bg-gradient-to-l from-transparent to-purple-300"></span>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        <!-- Username Field -->
+        <div class="flex flex-col gap-2">
+          <label for="username" class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <i class="pi pi-user text-purple-600"></i>
+            Username
+          </label>
+          <input
+            pInputText
+            type="text"
+            id="username"
+            formControlName="username"
+            placeholder="Enter your username"
+            class="w-full"
+            [ngClass]="{'ng-invalid ng-dirty': loginForm.get('username')?.invalid && loginForm.get('username')?.touched}"
+          />
+          <small
+            class="text-red-500 text-xs font-medium flex items-center gap-1"
+            *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+          >
+            <i class="pi pi-exclamation-circle text-xs"></i>
+            Username is required
+          </small>
+        </div>
+
+        <!-- Password Field -->
+        <div class="flex flex-col gap-2">
+          <label for="password" class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <i class="pi pi-lock text-purple-600"></i>
+            Password
+          </label>
+          <p-password
+            formControlName="password"
+            placeholder="Enter your password"
+            [toggleMask]="true"
+            [feedback]="false"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [ngClass]="{'ng-invalid ng-dirty': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
+          ></p-password>
+          <small
+            class="text-red-500 text-xs font-medium flex items-center gap-1"
+            *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          >
+            <i class="pi pi-exclamation-circle text-xs"></i>
+            Password is required
+          </small>
+        </div>
+
+        <!-- Global Error Message -->
+        <div
+          class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600 text-sm font-medium flex items-center gap-2"
+          *ngIf="errorMessage"
+        >
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <!-- Login Button -->
+        <button
+          pButton
+          type="submit"
+          [label]="isLoading ? 'Signing in...' : 'Sign In'"
+          icon="pi pi-sign-in"
+          [loading]="isLoading"
+          [disabled]="!loginForm.valid || isLoading"
+          class="w-full mt-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+          [attr.aria-label]="'Sign in to your account'"
+          title="Sign in to your account"
+        ></button>
+
+        <!-- Additional Actions -->
+        <div class="flex justify-center mt-4">
+          <a
+            routerLink="/forgot-password"
+            class="text-purple-600 no-underline text-sm font-medium flex items-center gap-1 hover:text-purple-900 transition-colors"
+          >
+            <i class="pi pi-key text-xs"></i>
+            Forgot your password?
+          </a>
+        </div>
+      </form>
+
+      <!-- Footer -->
+      <div class="mt-8 pt-4 border-t border-gray-200 text-center">
+        <p class="text-gray-400 text-xs m-0">&copy; 2024 DBMS Portal. All rights reserved.</p>
+      </div>
+    </div>
   </div>
 </div>

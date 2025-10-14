@@ -9,7 +9,7 @@
   display: flex;
   flex: 1;
   position: relative;
-  margin-top: 64px; // Height of navbar
+  padding-top: 70px; // Height of navbar + padding
 }
 
 .main-content {
@@ -17,10 +17,11 @@
   padding: 2rem;
   margin-left: 250px;
   transition: margin-left 0.3s ease;
+  min-height: calc(100vh - 70px);
 }
 
 .sidebar-collapsed {
   .main-content {
-    margin-left: 70px;
+    margin-left: 80px;
   }
 }

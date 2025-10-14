@@ -9,12 +9,34 @@ import {
   TransferRequestStatus
 } from '../../../core/models/inventory-transfer.model';
 import { CentralInventory, ExplosiveType } from '../../../core/models/central-inventory.model';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { NotificationService } from '../../../core/services/notification.service';
+import { DropdownModule } from 'primeng/dropdown';
+import { CalendarModule } from 'primeng/calendar';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { MessageModule } from 'primeng/message';
+import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-add-stock',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatSnackBarModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownModule,
+    CalendarModule,
+    InputNumberModule,
+    InputTextareaModule,
+    InputTextModule,
+    ButtonModule,
+    CardModule,
+    MessageModule,
+    TagModule
+  ],
   templateUrl: './add-stock.component.html',
   styleUrls: ['./add-stock.component.scss']
 })
@@ -36,6 +58,10 @@ export class AddStockComponent implements OnInit, OnDestroy {
   filteredInventory: CentralInventory[] = [];
   selectedBatch: CentralInventory | null = null;
 
+  // Dropdown options
+  explosiveTypeOptions: { label: string; value: ExplosiveType }[] = [];
+  batchOptions: { label: string; value: number }[] = [];
+
   // User and store information (would typically come from auth service)
   currentUser = {
     name: 'Store Manager',
@@ -52,7 +78,7 @@ export class AddStockComponent implements OnInit, OnDestroy {
     private transferService: InventoryTransferService,
     private inventoryService: CentralInventoryService,
     private fb: FormBuilder,
-    private snackBar: MatSnackBar
+    private notificationService: NotificationService
   ) {
     this.initializeForm();
   }
@@ -88,14 +114,30 @@ export class AddStockComponent implements OnInit, OnDestroy {
             item => item.availableQuantity > 0 && item.status === 'Available'
           );
           this.filteredInventory = this.availableInventory;
+          this.updateExplosiveTypeOptions();
           this.isLoadingInventory = false;
         },
         error: (error) => {
           console.error('Error loading inventory:', error);
-          this.snackBar.open('Failed to load available inventory', 'Close', { duration: 3000 });
+          this.notificationService.showError('Failed to load available inventory');
           this.isLoadingInventory = false;
         }
       });
+  }
+
+  private updateExplosiveTypeOptions(): void {
+    const types = this.getExplosiveTypes();
+    this.explosiveTypeOptions = types.map(type => ({
+      label: this.getExplosiveTypeName(type),
+      value: type
+    }));
+  }
+
+  private updateBatchOptions(): void {
+    this.batchOptions = this.filteredInventory.map(batch => ({
+      label: this.getBatchDisplayName(batch),
+      value: batch.id
+    }));
   }
 
   onExplosiveTypeChange(): void {
@@ -110,6 +152,7 @@ export class AddStockComponent implements OnInit, OnDestroy {
     } else {
       this.filteredInventory = this.availableInventory;
     }
+    this.updateBatchOptions();
   }
 
   onBatchChange(): void {
@@ -166,14 +209,14 @@ export class AddStockComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (response) => {
             this.showSuccess(`Transfer request created successfully! Request #${response.requestNumber}`);
-            this.snackBar.open(`Request #${response.requestNumber} created successfully`, 'Close', { duration: 5000 });
+            this.notificationService.showSuccess(`Request #${response.requestNumber} created successfully`);
             this.resetForm();
             this.isSubmitting = false;
           },
           error: (error) => {
             const errorMsg = error.message || 'Error creating transfer request. Please try again.';
             this.showError(errorMsg);
-            this.snackBar.open(errorMsg, 'Close', { duration: 5000 });
+            this.notificationService.showError(errorMsg);
             this.isSubmitting = false;
           }
         });
@@ -259,5 +302,9 @@ export class AddStockComponent implements OnInit, OnDestroy {
   clearMessages(): void {
     this.successMessage = '';
     this.errorMessage = '';
+  }
+
+  getTodayDate(): Date {
+    return new Date();
   }
 }

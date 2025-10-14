@@ -3,11 +3,11 @@
     <!-- Modal Header -->
     <div class="modal-header">
       <h2 class="modal-title">
-        <i class="material-icons">description</i>
+        <i class="pi pi-file"></i>
         Request Details
       </h2>
       <button class="btn-close" (click)="onClose()">
-        <i class="material-icons">close</i>
+        <i class="pi pi-times"></i>
       </button>
     </div>
 
@@ -17,7 +17,7 @@
       <!-- Request Information Section -->
       <div class="info-section">
         <h3 class="section-title">
-          <i class="material-icons">info</i>
+          <i class="pi pi-info-circle"></i>
           Request Information
         </h3>
         <div class="info-grid">
@@ -45,7 +45,7 @@
       <!-- Requester Information Section -->
       <div class="info-section">
         <h3 class="section-title">
-          <i class="material-icons">person</i>
+          <i class="pi pi-user"></i>
           Requester Information
         </h3>
         <div class="info-grid">
@@ -63,7 +63,7 @@
       <!-- Explosive Details Section -->
       <div class="info-section">
         <h3 class="section-title">
-          <i class="material-icons">science</i>
+          <i class="pi science"></i>
           Explosive Details
         </h3>
         <div class="info-grid">
@@ -89,7 +89,7 @@
       <!-- Approval Information Section -->
       <div class="info-section" *ngIf="request?.approvedDate">
         <h3 class="section-title">
-          <i class="material-icons">verified</i>
+          <i class="pi verified"></i>
           Approval Information
         </h3>
         <div class="info-grid">
@@ -115,7 +115,7 @@
       <!-- Dispatch Information Section -->
       <div class="info-section" *ngIf="request?.dispatchDate">
         <h3 class="section-title">
-          <i class="material-icons">local_shipping</i>
+          <i class="pi pi-truck"></i>
           Dispatch Information
         </h3>
         <div class="info-grid">
@@ -141,7 +141,7 @@
       <!-- Notes Section -->
       <div class="info-section">
         <h3 class="section-title">
-          <i class="material-icons">note</i>
+          <i class="pi note"></i>
           Notes
         </h3>
         <div class="notes-content">

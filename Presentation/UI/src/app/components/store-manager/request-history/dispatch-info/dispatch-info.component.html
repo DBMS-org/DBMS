@@ -3,7 +3,7 @@
   <div class="dispatch-header">
     <div class="header-content">
       <div class="icon-wrapper">
-        <mat-icon>local_shipping</mat-icon>
+        <i class="pi pi-truck"></i>
       </div>
       <div class="header-text">
         <h3>Dispatch Information</h3>
@@ -11,11 +11,11 @@
       </div>
     </div>
     <div class="status-badge" [ngClass]="getDispatchStatusClass()">
-      <mat-icon>local_shipping</mat-icon>
+      <i class="pi pi-truck"></i>
       {{ getDispatchStatus() }}
     </div>
     <button class="close-btn" (click)="onClose()" *ngIf="!isStandalonePage">
-      <mat-icon>close</mat-icon>
+      <i class="pi pi-times"></i>
     </button>
   </div>
 
@@ -25,7 +25,7 @@
       <!-- Timeline Section -->
       <div class="detail-card">
         <div class="card-header">
-          <mat-icon>schedule</mat-icon>
+          <i class="pi pi-clock"></i>
           Dispatch Timeline
         </div>
         <div class="card-content">
@@ -51,7 +51,7 @@
       <!-- Requester Information -->
       <div class="detail-card">
         <div class="card-header">
-          <mat-icon>person</mat-icon>
+          <i class="pi pi-user"></i>
           Requester Information
         </div>
         <div class="card-content">
@@ -73,7 +73,7 @@
       <!-- Transportation Information -->
       <div class="detail-card">
         <div class="card-header">
-          <mat-icon>local_shipping</mat-icon>
+          <i class="pi pi-truck"></i>
           Transportation Details
         </div>
         <div class="card-content">
@@ -99,7 +99,7 @@
       <!-- Items Summary -->
       <div class="detail-card full-width">
         <div class="card-header">
-          <mat-icon>inventory</mat-icon>
+          <i class="pi pi-box"></i>
           Dispatched Items
         </div>
         <div class="card-content">
@@ -126,7 +126,7 @@
     <!-- Additional Information -->
     <div class="info-section">
       <div class="section-header">
-        <mat-icon>info</mat-icon>
+        <i class="pi pi-info-circle"></i>
         Additional Information
       </div>
       <div class="section-content">
@@ -152,20 +152,20 @@
   <!-- Action Section -->
   <div class="action-section">
     <div class="action-info" *ngIf="canConfirmDelivery()">
-      <mat-icon>info</mat-icon>
+      <i class="pi pi-info-circle"></i>
       <span>Materials ready for collection - Confirm when received</span>
     </div>
     <div class="action-info" *ngIf="request.deliveryConfirmedDate">
-      <mat-icon>check_circle</mat-icon>
+      <i class="pi pi-check-circle"></i>
       <span>Delivery confirmed on {{ formatDate(request.deliveryConfirmedDate) }}</span>
     </div>
     <div class="action-buttons">
       <button class="receive-btn" (click)="onReceive()" *ngIf="canConfirmDelivery()" [disabled]="isLoading">
-        <mat-icon>check_circle</mat-icon>
+        <i class="pi pi-check-circle"></i>
         {{ isLoading ? 'Processing...' : 'Confirm Receipt' }}
       </button>
       <button class="back-btn" (click)="onClose()" *ngIf="isStandalonePage">
-        <mat-icon>arrow_back</mat-icon>
+        <i class="pi pi-arrow-left"></i>
         Back to Request History
       </button>
     </div>
@@ -174,14 +174,14 @@
 
 <!-- Loading State -->
 <div class="loading-state" *ngIf="isLoading">
-  <mat-icon>hourglass_empty</mat-icon>
+  <i class="pi pi-clock"></i>
   <h4>Loading dispatch information...</h4>
 </div>
 
 <!-- Empty State -->
 <div class="no-request" *ngIf="!request && !isStandalonePage && !isLoading">
   <div class="empty-state">
-    <mat-icon>local_shipping</mat-icon>
+    <i class="pi pi-truck"></i>
     <h4>No Request Selected</h4>
     <p>Select a dispatched request to view dispatch information</p>
   </div>
@@ -190,11 +190,11 @@
 <!-- Not Dispatched State -->
 <div class="not-dispatched" *ngIf="request && !request.dispatchDate && !isLoading">
   <div class="empty-state">
-    <mat-icon>schedule</mat-icon>
+    <i class="pi pi-clock"></i>
     <h4>Request Not Yet Dispatched</h4>
     <p>This request has not been dispatched yet. Dispatch information will be available once the request is processed.</p>
     <button class="back-btn" (click)="onClose()">
-      <mat-icon>arrow_back</mat-icon>
+      <i class="pi pi-arrow-left"></i>
       Back
     </button>
   </div>
