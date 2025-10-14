@@ -20,6 +20,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { MatIconModule } from '@angular/material/icon';
+import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-request-history',
@@ -39,7 +40,8 @@ import { MatIconModule } from '@angular/material/icon';
     IconFieldModule,
     InputIconModule,
     TooltipModule,
-    MatIconModule
+    MatIconModule,
+    MessageModule
   ],
   templateUrl: './request-history.component.html',
   styleUrls: ['./request-history.component.scss']
