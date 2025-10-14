@@ -1,21 +1,21 @@
-<div class="dispatch-info-container" *ngIf="request">
+<div class="dispatch-info-container" *ngIf="request && !isLoading">
   <!-- Header Section -->
   <div class="dispatch-header">
     <div class="header-content">
       <div class="icon-wrapper">
-        <mat-icon>local_shipping</mat-icon>
+        <i class="pi pi-truck"></i>
       </div>
       <div class="header-text">
         <h3>Dispatch Information</h3>
-        <div class="subtitle">Request ID: {{ request.id }}</div>
+        <div class="subtitle">Request Number: {{ request.requestNumber }}</div>
       </div>
     </div>
     <div class="status-badge" [ngClass]="getDispatchStatusClass()">
-      <mat-icon>local_shipping</mat-icon>
+      <i class="pi pi-truck"></i>
       {{ getDispatchStatus() }}
     </div>
     <button class="close-btn" (click)="onClose()" *ngIf="!isStandalonePage">
-      <mat-icon>close</mat-icon>
+      <i class="pi pi-times"></i>
     </button>
   </div>
 
@@ -25,7 +25,7 @@
       <!-- Timeline Section -->
       <div class="detail-card">
         <div class="card-header">
-          <mat-icon>schedule</mat-icon>
+          <i class="pi pi-clock"></i>
           Dispatch Timeline
         </div>
         <div class="card-content">
@@ -35,11 +35,15 @@
           </div>
           <div class="detail-item">
             <label>Required Date:</label>
-            <span class="value">{{ formatDate(request.requiredDate) }}</span>
+            <span class="value">{{ formatDate(request.requiredByDate) }}</span>
           </div>
           <div class="detail-item">
             <label>Dispatch Date:</label>
-            <span class="value">{{ formatDate(request.dispatchedDate) }}</span>
+            <span class="value">{{ formatDate(request.dispatchDate) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="request.deliveryConfirmedDate">
+            <label>Delivery Confirmed:</label>
+            <span class="value">{{ formatDate(request.deliveryConfirmedDate) }}</span>
           </div>
         </div>
       </div>
@@ -47,21 +51,21 @@
       <!-- Requester Information -->
       <div class="detail-card">
         <div class="card-header">
-          <mat-icon>person</mat-icon>
+          <i class="pi pi-user"></i>
           Requester Information
         </div>
         <div class="card-content">
           <div class="detail-item">
             <label>Requester Name:</label>
-            <span class="value">{{ request.requesterName }}</span>
+            <span class="value">{{ request.requestedByUserName }}</span>
           </div>
           <div class="detail-item">
-            <label>Store Location:</label>
-            <span class="value">{{ request.requesterStoreName }}</span>
+            <label>Destination Store:</label>
+            <span class="value">{{ request.destinationStoreName }}</span>
           </div>
           <div class="detail-item">
-            <label>Store ID:</label>
-            <span class="value">{{ request.requesterStoreId }}</span>
+            <label>Batch ID:</label>
+            <span class="value">{{ request.batchId }}</span>
           </div>
         </div>
       </div>
@@ -69,48 +73,50 @@
       <!-- Transportation Information -->
       <div class="detail-card">
         <div class="card-header">
-          <mat-icon>local_shipping</mat-icon>
+          <i class="pi pi-truck"></i>
           Transportation Details
         </div>
         <div class="card-content">
           <div class="detail-item">
             <label>Truck Number:</label>
-            <span class="value">TRK-2024-001</span>
+            <span class="value">{{ request.truckNumber || 'N/A' }}</span>
           </div>
           <div class="detail-item">
             <label>Driver Name:</label>
-            <span class="value">Mohammed Al-Balushi</span>
+            <span class="value">{{ request.driverName || 'N/A' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="request.driverContactNumber">
+            <label>Driver Contact:</label>
+            <span class="value">{{ request.driverContactNumber }}</span>
           </div>
           <div class="detail-item">
-            <label>Route:</label>
-            <span class="value">Muscat Central → {{ request.requesterStoreName }}</span>
+            <label>Dispatched By:</label>
+            <span class="value">{{ request.dispatchedByUserName || 'N/A' }}</span>
           </div>
-          <div class="detail-item">
-            <label>Estimated Travel Time:</label>
-            <span class="value">2.5 hours</span>
-          </div>
+        </div>
       </div>
-    </div>
 
       <!-- Items Summary -->
       <div class="detail-card full-width">
         <div class="card-header">
-          <mat-icon>inventory</mat-icon>
+          <i class="pi pi-box"></i>
           Dispatched Items
         </div>
         <div class="card-content">
           <div class="items-table">
             <div class="table-header">
               <div>Explosive Type</div>
-              <div>Quantity</div>
+              <div>Requested Quantity</div>
+              <div>Approved Quantity</div>
+              <div>Final Quantity</div>
               <div>Unit</div>
-              <div>Purpose</div>
             </div>
-            <div class="table-row" *ngFor="let item of request.requestedItems">
-              <div class="item-type">{{ item.explosiveType }}</div>
-              <div class="item-quantity">{{ item.requestedQuantity }}</div>
-              <div class="item-unit">{{ item.unit }}</div>
-              <div class="item-purpose">{{ item.purpose }}</div>
+            <div class="table-row">
+              <div class="item-type">{{ request.explosiveTypeName }}</div>
+              <div class="item-quantity">{{ request.requestedQuantity }}</div>
+              <div class="item-quantity">{{ request.approvedQuantity || '-' }}</div>
+              <div class="item-quantity"><strong>{{ request.finalQuantity }}</strong></div>
+              <div class="item-unit">{{ request.unit }}</div>
             </div>
           </div>
         </div>
@@ -120,17 +126,24 @@
     <!-- Additional Information -->
     <div class="info-section">
       <div class="section-header">
-        <mat-icon>info</mat-icon>
+        <i class="pi pi-info-circle"></i>
         Additional Information
       </div>
       <div class="section-content">
-        <div class="info-item">
-          <strong>Dispatch Date:</strong>
-          <span class="value">{{ request.dispatchedDate | date:'medium' }}</span>
+        <div class="info-item" *ngIf="request.requestNotes">
+          <strong>Request Notes:</strong>
+          <span class="value">{{ request.requestNotes }}</span>
         </div>
-        <div class="info-item">
-          <strong>Notes:</strong>
-          <span class="value">{{ request.notes || 'No additional notes' }}</span>
+        <div class="info-item" *ngIf="request.approvalNotes">
+          <strong>Approval Notes:</strong>
+          <span class="value">{{ request.approvalNotes }}</span>
+        </div>
+        <div class="info-item" *ngIf="request.dispatchNotes">
+          <strong>Dispatch Notes:</strong>
+          <span class="value">{{ request.dispatchNotes }}</span>
+        </div>
+        <div class="info-item" *ngIf="!request.requestNotes && !request.approvalNotes && !request.dispatchNotes">
+          <span class="value">No additional notes</span>
         </div>
       </div>
     </div>
@@ -138,37 +151,51 @@
 
   <!-- Action Section -->
   <div class="action-section">
-    <div class="action-info">
-      <mat-icon>info</mat-icon>
-      <span>Materials ready for collection</span>
+    <div class="action-info" *ngIf="canConfirmDelivery()">
+      <i class="pi pi-info-circle"></i>
+      <span>Materials ready for collection - Confirm when received</span>
+    </div>
+    <div class="action-info" *ngIf="request.deliveryConfirmedDate">
+      <i class="pi pi-check-circle"></i>
+      <span>Delivery confirmed on {{ formatDate(request.deliveryConfirmedDate) }}</span>
     </div>
     <div class="action-buttons">
-      <button class="receive-btn" (click)="onReceive()">
-        <mat-icon>check_circle</mat-icon>
-        Receive Materials
+      <button class="receive-btn" (click)="onReceive()" *ngIf="canConfirmDelivery()" [disabled]="isLoading">
+        <i class="pi pi-check-circle"></i>
+        {{ isLoading ? 'Processing...' : 'Confirm Receipt' }}
       </button>
       <button class="back-btn" (click)="onClose()" *ngIf="isStandalonePage">
-        <mat-icon>arrow_back</mat-icon>
+        <i class="pi pi-arrow-left"></i>
         Back to Request History
       </button>
     </div>
   </div>
 </div>
 
+<!-- Loading State -->
+<div class="loading-state" *ngIf="isLoading">
+  <i class="pi pi-clock"></i>
+  <h4>Loading dispatch information...</h4>
+</div>
+
 <!-- Empty State -->
-<div class="no-request" *ngIf="!request && !isStandalonePage">
+<div class="no-request" *ngIf="!request && !isStandalonePage && !isLoading">
   <div class="empty-state">
-    <mat-icon>local_shipping</mat-icon>
+    <i class="pi pi-truck"></i>
     <h4>No Request Selected</h4>
     <p>Select a dispatched request to view dispatch information</p>
   </div>
 </div>
 
 <!-- Not Dispatched State -->
-<div class="not-dispatched" *ngIf="request && !request.dispatched">
+<div class="not-dispatched" *ngIf="request && !request.dispatchDate && !isLoading">
   <div class="empty-state">
-    <mat-icon>schedule</mat-icon>
+    <i class="pi pi-clock"></i>
     <h4>Request Not Yet Dispatched</h4>
     <p>This request has not been dispatched yet. Dispatch information will be available once the request is processed.</p>
+    <button class="back-btn" (click)="onClose()">
+      <i class="pi pi-arrow-left"></i>
+      Back
+    </button>
   </div>
 </div>

@@ -1,10 +1,22 @@
-<aside class="sidebar" [class.collapsed]="isCollapsed">
-  <nav class="nav-menu">
+<aside
+  class="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 shadow-md transition-all duration-300 ease-in-out z-[900]"
+  [ngClass]="isCollapsed ? 'w-[70px]' : 'w-64'">
+
+  <nav class="flex flex-col gap-2 py-4">
     @for (item of navItems; track item.route) {
-      <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
-        <i class="material-icons">{{item.icon}}</i>
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="bg-blue-50 text-blue-600 border-r-4 border-blue-600"
+        class="flex items-center gap-4 px-6 py-3 text-gray-600 no-underline rounded-r-[20px] mr-4 transition-all duration-200 hover:bg-gray-50 hover:text-gray-900 group">
+
+        <i class="material-icons text-2xl min-w-[24px] transition-transform duration-200 group-hover:scale-110">
+          {{item.icon}}
+        </i>
+
         @if (!isCollapsed) {
-          <span>{{item.label}}</span>
+          <span class="text-sm font-medium whitespace-nowrap">
+            {{item.label}}
+          </span>
         }
       </a>
     }

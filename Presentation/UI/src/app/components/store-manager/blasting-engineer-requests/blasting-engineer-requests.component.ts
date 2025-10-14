@@ -4,11 +4,35 @@ import { FormsModule } from '@angular/forms';
 import { ExplosiveApprovalRequestService, ExplosiveApprovalRequest } from '../../../core/services/explosive-approval-request.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { RequestDetailsComponent } from './request-details/request-details.component';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { TagModule } from 'primeng/tag';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextareaModule } from 'primeng/inputtextarea';
 
 @Component({
   selector: 'app-blasting-engineer-requests',
   standalone: true,
-  imports: [CommonModule, FormsModule, RequestDetailsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RequestDetailsComponent,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    TagModule,
+    IconFieldModule,
+    InputIconModule,
+    TooltipModule,
+    DialogModule,
+    InputTextareaModule
+  ],
   templateUrl: './blasting-engineer-requests.component.html',
   styleUrl: './blasting-engineer-requests.component.scss'
 })
@@ -28,6 +52,22 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   // Modal properties
   selectedRequest: ExplosiveApprovalRequest | null = null;
   isDetailsModalVisible: boolean = false;
+
+  // Rejection dialog properties
+  showRejectDialog = false;
+  rejectionReason = '';
+  rejectionError = '';
+  isRejectingRequest = false;
+
+  // Dropdown options
+  statusOptions = [
+    { label: 'All Statuses', value: 'ALL' },
+    { label: 'Pending', value: 'Pending' },
+    { label: 'Approved', value: 'Approved' },
+    { label: 'Rejected', value: 'Rejected' },
+    { label: 'Cancelled', value: 'Cancelled' },
+    { label: 'Expired', value: 'Expired' }
+  ];
 
   constructor(
     private explosiveApprovalService: ExplosiveApprovalRequestService,
@@ -193,27 +233,54 @@ export class BlastingEngineerRequestsComponent implements OnInit {
   }
 
   onReject(request: ExplosiveApprovalRequest): void {
-    const rejectionReason = prompt('Please provide a reason for rejection:');
-    if (rejectionReason) {
-      const currentUser = this.authService.getCurrentUser();
-      const detailedReason = `Rejected by ${currentUser?.name || 'Store Manager'} from ${this.currentUserRegion || 'Unknown Region'}: ${rejectionReason}`;
-      
-      this.explosiveApprovalService.rejectExplosiveApprovalRequest(request.id, detailedReason)
-        .subscribe({
-          next: (success) => {
-            if (success) {
-              console.log('Rejected request:', request.id);
-              this.errorMessage = ''; // Clear any previous errors
-              // Refresh the data from server to get the updated status
-              this.loadRequests();
-            }
-          },
-          error: (error) => {
-            console.error('Error rejecting request:', error);
-            this.errorMessage = 'Failed to reject request. Please try again.';
-          }
-        });
+    this.selectedRequest = request;
+    this.rejectionReason = '';
+    this.rejectionError = '';
+    this.showRejectDialog = true;
+  }
+
+  confirmReject(): void {
+    if (!this.rejectionReason || this.rejectionReason.trim().length === 0) {
+      this.rejectionError = 'Rejection reason is required';
+      return;
     }
+
+    if (this.rejectionReason.trim().length < 10) {
+      this.rejectionError = 'Please provide a more detailed reason (at least 10 characters)';
+      return;
+    }
+
+    this.isRejectingRequest = true;
+    this.rejectionError = '';
+
+    const currentUser = this.authService.getCurrentUser();
+    const detailedReason = `Rejected by ${currentUser?.name || 'Store Manager'} from ${this.currentUserRegion || 'Unknown Region'}: ${this.rejectionReason}`;
+
+    this.explosiveApprovalService.rejectExplosiveApprovalRequest(this.selectedRequest!.id, detailedReason)
+      .subscribe({
+        next: (success) => {
+          if (success) {
+            console.log('Rejected request:', this.selectedRequest!.id);
+            this.errorMessage = ''; // Clear any previous errors
+            this.isRejectingRequest = false;
+            this.closeRejectDialog();
+            // Refresh the data from server to get the updated status
+            this.loadRequests();
+          }
+        },
+        error: (error) => {
+          console.error('Error rejecting request:', error);
+          this.rejectionError = 'Failed to reject request. Please try again.';
+          this.isRejectingRequest = false;
+        }
+      });
+  }
+
+  closeRejectDialog(): void {
+    this.showRejectDialog = false;
+    this.rejectionReason = '';
+    this.rejectionError = '';
+    this.selectedRequest = null;
   }
 
   onViewDetails(request: ExplosiveApprovalRequest): void {
@@ -298,5 +365,34 @@ export class BlastingEngineerRequestsComponent implements OnInit {
     this.searchTerm = '';
     this.statusFilter = 'ALL';
     this.filteredRequests = [...this.requests];
+  }
+
+  getStatusSeverity(status: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' | undefined {
+    switch (status) {
+      case 'Pending': return 'warning';
+      case 'Approved': return 'success';
+      case 'Rejected': return 'danger';
+      case 'Cancelled': return 'secondary';
+      case 'Expired': return 'contrast';
+      default: return 'info';
+    }
+  }
+
+  getPrioritySeverity(priority: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' | undefined {
+    switch (priority.toLowerCase()) {
+      case 'high': return 'danger';
+      case 'medium': return 'warning';
+      case 'low': return 'info';
+      default: return 'secondary';
+    }
+  }
+
+  getApprovalTypeSeverity(approvalType: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' | undefined {
+    switch (approvalType.toLowerCase()) {
+      case 'normal': return 'info';
+      case 'urgent': return 'danger';
+      case 'emergency': return 'contrast';
+      default: return 'secondary';
+    }
   }
 }

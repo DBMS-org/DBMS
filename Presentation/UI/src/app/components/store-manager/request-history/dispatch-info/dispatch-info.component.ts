@@ -1,78 +1,94 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { StockRequest } from '../../../../core/models/stock-request.model';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Subject, takeUntil } from 'rxjs';
+import { InventoryTransferRequest } from '../../../../core/models/inventory-transfer.model';
+import { InventoryTransferService } from '../../../../core/services/inventory-transfer.service';
 
 @Component({
   selector: 'app-dispatch-info',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatSnackBarModule],
   templateUrl: './dispatch-info.component.html',
   styleUrls: ['./dispatch-info.component.scss']
 })
-export class DispatchInfoComponent implements OnInit {
-  @Input() request: StockRequest | null = null;
+export class DispatchInfoComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  @Input() request: InventoryTransferRequest | null = null;
   @Output() close = new EventEmitter<void>();
-  
+
   // For standalone page navigation
-  requestId: string | null = null;
+  requestId: number | null = null;
   isStandalonePage = false;
+  isLoading = false;
 
   constructor(
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private transferService: InventoryTransferService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
     // Check if this is being used as a standalone page
-    this.requestId = this.route.snapshot.paramMap.get('id');
+    const idParam = this.route.snapshot.paramMap.get('id');
+    this.requestId = idParam ? parseInt(idParam) : null;
     this.isStandalonePage = !!this.requestId;
-    
+
     if (this.isStandalonePage && this.requestId) {
       // Load request data based on ID
       this.loadRequestData(this.requestId);
     }
   }
 
-  private loadRequestData(id: string) {
-    // Mock data for now - in real app, this would come from a service
-    const mockRequests: StockRequest[] = [
-      {
-        id: '1',
-        requesterId: 'user1',
-        requesterName: 'Ahmed Al-Rashid',
-        requesterStoreId: 'store1',
-        requesterStoreName: 'Muscat Field Storage',
-        requestedItems: [
-          {
-            explosiveType: 'ANFO' as any,
-            requestedQuantity: 0.5,
-            unit: 'tons',
-            purpose: 'Mining operations - Phase 2',
-            specifications: 'Standard grade ANFO for surface mining'
-          }
-        ],
-        requestDate: new Date('2024-01-15'),
-        requiredDate: new Date('2024-01-25'),
-        status: 'APPROVED' as any,
-        dispatched: true,
-        dispatchedDate: new Date('2024-01-17'),
-        justification: 'Urgent requirement for upcoming mining phase',
-        notes: 'Please ensure delivery before 25th Jan',
-        approvalDate: new Date('2024-01-16'),
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-01-16')
-      }
-    ];
-    
-    this.request = mockRequests.find(r => r.id === id) || null;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadRequestData(id: number): void {
+    this.isLoading = true;
+    this.transferService.getTransferRequestById(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (request) => {
+          this.request = request;
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading request:', error);
+          this.snackBar.open('Error loading request details', 'Close', { duration: 3000 });
+          this.isLoading = false;
+          this.router.navigate(['/store-manager/request-history']);
+        }
+      });
   }
 
   onReceive(): void {
-    console.log('Receive button clicked for request:', this.request?.id);
-    // Placeholder for receive functionality
+    if (!this.request) return;
+
+    this.isLoading = true;
+    this.transferService.confirmDelivery(this.request.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Delivery confirmed successfully!', 'Close', { duration: 3000 });
+          this.isLoading = false;
+          // Reload the request data
+          if (this.request) {
+            this.loadRequestData(this.request.id);
+          }
+        },
+        error: (error) => {
+          console.error('Error confirming delivery:', error);
+          this.snackBar.open('Error confirming delivery', 'Close', { duration: 3000 });
+          this.isLoading = false;
+        }
+      });
   }
 
   onClose(): void {
@@ -93,10 +109,14 @@ export class DispatchInfoComponent implements OnInit {
   }
 
   getDispatchStatus(): string {
-    return this.request?.dispatched ? 'Dispatched' : 'Not Dispatched';
+    return this.request?.dispatchDate ? 'Dispatched' : 'Not Dispatched';
   }
 
   getDispatchStatusClass(): string {
-    return this.request?.dispatched ? 'status-dispatched' : 'status-not-dispatched';
+    return this.request?.dispatchDate ? 'status-dispatched' : 'status-not-dispatched';
+  }
+
+  canConfirmDelivery(): boolean {
+    return !!this.request?.dispatchDate && !this.request?.deliveryConfirmedDate;
   }
 }

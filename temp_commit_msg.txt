@@ -1,1 +1,1 @@
-refactor(mechanical-engineer): modernize navbar with glassmorphism
+refactor(mechanical-engineer): enhance sidebar with gradient states

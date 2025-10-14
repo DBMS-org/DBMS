@@ -67,6 +67,19 @@ export class StoreService {
     );
   }
 
+  // Assign manager to store
+  assignManager(storeId: number, managerUserId: number, store: Store): Observable<Store> {
+    const request: UpdateStoreRequest = {
+      storeName: store.storeName,
+      storeAddress: store.storeAddress,
+      storageCapacity: store.storageCapacity,
+      city: store.city,
+      status: store.status,
+      managerUserId: managerUserId
+    };
+    return this.updateStore(storeId, request);
+  }
+
   // Get store statistics
   getStoreStatistics(): Observable<StoreStatistics> {
     return this.http.get<StoreStatistics>(`${this.apiUrl}/statistics`).pipe(

@@ -2,7 +2,7 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="header-content">
-      <button mat-icon-button (click)="goBack()" class="back-button">
+      <button type="button" mat-icon-button (click)="goBack()" class="back-button">
         <mat-icon>arrow_back</mat-icon>
       </button>
       <div class="header-text">
@@ -21,42 +21,47 @@
       <div class="request-details">
         <div class="detail-row">
           <mat-icon class="detail-icon">tag</mat-icon>
-          <span class="label">Request ID:</span>
-          <span class="value">{{request.id}}</span>
+          <span class="label">Request Number:</span>
+          <span class="value">{{request.requestNumber}}</span>
         </div>
         <div class="detail-row">
           <mat-icon class="detail-icon">person</mat-icon>
           <span class="label">Requester:</span>
-          <span class="value">{{request.requesterName}} ({{request.requesterRole}})</span>
+          <span class="value">{{request.requestedByUserName}}</span>
         </div>
         <div class="detail-row">
           <mat-icon class="detail-icon">location_on</mat-icon>
-          <span class="label">Store Location:</span>
-          <span class="value">{{request.storeLocation}}</span>
+          <span class="label">Destination Store:</span>
+          <span class="value">{{request.destinationStoreName}}</span>
+        </div>
+        <div class="detail-row">
+          <mat-icon class="detail-icon">inventory</mat-icon>
+          <span class="label">Batch ID:</span>
+          <span class="value">{{request.batchId}}</span>
         </div>
         <div class="detail-row">
           <mat-icon class="detail-icon">science</mat-icon>
           <span class="label">Explosive Type:</span>
           <span class="value">
             <mat-chip-listbox>
-              <mat-chip [ngClass]="request?.explosiveType ? (request.explosiveType | lowercase) : ''">{{ request?.explosiveType || '-' }}</mat-chip>
+              <mat-chip [ngClass]="request?.explosiveTypeName ? (request.explosiveTypeName | lowercase) : ''">{{ request?.explosiveTypeName || '-' }}</mat-chip>
             </mat-chip-listbox>
           </span>
         </div>
         <div class="detail-row">
           <mat-icon class="detail-icon">scale</mat-icon>
           <span class="label">Requested Quantity:</span>
-          <span class="value">{{request.quantity}} {{request.unit}}</span>
+          <span class="value">{{request.requestedQuantity}} {{request.unit}}</span>
         </div>
         <div class="detail-row">
           <mat-icon class="detail-icon">schedule</mat-icon>
           <span class="label">Required By:</span>
-          <span class="value">{{request.requiredDate | date:'mediumDate'}}</span>
+          <span class="value">{{request.requiredByDate | date:'mediumDate'}}</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-row" *ngIf="request.requestNotes">
           <mat-icon class="detail-icon">description</mat-icon>
-          <span class="label">Purpose:</span>
-          <span class="value">{{request.purpose}}</span>
+          <span class="label">Notes:</span>
+          <span class="value">{{request.requestNotes}}</span>
         </div>
       </div>
     </div>

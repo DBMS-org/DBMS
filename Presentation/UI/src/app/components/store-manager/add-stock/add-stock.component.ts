@@ -1,19 +1,42 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { StockRequestService } from '../../../core/services/stock-request.service';
-import { 
-  StockRequest, 
-  CreateStockRequestRequest, 
-  StockRequestStatus
-} from '../../../core/models/stock-request.model';
-import { ExplosiveType } from '../../../core/models/store.model';
+import { InventoryTransferService } from '../../../core/services/inventory-transfer.service';
+import { CentralInventoryService } from '../../../core/services/central-inventory.service';
+import {
+  CreateTransferRequest,
+  TransferRequestStatus
+} from '../../../core/models/inventory-transfer.model';
+import { CentralInventory, ExplosiveType } from '../../../core/models/central-inventory.model';
+import { NotificationService } from '../../../core/services/notification.service';
+import { DropdownModule } from 'primeng/dropdown';
+import { CalendarModule } from 'primeng/calendar';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { MessageModule } from 'primeng/message';
+import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-add-stock',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownModule,
+    CalendarModule,
+    InputNumberModule,
+    InputTextareaModule,
+    InputTextModule,
+    ButtonModule,
+    CardModule,
+    MessageModule,
+    TagModule
+  ],
   templateUrl: './add-stock.component.html',
   styleUrls: ['./add-stock.component.scss']
 })
@@ -21,38 +44,47 @@ export class AddStockComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   stockRequestForm!: FormGroup;
-  
+
   isSubmitting = false;
-  
+  isLoadingInventory = false;
+
   successMessage = '';
   errorMessage = '';
-  
-  ExplosiveType = ExplosiveType;
 
-  StockRequestStatus = StockRequestStatus;
-  
-  explosiveTypes = Object.values(ExplosiveType);
+  ExplosiveType = ExplosiveType;
+  TransferRequestStatus = TransferRequestStatus;
+
+  availableInventory: CentralInventory[] = [];
+  filteredInventory: CentralInventory[] = [];
+  selectedBatch: CentralInventory | null = null;
+
+  // Dropdown options
+  explosiveTypeOptions: { label: string; value: ExplosiveType }[] = [];
+  batchOptions: { label: string; value: number }[] = [];
 
   // User and store information (would typically come from auth service)
   currentUser = {
-    name: 'John Smith',
+    name: 'Store Manager',
     role: 'Store Manager'
   };
-  
+
   currentStore = {
-    id: 'store1',
-    name: 'Muscat Field Storage',
-    manager: 'Ahmed Al-Rashid'
+    id: 1,
+    name: 'Field Storage Site',
+    manager: 'Store Manager'
   };
 
   constructor(
-    private stockRequestService: StockRequestService,
-    private fb: FormBuilder
+    private transferService: InventoryTransferService,
+    private inventoryService: CentralInventoryService,
+    private fb: FormBuilder,
+    private notificationService: NotificationService
   ) {
     this.initializeForm();
   }
 
   ngOnInit(): void {
+    this.loadAvailableInventory();
   }
 
   ngOnDestroy(): void {
@@ -62,55 +94,79 @@ export class AddStockComponent implements OnInit, OnDestroy {
 
   private initializeForm(): void {
     this.stockRequestForm = this.fb.group({
-      requiredDate: ['', Validators.required],
-      notes: [''],
-      items: this.fb.array([this.buildItemGroup()])
-    });
-  }
-
-  // Getter for items FormArray
-  get items(): FormArray {
-    return this.stockRequestForm.get('items') as FormArray;
-  }
-
-  // Helper to get a specific item FormGroup
-  getItemGroup(index: number): FormGroup {
-    return this.items.at(index) as FormGroup;
-  }
-
-  // Build a single item form group
-  private buildItemGroup(): FormGroup {
-    return this.fb.group({
       explosiveType: ['', Validators.required],
+      batchId: ['', Validators.required],
       requestedQuantity: ['', [Validators.required, Validators.min(0.1)]],
-      unit: ['', Validators.required],
-      purpose: ['', [Validators.required, Validators.minLength(5)]],
-      specifications: ['']
+      unit: ['kg', Validators.required],
+      requiredDate: ['', Validators.required],
+      notes: ['']
     });
   }
 
-  // Add a new item row
-  addItem(): void {
-    this.items.push(this.buildItemGroup());
+  loadAvailableInventory(): void {
+    this.isLoadingInventory = true;
+    this.inventoryService.getInventory({ pageSize: 100 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          // Filter to only show available inventory (not expired, quarantined, or depleted)
+          this.availableInventory = response.items.filter(
+            item => item.availableQuantity > 0 && item.status === 'Available'
+          );
+          this.filteredInventory = this.availableInventory;
+          this.updateExplosiveTypeOptions();
+          this.isLoadingInventory = false;
+        },
+        error: (error) => {
+          console.error('Error loading inventory:', error);
+          this.notificationService.showError('Failed to load available inventory');
+          this.isLoadingInventory = false;
+        }
+      });
   }
 
-  // Remove an item row by index
-  removeItem(index: number): void {
-    if (this.items.length > 1) {
-      this.items.removeAt(index);
+  private updateExplosiveTypeOptions(): void {
+    const types = this.getExplosiveTypes();
+    this.explosiveTypeOptions = types.map(type => ({
+      label: this.getExplosiveTypeName(type),
+      value: type
+    }));
+  }
+
+  private updateBatchOptions(): void {
+    this.batchOptions = this.filteredInventory.map(batch => ({
+      label: this.getBatchDisplayName(batch),
+      value: batch.id
+    }));
+  }
+
+  onExplosiveTypeChange(): void {
+    const explosiveType = this.stockRequestForm.get('explosiveType')?.value;
+    this.stockRequestForm.get('batchId')?.setValue('');
+    this.selectedBatch = null;
+
+    if (explosiveType) {
+      this.filteredInventory = this.availableInventory.filter(
+        inv => inv.explosiveType === explosiveType
+      );
+    } else {
+      this.filteredInventory = this.availableInventory;
+    }
+    this.updateBatchOptions();
+  }
+
+  onBatchChange(): void {
+    const batchId = this.stockRequestForm.get('batchId')?.value;
+    this.selectedBatch = this.availableInventory.find(inv => inv.id === parseInt(batchId)) || null;
+
+    if (this.selectedBatch) {
+      this.stockRequestForm.get('unit')?.setValue(this.selectedBatch.unit);
     }
   }
 
-  // When explosive type changes, reset the unit so user selects a valid one for that type
-  onExplosiveTypeChange(index: number): void {
-    const group = this.getItemGroup(index);
-    group.get('unit')?.reset('');
-  }
-
-  // Get units list for an item based on its explosive type
-  getUnitsForItem(index: number): string[] {
-    const type = this.getItemGroup(index).get('explosiveType')?.value as ExplosiveType | undefined;
-    return type ? this.getUnitsForExplosiveType(type) : [];
+  getExplosiveTypes(): ExplosiveType[] {
+    const types = new Set(this.availableInventory.map(inv => inv.explosiveType));
+    return Array.from(types);
   }
 
   getCurrentDateTime(): string {
@@ -126,58 +182,41 @@ export class AddStockComponent implements OnInit, OnDestroy {
     });
   }
 
-  getUnitsForExplosiveType(explosiveType: ExplosiveType): string[] {
-    return this.stockRequestService.getUnitsForExplosiveType(explosiveType);
-  }
-
 
 
   onSubmit(): void {
+    if (!this.selectedBatch) {
+      this.showError('Please select a batch from central warehouse');
+      return;
+    }
+
     if (this.stockRequestForm.valid) {
       this.isSubmitting = true;
 
-      const requestedItems = this.items.controls.map(ctrl => {
-        const v = (ctrl as FormGroup).value as {
-          explosiveType: ExplosiveType;
-          requestedQuantity: number | string;
-          unit: string;
-          purpose: string;
-          specifications?: string;
-        };
-        return {
-          explosiveType: v.explosiveType,
-          requestedQuantity: typeof v.requestedQuantity === 'string' ? parseFloat(v.requestedQuantity) : v.requestedQuantity,
-          unit: v.unit,
-          purpose: v.purpose,
-          specifications: v.specifications || ''
-        };
-      });
+      const formValue = this.stockRequestForm.value;
 
-      const justification = requestedItems
-        .map(it => it.purpose)
-        .filter(p => !!p && p.trim().length > 0)
-        .join('; ');
-
-      // Create the request in the expected format
-      const request: CreateStockRequestRequest = {
-        requesterStoreId: this.currentStore.id,
-        requestedItems,
-        requiredDate: this.stockRequestForm.value.requiredDate,
-        justification: justification || 'Multiple items request',
-        notes: this.stockRequestForm.value.notes || ''
+      const request: CreateTransferRequest = {
+        centralWarehouseInventoryId: this.selectedBatch.id,
+        destinationStoreId: this.currentStore.id,
+        requestedQuantity: parseFloat(formValue.requestedQuantity),
+        unit: formValue.unit,
+        requiredByDate: formValue.requiredDate ? new Date(formValue.requiredDate) : undefined,
+        requestNotes: formValue.notes || undefined
       };
 
-      this.stockRequestService.createStockRequest(request)
+      this.transferService.createTransferRequest(request)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
-            this.showSuccess('Explosive request created successfully! Request ID: ' + response.id);
+            this.showSuccess(`Transfer request created successfully! Request #${response.requestNumber}`);
+            this.notificationService.showSuccess(`Request #${response.requestNumber} created successfully`);
             this.resetForm();
-
             this.isSubmitting = false;
           },
           error: (error) => {
-            this.showError('Error creating explosive request. Please try again.');
+            const errorMsg = error.message || 'Error creating transfer request. Please try again.';
+            this.showError(errorMsg);
+            this.notificationService.showError(errorMsg);
             this.isSubmitting = false;
           }
         });
@@ -188,26 +227,23 @@ export class AddStockComponent implements OnInit, OnDestroy {
   }
 
   resetForm(): void {
-    this.stockRequestForm.reset();
-    this.initializeForm();
+    this.stockRequestForm.reset({
+      explosiveType: '',
+      batchId: '',
+      unit: 'kg'
+    });
+    this.selectedBatch = null;
+    this.filteredInventory = this.availableInventory;
     this.clearMessages();
   }
-
-
 
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
       control?.markAsTouched();
-      
+
       if (control instanceof FormGroup) {
         this.markFormGroupTouched(control);
-      } else if (control instanceof FormArray) {
-        control.controls.forEach(arrayControl => {
-          if (arrayControl instanceof FormGroup) {
-            this.markFormGroupTouched(arrayControl);
-          }
-        });
       }
     });
   }
@@ -234,16 +270,21 @@ export class AddStockComponent implements OnInit, OnDestroy {
   private getFieldDisplayName(fieldName: string): string {
     const displayNames: { [key: string]: string } = {
       explosiveType: 'Explosive Type',
-      requestedQuantity: 'Quantity',
+      batchId: 'Batch',
+      requestedQuantity: 'Requested Quantity',
       unit: 'Unit',
-      purpose: 'Purpose',
-      specifications: 'Specifications',
       requiredDate: 'Required Date',
-      priority: 'Priority',
-      justification: 'Justification',
       notes: 'Notes'
     };
     return displayNames[fieldName] || fieldName;
+  }
+
+  getExplosiveTypeName(type: ExplosiveType): string {
+    return type === ExplosiveType.ANFO ? 'ANFO' : 'Emulsion';
+  }
+
+  getBatchDisplayName(batch: CentralInventory): string {
+    return `${batch.batchId} - ${batch.availableQuantity} ${batch.unit} available`;
   }
 
   private showSuccess(message: string): void {
@@ -261,5 +302,9 @@ export class AddStockComponent implements OnInit, OnDestroy {
   clearMessages(): void {
     this.successMessage = '';
     this.errorMessage = '';
+  }
+
+  getTodayDate(): Date {
+    return new Date();
   }
 }
