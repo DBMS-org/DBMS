@@ -1,174 +1,244 @@
-<div class="dispatch-info-container" *ngIf="request">
+<p-toast></p-toast>
+
+<div *ngIf="request && !isLoading" class="p-4 bg-gray-50 min-h-screen">
   <!-- Header Section -->
-  <div class="dispatch-header">
-    <div class="header-content">
-      <div class="icon-wrapper">
-        <mat-icon>local_shipping</mat-icon>
+  <p-panel styleClass="mb-4">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full p-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+            <i class="pi pi-truck text-indigo-600 text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 m-0">Dispatch Information</h3>
+            <div class="text-xs text-gray-600 mt-0.5">Request #{{ request.requestNumber }}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <p-tag
+            [value]="getDispatchStatus()"
+            [severity]="request.dispatchDate ? 'success' : 'warning'"
+            [rounded]="true">
+          </p-tag>
+          <p-button
+            *ngIf="!isStandalonePage"
+            icon="pi pi-times"
+            (onClick)="onClose()"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary">
+          </p-button>
+        </div>
       </div>
-      <div class="header-text">
-        <h3>Dispatch Information</h3>
-        <div class="subtitle">Request ID: {{ request.id }}</div>
+    </ng-template>
+  </p-panel>
+
+  <!-- Dispatch Details Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+    <!-- Timeline Section -->
+    <p-panel>
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2 p-3">
+          <i class="pi pi-clock text-indigo-600 text-sm"></i>
+          <span class="font-semibold text-sm">Dispatch Timeline</span>
+        </div>
+      </ng-template>
+      <div class="p-3 space-y-2">
+        <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+          <label class="text-xs font-medium text-gray-500">Request Date:</label>
+          <span class="text-sm text-gray-800">{{ formatDate(request.requestDate) }}</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+          <label class="text-xs font-medium text-gray-500">Required Date:</label>
+          <span class="text-sm text-gray-800">{{ formatDate(request.requiredByDate) }}</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+          <label class="text-xs font-medium text-gray-500">Dispatch Date:</label>
+          <span class="text-sm text-gray-800">{{ formatDate(request.dispatchDate) }}</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5" *ngIf="request.deliveryConfirmedDate">
+          <label class="text-xs font-medium text-gray-500">Delivery Confirmed:</label>
+          <span class="text-sm text-green-600 font-semibold">{{ formatDate(request.deliveryConfirmedDate) }}</span>
+        </div>
       </div>
-    </div>
-    <div class="status-badge" [ngClass]="getDispatchStatusClass()">
-      <mat-icon>local_shipping</mat-icon>
-      {{ getDispatchStatus() }}
-    </div>
-    <button class="close-btn" (click)="onClose()" *ngIf="!isStandalonePage">
-      <mat-icon>close</mat-icon>
-    </button>
+    </p-panel>
+
+    <!-- Requester Information -->
+    <p-panel>
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2 p-3">
+          <i class="pi pi-user text-indigo-600 text-sm"></i>
+          <span class="font-semibold text-sm">Requester Information</span>
+        </div>
+      </ng-template>
+      <div class="p-3 space-y-2">
+        <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+          <label class="text-xs font-medium text-gray-500">Requester Name:</label>
+          <span class="text-sm text-gray-800">{{ request.requestedByUserName }}</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+          <label class="text-xs font-medium text-gray-500">Destination Store:</label>
+          <span class="text-sm text-gray-800">{{ request.destinationStoreName }}</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5">
+          <label class="text-xs font-medium text-gray-500">Batch ID:</label>
+          <span class="text-sm text-gray-800">{{ request.batchId }}</span>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- Transportation Information -->
+    <p-panel>
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2 p-3">
+          <i class="pi pi-truck text-indigo-600 text-sm"></i>
+          <span class="font-semibold text-sm">Transportation Details</span>
+        </div>
+      </ng-template>
+      <div class="p-3 space-y-2">
+        <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+          <label class="text-xs font-medium text-gray-500">Truck Number:</label>
+          <span class="text-sm text-gray-800">{{ request.truckNumber || 'N/A' }}</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+          <label class="text-xs font-medium text-gray-500">Driver Name:</label>
+          <span class="text-sm text-gray-800">{{ request.driverName || 'N/A' }}</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-gray-100" *ngIf="request.driverContactNumber">
+          <label class="text-xs font-medium text-gray-500">Driver Contact:</label>
+          <span class="text-sm text-gray-800">{{ request.driverContactNumber }}</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5">
+          <label class="text-xs font-medium text-gray-500">Dispatched By:</label>
+          <span class="text-sm text-gray-800">{{ request.dispatchedByUserName || 'N/A' }}</span>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- Items Summary -->
+    <p-panel styleClass="md:col-span-2">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2 p-3">
+          <i class="pi pi-box text-indigo-600 text-sm"></i>
+          <span class="font-semibold text-sm">Dispatched Items</span>
+        </div>
+      </ng-template>
+      <p-table [value]="[request]" styleClass="p-datatable-sm p-datatable-striped">
+        <ng-template pTemplate="header">
+          <tr class="bg-indigo-600 text-white">
+            <th class="text-xs uppercase tracking-wide">Explosive Type</th>
+            <th class="text-xs uppercase tracking-wide">Requested</th>
+            <th class="text-xs uppercase tracking-wide">Approved</th>
+            <th class="text-xs uppercase tracking-wide">Final</th>
+            <th class="text-xs uppercase tracking-wide">Unit</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr class="hover:bg-indigo-50 transition-colors">
+            <td class="font-semibold text-gray-800 text-sm">{{ item.explosiveTypeName }}</td>
+            <td class="text-gray-700 text-sm">{{ item.requestedQuantity }}</td>
+            <td class="text-gray-700 text-sm">{{ item.approvedQuantity || '-' }}</td>
+            <td class="font-bold text-green-600 text-sm">{{ item.finalQuantity }}</td>
+            <td class="text-gray-700 text-sm">{{ item.unit }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-panel>
   </div>
 
-  <!-- Dispatch Details -->
-  <div class="dispatch-details">
-    <div class="details-grid">
-      <!-- Timeline Section -->
-      <div class="detail-card">
-        <div class="card-header">
-          <mat-icon>schedule</mat-icon>
-          Dispatch Timeline
-        </div>
-        <div class="card-content">
-          <div class="detail-item">
-            <label>Request Date:</label>
-            <span class="value">{{ formatDate(request.requestDate) }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Required Date:</label>
-            <span class="value">{{ formatDate(request.requiredDate) }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Dispatch Date:</label>
-            <span class="value">{{ formatDate(request.dispatchedDate) }}</span>
-          </div>
-        </div>
+  <!-- Additional Information -->
+  <p-panel styleClass="mb-3">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2 p-3">
+        <i class="pi pi-comment text-indigo-600 text-sm"></i>
+        <span class="font-semibold text-sm">Additional Information</span>
       </div>
-
-      <!-- Requester Information -->
-      <div class="detail-card">
-        <div class="card-header">
-          <mat-icon>person</mat-icon>
-          Requester Information
-        </div>
-        <div class="card-content">
-          <div class="detail-item">
-            <label>Requester Name:</label>
-            <span class="value">{{ request.requesterName }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Store Location:</label>
-            <span class="value">{{ request.requesterStoreName }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Store ID:</label>
-            <span class="value">{{ request.requesterStoreId }}</span>
-          </div>
-        </div>
+    </ng-template>
+    <div class="p-3 space-y-2">
+      <div *ngIf="request.requestNotes" class="p-2.5 bg-blue-50 rounded border-l-4 border-blue-500">
+        <strong class="text-blue-800 text-xs">Request Notes:</strong>
+        <p class="m-0 mt-1 text-xs text-gray-700">{{ request.requestNotes }}</p>
       </div>
-
-      <!-- Transportation Information -->
-      <div class="detail-card">
-        <div class="card-header">
-          <mat-icon>local_shipping</mat-icon>
-          Transportation Details
-        </div>
-        <div class="card-content">
-          <div class="detail-item">
-            <label>Truck Number:</label>
-            <span class="value">TRK-2024-001</span>
-          </div>
-          <div class="detail-item">
-            <label>Driver Name:</label>
-            <span class="value">Mohammed Al-Balushi</span>
-          </div>
-          <div class="detail-item">
-            <label>Route:</label>
-            <span class="value">Muscat Central → {{ request.requesterStoreName }}</span>
-          </div>
-          <div class="detail-item">
-            <label>Estimated Travel Time:</label>
-            <span class="value">2.5 hours</span>
-          </div>
+      <div *ngIf="request.approvalNotes" class="p-2.5 bg-green-50 rounded border-l-4 border-green-500">
+        <strong class="text-green-800 text-xs">Approval Notes:</strong>
+        <p class="m-0 mt-1 text-xs text-gray-700">{{ request.approvalNotes }}</p>
+      </div>
+      <div *ngIf="request.dispatchNotes" class="p-2.5 bg-indigo-50 rounded border-l-4 border-indigo-500">
+        <strong class="text-indigo-800 text-xs">Dispatch Notes:</strong>
+        <p class="m-0 mt-1 text-xs text-gray-700">{{ request.dispatchNotes }}</p>
+      </div>
+      <div *ngIf="!request.requestNotes && !request.approvalNotes && !request.dispatchNotes" class="p-2.5 bg-gray-50 rounded text-center">
+        <span class="text-gray-500 italic text-xs">No additional notes</span>
       </div>
     </div>
-
-      <!-- Items Summary -->
-      <div class="detail-card full-width">
-        <div class="card-header">
-          <mat-icon>inventory</mat-icon>
-          Dispatched Items
-        </div>
-        <div class="card-content">
-          <div class="items-table">
-            <div class="table-header">
-              <div>Explosive Type</div>
-              <div>Quantity</div>
-              <div>Unit</div>
-              <div>Purpose</div>
-            </div>
-            <div class="table-row" *ngFor="let item of request.requestedItems">
-              <div class="item-type">{{ item.explosiveType }}</div>
-              <div class="item-quantity">{{ item.requestedQuantity }}</div>
-              <div class="item-unit">{{ item.unit }}</div>
-              <div class="item-purpose">{{ item.purpose }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Additional Information -->
-    <div class="info-section">
-      <div class="section-header">
-        <mat-icon>info</mat-icon>
-        Additional Information
-      </div>
-      <div class="section-content">
-        <div class="info-item">
-          <strong>Dispatch Date:</strong>
-          <span class="value">{{ request.dispatchedDate | date:'medium' }}</span>
-        </div>
-        <div class="info-item">
-          <strong>Notes:</strong>
-          <span class="value">{{ request.notes || 'No additional notes' }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  </p-panel>
 
   <!-- Action Section -->
-  <div class="action-section">
-    <div class="action-info">
-      <mat-icon>info</mat-icon>
-      <span>Materials ready for collection</span>
-    </div>
-    <div class="action-buttons">
-      <button class="receive-btn" (click)="onReceive()">
-        <mat-icon>check_circle</mat-icon>
-        Receive Materials
-      </button>
-      <button class="back-btn" (click)="onClose()" *ngIf="isStandalonePage">
-        <mat-icon>arrow_back</mat-icon>
-        Back to Request History
-      </button>
+  <div class="bg-white p-3 rounded-lg border border-gray-200">
+    <p-message *ngIf="canConfirmDelivery()" severity="info" styleClass="mb-3 w-full">
+      <ng-template pTemplate>
+        <div class="flex items-center gap-2">
+          <i class="pi pi-info-circle"></i>
+          <span>Materials ready for collection - Confirm when received</span>
+        </div>
+      </ng-template>
+    </p-message>
+
+    <p-message *ngIf="request.deliveryConfirmedDate" severity="success" styleClass="mb-3 w-full">
+      <ng-template pTemplate>
+        <div class="flex items-center gap-2">
+          <i class="pi pi-check-circle"></i>
+          <span>Delivery confirmed on {{ formatDate(request.deliveryConfirmedDate) }}</span>
+        </div>
+      </ng-template>
+    </p-message>
+
+    <div class="flex gap-2 justify-end">
+      <p-button
+        *ngIf="canConfirmDelivery()"
+        label="Confirm Receipt"
+        icon="pi pi-check-circle"
+        (onClick)="onReceive()"
+        [disabled]="isLoading"
+        severity="success">
+      </p-button>
+      <p-button
+        *ngIf="isStandalonePage"
+        label="Back to Request History"
+        icon="pi pi-arrow-left"
+        (onClick)="onClose()"
+        severity="secondary">
+      </p-button>
     </div>
   </div>
 </div>
 
+<!-- Loading State -->
+<div *ngIf="isLoading" class="flex flex-col items-center justify-center py-16">
+  <i class="pi pi-spin pi-spinner text-5xl text-indigo-600 mb-4"></i>
+  <h4 class="text-gray-700 font-semibold">Loading dispatch information...</h4>
+</div>
+
 <!-- Empty State -->
-<div class="no-request" *ngIf="!request && !isStandalonePage">
-  <div class="empty-state">
-    <mat-icon>local_shipping</mat-icon>
-    <h4>No Request Selected</h4>
-    <p>Select a dispatched request to view dispatch information</p>
+<div *ngIf="!request && !isStandalonePage && !isLoading" class="flex flex-col items-center justify-center py-16">
+  <div class="text-center">
+    <i class="pi pi-truck text-8xl text-gray-300 mb-4"></i>
+    <h4 class="text-gray-700 font-semibold text-xl mb-2">No Request Selected</h4>
+    <p class="text-gray-600">Select a dispatched request to view dispatch information</p>
   </div>
 </div>
 
 <!-- Not Dispatched State -->
-<div class="not-dispatched" *ngIf="request && !request.dispatched">
-  <div class="empty-state">
-    <mat-icon>schedule</mat-icon>
-    <h4>Request Not Yet Dispatched</h4>
-    <p>This request has not been dispatched yet. Dispatch information will be available once the request is processed.</p>
+<div *ngIf="request && !request.dispatchDate && !isLoading" class="flex flex-col items-center justify-center py-16">
+  <div class="text-center">
+    <i class="pi pi-clock text-8xl text-gray-300 mb-4"></i>
+    <h4 class="text-gray-700 font-semibold text-xl mb-2">Request Not Yet Dispatched</h4>
+    <p class="text-gray-600 mb-4">This request has not been dispatched yet. Dispatch information will be available once the request is processed.</p>
+    <p-button
+      label="Back"
+      icon="pi pi-arrow-left"
+      (onClick)="onClose()"
+      severity="secondary">
+    </p-button>
   </div>
 </div>

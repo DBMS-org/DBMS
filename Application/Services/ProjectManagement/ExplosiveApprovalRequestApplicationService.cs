@@ -74,12 +74,14 @@ namespace Application.Services.ProjectManagement
         }
 
         public async Task<ExplosiveApprovalRequest> CreateExplosiveApprovalRequestAsync(
-            int projectSiteId, 
-            int requestedByUserId, 
-            DateTime expectedUsageDate, 
+            int projectSiteId,
+            int requestedByUserId,
+            DateTime expectedUsageDate,
             string? comments = null,
             RequestPriority priority = RequestPriority.Normal,
-            ExplosiveApprovalType approvalType = ExplosiveApprovalType.Standard)
+            ExplosiveApprovalType approvalType = ExplosiveApprovalType.Standard,
+            DateTime? blastingDate = null,
+            string? blastTiming = null)
         {
             try
             {
@@ -93,7 +95,7 @@ namespace Application.Services.ProjectManagement
                 // Check if there's already a pending request for this project site
                 var existingRequests = await _explosiveApprovalRequestRepository.GetByProjectSiteIdAsync(projectSiteId);
                 var hasPendingRequest = existingRequests.Any(r => r.Status == ExplosiveApprovalStatus.Pending);
-                
+
                 if (hasPendingRequest)
                 {
                     throw new InvalidOperationException($"There is already a pending explosive approval request for project site {projectSiteId}.");
@@ -107,7 +109,9 @@ namespace Application.Services.ProjectManagement
                     Comments = comments,
                     Priority = priority,
                     ApprovalType = approvalType,
-                    Status = ExplosiveApprovalStatus.Pending
+                    Status = ExplosiveApprovalStatus.Pending,
+                    BlastingDate = blastingDate,
+                    BlastTiming = blastTiming
                 };
 
                 return await _explosiveApprovalRequestRepository.CreateAsync(request);
@@ -213,6 +217,29 @@ namespace Application.Services.ProjectManagement
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving latest explosive approval request for project site {ProjectSiteId}", projectSiteId);
+                throw;
+            }
+        }
+
+        public async Task<bool> UpdateBlastingTimingAsync(int requestId, DateTime? blastingDate, string? blastTiming)
+        {
+            try
+            {
+                // Validate timing format if provided
+                if (!string.IsNullOrWhiteSpace(blastTiming))
+                {
+                    if (!TimeSpan.TryParse(blastTiming, out _))
+                    {
+                        throw new ArgumentException("Invalid timing format. Expected format: HH:mm (e.g., 14:30)");
+                    }
+                }
+
+                return await _explosiveApprovalRequestRepository.UpdateBlastingTimingAsync(
+                    requestId, blastingDate, blastTiming);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating blasting timing for request {RequestId}", requestId);
                 throw;
             }
         }

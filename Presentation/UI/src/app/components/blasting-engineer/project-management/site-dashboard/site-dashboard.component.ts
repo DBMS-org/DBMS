@@ -47,6 +47,8 @@ export class SiteDashboardComponent implements OnInit {
   
   explosiveApprovalForm = {
     expectedUsageDate: '',
+    blastingDate: '',
+    blastTiming: '',
     comments: ''
   };
   
@@ -469,6 +471,8 @@ export class SiteDashboardComponent implements OnInit {
             // No pending request, show the modal
             this.explosiveApprovalForm = {
               expectedUsageDate: '',
+              blastingDate: '',
+              blastTiming: '',
               comments: ''
             };
             this.showExplosiveApprovalModal = true;
@@ -479,6 +483,8 @@ export class SiteDashboardComponent implements OnInit {
           // If check fails, still allow the user to try (they'll get proper error handling in confirmExplosiveApprovalRequest)
           this.explosiveApprovalForm = {
             expectedUsageDate: '',
+            blastingDate: '',
+            blastTiming: '',
             comments: ''
           };
           this.showExplosiveApprovalModal = true;
@@ -521,6 +527,8 @@ export class SiteDashboardComponent implements OnInit {
     this.showExplosiveApprovalModal = false;
     this.explosiveApprovalForm = {
       expectedUsageDate: '',
+      blastingDate: '',
+      blastTiming: '',
       comments: ''
     };
   }

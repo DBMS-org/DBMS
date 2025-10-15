@@ -1,232 +1,322 @@
-<header class="dashboard-header">
-  <div class="header-content">
-    <h1>Store Manager Dashboard</h1>
-    <div class="user-info">
-      <div class="user-details" *ngIf="currentUser">
-        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
-        <div class="user-metadata">
-          <span class="user-role">Role: {{ currentUser.role }}</span>
-          <span class="user-location" *ngIf="currentUser.region">Region: {{ currentUser.region }}</span>
+<header class="bg-gradient-to-r from-primary to-primary-dark text-white px-6 py-8 rounded-lg shadow-lg mb-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold">Store Manager Dashboard</h1>
+      <div class="mt-2" *ngIf="currentUser">
+        <span class="text-lg">{{ getUserWelcomeMessage() }}</span>
+        <div class="flex gap-4 mt-1 text-sm opacity-90">
+          <span>Role: {{ currentUser.role }}</span>
+          <span *ngIf="currentUser.region">Region: {{ currentUser.region }}</span>
         </div>
       </div>
-      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
-        <i class="material-icons">refresh</i>
-        Refresh
-      </button>
     </div>
+    <button
+      type="button"
+      class="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-md transition-all"
+      (click)="refreshDashboard()"
+      title="Refresh dashboard data">
+      <i class="pi pi-refresh"></i>
+      <span>Refresh</span>
+    </button>
   </div>
 </header>
 
-<div class="loading-container" *ngIf="isLoading">
-  <div class="spinner"></div>
-  <p>Loading dashboard...</p>
+<div class="flex flex-col items-center justify-center py-12" *ngIf="isLoading">
+  <i class="pi pi-spin pi-spinner text-4xl text-primary mb-4"></i>
+  <p class="text-gray-600">Loading dashboard...</p>
 </div>
 
-<div class="dashboard-content" *ngIf="!isLoading">
-  <div class="dashboard-stats">
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="material-icons">add_box</i>
-      </div>
-      <div class="stat-content">
-        <h3>Add Stock Requests</h3>
-        <p class="stat-value">{{ stats.pendingAddRequests }}</p>
-        <p class="stat-change">Pending approval</p>
-      </div>
-    </div>
-    
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="material-icons">edit</i>
-      </div>
-      <div class="stat-content">
-        <h3>Edit Stock Requests</h3>
-        <p class="stat-value">{{ stats.pendingEditRequests }}</p>
-        <p class="stat-change">Pending approval</p>
+<div class="space-y-6" *ngIf="!isLoading">
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Add Stock Requests Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <p class="text-sm text-gray-600 font-medium uppercase">Add Stock Requests</p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.pendingAddRequests }}</p>
+          <p class="text-sm text-gray-500 mt-2">Pending approval</p>
+        </div>
+        <div class="bg-blue-100 p-4 rounded-full">
+          <i class="pi pi-plus-circle text-2xl text-blue-600"></i>
+        </div>
       </div>
     </div>
-    
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="material-icons">delete</i>
-      </div>
-      <div class="stat-content">
-        <h3>Delete Stock Requests</h3>
-        <p class="stat-value">{{ stats.pendingDeleteRequests }}</p>
-        <p class="stat-change">Pending approval</p>
+
+    <!-- Edit Stock Requests Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500 hover:shadow-xl transition-shadow">
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <p class="text-sm text-gray-600 font-medium uppercase">Edit Stock Requests</p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.pendingEditRequests }}</p>
+          <p class="text-sm text-gray-500 mt-2">Pending approval</p>
+        </div>
+        <div class="bg-yellow-100 p-4 rounded-full">
+          <i class="pi pi-pencil text-2xl text-yellow-600"></i>
+        </div>
       </div>
     </div>
-    
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="material-icons">notifications</i>
+
+    <!-- Delete Stock Requests Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 hover:shadow-xl transition-shadow">
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <p class="text-sm text-gray-600 font-medium uppercase">Delete Stock Requests</p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.pendingDeleteRequests }}</p>
+          <p class="text-sm text-gray-500 mt-2">Pending approval</p>
+        </div>
+        <div class="bg-red-100 p-4 rounded-full">
+          <i class="pi pi-trash text-2xl text-red-600"></i>
+        </div>
       </div>
-      <div class="stat-content">
-        <h3>Notifications</h3>
-        <p class="stat-value">{{ stats.totalNotifications }}</p>
-        <p class="stat-change negative">{{ stats.rejectedRequests }} rejection(s)</p>
+    </div>
+
+    <!-- Notifications Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500 hover:shadow-xl transition-shadow">
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <p class="text-sm text-gray-600 font-medium uppercase">Notifications</p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.totalNotifications }}</p>
+          <p class="text-sm text-red-600 mt-2">{{ stats.rejectedRequests }} rejection(s)</p>
+        </div>
+        <div class="bg-purple-100 p-4 rounded-full">
+          <i class="pi pi-bell text-2xl text-purple-600"></i>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- System Metrics Panel -->
-  <div class="system-metrics-panel">
-    <h3>
-      <i class="material-icons">analytics</i>
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <i class="pi pi-chart-bar text-primary"></i>
       System Overview
     </h3>
-    <div class="metrics-grid">
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">approval</i>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <span class="text-sm text-gray-600 flex items-center gap-2">
+          <i class="pi pi-check-circle text-green-600"></i>
           Request Approval Rate:
         </span>
-        <span class="metric-value">{{ systemMetrics.requestApprovalRate }}</span>
+        <span class="font-bold text-gray-800">{{ systemMetrics.requestApprovalRate }}</span>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">schedule</i>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <span class="text-sm text-gray-600 flex items-center gap-2">
+          <i class="pi pi-clock text-blue-600"></i>
           Avg. Response Time:
         </span>
-        <span class="metric-value">{{ systemMetrics.averageResponseTime }}</span>
+        <span class="font-bold text-gray-800">{{ systemMetrics.averageResponseTime }}</span>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">local_shipping</i>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <span class="text-sm text-gray-600 flex items-center gap-2">
+          <i class="pi pi-truck text-purple-600"></i>
           Dispatch Efficiency:
         </span>
-        <span class="metric-value security-secure">{{ systemMetrics.dispatchEfficiency }}</span>
+        <span class="font-bold text-green-600">{{ systemMetrics.dispatchEfficiency }}</span>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">mark_email_read</i>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <span class="text-sm text-gray-600 flex items-center gap-2">
+          <i class="pi pi-envelope text-indigo-600"></i>
           Notification Status:
         </span>
-        <span class="metric-value">{{ systemMetrics.notificationStatus }}</span>
+        <span class="font-bold text-gray-800">{{ systemMetrics.notificationStatus }}</span>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">update</i>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <span class="text-sm text-gray-600 flex items-center gap-2">
+          <i class="pi pi-refresh text-orange-600"></i>
           Last Stock Update:
         </span>
-        <span class="metric-value">{{ systemMetrics.lastStockUpdate }}</span>
+        <span class="font-bold text-gray-800">{{ systemMetrics.lastStockUpdate }}</span>
       </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">inventory_2</i>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <span class="text-sm text-gray-600 flex items-center gap-2">
+          <i class="pi pi-box text-teal-600"></i>
           Total Batches:
         </span>
-        <span class="metric-value">{{ systemMetrics.totalBatches }}</span>
+        <span class="font-bold text-gray-800">{{ systemMetrics.totalBatches }}</span>
       </div>
     </div>
   </div>
 
   <!-- Quick Actions Panel -->
-  <div class="admin-actions-panel">
-    <h3>
-      <i class="material-icons">dashboard</i>
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+      <i class="pi pi-th-large text-primary"></i>
       Quick Actions
     </h3>
-    <div class="action-cards">
-      <div class="action-card add-stock-action" (click)="navigateToAddStock()">
-        <div class="action-icon">
-          <i class="material-icons">add_box</i>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Add Stock Request Action -->
+      <div
+        class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 border-l-4 border-blue-500"
+        (click)="navigateToAddStock()">
+        <div class="flex items-center gap-4">
+          <div class="bg-blue-500 p-4 rounded-full">
+            <i class="pi pi-plus-circle text-2xl text-white"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-lg font-semibold text-gray-800">Add Stock Request</h4>
+            <p class="text-sm text-gray-600 mt-1">Submit request to add new explosive stock entries</p>
+            <div class="mt-2 text-sm font-medium text-blue-700">{{ stats.pendingAddRequests }} pending</div>
+          </div>
         </div>
-        <h4>Add Stock Request</h4>
-        <p>Submit request to add new explosive stock entries</p>
-        <div class="action-status">{{ stats.pendingAddRequests }} pending</div>
-      </div>
-      
-      <div class="action-card edit-stock-action" (click)="navigateToEditStock()">
-        <div class="action-icon">
-          <i class="material-icons">edit</i>
-        </div>
-        <h4>Edit Stock Request</h4>
-        <p>Submit request to edit existing explosive stock entries</p>
-        <div class="action-status">{{ stats.pendingEditRequests }} pending</div>
       </div>
 
-      <div class="action-card delete-stock-action" (click)="navigateToDeleteStock()">
-        <div class="action-icon">
-          <i class="material-icons">delete</i>
+      <!-- Edit Stock Request Action -->
+      <div
+        class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 border-l-4 border-yellow-500"
+        (click)="navigateToEditStock()">
+        <div class="flex items-center gap-4">
+          <div class="bg-yellow-500 p-4 rounded-full">
+            <i class="pi pi-pencil text-2xl text-white"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-lg font-semibold text-gray-800">Edit Stock Request</h4>
+            <p class="text-sm text-gray-600 mt-1">Submit request to edit existing explosive stock entries</p>
+            <div class="mt-2 text-sm font-medium text-yellow-700">{{ stats.pendingEditRequests }} pending</div>
+          </div>
         </div>
-        <h4>Delete Stock Request</h4>
-        <p>Submit request to delete explosive stock entries</p>
-        <div class="action-status">{{ stats.pendingDeleteRequests }} pending</div>
       </div>
 
-      <div class="action-card notifications-action" (click)="navigateToNotifications()">
-        <div class="action-icon">
-          <i class="material-icons">notifications</i>
+      <!-- Delete Stock Request Action -->
+      <div
+        class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 border-l-4 border-red-500"
+        (click)="navigateToDeleteStock()">
+        <div class="flex items-center gap-4">
+          <div class="bg-red-500 p-4 rounded-full">
+            <i class="pi pi-trash text-2xl text-white"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-lg font-semibold text-gray-800">Delete Stock Request</h4>
+            <p class="text-sm text-gray-600 mt-1">Submit request to delete explosive stock entries</p>
+            <div class="mt-2 text-sm font-medium text-red-700">{{ stats.pendingDeleteRequests }} pending</div>
+          </div>
         </div>
-        <h4>Notifications</h4>
-        <p>View rejection notifications and store updates</p>
-        <div class="action-status">{{ stats.totalNotifications }} notifications</div>
       </div>
 
-      <div class="action-card dispatch-action" (click)="navigateToDispatch()">
-        <div class="action-icon">
-          <i class="material-icons">local_shipping</i>
+      <!-- Notifications Action -->
+      <div
+        class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 border-l-4 border-purple-500"
+        (click)="navigateToNotifications()">
+        <div class="flex items-center gap-4">
+          <div class="bg-purple-500 p-4 rounded-full">
+            <i class="pi pi-bell text-2xl text-white"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-lg font-semibold text-gray-800">Notifications</h4>
+            <p class="text-sm text-gray-600 mt-1">View rejection notifications and store updates</p>
+            <div class="mt-2 text-sm font-medium text-purple-700">{{ stats.totalNotifications }} notifications</div>
+          </div>
         </div>
-        <h4>Dispatch Preparation</h4>
-        <p>Prepare explosives for dispatch when notified</p>
-        <div class="action-status">{{ stats.dispatchOrders }} orders</div>
+      </div>
+
+      <!-- Dispatch Preparation Action -->
+      <div
+        class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 border-l-4 border-green-500"
+        (click)="navigateToDispatch()">
+        <div class="flex items-center gap-4">
+          <div class="bg-green-500 p-4 rounded-full">
+            <i class="pi pi-truck text-2xl text-white"></i>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-lg font-semibold text-gray-800">Dispatch Preparation</h4>
+            <p class="text-sm text-gray-600 mt-1">Prepare explosives for dispatch when notified</p>
+            <div class="mt-2 text-sm font-medium text-green-700">{{ stats.dispatchOrders }} orders</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- User Profile Section -->
-  <div class="user-profile-section">
-    <h3>
-      <i class="material-icons">account_circle</i>
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+      <i class="pi pi-user text-primary"></i>
       Store Manager Profile
     </h3>
-    <div class="profile-card" *ngIf="currentUser">
-      <div class="profile-header">
-        <div class="profile-avatar">
-          <span class="avatar-initials">{{ getInitials() }}</span>
+    <div *ngIf="currentUser">
+      <!-- Profile Header -->
+      <div class="flex items-start gap-6 mb-6 pb-6 border-b border-gray-200">
+        <div class="flex-shrink-0">
+          <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+            {{ getInitials() }}
+          </div>
         </div>
-        <div class="profile-main-info">
-          <h4>{{ currentUser.name }}</h4>
-          <p class="profile-email">{{ currentUser.email }}</p>
-          <div class="profile-role-badge">
-            <span class="role-badge">Store Manager</span>
+        <div class="flex-1">
+          <h4 class="text-2xl font-bold text-gray-800">{{ currentUser.name }}</h4>
+          <p class="text-gray-600 mt-1 flex items-center gap-2">
+            <i class="pi pi-envelope text-sm"></i>
+            {{ currentUser.email }}
+          </p>
+          <div class="mt-3">
+            <span class="inline-block px-4 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+              <i class="pi pi-briefcase mr-1"></i>
+              Store Manager
+            </span>
           </div>
         </div>
       </div>
-      
-      <div class="profile-details-grid">
-        <div class="profile-detail-item">
-          <div class="detail-label">Specialization:</div>
-          <div class="detail-value">Store Management</div>
+
+      <!-- Profile Details Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <i class="pi pi-star"></i>
+            <span class="font-medium">Specialization</span>
+          </div>
+          <div class="text-gray-800 font-semibold">Store Management</div>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Operating Region:</div>
-          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
+
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <i class="pi pi-map-marker"></i>
+            <span class="font-medium">Operating Region</span>
+          </div>
+          <div class="text-gray-800 font-semibold">{{ currentUser.region || 'All Regions' }}</div>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Country:</div>
-          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
+
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <i class="pi pi-globe"></i>
+            <span class="font-medium">Country</span>
+          </div>
+          <div class="text-gray-800 font-semibold">{{ currentUser.country || 'Oman' }}</div>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Contact:</div>
-          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
+
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <i class="pi pi-phone"></i>
+            <span class="font-medium">Contact</span>
+          </div>
+          <div class="text-gray-800 font-semibold">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Status:</div>
-          <div class="detail-value">
-            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
+
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <i class="pi pi-info-circle"></i>
+            <span class="font-medium">Status</span>
+          </div>
+          <div>
+            <span
+              class="inline-block px-3 py-1 rounded-full text-sm font-medium"
+              [ngClass]="{
+                'bg-green-100 text-green-800': (currentUser.status || 'active').toLowerCase() === 'active',
+                'bg-yellow-100 text-yellow-800': (currentUser.status || 'active').toLowerCase() === 'pending',
+                'bg-red-100 text-red-800': (currentUser.status || 'active').toLowerCase() === 'inactive'
+              }">
               {{ currentUser.status || 'ACTIVE' }}
             </span>
           </div>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Data Sets:</div>
-          <div class="detail-value">{{ stats.totalNotifications }} requests managed</div>
+
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <i class="pi pi-database"></i>
+            <span class="font-medium">Requests Managed</span>
+          </div>
+          <div class="text-gray-800 font-semibold">{{ stats.totalNotifications }} requests</div>
         </div>
       </div>
     </div>
   </div>
-
 
 </div>

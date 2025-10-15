@@ -115,6 +115,13 @@ export class ProjectService {
     );
   }
 
+  // Complete a project site
+  completeSite(siteId: number): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/api/projectsites/${siteId}/complete`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   // Check if operator is already assigned to a project
   getProjectByOperator(operatorId: number): Observable<Project | null> {
     return this.http.get<Project | null>(`${this.apiUrl}/by-operator/${operatorId}`).pipe(

@@ -424,6 +424,7 @@
       display: flex;
       gap: 0.5rem;
       margin-top: 0.5rem;
+      flex-wrap: wrap;
 
       button {
         background: rgba(102, 126, 234, 0.08);
@@ -436,7 +437,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.1rem;
-        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 2px 8px rgba(102, 126, 234, 0.05);
 
         &:hover {
@@ -448,6 +449,48 @@
 
         i {
           font-size: 1.1rem;
+        }
+
+        // Complete button with text styling
+        &.complete-btn {
+          width: auto;
+          padding: 0.5rem 1rem;
+          border-radius: 50px;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          font-weight: 600;
+          gap: 0.5rem;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+
+          .btn-text {
+            display: inline-block;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+          }
+
+          &:hover:not(:disabled) {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+          }
+
+          &:disabled {
+            background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+            color: #6b7280;
+            cursor: not-allowed;
+            box-shadow: 0 2px 6px rgba(107, 114, 128, 0.2);
+            transform: none;
+
+            &:hover {
+              transform: none;
+              box-shadow: 0 2px 6px rgba(107, 114, 128, 0.2);
+            }
+          }
+
+          i {
+            font-size: 0.9rem;
+          }
         }
       }
     }

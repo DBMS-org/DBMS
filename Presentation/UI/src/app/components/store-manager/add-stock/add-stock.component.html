@@ -1,295 +1,282 @@
-<div class="add-stock-container">
+<div class="w-full max-w-6xl mx-auto p-1 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
   <!-- Header Section -->
-  <div class="header-section">
-    <div class="page-title-section">
-      <h1 class="page-title">
-        <i class="material-icons">add_shopping_cart</i>
-        Request Stock from Explosive Manager
+  <div class="mb-2 p-3 lg:p-6 bg-gradient-to-r from-primary to-primary-dark rounded-2xl shadow-lg text-center relative overflow-hidden">
+    <div class="relative z-10">
+      <h1 class="flex items-center justify-center gap-3 text-2xl lg:text-4xl font-bold text-white mb-1 drop-shadow-lg">
+        <i class="pi pi-shopping-cart text-3xl lg:text-5xl text-yellow-300"></i>
+        Request Stock from Central Warehouse
       </h1>
-      <p class="page-subtitle">Submit a request to the explosive manager for additional stock inventory</p>
+      <p class="text-white text-opacity-90 text-sm lg:text-base">Submit a request to the explosive manager for additional explosive inventory</p>
     </div>
   </div>
 
   <!-- Alert Messages -->
-  <div *ngIf="successMessage" class="alert alert-success">
-    <i class="material-icons">check_circle</i>
-    {{ successMessage }}
-    <button class="btn-close" (click)="clearMessages()">
-      <i class="material-icons">close</i>
+  <div *ngIf="successMessage" class="alert-success mb-4">
+    <i class="pi pi-check-circle text-lg"></i>
+    <span>{{ successMessage }}</span>
+    <button type="button" class="ml-auto rounded hover:bg-success-dark hover:bg-opacity-20 p-1 transition" (click)="clearMessages()">
+      <i class="pi pi-times"></i>
     </button>
   </div>
 
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    <i class="material-icons">error</i>
-    {{ errorMessage }}
-    <button class="btn-close" (click)="clearMessages()">
-      <i class="material-icons">close</i>
+  <div *ngIf="errorMessage" class="alert-danger mb-4">
+    <i class="pi pi-exclamation-circle text-lg"></i>
+    <span>{{ errorMessage }}</span>
+    <button type="button" class="ml-auto rounded hover:bg-danger-dark hover:bg-opacity-20 p-1 transition" (click)="clearMessages()">
+      <i class="pi pi-times"></i>
     </button>
   </div>
 
-  <div class="content-layout">
+  <div class="flex justify-center items-start">
     <!-- Main Form Section -->
-    <div class="form-section">
-      <div class="section-card">
-        <div class="card-header">
-          <h2>
-            <i class="material-icons">description</i>
-            New Explosive Request
+    <div class="w-full max-w-4xl">
+      <div class="bg-white bg-opacity-95 rounded-2xl shadow-xl border border-gray-200 overflow-hidden backdrop-blur-sm hover:shadow-2xl transition-all">
+        <div class="bg-gradient-to-r from-primary to-primary-dark text-white p-4 lg:p-6 text-center relative overflow-hidden">
+          <h2 class="m-0 flex items-center justify-center gap-4 text-xl lg:text-2xl font-bold drop-shadow-md">
+            <i class="pi pi-file text-2xl lg:text-3xl"></i>
+            New Transfer Request
           </h2>
         </div>
 
-        <div class="card-body">
+        <div class="p-4 lg:p-6">
           <form [formGroup]="stockRequestForm" (ngSubmit)="onSubmit()">
             <!-- Request Information -->
-            <div class="form-section-group">
-              <h3 class="section-title">Request Information</h3>
-              
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="requestDate">Request Date</label>
-                  <input 
-                    type="text" 
-                    class="form-control"
+            <div class="mb-2 p-3 bg-gradient-to-br from-white to-gray-50 rounded-xl border border-primary border-opacity-10">
+              <h3 class="text-lg font-bold text-gray-800 mb-1 pb-1 border-b-2 border-primary inline-block relative">
+                Request Information
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+                <div class="flex flex-col gap-2 mb-1">
+                  <label for="requestDate" class="block font-semibold text-gray-700 text-sm">Request Date</label>
+                  <input
+                    type="text"
+                    pInputText
                     id="requestDate"
                     [value]="getCurrentDateTime()"
-                    readonly>
-                  <small class="text-muted">Automatically generated</small>
+                    readonly
+                    class="w-full">
+                  <small class="text-gray-600 text-xs">Automatically generated</small>
                 </div>
-                
-                <div class="form-group">
-                  <label for="requiredDate">Required Date *</label>
-                  <input 
-                    type="date" 
-                    class="form-control"
-                    id="requiredDate"
-                    formControlName="requiredDate"
-                    [class.is-invalid]="isFieldInvalid(stockRequestForm, 'requiredDate')">
-                  <div *ngIf="isFieldInvalid(stockRequestForm, 'requiredDate')" class="error-message">
-                    {{ getFieldError(stockRequestForm, 'requiredDate') }}
+
+                <div class="flex flex-col gap-2 mb-1">
+                  <label class="block font-semibold text-gray-700 text-sm">Status</label>
+                  <div>
+                    <p-tag value="PENDING" severity="warning"></p-tag>
                   </div>
-                </div>
-                
-                <div class="form-group">
-                  <label>Status</label>
-                  <span class="badge bg-warning">PENDING</span>
-                  <small class="text-muted d-block">Will be updated after submission</small>
+                  <small class="text-gray-600 text-xs">Will be updated after submission</small>
                 </div>
               </div>
             </div>
 
             <!-- Requester Information -->
-            <div class="form-section-group">
-              <h3 class="section-title">Requester Information</h3>
-              
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="requesterName">Name</label>
-                  <input 
-                    type="text" 
-                    class="form-control"
+            <div class="mb-2 p-3 bg-gradient-to-br from-white to-gray-50 rounded-xl border border-primary border-opacity-10">
+              <h3 class="text-lg font-bold text-gray-800 mb-1 pb-1 border-b-2 border-primary inline-block">Requester Information</h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-1">
+                <div class="flex flex-col gap-2 mb-1">
+                  <label for="requesterName" class="block font-semibold text-gray-700 text-sm">Store Manager</label>
+                  <input
+                    type="text"
+                    pInputText
                     id="requesterName"
                     [value]="currentUser.name"
-                    readonly>
-                  <small class="text-muted">From user profile</small>
+                    readonly
+                    class="w-full">
+                  <small class="text-gray-600 text-xs">From user profile</small>
                 </div>
-                
-                <div class="form-group">
-                  <label for="requesterRole">Role</label>
-                  <input 
-                    type="text" 
-                    class="form-control"
+
+                <div class="flex flex-col gap-2 mb-1">
+                  <label for="requesterRole" class="block font-semibold text-gray-700 text-sm">Role</label>
+                  <input
+                    type="text"
+                    pInputText
                     id="requesterRole"
                     [value]="currentUser.role"
-                    readonly>
-                  <small class="text-muted">From user profile</small>
+                    readonly
+                    class="w-full">
+                  <small class="text-gray-600 text-xs">From user profile</small>
                 </div>
-                
-                <div class="form-group">
-                  <label for="storeLocation">Store Location</label>
-                  <input 
-                    type="text" 
-                    class="form-control"
+
+                <div class="flex flex-col gap-2 mb-1">
+                  <label for="storeLocation" class="block font-semibold text-gray-700 text-sm">Destination Store</label>
+                  <input
+                    type="text"
+                    pInputText
                     id="storeLocation"
                     [value]="currentStore.name"
-                    readonly>
-                  <small class="text-muted">From store assignment</small>
+                    readonly
+                    class="w-full">
+                  <small class="text-gray-600 text-xs">From store assignment</small>
                 </div>
               </div>
             </div>
 
             <!-- Explosive Details Section -->
-            <div class="form-section-group">
-              <h3 class="section-title">Explosive Details</h3>
+            <div class="mb-2 p-3 bg-gradient-to-br from-white to-gray-50 rounded-xl border border-primary border-opacity-10">
+              <h3 class="text-lg font-bold text-gray-800 mb-1 pb-1 border-b-2 border-primary inline-block">Select from Central Warehouse</h3>
 
-              <div formArrayName="items">
-                <div *ngFor="let item of items.controls; let i = index" [formGroupName]="i" class="form-row card-item-row">
-                  <div class="form-group">
-                    <label [attr.for]="'item-' + i + '-type'">Type *</label>
-                    <select
-                      title="Select explosive type"
-                      class="form-select"
-                      id="item-{{i}}-type"
-                      formControlName="explosiveType"
-                      (change)="onExplosiveTypeChange(i)"
-                      [class.is-invalid]="isFieldInvalid(getItemGroup(i), 'explosiveType')">
-                      <option value="">Select explosive type</option>
-                      <option *ngFor="let type of explosiveTypes" [value]="type">
-                        {{ type }}
-                      </option>
-                    </select>
-                    <div *ngIf="isFieldInvalid(getItemGroup(i), 'explosiveType')" class="error-message">
-                      {{ getFieldError(getItemGroup(i), 'explosiveType') }}
-                    </div>
-                  </div>
+              <div *ngIf="isLoadingInventory" class="alert-info mb-3">
+                <i class="pi pi-clock"></i>
+                <span>Loading available inventory...</span>
+              </div>
 
-                  <div class="form-group">
-                    <label [attr.for]="'item-' + i + '-quantity'">Quantity *</label>
-                    <input
-                      type="number"
-                      class="form-control"
-                      id="item-{{i}}-quantity"
-                      formControlName="requestedQuantity"
-                      [class.is-invalid]="isFieldInvalid(getItemGroup(i), 'requestedQuantity')"
-                      placeholder="Enter quantity"
-                      min="0.1"
-                      step="0.1">
-                    <div *ngIf="isFieldInvalid(getItemGroup(i), 'requestedQuantity')" class="error-message">
-                      {{ getFieldError(getItemGroup(i), 'requestedQuantity') }}
-                    </div>
-                  </div>
+              <div *ngIf="!isLoadingInventory && availableInventory.length === 0" class="alert-warning mb-3">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span>No inventory available in central warehouse</span>
+              </div>
 
-                  <div class="form-group">
-                    <label [attr.for]="'item-' + i + '-unit'">Unit *</label>
-                    <select
-                      class="form-select"
-                      id="item-{{i}}-unit"
-                      formControlName="unit"
-                      [class.is-invalid]="isFieldInvalid(getItemGroup(i), 'unit')"
-                      title="Select unit">
-                      <option value="">Select unit</option>
-                      <option *ngFor="let unit of getUnitsForItem(i)" [value]="unit">{{ unit }}</option>
-                    </select>
-                    <div *ngIf="isFieldInvalid(getItemGroup(i), 'unit')" class="error-message">
-                      {{ getFieldError(getItemGroup(i), 'unit') }}
-                    </div>
-                  </div>
-
-                  <div class="form-group flex-grow">
-                    <label [attr.for]="'item-' + i + '-purpose'">Purpose *</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="item-{{i}}-purpose"
-                      formControlName="purpose"
-                      [class.is-invalid]="isFieldInvalid(getItemGroup(i), 'purpose')"
-                      placeholder="e.g., Mining operation - Sector 7">
-                    <div *ngIf="isFieldInvalid(getItemGroup(i), 'purpose')" class="error-message">
-                      {{ getFieldError(getItemGroup(i), 'purpose') }}
-                    </div>
-                  </div>
-
-                  <div class="form-group flex-grow">
-                    <label>Specifications (optional)</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="item-{{i}}-specs"
-                      formControlName="specifications"
-                      placeholder="e.g., Water-resistant emulsion">
-                  </div>
-
-                  <div class="form-group align-end">
-                    <button type="button" class="btn btn-outline-danger" (click)="removeItem(i)" [disabled]="items.length === 1">
-                      <i class="material-icons">remove_circle</i>
-                      Remove
-                    </button>
-                  </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+                <div class="flex flex-col gap-2 mb-1">
+                  <label for="explosiveType" class="block font-semibold text-gray-700 text-sm">Explosive Type *</label>
+                  <p-dropdown
+                    inputId="explosiveType"
+                    [options]="explosiveTypeOptions"
+                    formControlName="explosiveType"
+                    (onChange)="onExplosiveTypeChange()"
+                    [disabled]="isLoadingInventory"
+                    placeholder="Select explosive type"
+                    optionLabel="label"
+                    optionValue="value"
+                    [style]="{'width': '100%'}"
+                    [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid(stockRequestForm, 'explosiveType')}">
+                  </p-dropdown>
+                  <small class="text-danger" *ngIf="isFieldInvalid(stockRequestForm, 'explosiveType')">
+                    {{ getFieldError(stockRequestForm, 'explosiveType') }}
+                  </small>
                 </div>
 
-                <div class="form-actions mt-2">
-                  <button type="button" class="btn btn-outline-secondary" (click)="addItem()">
-                    <i class="material-icons">add_circle</i>
-                    Add Item
-                  </button>
+                <div class="form-group flex-grow">
+                  <label for="batchId">Available Batch *</label>
+                  <p-dropdown
+                    inputId="batchId"
+                    [options]="batchOptions"
+                    formControlName="batchId"
+                    (onChange)="onBatchChange()"
+                    [disabled]="isLoadingInventory || filteredInventory.length === 0"
+                    placeholder="Select batch"
+                    optionLabel="label"
+                    optionValue="value"
+                    [style]="{'width': '100%'}"
+                    [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid(stockRequestForm, 'batchId')}">
+                  </p-dropdown>
+                  <small class="text-muted" *ngIf="!stockRequestForm.get('explosiveType')?.value">
+                    Select explosive type first
+                  </small>
+                  <small class="text-danger" *ngIf="isFieldInvalid(stockRequestForm, 'batchId')">
+                    {{ getFieldError(stockRequestForm, 'batchId') }}
+                  </small>
+                </div>
+              </div>
+
+              <div *ngIf="selectedBatch" class="alert alert-info mt-3">
+                <h4>Selected Batch Information:</h4>
+                <p><strong>Batch ID:</strong> {{ selectedBatch.batchId }}</p>
+                <p><strong>Available Quantity:</strong> {{ selectedBatch.availableQuantity }} {{ selectedBatch.unit }}</p>
+                <p><strong>Manufacturing Date:</strong> {{ selectedBatch.manufacturingDate | date }}</p>
+                <p><strong>Expiry Date:</strong> {{ selectedBatch.expiryDate | date }}</p>
+                <p><strong>Supplier:</strong> {{ selectedBatch.supplier }}</p>
+              </div>
+
+              <div class="form-row mt-3">
+                <div class="form-group">
+                  <label for="requestedQuantity">Requested Quantity *</label>
+                  <p-inputNumber
+                    inputId="requestedQuantity"
+                    formControlName="requestedQuantity"
+                    [disabled]="!selectedBatch"
+                    [max]="selectedBatch?.availableQuantity || 999999"
+                    [min]="0.1"
+                    [minFractionDigits]="1"
+                    [maxFractionDigits]="2"
+                    placeholder="Enter quantity"
+                    [style]="{'width': '100%'}"
+                    [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid(stockRequestForm, 'requestedQuantity')}">
+                  </p-inputNumber>
+                  <small class="text-muted" *ngIf="selectedBatch">
+                    Maximum: {{ selectedBatch.availableQuantity }} {{ selectedBatch.unit }}
+                  </small>
+                  <small class="text-danger" *ngIf="isFieldInvalid(stockRequestForm, 'requestedQuantity')">
+                    {{ getFieldError(stockRequestForm, 'requestedQuantity') }}
+                  </small>
+                </div>
+
+                <div class="form-group">
+                  <label for="unit">Unit *</label>
+                  <input
+                    type="text"
+                    pInputText
+                    id="unit"
+                    formControlName="unit"
+                    readonly
+                    [style]="{'width': '100%'}">
+                  <small class="text-muted">Unit from selected batch</small>
                 </div>
               </div>
             </div>
-              
-              <!-- Purpose moved to per-item FormArray -->
 
-            <!-- Approval Information (Read-only) -->
+            <!-- Request Details Section -->
             <div class="form-section-group">
-              <h3 class="section-title">Approval Information</h3>
-              
-              <div class="alert alert-info">
-                <i class="material-icons">info</i>
-                This section will be populated after the explosive manager reviews your request.
-              </div>
-              
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="approvalDate">Approval Date</label>
-                  <input 
-                    type="text" 
-                    class="form-control"
-                    id="approvalDate"
-                    value="Pending approval"
-                    readonly>
-                </div>
-                
-                <div class="form-group">
-                  <label for="approvedBy">Approved By</label>
-                  <input 
-                    type="text" 
-                    class="form-control"
-                    id="approvedBy"
-                    value="Pending approval"
-                    readonly>
-                </div>
+              <h3 class="section-title">Request Details</h3>
+
+              <div class="form-group">
+                <label for="requiredDate">Required By Date</label>
+                <p-calendar
+                  inputId="requiredDate"
+                  formControlName="requiredDate"
+                  [showIcon]="true"
+                  dateFormat="yy-mm-dd"
+                  placeholder="Select required date"
+                  [style]="{'width': '100%'}"
+                  [minDate]="getTodayDate()"
+                  [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid(stockRequestForm, 'requiredDate')}">
+                </p-calendar>
+                <small class="text-muted">When do you need this material?</small>
+                <small class="text-danger" *ngIf="isFieldInvalid(stockRequestForm, 'requiredDate')">
+                  {{ getFieldError(stockRequestForm, 'requiredDate') }}
+                </small>
               </div>
             </div>
 
             <!-- Notes Section -->
             <div class="form-section-group">
-              <h3 class="section-title">Notes</h3>
-              
+              <h3 class="section-title">Additional Notes</h3>
+
               <div class="form-group">
-                <label>Additional Notes</label>
-                <textarea 
-                  class="form-control"
+                <label for="notes">Additional Notes (Optional)</label>
+                <textarea
+                  pInputTextarea
                   id="notes"
                   formControlName="notes"
-                  placeholder="e.g., Urgent requirement for scheduled blasting"
-                  rows="3"></textarea>
-                <small class="text-muted">Provide any additional information or special requirements</small>
+                  placeholder="Any additional information or special requirements"
+                  rows="3"
+                  [style]="{'width': '100%'}"></textarea>
+                <small class="text-muted">Provide any additional information that may be relevant to this request</small>
               </div>
             </div>
 
             <!-- Form Actions -->
             <div class="form-actions">
-              <button 
-                type="button" 
-                class="btn btn-secondary"
-                (click)="resetForm()"
+              <p-button
+                label="Reset Form"
+                icon="pi pi-refresh"
+                severity="secondary"
+                (onClick)="resetForm()"
                 [disabled]="isSubmitting">
-                <i class="material-icons">refresh</i>
-                Reset Form
-              </button>
-              
-              <button 
-                type="submit" 
-                class="btn btn-primary"
-                [disabled]="isSubmitting">
-                <i class="material-icons">send</i>
-                <span *ngIf="!isSubmitting">Submit Request</span>
-                <span *ngIf="isSubmitting">Submitting...</span>
-              </button>
+              </p-button>
+
+              <p-button
+                [label]="isSubmitting ? 'Submitting...' : 'Submit Request'"
+                icon="pi pi-send"
+                severity="primary"
+                type="submit"
+                [disabled]="isSubmitting"
+                [loading]="isSubmitting">
+              </p-button>
             </div>
           </form>
         </div>
       </div>
     </div>
-
-
   </div>
 </div>
