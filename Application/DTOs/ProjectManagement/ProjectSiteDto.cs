@@ -12,12 +12,16 @@ namespace Application.DTOs.ProjectManagement
         public bool IsPatternApproved { get; set; }
         public bool IsSimulationConfirmed { get; set; }
         public bool IsOperatorCompleted { get; set; }
+        public bool IsCompleted { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public int? CompletedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        
+
         // Navigation properties (optional, for detailed views)
         public string? ProjectName { get; set; }
         public string? ProjectRegion { get; set; }
+        public string? CompletedByUserName { get; set; }
         public ProjectDto? Project { get; set; }
     }
 }
