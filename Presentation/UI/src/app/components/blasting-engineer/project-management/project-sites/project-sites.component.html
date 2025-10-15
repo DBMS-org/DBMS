@@ -1,4 +1,10 @@
 <div class="project-sites-container">
+  <!-- PrimeNG Toast for notifications -->
+  <p-toast position="top-right"></p-toast>
+
+  <!-- PrimeNG ConfirmDialog for confirmations -->
+  <p-confirmDialog></p-confirmDialog>
+
   <!-- Page Header -->
   <div class="page-header">
     <div class="header-content">
@@ -100,17 +106,47 @@
               </div>
             </div>
             <div class="site-actions">
-              <button class="btn btn-sm btn-outline-info" (click)="viewDrillVisualization(site)" title="View Drill Visualization">
-                <i class="fas fa-eye"></i>
+              <button 
+                type="button"
+                class="btn btn-sm btn-outline-info" 
+                (click)="viewDrillVisualization(site)" 
+                title="View Drill Visualization"
+                [attr.aria-label]="'View drill visualization for site: ' + site.name">
+                <i class="fas fa-eye" aria-hidden="true"></i>
               </button>
-              <button class="btn btn-sm btn-outline-success" (click)="uploadSurvey(site)" title="Upload Survey">
-                <i class="fas fa-upload"></i>
+              <button 
+                type="button"
+                class="btn btn-sm btn-outline-success" 
+                (click)="uploadSurvey(site)" 
+                title="Upload Survey"
+                [attr.aria-label]="'Upload survey for site: ' + site.name">
+                <i class="fas fa-upload" aria-hidden="true"></i>
               </button>
-              <button class="btn btn-sm btn-outline-primary" (click)="createPattern(site)" title="Open Site Dashboard">
-                <i class="fas fa-cog"></i>
+              <button 
+                type="button"
+                class="btn btn-sm btn-outline-primary" 
+                (click)="createPattern(site)" 
+                title="Open Site Dashboard"
+                [attr.aria-label]="'Open site dashboard for: ' + site.name">
+                <i class="fas fa-cog" aria-hidden="true"></i>
               </button>
-              <button class="btn btn-sm btn-outline-danger" (click)="openDeleteModal(site)" title="Delete Site">
-                <i class="fas fa-trash"></i>
+              <button
+                type="button"
+                class="btn btn-sm btn-success complete-btn"
+                (click)="completeSite(site)"
+                [disabled]="!canCompleteSite(site)"
+                [title]="getCompleteButtonTooltip(site)"
+                [attr.aria-label]="'Complete site: ' + site.name">
+                <i class="fas fa-check" aria-hidden="true"></i>
+                <span class="btn-text">Complete</span>
+              </button>
+              <button 
+                type="button"
+                class="btn btn-sm btn-outline-danger" 
+                (click)="openDeleteModal(site)" 
+                title="Delete Site"
+                [attr.aria-label]="'Delete site: ' + site.name">
+                <i class="fas fa-trash" aria-hidden="true"></i>
               </button>
             </div>
           </div>

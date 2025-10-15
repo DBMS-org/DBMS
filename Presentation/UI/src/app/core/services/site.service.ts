@@ -163,6 +163,15 @@ export class SiteService {
       );
   }
 
+  // Complete site (mark as operator completed)
+  completeSite(siteId: number) {
+    const url = `${this.apiUrl}/${siteId}/complete`;
+    return this.http.post(url, {}, this.getHttpOptions())
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
   private handleError(error: any) {
     console.error('An error occurred:', error);
     

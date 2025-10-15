@@ -1,19 +1,51 @@
-<nav class="navbar">
-  <div class="navbar-left">
-    <button class="menu-btn" (click)="onToggleSidebar()">
-      <i class="material-icons">menu</i>
+<nav class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-[1000] shadow-sm">
+
+  <!-- Left Section -->
+  <div class="flex items-center gap-4">
+    <button
+      (click)="onToggleSidebar()"
+      class="bg-transparent border-none cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+      <i class="material-icons text-[28px] text-gray-700">menu</i>
     </button>
-    <h1 class="brand">Admin Dashboard</h1>
+
+    <h1 class="m-0 text-xl font-semibold text-gray-800">
+      Admin Dashboard
+    </h1>
   </div>
-  <div class="navbar-right">
-    <div class="user-menu">
-      <div class="user-info" (click)="navigateToProfile()" title="View Profile">
-        <i class="material-icons">account_circle</i>
-        <span class="user-name">{{ getUserDisplayName() }}</span>
-        <span class="user-role" *ngIf="currentUser">{{ currentUser.role }}</span>
+
+  <!-- Right Section -->
+  <div class="flex items-center">
+    <div class="flex items-center gap-4 px-2.5 py-1.5 rounded">
+
+      <!-- User Info -->
+      <div
+        (click)="navigateToProfile()"
+        title="View Profile"
+        class="flex items-center gap-2.5 cursor-pointer px-2.5 py-1.5 rounded hover:bg-gray-100 transition-colors duration-200 group">
+
+        <i class="material-icons text-2xl text-gray-800 group-hover:text-primary transition-colors">
+          account_circle
+        </i>
+
+        <div class="hidden md:flex flex-col">
+          <span class="text-gray-800 font-medium text-sm">
+            {{ getUserDisplayName() }}
+          </span>
+
+          <span
+            *ngIf="currentUser"
+            class="text-gray-600 text-xs bg-blue-50 px-2 py-0.5 rounded-full mt-0.5">
+            {{ currentUser.role }}
+          </span>
+        </div>
       </div>
-      <button class="logout-btn" (click)="logout()" title="Logout">
-        <i class="material-icons">logout</i>
+
+      <!-- Logout Button -->
+      <button
+        (click)="logout()"
+        title="Logout"
+        class="bg-transparent border border-gray-300 text-gray-600 p-2 rounded cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-red-500 hover:border-red-500 hover:text-white">
+        <i class="material-icons text-lg">logout</i>
       </button>
     </div>
   </div>

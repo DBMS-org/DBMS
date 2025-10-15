@@ -5,10 +5,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Project } from '../../../../core/models/project.model';
 import { ProjectService } from '../../../../core/services/project.service';
 import { SiteService, ProjectSite } from '../../../../core/services/site.service';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-project-sites',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ToastModule, ConfirmDialogModule],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './project-sites.component.html',
   styleUrl: './project-sites.component.scss'
 })
@@ -25,7 +29,9 @@ export class ProjectSitesComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private projectService: ProjectService,
-    private siteService: SiteService
+    private siteService: SiteService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService
   ) {}
 
   ngOnInit() {
@@ -159,5 +165,101 @@ export class ProjectSitesComponent implements OnInit {
   getCompletionPercentage(): number {
     if (this.sites.length === 0) return 0;
     return Math.round((this.getCompletedSitesCount() / this.sites.length) * 100);
+  }
+
+  // Site completion functionality
+  canCompleteSite(site: ProjectSite): boolean {
+    // A site can be completed if:
+    // 1. Pattern is approved (isPatternApproved = true)
+    // 2. Simulation is confirmed (isSimulationConfirmed = true)
+    // 3. Explosive approval has been requested (isExplosiveApprovalRequested = true)
+    // 4. Site is not already completed by operator
+    return site.isPatternApproved && 
+           site.isSimulationConfirmed && 
+           site.isExplosiveApprovalRequested && 
+           !site.isOperatorCompleted;
+  }
+
+  getCompleteButtonTooltip(site: ProjectSite): string {
+    if (site.isOperatorCompleted) {
+      return 'Site is already completed by operator';
+    }
+
+    const missingRequirements: string[] = [];
+    
+    if (!site.isPatternApproved) {
+      missingRequirements.push('Pattern approval');
+    }
+    
+    if (!site.isSimulationConfirmed) {
+      missingRequirements.push('Simulation confirmation');
+    }
+    
+    if (!site.isExplosiveApprovalRequested) {
+      missingRequirements.push('Explosive approval request');
+    }
+
+    if (missingRequirements.length > 0) {
+      return `Missing requirements: ${missingRequirements.join(', ')}`;
+    }
+
+    return 'Mark site as complete';
+  }
+
+  completeSite(site: ProjectSite) {
+    if (!this.canCompleteSite(site)) {
+      return;
+    }
+
+    // Show PrimeNG confirmation dialog before completing
+    this.confirmationService.confirm({
+      message: `Are you sure you want to mark "${site.name}" as complete? This action will mark the site as completed by the operator and update the completion status. This action cannot be undone.`,
+      header: 'Complete Site',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Yes, Complete',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        this.loading = true;
+        this.error = null;
+
+        this.siteService.completeSite(site.id).subscribe({
+          next: () => {
+            // Update the local site data
+            const siteIndex = this.sites.findIndex(s => s.id === site.id);
+            if (siteIndex !== -1) {
+              this.sites[siteIndex] = {
+                ...this.sites[siteIndex],
+                isOperatorCompleted: true,
+                updatedAt: new Date()
+              };
+            }
+            this.loading = false;
+
+            // Show success toast notification
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: `Site "${site.name}" marked as complete successfully!`,
+              life: 5000
+            });
+          },
+          error: (error) => {
+            console.error('Error completing site:', error);
+            this.error = 'Failed to complete site. Please try again.';
+            this.loading = false;
+
+            // Show error toast notification
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Failed to complete site. Please try again.',
+              life: 5000
+            });
+          }
+        });
+      }
+    });
   }
 }

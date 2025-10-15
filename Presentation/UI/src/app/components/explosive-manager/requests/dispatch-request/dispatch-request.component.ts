@@ -1,50 +1,56 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { ActivatedRoute } from '@angular/router';
-import { Location } from '@angular/common';
-import { RequestService } from '../services/request.service';
-import { ExplosiveRequest, RequestItem, RequestStatus } from '../models/explosive-request.model';
-import { DispatchForm } from '../models/dispatch.model';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
+import { InventoryTransferService } from '../../../../core/services/inventory-transfer.service';
+import {
+  InventoryTransferRequest,
+  DispatchTransferRequest
+} from '../../../../core/models/inventory-transfer.model';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-dispatch-request',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatSelectModule, MatInputModule, MatDatepickerModule, MatNativeDateModule, MatTableModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatSnackBarModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatProgressSpinnerModule,
+    MatCardModule
+  ],
   templateUrl: './dispatch-request.component.html',
   styleUrl: './dispatch-request.component.scss'
 })
-export class DispatchRequestComponent implements OnInit {
+export class DispatchRequestComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   dispatchForm!: FormGroup;
-  request!: ExplosiveRequest | undefined;
+  request!: InventoryTransferRequest;
   isSubmitting = false;
   isLoading = true;
-  // Expose items to template for per-item approval
-  viewItems: RequestItem[] = [];
-  // Columns for the mat-table in the template
-  displayedColumns: string[] = ['itemName', 'requestedQuantity', 'approvedQuantity', 'remarks'];
-  // Convenience getter for items FormArray used in template
-  get itemsForm(): FormArray {
-    return this.dispatchForm.get('items') as FormArray;
-  }
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private location: Location,
+    private router: Router,
     private snackBar: MatSnackBar,
-    private requestService: RequestService
+    private transferService: InventoryTransferService
   ) {}
 
   ngOnInit(): void {
@@ -52,135 +58,107 @@ export class DispatchRequestComponent implements OnInit {
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.requestService.getRequestById(id).subscribe({
-        next: (req) => {
-          this.isLoading = false;
-          this.request = req;
-          if (!this.request) {
-            this.snackBar.open('Request not found', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
-            this.goBack();
-          } else {
-            this.initItemsForm();
-          }
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.snackBar.open('Error loading request: ' + err.message, 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
-          this.goBack();
-        }
-      });
+      this.loadRequest(parseInt(id));
     } else {
-      this.isLoading = false;
-      this.snackBar.open('No request ID provided', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      this.snackBar.open('No request ID provided', 'Close', { duration: 3000 });
       this.goBack();
     }
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   private initForm(): void {
     this.dispatchForm = this.fb.group({
-      truckNumber: ['', [Validators.required]],
-      dispatchDate: ['', Validators.required],
-      driverName: [''],
-      routeInformation: [''],
-      additionalNotes: [''],
-      items: this.fb.array([])
-    });
-
-    // default dispatch date to today
-    this.dispatchForm.patchValue({
-      dispatchDate: new Date()
+      truckNumber: ['', [Validators.required, Validators.maxLength(50)]],
+      driverName: ['', [Validators.required, Validators.maxLength(200)]],
+      driverContactNumber: ['', Validators.maxLength(20)],
+      dispatchNotes: ['', Validators.maxLength(1000)]
     });
   }
 
-  private initItemsForm() {
-    const items = this.request?.requestedItems || (this.request ? this.singleAsItem(this.request) : []);
-    this.viewItems = items;
-    const itemsArray = this.fb.array(
-      items.map(item =>
-        this.fb.group({
-          approvedQuantity: [item.approvedQuantity ?? item.quantity, [Validators.min(0)]],
-          remarks: ['']
-        })
-      )
-    );
-    this.dispatchForm.setControl('items', itemsArray);
+  private loadRequest(requestId: number): void {
+    this.isLoading = true;
+    this.transferService.getTransferRequestById(requestId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (request) => {
+          this.request = request;
+          this.isLoading = false;
+
+          // Validate that the request can be dispatched
+          if (request.status !== 'Approved') {
+            this.snackBar.open('Only approved requests can be dispatched', 'Close', { duration: 5000 });
+            this.goBack();
+          }
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.snackBar.open('Error loading request: ' + error.message, 'Close', { duration: 5000 });
+          this.goBack();
+        }
+      });
   }
 
-  private singleAsItem(req: ExplosiveRequest): RequestItem[] {
-    if (req.explosiveType && req.quantity && req.unit) {
-      return [{ explosiveType: req.explosiveType, quantity: req.quantity, unit: req.unit, purpose: req.purpose } as RequestItem];
+  submit(): void {
+    if (this.dispatchForm.invalid) {
+      this.markFormAsTouched();
+      return;
     }
-    return [];
-  }
 
-  submit() {
-    if (this.dispatchForm.invalid) return;
     if (!this.request) return;
-    const payload = { ...this.dispatchForm.value };
-    // Map item decisions payload without decision field
-    payload.items = (this.dispatchForm.get('items') as FormArray).controls.map((ctrl, idx) => ({
-      index: idx,
-      approvedQuantity: Number(ctrl.get('approvedQuantity')?.value ?? 0),
-      remarks: ctrl.get('remarks')?.value ?? ''
-    }));
-  
+
+    const dispatchData: DispatchTransferRequest = {
+      truckNumber: this.dispatchForm.value.truckNumber,
+      driverName: this.dispatchForm.value.driverName,
+      driverContactNumber: this.dispatchForm.value.driverContactNumber || undefined,
+      dispatchNotes: this.dispatchForm.value.dispatchNotes || undefined
+    };
+
     this.isSubmitting = true;
-    this.requestService.dispatchRequest(this.request.id, {
-      truckNumber: payload.truckNumber,
-      dispatchDate: new Date(payload.dispatchDate),
-      driverName: payload.driverName,
-      routeInformation: payload.routeInformation,
-      dispatchNotes: payload.additionalNotes,
-      itemDecisions: payload.items
-    }).subscribe({
-      next: () => {
-        this.isSubmitting = false;
-        this.snackBar.open('Request dispatched successfully!', 'Close', { 
-          duration: 3000, 
-          panelClass: ['success-snackbar'] 
-        });
-        this.goBack();
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.snackBar.open('Error dispatching request: ' + err.message, 'Close', { 
-          duration: 3000, 
-          panelClass: ['error-snackbar'] 
-        });
-      }
-    });
+    this.transferService.dispatchTransferRequest(this.request.id, dispatchData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.snackBar.open('Request dispatched successfully!', 'Close', {
+            duration: 3000
+          });
+          this.goBack();
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          this.snackBar.open('Error dispatching request: ' + error.message, 'Close', {
+            duration: 5000
+          });
+        }
+      });
   }
 
-  getStatusIcon(status: RequestStatus): string {
-    const iconMap: Record<RequestStatus, string> = {
-      [RequestStatus.PENDING]: 'schedule',
-      [RequestStatus.APPROVED]: 'check_circle',
-      [RequestStatus.REJECTED]: 'cancel',
-      [RequestStatus.IN_PROGRESS]: 'hourglass_empty',
-      [RequestStatus.COMPLETED]: 'task_alt',
-      [RequestStatus.CANCELLED]: 'block',
-      [RequestStatus.DISPATCHED]: 'local_shipping'
-    };
-    return iconMap[status] || 'help';
+  private markFormAsTouched(): void {
+    Object.keys(this.dispatchForm.controls).forEach(key => {
+      this.dispatchForm.get(key)?.markAsTouched();
+    });
   }
 
   getError(fieldName: string): string | null {
     const field = this.dispatchForm.get(fieldName);
-    if (!field) return null;
-    if (field.touched && field.errors) {
-      if (field.errors['required']) return `${this.displayName(fieldName)} is required`;
-      // Removed strict pattern requirement message for truck number
-    }
+    if (!field || !field.touched || !field.errors) return null;
+
+    if (field.errors['required']) return `${this.displayName(fieldName)} is required`;
+    if (field.errors['maxlength']) return `Maximum ${field.errors['maxlength'].requiredLength} characters allowed`;
+
     return null;
   }
 
   displayName(fieldName: string): string {
     const map: Record<string, string> = {
       truckNumber: 'Truck Number',
-      dispatchDate: 'Dispatch Date',
       driverName: 'Driver Name',
-      routeInformation: 'Route Information',
-      additionalNotes: 'Additional Notes'
+      driverContactNumber: 'Driver Contact Number',
+      dispatchNotes: 'Dispatch Notes'
     };
     return map[fieldName] || fieldName;
   }
@@ -191,6 +169,6 @@ export class DispatchRequestComponent implements OnInit {
   }
 
   goBack(): void {
-    this.location.back();
+    this.router.navigate(['/explosive-manager/requests']);
   }
 }

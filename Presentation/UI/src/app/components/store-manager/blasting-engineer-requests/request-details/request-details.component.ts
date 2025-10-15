@@ -2,11 +2,25 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { ExplosiveApprovalRequest } from '../../../../core/services/explosive-approval-request.service';
 import { ExplosiveCalculationsService, ExplosiveCalculationResultDto } from '../../../../core/services/explosive-calculations.service';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { PanelModule } from 'primeng/panel';
+import { TagModule } from 'primeng/tag';
+import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-request-details',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    DialogModule,
+    ButtonModule,
+    PanelModule,
+    TagModule,
+    TableModule,
+    TooltipModule
+  ],
   templateUrl: './request-details.component.html',
   styleUrl: './request-details.component.scss'
 })
@@ -167,5 +181,76 @@ export class RequestDetailsComponent implements OnInit, OnChanges {
     this.totalAnfo = 0;
     this.totalEmulsion = 0;
     this.isLoadingCalculations = false;
+  }
+
+  getStatusSeverity(status: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' | undefined {
+    switch (status) {
+      case 'Pending': return 'warning';
+      case 'Approved': return 'success';
+      case 'Rejected': return 'danger';
+      case 'Cancelled': return 'secondary';
+      case 'Expired': return 'contrast';
+      default: return 'info';
+    }
+  }
+
+  getPrioritySeverity(priority: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' | undefined {
+    switch (priority.toLowerCase()) {
+      case 'high': return 'danger';
+      case 'medium': return 'warning';
+      case 'low': return 'info';
+      default: return 'secondary';
+    }
+  }
+
+  getApprovalTypeSeverity(approvalType: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' | undefined {
+    switch (approvalType.toLowerCase()) {
+      case 'normal': return 'info';
+      case 'urgent': return 'danger';
+      case 'emergency': return 'contrast';
+      default: return 'secondary';
+    }
+  }
+
+  /**
+   * Check if the request can be approved
+   * Requirements:
+   * - Request status must be 'Pending'
+   * - Blasting date must be specified
+   * - Blast timing must be specified
+   */
+  canApprove(): boolean {
+    if (!this.request || this.request.status !== 'Pending') {
+      return false;
+    }
+
+    // Both blasting date and timing must be specified
+    return !!(this.request.blastingDate && this.request.blastTiming);
+  }
+
+  /**
+   * Get the message explaining why approval is blocked
+   */
+  getApprovalBlockedMessage(): string {
+    if (!this.request) {
+      return 'Request data not available';
+    }
+
+    if (this.request.status !== 'Pending') {
+      return `Request status is ${this.request.status}`;
+    }
+
+    const missingDate = !this.request.blastingDate;
+    const missingTiming = !this.request.blastTiming;
+
+    if (missingDate && missingTiming) {
+      return 'Cannot approve: Blasting Date and Blast Timing not specified by Blasting Engineer';
+    } else if (missingDate) {
+      return 'Cannot approve: Blasting Date not specified by Blasting Engineer';
+    } else if (missingTiming) {
+      return 'Cannot approve: Blast Timing not specified by Blasting Engineer';
+    }
+
+    return 'Approval requirements met';
   }
 }

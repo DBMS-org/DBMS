@@ -223,6 +223,38 @@ namespace Infrastructure.Repositories.ProjectManagement
             }
         }
 
+        public async Task<bool> CompleteSiteAsync(int id, int completedByUserId)
+        {
+            try
+            {
+                var site = await _context.ProjectSites.FindAsync(id);
+                if (site == null)
+                {
+                    return false;
+                }
+
+                // Validate that all required steps are completed
+                if (!site.IsPatternApproved || !site.IsSimulationConfirmed || !site.IsOperatorCompleted)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot complete site: Pattern approval, simulation confirmation, and operator completion are all required.");
+                }
+
+                site.IsCompleted = true;
+                site.CompletedAt = DateTime.UtcNow;
+                site.CompletedByUserId = completedByUserId;
+                site.UpdatedAt = DateTime.UtcNow;
+
+                var result = await _context.SaveChangesAsync();
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completing project site {ProjectSiteId}", id);
+                throw;
+            }
+        }
+
         // Note: Explosive approval methods have been moved to ExplosiveApprovalRequestRepository
         // as part of the new ExplosiveApprovalRequest entity implementation
     }

@@ -1,8 +1,16 @@
-<div class="admin-layout">
+<div class="min-h-screen flex flex-col bg-gray-50">
+  <!-- Navbar -->
   <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
-  <div class="admin-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+
+  <!-- Content Area -->
+  <div class="flex flex-1 relative mt-16">
+    <!-- Sidebar -->
     <app-sidebar [isCollapsed]="isSidebarCollapsed"></app-sidebar>
-    <main class="main-content">
+
+    <!-- Main Content -->
+    <main
+      class="flex-1 p-8 transition-all duration-300 ease-in-out"
+      [ngClass]="isSidebarCollapsed ? 'ml-[70px]' : 'ml-64'">
       <router-outlet></router-outlet>
     </main>
   </div>
