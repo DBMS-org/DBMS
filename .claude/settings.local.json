@@ -7,8 +7,7 @@
       "Bash(grep:*)",
       "Bash(dotnet build:*)",
       "Bash(npx ng build:*)",
-      "Bash(npm install:*)",
-      "Bash(npm run build)",
+      "Bash(npm run ng:*)",
       "Bash(find:*)"
     ],
     "deny": [],

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 export interface Notification {
@@ -30,16 +30,20 @@ export interface ToastNotification {
   providedIn: 'root'
 })
 export class NotificationService {
-  private readonly defaultDuration = 3000;
+  private readonly defaultConfig: MatSnackBarConfig = {
+    duration: 3000,
+    horizontalPosition: 'right',
+    verticalPosition: 'top'
+  };
 
   private notifications$ = new BehaviorSubject<Notification[]>([]);
   private toastNotifications$ = new Subject<ToastNotification>();
   private unreadCount$ = new BehaviorSubject<number>(0);
 
-  constructor(private messageService: MessageService) {
+  constructor(private snackBar: MatSnackBar) {
     // Load notifications from localStorage on service initialization
     this.loadNotificationsFromStorage();
-
+    
     // Generate some mock notifications for demonstration
     this.generateMockNotifications();
   }
@@ -57,40 +61,36 @@ export class NotificationService {
     return this.unreadCount$.asObservable();
   }
 
-  // Enhanced toast methods
-  showSuccess(message: string, title: string = 'Success', duration?: number): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: title,
-      detail: message,
-      life: duration || this.defaultDuration
+  // Enhanced snackbar methods
+  showSuccess(message: string, action: string = 'OK', config?: MatSnackBarConfig): void {
+    this.snackBar.open(message, action, {
+      ...this.defaultConfig,
+      panelClass: ['snackbar-success'],
+      ...config
     });
   }
 
-  showError(message: string, title: string = 'Error', duration?: number): void {
-    this.messageService.add({
-      severity: 'error',
-      summary: title,
-      detail: message,
-      life: duration || this.defaultDuration
+  showError(message: string, action: string = 'Dismiss', config?: MatSnackBarConfig): void {
+    this.snackBar.open(message, action, {
+      ...this.defaultConfig,
+      panelClass: ['snackbar-error'],
+      ...config
     });
   }
 
-  showWarning(message: string, title: string = 'Warning', duration?: number): void {
-    this.messageService.add({
-      severity: 'warn',
-      summary: title,
-      detail: message,
-      life: duration || this.defaultDuration
+  showWarning(message: string, action: string = 'OK', config?: MatSnackBarConfig): void {
+    this.snackBar.open(message, action, {
+      ...this.defaultConfig,
+      panelClass: ['snackbar-warning'],
+      ...config
     });
   }
 
-  showInfo(message: string, title: string = 'Info', duration?: number): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: title,
-      detail: message,
-      life: duration || this.defaultDuration
+  showInfo(message: string, action: string = 'OK', config?: MatSnackBarConfig): void {
+    this.snackBar.open(message, action, {
+      ...this.defaultConfig,
+      panelClass: ['snackbar-info'],
+      ...config
     });
   }
 
@@ -110,9 +110,9 @@ export class NotificationService {
     this.updateUnreadCount();
     this.saveNotificationsToStorage();
 
-    // Show toast for high priority notifications
+    // Show snackbar for high priority notifications
     if (notification.priority === 'high' || notification.priority === 'urgent') {
-      this.showToastForNotification(newNotification);
+      this.showSnackbarForNotification(newNotification);
     }
   }
 
@@ -274,19 +274,17 @@ export class NotificationService {
     return 'notif_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
   }
 
-  private showToastForNotification(notification: Notification): void {
-    const duration = notification.priority === 'urgent' ? 8000 : 5000;
-    const severity = this.mapNotificationTypeToSeverity(notification.type);
+  private showSnackbarForNotification(notification: Notification): void {
+    const config: MatSnackBarConfig = {
+      ...this.defaultConfig,
+      duration: notification.priority === 'urgent' ? 8000 : 5000,
+      panelClass: [`snackbar-${this.mapNotificationTypeToSnackbar(notification.type)}`]
+    };
 
-    this.messageService.add({
-      severity: severity,
-      summary: notification.title,
-      detail: notification.message,
-      life: duration
-    });
+    this.snackBar.open(notification.title, 'View', config);
   }
 
-  private mapNotificationTypeToSeverity(type: Notification['type']): 'success' | 'info' | 'warn' | 'error' {
+  private mapNotificationTypeToSnackbar(type: Notification['type']): string {
     switch (type) {
       case 'success':
       case 'assignment':
@@ -295,7 +293,7 @@ export class NotificationService {
         return 'error';
       case 'warning':
       case 'maintenance':
-        return 'warn';
+        return 'warning';
       case 'info':
       case 'request':
       default:

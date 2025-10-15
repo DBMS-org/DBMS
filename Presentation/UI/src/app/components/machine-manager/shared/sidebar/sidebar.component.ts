@@ -23,6 +23,7 @@ export class SidebarComponent {
     { icon: 'precision_manufacturing', label: 'Machine Inventory', route: '/machine-manager/machine-inventory' },
     { icon: 'assignment', label: 'Assignment Requests', route: '/machine-manager/assignment-requests' },
     { icon: 'inventory', label: 'Accessories Inventory', route: '/machine-manager/accessories-inventory' },
-    { icon: 'build', label: 'Maintenance Management', route: '/machine-manager/maintenance-management' }
+    { icon: 'build', label: 'Maintenance Management', route: '/machine-manager/maintenance-management' },
+    { icon: 'notifications', label: 'Notifications', route: '/machine-manager/notifications' }
   ];
 }

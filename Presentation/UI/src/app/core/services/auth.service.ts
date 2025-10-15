@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { environment } from '../../../environments/environment';
 import { User, LoginResponse } from '../models/user.model';
+import { LogoutConfirmationDialogComponent, LogoutDialogData } from '../../shared/shared/components/logout-confirmation-dialog/logout-confirmation-dialog.component';
 import { SessionService } from './session.service';
-import { AppDialogService } from './dialog.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private dialogService: AppDialogService,
+    private dialog: MatDialog,
     private sessionService: SessionService
   ) {
     // Load user from localStorage on service initialization
@@ -51,9 +52,18 @@ export class AuthService {
 
   logoutWithConfirmation(): void {
     const currentUser = this.getCurrentUser();
+    const dialogData: LogoutDialogData = {
+      userName: currentUser?.name
+    };
 
-    this.dialogService.openLogoutDialog(currentUser?.name).subscribe(confirmed => {
-      if (confirmed) {
+    const dialogRef = this.dialog.open(LogoutConfirmationDialogComponent, {
+      width: '450px',
+      disableClose: true,
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
         this.logout();
       }
     });

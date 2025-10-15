@@ -12,7 +12,8 @@ interface NavItem {
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './sidebar.component.html'
+  templateUrl: './sidebar.component.html',
+  styleUrl: './sidebar.component.scss'
 })
 export class SidebarComponent {
   @Input() isCollapsed = false;
@@ -22,7 +23,6 @@ export class SidebarComponent {
     { icon: 'people', label: 'User Management', route: '/admin/users' },
     { icon: 'work', label: 'Project Management', route: '/admin/project-management' },
     { icon: 'precision_manufacturing', label: 'Machine Inventory', route: '/admin/machine-inventory' },
-    { icon: 'assignment', label: 'Machine Assignments', route: '/admin/machine-assignments' },
-    { icon: 'store', label: 'Store Management', route: '/admin/stores' }
+    { icon: 'assignment', label: 'Machine Assignments', route: '/admin/machine-assignments' }
   ];
 }

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ProposalHistoryService, ProposalHistoryItem, ExplosiveApprovalStatus } from '../../../core/services/proposal-history.service';
 import { SiteService, ProjectSite } from '../../../core/services/site.service';
 import { ProjectService } from '../../../core/services/project.service';
@@ -15,14 +14,12 @@ interface DisplayProposalItem {
   proposalType: string;
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   submittedDate: Date;
-  blastingDate?: string;
-  blastTiming?: string;
 }
 
 @Component({
   selector: 'app-proposal-history',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProposalDetailsComponent],
+  imports: [CommonModule, ProposalDetailsComponent],
   templateUrl: './proposal-history.component.html',
   styleUrl: './proposal-history.component.scss'
 })
@@ -42,15 +39,6 @@ export class ProposalHistoryComponent implements OnInit {
   // Details modal properties
   showDetailsModal: boolean = false;
   selectedProposalId: number | null = null;
-
-  // Timing modal properties
-  showTimingModal: boolean = false;
-  timingForm = {
-    proposalId: 0,
-    blastingDate: '',
-    blastTiming: ''
-  };
-  isSavingTiming: boolean = false;
 
   constructor(
     private proposalHistoryService: ProposalHistoryService,
@@ -178,9 +166,7 @@ export class ProposalHistoryComponent implements OnInit {
       siteName: site?.name || proposal.projectSiteName || `Site ${proposal.projectSiteId}`,
       proposalType: 'Explosive Approval Request',
       status: this.mapStatus(proposal.status),
-      submittedDate: proposal.createdAt,
-      blastingDate: (proposal as any).blastingDate,
-      blastTiming: (proposal as any).blastTiming
+      submittedDate: proposal.createdAt
     };
   }
 
@@ -294,85 +280,6 @@ export class ProposalHistoryComponent implements OnInit {
   closeDetailsModal(): void {
     this.showDetailsModal = false;
     this.selectedProposalId = null;
-  }
-
-  // Timing modal methods
-  openTimingModal(proposal: DisplayProposalItem): void {
-    this.timingForm = {
-      proposalId: proposal.id,
-      blastingDate: proposal.blastingDate || '',
-      blastTiming: proposal.blastTiming || ''
-    };
-    this.showTimingModal = true;
-  }
-
-  closeTimingModal(): void {
-    this.showTimingModal = false;
-    this.timingForm = {
-      proposalId: 0,
-      blastingDate: '',
-      blastTiming: ''
-    };
-    this.isSavingTiming = false;
-  }
-
-  saveTiming(): void {
-    if (!this.timingForm.blastingDate || !this.timingForm.blastTiming) {
-      alert('Please fill in both blasting date and timing');
-      return;
-    }
-
-    this.isSavingTiming = true;
-
-    // Note: This is a frontend-only implementation
-    // When backend is ready, use: this.proposalHistoryService.updateTiming(...)
-    console.log('Saving timing (frontend only):', this.timingForm);
-
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // Update the proposal in the local arrays
-      const updateProposal = (p: DisplayProposalItem) => {
-        if (p.id === this.timingForm.proposalId) {
-          return {
-            ...p,
-            blastingDate: this.timingForm.blastingDate,
-            blastTiming: this.timingForm.blastTiming
-          };
-        }
-        return p;
-      };
-
-      this.proposalHistory = this.proposalHistory.map(updateProposal);
-      this.filteredHistory = this.filteredHistory.map(updateProposal);
-
-      console.log('✅ Timing updated successfully (frontend only)');
-      this.closeTimingModal();
-    }, 500);
-  }
-
-  isTimingFormValid(): boolean {
-    return !!(this.timingForm.blastingDate && this.timingForm.blastTiming);
-  }
-
-  hasTimingSet(proposal: DisplayProposalItem): boolean {
-    return !!(proposal.blastingDate && proposal.blastTiming);
-  }
-
-  formatTimingDisplay(date?: string, time?: string): string {
-    if (!date || !time) {
-      return 'Not Set';
-    }
-    try {
-      const dateObj = new Date(date);
-      const formattedDate = dateObj.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-      return `${formattedDate} at ${time}`;
-    } catch {
-      return 'Invalid Date/Time';
-    }
   }
 
 }

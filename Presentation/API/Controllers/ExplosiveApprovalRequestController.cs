@@ -101,9 +101,7 @@ namespace Presentation.API.Controllers
                     dto.ExpectedUsageDate,
                     dto.Comments,
                     dto.Priority,
-                    dto.ApprovalType,
-                    dto.BlastingDate,
-                    dto.BlastTiming);
+                    dto.ApprovalType);
 
                 return CreatedAtAction(nameof(GetExplosiveApprovalRequest), new { id = request.Id }, request);
             }
@@ -161,52 +159,6 @@ namespace Presentation.API.Controllers
             }
         }
 
-        [HttpPut("{id}/timing")]
-        [Authorize(Policy = "ManageProjectSites")]
-        public async Task<IActionResult> UpdateBlastingTiming(int id, [FromBody] UpdateBlastingTimingDto dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var existingRequest = await _explosiveApprovalRequestService.GetExplosiveApprovalRequestByIdAsync(id);
-                if (existingRequest == null)
-                {
-                    return NotFound($"Explosive approval request with ID {id} not found");
-                }
-
-                // Only allow timing updates for pending requests
-                if (existingRequest.Status != ExplosiveApprovalStatus.Pending)
-                {
-                    return BadRequest("Blasting timing can only be updated for pending requests");
-                }
-
-                var success = await _explosiveApprovalRequestService.UpdateBlastingTimingAsync(
-                    id, dto.BlastingDate, dto.BlastTiming);
-
-                if (!success)
-                {
-                    return StatusCode(500, "Failed to update blasting timing");
-                }
-
-                // Fetch updated request to return
-                var updatedRequest = await _explosiveApprovalRequestService.GetExplosiveApprovalRequestByIdAsync(id);
-                return Ok(updatedRequest);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating blasting timing for request {RequestId}", id);
-                return StatusCode(500, "An error occurred while updating the blasting timing");
-            }
-        }
-
         [HttpPost("{id}/approve")]
         [Authorize(Policy = "ManageExplosiveRequests")]
         public async Task<IActionResult> ApproveExplosiveApprovalRequest(int id, [FromBody] ApprovalActionDto dto)
@@ -226,10 +178,6 @@ namespace Presentation.API.Controllers
                 }
 
                 return Ok(new { message = "Explosive approval request approved successfully" });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -409,8 +357,6 @@ namespace Presentation.API.Controllers
         public string? Comments { get; set; }
         public RequestPriority Priority { get; set; } = RequestPriority.Normal;
         public ExplosiveApprovalType ApprovalType { get; set; } = ExplosiveApprovalType.Standard;
-        public DateTime? BlastingDate { get; set; }
-        public string? BlastTiming { get; set; }
     }
 
     public class UpdateExplosiveApprovalRequestDto
@@ -419,14 +365,6 @@ namespace Presentation.API.Controllers
         public string? Comments { get; set; }
         public RequestPriority Priority { get; set; }
         public ExplosiveApprovalType ApprovalType { get; set; }
-        public DateTime? BlastingDate { get; set; }
-        public string? BlastTiming { get; set; }
-    }
-
-    public class UpdateBlastingTimingDto
-    {
-        public DateTime? BlastingDate { get; set; }
-        public string? BlastTiming { get; set; }
     }
 
     public class ApprovalActionDto

@@ -1,45 +1,53 @@
 .sidebar {
   width: 250px;
-  height: calc(100vh - 70px);
+  height: 100vh;
   background-color: white;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid #e1e1e1;
   position: fixed;
-  top: 70px;
+  top: 64px;
   left: 0;
   z-index: 900;
-  overflow-y: auto;
-  transition: width 0.3s ease;
-  padding: 1rem 0;
 
   &.collapsed {
-    width: 80px;
+    width: 70px;
+  }
+}
 
-    nav a span {
-      display: none;
-    }
+.nav-menu {
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-    nav a {
-      justify-content: center;
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  color: #666;
+  text-decoration: none;
+  border-radius: 0 20px 20px 0;
+  margin-right: 1rem;
+
+  &:hover {
+    background-color: #f8f9fa;
+    color: #333;
   }
 
-  // Custom scrollbar styling
-  &::-webkit-scrollbar {
-    width: 6px;
+  &.active {
+    background-color: #e3f2fd;
+    color: #1976d2;
   }
 
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
+  i {
+    font-size: 24px;
+    min-width: 24px;
   }
 
-  &::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: #555;
+  span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
   }
 }
