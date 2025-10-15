@@ -892,6 +892,52 @@
 }
 }
 
+// Responsive Design for Compact Modal
+@media (max-width: 600px) {
+  .enhanced-modal-content {
+    max-width: 95%;
+
+    .modal-body.compact-modal-body {
+      padding: 1rem;
+
+      .explosive-summary-compact {
+        .explosive-totals-grid {
+          grid-template-columns: 1fr;
+          gap: 0.5rem;
+        }
+      }
+
+      .form-grid-compact {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+
+        .form-group-compact.full-width {
+          grid-column: 1;
+        }
+      }
+
+      .form-hint-box {
+        padding: 0.6rem;
+
+        span {
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
 // Responsive Design
 @media (max-width: 768px) {
   .site-dashboard-container {
@@ -1096,6 +1142,21 @@
         font-weight: 600;
         color: #374151;
         font-size: 0.95rem;
+
+        .optional-label {
+          font-weight: 400;
+          color: #6b7280;
+          font-size: 0.85rem;
+          font-style: italic;
+        }
+      }
+
+      .form-hint {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-style: italic;
       }
 
       .form-control {
@@ -1121,6 +1182,145 @@
       textarea.form-control {
         resize: vertical;
         min-height: 80px;
+      }
+    }
+
+    // Compact modal body
+    &.compact-modal-body {
+      padding: 1.5rem;
+    }
+
+    // Compact explosive summary
+    .explosive-summary-compact {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #dee2e6;
+
+      h4 {
+        margin: 0 0 0.75rem 0;
+        color: #495057;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .explosive-totals-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+
+        .explosive-item-compact {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 0.5rem;
+          background: #fff;
+          border-radius: 6px;
+          border: 1px solid #e9ecef;
+
+          .label {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+          }
+
+          .value {
+            color: #495057;
+            font-weight: 600;
+            font-size: 0.9rem;
+          }
+
+          &.total {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+            .label {
+              color: rgba(255, 255, 255, 0.9);
+            }
+
+            .value {
+              color: #fff;
+              font-size: 1rem;
+              font-weight: 700;
+            }
+          }
+        }
+      }
+    }
+
+    // Compact form grid (2 columns)
+    .form-grid-compact {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .form-group-compact {
+        margin-bottom: 0;
+
+        label {
+          display: block;
+          margin-bottom: 0.4rem;
+          font-weight: 600;
+          color: #374151;
+          font-size: 0.85rem;
+
+          .optional-label {
+            font-weight: 400;
+            color: #6b7280;
+            font-size: 0.75rem;
+            font-style: italic;
+          }
+        }
+
+        .form-control {
+          width: 100%;
+          padding: 0.6rem;
+          border: 2px solid #e5e7eb;
+          border-radius: 6px;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+          box-sizing: border-box;
+
+          &:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+        }
+
+        textarea.form-control {
+          resize: vertical;
+          min-height: 60px;
+        }
+
+        &.full-width {
+          grid-column: 1 / -1;
+        }
+      }
+    }
+
+    // Form hint box
+    .form-hint-box {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 0.75rem;
+      margin-top: 1rem;
+
+      .material-icons {
+        color: #3b82f6;
+        font-size: 18px;
+      }
+
+      span {
+        color: #1e40af;
+        font-size: 0.8rem;
+        line-height: 1.4;
       }
     }
   }

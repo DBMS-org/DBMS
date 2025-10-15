@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-request-details',
@@ -17,7 +18,8 @@ import { TableModule } from 'primeng/table';
     ButtonModule,
     PanelModule,
     TagModule,
-    TableModule
+    TableModule,
+    TooltipModule
   ],
   templateUrl: './request-details.component.html',
   styleUrl: './request-details.component.scss'
@@ -208,5 +210,47 @@ export class RequestDetailsComponent implements OnInit, OnChanges {
       case 'emergency': return 'contrast';
       default: return 'secondary';
     }
+  }
+
+  /**
+   * Check if the request can be approved
+   * Requirements:
+   * - Request status must be 'Pending'
+   * - Blasting date must be specified
+   * - Blast timing must be specified
+   */
+  canApprove(): boolean {
+    if (!this.request || this.request.status !== 'Pending') {
+      return false;
+    }
+
+    // Both blasting date and timing must be specified
+    return !!(this.request.blastingDate && this.request.blastTiming);
+  }
+
+  /**
+   * Get the message explaining why approval is blocked
+   */
+  getApprovalBlockedMessage(): string {
+    if (!this.request) {
+      return 'Request data not available';
+    }
+
+    if (this.request.status !== 'Pending') {
+      return `Request status is ${this.request.status}`;
+    }
+
+    const missingDate = !this.request.blastingDate;
+    const missingTiming = !this.request.blastTiming;
+
+    if (missingDate && missingTiming) {
+      return 'Cannot approve: Blasting Date and Blast Timing not specified by Blasting Engineer';
+    } else if (missingDate) {
+      return 'Cannot approve: Blasting Date not specified by Blasting Engineer';
+    } else if (missingTiming) {
+      return 'Cannot approve: Blast Timing not specified by Blasting Engineer';
+    }
+
+    return 'Approval requirements met';
   }
 }
