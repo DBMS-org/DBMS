@@ -13,11 +13,16 @@ namespace API.Controllers
     {
         private readonly IProjectSiteService _projectSiteService;
         private readonly IAuthorizationService _authorizationService;
+        private readonly ILogger<ProjectSitesController> _logger;
 
-        public ProjectSitesController(IProjectSiteService projectSiteService, IAuthorizationService authorizationService)
+        public ProjectSitesController(
+            IProjectSiteService projectSiteService,
+            IAuthorizationService authorizationService,
+            ILogger<ProjectSitesController> logger)
         {
             _projectSiteService = projectSiteService;
             _authorizationService = authorizationService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -133,6 +138,43 @@ namespace API.Controllers
                     return NotFound($"Project site with ID {id} not found");
                 }
             return Ok();
+        }
+
+        [HttpPost("{id}/complete")]
+        [Authorize(Policy = "ManageProjectSites")]
+        public async Task<IActionResult> CompleteSite(int id)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                if (userId == null)
+                {
+                    return Unauthorized("User ID not found in token");
+                }
+
+                var success = await _projectSiteService.CompleteSiteAsync(id, userId.Value);
+                if (!success)
+                {
+                    return NotFound($"Project site with ID {id} not found");
+                }
+
+                return Ok(new { message = "Project site marked as completed successfully" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completing project site {SiteId}", id);
+                return StatusCode(500, "An error occurred while completing the project site");
+            }
+        }
+
+        private int? GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : null;
         }
 
         // Explosive approval endpoints have been moved to ExplosiveApprovalRequestController

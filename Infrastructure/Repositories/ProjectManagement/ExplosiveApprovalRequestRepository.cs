@@ -137,11 +137,18 @@ namespace Infrastructure.Repositories.ProjectManagement
                     return false;
                 }
 
+                // Validate that blasting date and timing are set before approval
+                if (!request.BlastingDate.HasValue || string.IsNullOrWhiteSpace(request.BlastTiming))
+                {
+                    throw new InvalidOperationException(
+                        "Cannot approve request: Blasting date and timing must be specified before approval.");
+                }
+
                 request.Status = ExplosiveApprovalStatus.Approved;
                 request.ProcessedByUserId = approvedByUserId;
                 request.ProcessedAt = DateTime.UtcNow;
                 request.UpdatedAt = DateTime.UtcNow;
-                
+
                 if (!string.IsNullOrEmpty(approvalComments))
                 {
                     request.Comments = approvalComments;
@@ -224,6 +231,30 @@ namespace Infrastructure.Repositories.ProjectManagement
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting explosive approval request {RequestId}", id);
+                throw;
+            }
+        }
+
+        public async Task<bool> UpdateBlastingTimingAsync(int requestId, DateTime? blastingDate, string? blastTiming)
+        {
+            try
+            {
+                var request = await _context.ExplosiveApprovalRequests.FindAsync(requestId);
+                if (request == null)
+                {
+                    return false;
+                }
+
+                request.BlastingDate = blastingDate;
+                request.BlastTiming = blastTiming;
+                request.UpdatedAt = DateTime.UtcNow;
+
+                var result = await _context.SaveChangesAsync();
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating blasting timing for request {RequestId}", requestId);
                 throw;
             }
         }

@@ -53,7 +53,12 @@ namespace Application.Interfaces.Infrastructure.Repositories
         /// Deletes an explosive approval request
         /// </summary>
         Task<bool> DeleteAsync(int id);
-        
+
+        /// <summary>
+        /// Updates the blasting date and timing for an explosive approval request
+        /// </summary>
+        Task<bool> UpdateBlastingTimingAsync(int requestId, DateTime? blastingDate, string? blastTiming);
+
         /// <summary>
         /// Retrieves explosive approval requests filtered by region
         /// </summary>
