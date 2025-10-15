@@ -268,6 +268,19 @@ namespace Application.Services.ProjectManagement
             }
         }
 
+        public async Task<bool> CompleteSiteAsync(int id, int completedByUserId)
+        {
+            try
+            {
+                return await _projectSiteRepository.CompleteSiteAsync(id, completedByUserId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completing project site {ProjectSiteId}", id);
+                throw;
+            }
+        }
+
         // Note: Explosive approval methods have been moved to ExplosiveApprovalRequestApplicationService
         // as part of the new ExplosiveApprovalRequest entity implementation
 

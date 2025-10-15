@@ -19,6 +19,8 @@ namespace Application.DTOs.ProjectManagement
         public decimal? EstimatedDurationHours { get; set; }
         public bool SafetyChecklistCompleted { get; set; }
         public bool EnvironmentalAssessmentCompleted { get; set; }
+        public DateTime? BlastingDate { get; set; }
+        public string? BlastTiming { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; }
