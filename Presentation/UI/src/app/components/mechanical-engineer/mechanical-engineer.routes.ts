@@ -17,16 +17,19 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: DashboardHomeComponent },
             { path: 'profile', component: UserProfileComponent },
-            { 
-                path: 'maintenance', 
+            {
+                path: 'maintenance',
                 component: MaintenanceComponent,
                 children: [
                     { path: '', redirectTo: 'jobs', pathMatch: 'full' },
-                    { path: 'jobs', component: MaintenanceJobsComponent },
-                    { path: 'notifications', component: MaintenanceNotificationsComponent }
+                    { path: 'jobs', component: MaintenanceJobsComponent }
                 ]
             },
-            // Irrelevant placeholder routes removed
+            { path: 'notifications', component: MaintenanceNotificationsComponent },
+            {
+                path: 'reports',
+                loadComponent: () => import('./reports/reports.component').then(m => m.ReportsComponent)
+            }
         ]
     }
 ];
