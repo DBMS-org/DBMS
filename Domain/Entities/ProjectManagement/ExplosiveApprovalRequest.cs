@@ -77,7 +77,22 @@ namespace Domain.Entities.ProjectManagement
         /// Environmental impact assessment completion status
         /// </summary>
         public bool EnvironmentalAssessmentCompleted { get; set; } = false;
-        
+
+        /// <summary>
+        /// Specific date when the blasting operation will occur
+        /// Optional when creating request, can be updated later
+        /// Required before approval by Store Manager
+        /// </summary>
+        public DateTime? BlastingDate { get; set; }
+
+        /// <summary>
+        /// Specific time when the blasting operation will occur
+        /// Format: "HH:mm" (24-hour format)
+        /// Optional when creating request, can be updated later
+        /// Required before approval by Store Manager
+        /// </summary>
+        public string? BlastTiming { get; set; }
+
         // Navigation properties
         public virtual ProjectSite ProjectSite { get; set; } = null!;
         public virtual User RequestedByUser { get; set; } = null!;

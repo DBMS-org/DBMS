@@ -1,1 +1,1 @@
-updated some stylings in the store manager request
+update
