@@ -189,6 +189,64 @@
       </div>
     </p-panel>
 
+    <!-- Blasting Schedule Section -->
+    <p-panel header="Blasting Schedule" [toggleable]="true" styleClass="shadow-sm">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-clock text-indigo-600"></i>
+          <span class="font-semibold">Blasting Schedule</span>
+        </div>
+      </ng-template>
+      <div class="p-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Blasting Date -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-gray-600">Blasting Date:</label>
+            @if (request.blastingDate) {
+              <div class="flex items-center gap-2">
+                <i class="pi pi-check-circle text-green-600"></i>
+                <span class="text-base text-gray-800">{{ formatDate(request.blastingDate) }}</span>
+              </div>
+            } @else {
+              <div class="flex items-center gap-2">
+                <i class="pi pi-exclamation-triangle text-amber-500"></i>
+                <span class="text-base text-amber-600 font-semibold">Not Specified</span>
+              </div>
+            }
+          </div>
+
+          <!-- Blast Timing -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-gray-600">Blast Timing:</label>
+            @if (request.blastTiming) {
+              <div class="flex items-center gap-2">
+                <i class="pi pi-check-circle text-green-600"></i>
+                <span class="text-base text-gray-800">{{ request.blastTiming }}</span>
+              </div>
+            } @else {
+              <div class="flex items-center gap-2">
+                <i class="pi pi-exclamation-triangle text-amber-500"></i>
+                <span class="text-base text-amber-600 font-semibold">Not Specified</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Information Note when timing is missing -->
+        @if (!request.blastingDate || !request.blastTiming) {
+          <div class="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <div class="flex items-start gap-2">
+              <i class="pi pi-info-circle text-amber-600 mt-0.5"></i>
+              <div>
+                <p class="m-0 text-sm text-amber-800 font-semibold">Timing Information Required for Approval</p>
+                <p class="m-0 mt-1 text-xs text-amber-700">The Blasting Engineer needs to specify both the blasting date and timing before this request can be approved.</p>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </p-panel>
+
     <!-- Processing Information Section -->
     <p-panel header="Processing Information" [toggleable]="true" styleClass="shadow-sm" *ngIf="request.processedByUserId || request.processedAt || request.rejectionReason">
       <ng-template pTemplate="header">
@@ -235,24 +293,44 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-between items-center w-full">
-      <p-button
-        label="Close"
-        icon="pi pi-times"
-        (onClick)="onClose()"
-        severity="secondary"></p-button>
+    <div class="flex flex-col gap-3 w-full">
 
-      <div class="flex gap-2" *ngIf="request?.status === 'Pending'">
+      <!-- Approval Requirements Message (shown when approval is blocked) -->
+      @if (request?.status === 'Pending' && !canApprove()) {
+        <div class="p-3 bg-amber-50 rounded-lg border border-amber-300">
+          <div class="flex items-start gap-2">
+            <i class="pi pi-exclamation-triangle text-amber-600 mt-0.5"></i>
+            <div>
+              <p class="m-0 text-sm font-semibold text-amber-800">Cannot Approve Request</p>
+              <p class="m-0 mt-1 text-xs text-amber-700">{{ getApprovalBlockedMessage() }}</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Action Buttons -->
+      <div class="flex justify-between items-center w-full">
         <p-button
-          label="Reject"
-          icon="pi pi-times-circle"
-          (onClick)="onReject()"
-          severity="danger"></p-button>
-        <p-button
-          label="Approve"
-          icon="pi pi-check-circle"
-          (onClick)="onApprove()"
-          severity="success"></p-button>
+          label="Close"
+          icon="pi pi-times"
+          (onClick)="onClose()"
+          severity="secondary"></p-button>
+
+        <div class="flex gap-2" *ngIf="request?.status === 'Pending'">
+          <p-button
+            label="Reject"
+            icon="pi pi-times-circle"
+            (onClick)="onReject()"
+            severity="danger"></p-button>
+          <p-button
+            label="Approve"
+            icon="pi pi-check-circle"
+            (onClick)="onApprove()"
+            [disabled]="!canApprove()"
+            [pTooltip]="!canApprove() ? getApprovalBlockedMessage() : 'Approve this request'"
+            tooltipPosition="top"
+            severity="success"></p-button>
+        </div>
       </div>
     </div>
   </ng-template>

@@ -9,6 +9,8 @@ export interface ExplosiveApprovalRequest {
   projectSiteId: number;
   requestedByUserId: number;
   expectedUsageDate: string;
+  blastingDate?: string;
+  blastTiming?: string;
   comments?: string;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' | 'Expired';
   priority: 'Low' | 'Normal' | 'High' | 'Critical';

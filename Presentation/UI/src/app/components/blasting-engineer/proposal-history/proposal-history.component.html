@@ -47,8 +47,10 @@
           <th>Project</th>
           <th>Site</th>
           <th>Type</th>
+          <th>Status</th>
+          <th>Blasting Schedule</th>
           <th>Submitted Date</th>
-          <th>Action</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -57,11 +59,39 @@
           <td>{{ item.projectName }}</td>
           <td>{{ item.siteName }}</td>
           <td>{{ item.proposalType }}</td>
+          <td>
+            <span class="status-badge" [class]="'status-' + item.status">
+              {{ item.status | titlecase }}
+            </span>
+          </td>
+          <td class="timing-cell">
+            <div class="timing-status">
+              <span *ngIf="hasTimingSet(item)" class="timing-set">
+                <i class="material-icons">check_circle</i>
+                {{ formatTimingDisplay(item.blastingDate, item.blastTiming) }}
+              </span>
+              <span *ngIf="!hasTimingSet(item)" class="timing-not-set">
+                <i class="material-icons">warning</i>
+                Not Set
+              </span>
+            </div>
+          </td>
           <td>{{ item.submittedDate | date:'short' }}</td>
           <td class="actions-cell">
-            <button class="view-detail-btn" type="button" (click)="viewProposalDetails(item.id)">
-              View Details
-            </button>
+            <div class="action-buttons">
+              <button class="view-detail-btn" type="button" (click)="viewProposalDetails(item.id)">
+                <i class="material-icons">visibility</i>
+                Details
+              </button>
+              <button
+                class="timing-btn"
+                type="button"
+                (click)="openTimingModal(item)"
+                [class.has-timing]="hasTimingSet(item)">
+                <i class="material-icons">schedule</i>
+                {{ hasTimingSet(item) ? 'Update' : 'Set' }} Timing
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -80,9 +110,70 @@
 <!-- Proposal Details Modal -->
 <div *ngIf="showDetailsModal" class="modal-overlay" (click)="closeDetailsModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    <app-proposal-details 
-      [proposalId]="selectedProposalId" 
+    <app-proposal-details
+      [proposalId]="selectedProposalId"
       (closeEvent)="closeDetailsModal()">
     </app-proposal-details>
+  </div>
+</div>
+
+<!-- Timing Modal -->
+<div *ngIf="showTimingModal" class="modal-overlay" (click)="closeTimingModal()">
+  <div class="timing-modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-icon">
+        <i class="material-icons">schedule</i>
+      </div>
+      <h3>{{ (timingForm.blastingDate && timingForm.blastTiming) ? 'Update' : 'Set' }} Blasting Schedule</h3>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-description">Specify the date and time when the blast will be conducted. Both fields are required.</p>
+
+      <div class="form-group">
+        <label for="blastingDate">
+          Blasting Date *
+        </label>
+        <input
+          type="date"
+          id="blastingDate"
+          class="form-control"
+          [(ngModel)]="timingForm.blastingDate"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label for="blastTiming">
+          Blast Timing *
+        </label>
+        <input
+          type="time"
+          id="blastTiming"
+          class="form-control"
+          [(ngModel)]="timingForm.blastTiming"
+          required>
+        <small class="form-hint">24-hour format (HH:mm)</small>
+      </div>
+
+      <div class="info-box">
+        <i class="material-icons">info</i>
+        <span>You can update the blasting schedule anytime before it's processed by the Store Manager.</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button
+        class="btn btn-gradient"
+        type="button"
+        (click)="saveTiming()"
+        [disabled]="!isTimingFormValid() || isSavingTiming">
+        <i class="material-icons">save</i>
+        <span>{{ isSavingTiming ? 'Saving...' : 'Save Timing' }}</span>
+      </button>
+      <button class="btn btn-secondary" type="button" (click)="closeTimingModal()" [disabled]="isSavingTiming">
+        <i class="material-icons">close</i>
+        <span>Cancel</span>
+      </button>
+    </div>
   </div>
 </div>

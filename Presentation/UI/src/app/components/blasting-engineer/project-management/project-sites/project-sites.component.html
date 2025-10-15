@@ -1,4 +1,10 @@
 <div class="project-sites-container">
+  <!-- PrimeNG Toast for notifications -->
+  <p-toast position="top-right"></p-toast>
+
+  <!-- PrimeNG ConfirmDialog for confirmations -->
+  <p-confirmDialog></p-confirmDialog>
+
   <!-- Page Header -->
   <div class="page-header">
     <div class="header-content">
@@ -124,14 +130,15 @@
                 [attr.aria-label]="'Open site dashboard for: ' + site.name">
                 <i class="fas fa-cog" aria-hidden="true"></i>
               </button>
-              <button 
+              <button
                 type="button"
-                class="btn btn-sm btn-success" 
+                class="btn btn-sm btn-success complete-btn"
                 (click)="completeSite(site)"
                 [disabled]="!canCompleteSite(site)"
                 [title]="getCompleteButtonTooltip(site)"
                 [attr.aria-label]="'Complete site: ' + site.name">
                 <i class="fas fa-check" aria-hidden="true"></i>
+                <span class="btn-text">Complete</span>
               </button>
               <button 
                 type="button"
