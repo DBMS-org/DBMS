@@ -23,22 +23,28 @@ export class SidebarComponent {
   private router = inject(Router);
 
   navItems: NavItem[] = [
-    { 
-      icon: 'dashboard', 
-      label: 'Dashboard', 
-      route: '/mechanical-engineer/dashboard' 
+    {
+      icon: 'dashboard',
+      label: 'Dashboard',
+      route: '/mechanical-engineer/dashboard'
     },
-    { 
-      icon: 'assignment', 
-      label: 'Maintenance Jobs', 
+    {
+      icon: 'build',
+      label: 'Maintenance Jobs',
       route: '/mechanical-engineer/maintenance/jobs',
-      matchPattern: '/mechanical-engineer/maintenance/jobs'
+      matchPattern: '/mechanical-engineer/maintenance'
     },
-    { 
-      icon: 'notifications', 
-      label: 'Notifications', 
-      route: '/mechanical-engineer/maintenance/notifications',
-      matchPattern: '/mechanical-engineer/maintenance/notifications'
+    {
+      icon: 'assessment',
+      label: 'Reports',
+      route: '/mechanical-engineer/reports',
+      matchPattern: '/mechanical-engineer/reports'
+    },
+    {
+      icon: 'notifications',
+      label: 'Notifications',
+      route: '/mechanical-engineer/notifications',
+      matchPattern: '/mechanical-engineer/notifications'
     }
   ];
 
