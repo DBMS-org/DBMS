@@ -1,48 +1,56 @@
-<div class="blasting-requests-container">
+<div class="p-4 min-h-screen bg-gray-50">
   <!-- Header Section -->
-  <div class="header-section">
-    <div class="page-title-section">
-      <h2 class="page-title">
-        <i class="material-icons">engineering</i>
-        Blasting Engineer Requests
-      </h2>
-      <p class="page-subtitle">Manage explosive material requests from blasting engineers in your region</p>
+  <div class="mb-3">
+    <p-panel>
+      <ng-template pTemplate="header">
+        <div class="flex items-center justify-between flex-wrap gap-2 w-full p-2">
+          <div class="flex-1">
+            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 m-0">
+              <i class="pi pi-wrench text-blue-600 text-lg"></i>
+              Blasting Engineer Requests
+            </h2>
+            <p class="text-gray-600 text-xs mt-0.5 mb-0">Manage explosive material requests from blasting engineers in your region</p>
+          </div>
+          <p-button
+            label="Refresh"
+            icon="pi pi-refresh"
+            (onClick)="refreshRequests()"
+            [disabled]="isLoading"
+            size="small">
+          </p-button>
+        </div>
+      </ng-template>
+
       @if (currentUserRegion || currentUserCountry || currentUserName) {
-        <div class="user-info-section">
+        <div class="flex flex-wrap gap-2 p-2 bg-blue-50 rounded-md border-l-4 border-blue-600">
           @if (currentUserName) {
-            <div class="user-info">
-              <i class="material-icons">person</i>
+            <div class="flex items-center gap-1.5 text-xs text-gray-700">
+              <i class="pi pi-user text-blue-600 text-xs"></i>
               <span>{{ getUserDisplayInfo() }}</span>
             </div>
           }
           @if (currentUserRegion) {
-            <div class="region-info">
-              <i class="material-icons">location_on</i>
+            <div class="flex items-center gap-1.5 text-xs text-gray-700">
+              <i class="pi pi-map-marker text-blue-600 text-xs"></i>
               <span>Region: {{ currentUserRegion }}</span>
             </div>
           }
           @if (currentUserCountry) {
-            <div class="country-info">
-              <i class="material-icons">public</i>
+            <div class="flex items-center gap-1.5 text-xs text-gray-700">
+              <i class="pi pi-globe text-blue-600 text-xs"></i>
               <span>Country: {{ currentUserCountry }}</span>
             </div>
           }
           @if (lastRefreshTime) {
-            <div class="refresh-info">
-              <i class="material-icons">refresh</i>
+            <div class="flex items-center gap-1.5 text-xs text-gray-600 ml-auto">
+              <i class="pi pi-refresh text-green-600 text-xs"></i>
               <span>Last updated: {{ getFormattedRefreshTime() }}</span>
             </div>
           }
         </div>
       }
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-primary" (click)="refreshRequests()" [disabled]="isLoading">
-        <i class="material-icons">refresh</i>
-        Refresh
-      </button>
-    </div>
-</div>
+    </p-panel>
+  </div>
 
 <!-- Request Details Modal -->
 <app-request-details
@@ -55,203 +63,249 @@
 
   <!-- Error Message -->
   @if (errorMessage) {
-    <div class="error-message">
-      <i class="material-icons">error</i>
-      <span>{{ errorMessage }}</span>
-      <button class="btn btn-sm btn-secondary" (click)="refreshRequests()">
-        <i class="material-icons">refresh</i>
-        Retry
-      </button>
-    </div>
+    <p-message severity="error" styleClass="mb-3 w-full">
+      <ng-template pTemplate>
+        <div class="flex items-center justify-between w-full gap-2">
+          <div class="flex-1">
+            <h4 class="font-semibold text-sm m-0 mb-0.5">Error</h4>
+            <p class="text-xs m-0">{{ errorMessage }}</p>
+          </div>
+          <p-button
+            label="Retry"
+            icon="pi pi-refresh"
+            (onClick)="refreshRequests()"
+            severity="danger"
+            [text]="true"
+            size="small">
+          </p-button>
+        </div>
+      </ng-template>
+    </p-message>
   }
 
   <!-- Filters Section -->
-  <div class="filters-section">
-    <div class="search-container">
-      <div class="search-box">
-        <i class="material-icons">search</i>
-        <input 
-          type="text" 
-          placeholder="Search by Request ID, Engineer, Project Site, or Comments..." 
+  <p-panel [toggleable]="true" [(collapsed)]="isFiltersPanelCollapsed" styleClass="mb-3">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full p-2">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-filter text-blue-600 text-sm"></i>
+          <span class="font-semibold text-sm">Filters</span>
+          @if (isFiltersPanelCollapsed && (searchTerm || statusFilter !== 'ALL')) {
+            <p-tag value="Active" severity="info" [rounded]="true" styleClass="text-xs"></p-tag>
+          }
+        </div>
+        <p-button
+          [icon]="isFiltersPanelCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
+          (onClick)="toggleFiltersPanel()"
+          [text]="true"
+          [rounded]="true"
+          size="small"
+          severity="secondary"
+          [pTooltip]="isFiltersPanelCollapsed ? 'Show Filters' : 'Hide Filters'">
+        </p-button>
+      </div>
+    </ng-template>
+    <div class="flex flex-col gap-2">
+      <span class="p-input-icon-left w-full">
+        <i class="pi pi-search text-sm"></i>
+        <input
+          type="text"
+          pInputText
+          placeholder="Search by Request ID, Engineer, Project Site, or Comments..."
           [(ngModel)]="searchTerm"
           (input)="onSearch()"
-          class="search-input">
-        @if (searchTerm) {
-          <button class="clear-search" (click)="searchTerm = ''; onSearch()" title="Clear search">
-            <i class="material-icons">clear</i>
-          </button>
-        }
+          class="w-full text-sm pl-8">
+      </span>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex items-center gap-2">
+          <label for="statusFilter" class="text-xs text-gray-700">Status:</label>
+          <p-dropdown
+            [options]="statusOptions"
+            [(ngModel)]="statusFilter"
+            (onChange)="onStatusFilterChange()"
+            placeholder="All Statuses"
+            styleClass="w-44">
+          </p-dropdown>
+        </div>
+
+        <p-button
+          label="Clear Filters"
+          icon="pi pi-filter-slash"
+          (onClick)="clearFilters()"
+          severity="secondary"
+          [outlined]="true"
+          size="small">
+        </p-button>
       </div>
     </div>
-    
-    <div class="filter-controls">
-      <div class="filter-group">
-        <label for="statusFilter">Status:</label>
-        <select 
-          id="statusFilter" 
-          [(ngModel)]="statusFilter" 
-          (change)="onStatusFilterChange()"
-          class="filter-select">
-          <option value="ALL">All Statuses</option>
-          <option value="Pending">Pending</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
-          <option value="Cancelled">Cancelled</option>
-          <option value="Expired">Expired</option>
-        </select>
-      </div>
-      
-      <button class="btn btn-secondary" (click)="clearFilters()" title="Clear all filters">
-        <i class="material-icons">filter_list_off</i>
-        Clear Filters
-      </button>
-    </div>
-  </div>
+  </p-panel>
 
   <!-- Table Section -->
-  <div class="table-section">
-    @if (isLoading) {
-      <div class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>Loading requests...</p>
-      </div>
-    } @else {
-      <div class="table-container">
-        <table class="requests-table">
-          <thead>
-            <tr>
-              <th>Request ID</th>
-              <th>Engineer</th>
-              <th>Project Site</th>
-              <th>Expected Date</th>
-              <th>Request Date</th>
-              <th>Status</th>
-              <th>Priority</th>
-              <th>Type</th>
-              <th>Comments</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (request of filteredRequests; track request.id) {
-              <tr class="request-row">
-                <td class="request-id">
-                  <span class="id-badge">{{ request.id }}</span>
-                </td>
-                <td class="engineer-info">
-                  <div class="engineer-details">
-                    <span class="engineer-name">{{ request.requestedByUser?.name || 'Unknown' }}</span>
-                    <span class="engineer-email">{{ request.requestedByUser?.email || '' }}</span>
-                  </div>
-                </td>
-                <td class="project-site">
-                  <div class="site-info">
-                    <span class="site-name">{{ request.projectSite?.name || 'Unknown Site' }}</span>
-                    <span class="project-name">{{ request.projectSite?.project?.name || '' }}</span>
-                  </div>
-                </td>
-                <td class="expected-date">
-                  <div class="date-info">
-                    <span class="date-value">{{ formatDate(request.expectedUsageDate) }}</span>
-                  </div>
-                </td>
-                <td class="request-date">
-                  <div class="date-info">
-                    <span class="date-value">{{ formatDate(request.createdAt) }}</span>
-                    @if (getProcessedByInfo(request)) {
-                      <span class="processed-info">{{ getProcessedByInfo(request) }}</span>
-                    }
-                  </div>
-                </td>
-                <td class="status">
-                  <span class="status-badge" [class]="getStatusClass(request.status)">
-                    {{ request.status }}
-                  </span>
-                </td>
-                <td class="priority">
-                  <span class="priority-badge" [class]="'priority-' + request.priority.toLowerCase()">
-                    {{ request.priority }}
-                  </span>
-                </td>
-                <td class="approval-type">
-                  <span class="type-badge" [class]="'type-' + request.approvalType.toLowerCase()">
-                    {{ request.approvalType }}
-                  </span>
-                </td>
-                <td class="comments">
-                  <span class="comments-text" [title]="request.comments || 'No comments'">
-                    {{ request.comments ? (request.comments.length > 30 ? request.comments.substring(0, 30) + '...' : request.comments) : 'No comments' }}
-                  </span>
-                </td>
-                <td class="actions">
-                  <div class="action-buttons">
-                    <button 
-                      class="btn btn-sm btn-info" 
-                      (click)="onViewDetails(request)"
-                      title="View Details">
-                      <i class="material-icons">visibility</i>
-                    </button>
-                    @if (request.status === 'Pending') {
-                      <button 
-                        class="btn btn-sm btn-success" 
-                        (click)="onApprove(request)"
-                        title="Approve Request">
-                        <i class="material-icons">check</i>
-                      </button>
-                      <button 
-                        class="btn btn-sm btn-danger" 
-                        (click)="onReject(request)"
-                        title="Reject Request">
-                        <i class="material-icons">close</i>
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="10" class="no-data">
-                  <div class="empty-state">
-                    <i class="material-icons">inbox</i>
-                    <h4>No Requests Found</h4>
-                    <p>No blasting engineer requests match your current filters.</p>
-                    @if (searchTerm || statusFilter !== 'ALL') {
-                      <button class="btn btn-secondary" (click)="clearFilters()">
-                        <i class="material-icons">filter_list_off</i>
-                        Clear Filters
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
+  <p-table
+    [value]="filteredRequests"
+    [loading]="isLoading"
+    styleClass="p-datatable-sm"
+    responsiveLayout="scroll"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} requests">
+
+    <ng-template pTemplate="header">
+      <tr class="bg-blue-600 text-white">
+        <th class="text-xs uppercase py-2">Request ID</th>
+        <th class="text-xs uppercase py-2">Engineer</th>
+        <th class="text-xs uppercase py-2">Project Site</th>
+        <th class="text-xs uppercase py-2">Expected Date</th>
+        <th class="text-xs uppercase py-2">Request Date</th>
+        <th class="text-xs uppercase py-2">Status</th>
+        <th class="text-xs uppercase py-2">Priority</th>
+        <th class="text-xs uppercase py-2">Type</th>
+        <th class="text-xs uppercase py-2">Comments</th>
+        <th class="text-xs uppercase py-2">Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-request>
+      <tr class="hover:bg-blue-50 transition-colors">
+        <td class="py-2">
+          <p-tag [value]="request.id.toString()" severity="info"></p-tag>
+        </td>
+        <td class="py-2">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-semibold text-xs text-gray-800">{{ request.requestedByUser?.name || 'Unknown' }}</span>
+            <span class="text-xs text-gray-500 italic">{{ request.requestedByUser?.email || '' }}</span>
+          </div>
+        </td>
+        <td class="py-2">
+          <div class="flex flex-col gap-0.5">
+            <span class="font-semibold text-xs text-gray-800">{{ request.projectSite?.name || 'Unknown Site' }}</span>
+            <span class="text-xs text-gray-500 italic">{{ request.projectSite?.project?.name || '' }}</span>
+          </div>
+        </td>
+        <td class="py-2">
+          <span class="text-xs font-medium text-gray-700">{{ formatDate(request.expectedUsageDate) }}</span>
+        </td>
+        <td class="py-2">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-xs font-medium text-gray-700">{{ formatDate(request.createdAt) }}</span>
+            @if (getProcessedByInfo(request)) {
+              <span class="text-xs text-gray-500 italic">{{ getProcessedByInfo(request) }}</span>
             }
-          </tbody>
-        </table>
-      </div>
-    }
-  </div>
+          </div>
+        </td>
+        <td class="py-2">
+          <p-tag
+            [value]="request.status"
+            [severity]="getStatusSeverity(request.status)"
+            [rounded]="true">
+          </p-tag>
+        </td>
+        <td class="py-2">
+          <p-tag
+            [value]="request.priority"
+            [severity]="getPrioritySeverity(request.priority)"
+            [rounded]="true">
+          </p-tag>
+        </td>
+        <td class="py-2">
+          <p-tag
+            [value]="request.approvalType"
+            [severity]="getApprovalTypeSeverity(request.approvalType)"
+            [rounded]="true">
+          </p-tag>
+        </td>
+        <td class="py-2">
+          <span class="text-xs text-gray-600" [pTooltip]="request.comments || 'No comments'">
+            {{ request.comments ? (request.comments.length > 30 ? request.comments.substring(0, 30) + '...' : request.comments) : 'No comments' }}
+          </span>
+        </td>
+        <td class="py-2">
+          <div class="flex gap-0.5">
+            <p-button
+              icon="pi pi-eye"
+              (onClick)="onViewDetails(request)"
+              severity="info"
+              [rounded]="true"
+              [text]="true"
+              size="small"
+              pTooltip="View Details">
+            </p-button>
+            @if (request.status === 'Pending') {
+              <p-button
+                icon="pi pi-check"
+                (onClick)="onApprove(request)"
+                severity="success"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                pTooltip="Approve Request">
+              </p-button>
+              <p-button
+                icon="pi pi-times"
+                (onClick)="onReject(request)"
+                severity="danger"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                pTooltip="Reject Request">
+              </p-button>
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="10" class="text-center py-8">
+          <div class="flex flex-col items-center gap-2">
+            <i class="pi pi-inbox text-4xl text-gray-300"></i>
+            <h4 class="text-gray-700 m-0 font-semibold text-sm">No Requests Found</h4>
+            <p class="text-gray-600 m-0 text-xs">No blasting engineer requests match your current filters.</p>
+            @if (searchTerm || statusFilter !== 'ALL') {
+              <p-button
+                label="Clear Filters"
+                icon="pi pi-filter-slash"
+                (onClick)="clearFilters()"
+                severity="secondary"
+                size="small">
+              </p-button>
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 
   <!-- Summary Section -->
   @if (!isLoading && filteredRequests.length > 0) {
-    <div class="summary-section">
-      <div class="summary-stats">
-        <div class="stat-item">
-          <span class="stat-label">Total Requests:</span>
-          <span class="stat-value">{{ getTotalRequestsCount() }}</span>
+    <p-panel styleClass="mt-3">
+      <ng-template pTemplate="header">
+        <div class="flex items-center gap-2 p-2">
+          <i class="pi pi-chart-bar text-blue-600 text-sm"></i>
+          <span class="font-semibold text-sm">Summary Statistics</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">Pending:</span>
-          <span class="stat-value pending">{{ getPendingCount() }}</span>
+      </ng-template>
+      <div class="flex flex-wrap gap-4">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-gray-600 font-medium">Total Requests:</span>
+          <span class="text-lg font-bold text-gray-800">{{ getTotalRequestsCount() }}</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">Approved:</span>
-          <span class="stat-value approved">{{ getApprovedCount() }}</span>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-gray-600 font-medium">Pending:</span>
+          <span class="text-lg font-bold text-yellow-600">{{ getPendingCount() }}</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">Rejected:</span>
-          <span class="stat-value rejected">{{ getRejectedCount() }}</span>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-gray-600 font-medium">Approved:</span>
+          <span class="text-lg font-bold text-green-600">{{ getApprovedCount() }}</span>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-gray-600 font-medium">Rejected:</span>
+          <span class="text-lg font-bold text-red-600">{{ getRejectedCount() }}</span>
         </div>
       </div>
-    </div>
+    </p-panel>
   }
 </div>

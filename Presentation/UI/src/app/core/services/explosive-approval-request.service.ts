@@ -9,6 +9,8 @@ export interface ExplosiveApprovalRequest {
   projectSiteId: number;
   requestedByUserId: number;
   expectedUsageDate: string;
+  blastingDate?: string;
+  blastTiming?: string;
   comments?: string;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' | 'Expired';
   priority: 'Low' | 'Normal' | 'High' | 'Critical';
@@ -54,6 +56,13 @@ export interface CreateExplosiveApprovalRequestDto {
   comments?: string;
   priority: 'Low' | 'Normal' | 'High' | 'Critical';
   approvalType: 'Standard' | 'Emergency' | 'Maintenance' | 'Testing' | 'Research';
+  blastingDate?: string;
+  blastTiming?: string;
+}
+
+export interface UpdateBlastingTimingDto {
+  blastingDate?: string;
+  blastTiming?: string;
 }
 
 @Injectable({
@@ -180,6 +189,15 @@ export class ExplosiveApprovalRequestService {
    */
   deleteExplosiveApprovalRequest(requestId: number): Observable<boolean> {
     return this.http.delete<boolean>(`${this.apiUrl}/${requestId}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Update blasting date and timing for an explosive approval request
+   */
+  updateBlastingTiming(requestId: number, timingData: UpdateBlastingTimingDto): Observable<ExplosiveApprovalRequest> {
+    return this.http.put<ExplosiveApprovalRequest>(`${this.apiUrl}/${requestId}/timing`, timingData).pipe(
       catchError(this.handleError)
     );
   }

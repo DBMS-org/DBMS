@@ -16,6 +16,7 @@ namespace Application.Interfaces.ProjectManagement
         Task<bool> RevokePatternAsync(int id);
         Task<bool> ConfirmSimulationAsync(int id);
         Task<bool> RevokeSimulationAsync(int id);
+        Task<bool> CompleteSiteAsync(int id, int completedByUserId);
         // Note: Explosive approval methods moved to IExplosiveApprovalRequestRepository
     }
 }

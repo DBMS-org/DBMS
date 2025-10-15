@@ -19,10 +19,10 @@ export class SidebarComponent {
   @Input() isCollapsed = false;
 
   navItems: NavItem[] = [
-    { icon: 'dashboard', label: 'Dashboard', route: '/store-manager/dashboard' },
-    { icon: 'add_box', label: 'Add Stock Request', route: '/store-manager/add-stock' },
-    { icon: 'history', label: 'Request History', route: '/store-manager/request-history' },
-    { icon: 'engineering', label: 'Blasting Engineer Requests', route: '/store-manager/blasting-engineer-requests' },
-    { icon: 'local_shipping', label: 'Dispatch Preparation', route: '/store-manager/dispatch' }
+    { icon: 'pi-home', label: 'Dashboard', route: '/store-manager/dashboard' },
+    { icon: 'pi-plus-circle', label: 'Add Stock Request', route: '/store-manager/add-stock' },
+    { icon: 'pi-history', label: 'Request History', route: '/store-manager/request-history' },
+    { icon: 'pi-user', label: 'Blasting Engineer Requests', route: '/store-manager/blasting-engineer-requests' },
+    { icon: 'pi-truck', label: 'Dispatch Preparation', route: '/store-manager/dispatch' }
   ];
 }

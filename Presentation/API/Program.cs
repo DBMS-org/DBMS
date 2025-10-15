@@ -129,9 +129,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ManageMachines", policy => policy.RequireRole("Admin", "Administrator", "MachineManager"));
     options.AddPolicy("ReadProjectData", policy => policy.RequireRole("Admin", "Administrator", "BlastingEngineer", "Operator", "MachineManager"));
     options.AddPolicy("ManageExplosiveRequests", policy => policy.RequireRole("Admin", "Administrator", "StoreManager", "BlastingEngineer"));
-    options.AddPolicy("ReadInventoryData", policy => policy.RequireRole("Admin", "Administrator", "StoreManager", "BlastingEngineer", "Operator"));
-    options.AddPolicy("ManageInventory", policy => policy.RequireRole("Admin", "Administrator", "StoreManager"));
-    options.AddPolicy("ApproveTransfers", policy => policy.RequireRole("Admin", "Administrator", "StoreManager"));
+    options.AddPolicy("ReadInventoryData", policy => policy.RequireRole("Admin", "Administrator", "StoreManager", "ExplosiveManager", "BlastingEngineer", "Operator"));
+    options.AddPolicy("ManageInventory", policy => policy.RequireRole("Admin", "Administrator", "StoreManager", "ExplosiveManager"));
+    options.AddPolicy("ApproveTransfers", policy => policy.RequireRole("Admin", "Administrator", "StoreManager", "ExplosiveManager"));
     });
 
 // Register DrillHole services (split into focused services)

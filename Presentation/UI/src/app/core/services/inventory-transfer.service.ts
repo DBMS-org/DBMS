@@ -32,10 +32,10 @@ export class InventoryTransferService {
     if (filter.status) params = params.set('status', filter.status);
     if (filter.destinationStoreId) params = params.set('destinationStoreId', filter.destinationStoreId.toString());
     if (filter.requestedByUserId) params = params.set('requestedByUserId', filter.requestedByUserId.toString());
-    if (filter.isOverdue !== undefined) params = params.set('isOverdue', filter.isOverdue.toString());
-    if (filter.isUrgent !== undefined) params = params.set('isUrgent', filter.isUrgent.toString());
+    if (filter.isOverdue !== undefined && filter.isOverdue !== null) params = params.set('isOverdue', filter.isOverdue.toString());
+    if (filter.isUrgent !== undefined && filter.isUrgent !== null) params = params.set('isUrgent', filter.isUrgent.toString());
     if (filter.sortBy) params = params.set('sortBy', filter.sortBy);
-    if (filter.sortDescending !== undefined) params = params.set('sortDescending', filter.sortDescending.toString());
+    if (filter.sortDescending !== undefined && filter.sortDescending !== null) params = params.set('sortDescending', filter.sortDescending.toString());
 
     return this.http.get<any>(this.apiUrl, { params }).pipe(
       map(response => this.extractPagedData<InventoryTransferRequest>(response)),

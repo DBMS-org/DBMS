@@ -9,8 +9,7 @@ import { User } from '../../../../core/models/user.model';
   selector: 'app-navbar',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.scss'
+  templateUrl: './navbar.component.html'
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   @Output() toggleSidebar = new EventEmitter<void>();

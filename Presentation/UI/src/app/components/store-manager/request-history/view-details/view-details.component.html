@@ -1,147 +1,190 @@
-<div class="modal-overlay" *ngIf="request" (click)="onBackdropClick($event)">
-  <div class="modal-container">
-    <!-- Modal Header -->
-    <div class="modal-header">
-      <h2 class="modal-title">
-        <i class="material-icons">description</i>
-        Request Details
-      </h2>
-      <button class="btn-close" (click)="onClose()">
-        <i class="material-icons">close</i>
-      </button>
-    </div>
+<p-dialog
+  [(visible)]="isVisible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width: '90vw', maxWidth: '900px'}"
+  styleClass="request-details-dialog"
+  (onHide)="onClose()">
 
-    <!-- Modal Content -->
-    <div class="modal-content" *ngIf="request">
-      
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-2 p-2">
+      <i class="pi pi-file text-lg text-indigo-600"></i>
+      <h2 class="text-lg font-bold text-gray-800 m-0">Request Details</h2>
+    </div>
+  </ng-template>
+
+  <div *ngIf="request" class="p-3">
+
       <!-- Request Information Section -->
-      <div class="info-section">
-        <h3 class="section-title">
-          <i class="material-icons">info</i>
-          Request Information
-        </h3>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Request ID:</label>
-            <span class="value">{{ request?.id }}</span>
+      <p-panel [toggleable]="true" styleClass="mb-3">
+        <ng-template pTemplate="header">
+          <div class="flex items-center gap-2 p-2">
+            <i class="pi pi-info-circle text-indigo-600 text-sm"></i>
+            <span class="font-semibold text-sm">Request Information</span>
           </div>
-          <div class="info-item">
-            <label>Request Date:</label>
-            <span class="value">{{ formatDate(request?.requestDate) }}</span>
+        </ng-template>
+        <div class="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Request Number:</label>
+            <span class="text-sm text-gray-800 font-semibold">{{ request?.requestNumber }}</span>
           </div>
-          <div class="info-item">
-            <label>Required Date:</label>
-            <span class="value">{{ formatDate(request?.requiredDate) }}</span>
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Request Date:</label>
+            <span class="text-sm text-gray-800">{{ formatDate(request?.requestDate) }}</span>
           </div>
-          <div class="info-item">
-            <label>Status:</label>
-            <span class="badge" [class]="getStatusClass(request?.status || '')">
-              {{ request?.status }}
-            </span>
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Required Date:</label>
+            <span class="text-sm text-gray-800">{{ formatDate(request?.requiredByDate) }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5">
+            <label class="text-xs font-medium text-gray-500">Status:</label>
+            <p-tag [value]="request?.statusName" [severity]="getTagSeverity(request?.statusName || '')" styleClass="text-xs"></p-tag>
           </div>
         </div>
-      </div>
+      </p-panel>
 
       <!-- Requester Information Section -->
-      <div class="info-section">
-        <h3 class="section-title">
-          <i class="material-icons">person</i>
-          Requester Information
-        </h3>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Requester Name:</label>
-            <span class="value">{{ request?.requesterName }}</span>
+      <p-panel [toggleable]="true" styleClass="mb-3">
+        <ng-template pTemplate="header">
+          <div class="flex items-center gap-2 p-2">
+            <i class="pi pi-user text-indigo-600 text-sm"></i>
+            <span class="font-semibold text-sm">Requester Information</span>
           </div>
-          <div class="info-item">
-            <label>Requester ID:</label>
-            <span class="value">{{ request?.requesterId }}</span>
+        </ng-template>
+        <div class="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Requester Name:</label>
+            <span class="text-sm text-gray-800">{{ request?.requestedByUserName }}</span>
           </div>
-          <div class="info-item">
-            <label>Store Name:</label>
-            <span class="value">{{ request?.requesterStoreName }}</span>
-          </div>
-          <div class="info-item">
-            <label>Store ID:</label>
-            <span class="value">{{ request?.requesterStoreId }}</span>
+          <div class="flex justify-between items-center py-1.5">
+            <label class="text-xs font-medium text-gray-500">Destination Store:</label>
+            <span class="text-sm text-gray-800">{{ request?.destinationStoreName }}</span>
           </div>
         </div>
-      </div>
+      </p-panel>
 
       <!-- Explosive Details Section -->
-      <div class="info-section">
-        <h3 class="section-title">
-          <i class="material-icons">warning</i>
-          Explosive Details
-        </h3>
-        <div class="info-grid">
-          <table class="table table-sm table-bordered">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Unit</th>
-                <th>Purpose</th>
-                <th>Specifications</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of request?.requestedItems; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ item.explosiveType }}</td>
-                <td>{{ item.requestedQuantity }}</td>
-                <td>{{ item.unit }}</td>
-                <td>{{ item.purpose }}</td>
-                <td>{{ item.specifications || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
+      <p-panel [toggleable]="true" styleClass="mb-3">
+        <ng-template pTemplate="header">
+          <div class="flex items-center gap-2 p-2">
+            <i class="pi pi-box text-indigo-600 text-sm"></i>
+            <span class="font-semibold text-sm">Explosive Details</span>
+          </div>
+        </ng-template>
+        <div class="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Explosive Type:</label>
+            <span class="text-sm text-gray-800 font-semibold">{{ request?.explosiveTypeName }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Requested Quantity:</label>
+            <span class="text-sm text-gray-800 font-semibold">{{ request?.requestedQuantity }} {{ request?.unit }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Approved Quantity:</label>
+            <span class="text-sm text-gray-800 font-semibold">{{ request?.approvedQuantity || '-' }} {{ request?.approvedQuantity ? request?.unit : '' }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5">
+            <label class="text-xs font-medium text-gray-500">Final Quantity:</label>
+            <span class="text-sm text-green-600 font-bold">{{ request?.finalQuantity }} {{ request?.unit }}</span>
+          </div>
         </div>
-      </div>
+      </p-panel>
 
       <!-- Approval Information Section -->
-      <div class="info-section">
-        <h3 class="section-title">
-          <i class="material-icons">check_circle</i>
-          Approval Information
-        </h3>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Approval Date:</label>
-            <span class="value">{{ request?.approvalDate ? formatDate(request.approvalDate) : 'Not yet approved' }}</span>
+      <p-panel *ngIf="request?.approvedDate" [toggleable]="true" styleClass="mb-3">
+        <ng-template pTemplate="header">
+          <div class="flex items-center gap-2 p-2">
+            <i class="pi pi-check-circle text-indigo-600 text-sm"></i>
+            <span class="font-semibold text-sm">Approval Information</span>
           </div>
-          <div class="info-item">
-            <label>Fulfillment Date:</label>
-            <span class="value">{{ request?.fulfillmentDate ? formatDate(request.fulfillmentDate) : 'Not yet fulfilled' }}</span>
+        </ng-template>
+        <div class="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Approval Date:</label>
+            <span class="text-sm text-gray-800">{{ request?.approvedDate ? formatDate(request.approvedDate) : 'Not yet approved' }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Approved By:</label>
+            <span class="text-sm text-gray-800">{{ request?.approvedByUserName || '-' }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5" *ngIf="request?.deliveryConfirmedDate">
+            <label class="text-xs font-medium text-gray-500">Delivery Confirmed:</label>
+            <span class="text-sm text-green-600 font-semibold">{{ request?.deliveryConfirmedDate ? formatDate(request.deliveryConfirmedDate) : 'Not yet fulfilled' }}</span>
+          </div>
+          <div class="md:col-span-2" *ngIf="request?.rejectionReason">
+            <div class="p-2.5 bg-red-50 rounded border-l-4 border-red-500">
+              <strong class="text-red-800 text-xs">Rejection Reason:</strong>
+              <p class="m-0 mt-1 text-xs text-red-600">{{ request?.rejectionReason }}</p>
+            </div>
           </div>
         </div>
-      </div>
+      </p-panel>
+
+      <!-- Dispatch Information Section -->
+      <p-panel *ngIf="request?.dispatchDate" [toggleable]="true" styleClass="mb-3">
+        <ng-template pTemplate="header">
+          <div class="flex items-center gap-2 p-2">
+            <i class="pi pi-truck text-indigo-600 text-sm"></i>
+            <span class="font-semibold text-sm">Dispatch Information</span>
+          </div>
+        </ng-template>
+        <div class="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Dispatch Date:</label>
+            <span class="text-sm text-gray-800">{{ formatDate(request?.dispatchDate) }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Truck Number:</label>
+            <span class="text-sm text-gray-800">{{ request?.truckNumber || '-' }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+            <label class="text-xs font-medium text-gray-500">Driver Name:</label>
+            <span class="text-sm text-gray-800">{{ request?.driverName || '-' }}</span>
+          </div>
+          <div class="flex justify-between items-center py-1.5">
+            <label class="text-xs font-medium text-gray-500">Driver Contact:</label>
+            <span class="text-sm text-gray-800">{{ request?.driverContactNumber || '-' }}</span>
+          </div>
+        </div>
+      </p-panel>
 
       <!-- Notes Section -->
-      <div class="info-section">
-        <h3 class="section-title">
-          <i class="material-icons">note</i>
-          Notes
-        </h3>
-        <div class="notes-content">
-          <p>{{ request?.notes || 'No additional notes provided.' }}</p>
+      <p-panel [toggleable]="true">
+        <ng-template pTemplate="header">
+          <div class="flex items-center gap-2 p-2">
+            <i class="pi pi-comment text-indigo-600 text-sm"></i>
+            <span class="font-semibold text-sm">Notes</span>
+          </div>
+        </ng-template>
+        <div class="p-3 space-y-2">
+          <div *ngIf="request?.requestNotes" class="p-2.5 bg-blue-50 rounded border-l-4 border-blue-500">
+            <strong class="text-blue-800 text-xs">Request Notes:</strong>
+            <p class="m-0 mt-1 text-xs text-gray-700">{{ request?.requestNotes }}</p>
+          </div>
+          <div *ngIf="request?.approvalNotes" class="p-2.5 bg-green-50 rounded border-l-4 border-green-500">
+            <strong class="text-green-800 text-xs">Approval Notes:</strong>
+            <p class="m-0 mt-1 text-xs text-gray-700">{{ request?.approvalNotes }}</p>
+          </div>
+          <div *ngIf="request?.dispatchNotes" class="p-2.5 bg-indigo-50 rounded border-l-4 border-indigo-500">
+            <strong class="text-indigo-800 text-xs">Dispatch Notes:</strong>
+            <p class="m-0 mt-1 text-xs text-gray-700">{{ request?.dispatchNotes }}</p>
+          </div>
+          <div *ngIf="!request?.requestNotes && !request?.approvalNotes && !request?.dispatchNotes" class="p-2.5 bg-gray-50 rounded text-center">
+            <span class="text-gray-500 italic text-xs">No additional notes provided.</span>
+          </div>
         </div>
-        
-        <div class="info-item full-width" style="margin-top: 1rem;">
-          <label>Justification:</label>
-          <span class="value">{{ request?.justification }}</span>
-        </div>
-      </div>
+      </p-panel>
 
-    </div>
-
-    <!-- Modal Footer -->
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="onClose()">
-        <i class="material-icons">close</i>
-        Close
-      </button>
-    </div>
   </div>
-</div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Close"
+      icon="pi pi-times"
+      (onClick)="onClose()"
+      severity="secondary"></p-button>
+  </ng-template>
+</p-dialog>

@@ -45,28 +45,6 @@
         <p class="stat-change">All protocols active</p>
       </div>
     </div>
-    
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="material-icons">work</i>
-      </div>
-      <div class="stat-content">
-        <h3>Active Operations</h3>
-        <p class="stat-value">{{ stats.activeOperations }}</p>
-        <p class="stat-change positive">+1 ongoing</p>
-      </div>
-    </div>
-    
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="material-icons">warning</i>
-      </div>
-      <div class="stat-content">
-        <h3>Pending Alerts</h3>
-        <p class="stat-value">{{ stats.pendingAlerts }}</p>
-        <p class="stat-change negative">2 require attention</p>
-      </div>
-    </div>
   </div>
 
   <!-- System Metrics Panel -->
@@ -130,24 +108,6 @@
         <h4>Safety Protocols</h4>
         <p>Review and update safety procedures</p>
         <div class="action-status">{{ stats.safetyProtocols }} protocols</div>
-      </div>
-
-      <div class="action-card operations-action" (click)="navigateToOperations()">
-        <div class="action-icon">
-          <i class="material-icons">work</i>
-        </div>
-        <h4>Operations</h4>
-        <p>Monitor ongoing operations</p>
-        <div class="action-status">{{ stats.activeOperations }} active</div>
-      </div>
-
-      <div class="action-card alerts-action" (click)="navigateToAlerts()">
-        <div class="action-icon">
-          <i class="material-icons">warning</i>
-        </div>
-        <h4>Alerts</h4>
-        <p>Review pending alerts</p>
-        <div class="action-status">{{ stats.pendingAlerts }} pending</div>
       </div>
     </div>
   </div>
