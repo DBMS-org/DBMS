@@ -8,6 +8,7 @@ import { MaintenanceReportsComponent } from './maintenance-reports/maintenance-r
 import { MyMachinesComponent } from './my-machines/my-machines.component';
 import { SiteDetailsComponent } from './site-details/site-details.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
+import { OperatorNotificationsComponent } from './notifications/notifications.component';
 
 export const OPERATOR_ROUTES: Routes = [
     {
@@ -22,7 +23,8 @@ export const OPERATOR_ROUTES: Routes = [
             { path: 'my-project/sites/:siteId/pattern-view', component: OperatorPatternViewComponent },
             { path: 'my-project/sites/:siteId/details', component: SiteDetailsComponent },
             { path: 'maintenance-reports', component: MaintenanceReportsComponent },
-            { path: 'my-machines', component: MyMachinesComponent }
+            { path: 'my-machines', component: MyMachinesComponent },
+            { path: 'notifications', component: OperatorNotificationsComponent }
         ]
     }
 ];

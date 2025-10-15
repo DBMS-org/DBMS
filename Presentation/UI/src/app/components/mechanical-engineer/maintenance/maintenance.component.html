@@ -22,33 +22,7 @@
     </div>
   } @else {
     <div class="page">
-      
-
-      <header class="page-header" role="banner">
-        <h1 class="page-title">Maintenance</h1>
-        <p class="page-subtitle">Monitor and manage machine maintenance operations</p>
-      </header>
-
-      <nav class="subnav" role="navigation" aria-label="Maintenance sections">
-        <a 
-          routerLink="jobs" 
-          routerLinkActive="active"
-          class="subnav-link"
-          aria-label="Go to maintenance jobs">
-          <i class="material-icons" aria-hidden="true">assignment</i>
-          <span>Jobs</span>
-        </a>
-        <a 
-          routerLink="notifications" 
-          routerLinkActive="active"
-          class="subnav-link"
-          aria-label="Go to notifications">
-          <i class="material-icons" aria-hidden="true">notifications</i>
-          <span>Notifications</span>
-        </a>
-      </nav>
-
-      <section class="card content" role="region" aria-label="Maintenance content">
+      <section class="content" role="region" aria-label="Maintenance content">
         <router-outlet></router-outlet>
       </section>
     </div>

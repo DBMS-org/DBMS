@@ -6,10 +6,7 @@
       "Bash(mkdir:*)",
       "Bash(grep:*)",
       "Bash(dotnet build:*)",
-      "Bash(npx ng build:*)",
-      "Bash(npm install:*)",
-      "Bash(npm run build)",
-      "Bash(find:*)"
+      "Bash(npx ng build:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,10 +1,11 @@
 .dashboard-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1.5rem 2rem;
-  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  border-radius: 16px;
   margin-bottom: 2rem;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .header-content {
@@ -17,7 +18,8 @@
   h1 {
     margin: 0;
     font-size: 2rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -0.5px;
   }
 }
 
@@ -116,31 +118,50 @@
 
 .stat-card {
   background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  padding: 1.75rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #e9ecef;
+  border: 1px solid #f0f0f0;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
-    border-color: #667eea;
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15);
+    border-color: rgba(102, 126, 234, 0.2);
+
+    &::before {
+      opacity: 1;
+    }
   }
 
   .stat-icon {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 26px;
     color: white;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
   }
 
   .stat-content {
@@ -178,22 +199,23 @@
 
 .operations-panel, .actions-panel {
   background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+  border-radius: 16px;
+  padding: 2.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
 
   h3 {
-    margin: 0 0 1.5rem 0;
-    font-size: 1.3rem;
-    color: #2c3e50;
+    margin: 0 0 1.75rem 0;
+    font-size: 1.35rem;
+    color: #1f2937;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-weight: 600;
+    gap: 0.875rem;
+    font-weight: 700;
 
     i {
       color: #667eea;
+      font-size: 1.5rem;
     }
   }
 }
@@ -259,55 +281,81 @@
 }
 
 .action-card {
-  background: #f8f9fa;
+  background: #fafbfc;
   border: 2px solid #e9ecef;
-  border-radius: 12px;
-  padding: 1.5rem;
+  border-radius: 14px;
+  padding: 1.75rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+  }
 
   &:hover {
+    background: white;
     border-color: #667eea;
     transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15);
+
+    &::before {
+      width: 80%;
+    }
   }
 
   .action-icon {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem auto;
-    font-size: 28px;
+    margin: 0 auto 1.25rem auto;
+    font-size: 30px;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
+    transition: transform 0.3s ease;
+  }
+
+  &:hover .action-icon {
+    transform: scale(1.05);
   }
 
   h4 {
-    margin: 0 0 0.5rem 0;
-    color: #2c3e50;
+    margin: 0 0 0.625rem 0;
+    color: #1f2937;
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   p {
     margin: 0 0 1rem 0;
-    color: #666;
-    line-height: 1.5;
+    color: #6b7280;
+    line-height: 1.6;
+    font-size: 0.95rem;
   }
 
   .action-status {
     font-size: 0.85rem;
     color: #667eea;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 
     &.alert {
-      color: #dc3545;
+      color: #dc2626;
     }
   }
 }
