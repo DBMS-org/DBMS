@@ -1,5 +1,7 @@
-Add maintenance history route and remove lazy loading
+Apply unified table design to machine inventory
 
-- Add maintenance history route configuration
-- Remove lazy loading from reports component
-- Import MaintenanceHistoryComponent and ReportsComponent
+- Replace gradient headers with standard #f5f5f5 background
+- Update table borders and padding to 16px
+- Apply consistent hover state (#f9f9f9)
+- Standardize status badge styles (24px height, 12px font)
+- Add last-child border removal
