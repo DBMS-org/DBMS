@@ -16,6 +16,22 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../shared/shared/components/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from '../../../../core/services/notification.service';
 
+// PrimeNG Imports
+import { Button } from 'primeng/button';
+import { Card } from 'primeng/card';
+import { ProgressBar } from 'primeng/progressbar';
+import { Badge } from 'primeng/badge';
+import { Dialog } from 'primeng/dialog';
+import { InputText } from 'primeng/inputtext';
+import { InputTextarea } from 'primeng/inputtextarea';
+import { DatePicker } from 'primeng/datepicker';
+import { Tooltip } from 'primeng/tooltip';
+import { Divider } from 'primeng/divider';
+import { Tag } from 'primeng/tag';
+import { Chip } from 'primeng/chip';
+import { Skeleton } from 'primeng/skeleton';
+import { Message } from 'primeng/message';
+
 interface WorkflowStep {
   id: string;
   name: string;
@@ -30,7 +46,24 @@ interface WorkflowStep {
 @Component({
   selector: 'app-site-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    Button,
+    Card,
+    ProgressBar,
+    Badge,
+    Dialog,
+    InputText,
+    InputTextarea,
+    DatePicker,
+    Tooltip,
+    Divider,
+    Tag,
+    Chip,
+    Skeleton,
+    Message
+  ],
   templateUrl: './site-dashboard.component.html',
   styleUrls: ['./site-dashboard.component.scss']
 })
