@@ -1,0 +1,369 @@
+// Job Detail Panel - Consistent System Theme
+.detail-panel-container {
+  height: 100%;
+}
+
+.detail-panel {
+  width: 480px;
+  max-width: 90vw;
+}
+
+// Panel Header
+.panel-header {
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .header-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #1976d2;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+  }
+}
+
+.close-btn {
+  mat-icon {
+    color: #666;
+  }
+}
+
+.job-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.machine-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #1976d2;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+  }
+}
+
+// Panel Content
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tab-content {
+  padding: 16px;
+}
+
+// Cards
+.info-card {
+  margin-bottom: 16px;
+}
+
+.info-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+// Info Grid
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  label {
+    font-weight: 500;
+    color: #666;
+  }
+
+  span {
+    text-align: right;
+  }
+}
+
+.status-text {
+  font-weight: 500;
+}
+
+.next-service-overdue {
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+.next-service-due-soon {
+  color: #f57c00;
+  font-weight: 500;
+}
+
+// Metrics Grid
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.metric-item {
+  text-align: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+// Technicians
+.technicians-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.technician-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.empty-state-small {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-style: italic;
+}
+
+// Progress Items
+.progress-item {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 8px;
+  }
+}
+
+.observations {
+  margin: 0;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 4px solid #1976d2;
+}
+
+.parts-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.part-chip {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+// Attachments
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.attachment-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.filename {
+  font-weight: 500;
+}
+
+.filesize {
+  font-size: 12px;
+  color: #666;
+}
+
+// Panel Actions
+.panel-actions {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.status-update-btn {
+  width: 100%;
+}
+
+// Status & Type Chips
+.status-scheduled {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-in-progress {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-completed {
+  background-color: #e8f5e8;
+  color: #388e3c;
+}
+
+.status-cancelled {
+  background-color: #fce4ec;
+  color: #c2185b;
+}
+
+.status-overdue {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.type-preventive {
+  background-color: #e8f5e8;
+  color: #388e3c;
+}
+
+.type-corrective {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.type-predictive {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.type-emergency {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+// Status Icons
+.icon-scheduled {
+  color: #1976d2;
+}
+
+.icon-in-progress {
+  color: #f57c00;
+}
+
+.icon-completed {
+  color: #388e3c;
+}
+
+.icon-cancelled {
+  color: #c2185b;
+}
+
+.icon-overdue {
+  color: #d32f2f;
+}
+
+// Loading & Empty States
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+
+  p {
+    margin-top: 16px;
+    color: #666;
+  }
+}
+
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  color: #d32f2f;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+}
+
+.empty-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #666;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+}
