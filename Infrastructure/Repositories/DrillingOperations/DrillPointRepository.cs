@@ -186,5 +186,48 @@ namespace Infrastructure.Repositories.DrillingOperations
             await _context.SaveChangesAsync();
             return existingSettings;
         }
+
+        public async Task<bool> MarkAsCompletedAsync(string id, int projectId, int siteId, int completedByUserId)
+        {
+            try
+            {
+                var drillPoint = await GetByIdAsync(id, projectId, siteId);
+                if (drillPoint == null)
+                {
+                    _logger.LogWarning("Drill point {Id} not found for project {ProjectId}, site {SiteId}",
+                        id, projectId, siteId);
+                    return false;
+                }
+
+                if (drillPoint.IsCompleted)
+                {
+                    _logger.LogInformation("Drill point {Id} is already marked as completed", id);
+                    return true; // Already completed, return success
+                }
+
+                drillPoint.IsCompleted = true;
+                drillPoint.CompletedAt = DateTime.UtcNow;
+                drillPoint.CompletedByUserId = completedByUserId;
+                drillPoint.UpdatedAt = DateTime.UtcNow;
+
+                _context.DrillPoints.Update(drillPoint);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Drill point {Id} marked as completed by user {UserId}", id, completedByUserId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking drill point {Id} as completed for project {ProjectId}, site {SiteId}",
+                    id, projectId, siteId);
+                return false;
+            }
+        }
+
+        public async Task<bool> IsCompletedAsync(string id, int projectId, int siteId)
+        {
+            var drillPoint = await GetByIdAsync(id, projectId, siteId);
+            return drillPoint?.IsCompleted ?? false;
+        }
     }
 } 
