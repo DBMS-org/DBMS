@@ -1,1 +1,7 @@
-Merge branch 'master' of https://github.com/DBMS-org/DBMS
+Apply unified table design to maintenance reports
+
+- Update table container with standard borders and background
+- Apply consistent header styling (#f5f5f5 background, 16px padding)
+- Update row hover states and transitions
+- Standardize chip/badge styles to match design system
+- Update date display styling
