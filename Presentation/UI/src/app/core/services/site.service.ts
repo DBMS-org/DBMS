@@ -133,12 +133,20 @@ export class SiteService {
   }
 
   // Request explosive approval from store manager
-  requestExplosiveApproval(siteId: number, expectedUsageDate: string, comments?: string) {
+  requestExplosiveApproval(
+    siteId: number,
+    expectedUsageDate: string,
+    comments?: string,
+    blastingDate?: string,
+    blastTiming?: string
+  ) {
     const url = `${environment.apiUrl}/api/explosive-approval-requests`;
-    return this.http.post(url, { 
-      ProjectSiteId: siteId, 
-      ExpectedUsageDate: expectedUsageDate, 
-      Comments: comments 
+    return this.http.post(url, {
+      ProjectSiteId: siteId,
+      ExpectedUsageDate: expectedUsageDate,
+      Comments: comments,
+      BlastingDate: blastingDate,
+      BlastTiming: blastTiming
     }, this.getHttpOptions());
   }
 
