@@ -32,13 +32,7 @@ export class SidebarComponent {
       icon: 'build',
       label: 'Maintenance Jobs',
       route: '/mechanical-engineer/maintenance/jobs',
-      matchPattern: '/mechanical-engineer/maintenance/jobs'
-    },
-    {
-      icon: 'history',
-      label: 'Maintenance History',
-      route: '/mechanical-engineer/maintenance/history',
-      matchPattern: '/mechanical-engineer/maintenance/history'
+      matchPattern: '/mechanical-engineer/maintenance'
     },
     {
       icon: 'assessment',

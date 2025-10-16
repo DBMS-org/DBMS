@@ -58,89 +58,60 @@
 }
 
 .profile-avatar-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2.5rem 2rem;
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  padding: 2rem;
   display: flex;
   align-items: center;
   gap: 1.5rem;
   color: white;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
-    border-radius: 50%;
-  }
 
   .profile-avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.25);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    position: relative;
-    z-index: 1;
+    border: 3px solid rgba(255, 255, 255, 0.3);
 
     .avatar-initials {
-      font-size: 2rem;
-      font-weight: 700;
+      font-size: 1.8rem;
+      font-weight: 600;
       color: white;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
   }
 
   .profile-basic-info {
     flex: 1;
-    position: relative;
-    z-index: 1;
 
     h2 {
       margin: 0 0 0.5rem 0;
-      font-size: 2rem;
-      font-weight: 700;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      letter-spacing: -0.3px;
+      font-size: 1.8rem;
+      font-weight: 600;
     }
 
     .profile-email {
       margin: 0 0 1rem 0;
-      opacity: 0.95;
+      opacity: 0.9;
       font-size: 1.1rem;
-      font-weight: 500;
     }
 
     .role-badge {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      background: rgba(255, 255, 255, 0.25);
-      padding: 0.6rem 1.25rem;
-      border-radius: 25px;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
       width: fit-content;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
       i {
-        font-size: 20px;
+        font-size: 18px;
       }
 
       span {
-        font-weight: 600;
-        letter-spacing: 0.3px;
+        font-weight: 500;
       }
     }
   }

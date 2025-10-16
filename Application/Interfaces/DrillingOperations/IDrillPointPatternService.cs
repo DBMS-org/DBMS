@@ -33,5 +33,8 @@ namespace Application.Interfaces.DrillingOperations
         Task<bool> ValidateCoordinatesAsync(double x, double y);
         Task<bool> ValidateUniqueCoordinatesAsync(double x, double y, int projectId, int siteId, string? excludePointId = null);
         Task<bool> ValidateDrillPointCountAsync(int projectId, int siteId, int maxPoints);
+
+        // Completion tracking
+        Task<bool> MarkDrillPointAsCompletedAsync(string pointId, int projectId, int siteId, int completedByUserId);
     }
 } 

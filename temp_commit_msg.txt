@@ -1,7 +1,7 @@
-Apply unified table design to assignment history
+Apply unified table design to assignment requests
 
-- Update table container with standard borders and background
-- Apply consistent header styling (16px padding, #f5f5f5)
-- Standardize row hover and transitions
-- Update status and duration badge styles
-- Add last-child border removal
+- Update table container with standard borders
+- Apply consistent header and cell styling
+- Standardize row transitions and hover states
+- Update badge/chip styles to match design system
+- Add responsive min-width (800px)

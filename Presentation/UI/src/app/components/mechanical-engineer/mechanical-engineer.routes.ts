@@ -4,12 +4,10 @@ import { DashboardHomeComponent } from './dashboard/dashboard-home/dashboard-hom
 import { MaintenanceComponent } from './maintenance/maintenance.component';
 import { MaintenanceDashboardComponent } from './maintenance/maintenance-dashboard/maintenance-dashboard.component';
 import { MaintenanceJobsComponent } from './maintenance/maintenance-jobs/maintenance-jobs.component';
-import { MaintenanceHistoryComponent } from './maintenance/maintenance-history/maintenance-history.component';
 import { MaintenanceAnalyticsComponent } from './maintenance/maintenance-analytics/maintenance-analytics.component';
 import { MaintenanceSettingsComponent } from './maintenance/maintenance-settings/maintenance-settings.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 import { MaintenanceNotificationsComponent } from './maintenance/maintenance-notifications/maintenance-notifications.component';
-import { ReportsComponent } from './reports/reports.component';
 
 export const MECHANICAL_ENGINEER_ROUTES: Routes = [
     {
@@ -24,12 +22,14 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
                 component: MaintenanceComponent,
                 children: [
                     { path: '', redirectTo: 'jobs', pathMatch: 'full' },
-                    { path: 'jobs', component: MaintenanceJobsComponent },
-                    { path: 'history', component: MaintenanceHistoryComponent }
+                    { path: 'jobs', component: MaintenanceJobsComponent }
                 ]
             },
             { path: 'notifications', component: MaintenanceNotificationsComponent },
-            { path: 'reports', component: ReportsComponent }
+            {
+                path: 'reports',
+                loadComponent: () => import('./reports/reports.component').then(m => m.ReportsComponent)
+            }
         ]
     }
 ];

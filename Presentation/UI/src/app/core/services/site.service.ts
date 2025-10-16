@@ -9,19 +9,18 @@ export interface ProjectSite {
   projectId: number;
   name: string;
   location: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
+  coordinates?: string; // Backend stores as string, not object
   status: string;
   description: string;
   isPatternApproved: boolean;
   isSimulationConfirmed: boolean;
   isOperatorCompleted: boolean;
-  isExplosiveApprovalRequested: boolean;
-  explosiveApprovalRequestDate?: Date;
-  expectedExplosiveUsageDate?: Date;
-  explosiveApprovalComments?: string;
+  isCompleted: boolean;
+  completedAt?: Date;
+  completedByUserId?: number;
+  projectName?: string;
+  projectRegion?: string;
+  completedByUserName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,10 +29,7 @@ export interface CreateSiteRequest {
   projectId: number;
   name: string;
   location: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
+  coordinates?: string; // Backend expects string format
   status: string;
   description: string;
 }
@@ -133,12 +129,20 @@ export class SiteService {
   }
 
   // Request explosive approval from store manager
-  requestExplosiveApproval(siteId: number, expectedUsageDate: string, comments?: string) {
+  requestExplosiveApproval(
+    siteId: number,
+    expectedUsageDate: string,
+    comments?: string,
+    blastingDate?: string,
+    blastTiming?: string
+  ) {
     const url = `${environment.apiUrl}/api/explosive-approval-requests`;
-    return this.http.post(url, { 
-      ProjectSiteId: siteId, 
-      ExpectedUsageDate: expectedUsageDate, 
-      Comments: comments 
+    return this.http.post(url, {
+      ProjectSiteId: siteId,
+      ExpectedUsageDate: expectedUsageDate,
+      Comments: comments,
+      BlastingDate: blastingDate,
+      BlastTiming: blastTiming
     }, this.getHttpOptions());
   }
 
@@ -167,6 +171,15 @@ export class SiteService {
   completeSite(siteId: number) {
     const url = `${this.apiUrl}/${siteId}/complete`;
     return this.http.post(url, {}, this.getHttpOptions())
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  // Mark drill point as completed
+  markDrillPointAsCompleted(pointId: string, projectId: number, siteId: number): Observable<{success: boolean, message: string}> {
+    const url = `${environment.apiUrl}/api/DrillPointPattern/drill-points/${pointId}/complete?projectId=${projectId}&siteId=${siteId}`;
+    return this.http.post<{success: boolean, message: string}>(url, {}, this.getHttpOptions())
       .pipe(
         catchError(this.handleError)
       );

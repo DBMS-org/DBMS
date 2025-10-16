@@ -137,44 +137,41 @@
 
 /* Table Styles */
 .requests-table-container {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   overflow-x: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  background: white;
 }
 
 .table {
   width: 100%;
-  min-width: 800px;
   border-collapse: collapse;
 }
 
 .table thead th {
   background-color: #f5f5f5;
-  font-weight: 600;
-  color: #333;
-  padding: 16px;
+  padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 2px solid #e0e0e0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.25px;
 }
 
 .table tbody tr {
-  transition: background-color 0.2s;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.3s ease;
+}
 
-  &:hover {
-    background-color: #f9f9f9;
-  }
+.table tbody tr:hover {
+  background-color: #f9f9f9;
 }
 
 .table tbody td {
-  padding: 16px;
-  color: #555;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 0.75rem 1rem;
   vertical-align: middle;
-}
-
-.table tbody tr:last-child td {
-  border-bottom: none;
+  font-size: 0.95rem;
 }
 
 .id-badge {
@@ -201,28 +198,23 @@
 }
 
 .type-badge, .quantity-badge, .urgency-badge, .status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
-  min-height: 24px;
-  height: 24px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.type-badge { background-color: #e3f2fd; color: #1976d2; }
+.type-badge { background-color: #e3f2fd; color: #1e88e5; }
 .quantity-badge { background-color: #f3e5f5; color: #8e24aa; }
 
-.urgency-badge.low { background-color: #e8f5e8; color: #388e3c; }
-.urgency-badge.medium { background-color: #fff3e0; color: #f57c00; }
-.urgency-badge.high { background-color: #ffebee; color: #d32f2f; }
-.urgency-badge.urgent { background-color: #ffebee; color: #d32f2f; }
+.urgency-badge.low { background-color: #e8f5e9; color: #388e3c; }
+.urgency-badge.medium { background-color: #fff3e0; color: #fb8c00; }
+.urgency-badge.high { background-color: #ffcdd2; color: #c62828; }
+.urgency-badge.urgent { background-color: #d32f2f; color: #fff; }
 
-.status-badge.pending { background-color: #e3f2fd; color: #1976d2; }
-.status-badge.approved { background-color: #e8f5e8; color: #388e3c; }
-.status-badge.rejected { background-color: #fce4ec; color: #c2185b; }
+.status-badge.pending { background-color: #fffde7; color: #fbc02d; }
+.status-badge.approved { background-color: #e8f5e9; color: #388e3c; }
+.status-badge.rejected { background-color: #ffebee; color: #c62828; }
 
 .action-buttons {
   display: flex;

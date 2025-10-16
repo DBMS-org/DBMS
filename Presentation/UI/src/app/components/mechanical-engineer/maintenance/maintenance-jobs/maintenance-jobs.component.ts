@@ -59,11 +59,11 @@ import { OfflineIndicatorComponent } from '../shared/offline-indicator/offline-i
       </app-job-filters>
 
       <!-- Job Detail Panel Container -->
-      <!-- NOTE: Edit functionality removed for Mechanical Engineer role -->
       <app-job-detail-panel
         [selectedJob]="selectedJob()"
         [isOpen]="isDetailPanelOpen()"
         (panelClosed)="onDetailPanelClosed()"
+        (editJob)="onEditJob($event)"
         (updateStatus)="onUpdateJobStatus($event)">
         
         <!-- Job List -->
@@ -72,7 +72,8 @@ import { OfflineIndicatorComponent } from '../shared/offline-indicator/offline-i
           (machineClicked)="onMachineClicked($event)"
           (jobSelected)="onJobSelected($event)"
           (jobStatusChanged)="onJobStatusChanged($event)"
-          (bulkStatusChanged)="onBulkStatusChanged($event)">
+          (bulkStatusChanged)="onBulkStatusChanged($event)"
+          (bulkAssignRequested)="onBulkAssignRequested($event)">
         </app-job-list>
       </app-job-detail-panel>
     </div>
@@ -91,20 +92,15 @@ import { OfflineIndicatorComponent } from '../shared/offline-indicator/offline-i
 
     .page-header h2 {
       margin: 0 0 8px 0;
-      font-size: 28px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: -0.5px;
+      font-size: 24px;
+      font-weight: 500;
+      color: #333;
     }
 
     .page-header p {
       margin: 0;
-      color: #6b7280;
-      font-size: 15px;
-      font-weight: 500;
+      color: #666;
+      font-size: 14px;
     }
   `]
 })
@@ -187,8 +183,11 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
     this.selectedJob.set(null);
   }
 
-  // REMOVED: onEditJob() - Mechanical Engineer cannot edit jobs
-  // Only status updates are allowed via the consolidated status update dialog
+  onEditJob(job: MaintenanceJob) {
+    // TODO: Implement job editing functionality
+    console.log('Edit job:', job);
+    this.showInfoMessage('Job editing functionality will be implemented in a future update');
+  }
 
   onUpdateJobStatus(job: MaintenanceJob) {
     const dialogData: JobStatusUpdateData = { job };
@@ -215,6 +214,12 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
 
   onBulkStatusChanged(event: { jobs: MaintenanceJob[]; status: MaintenanceStatus }) {
     this.bulkUpdateJobStatusWithProgress(event.jobs, event.status);
+  }
+
+  onBulkAssignRequested(jobs: MaintenanceJob[]) {
+    // TODO: Implement bulk assignment functionality
+    console.log('Bulk assign jobs:', jobs);
+    this.showInfoMessage('Bulk assignment functionality will be implemented in a future update');
   }
 
   // Job Management Methods with immediate feedback
