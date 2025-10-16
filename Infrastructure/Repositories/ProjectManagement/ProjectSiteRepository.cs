@@ -227,22 +227,43 @@ namespace Infrastructure.Repositories.ProjectManagement
         {
             try
             {
-                var site = await _context.ProjectSites.FindAsync(id);
+                var site = await _context.ProjectSites
+                    .Include(s => s.ExplosiveApprovalRequests)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+
                 if (site == null)
                 {
                     return false;
                 }
 
-                // Validate that all required steps are completed
-                if (!site.IsPatternApproved || !site.IsSimulationConfirmed || !site.IsOperatorCompleted)
+                // Check if already completed
+                if (site.IsOperatorCompleted)
                 {
                     throw new InvalidOperationException(
-                        "Cannot complete site: Pattern approval, simulation confirmation, and operator completion are all required.");
+                        "Cannot complete site: Site is already marked as completed.");
                 }
 
-                site.IsCompleted = true;
-                site.CompletedAt = DateTime.UtcNow;
-                site.CompletedByUserId = completedByUserId;
+                // Validate that pattern is approved
+                if (!site.IsPatternApproved)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot complete site: Pattern approval is required.");
+                }
+
+                // Validate that explosive approval request exists and is approved
+                var approvedRequest = site.ExplosiveApprovalRequests
+                    .Where(r => r.IsActive)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .FirstOrDefault();
+
+                if (approvedRequest == null || approvedRequest.Status != ExplosiveApprovalStatus.Approved)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot complete site: Explosive approval is required.");
+                }
+
+                // Mark the site as completed by operator
+                site.IsOperatorCompleted = true;
                 site.UpdatedAt = DateTime.UtcNow;
 
                 var result = await _context.SaveChangesAsync();

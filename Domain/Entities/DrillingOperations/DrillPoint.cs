@@ -17,11 +17,16 @@ namespace Domain.Entities.DrillingOperations
         public double Volume { get; set; } = 0; // Default volume
         public double ANFO { get; set; } = 0; // Default ANFO amount
         public double Emulsion { get; set; } = 0; // Default emulsion amount
-        
+
         // Project and Site context
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
-        
+
+        // Operator completion tracking
+        public bool IsCompleted { get; set; } = false;
+        public DateTime? CompletedAt { get; set; }
+        public int? CompletedByUserId { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
