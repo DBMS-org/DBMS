@@ -377,10 +377,32 @@ import { AuthService } from '../../../core/services/auth.service';
 
     .table-container {
       overflow-x: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: white;
     }
 
     .reports-table {
       width: 100%;
+      min-width: 800px;
+
+      th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+        color: #333;
+        padding: 16px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      td {
+        padding: 16px;
+        color: #555;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
     }
 
     .category-badge,
@@ -440,11 +462,11 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .report-row {
-      transition: background-color 0.2s ease;
-    }
+      transition: background-color 0.2s;
 
-    .report-row:hover {
-      background-color: #f8f9fa;
+      &:hover {
+        background-color: #f9f9f9;
+      }
     }
 
     .description-cell {
@@ -485,12 +507,12 @@ import { AuthService } from '../../../core/services/auth.service';
 
     .date {
       font-weight: 500;
-      color: #212529;
+      color: #333;
     }
 
     .time {
-      color: #6c757d;
-      font-size: 0.75rem;
+      font-size: 12px;
+      color: #666;
     }
 
     .action-button {
@@ -508,10 +530,12 @@ import { AuthService } from '../../../core/services/auth.service';
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 4px 8px;
+      padding: 0 12px;
+      min-height: 24px;
+      height: 24px;
       border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
