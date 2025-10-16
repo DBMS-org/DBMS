@@ -56,10 +56,7 @@ export class SiteDashboardComponent implements OnInit {
   explosiveCalculations: ExplosiveCalculationResultDto | null = null;
   totalAnfo: number = 0;
   totalEmulsion: number = 0;
-
-  // Track explosive approval status
-  hasPendingExplosiveRequest: boolean = false;
-
+  
   minDate: string = new Date().toISOString().split('T')[0];
 
   workflowSteps: WorkflowStep[] = [
@@ -166,17 +163,7 @@ export class SiteDashboardComponent implements OnInit {
         this.site = site;
         // Initialize site-specific data service
         this.blastSequenceDataService.setSiteContext(this.stateService.currentState.activeProjectId!, this.stateService.currentState.activeSiteId!);
-
-        // Check for pending explosive approval requests
-        this.siteService.hasPendingExplosiveApprovalRequest(siteId).subscribe({
-          next: (response) => {
-            this.hasPendingExplosiveRequest = response.hasPendingRequest;
-          },
-          error: () => {
-            this.hasPendingExplosiveRequest = false;
-          }
-        });
-
+        
         // Wait a moment for backend data to load before checking progress
         setTimeout(() => {
           this.loadWorkflowProgress();
@@ -458,7 +445,7 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   get isExplosiveApprovalRequested(): boolean {
-    return this.hasPendingExplosiveRequest;
+    return this.site?.isExplosiveApprovalRequested || false;
   }
 
   confirmSimulationForAdmin() {
@@ -508,16 +495,10 @@ export class SiteDashboardComponent implements OnInit {
 
   confirmExplosiveApprovalRequest(): void {
     if (this.site && this.explosiveApprovalForm.expectedUsageDate) {
-      // Prepare optional timing data
-      const blastingDate = this.explosiveApprovalForm.blastingDate || undefined;
-      const blastTiming = this.explosiveApprovalForm.blastTiming || undefined;
-
       this.siteService.requestExplosiveApproval(
         this.site.id,
         this.explosiveApprovalForm.expectedUsageDate,
-        this.explosiveApprovalForm.comments,
-        blastingDate,
-        blastTiming
+        this.explosiveApprovalForm.comments
       ).subscribe({
         next: () => {
            console.log('Explosive approval request sent successfully');
@@ -526,7 +507,7 @@ export class SiteDashboardComponent implements OnInit {
          },
         error: (error) => {
           console.error('Error sending explosive approval request:', error);
-
+          
           // Handle specific error cases
           if (error.status === 409) {
             alert('There is already a pending explosive approval request for this project site. Please wait for the current request to be processed or cancel it first.');

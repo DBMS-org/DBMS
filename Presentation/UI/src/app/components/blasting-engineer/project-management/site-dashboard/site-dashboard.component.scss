@@ -1167,8 +1167,6 @@
         font-size: 1rem;
         transition: all 0.3s ease;
         box-sizing: border-box;
-        background-color: white;
-        color: #1f2937;
 
         &:focus {
           outline: none;
@@ -1184,8 +1182,6 @@
       textarea.form-control {
         resize: vertical;
         min-height: 80px;
-        background-color: white;
-        color: #1f2937;
       }
     }
 
@@ -1286,8 +1282,6 @@
           font-size: 0.9rem;
           transition: all 0.3s ease;
           box-sizing: border-box;
-          background-color: white;
-          color: #1f2937;
 
           &:focus {
             outline: none;
@@ -1299,8 +1293,6 @@
         textarea.form-control {
           resize: vertical;
           min-height: 60px;
-          background-color: white;
-          color: #1f2937;
         }
 
         &.full-width {

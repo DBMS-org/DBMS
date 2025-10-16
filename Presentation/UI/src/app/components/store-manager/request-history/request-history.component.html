@@ -193,7 +193,7 @@
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} requests">
 
             <ng-template pTemplate="header">
-              <tr>
+              <tr class="bg-blue-600 text-white">
                 <th class="text-xs uppercase py-2">Request #</th>
                 <th class="text-xs uppercase py-2">Request Date</th>
                 <th class="text-xs uppercase py-2">Required Date</th>
@@ -274,7 +274,7 @@
                       icon="pi pi-pencil"
                       *ngIf="request.status === TransferRequestStatus.Pending"
                       pTooltip="Edit"
-                      severity="warn"
+                      severity="warning"
                       [rounded]="true"
                       [text]="true"
                       size="small">

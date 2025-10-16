@@ -1,7 +1,1 @@
-Apply unified table design to assignment requests
-
-- Update table container with standard borders
-- Apply consistent header and cell styling
-- Standardize row transitions and hover states
-- Update badge/chip styles to match design system
-- Add responsive min-width (800px)
+some changes

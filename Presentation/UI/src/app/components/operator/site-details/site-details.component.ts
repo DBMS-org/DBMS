@@ -4,44 +4,50 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProjectSite } from '../../../core/models/project.model';
 import { SiteService } from '../../../core/services/site.service';
-import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
-import { DrillLocation } from '../../../core/models/drilling.model';
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
+
+// Drill Plan interfaces
+export interface DrillHole {
+  id: string;
+  depth: number;
+  burden: number;
+  spacing: number;
+  stemming: number;
+  chargeAmount: number;
+  status: 'pending' | 'completed';
+  x: number;
+  y: number;
+}
 
 @Component({
   selector: 'app-site-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TableModule, ButtonModule, TagModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './site-details.component.html',
   styleUrl: './site-details.component.scss'
 })
 export class SiteDetailsComponent implements OnInit {
   siteId: number = 0;
-  projectId: number = 0;
   site: ProjectSite | null = null;
   loading = true;
   error: string | null = null;
 
-  // Drill Points Data
-  drillPoints: DrillLocation[] = [];
-  loadingDrillPoints = false;
+  // Drill Plan Data
+  drillHoles: DrillHole[] = [];
 
   // View States
-  activeTab: 'overview' | 'drill-points' = 'overview';
+  activeTab: 'overview' | 'drill-plan' = 'overview';
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private siteService: SiteService,
-    private drillDataService: UnifiedDrillDataService
+    private siteService: SiteService
   ) {}
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.siteId = +params['siteId'];
       this.loadSiteDetails();
+      this.loadDrillPlan();
     });
   }
 
@@ -50,10 +56,7 @@ export class SiteDetailsComponent implements OnInit {
     this.siteService.getSite(this.siteId).subscribe({
       next: (site) => {
         this.site = site;
-        this.projectId = site.projectId;
         this.loading = false;
-        // Load drill points after we have projectId
-        this.loadDrillPoints();
       },
       error: (err) => {
         this.error = 'Failed to load site details';
@@ -62,77 +65,28 @@ export class SiteDetailsComponent implements OnInit {
     });
   }
 
-  private loadDrillPoints(): void {
-    if (!this.projectId || !this.siteId) {
-      console.error('Project ID or Site ID not available');
-      return;
-    }
-
-    this.loadingDrillPoints = true;
-    this.drillDataService.getDrillPoints(this.projectId, this.siteId).subscribe({
-      next: (drillPoints) => {
-        // Sort drill points numerically by extracting the number from the ID
-        this.drillPoints = drillPoints.sort((a, b) => {
-          const numA = this.extractNumberFromId(a.id);
-          const numB = this.extractNumberFromId(b.id);
-          return numA - numB;
-        });
-        this.loadingDrillPoints = false;
-        console.log('Drill points loaded:', drillPoints.length);
-      },
-      error: (error) => {
-        console.error('Error loading drill points:', error);
-        this.loadingDrillPoints = false;
-      }
-    });
+  private loadDrillPlan(): void {
+    // Mock data - replace with actual service call
+    this.drillHoles = [
+      { id: 'DH-001', depth: 12.5, burden: 3.5, spacing: 4.0, stemming: 3.0, chargeAmount: 25.5, status: 'completed', x: 100, y: 150 },
+      { id: 'DH-002', depth: 11.8, burden: 3.5, spacing: 4.0, stemming: 2.8, chargeAmount: 24.2, status: 'pending', x: 104, y: 150 },
+      { id: 'DH-003', depth: 13.2, burden: 3.5, spacing: 4.0, stemming: 3.2, chargeAmount: 26.8, status: 'pending', x: 108, y: 150 },
+      { id: 'DH-004', depth: 12.0, burden: 3.5, spacing: 4.0, stemming: 3.0, chargeAmount: 25.0, status: 'pending', x: 112, y: 150 }
+    ];
   }
 
-  private extractNumberFromId(id: string): number {
-    // Extract numeric part from IDs like "DH1", "DH10", "DH2"
-    const match = id.match(/\d+/);
-    return match ? parseInt(match[0], 10) : 0;
-  }
-
-  setActiveTab(tab: 'overview' | 'drill-points'): void {
+  setActiveTab(tab: 'overview' | 'drill-plan'): void {
     this.activeTab = tab;
+  }
+
+  markDrillHoleCompleted(holeId: string): void {
+    const hole = this.drillHoles.find(h => h.id === holeId);
+    if (hole && hole.status === 'pending') {
+      hole.status = 'completed';
+    }
   }
 
   goBack(): void {
     this.router.navigate(['/operator/my-project']);
-  }
-
-  getStatus(pointId: string): 'pending' | 'completed' {
-    const point = this.drillPoints.find(p => p.id === pointId);
-    return point?.isCompleted ? 'completed' : 'pending';
-  }
-
-  markAsCompleted(pointId: string): void {
-    if (!this.projectId || !this.siteId) {
-      console.error('Project ID or Site ID not available');
-      return;
-    }
-
-    this.siteService.markDrillPointAsCompleted(pointId, this.projectId, this.siteId).subscribe({
-      next: (response) => {
-        if (response.success) {
-          // Update the local drill point status
-          const point = this.drillPoints.find(p => p.id === pointId);
-          if (point) {
-            point.isCompleted = true;
-            point.completedAt = new Date();
-          }
-          console.log(`Drill point ${pointId} marked as completed`);
-        }
-      },
-      error: (error) => {
-        console.error('Error marking drill point as completed:', error);
-        this.error = 'Failed to mark drill point as completed';
-      }
-    });
-  }
-
-  isCompleted(pointId: string): boolean {
-    const point = this.drillPoints.find(p => p.id === pointId);
-    return point?.isCompleted || false;
   }
 }
