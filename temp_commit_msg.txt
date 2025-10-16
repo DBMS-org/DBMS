@@ -1,1 +1,1 @@
-Design changes in Users's Profile
+Add Maintenance History navigation menu item

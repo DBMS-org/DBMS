@@ -1,13 +1,30 @@
 .sidebar {
   width: 260px;
   height: 100vh;
-  background: #fafbfc;
-  border-right: 1px solid #e5e7eb;
+  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+  border-right: 1px solid rgba(229, 231, 235, 0.8);
   position: fixed;
   top: 70px;
   left: 0;
   z-index: 900;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.03);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(180deg, transparent, rgba(102, 126, 234, 0.2), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
 
   &.collapsed {
     width: 75px;
@@ -30,31 +47,50 @@
   text-decoration: none;
   border-radius: 12px;
   margin: 0;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 0%;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border-radius: 0 4px 4px 0;
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
   &:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
     color: #374151;
-    transform: translateX(2px);
+    transform: translateX(4px);
+
+    &::before {
+      height: 60%;
+    }
+
+    i {
+      transform: scale(1.15);
+    }
   }
 
   &.active {
     background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
     color: #4f46e5;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
 
     &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 4px;
       height: 60%;
-      background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-      border-radius: 0 4px 4px 0;
+      box-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
+    }
+
+    i {
+      color: #667eea;
     }
   }
 
@@ -66,11 +102,7 @@
   i {
     font-size: 1.25rem;
     min-width: 1.25rem;
-    transition: transform 0.2s ease;
-  }
-
-  &:hover i {
-    transform: scale(1.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   span {
