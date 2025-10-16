@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProposalHistoryService, ProposalHistoryItem, ExplosiveApprovalStatus } from '../../../core/services/proposal-history.service';
 import { SiteService, ProjectSite } from '../../../core/services/site.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { ExplosiveApprovalRequestService } from '../../../core/services/explosive-approval-request.service';
 import { ProposalDetailsComponent } from '../proposal-details/proposal-details.component';
 import { forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -55,7 +56,8 @@ export class ProposalHistoryComponent implements OnInit {
   constructor(
     private proposalHistoryService: ProposalHistoryService,
     private siteService: SiteService,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private explosiveApprovalRequestService: ExplosiveApprovalRequestService
   ) {}
 
   ngOnInit() {
@@ -70,6 +72,11 @@ export class ProposalHistoryComponent implements OnInit {
     
     this.proposalHistoryService.getUserProposals().subscribe({
       next: (proposals: ProposalHistoryItem[]) => {
+        console.log('📦 Raw proposals from API:', proposals);
+        proposals.forEach(p => {
+          console.log(`Proposal ${p.id}: status=${p.status}, type=${typeof p.status}`);
+        });
+
         // Create an array of observables to fetch site details for each proposal
         const siteRequests = proposals.map(proposal => 
           this.siteService.getSite(proposal.projectSiteId).pipe(
@@ -184,17 +191,44 @@ export class ProposalHistoryComponent implements OnInit {
     };
   }
 
-  private mapStatus(status: ExplosiveApprovalStatus): 'pending' | 'approved' | 'rejected' | 'cancelled' {
-    switch (status) {
+  private mapStatus(status: ExplosiveApprovalStatus | any): 'pending' | 'approved' | 'rejected' | 'cancelled' {
+    console.log('🔍 mapStatus called with:', status, 'Type:', typeof status, 'Value:', JSON.stringify(status));
+
+    // Handle string status values (case-insensitive)
+    if (typeof status === 'string') {
+      const statusLower = status.toLowerCase();
+      console.log('🔍 String status detected:', statusLower);
+      switch (statusLower) {
+        case 'pending':
+          return 'pending';
+        case 'approved':
+          return 'approved';
+        case 'rejected':
+          return 'rejected';
+        case 'cancelled':
+          return 'cancelled';
+      }
+    }
+
+    // Handle numeric status values
+    const statusValue = typeof status === 'number' ? status : Number(status);
+    console.log('🔍 Numeric status value:', statusValue);
+
+    switch (statusValue) {
       case ExplosiveApprovalStatus.Pending:
+      case 0:
         return 'pending';
       case ExplosiveApprovalStatus.Approved:
+      case 1:
         return 'approved';
       case ExplosiveApprovalStatus.Rejected:
+      case 2:
         return 'rejected';
       case ExplosiveApprovalStatus.Cancelled:
+      case 3:
         return 'cancelled';
       default:
+        console.warn('⚠️ Unknown status value:', status, 'Defaulting to pending');
         return 'pending';
     }
   }
@@ -324,30 +358,52 @@ export class ProposalHistoryComponent implements OnInit {
 
     this.isSavingTiming = true;
 
-    // Note: This is a frontend-only implementation
-    // When backend is ready, use: this.proposalHistoryService.updateTiming(...)
-    console.log('Saving timing (frontend only):', this.timingForm);
+    console.log('Saving timing to backend:', this.timingForm);
 
-    // Simulate API call with timeout
-    setTimeout(() => {
-      // Update the proposal in the local arrays
-      const updateProposal = (p: DisplayProposalItem) => {
-        if (p.id === this.timingForm.proposalId) {
-          return {
-            ...p,
-            blastingDate: this.timingForm.blastingDate,
-            blastTiming: this.timingForm.blastTiming
-          };
+    // Use the real backend API to update timing
+    this.explosiveApprovalRequestService.updateBlastingTiming(
+      this.timingForm.proposalId,
+      {
+        blastingDate: this.timingForm.blastingDate,
+        blastTiming: this.timingForm.blastTiming
+      }
+    ).subscribe({
+      next: (updatedRequest) => {
+        console.log('✅ Timing updated successfully in backend:', updatedRequest);
+
+        // Update the proposal in the local arrays
+        const updateProposal = (p: DisplayProposalItem) => {
+          if (p.id === this.timingForm.proposalId) {
+            return {
+              ...p,
+              blastingDate: this.timingForm.blastingDate,
+              blastTiming: this.timingForm.blastTiming
+            };
+          }
+          return p;
+        };
+
+        this.proposalHistory = this.proposalHistory.map(updateProposal);
+        this.filteredHistory = this.filteredHistory.map(updateProposal);
+
+        this.closeTimingModal();
+      },
+      error: (error) => {
+        console.error('❌ Error updating timing:', error);
+        this.isSavingTiming = false;
+
+        let errorMessage = 'Failed to update blasting timing. Please try again.';
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.status === 400) {
+          errorMessage = 'Invalid timing format. Please use HH:mm format (e.g., 14:30).';
+        } else if (error.status === 404) {
+          errorMessage = 'Explosive approval request not found.';
         }
-        return p;
-      };
 
-      this.proposalHistory = this.proposalHistory.map(updateProposal);
-      this.filteredHistory = this.filteredHistory.map(updateProposal);
-
-      console.log('✅ Timing updated successfully (frontend only)');
-      this.closeTimingModal();
-    }, 500);
+        alert(errorMessage);
+      }
+    });
   }
 
   isTimingFormValid(): boolean {
