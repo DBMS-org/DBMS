@@ -56,7 +56,10 @@ export class SiteDashboardComponent implements OnInit {
   explosiveCalculations: ExplosiveCalculationResultDto | null = null;
   totalAnfo: number = 0;
   totalEmulsion: number = 0;
-  
+
+  // Track explosive approval status
+  hasPendingExplosiveRequest: boolean = false;
+
   minDate: string = new Date().toISOString().split('T')[0];
 
   workflowSteps: WorkflowStep[] = [
@@ -163,7 +166,17 @@ export class SiteDashboardComponent implements OnInit {
         this.site = site;
         // Initialize site-specific data service
         this.blastSequenceDataService.setSiteContext(this.stateService.currentState.activeProjectId!, this.stateService.currentState.activeSiteId!);
-        
+
+        // Check for pending explosive approval requests
+        this.siteService.hasPendingExplosiveApprovalRequest(siteId).subscribe({
+          next: (response) => {
+            this.hasPendingExplosiveRequest = response.hasPendingRequest;
+          },
+          error: () => {
+            this.hasPendingExplosiveRequest = false;
+          }
+        });
+
         // Wait a moment for backend data to load before checking progress
         setTimeout(() => {
           this.loadWorkflowProgress();
@@ -445,7 +458,7 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   get isExplosiveApprovalRequested(): boolean {
-    return this.site?.isExplosiveApprovalRequested || false;
+    return this.hasPendingExplosiveRequest;
   }
 
   confirmSimulationForAdmin() {
