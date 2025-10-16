@@ -58,18 +58,14 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
           </div>
         }
 
-        <!-- Bulk Actions Bar -->
+        <!-- Bulk Actions Bar - Mechanical Engineer Permissions -->
         @if (selection.hasValue()) {
         <div class="bulk-actions-bar">
           <span class="selected-count">{{ selection.selected.length }} jobs selected</span>
           <div class="bulk-actions">
             <button mat-stroked-button [matMenuTriggerFor]="bulkStatusMenu">
-              <mat-icon>edit</mat-icon>
-              Change Status
-            </button>
-            <button mat-stroked-button [matMenuTriggerFor]="bulkAssignMenu">
-              <mat-icon>person_add</mat-icon>
-              Assign To
+              <mat-icon>update</mat-icon>
+              Update Status
             </button>
             <button mat-stroked-button color="warn" (click)="clearSelection()">
               <mat-icon>clear</mat-icon>
@@ -308,27 +304,40 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
         }
       }
 
-      <!-- Action Menu Template -->
-      <mat-menu #actionMenu="matMenu">
+      <!-- Action Menu Template - Mechanical Engineer Permissions -->
+      <mat-menu #actionMenu="matMenu" class="action-menu-modern">
         <ng-template matMenuContent let-job="job">
-          <button mat-menu-item (click)="onViewDetails(job)">
-            <mat-icon>visibility</mat-icon>
-            <span>View Details</span>
+          <div class="menu-header">
+            <span class="menu-title">Actions</span>
+          </div>
+          <button mat-menu-item (click)="onViewJobDetails(job)" class="menu-item-primary">
+            <div class="menu-item-content">
+              <mat-icon class="menu-icon">description</mat-icon>
+              <div class="menu-text">
+                <span class="menu-label">Job Details</span>
+                <span class="menu-description">View job information and progress</span>
+              </div>
+            </div>
           </button>
-          <button mat-menu-item (click)="onEditJob(job)">
-            <mat-icon>edit</mat-icon>
-            <span>Edit Job</span>
+          <button mat-menu-item (click)="onViewMachineOverview(job)" class="menu-item-primary">
+            <div class="menu-item-content">
+              <mat-icon class="menu-icon">precision_manufacturing</mat-icon>
+              <div class="menu-text">
+                <span class="menu-label">Machine Overview</span>
+                <span class="menu-description">View machine details and metrics</span>
+              </div>
+            </div>
           </button>
-          <mat-divider></mat-divider>
-          <button mat-menu-item [matMenuTriggerFor]="statusSubmenu" [matMenuTriggerData]="{job: job}">
-            <mat-icon>update</mat-icon>
-            <span>Change Status</span>
-            <mat-icon class="submenu-arrow">chevron_right</mat-icon>
-          </button>
-          <mat-divider></mat-divider>
-          <button mat-menu-item (click)="onDeleteJob(job)" class="delete-action">
-            <mat-icon>delete</mat-icon>
-            <span>Delete Job</span>
+          <mat-divider class="menu-divider"></mat-divider>
+          <button mat-menu-item [matMenuTriggerFor]="statusSubmenu" [matMenuTriggerData]="{job: job}" class="menu-item-action">
+            <div class="menu-item-content">
+              <mat-icon class="menu-icon status-icon">update</mat-icon>
+              <div class="menu-text">
+                <span class="menu-label">Update Job Status</span>
+                <span class="menu-description">Change the current job status</span>
+              </div>
+              <mat-icon class="submenu-arrow">chevron_right</mat-icon>
+            </div>
           </button>
         </ng-template>
       </mat-menu>
@@ -353,14 +362,6 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
             <span>{{ getStatusDisplayName(status) }}</span>
           </button>
         }
-      </mat-menu>
-
-      <!-- Bulk Assign Menu -->
-      <mat-menu #bulkAssignMenu="matMenu">
-        <button mat-menu-item (click)="onBulkAssign()">
-          <mat-icon>person_add</mat-icon>
-          <span>Assign Technicians</span>
-        </button>
       </mat-menu>
     </div>
   `,
@@ -396,24 +397,43 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
       overflow: auto;
       border: 1px solid #e0e0e0;
       border-radius: 4px;
+      background: white;
     }
 
     .jobs-table {
       width: 100%;
       min-width: 800px;
+
+      th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+        color: #333;
+        padding: 16px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      td {
+        padding: 16px;
+        color: #555;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
     }
 
     .job-row {
       cursor: pointer;
       transition: background-color 0.2s;
-    }
 
-    .job-row:hover {
-      background-color: #f5f5f5;
-    }
+      &:hover {
+        background-color: #f9f9f9;
+      }
 
-    .job-row.selected {
-      background-color: #e3f2fd;
+      &.selected {
+        background-color: #e3f2fd;
+      }
     }
 
     .machine-info {
@@ -441,10 +461,12 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
     .date-info {
       display: flex;
       flex-direction: column;
+      gap: 2px;
     }
 
     .date {
       font-weight: 500;
+      color: #333;
     }
 
     .time {
@@ -659,6 +681,115 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
     .icon-overdue {
       color: #d32f2f;
     }
+
+    /* Modern Action Menu Styles */
+    ::ng-deep .action-menu-modern {
+      min-width: 320px;
+      padding: 0;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    ::ng-deep .action-menu-modern .mat-mdc-menu-content {
+      padding: 0;
+    }
+
+    ::ng-deep .action-menu-modern .menu-header {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 8px 8px 0 0;
+    }
+
+    ::ng-deep .action-menu-modern .menu-title {
+      display: block;
+    }
+
+    ::ng-deep .action-menu-modern .mat-mdc-menu-item {
+      height: auto;
+      min-height: 64px;
+      padding: 0;
+      line-height: normal;
+    }
+
+    ::ng-deep .action-menu-modern .menu-item-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      width: 100%;
+    }
+
+    ::ng-deep .action-menu-modern .menu-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+      color: #1976d2;
+    }
+
+    ::ng-deep .action-menu-modern .status-icon {
+      color: #f57c00;
+    }
+
+    ::ng-deep .action-menu-modern .menu-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    ::ng-deep .action-menu-modern .menu-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      line-height: 1.3;
+    }
+
+    ::ng-deep .action-menu-modern .menu-description {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.3;
+    }
+
+    ::ng-deep .action-menu-modern .submenu-arrow {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      font-size: 20px;
+      color: #999;
+      margin-left: auto;
+    }
+
+    ::ng-deep .action-menu-modern .menu-divider {
+      margin: 8px 0;
+      border-top-color: #e0e0e0;
+    }
+
+    ::ng-deep .action-menu-modern .menu-item-primary:hover {
+      background-color: #e3f2fd;
+    }
+
+    ::ng-deep .action-menu-modern .menu-item-action:hover {
+      background-color: #fff3e0;
+    }
+
+    ::ng-deep .action-menu-modern .mat-mdc-menu-item:hover .menu-icon {
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
+    }
+
+    ::ng-deep .action-menu-modern .mat-mdc-menu-item:hover .menu-label {
+      color: #1976d2;
+    }
+
+    ::ng-deep .action-menu-modern .menu-item-action:hover .menu-label {
+      color: #f57c00;
+    }
   `]
 })
 export class JobListComponent implements AfterViewInit, OnDestroy {
@@ -744,7 +875,6 @@ export class JobListComponent implements AfterViewInit, OnDestroy {
   jobSelected = output<MaintenanceJob>();
   jobStatusChanged = output<{ job: MaintenanceJob; status: MaintenanceStatus }>();
   bulkStatusChanged = output<{ jobs: MaintenanceJob[]; status: MaintenanceStatus }>();
-  bulkAssignRequested = output<MaintenanceJob[]>();
 
   // Table configuration
   displayedColumns = ['select', 'machine', 'serialNumber', 'project', 'scheduledDate', 'type', 'status', 'assignedTo', 'actions'];
@@ -791,18 +921,14 @@ export class JobListComponent implements AfterViewInit, OnDestroy {
     this.machineClicked.emit(job);
   }
 
-  onViewDetails(job: MaintenanceJob) {
+  onViewJobDetails(job: MaintenanceJob) {
+    // Emit event to show job details in the detail panel
     this.jobSelected.emit(job);
   }
 
-  onEditJob(job: MaintenanceJob) {
-    // TODO: Implement edit functionality
-    console.log('Edit job:', job);
-  }
-
-  onDeleteJob(job: MaintenanceJob) {
-    // TODO: Implement delete functionality
-    console.log('Delete job:', job);
+  onViewMachineOverview(job: MaintenanceJob) {
+    // Emit event to show machine overview (handled by parent)
+    this.machineClicked.emit(job);
   }
 
   onStatusChange(job: MaintenanceJob, status: MaintenanceStatus) {
@@ -813,11 +939,6 @@ export class JobListComponent implements AfterViewInit, OnDestroy {
     const selectedJobs = this.selection.selected;
     this.bulkStatusChanged.emit({ jobs: selectedJobs, status });
     this.clearSelection();
-  }
-
-  onBulkAssign() {
-    const selectedJobs = this.selection.selected;
-    this.bulkAssignRequested.emit(selectedJobs);
   }
 
   // Selection Methods
