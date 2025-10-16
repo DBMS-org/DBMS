@@ -1,1 +1,5 @@
-Edited Mechanical engineer dashboard
+Add maintenance history route and remove lazy loading
+
+- Add maintenance history route configuration
+- Remove lazy loading from reports component
+- Import MaintenanceHistoryComponent and ReportsComponent
