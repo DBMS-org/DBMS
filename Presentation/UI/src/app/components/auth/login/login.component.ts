@@ -4,9 +4,12 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoginRequest } from '../../../core/models/user.model';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
-import { PasswordModule } from 'primeng/password';
+
+// PrimeNG Standalone Components
+import { InputText } from 'primeng/inputtext';
+import { Button } from 'primeng/button';
+import { Password } from 'primeng/password';
+import { Message } from 'primeng/message';
 
 @Component({
   selector: 'app-login',
@@ -16,9 +19,10 @@ import { PasswordModule } from 'primeng/password';
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    InputTextModule,
-    ButtonModule,
-    PasswordModule
+    InputText,
+    Button,
+    Password,
+    Message
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
