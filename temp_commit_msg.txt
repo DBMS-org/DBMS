@@ -1,1 +1,1 @@
-Add reports route to machine manager navigation
+update button styling with consistent border-radius and sizing
