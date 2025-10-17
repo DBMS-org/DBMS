@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,24 +11,18 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { AuthService } from '../../../core/services/auth.service';
 
-interface MaintenanceReport {
+interface OperatorReport {
   id: string;
   name: string;
   description: string;
   icon: string;
-  category: 'maintenance-summary' | 'accessory-usage' | 'service-alerts' | 'maintenance-history';
-}
-
-interface ReportFilters {
-  machine?: string;
-  dateFrom?: Date | null;
-  dateTo?: Date | null;
-  maintenanceType?: string;
+  category: 'drilling-progress' | 'work-summary' | 'site-completion' | 'efficiency-metrics';
 }
 
 @Component({
-  selector: 'app-reports',
+  selector: 'app-operator-reports',
   standalone: true,
   imports: [
     CommonModule,
@@ -48,13 +42,14 @@ interface ReportFilters {
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
-export class ReportsComponent implements OnInit {
+export class OperatorReportsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
 
   // Component state
   isLoading = signal(false);
-  selectedReport = signal<MaintenanceReport | null>(null);
+  selectedReport = signal<OperatorReport | null>(null);
   isGenerating = signal(false);
   showFilters = signal(false);
 
@@ -62,82 +57,84 @@ export class ReportsComponent implements OnInit {
   filterForm!: FormGroup;
 
   // Available reports
-  reports = signal<MaintenanceReport[]>([]);
+  reports = signal<OperatorReport[]>([]);
 
   // Dropdown options
-  machines = signal<any[]>([]);
-  maintenanceTypes = ['Preventive', 'Corrective', 'Predictive', 'Emergency'];
+  sites = signal<any[]>([]);
+  dateRangeOptions = ['Today', 'This Week', 'This Month', 'Last Month', 'Custom'];
+
+  // Current user
+  currentUser = computed(() => this.authService.getCurrentUser());
 
   ngOnInit() {
     this.initializeFilterForm();
     this.loadReports();
-    this.loadMachines();
+    this.loadSites();
   }
 
   private initializeFilterForm() {
     this.filterForm = this.fb.group({
-      machine: [''],
+      site: [''],
       dateFrom: [null],
       dateTo: [null],
-      maintenanceType: ['']
+      dateRange: ['']
     });
   }
 
   private loadReports() {
-    const maintenanceReports: MaintenanceReport[] = [
+    const operatorReports: OperatorReport[] = [
       {
         id: 'report-1',
-        name: 'Maintenance Summary Report',
-        description: 'Overview of scheduled vs completed vs pending maintenance activities',
-        icon: 'summarize',
-        category: 'maintenance-summary'
+        name: 'Daily Drilling Progress Report',
+        description: 'Track daily drilling operations, holes completed, and overall progress metrics',
+        icon: 'trending_up',
+        category: 'drilling-progress'
       },
       {
         id: 'report-2',
-        name: 'Accessory Usage Report',
-        description: 'Accessories and spare parts used during maintenance operations',
-        icon: 'inventory',
-        category: 'accessory-usage'
+        name: 'Work Summary Report',
+        description: 'Comprehensive summary of work completed, hours logged, and tasks performed',
+        icon: 'summarize',
+        category: 'work-summary'
       },
       {
         id: 'report-3',
-        name: 'Service Alerts Report',
-        description: 'Record of all service alerts received and their resolution status',
-        icon: 'notifications_active',
-        category: 'service-alerts'
+        name: 'Site Completion Report',
+        description: 'Detailed report of site completion status, patterns executed, and quality metrics',
+        icon: 'task_alt',
+        category: 'site-completion'
       },
       {
         id: 'report-4',
-        name: 'Maintenance History Report',
-        description: 'Detailed maintenance logs filtered by date, machine, or type',
-        icon: 'history',
-        category: 'maintenance-history'
+        name: 'Operator Efficiency Report',
+        description: 'Personal efficiency metrics, machine utilization, and performance indicators',
+        icon: 'speed',
+        category: 'efficiency-metrics'
       }
     ];
-    this.reports.set(maintenanceReports);
+    this.reports.set(operatorReports);
   }
 
-  private loadMachines() {
-    const machines = [
-      { id: 'DR-102', name: 'Drill Rig Atlas Copco' },
-      { id: 'LD-201', name: 'Loader Caterpillar 980M' },
-      { id: 'LD-103', name: 'Loader CAT 966M' },
-      { id: 'EX-005', name: 'Excavator Komatsu PC200' }
+  private loadSites() {
+    // In real implementation, load from service
+    const mockSites = [
+      { id: 'site-1', name: 'Mining Site Alpha' },
+      { id: 'site-2', name: 'Construction Zone Beta' },
+      { id: 'site-3', name: 'Excavation Point Gamma' }
     ];
-    this.machines.set(machines);
+    this.sites.set(mockSites);
   }
 
-  selectReport(report: MaintenanceReport) {
+  selectReport(report: OperatorReport) {
     this.selectedReport.set(report);
     this.showFilters.set(true);
   }
 
-  exportReport(format: 'pdf' | 'csv', report?: MaintenanceReport) {
+  exportReport(format: 'pdf' | 'csv', report?: OperatorReport) {
     const selectedRep = report || this.selectedReport();
     if (!selectedRep) {
       this.snackBar.open('Please select a report first', 'Close', {
-        duration: 3000,
-        panelClass: ['error-snackbar']
+        duration: 3000
       });
       return;
     }
@@ -152,16 +149,16 @@ export class ReportsComponent implements OnInit {
         `${selectedRep.name} exported as ${format.toUpperCase()}`,
         'Close',
         {
-          duration: 3000,
-          panelClass: ['success-snackbar']
+          duration: 3000
         }
       );
 
       // In real implementation, trigger download here
-      console.log('Exporting report:', {
+      console.log('Exporting operator report:', {
         report: selectedRep.name,
         format: format,
-        filters: this.filterForm.value
+        filters: this.filterForm.value,
+        operator: this.currentUser()
       });
     }, 1500);
   }

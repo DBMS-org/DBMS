@@ -1,5 +1,5 @@
 // ============================================
-// MECHANICAL ENGINEER REPORTS - PROFESSIONAL DESIGN
+// OPERATOR REPORTS - PROFESSIONAL DESIGN
 // ============================================
 
 :host {
@@ -21,10 +21,6 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-// ============================================
-// CONTAINER
-// ============================================
-
 .reports-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
@@ -34,10 +30,6 @@
     padding: 1rem;
   }
 }
-
-// ============================================
-// PAGE HEADER
-// ============================================
 
 .page-header {
   background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
@@ -114,10 +106,6 @@
   }
 }
 
-// ============================================
-// LOADING STATE
-// ============================================
-
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -136,19 +124,11 @@
   }
 }
 
-// ============================================
-// MAIN CONTENT
-// ============================================
-
 .main-content {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
-
-// ============================================
-// REPORTS SECTION
-// ============================================
 
 .reports-section {
   .section-header {
@@ -190,10 +170,6 @@
   }
 }
 
-// ============================================
-// REPORTS GRID
-// ============================================
-
 .reports-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -203,10 +179,6 @@
     grid-template-columns: 1fr;
   }
 }
-
-// ============================================
-// REPORT CARD
-// ============================================
 
 .report-card {
   background: var(--bg-primary);
@@ -254,22 +226,22 @@
       color: white;
     }
 
-    &.icon-maintenance-summary {
+    &.icon-drilling-progress {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    &.icon-work-summary {
       background: linear-gradient(135deg, #10b981, #059669);
       box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
     }
 
-    &.icon-accessory-usage {
+    &.icon-site-completion {
       background: linear-gradient(135deg, #f59e0b, #d97706);
       box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
     }
 
-    &.icon-service-alerts {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-    }
-
-    &.icon-maintenance-history {
+    &.icon-efficiency-metrics {
       background: linear-gradient(135deg, #8b5cf6, #7c3aed);
       box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
     }
@@ -380,10 +352,6 @@
   }
 }
 
-// ============================================
-// FILTERS CONTAINER
-// ============================================
-
 .filters-container {
   animation: slideIn 0.3s ease-out;
 }
@@ -477,10 +445,6 @@
   }
 }
 
-// ============================================
-// FILTER FORM
-// ============================================
-
 .filter-form {
   display: flex;
   flex-direction: column;
@@ -515,10 +479,6 @@
     }
   }
 }
-
-// ============================================
-// FILTER ACTIONS
-// ============================================
 
 .filter-actions {
   display: flex;
@@ -577,10 +537,6 @@
   }
 }
 
-// ============================================
-// NO DATA MESSAGE
-// ============================================
-
 .no-data-message {
   display: flex;
   flex-direction: column;
@@ -606,10 +562,6 @@
     font-size: 1.125rem;
   }
 }
-
-// ============================================
-// GENERATING OVERLAY
-// ============================================
 
 .generating-overlay {
   position: fixed;
@@ -663,10 +615,6 @@
     opacity: 1;
   }
 }
-
-// ============================================
-// RESPONSIVE DESIGN
-// ============================================
 
 @media (max-width: 768px) {
   .page-header {
