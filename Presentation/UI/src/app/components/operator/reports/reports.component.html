@@ -5,8 +5,8 @@
       <div class="header-title">
         <mat-icon class="header-icon">assessment</mat-icon>
         <div class="title-text">
-          <h1>Maintenance Reports</h1>
-          <p class="subtitle">Generate and export comprehensive maintenance reports</p>
+          <h1>Work Reports</h1>
+          <p class="subtitle">Generate and export comprehensive work performance reports</p>
         </div>
       </div>
       <div class="header-actions">
@@ -59,8 +59,8 @@
 
               <div class="report-meta">
                 <div class="meta-item">
-                  <mat-icon>category</mat-icon>
-                  <span>{{ report.category | titlecase }}</span>
+                  <mat-icon>person</mat-icon>
+                  <span>{{ currentUser()?.name || 'Operator' }}</span>
                 </div>
                 <div class="meta-item">
                   <mat-icon>schedule</mat-icon>
@@ -115,15 +115,15 @@
             </div>
 
             <form [formGroup]="filterForm" class="filter-form">
-              <!-- Machine Filter -->
+              <!-- Site Filter -->
               <div class="form-group">
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Machine</mat-label>
-                  <mat-icon matPrefix>precision_manufacturing</mat-icon>
-                  <mat-select formControlName="machine">
-                    <mat-option value="">All Machines</mat-option>
-                    @for (machine of machines(); track machine.id) {
-                      <mat-option [value]="machine.id">{{ machine.name }}</mat-option>
+                  <mat-label>Site</mat-label>
+                  <mat-icon matPrefix>location_on</mat-icon>
+                  <mat-select formControlName="site">
+                    <mat-option value="">All Sites</mat-option>
+                    @for (site of sites(); track site.id) {
+                      <mat-option [value]="site.id">{{ site.name }}</mat-option>
                     }
                   </mat-select>
                 </mat-form-field>
@@ -148,15 +148,15 @@
                 </mat-form-field>
               </div>
 
-              <!-- Maintenance Type Filter -->
+              <!-- Date Range Presets -->
               <div class="form-group">
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Maintenance Type</mat-label>
-                  <mat-icon matPrefix>build</mat-icon>
-                  <mat-select formControlName="maintenanceType">
-                    <mat-option value="">All Types</mat-option>
-                    @for (type of maintenanceTypes; track type) {
-                      <mat-option [value]="type">{{ type }}</mat-option>
+                  <mat-label>Quick Date Range</mat-label>
+                  <mat-icon matPrefix>date_range</mat-icon>
+                  <mat-select formControlName="dateRange">
+                    <mat-option value="">Custom Range</mat-option>
+                    @for (option of dateRangeOptions; track option) {
+                      <mat-option [value]="option">{{ option }}</mat-option>
                     }
                   </mat-select>
                 </mat-form-field>
