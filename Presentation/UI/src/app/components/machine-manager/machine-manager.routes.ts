@@ -4,6 +4,7 @@ import { MachineInventoryComponent } from './machine-inventory/machine-inventory
 import { AssignmentRequestsComponent } from './assignment-requests/assignment-requests.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 import { MachineManagerNotificationsComponent } from './notifications/notifications.component';
+import { ReportsComponent } from './reports/reports.component';
 
 export const MACHINE_MANAGER_ROUTES: Routes = [
     {
@@ -31,6 +32,10 @@ export const MACHINE_MANAGER_ROUTES: Routes = [
             {
               path: 'maintenance-management',
               loadComponent: () => import('../../features/maintenance-management/maintenance-management.component').then(m => m.MaintenanceManagementComponent)
+            },
+            {
+              path: 'reports',
+              component: ReportsComponent
             },
             {
               path: 'notifications',
