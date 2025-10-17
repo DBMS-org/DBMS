@@ -1,0 +1,213 @@
+<div class="reports-container">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-title">
+        <mat-icon class="header-icon">analytics</mat-icon>
+        <div class="title-text">
+          <h1>Machine Reports</h1>
+          <p class="subtitle">Generate comprehensive machine management reports</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button mat-raised-button color="primary" (click)="refreshReports()" class="action-btn">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p class="loading-text">Loading reports...</p>
+    </div>
+  }
+
+  <!-- Main Content -->
+  <div class="main-content" *ngIf="!isLoading()">
+    <!-- Reports Grid -->
+    <div class="reports-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <mat-icon>library_books</mat-icon>
+          Available Reports
+        </h2>
+        <span class="report-count">{{ reports().length }} reports</span>
+      </div>
+
+      <div class="reports-grid">
+        @for (report of reports(); track report.id) {
+          <mat-card
+            class="report-card"
+            [class.selected]="selectedReport()?.id === report.id"
+            (click)="selectReport(report)">
+            <mat-card-header>
+              <div class="card-icon" [class]="'icon-' + report.category">
+                <mat-icon>{{ report.icon }}</mat-icon>
+              </div>
+              <div class="card-header-text">
+                <mat-card-title>{{ report.name }}</mat-card-title>
+                <mat-card-subtitle>{{ report.category | titlecase }}</mat-card-subtitle>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content>
+              <p class="report-description">{{ report.description }}</p>
+
+              <div class="report-meta">
+                <div class="meta-item">
+                  <mat-icon>category</mat-icon>
+                  <span>{{ report.category | titlecase }}</span>
+                </div>
+                <div class="meta-item">
+                  <mat-icon>schedule</mat-icon>
+                  <span>Real-time data</span>
+                </div>
+              </div>
+            </mat-card-content>
+
+            <mat-card-actions class="card-actions">
+              <button
+                mat-stroked-button
+                class="export-btn pdf"
+                (click)="exportReport('pdf', report); $event.stopPropagation()"
+                [disabled]="isGenerating()">
+                <mat-icon>picture_as_pdf</mat-icon>
+                PDF
+              </button>
+              <button
+                mat-stroked-button
+                class="export-btn csv"
+                (click)="exportReport('csv', report); $event.stopPropagation()"
+                [disabled]="isGenerating()">
+                <mat-icon>table_chart</mat-icon>
+                CSV
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    @if (showFilters() && selectedReport()) {
+      <div class="filters-container">
+        <mat-card class="filters-panel">
+          <mat-card-header>
+            <div class="panel-header-content">
+              <div class="panel-title">
+                <mat-icon>filter_list</mat-icon>
+                <h3>Filter Options</h3>
+              </div>
+              <button mat-icon-button (click)="closeFilters()" aria-label="Close filters">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="filter-subtitle">
+              <mat-icon>analytics</mat-icon>
+              <span>{{ selectedReport()?.name }}</span>
+            </div>
+
+            <form [formGroup]="filterForm" class="filter-form">
+              <!-- Machine Filter -->
+              <div class="form-group">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Machine</mat-label>
+                  <mat-icon matPrefix>precision_manufacturing</mat-icon>
+                  <mat-select formControlName="machine">
+                    <mat-option value="">All Machines</mat-option>
+                    @for (machine of machines(); track machine.id) {
+                      <mat-option [value]="machine.id">{{ machine.name }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <!-- Date Range -->
+              <div class="form-group date-range">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>From Date</mat-label>
+                  <input matInput [matDatepicker]="pickerFrom" formControlName="dateFrom">
+                  <mat-datepicker-toggle matSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerFrom></mat-datepicker>
+                  <mat-icon matPrefix>event</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>To Date</mat-label>
+                  <input matInput [matDatepicker]="pickerTo" formControlName="dateTo">
+                  <mat-datepicker-toggle matSuffix [for]="pickerTo"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerTo></mat-datepicker>
+                  <mat-icon matPrefix>event</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <!-- Report Type Filter -->
+              <div class="form-group">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Report Type</mat-label>
+                  <mat-icon matPrefix>analytics</mat-icon>
+                  <mat-select formControlName="reportType">
+                    <mat-option value="">All Types</mat-option>
+                    @for (type of reportTypes; track type) {
+                      <mat-option [value]="type">{{ type }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <!-- Filter Actions -->
+              <div class="filter-actions">
+                <button
+                  mat-button
+                  type="button"
+                  (click)="resetFilters()"
+                  class="reset-btn">
+                  <mat-icon>clear</mat-icon>
+                  Reset Filters
+                </button>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  (click)="generateReport()"
+                  [disabled]="isGenerating()"
+                  class="generate-btn">
+                  @if (isGenerating()) {
+                    <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+                  } @else {
+                    <mat-icon>file_download</mat-icon>
+                  }
+                  Generate Report
+                </button>
+              </div>
+            </form>
+
+            @if (hasNoData()) {
+              <div class="no-data-message">
+                <mat-icon>info</mat-icon>
+                <p>No data available for the selected filters.</p>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+  </div>
+
+  <!-- Generating Overlay -->
+  @if (isGenerating()) {
+    <div class="generating-overlay">
+      <div class="overlay-content">
+        <mat-spinner diameter="56"></mat-spinner>
+        <h3>Generating Report...</h3>
+        <p>Please wait while we prepare your report</p>
+      </div>
+    </div>
+  }
+</div>
