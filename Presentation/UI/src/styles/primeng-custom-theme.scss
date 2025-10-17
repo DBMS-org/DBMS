@@ -2,48 +2,81 @@
 // PRIMENG CUSTOM THEME - Matching Existing Design System
 // ==========================================
 
-// Additional refinements for PrimeNG components to match design system
-// No !important flags - proper theme configuration
+:root {
+  // Primary Colors - Match existing gradient
+  --primary-color: #667eea;
+  --primary-color-text: #ffffff;
+  --primary-50: #f5f7ff;
+  --primary-100: #ebedff;
+  --primary-200: #d6dbff;
+  --primary-300: #b8c1ff;
+  --primary-400: #8b9ef8;
+  --primary-500: #667eea;
+  --primary-600: #5a67d8;
+  --primary-700: #4c51bf;
+  --primary-800: #3d3d99;
+  --primary-900: #764ba2;
 
-// Buttons - Enhanced styling with proper spacing
+  // Surface Colors
+  --surface-0: #ffffff;
+  --surface-50: #f8f9fc;
+  --surface-100: #f3f4f6;
+  --surface-200: #e9ecef;
+  --surface-300: #dee2e6;
+  --surface-400: #ced4da;
+  --surface-500: #adb5bd;
+  --surface-600: #6c757d;
+  --surface-700: #495057;
+  --surface-800: #343a40;
+  --surface-900: #212529;
+  --surface-ground: #f8f9fc;
+  --surface-section: #ffffff;
+  --surface-card: #ffffff;
+  --surface-overlay: #ffffff;
+  --surface-border: #e9ecef;
+  --surface-hover: rgba(102, 126, 234, 0.04);
+
+  // Text Colors - Match existing design
+  --text-color: #2c3e50;
+  --text-color-secondary: #6c757d;
+  --text-muted: #9ca3af;
+
+  // Status Colors - Match existing design
+  --green-500: #10b981;
+  --green-600: #059669;
+  --yellow-500: #f59e0b;
+  --yellow-600: #d97706;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+
+  // Shadows - Match existing design
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 30px rgba(102, 126, 234, 0.15);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
+
+  // Border Radius - Match existing design
+  --border-radius: 8px;
+  --border-radius-sm: 6px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+
+  // Transitions
+  --transition-duration: 0.3s;
+}
+
+// ==========================================
+// COMPONENT OVERRIDES
+// ==========================================
+
+// Buttons
 .p-button {
-  border-radius: var(--border-radius-md, 8px);
+  border-radius: var(--border-radius-md);
   font-weight: 500;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0.75rem 1.25rem;
-  gap: 0.5rem; // Space between icon and label
-
-  // Icon spacing
-  .p-button-icon {
-    margin-right: 0.5rem;
-  }
-
-  &.p-button-icon-only {
-    padding: 0.75rem;
-
-    .p-button-icon {
-      margin-right: 0;
-    }
-  }
-
-  // Size variants
-  &.p-button-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-
-    .p-button-icon {
-      font-size: 0.875rem;
-    }
-  }
-
-  &.p-button-lg {
-    padding: 1rem 1.5rem;
-    font-size: 1.125rem;
-
-    .p-button-icon {
-      font-size: 1.125rem;
-    }
-  }
 
   &.p-button-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -78,7 +111,7 @@
     }
   }
 
-  &.p-button-warn {
+  &.p-button-warning {
     background: #f59e0b;
 
     &:enabled:hover {
@@ -97,71 +130,55 @@
   }
 }
 
-// Cards - Enhanced styling with proper spacing
+// Cards
 .p-card {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
   }
 
   .p-card-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 1.5rem 2rem;
-    border-radius: 12px 12px 0 0;
+    padding: 1.5rem;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
     font-weight: 600;
   }
 
   .p-card-body {
-    padding: 1.5rem 2rem;
-  }
-
-  .p-card-content {
-    padding: 0; // Reset default padding as body already has padding
+    padding: 1.5rem;
   }
 
   .p-card-footer {
-    padding: 1.25rem 2rem;
+    padding: 1rem 1.5rem;
     background: #f8f9fa;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--surface-border);
   }
 }
 
-// Dialogs - Enhanced styling with proper spacing
+// Dialogs
 .p-dialog {
-  border-radius: 12px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-xl);
 
   .p-dialog-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-radius: 12px 12px 0 0;
-    padding: 1.5rem 2rem;
-    gap: 1rem;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    padding: 1.5rem;
 
     .p-dialog-title {
       font-weight: 600;
       font-size: 1.25rem;
-      margin: 0;
-    }
-
-    .p-dialog-header-icons {
-      display: flex;
-      gap: 0.5rem;
     }
 
     .p-dialog-header-icon {
       color: white;
-      width: 2rem;
-      height: 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 6px;
 
       &:enabled:hover {
         background: rgba(255, 255, 255, 0.2);
@@ -171,167 +188,139 @@
   }
 
   .p-dialog-content {
-    padding: 2rem;
-    line-height: 1.6;
+    padding: 1.5rem;
   }
 
   .p-dialog-footer {
-    padding: 1.5rem 2rem;
-    border-top: 1px solid #e9ecef;
+    padding: 1.5rem;
+    border-top: 1px solid var(--surface-border);
     background: #f8f9fa;
-    gap: 1rem;
-    display: flex;
-    justify-content: flex-end;
-
-    .p-button {
-      margin: 0;
-    }
   }
 }
 
-// Input Fields - Enhanced styling with proper spacing
-.p-inputtext {
-  border: 2px solid rgba(102, 126, 234, 0.2);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  transition: all 0.2s ease;
-  font-size: 1rem;
-  line-height: 1.5;
-
-  &:enabled:hover {
-    border-color: #667eea;
+// Data Tables
+.p-datatable {
+  .p-datatable-header {
+    background: #f8f9fa;
+    border: 1px solid var(--surface-border);
+    padding: 1rem;
   }
 
-  &:enabled:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  &.p-inputtext-sm {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-  }
-
-  &.p-inputtext-lg {
-    padding: 1rem 1.25rem;
-    font-size: 1.125rem;
-  }
-}
-
-// Textarea - Enhanced styling with proper spacing
-.p-inputtextarea {
-  border: 2px solid rgba(102, 126, 234, 0.2);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  transition: all 0.2s ease;
-  font-size: 1rem;
-  line-height: 1.6;
-  resize: vertical;
-
-  &:enabled:hover {
-    border-color: #667eea;
-  }
-
-  &:enabled:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-}
-
-// DatePicker - Enhanced styling with proper spacing
-.p-datepicker {
-  border-radius: 8px;
-  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
-  padding: 0.5rem;
-
-  .p-datepicker-header {
+  .p-datatable-thead > tr > th {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-radius: 8px 8px 0 0;
+    font-weight: 600;
     padding: 1rem;
-    margin: -0.5rem -0.5rem 0.5rem -0.5rem;
+    border: none;
 
-    .p-datepicker-title {
-      gap: 0.5rem;
+    &:first-child {
+      border-radius: var(--border-radius-md) 0 0 0;
     }
 
-    .p-datepicker-prev,
-    .p-datepicker-next {
-      color: white;
-      width: 2rem;
-      height: 2rem;
-      border-radius: 6px;
-
-      &:enabled:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-      }
+    &:last-child {
+      border-radius: 0 var(--border-radius-md) 0 0;
     }
   }
 
-  .p-datepicker-calendar {
-    margin: 0.5rem 0;
+  .p-datatable-tbody > tr {
+    transition: all 0.2s ease;
 
-    thead tr th {
-      padding: 0.5rem;
+    &:hover {
+      background: rgba(102, 126, 234, 0.05);
     }
 
-    tbody tr td {
-      padding: 0.25rem;
-
-      > span {
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+    > td {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--surface-border);
     }
   }
 
-  table td > span.p-highlight {
-    background: #667eea;
-    color: white;
+  .p-datatable-footer {
+    background: #f8f9fa;
+    border: 1px solid var(--surface-border);
+    padding: 1rem;
   }
 
-  table td > span:hover {
-    background: rgba(102, 126, 234, 0.1);
-  }
+  &.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+    background: rgba(102, 126, 234, 0.02);
 
-  // Input wrapper spacing
-  .p-datepicker-input-icon-container {
-    .p-inputtext {
-      padding-right: 3rem;
-    }
-
-    .p-datepicker-input-icon {
-      right: 1rem;
+    &:hover {
+      background: rgba(102, 126, 234, 0.08);
     }
   }
 }
 
-// Tags - Enhanced styling with proper spacing
-.p-tag {
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 0.5rem 0.875rem;
-  gap: 0.5rem;
-  display: inline-flex;
-  align-items: center;
+// Input Fields
+.p-inputtext {
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: var(--border-radius-md);
+  padding: 0.75rem;
+  transition: all 0.2s ease;
 
-  .p-tag-icon {
-    margin-right: 0.375rem;
-    font-size: 0.875rem;
+  &:enabled:hover {
+    border-color: #667eea;
   }
+
+  &:enabled:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+}
+
+.p-float-label {
+  label {
+    color: var(--text-color-secondary);
+  }
+
+  input:focus ~ label,
+  input:-webkit-autofill ~ label,
+  input.p-filled ~ label,
+  textarea:focus ~ label,
+  textarea.p-filled ~ label,
+  .p-inputwrapper-focus ~ label,
+  .p-inputwrapper-filled ~ label {
+    color: #667eea;
+  }
+}
+
+// Dropdowns
+.p-dropdown {
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: var(--border-radius-md);
+  transition: all 0.2s ease;
+
+  &:not(.p-disabled):hover {
+    border-color: #667eea;
+  }
+
+  &:not(.p-disabled).p-focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+}
+
+.p-dropdown-panel {
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+
+  .p-dropdown-items .p-dropdown-item.p-highlight {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+  }
+}
+
+// Tags and Badges
+.p-tag {
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
 
   &.p-tag-success {
     background: #10b981;
   }
 
-  &.p-tag-warn {
+  &.p-tag-warning {
     background: #f59e0b;
   }
 
@@ -342,139 +331,157 @@
   &.p-tag-info {
     background: #3b82f6;
   }
+}
 
-  &.p-tag-secondary {
-    background: #6c757d;
+.p-badge {
+  border-radius: var(--border-radius-md);
+
+  &.p-badge-success {
+    background: #10b981;
+  }
+
+  &.p-badge-warning {
+    background: #f59e0b;
+  }
+
+  &.p-badge-danger {
+    background: #ef4444;
+  }
+
+  &.p-badge-info {
+    background: #3b82f6;
   }
 }
 
-// Progress Bars - Enhanced styling with proper spacing
+// Progress Bars
 .p-progressbar {
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
   background: rgba(102, 126, 234, 0.1);
-  height: 1.25rem;
-  margin: 0.5rem 0;
 
   .p-progressbar-value {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
+  }
+}
+
+// Toast Messages
+.p-toast {
+  .p-toast-message {
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+
+    &.p-toast-message-success {
+      background: #10b981;
+      border: none;
+    }
+
+    &.p-toast-message-error {
+      background: #ef4444;
+      border: none;
+    }
+
+    &.p-toast-message-warn {
+      background: #f59e0b;
+      border: none;
+    }
+
+    &.p-toast-message-info {
+      background: #3b82f6;
+      border: none;
+    }
+  }
+}
+
+// Menus
+.p-menu {
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
+
+  .p-menuitem-link {
+    transition: all 0.2s ease;
+
+    &:not(.p-disabled):hover {
+      background: rgba(102, 126, 234, 0.05);
+    }
+
+    &:focus {
+      box-shadow: inset 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+  }
+}
+
+// Sidebar
+.p-sidebar {
+  box-shadow: var(--shadow-xl);
+
+  .p-sidebar-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+
+    .p-sidebar-close {
+      color: white;
+
+      &:enabled:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+    }
   }
 
-  .p-progressbar-label {
-    padding: 0 0.5rem;
-    font-size: 0.75rem;
+  .p-sidebar-content {
+    padding: 1.5rem;
+  }
+}
+
+// Panel
+.p-panel {
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+
+  .p-panel-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
     font-weight: 600;
   }
+}
 
-  &.h-2 {
-    height: 0.5rem;
+// Confirm Dialog
+.p-confirmdialog {
+  .p-dialog-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+}
 
-    .p-progressbar-label {
-      display: none;
+// Calendar
+.p-calendar {
+  .p-inputtext {
+    border: 2px solid rgba(102, 126, 234, 0.2);
+  }
+}
+
+.p-datepicker {
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+
+  .p-datepicker-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+
+    .p-datepicker-prev,
+    .p-datepicker-next {
+      color: white;
+
+      &:enabled:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
     }
   }
-}
 
-// Messages - Enhanced styling with proper spacing
-.p-message {
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  margin: 1rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-
-  .p-message-icon {
-    font-size: 1.25rem;
-    margin-right: 0.75rem;
-  }
-
-  .p-message-text {
-    flex: 1;
-    font-size: 0.9375rem;
-    line-height: 1.5;
-  }
-
-  .p-message-close {
-    margin-left: 0.75rem;
-  }
-
-  &.p-message-error {
-    background-color: #fee2e2;
-    color: #991b1b;
-    border-color: #f87171;
-  }
-
-  &.p-message-success {
-    background-color: #d1fae5;
-    color: #065f46;
-    border-color: #34d399;
-  }
-
-  &.p-message-info {
-    background-color: #dbeafe;
-    color: #1e40af;
-    border-color: #60a5fa;
-  }
-
-  &.p-message-warn {
-    background-color: #fef3c7;
-    color: #92400e;
-    border-color: #fbbf24;
-  }
-}
-
-// Skeleton - Enhanced styling with proper spacing
-.p-skeleton {
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: 8px;
-  margin: 0.5rem 0;
-
-  &.p-skeleton-circle {
-    border-radius: 50%;
-  }
-
-  &.mb-4 {
-    margin-bottom: 1rem;
-  }
-}
-
-@keyframes skeleton-loading {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-// Chip - Enhanced styling with proper spacing
-.p-chip {
-  border-radius: 16px;
-  padding: 0.625rem 1rem;
-  font-weight: 500;
-  gap: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-
-  .p-chip-icon {
-    margin-right: 0.5rem;
-    font-size: 1rem;
-  }
-
-  .p-chip-text {
-    font-size: 0.9375rem;
-  }
-
-  .p-chip-remove-icon {
-    margin-left: 0.5rem;
-    font-size: 0.875rem;
-    cursor: pointer;
-
-    &:hover {
-      opacity: 0.7;
-    }
+  table td > span.p-highlight {
+    background: #667eea;
   }
 }

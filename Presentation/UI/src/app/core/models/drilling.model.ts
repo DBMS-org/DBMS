@@ -38,16 +38,11 @@ export interface DrillLocation {
   // Context
   projectId: number;
   siteId: number;
-
-  // Completion tracking
-  isCompleted?: boolean;
-  completedAt?: Date;
-  completedByUserId?: number;
-
+  
   // Metadata
   createdAt: Date;
   updatedAt: Date;
-
+  
   // Computed Properties
   has3DData: boolean;
   requiresFallbackTo2D: boolean;
@@ -257,9 +252,6 @@ export class DrillModelConverter {
       burden: drillPoint.burden || 2.5,
       projectId: drillPoint.projectId || 0,
       siteId: drillPoint.siteId || 0,
-      isCompleted: drillPoint.isCompleted || false,
-      completedAt: drillPoint.completedAt ? new Date(drillPoint.completedAt) : undefined,
-      completedByUserId: drillPoint.completedByUserId,
       createdAt: drillPoint.createdAt ? new Date(drillPoint.createdAt) : new Date(),
       updatedAt: drillPoint.updatedAt ? new Date(drillPoint.updatedAt) : new Date(),
       has3DData: false,
