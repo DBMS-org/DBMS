@@ -1,1 +1,1 @@
-update
+Add reports route to machine manager navigation
