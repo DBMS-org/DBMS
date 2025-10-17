@@ -1,1 +1,1 @@
-redesign reports page with modern card layout and improved UX
+design for the reports component
