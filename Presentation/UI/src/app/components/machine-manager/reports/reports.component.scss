@@ -1,5 +1,5 @@
 // ============================================
-// MECHANICAL ENGINEER REPORTS - PROFESSIONAL DESIGN
+// MACHINE MANAGER REPORTS - PROFESSIONAL DESIGN
 // ============================================
 
 :host {
@@ -254,24 +254,24 @@
       color: white;
     }
 
-    &.icon-maintenance-summary {
+    &.icon-machine-utilization {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    &.icon-assignment-history {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    &.icon-inventory-status {
       background: linear-gradient(135deg, #10b981, #059669);
       box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
     }
 
-    &.icon-accessory-usage {
+    &.icon-maintenance-costs {
       background: linear-gradient(135deg, #f59e0b, #d97706);
       box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-    }
-
-    &.icon-service-alerts {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-    }
-
-    &.icon-maintenance-history {
-      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
     }
   }
 

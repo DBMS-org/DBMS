@@ -12,19 +12,19 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-interface MaintenanceReport {
+interface MachineReport {
   id: string;
   name: string;
   description: string;
   icon: string;
-  category: 'maintenance-summary' | 'accessory-usage' | 'service-alerts' | 'maintenance-history';
+  category: 'machine-utilization' | 'assignment-history' | 'inventory-status' | 'maintenance-costs';
 }
 
 interface ReportFilters {
   machine?: string;
   dateFrom?: Date | null;
   dateTo?: Date | null;
-  maintenanceType?: string;
+  reportType?: string;
 }
 
 @Component({
@@ -54,7 +54,7 @@ export class ReportsComponent implements OnInit {
 
   // Component state
   isLoading = signal(false);
-  selectedReport = signal<MaintenanceReport | null>(null);
+  selectedReport = signal<MachineReport | null>(null);
   isGenerating = signal(false);
   showFilters = signal(false);
 
@@ -62,11 +62,11 @@ export class ReportsComponent implements OnInit {
   filterForm!: FormGroup;
 
   // Available reports
-  reports = signal<MaintenanceReport[]>([]);
+  reports = signal<MachineReport[]>([]);
 
   // Dropdown options
   machines = signal<any[]>([]);
-  maintenanceTypes = ['Preventive', 'Corrective', 'Predictive', 'Emergency'];
+  reportTypes = ['All Machines', 'By Location', 'By Status', 'By Age'];
 
   ngOnInit() {
     this.initializeFilterForm();
@@ -79,42 +79,42 @@ export class ReportsComponent implements OnInit {
       machine: [''],
       dateFrom: [null],
       dateTo: [null],
-      maintenanceType: ['']
+      reportType: ['']
     });
   }
 
   private loadReports() {
-    const maintenanceReports: MaintenanceReport[] = [
+    const machineReports: MachineReport[] = [
       {
         id: 'report-1',
-        name: 'Maintenance Summary Report',
-        description: 'Overview of scheduled vs completed vs pending maintenance activities',
-        icon: 'summarize',
-        category: 'maintenance-summary'
+        name: 'Machine Utilization Report',
+        description: 'Track machine usage, idle time, and operational efficiency metrics',
+        icon: 'insights',
+        category: 'machine-utilization'
       },
       {
         id: 'report-2',
-        name: 'Accessory Usage Report',
-        description: 'Accessories and spare parts used during maintenance operations',
-        icon: 'inventory',
-        category: 'accessory-usage'
+        name: 'Assignment History Report',
+        description: 'Complete history of machine assignments, operators, and project allocations',
+        icon: 'history',
+        category: 'assignment-history'
       },
       {
         id: 'report-3',
-        name: 'Service Alerts Report',
-        description: 'Record of all service alerts received and their resolution status',
-        icon: 'notifications_active',
-        category: 'service-alerts'
+        name: 'Inventory Status Report',
+        description: 'Current inventory levels, machine availability, and location tracking',
+        icon: 'inventory_2',
+        category: 'inventory-status'
       },
       {
         id: 'report-4',
-        name: 'Maintenance History Report',
-        description: 'Detailed maintenance logs filtered by date, machine, or type',
-        icon: 'history',
-        category: 'maintenance-history'
+        name: 'Maintenance Costs Report',
+        description: 'Analysis of maintenance expenses, part costs, and budget tracking',
+        icon: 'payments',
+        category: 'maintenance-costs'
       }
     ];
-    this.reports.set(maintenanceReports);
+    this.reports.set(machineReports);
   }
 
   private loadMachines() {
@@ -127,12 +127,12 @@ export class ReportsComponent implements OnInit {
     this.machines.set(machines);
   }
 
-  selectReport(report: MaintenanceReport) {
+  selectReport(report: MachineReport) {
     this.selectedReport.set(report);
     this.showFilters.set(true);
   }
 
-  exportReport(format: 'pdf' | 'csv', report?: MaintenanceReport) {
+  exportReport(format: 'pdf' | 'csv', report?: MachineReport) {
     const selectedRep = report || this.selectedReport();
     if (!selectedRep) {
       this.snackBar.open('Please select a report first', 'Close', {

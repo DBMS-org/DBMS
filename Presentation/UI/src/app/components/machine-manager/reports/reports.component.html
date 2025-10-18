@@ -3,10 +3,10 @@
   <header class="page-header">
     <div class="header-content">
       <div class="header-title">
-        <mat-icon class="header-icon">assessment</mat-icon>
+        <mat-icon class="header-icon">analytics</mat-icon>
         <div class="title-text">
-          <h1>Maintenance Reports</h1>
-          <p class="subtitle">Generate and export comprehensive maintenance reports</p>
+          <h1>Machine Reports</h1>
+          <p class="subtitle">Generate comprehensive machine management reports</p>
         </div>
       </div>
       <div class="header-actions">
@@ -110,7 +110,7 @@
 
           <mat-card-content>
             <div class="filter-subtitle">
-              <mat-icon>assessment</mat-icon>
+              <mat-icon>analytics</mat-icon>
               <span>{{ selectedReport()?.name }}</span>
             </div>
 
@@ -148,14 +148,14 @@
                 </mat-form-field>
               </div>
 
-              <!-- Maintenance Type Filter -->
+              <!-- Report Type Filter -->
               <div class="form-group">
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Maintenance Type</mat-label>
-                  <mat-icon matPrefix>build</mat-icon>
-                  <mat-select formControlName="maintenanceType">
+                  <mat-label>Report Type</mat-label>
+                  <mat-icon matPrefix>analytics</mat-icon>
+                  <mat-select formControlName="reportType">
                     <mat-option value="">All Types</mat-option>
-                    @for (type of maintenanceTypes; track type) {
+                    @for (type of reportTypes; track type) {
                       <mat-option [value]="type">{{ type }}</mat-option>
                     }
                   </mat-select>
