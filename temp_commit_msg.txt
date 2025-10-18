@@ -1,1 +1,1 @@
-edited machine manager, operator and mechanical engineer for consistant design and style
+Merge branch 'master' of https://github.com/DBMS-org/DBMS
