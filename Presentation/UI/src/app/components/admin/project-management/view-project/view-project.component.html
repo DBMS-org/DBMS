@@ -75,9 +75,8 @@
               <p><i class="fas fa-map-marker-alt"></i> {{ site.location }}</p>
               <p *ngIf="site.description">{{ site.description }}</p>
               <p class="site-coords" *ngIf="site.coordinates">
-                <i class="fas fa-globe"></i> 
-                Lat: {{ site.coordinates.latitude }}, 
-                Lng: {{ site.coordinates.longitude }}
+                <i class="fas fa-globe"></i>
+                {{ site.coordinates }}
               </p>
             </div>
           </div>

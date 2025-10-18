@@ -1,1 +1,1 @@
-design for the reports component
+edited machine manager, operator and mechanical engineer for consistant design and style
