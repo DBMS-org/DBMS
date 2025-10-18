@@ -9,6 +9,7 @@ import { MyMachinesComponent } from './my-machines/my-machines.component';
 import { SiteDetailsComponent } from './site-details/site-details.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 import { OperatorNotificationsComponent } from './notifications/notifications.component';
+import { OperatorReportsComponent } from './reports/reports.component';
 
 export const OPERATOR_ROUTES: Routes = [
     {
@@ -24,6 +25,7 @@ export const OPERATOR_ROUTES: Routes = [
             { path: 'my-project/sites/:siteId/details', component: SiteDetailsComponent },
             { path: 'maintenance-reports', component: MaintenanceReportsComponent },
             { path: 'my-machines', component: MyMachinesComponent },
+            { path: 'reports', component: OperatorReportsComponent },
             { path: 'notifications', component: OperatorNotificationsComponent }
         ]
     }

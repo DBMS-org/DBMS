@@ -45,18 +45,29 @@ import { AuthService } from '../../../core/services/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="maintenance-reports-container">
+      <!-- Page Header -->
       <header class="page-header">
-        <h1>My Reports</h1>
-        <button 
-          mat-raised-button 
-          color="primary" 
-          class="submit-report-btn" 
-          (click)="toggleReportForm()"
-          [attr.aria-expanded]="showReportForm()"
-          aria-controls="report-form">
-          <mat-icon>{{ showReportForm() ? 'close' : 'add' }}</mat-icon>
-          {{ showReportForm() ? 'Cancel' : 'Submit Report' }}
-        </button>
+        <div class="header-content">
+          <div class="header-title">
+            <mat-icon class="header-icon">description</mat-icon>
+            <div class="title-text">
+              <h1>Maintenance Reports</h1>
+              <p class="subtitle">Submit and track machine maintenance reports</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button
+              mat-raised-button
+              color="primary"
+              class="submit-report-btn"
+              (click)="toggleReportForm()"
+              [attr.aria-expanded]="showReportForm()"
+              aria-controls="report-form">
+              <mat-icon>{{ showReportForm() ? 'close' : 'add' }}</mat-icon>
+              {{ showReportForm() ? 'Cancel' : 'Submit Report' }}
+            </button>
+          </div>
+        </div>
       </header>
 
       @if (isLoading()) {
@@ -252,48 +263,144 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `,
   styles: [`
+    /* ============================================ */
+    /* OPERATOR MAINTENANCE REPORTS - PROFESSIONAL DESIGN */
+    /* ============================================ */
+
     .maintenance-reports-container {
-      padding: 1rem;
-      max-width: 1200px;
-      margin: 0 auto;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+      padding: 2rem;
     }
 
+    /* ============================================ */
+    /* PAGE HEADER */
+    /* ============================================ */
+
     .page-header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
+      gap: 2rem;
     }
 
-    .page-header h1 {
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .header-icon {
+      width: 56px;
+      height: 56px;
+      font-size: 56px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .title-text h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
       margin: 0;
-      color: #333;
-      font-weight: 500;
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 400;
     }
 
-    .submit-report-btn {
+    .header-actions .submit-report-btn {
+      padding: 0.75rem 1.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-height: 44px;
+      backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
+    .header-actions .submit-report-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .submit-report-btn mat-icon {
+      font-size: 1.2rem;
+    }
+
+    /* ============================================ */
+    /* LOADING STATE */
+    /* ============================================ */
 
     .loading-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem;
-      gap: 1rem;
+      justify-content: center;
+      padding: 4rem 2rem;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      gap: 1.5rem;
     }
 
-    .submit-form-card {
-      margin-bottom: 1.5rem;
-      border-left: 4px solid #2196f3;
+    .loading-container p {
+      font-size: 1.1rem;
+      color: #6b7280;
+      font-weight: 500;
     }
+
+    /* ============================================ */
+    /* SUBMIT FORM CARD */
+    /* ============================================ */
+
+    .submit-form-card {
+      margin-bottom: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 2px solid #667eea;
+      overflow: hidden;
+    }
+
+    .submit-form-card ::ng-deep .mat-mdc-card-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1.5rem;
+    }
+
+    .submit-form-card ::ng-deep .mat-mdc-card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    /* ============================================ */
+    /* FORM ELEMENTS */
+    /* ============================================ */
 
     .form-row {
       display: flex;
       gap: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
 
     .full-width {
@@ -308,79 +415,201 @@ import { AuthService } from '../../../core/services/auth.service';
       display: flex;
       justify-content: flex-end;
       gap: 1rem;
+      padding-top: 1.5rem;
       margin-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
     }
 
+    .form-actions button {
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-height: 44px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-actions button mat-icon {
+      font-size: 1.2rem;
+    }
+
+    /* ============================================ */
+    /* REPORTS SUMMARY */
+    /* ============================================ */
+
     .reports-summary {
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
     }
 
     .stat-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
     }
 
     .stat-card {
       text-align: center;
-      border-left: 4px solid;
+      border-radius: 16px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 2px solid transparent;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     }
 
     .stat-card.pending {
-      border-left-color: #ff9800;
+      border-color: #f59e0b;
+      background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
     }
 
     .stat-card.in-progress {
-      border-left-color: #2196f3;
+      border-color: #3b82f6;
+      background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%);
     }
 
     .stat-card.completed {
-      border-left-color: #4caf50;
+      border-color: #10b981;
+      background: linear-gradient(135deg, #d1fae5 0%, #ffffff 100%);
+    }
+
+    .stat-card ::ng-deep .mat-mdc-card-content {
+      padding: 2rem 1.5rem;
     }
 
     .stat-item {
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: 0.75rem;
     }
 
     .stat-number {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #333;
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .stat-card.pending .stat-number {
+      color: #f59e0b;
+    }
+
+    .stat-card.in-progress .stat-number {
+      color: #3b82f6;
+    }
+
+    .stat-card.completed .stat-number {
+      color: #10b981;
     }
 
     .stat-label {
       font-size: 0.875rem;
-      color: #666;
+      color: #6b7280;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      font-weight: 700;
     }
 
+    /* ============================================ */
+    /* REPORT HISTORY CARD */
+    /* ============================================ */
+
     .report-history-card {
-      border-left: 4px solid #4caf50;
+      border-radius: 16px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 2px solid #667eea;
+      overflow: hidden;
     }
+
+    .report-history-card ::ng-deep .mat-mdc-card-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1.5rem;
+    }
+
+    .report-history-card ::ng-deep .mat-mdc-card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .report-history-card ::ng-deep .mat-mdc-card-subtitle {
+      color: #6b7280;
+      font-weight: 500;
+      margin-top: 0.25rem;
+    }
+
+    /* ============================================ */
+    /* EMPTY STATE */
+    /* ============================================ */
 
     .empty-state {
       text-align: center;
-      padding: 3rem 1rem;
-      color: #666;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+      border-radius: 12px;
+      border: 2px dashed #d1d5db;
     }
 
     .empty-state mat-icon {
-      font-size: 3rem;
-      width: 3rem;
-      height: 3rem;
-      color: #ccc;
-      margin-bottom: 1rem;
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      color: #9ca3af;
+      margin-bottom: 1.5rem;
     }
+
+    .empty-state p {
+      color: #4b5563;
+      font-weight: 600;
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state small {
+      color: #6b7280;
+      font-size: 0.938rem;
+    }
+
+    /* ============================================ */
+    /* TABLE CONTAINER */
+    /* ============================================ */
 
     .table-container {
       overflow-x: auto;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     }
 
     .reports-table {
       width: 100%;
+      min-width: 900px;
+    }
+
+    .reports-table th {
+      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+      font-weight: 700;
+      color: #1f2937;
+      padding: 1rem 1.5rem;
+      border-bottom: 2px solid #e5e7eb;
+      text-transform: uppercase;
+      font-size: 0.813rem;
+      letter-spacing: 0.5px;
+    }
+
+    .reports-table td {
+      padding: 1.25rem 1.5rem;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .reports-table tr:last-child td {
+      border-bottom: none;
     }
 
     .category-badge,
@@ -440,11 +669,11 @@ import { AuthService } from '../../../core/services/auth.service';
     }
 
     .report-row {
-      transition: background-color 0.2s ease;
-    }
+      transition: background-color 0.2s;
 
-    .report-row:hover {
-      background-color: #f8f9fa;
+      &:hover {
+        background-color: #f9f9f9;
+      }
     }
 
     .description-cell {
@@ -485,12 +714,12 @@ import { AuthService } from '../../../core/services/auth.service';
 
     .date {
       font-weight: 500;
-      color: #212529;
+      color: #333;
     }
 
     .time {
-      color: #6c757d;
-      font-size: 0.75rem;
+      font-size: 12px;
+      color: #666;
     }
 
     .action-button {
@@ -508,10 +737,12 @@ import { AuthService } from '../../../core/services/auth.service';
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 4px 8px;
+      padding: 0 12px;
+      min-height: 24px;
+      height: 24px;
       border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -569,15 +800,38 @@ import { AuthService } from '../../../core/services/auth.service';
       color: white;
     }
 
+    /* ============================================ */
+    /* RESPONSIVE DESIGN */
+    /* ============================================ */
+
     @media (max-width: 768px) {
       .maintenance-reports-container {
-        padding: 0.75rem;
+        padding: 1rem;
       }
 
       .page-header {
+        padding: 1.5rem;
+      }
+
+      .header-content {
         flex-direction: column;
         align-items: stretch;
+      }
+
+      .header-title {
+        flex-direction: column;
+        align-items: flex-start;
         gap: 1rem;
+      }
+
+      .header-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 48px;
+      }
+
+      .title-text h1 {
+        font-size: 1.75rem;
       }
 
       .form-row {
@@ -592,8 +846,16 @@ import { AuthService } from '../../../core/services/auth.service';
         grid-template-columns: 1fr;
       }
 
-      .submit-report-btn { 
-        width: 100%; 
+      .submit-report-btn {
+        width: 100%;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .form-actions button {
+        width: 100%;
       }
     }
   `]
