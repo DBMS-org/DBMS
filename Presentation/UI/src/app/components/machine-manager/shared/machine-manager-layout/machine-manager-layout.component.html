@@ -1,13 +1,7 @@
-<!-- Main layout container for machine manager interface -->
 <div class="machine-manager-layout">
-  <!-- Top navigation bar with sidebar toggle -->
   <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
-
-  <!-- Content area with sidebar and main content -->
   <div class="machine-manager-content" [class.sidebar-collapsed]="isSidebarCollapsed">
     <app-sidebar [isCollapsed]="isSidebarCollapsed"></app-sidebar>
-
-    <!-- Main content area where routed components render -->
     <main class="main-content">
       <router-outlet></router-outlet>
     </main>

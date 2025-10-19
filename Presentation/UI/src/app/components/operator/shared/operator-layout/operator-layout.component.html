@@ -1,16 +1,9 @@
-<!-- Main layout container for operator interface -->
 <div class="operator-layout">
-  <!-- Top navigation bar with sidebar toggle -->
   <app-operator-navbar (toggleSidebar)="toggleSidebar()"></app-operator-navbar>
-
-  <!-- Content area with sidebar and main content -->
   <div class="operator-content" [class.sidebar-collapsed]="isSidebarCollapsed">
     <app-operator-sidebar [isCollapsed]="isSidebarCollapsed"></app-operator-sidebar>
-
-    <!-- Mobile backdrop to close sidebar when tapped -->
+    <!-- Mobile backdrop to close sidebar when open -->
     <div class="backdrop" [class.visible]="!isSidebarCollapsed" (click)="toggleSidebar()"></div>
-
-    <!-- Main content area where routed components render -->
     <main class="main-content">
       <router-outlet></router-outlet>
     </main>
