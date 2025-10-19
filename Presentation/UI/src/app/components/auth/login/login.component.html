@@ -86,24 +86,26 @@
         </div>
 
         <!-- Global Error Message -->
-        <p-message
+        <div
+          class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600 text-sm font-medium flex items-center gap-2"
           *ngIf="errorMessage"
-          severity="error"
-          [text]="errorMessage"
-          styleClass="w-full"
-        ></p-message>
+        >
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
 
         <!-- Login Button -->
-        <p-button
+        <button
+          pButton
           type="submit"
           [label]="isLoading ? 'Signing in...' : 'Sign In'"
           icon="pi pi-sign-in"
           [loading]="isLoading"
           [disabled]="!loginForm.valid || isLoading"
-          styleClass="w-full mt-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+          class="w-full mt-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
           [attr.aria-label]="'Sign in to your account'"
-          [title]="'Sign in to your account'"
-        ></p-button>
+          title="Sign in to your account"
+        ></button>
 
         <!-- Additional Actions -->
         <div class="flex justify-center mt-4">

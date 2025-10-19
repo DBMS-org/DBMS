@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-// PrimeNG Standalone Components
-import { InputText } from 'primeng/inputtext';
-import { Button } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-verify-reset-code',
@@ -14,8 +14,9 @@ import { Button } from 'primeng/button';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    InputText,
-    Button
+    InputTextModule,
+    ButtonModule,
+    MessageModule
   ],
   templateUrl: './verify-reset-code.component.html',
   styleUrls: ['./verify-reset-code.component.scss']

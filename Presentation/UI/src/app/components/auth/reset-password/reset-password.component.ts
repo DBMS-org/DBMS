@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-// PrimeNG Standalone Components
-import { Button } from 'primeng/button';
-import { Password } from 'primeng/password';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { PasswordModule } from 'primeng/password';
+import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-reset-password',
@@ -14,8 +15,10 @@ import { Password } from 'primeng/password';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    Button,
-    Password
+    InputTextModule,
+    ButtonModule,
+    PasswordModule,
+    MessageModule
   ],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss']
