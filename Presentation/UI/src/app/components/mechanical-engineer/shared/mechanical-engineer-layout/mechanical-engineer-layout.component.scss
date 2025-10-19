@@ -1,3 +1,4 @@
+// Full viewport layout container
 .mechanical-engineer-layout {
   min-height: 100vh;
   display: flex;
@@ -5,30 +6,32 @@
   background-color: #f8f9fa;
 }
 
+// Content area below fixed navbar
 .mechanical-engineer-content {
   display: flex;
   flex: 1;
   position: relative;
-  margin-top: 64px; // Height of navbar
+  margin-top: 64px;
 }
 
+// Main content area adjusts based on sidebar state
 .main-content {
   flex: 1;
   padding: 2rem;
-  /* Keep space for sidebar while centering readable content */
   margin-left: 250px;
   max-width: 1280px;
   margin-right: auto;
   transition: margin-left 0.3s ease;
 }
 
+// Adjust layout when sidebar collapses
 .sidebar-collapsed {
   .main-content {
     margin-left: 70px;
   }
 }
 
-/* Responsive adjustments for better readability across screens */
+// Responsive adjustments for better readability
 @media (max-width: 1200px) {
   .main-content {
     padding: 1.5rem;
@@ -39,7 +42,7 @@
 @media (max-width: 992px) {
   .main-content {
     padding: 1.25rem;
-    margin-left: 70px; /* default to collapsed spacing on smaller screens */
+    margin-left: 70px;
     max-width: 900px;
   }
 }
@@ -47,7 +50,7 @@
 @media (max-width: 768px) {
   .main-content {
     padding: 1rem;
-    margin-left: 0; /* stack layout for mobile */
+    margin-left: 0;
     max-width: 100%;
   }
 }
