@@ -64,58 +64,92 @@
     </div>
 
     <div class="users-table">
-      @if (filteredUsers.length === 0) {
-        <div class="no-users">
-          <i class="material-icons">person_off</i>
-          <p>No users found</p>
-          @if (searchQuery || statusFilter) {
-            <button (click)="searchQuery = ''; statusFilter = ''; onSearch()" class="clear-filters-btn">
-              Clear Filters
-            </button>
-          }
-        </div>
-      } @else {
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Oman Phone</th>
-              <th>Region</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (user of filteredUsers; track user.id) {
-              <tr>
-                <td>{{user.name}}</td>
-                <td>{{user.email}}</td>
-                <td>{{user.role}}</td>
-                <td>{{user.omanPhone}}</td>
-                <td>{{user.region}}</td>
-                <td>
-                  <span class="status-badge" [class.active]="user.status === 'Active'">
-                    {{user.status}}
-                  </span>
-                </td>
-                <td class="actions">
-                  <button class="action-btn details" (click)="showUserDetails(user)" title="View Details">
-                    <i class="material-icons">visibility</i>
+      <p-table
+        [value]="filteredUsers"
+        styleClass="p-datatable-sm p-datatable-striped"
+        responsiveLayout="scroll"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} users"
+        [tableStyle]="{ 'min-width': '50rem' }"
+      >
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="text-center">
+              <div class="no-users">
+                <i class="material-icons">person_off</i>
+                <p>No users found</p>
+                @if (searchQuery || statusFilter) {
+                  <button (click)="searchQuery = ''; statusFilter = ''; onSearch()" class="clear-filters-btn">
+                    Clear Filters
                   </button>
-                  <button class="action-btn edit" (click)="editUser(user.id)" title="Edit User">
-                    <i class="material-icons">edit</i>
-                  </button>
-                  <button class="action-btn delete" (click)="deleteUser(user.id)" title="Delete User">
-                    <i class="material-icons">delete</i>
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Oman Phone</th>
+            <th>Region</th>
+            <th>Status</th>
+            <th style="width: 10rem">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-user>
+          <tr>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ user.omanPhone }}</td>
+            <td>{{ user.region }}</td>
+            <td>
+              <p-tag
+                [value]="user.status"
+                [severity]="user.status === 'Active' ? 'success' : 'danger'"
+              ></p-tag>
+            </td>
+            <td>
+              <div class="flex gap-2">
+                <p-button
+                  icon="pi pi-eye"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="info"
+                  (onClick)="showUserDetails(user)"
+                  [pTooltip]="'View Details'"
+                  tooltipPosition="top"
+                ></p-button>
+                <p-button
+                  icon="pi pi-pencil"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="warn"
+                  (onClick)="editUser(user.id)"
+                  [pTooltip]="'Edit User'"
+                  tooltipPosition="top"
+                ></p-button>
+                <p-button
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  (onClick)="deleteUser(user.id)"
+                  [pTooltip]="'Delete User'"
+                  tooltipPosition="top"
+                ></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
   }
 </div>
