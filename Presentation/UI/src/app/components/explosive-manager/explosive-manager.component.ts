@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { ExplosiveManagerLayoutComponent } from './shared/explosive-manager-layout/explosive-manager-layout.component';
 
+// Root component for the Explosive Manager module
 @Component({
   selector: 'app-explosive-manager',
   standalone: true,

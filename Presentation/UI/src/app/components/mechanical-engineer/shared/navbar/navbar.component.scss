@@ -1,3 +1,4 @@
+// Fixed navigation bar at top
 .navbar {
   height: 70px;
   background-color: rgba(255, 255, 255, 0.98);
@@ -16,6 +17,7 @@
   -webkit-backdrop-filter: blur(20px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
+  // Decorative gradient line on hover
   &::after {
     content: '';
     position: absolute;
@@ -33,10 +35,12 @@
   }
 }
 
+// Left section with menu and branding
 .navbar-left {
   display: flex;
   align-items: center;
 
+  // Menu toggle button
   .menu-btn {
     background: none;
     border: none;
@@ -92,18 +96,21 @@
   }
 }
 
+// Right section with user menu
 .navbar-right {
   display: flex;
   align-items: center;
 }
 
+// User menu with profile and logout
 .user-menu {
   display: flex;
   align-items: center;
   gap: 15px;
   padding: 5px 10px;
   border-radius: 4px;
-  
+
+  // User profile info section
   .user-info {
     display: flex;
     align-items: center;
@@ -138,6 +145,7 @@
     }
   }
 
+  // Logout button
   .logout-btn {
     background: none;
     border: 1.5px solid #e5e7eb;
@@ -162,23 +170,24 @@
   }
 }
 
+// Mobile responsive styles
 @media (max-width: 768px) {
   .navbar {
     padding: 0 10px;
   }
-  
+
   .navbar-left {
     .brand {
       font-size: 1.1rem;
     }
   }
-  
+
   .user-menu {
     gap: 10px;
-    
+
     .user-info {
       padding: 2px 5px;
-      
+
       .user-role {
         display: none;
       }
