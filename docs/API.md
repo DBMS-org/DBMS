@@ -1,13 +1,47 @@
 # API Documentation
 
-Complete REST API reference for the DBMS (Drilling & Blasting Management System).
-
-**Base URL**: `https://localhost:5019/api`
-**Authentication**: JWT Bearer tokens (except where marked `[AllowAnonymous]`)
+> **Document Type:** REST API Reference
+> **Version:** 2.0 | **Last Updated:** 2025-10-20
+> **Base URL:** `https://localhost:5019/api`
+> **Authentication:** JWT Bearer tokens (except where marked 🔓)
+> **Status:** 🟢 Production-Ready
 
 ---
 
-## Table of Contents
+## 🚀 Quick Start
+
+```bash
+# 1. Login to get JWT token
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "username": "your-username",
+  "password": "your-password"
+}
+
+# 2. Use token in subsequent requests
+GET /api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+---
+
+## 📋 API Module Overview
+
+| Module | Endpoints | Authentication | Primary Use |
+|--------|-----------|----------------|-------------|
+| [Authentication](#authentication) | 7 endpoints | 🔓 Public | Login, register, password reset |
+| [User Management](#user-management) | 6 endpoints | 🔒 Required | User CRUD operations |
+| [Project Management](#project-management) | 9 endpoints | 🔒 Required | Project and site management |
+| [Drilling Operations](#drilling-operations) | 8 endpoints | 🔒 Required | Drill hole planning |
+| [Blasting Operations](#blasting-operations) | 5 endpoints | 🔒 Required | Blast execution |
+| [Store Management](#store-management) | 10 endpoints | 🔒 Required | Inventory management |
+| [Machines](#machines) | 5 endpoints | 🔒 Required | Equipment tracking |
+
+---
+
+## 📚 Table of Contents
 
 1. [Authentication](#authentication)
 2. [User Management](#user-management)
@@ -985,4 +1019,53 @@ Delete assignment.
 
 ---
 
-**Last Updated**: October 2, 2025
+## 🛠️ Testing the API
+
+### Using cURL
+
+```bash
+# Login
+curl -X POST https://localhost:5019/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password123"}'
+
+# Get users (with token)
+curl -X GET https://localhost:5019/api/users \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+### Using Postman
+
+1. Import API collection (if available)
+2. Set environment variable `baseUrl` = `https://localhost:5019`
+3. Set authorization type to "Bearer Token"
+4. Paste JWT token from login response
+
+### Using Swagger UI
+
+Navigate to `https://localhost:5019/swagger` when running in Development mode
+
+---
+
+## 📖 Document Information
+
+| Attribute | Value |
+|-----------|-------|
+| **Document Version** | 2.0 |
+| **Last Updated** | 2025-10-20 |
+| **API Version** | v1 |
+| **Review Status** | ✅ Current |
+| **Endpoints Documented** | 60+ |
+
+---
+
+## 🔗 Related Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and design patterns
+- [DATABASE.md](DATABASE.md) - Database schema and entity relationships
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - API troubleshooting guide
+- [CLAUDE.md](CLAUDE.md) - AI assistant context and codebase overview
+
+---
+
+**Last Updated**: October 20, 2025
