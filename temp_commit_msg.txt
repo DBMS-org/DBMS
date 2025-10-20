@@ -1,9 +1,1 @@
-Enhance UI components and improve code readability across the Explosive Manager and Operator modules
-
-- Added gradient background and improved styling for dashboard header and user info display in the Explosive Manager.
-- Updated dashboard component with detailed comments for better understanding of functionality.
-- Improved HTML structure and added comments for clarity in the Explosive Manager and Operator components.
-- Enhanced sidebar and navbar components with better organization and comments for navigation items.
-- Refined loading states and error handling in various components for improved user experience.
-- Updated routing configurations to ensure proper navigation within the application.
-- Improved accessibility and responsiveness in sidebar and navbar components.
+doc updates
