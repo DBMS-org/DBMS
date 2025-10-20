@@ -689,9 +689,6 @@ namespace Application.Services.DrillingOperations
                 Emulsion = drillPoint.Emulsion,
                 ProjectId = drillPoint.ProjectId,
                 SiteId = drillPoint.SiteId,
-                IsCompleted = drillPoint.IsCompleted,
-                CompletedAt = drillPoint.CompletedAt,
-                CompletedByUserId = drillPoint.CompletedByUserId,
                 CreatedAt = drillPoint.CreatedAt,
                 UpdatedAt = drillPoint.UpdatedAt
             };
@@ -714,37 +711,6 @@ namespace Application.Services.DrillingOperations
             // Implement the logic to retrieve the current user ID from the context
             // This is a placeholder and should be replaced with the actual implementation
             return Guid.NewGuid(); // Placeholder return, actual implementation needed
-        }
-
-        public async Task<bool> MarkDrillPointAsCompletedAsync(string pointId, int projectId, int siteId, int completedByUserId)
-        {
-            try
-            {
-                // Validate region access
-                if (!await ValidateRegionAccessAsync(projectId))
-                {
-                    throw new UnauthorizedAccessException($"Access denied to project {projectId}");
-                }
-
-                var result = await _drillPointRepository.MarkAsCompletedAsync(pointId, projectId, siteId, completedByUserId);
-
-                if (result)
-                {
-                    _logger.LogInformation("Drill point {PointId} marked as completed by user {UserId}",
-                        pointId, completedByUserId);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to mark drill point {PointId} as completed", pointId);
-                }
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error marking drill point {PointId} as completed", pointId);
-                throw;
-            }
         }
     }
 }

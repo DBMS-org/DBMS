@@ -35,15 +35,15 @@
   <div *ngIf="!loading && !error && site" class="site-content">
     <!-- Navigation Tabs -->
     <div class="tab-navigation">
-      <button class="tab-button"
+      <button class="tab-button" 
               [class.active]="activeTab === 'overview'"
               (click)="setActiveTab('overview')">
         <i class="fas fa-info-circle"></i> Overview
       </button>
-      <button class="tab-button"
-              [class.active]="activeTab === 'drill-points'"
-              (click)="setActiveTab('drill-points')">
-        <i class="fas fa-map-marker-alt"></i> Drill Points
+      <button class="tab-button" 
+              [class.active]="activeTab === 'drill-plan'"
+              (click)="setActiveTab('drill-plan')">
+        <i class="fas fa-drill"></i> Drill Plan
       </button>
     </div>
 
@@ -90,90 +90,53 @@
         </div>
       </div>
 
-      <!-- Drill Points Tab -->
-      <div *ngIf="activeTab === 'drill-points'" class="tab-panel">
-        <div class="calculations-header">
-          <h3>Drill Points</h3>
-          <p>View all drill points defined for this site.</p>
+      <!-- Drill Plan Tab -->
+      <div *ngIf="activeTab === 'drill-plan'" class="tab-panel">
+        <div class="drill-plan-header">
+          <h3>Drill Plan Details</h3>
+          <p>Follow the validated blast parameters exactly as specified.</p>
         </div>
 
-        <!-- Loading State for Drill Points -->
-        <div *ngIf="loadingDrillPoints" class="loading-container">
-          <div class="loading-spinner"></div>
-          <p>Loading drill points...</p>
-        </div>
-
-        <div *ngIf="!loadingDrillPoints" class="calculations-table">
-          <p-table
-            [value]="drillPoints"
-            [paginator]="true"
-            [rows]="10"
-            [showCurrentPageReport]="true"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} drill points"
-            [rowsPerPageOptions]="[10, 25, 50]"
-            [tableStyle]="{ 'min-width': '40rem' }"
-            styleClass="p-datatable-striped"
-            [rowHover]="true">
-
-            <ng-template pTemplate="header">
+        <div class="drill-holes-table">
+          <table>
+            <thead>
               <tr>
-                <th pSortableColumn="id">
-                  Point ID <p-sortIcon field="id" />
-                </th>
-                <th pSortableColumn="depth">
-                  Depth (m) <p-sortIcon field="depth" />
-                </th>
-                <th pSortableColumn="spacing">
-                  Spacing (m) <p-sortIcon field="spacing" />
-                </th>
-                <th pSortableColumn="burden">
-                  Burden (m) <p-sortIcon field="burden" />
-                </th>
+                <th>Hole ID</th>
+                <th>Depth (m)</th>
+                <th>Burden (m)</th>
+                <th>Spacing (m)</th>
+                <th>Stemming (m)</th>
+                <th>Charge (kg)</th>
                 <th>Status</th>
-                <th>Action</th>
+                <th>Actions</th>
               </tr>
-            </ng-template>
-
-            <ng-template pTemplate="body" let-point>
-              <tr>
-                <td><strong>{{ point.id }}</strong></td>
-                <td>{{ point.depth | number:'1.2-2' }}</td>
-                <td>{{ point.spacing | number:'1.2-2' }}</td>
-                <td>{{ point.burden | number:'1.2-2' }}</td>
+            </thead>
+            <tbody>
+              <tr *ngFor="let hole of drillHoles" [class]="'status-' + hole.status">
+                <td class="hole-id">{{ hole.id }}</td>
+                <td>{{ hole.depth }}</td>
+                <td>{{ hole.burden }}</td>
+                <td>{{ hole.spacing }}</td>
+                <td>{{ hole.stemming }}</td>
+                <td>{{ hole.chargeAmount }}</td>
                 <td>
-                  <p-tag
-                    [value]="getStatus(point.id)"
-                    [severity]="getStatus(point.id) === 'completed' ? 'success' : 'warning'"
-                    [style]="{'text-transform': 'capitalize'}">
-                  </p-tag>
+                  <span class="status-badge" [class]="'status-' + hole.status">
+                    <i class="fas" 
+                       [class.fa-clock]="hole.status === 'pending'"
+                       [class.fa-check]="hole.status === 'completed'"></i>
+                    {{ hole.status | titlecase }}
+                  </span>
                 </td>
                 <td>
-                  <button
-                    pButton
-                    type="button"
-                    label="Completed"
-                    icon="pi pi-check"
-                    [disabled]="isCompleted(point.id)"
-                    (click)="markAsCompleted(point.id)"
-                    class="p-button-sm"
-                    [class.p-button-success]="!isCompleted(point.id)"
-                    [class.p-button-secondary]="isCompleted(point.id)">
+                  <button class="action-btn" 
+                          [disabled]="hole.status === 'completed'"
+                          (click)="markDrillHoleCompleted(hole.id)">
+                    {{ hole.status === 'pending' ? 'Mark Completed' : 'Completed' }}
                   </button>
                 </td>
               </tr>
-            </ng-template>
-
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="6" class="text-center">
-                  <div class="p-4">
-                    <i class="pi pi-info-circle text-4xl text-gray-400"></i>
-                    <p class="mt-2 text-gray-500">No drill points found for this site.</p>
-                  </div>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

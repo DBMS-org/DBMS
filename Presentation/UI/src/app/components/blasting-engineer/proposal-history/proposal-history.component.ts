@@ -92,7 +92,7 @@ export class ProposalHistoryComponent implements OnInit {
                 isPatternApproved: false,
                 isSimulationConfirmed: false,
                 isOperatorCompleted: false,
-                isCompleted: false,
+                isExplosiveApprovalRequested: false,
                 createdAt: new Date(),
                 updatedAt: new Date()
               } as ProjectSite);

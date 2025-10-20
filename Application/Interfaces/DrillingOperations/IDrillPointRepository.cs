@@ -25,9 +25,5 @@ namespace Application.Interfaces.DrillingOperations
         // Pattern settings (stored separately from drill points)
         Task<PatternSettings?> GetPatternSettingsAsync(int projectId, int siteId);
         Task<PatternSettings> SavePatternSettingsAsync(int projectId, int siteId, PatternSettings settings);
-
-        // Completion tracking
-        Task<bool> MarkAsCompletedAsync(string id, int projectId, int siteId, int completedByUserId);
-        Task<bool> IsCompletedAsync(string id, int projectId, int siteId);
     }
 } 

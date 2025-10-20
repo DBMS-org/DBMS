@@ -18,9 +18,6 @@ namespace Application.DTOs.DrillingOperations
         public double Emulsion { get; set; } = 0.0;
         public int ProjectId { get; set; }
         public int SiteId { get; set; }
-        public bool IsCompleted { get; set; } = false;
-        public DateTime? CompletedAt { get; set; }
-        public int? CompletedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

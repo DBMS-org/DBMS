@@ -16,22 +16,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../shared/shared/components/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from '../../../../core/services/notification.service';
 
-// PrimeNG Imports
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { ProgressBar } from 'primeng/progressbar';
-import { Badge } from 'primeng/badge';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
-import { DatePicker } from 'primeng/datepicker';
-import { Tooltip } from 'primeng/tooltip';
-import { Divider } from 'primeng/divider';
-import { Tag } from 'primeng/tag';
-import { Chip } from 'primeng/chip';
-import { Skeleton } from 'primeng/skeleton';
-import { Message } from 'primeng/message';
-
 interface WorkflowStep {
   id: string;
   name: string;
@@ -46,24 +30,7 @@ interface WorkflowStep {
 @Component({
   selector: 'app-site-dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    Button,
-    Card,
-    ProgressBar,
-    Badge,
-    Dialog,
-    InputText,
-    InputTextarea,
-    DatePicker,
-    Tooltip,
-    Divider,
-    Tag,
-    Chip,
-    Skeleton,
-    Message
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './site-dashboard.component.html',
   styleUrls: ['./site-dashboard.component.scss']
 })
@@ -89,10 +56,7 @@ export class SiteDashboardComponent implements OnInit {
   explosiveCalculations: ExplosiveCalculationResultDto | null = null;
   totalAnfo: number = 0;
   totalEmulsion: number = 0;
-
-  // Track explosive approval status
-  hasPendingExplosiveRequest: boolean = false;
-
+  
   minDate: string = new Date().toISOString().split('T')[0];
 
   workflowSteps: WorkflowStep[] = [
@@ -199,17 +163,7 @@ export class SiteDashboardComponent implements OnInit {
         this.site = site;
         // Initialize site-specific data service
         this.blastSequenceDataService.setSiteContext(this.stateService.currentState.activeProjectId!, this.stateService.currentState.activeSiteId!);
-
-        // Check for pending explosive approval requests
-        this.siteService.hasPendingExplosiveApprovalRequest(siteId).subscribe({
-          next: (response) => {
-            this.hasPendingExplosiveRequest = response.hasPendingRequest;
-          },
-          error: () => {
-            this.hasPendingExplosiveRequest = false;
-          }
-        });
-
+        
         // Wait a moment for backend data to load before checking progress
         setTimeout(() => {
           this.loadWorkflowProgress();
@@ -491,7 +445,7 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   get isExplosiveApprovalRequested(): boolean {
-    return this.hasPendingExplosiveRequest;
+    return this.site?.isExplosiveApprovalRequested || false;
   }
 
   confirmSimulationForAdmin() {

@@ -8,26 +8,10 @@ import { UserService } from '../../../core/services/user.service';
 import { User, CreateUserRequest } from '../../../core/models/user.model';
 import { NotificationService } from '../../../core/services/notification.service';
 
-// PrimeNG Components (v19+)
-// Note: Table still uses Module pattern, other components use standalone
-import { TableModule } from 'primeng/table';
-import { Button } from 'primeng/button';
-import { Tag } from 'primeng/tag';
-import { Tooltip } from 'primeng/tooltip';
-
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    AddUserComponent,
-    AssignUserComponent,
-    TableModule,
-    Button,
-    Tag,
-    Tooltip
-  ],
+  imports: [CommonModule, FormsModule, AddUserComponent, AssignUserComponent],
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss']
 })
