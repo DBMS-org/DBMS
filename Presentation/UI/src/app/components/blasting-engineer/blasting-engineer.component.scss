@@ -1,3 +1,4 @@
+// Main container layout for blasting engineer page
 .blasting-engineer-container {
   display: flex;
   flex-direction: column;
@@ -6,10 +7,12 @@
   gap: 20px;
 }
 
+// CSV upload section with fixed height
 app-csv-upload {
   flex: 0 0 auto;
 }
 
+// Drill visualization section takes remaining space
 app-drill-visualization {
   flex: 1 1 auto;
   min-height: 0;

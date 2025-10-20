@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
+// Navigation item structure
 interface NavItem {
   icon: string;
   label: string;
@@ -16,8 +17,10 @@ interface NavItem {
   styleUrl: './sidebar.component.scss'
 })
 export class OperatorSidebarComponent {
+  // Control sidebar collapsed state
   @Input() isCollapsed = false;
 
+  // Define navigation menu items
   navItems: NavItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/operator/dashboard' },
     { icon: 'assignment', label: 'My Assigned Project', route: '/operator/my-project' },
