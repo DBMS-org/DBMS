@@ -1,4 +1,4 @@
-// Full viewport layout container
+// Full height layout container
 .mechanical-engineer-layout {
   min-height: 100vh;
   display: flex;
@@ -6,7 +6,7 @@
   background-color: #f8f9fa;
 }
 
-// Content area below fixed navbar
+// Content area below navbar
 .mechanical-engineer-content {
   display: flex;
   flex: 1;
@@ -14,7 +14,7 @@
   margin-top: 64px;
 }
 
-// Main content area adjusts based on sidebar state
+// Main content area with sidebar spacing
 .main-content {
   flex: 1;
   padding: 2rem;
@@ -24,14 +24,14 @@
   transition: margin-left 0.3s ease;
 }
 
-// Adjust layout when sidebar collapses
+// Adjust when sidebar is collapsed
 .sidebar-collapsed {
   .main-content {
     margin-left: 70px;
   }
 }
 
-// Responsive adjustments for better readability
+// Responsive layout adjustments
 @media (max-width: 1200px) {
   .main-content {
     padding: 1.5rem;
