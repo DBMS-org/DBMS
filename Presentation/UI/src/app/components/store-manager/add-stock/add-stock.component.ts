@@ -13,7 +13,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -30,7 +30,7 @@ import { TagModule } from 'primeng/tag';
     DropdownModule,
     CalendarModule,
     InputNumberModule,
-    InputTextareaModule,
+    InputTextarea,
     InputTextModule,
     ButtonModule,
     CardModule,

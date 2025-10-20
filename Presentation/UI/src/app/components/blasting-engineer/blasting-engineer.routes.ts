@@ -15,16 +15,12 @@ import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/v
 import { ProposalHistoryComponent } from './proposal-history/proposal-history.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 
-// Route configuration for all blasting engineer pages
 export const BLASTING_ENGINEER_ROUTES: Routes = [
     {
         path: '',
         component: BlastingEngineerLayoutComponent,
         children: [
-            // Default route redirects to dashboard
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-
-            // Main navigation routes
             { path: 'dashboard', component: BlastingEngineerDashboardComponent },
             { path: 'profile', component: UserProfileComponent },
             { path: 'proposal-history', component: ProposalHistoryComponent },
@@ -34,13 +30,9 @@ export const BLASTING_ENGINEER_ROUTES: Routes = [
             { path: 'blast-sequence-simulator', component: BlastSequenceSimulatorComponent },
             { path: 'drill-visualization', component: DrillVisualizationComponent },
             { path: 'explosive-calculations', component: ExplosiveCalculationsDisplayComponent },
-
-            // Project management routes
             { path: 'project-management', component: BlastingEngineerProjectManagementComponent },
             { path: 'project-management/:id/sites', component: BlastingEngineerProjectSitesComponent },
             { path: 'project-management/:id/sites/new', component: AddSiteComponent },
-
-            // Site-specific routes with projectId and siteId parameters
             { path: 'project-management/:projectId/sites/:siteId/dashboard', component: SiteDashboardComponent },
             { path: 'project-management/:projectId/sites/:siteId/drill-visualization', component: DrillVisualizationComponent },
             { path: 'project-management/:projectId/sites/:siteId/pattern-creator', component: DrillingPatternCreatorComponent },

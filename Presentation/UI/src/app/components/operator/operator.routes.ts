@@ -11,7 +11,6 @@ import { UserProfileComponent } from './shared/user-profile/user-profile.compone
 import { OperatorNotificationsComponent } from './notifications/notifications.component';
 import { OperatorReportsComponent } from './reports/reports.component';
 
-// Define routing configuration for operator module
 export const OPERATOR_ROUTES: Routes = [
     {
         path: '',
@@ -21,6 +20,7 @@ export const OPERATOR_ROUTES: Routes = [
             { path: 'dashboard', component: OperatorDashboardComponent },
             { path: 'profile', component: UserProfileComponent },
             { path: 'my-project', component: MyProjectComponent },
+            // Sites are embedded in My Project page instead of separate routes
             { path: 'my-project/sites/:siteId/pattern-view', component: OperatorPatternViewComponent },
             { path: 'my-project/sites/:siteId/details', component: SiteDetailsComponent },
             { path: 'maintenance-reports', component: MaintenanceReportsComponent },

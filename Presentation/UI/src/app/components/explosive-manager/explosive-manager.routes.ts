@@ -14,21 +14,15 @@ import { UserProfileComponent } from './shared/user-profile/user-profile.compone
 import { ApprovalFormComponent } from './requests/approval-form/approval-form.component';
 import { DispatchRequestComponent } from './requests/dispatch-request/dispatch-request.component';
 
-// Route configuration for Explosive Manager module
 export const EXPLOSIVE_MANAGER_ROUTES: Routes = [
     {
         path: '',
         component: ExplosiveManagerLayoutComponent,
         children: [
-            // Default redirect to dashboard
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-
-            // Main navigation routes
             { path: 'dashboard', component: ExplosiveManagerDashboardComponent },
             { path: 'profile', component: UserProfileComponent },
             { path: 'stores', component: StoresComponent },
-
-            // Inventory management routes
             { path: 'inventory', component: InventoryComponent },
             { path: 'inventory/anfo', component: AnfoInventoryComponent },
             { path: 'inventory/anfo/add', component: AnfoAddComponent },
@@ -36,8 +30,6 @@ export const EXPLOSIVE_MANAGER_ROUTES: Routes = [
             { path: 'inventory/emulsion', component: EmulsionInventoryComponent },
             { path: 'inventory/emulsion/add', component: EmulsionAddComponent },
             { path: 'inventory/emulsion/edit/:id', component: EmulsionEditComponent },
-
-            // Request management routes
             { path: 'requests', component: RequestsComponent },
             { path: 'requests/approval/:id', component: ApprovalFormComponent },
             { path: 'requests/dispatch/:id', component: DispatchRequestComponent }

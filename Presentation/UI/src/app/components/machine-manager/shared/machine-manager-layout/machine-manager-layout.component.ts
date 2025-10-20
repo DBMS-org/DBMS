@@ -3,7 +3,13 @@ import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
-// Main layout component for machine manager interface with navbar, sidebar, and routing
+/**
+ * Machine Manager Layout Component
+ * 
+ * Provides the main layout structure for the machine manager interface, including
+ * navigation components and content area. Manages the sidebar collapse/expand
+ * functionality to optimize screen space usage for different viewing preferences.
+ */
 @Component({
   selector: 'app-machine-manager-layout',
   standalone: true,
@@ -12,10 +18,13 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
   styleUrl: './machine-manager-layout.component.scss'
 })
 export class MachineManagerLayoutComponent {
-  // Track sidebar collapse state
+  // Controls the collapsed/expanded state of the sidebar navigation
   isSidebarCollapsed = false;
 
-  // Toggle sidebar between collapsed and expanded states
+  /**
+   * Toggles the sidebar between collapsed and expanded states
+   * Used to provide more screen real estate when needed
+   */
   toggleSidebar() {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }

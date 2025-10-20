@@ -111,7 +111,6 @@ export class ProjectSitesComponent implements OnInit {
             this.sites.forEach(site => {
               console.log(`  Site: ${site.name}`);
               console.log(`    - isPatternApproved: ${site.isPatternApproved}`);
-              console.log(`    - isExplosiveApprovalRequested: ${site.isExplosiveApprovalRequested}`);
               console.log(`    - explosiveApprovalStatus: ${site.explosiveApprovalStatus}`);
               console.log(`    - isOperatorCompleted: ${site.isOperatorCompleted}`);
             });
@@ -229,14 +228,17 @@ export class ProjectSitesComponent implements OnInit {
     // A site can be completed if:
     // 1. Pattern is approved (isPatternApproved = true)
     // 2. Explosive approval status is 'Approved'
+    // 3. Site is not already completed (isOperatorCompleted = false)
 
     // DEBUG: Log the site state
     console.log('🔍 DEBUG canCompleteSite for site:', site.name);
     console.log('  - isPatternApproved:', site.isPatternApproved);
     console.log('  - explosiveApprovalStatus:', site.explosiveApprovalStatus);
+    console.log('  - isOperatorCompleted:', site.isOperatorCompleted);
 
     const canComplete = site.isPatternApproved &&
-                        site.explosiveApprovalStatus === 'Approved';
+                        site.explosiveApprovalStatus === 'Approved' &&
+                        !site.isOperatorCompleted;
 
     console.log('  ➡️ Result:', canComplete ? '✅ CAN COMPLETE' : '❌ CANNOT COMPLETE');
 
@@ -244,6 +246,11 @@ export class ProjectSitesComponent implements OnInit {
   }
 
   getCompleteButtonTooltip(site: ExtendedProjectSite): string {
+    // Check if already completed first
+    if (site.isOperatorCompleted) {
+      return 'Site is already marked as completed';
+    }
+
     const missingRequirements: string[] = [];
 
     if (!site.isPatternApproved) {
