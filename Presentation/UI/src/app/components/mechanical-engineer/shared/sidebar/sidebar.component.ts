@@ -7,7 +7,7 @@ interface NavItem {
   icon: string;
   label: string;
   route: string;
-  matchPattern?: string; // For matching nested routes
+  matchPattern?: string;
 }
 
 @Component({
@@ -19,9 +19,10 @@ interface NavItem {
 })
 export class SidebarComponent {
   @Input() isCollapsed = false;
-  
+
   private router = inject(Router);
 
+  // Navigation menu items
   navItems: NavItem[] = [
     {
       icon: 'dashboard',
@@ -54,14 +55,14 @@ export class SidebarComponent {
     }
   ];
 
-  // Check if a nav item should be active based on current route
+  // Check if navigation item matches current route
   isNavItemActive(item: NavItem): boolean {
     const currentUrl = this.router.url;
-    
+
     if (item.matchPattern) {
       return currentUrl.startsWith(item.matchPattern);
     }
-    
+
     return currentUrl === item.route;
   }
 }

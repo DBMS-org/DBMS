@@ -1,44 +1,10 @@
 # Troubleshooting Guide
 
-> **Document Type:** Troubleshooting & Solutions Reference
-> **Version:** 2.0 | **Last Updated:** 2025-10-20
-> **Audience:** Developers, DevOps, Support Teams
-> **Status:** 🟢 Current & Maintained
+Common issues and solutions for DBMS (Drilling & Blasting Management System).
 
 ---
 
-## 🚨 Emergency Quick Fixes
-
-| Issue | Quick Fix | Details |
-|-------|-----------|---------|
-| API won't start | Check database connection | [Database Issues](#database-issues) |
-| 401 Unauthorized | Verify JWT token is valid | [Authentication](#authentication--authorization) |
-| CORS errors | Check allowed origins | [API Issues](#api-issues) |
-| Angular won't compile | Run `npm install` | [Frontend Issues](#frontend-issues) |
-| Migration errors | Run `dotnet ef database update` | [Database Issues](#database-issues) |
-
----
-
-## 📋 Issue Severity Legend
-
-- 🔴 **Critical** - System down or major functionality broken
-- 🟡 **High** - Important feature not working, has workaround
-- 🟢 **Medium** - Minor issue, low impact
-- 🔵 **Low** - Cosmetic or nice-to-have
-
----
-
-## 🔍 Quick Search Guide
-
-**Use Ctrl+F to search for:**
-- Error message text (e.g., "Cannot open database")
-- HTTP status codes (e.g., "401", "500")
-- Technology names (e.g., "JWT", "CORS", "EF Core")
-- Component names (e.g., "Angular", "Chart.js")
-
----
-
-## 📚 Table of Contents
+## Table of Contents
 
 1. [Database Issues](#database-issues)
 2. [Authentication & Authorization](#authentication--authorization)
@@ -691,85 +657,22 @@ builder.Configuration.GetConnectionString("DefaultConnection")
 
 ---
 
----
+## Getting Help
 
-## 🆘 Getting Help
+If issues persist:
 
-If issues persist after trying solutions above:
-
-### 1. Check Logs
-```bash
-# API logs (console output)
-cd Presentation/API
-dotnet run
-
-# Angular logs (browser console)
-Open Developer Tools (F12) → Console tab
-```
-
-### 2. Review Recent Changes
-```bash
-# Check recent commits
-git log --oneline -10
-
-# See what changed in specific file
-git diff HEAD~1 path/to/file
-```
-
-### 3. Consult Documentation
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System design and patterns
-- [API.md](API.md) - API endpoint reference
-- [DATABASE.md](DATABASE.md) - Database schema and queries
-- [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) - Known issues and recommendations
-
-### 4. Debug Systematically
-1. Enable detailed logging in `appsettings.Development.json`
-2. Set breakpoints in Visual Studio/VS Code
-3. Use Postman/Swagger to isolate API issues
-4. Check browser network tab for HTTP requests
-5. Review Entity Framework query logs
-
-### 5. Report Issues
-When filing a bug report, include:
-- **Error Message**: Full stack trace
-- **Steps to Reproduce**: Detailed reproduction steps
-- **Environment**: OS, .NET version, Node version, browser
-- **Expected vs Actual**: What should happen vs what actually happens
-- **Logs**: Relevant log excerpts
-- **Screenshots**: If applicable
+1. **Check logs** in API console output
+2. **Review Git history** for recent breaking changes
+3. **Check documentation**:
+   - [ARCHITECTURE.md](ARCHITECTURE.md) - System design
+   - [API.md](API.md) - API reference
+   - [DATABASE.md](DATABASE.md) - Database schema
+4. **Debug with breakpoints** in Visual Studio/VS Code
+5. **File GitHub issue** with:
+   - Error message
+   - Steps to reproduce
+   - Environment details (OS, .NET version, Node version)
 
 ---
 
-## 📖 Document Information
-
-| Attribute | Value |
-|-----------|-------|
-| **Document Version** | 2.0 |
-| **Last Updated** | 2025-10-20 |
-| **Issues Documented** | 30+ common issues |
-| **Review Status** | ✅ Current |
-| **Next Review** | 2025-11-20 |
-
----
-
-## 🔗 Related Documentation
-
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Clean Architecture principles
-- [API.md](API.md) - API documentation and testing
-- [DATABASE.md](DATABASE.md) - Database troubleshooting section
-- [CLAUDE.md](CLAUDE.md) - AI assistant context
-
----
-
-## 📝 Contributing to This Guide
-
-Found a solution to a new issue? Help others by:
-1. Document the error message clearly
-2. Explain the root cause
-3. Provide step-by-step solution
-4. Include code examples where helpful
-5. Add search keywords for easy finding
-
----
-
-**Last Updated**: October 20, 2025
+**Last Updated**: October 2, 2025

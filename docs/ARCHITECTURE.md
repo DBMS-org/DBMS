@@ -1,44 +1,24 @@
 # DBMS – Clean Architecture Overview
 
-> **Document Type:** Architecture Guide & Design Patterns
-> **Version:** 2.0 | **Last Updated:** 2025-10-20
-> **Audience:** Developers, Architects, Technical Leads
-> **Status:** 🟢 Current & Maintained
-
----
-
-## 📋 Quick Reference
-
-| Topic | Go To | Use When |
-|-------|-------|----------|
-| Layer Responsibilities | [Section 3](#3-layer-responsibilities) | Understanding where code belongs |
-| Dependency Rules | [Section 4](#4-dependency-rules--project-references) | Adding new dependencies |
-| Service Design | [Section 8](#8-service-design-guidelines) | Creating new services |
-| DTO Guidelines | [Section 7](#7-dto-strategy--guidelines) | Deciding when to use DTOs |
-| Testing Strategy | [Section 9](#9-testing-strategy) | Writing tests |
-
----
-
-## 📚 Table of Contents
-
-1. [High-Level Overview](#1-high-level-overview)
-2. [Project Structure](#2-project-structure)
-3. [Layer Responsibilities](#3-layer-responsibilities)
-   1. [Domain Layer](#31-domain)
-   2. [Application Layer](#32-application)
-   3. [Infrastructure Layer](#33-infrastructure)
-   4. [Presentation Layer](#34-presentation)
-4. [Dependency Rules & Project References](#4-dependency-rules--project-references)
-5. [Cross-Cutting Concerns](#5-cross-cutting-concerns)
-   1. [Dependency Injection](#51-dependency-injection)
-   2. [Configuration & Secrets](#52-configuration--secrets)
-   3. [Validation Strategy](#53-validation-strategy)
-   4. [Logging](#54-logging)
-6. [Data-Access Strategy (Repository Pattern)](#6-data-access-strategy-repository-pattern)
-7. [DTO Strategy & Guidelines](#7-dto-strategy--guidelines)
-8. [Service Design Guidelines](#8-service-design-guidelines)
-9. [Testing Strategy](#9-testing-strategy)
-10. [Future Improvement Back-log](#10-future-improvement-back-log)
+## Table of Contents
+1. High-Level Overview
+2. Project Structure
+3. Layer Responsibilities
+   1. Domain Layer
+   2. Application Layer
+   3. Infrastructure Layer
+   4. Presentation Layer
+4. Dependency Rules & Project References
+5. Cross-Cutting Concerns
+   1. Dependency Injection
+   2. Configuration & Secrets
+   3. Validation Strategy
+   4. Logging
+6. Data-Access Strategy (Repository Pattern)
+7. DTO Strategy & Guidelines
+8. Service Design Guidelines
+9. Testing Strategy
+10. Future Improvement Back-log
 
 ---
 
@@ -225,42 +205,11 @@ DBMS/
 
 ---
 
----
+### Authors & References
+* **Architecture design:** Generated collaboratively with ChatGPT (2025-06-29).
+* **Pattern inspiration:**
+  * Clean Architecture – R. Martin
+  * Onion Architecture – J. Gunnarsson
+  * Microsoft eShopOnWeb sample
 
-## 📖 Document Information
-
-| Attribute | Value |
-|-----------|-------|
-| **Document Version** | 2.0 |
-| **Last Updated** | 2025-10-20 |
-| **Original Design** | 2025-06-29 |
-| **Review Status** | ✅ Current |
-| **Next Review** | 2025-11-20 |
-
----
-
-## 📚 References & Inspiration
-
-### Pattern Sources
-- **Clean Architecture** – Robert C. Martin ("Uncle Bob")
-- **Onion Architecture** – Jeffrey Palermo
-- **Hexagonal Architecture** – Alistair Cockburn
-- **Microsoft eShopOnWeb** – Reference implementation
-
-### Further Reading
-- [Clean Architecture Book](https://www.amazon.com/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164)
-- [Microsoft Architecture Patterns](https://learn.microsoft.com/en-us/azure/architecture/patterns/)
-- [Domain-Driven Design](https://www.amazon.com/Domain-Driven-Design-Tackling-Complexity-Software/dp/0321125215)
-
----
-
-## 🔗 Related Documentation
-
-- [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) - Comprehensive code analysis and quality metrics
-- [API.md](API.md) - REST API reference and endpoint documentation
-- [DATABASE.md](DATABASE.md) - Database schema and migration guide
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues and solutions
-
----
-
-> **Note:** Keep this document up-to-date whenever significant architectural decisions are made. All changes should be reviewed and approved by the technical lead. 
+> Keep this document up-to-date whenever architectural decisions are made. 

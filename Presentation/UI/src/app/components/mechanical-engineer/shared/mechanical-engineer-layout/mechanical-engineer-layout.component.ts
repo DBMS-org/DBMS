@@ -13,6 +13,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 export class MechanicalEngineerLayoutComponent {
   isSidebarCollapsed = false;
 
+  // Toggle sidebar visibility
   toggleSidebar() {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }

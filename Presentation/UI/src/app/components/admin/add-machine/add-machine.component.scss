@@ -1,4 +1,4 @@
-// === Modal Overlay & Container ===
+// Full-screen modal background overlay
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -14,6 +14,7 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+// Main modal container with scrolling content
 .modal-content {
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
@@ -25,7 +26,7 @@
   animation: slideInUp 0.3s ease-out;
 }
 
-// Modal Header
+// Header section with title and close button
 .modal-header {
   display: flex;
   align-items: center;
@@ -95,7 +96,7 @@
   }
 }
 
-// Alert Styles
+// Notification banner styles for errors and success messages
 .error-alert,
 .success-alert {
   display: flex;
@@ -154,6 +155,7 @@
   }
 }
 
+// Red styling for error messages
 .error-alert {
   background: linear-gradient(135deg, #fee, #fdd);
   border: 1px solid #fcc;
@@ -164,6 +166,7 @@
   }
 }
 
+// Green styling for success messages
 .success-alert {
   background: linear-gradient(135deg, #efe, #dfd);
   border: 1px solid #cfc;
@@ -174,11 +177,11 @@
   }
 }
 
-// Form Styles
 .add-machine-form {
   padding: var(--space-lg);
 }
 
+// Card containers for form sections
 .form-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -258,7 +261,7 @@
   }
 }
 
-// Form Grid and Groups
+// Grid layout for organizing form inputs
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -269,6 +272,7 @@
   }
 }
 
+// Individual form field styling
 .form-group {
   display: flex;
   flex-direction: column;
@@ -365,7 +369,7 @@
   }
 }
 
-// Form Summary
+// Progress indicator showing form completion
 .form-summary {
   background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
   border: 1px solid var(--border-color);
@@ -417,7 +421,7 @@
   }
 }
 
-// Form Actions
+// Submit and cancel button section
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -511,7 +515,7 @@
   }
 }
 
-// Animations
+// Animation keyframes for various effects
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -553,7 +557,7 @@
   100% { transform: rotate(360deg); }
 }
 
-// Responsive Design
+// Mobile device responsive adjustments
 @media (max-width: 768px) {
   .modal-content {
     width: 95%;
