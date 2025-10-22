@@ -4,6 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
 import { MachineService } from '../../../core/services/machine.service';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { TagModule } from 'primeng/tag';
+import { PanelModule } from 'primeng/panel';
+import { TooltipModule } from 'primeng/tooltip';
+import { MessageModule } from 'primeng/message';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface AssignmentRequest {
   id: string;
@@ -47,7 +56,19 @@ export interface RequestStatistics {
 @Component({
   selector: 'app-assignment-requests',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    TagModule,
+    PanelModule,
+    TooltipModule,
+    MessageModule,
+    MatIconModule
+  ],
   templateUrl: './assignment-requests.component.html',
   styleUrl: './assignment-requests.component.scss'
 })

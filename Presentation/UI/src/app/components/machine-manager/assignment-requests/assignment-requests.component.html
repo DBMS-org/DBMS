@@ -1,192 +1,336 @@
 <div class="assignment-requests-container">
-  <!-- Page header with title and refresh button -->
-  <div class="header-section">
-    <h2 class="page-title">Machine Assignment Requests</h2>
-    <div class="header-actions">
-      <button class="btn btn-outline-secondary" (click)="refreshRequests()" [disabled]="isLoading">
-        <i class="material-icons">refresh</i>
-        Refresh
-      </button>
+  <!-- Modern Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-title-section">
+        <div class="icon-wrapper">
+          <i class="material-icons">assignment_turned_in</i>
+        </div>
+        <div class="title-content">
+          <h1 class="page-title">Assignment Requests</h1>
+          <p class="page-subtitle">Manage and review machine assignment requests</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <p-button
+          icon="pi pi-refresh"
+          label="Refresh"
+          (onClick)="refreshRequests()"
+          [disabled]="isLoading"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="refresh-btn">
+        </p-button>
+      </div>
     </div>
   </div>
 
   <!-- Error notification display -->
   @if (error) {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      <i class="material-icons">error</i>
-      {{ error }}
-      <button type="button" class="btn-close" (click)="error = null"></button>
-    </div>
-  }
-
-  <!-- Statistics overview cards -->
-  <div class="stats-grid">
-    <div class="stat-card pending">
-      <div class="stat-icon">
-        <i class="material-icons">pending_actions</i>
+    <div class="error-alert">
+      <div class="error-content">
+        <i class="material-icons">error_outline</i>
+        <span>{{ error }}</span>
       </div>
-      <div class="stat-content">
-        <h3>{{ statistics.pending }}</h3>
-        <p>Pending Requests</p>
-      </div>
-    </div>
-    <div class="stat-card approved">
-      <div class="stat-icon">
-        <i class="material-icons">check_circle</i>
-      </div>
-      <div class="stat-content">
-        <h3>{{ statistics.approved }}</h3>
-        <p>Approved Today</p>
-      </div>
-    </div>
-    <div class="stat-card rejected">
-      <div class="stat-icon">
-        <i class="material-icons">cancel</i>
-      </div>
-      <div class="stat-content">
-        <h3>{{ statistics.rejected }}</h3>
-        <p>Rejected Today</p>
-      </div>
-    </div>
-    <div class="stat-card total">
-      <div class="stat-icon">
-        <i class="material-icons">assignment</i>
-      </div>
-      <div class="stat-content">
-        <h3>{{ statistics.total }}</h3>
-        <p>Total Requests</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search and filter controls -->
-  <div class="filters-section">
-    <div class="filter-group search-group">
-      <label for="search">Search</label>
-      <div class="search-input">
-        <i class="material-icons">search</i>
-        <input id="search" class="form-control" type="text" [(ngModel)]="searchQuery" (input)="applyAll()" placeholder="Search by ID, requester, project, or machine type" />
-      </div>
-    </div>
-
-    <div class="filter-group">
-      <label for="statusFilter">Status</label>
-      <select id="statusFilter" class="form-select" [(ngModel)]="selectedStatus" (change)="applyAll()">
-        <option value="ALL">All Status</option>
-        <option value="PENDING">Pending</option>
-        <option value="APPROVED">Approved</option>
-        <option value="REJECTED">Rejected</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <label for="urgencyFilter">Urgency</label>
-      <select id="urgencyFilter" class="form-select" [(ngModel)]="selectedUrgency" (change)="applyAll()">
-        <option value="ALL">All Urgency</option>
-        <option value="LOW">Low</option>
-        <option value="MEDIUM">Medium</option>
-        <option value="HIGH">High</option>
-        <option value="URGENT">Urgent</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <label for="machineTypeFilter">Machine Type</label>
-      <select id="machineTypeFilter" class="form-select" [(ngModel)]="selectedMachineType" (change)="applyAll()">
-        <option value="ALL">All Types</option>
-        <option value="EXCAVATOR">Excavator</option>
-        <option value="BULLDOZER">Bulldozer</option>
-        <option value="LOADER">Loader</option>
-        <option value="DUMP_TRUCK">Dump Truck</option>
-        <option value="DRILL_RIG">Drill Rig</option>
-        <option value="CRANE">Crane</option>
-      </select>
-    </div>
-
-    <div class="filter-actions">
-      <button class="btn btn-light" (click)="clearFilters()">
-        <i class="material-icons">filter_alt_off</i>
-        Clear Filters
+      <button class="error-close" (click)="error = null">
+        <i class="material-icons">close</i>
       </button>
     </div>
+  }
+
+  <!-- Modern Statistics Dashboard -->
+  <div class="stats-dashboard">
+    <div class="stat-card stat-pending">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">pending_actions</i>
+        </div>
+        <span class="stat-label">Pending</span>
+      </div>
+      <div class="stat-value">{{ statistics.pending }}</div>
+      <div class="stat-footer">Awaiting Review</div>
+    </div>
+
+    <div class="stat-card stat-approved">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <span class="stat-label">Approved</span>
+      </div>
+      <div class="stat-value">{{ statistics.approved }}</div>
+      <div class="stat-footer">Today</div>
+    </div>
+
+    <div class="stat-card stat-rejected">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">cancel</i>
+        </div>
+        <span class="stat-label">Rejected</span>
+      </div>
+      <div class="stat-value">{{ statistics.rejected }}</div>
+      <div class="stat-footer">Today</div>
+    </div>
+
+    <div class="stat-card stat-total">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">inventory_2</i>
+        </div>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat-value">{{ statistics.total }}</div>
+      <div class="stat-footer">All Requests</div>
+    </div>
   </div>
 
-  <!-- Loading spinner -->
-  @if (isLoading) {
-    <div class="loading-container">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <!-- Modern Filter Section -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <div class="filter-title">
+        <i class="material-icons">tune</i>
+        <span>Filters</span>
       </div>
-      <p>Loading assignment requests...</p>
+      <button class="clear-filters-btn" (click)="clearFilters()">
+        <i class="material-icons">clear_all</i>
+        Clear All
+      </button>
     </div>
-  }
 
-  <!-- Requests data table -->
-  @if (!isLoading && filteredRequests.length > 0) {
-    <div class="requests-table-container">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th (click)="setSort('requestedAt')" class="sortable">Requested<span class="sort-caret" [class.active]="sortBy==='requestedAt'">{{ sortDirection==='asc' ? '▲' : '▼' }}</span></th>
-            <th (click)="setSort('id')">Request ID</th>
-            <th (click)="setSort('requesterName')" class="sortable">Requester<span class="sort-caret" [class.active]="sortBy==='requesterName'">{{ sortDirection==='asc' ? '▲' : '▼' }}</span></th>
-            <th (click)="setSort('projectName')" class="sortable">Project<span class="sort-caret" [class.active]="sortBy==='projectName'">{{ sortDirection==='asc' ? '▲' : '▼' }}</span></th>
-            <th (click)="setSort('machineType')" class="sortable">Machine Type<span class="sort-caret" [class.active]="sortBy==='machineType'">{{ sortDirection==='asc' ? '▲' : '▼' }}</span></th>
-            <th>Quantity</th>
-            <th (click)="setSort('urgency')" class="sortable">Urgency<span class="sort-caret" [class.active]="sortBy==='urgency'">{{ sortDirection==='asc' ? '▲' : '▼' }}</span></th>
-            <th (click)="setSort('status')" class="sortable">Status<span class="sort-caret" [class.active]="sortBy==='status'">{{ sortDirection==='asc' ? '▲' : '▼' }}</span></th>
-            <th>Age</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let request of displayedRequests" class="request-row" [ngClass]="getRowClass(request)">
-            <td class="requested-date">{{ formatDate(request.requestedAt) }}</td>
-            <td class="request-id"><span class="id-badge">{{ request.id }}</span></td>
-            <td class="requester-info">
-              <div class="requester-details">
-                <span class="name">{{ request.requesterName }}</span>
-                <small class="email">{{ request.requesterEmail }}</small>
-              </div>
-            </td>
-            <td class="project-info">
-              <div class="project-details">
-                <span class="project-name">{{ request.projectName }}</span>
-                <small class="project-id">ID: {{ request.projectId }}</small>
-              </div>
-            </td>
-            <td class="machine-type"><span class="type-badge">{{ request.machineType }}</span></td>
-            <td class="quantity"><span class="quantity-badge">{{ request.quantity }}</span></td>
-            <td class="urgency"><span class="urgency-badge" [ngClass]="getUrgencyClass(request.urgency)">{{ request.urgency }}</span></td>
-            <td class="status"><span class="status-badge" [ngClass]="getStatusClass(request.status)">{{ request.status }}</span></td>
-            <td class="age">{{ getRequestAgeLabel(request) }}</td>
-            <td class="actions">
-              <div class="action-buttons">
+    <div class="filter-grid">
+      <!-- Search Input -->
+      <div class="filter-item search-item">
+        <label class="filter-label">
+          <i class="material-icons">search</i>
+          Search
+        </label>
+        <input
+          type="text"
+          class="filter-input search-input"
+          [(ngModel)]="searchQuery"
+          (input)="applyAll()"
+          placeholder="Search requests..." />
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Status</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Status', value: 'ALL'},
+            {label: 'Pending', value: 'PENDING'},
+            {label: 'Approved', value: 'APPROVED'},
+            {label: 'Rejected', value: 'REJECTED'}
+          ]"
+          [(ngModel)]="selectedStatus"
+          (onChange)="applyAll()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <!-- Urgency Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Urgency</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Urgency', value: 'ALL'},
+            {label: 'Low', value: 'LOW'},
+            {label: 'Medium', value: 'MEDIUM'},
+            {label: 'High', value: 'HIGH'},
+            {label: 'Urgent', value: 'URGENT'}
+          ]"
+          [(ngModel)]="selectedUrgency"
+          (onChange)="applyAll()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <!-- Machine Type Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Machine Type</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Types', value: 'ALL'},
+            {label: 'Excavator', value: 'EXCAVATOR'},
+            {label: 'Bulldozer', value: 'BULLDOZER'},
+            {label: 'Loader', value: 'LOADER'},
+            {label: 'Dump Truck', value: 'DUMP_TRUCK'},
+            {label: 'Drill Rig', value: 'DRILL_RIG'},
+            {label: 'Crane', value: 'CRANE'}
+          ]"
+          [(ngModel)]="selectedMachineType"
+          (onChange)="applyAll()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modern Table Section -->
+  <div class="table-section">
+    <div class="table-header">
+      <div class="table-title">
+        <i class="material-icons">view_list</i>
+        <span>Requests List</span>
+        <span class="request-count">{{ filteredRequests.length }}</span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="loader-spinner"></div>
+        <p>Loading assignment requests...</p>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!isLoading && filteredRequests.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="material-icons">inbox</i>
+        </div>
+        <h3>No Requests Found</h3>
+        <p>There are no assignment requests matching your current filters.</p>
+        <button class="empty-action-btn" (click)="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
+    }
+
+    <!-- Modern Table -->
+    @if (!isLoading && filteredRequests.length > 0) {
+      <div class="requests-table-wrapper">
+        <p-table
+          [value]="filteredRequests"
+          styleClass="modern-table"
+          responsiveLayout="scroll"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+          [sortField]="sortBy"
+          [sortOrder]="sortDirection === 'asc' ? 1 : -1">
+
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="requestedAt" class="col-date">
+                Date
+                <p-sortIcon field="requestedAt"></p-sortIcon>
+              </th>
+              <th pSortableColumn="id" class="col-id">
+                ID
+                <p-sortIcon field="id"></p-sortIcon>
+              </th>
+              <th pSortableColumn="requesterName" class="col-requester">
+                Requester
+                <p-sortIcon field="requesterName"></p-sortIcon>
+              </th>
+              <th pSortableColumn="projectName" class="col-project">
+                Project
+                <p-sortIcon field="projectName"></p-sortIcon>
+              </th>
+              <th pSortableColumn="machineType" class="col-machine">
+                Machine
+                <p-sortIcon field="machineType"></p-sortIcon>
+              </th>
+              <th class="col-qty">Qty</th>
+              <th pSortableColumn="urgency" class="col-urgency">
+                Urgency
+                <p-sortIcon field="urgency"></p-sortIcon>
+              </th>
+              <th pSortableColumn="status" class="col-status">
+                Status
+                <p-sortIcon field="status"></p-sortIcon>
+              </th>
+              <th class="col-age">Age</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-request>
+            <tr [ngClass]="'urgency-' + request.urgency.toLowerCase()">
+              <td class="col-date">
+                <div class="date-cell">
+                  <i class="material-icons">event</i>
+                  <span>{{ formatDate(request.requestedAt) }}</span>
+                </div>
+              </td>
+              <td class="col-id">
+                <span class="request-id">{{ request.id }}</span>
+              </td>
+              <td class="col-requester">
+                <div class="user-cell">
+                  <div class="user-avatar">
+                    <i class="material-icons">person</i>
+                  </div>
+                  <div class="user-info">
+                    <span class="user-name">{{ request.requesterName }}</span>
+                    <span class="user-email">{{ request.requesterEmail }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="col-project">
+                <div class="project-cell">
+                  <span class="project-name">{{ request.projectName }}</span>
+                  <span class="project-id">{{ request.projectId }}</span>
+                </div>
+              </td>
+              <td class="col-machine">
+                <span class="machine-badge">{{ request.machineType }}</span>
+              </td>
+              <td class="col-qty">
+                <span class="quantity-badge">{{ request.quantity }}</span>
+              </td>
+              <td class="col-urgency">
+                <span class="urgency-badge urgency-{{ request.urgency.toLowerCase() }}">
+                  {{ request.urgency }}
+                </span>
+              </td>
+              <td class="col-status">
+                <span class="status-badge status-{{ request.status.toLowerCase() }}">
+                  <i class="material-icons">
+                    {{ request.status === 'APPROVED' ? 'check_circle' :
+                       request.status === 'REJECTED' ? 'cancel' : 'schedule' }}
+                  </i>
+                  {{ request.status }}
+                </span>
+              </td>
+              <td class="col-age">
+                <span class="age-badge">{{ getRequestAgeLabel(request) }}</span>
+              </td>
+              <td class="col-actions">
                 @if (request.status === 'PENDING') {
-                  <button class="btn btn-sm btn-success action-btn" (click)="approveRequest(request)" title="Approve Request">
-                    <i class="material-icons">check</i>
-                  </button>
-                  <button class="btn btn-sm btn-danger action-btn" (click)="rejectRequest(request)" title="Reject Request">
-                    <i class="material-icons">close</i>
-                  </button>
+                  <div class="action-buttons">
+                    <button
+                      class="action-btn approve-btn"
+                      (click)="approveRequest(request)"
+                      title="Approve Request">
+                      <i class="material-icons">check</i>
+                    </button>
+                    <button
+                      class="action-btn reject-btn"
+                      (click)="rejectRequest(request)"
+                      title="Reject Request">
+                      <i class="material-icons">close</i>
+                    </button>
+                  </div>
+                } @else {
+                  <span class="no-actions">—</span>
                 }
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-    </div>
-  }
-
-  <!-- Empty state when no requests found -->
-  @if (!isLoading && filteredRequests.length === 0) {
-    <div class="empty-state">
-      <div class="empty-icon">
-        <i class="material-icons">assignment</i>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       </div>
-      <h3>No Assignment Requests</h3>
-      <p>There are no machine assignment requests matching your current filters.</p>
-    </div>
-  }
+    }
+  </div>
 </div>
