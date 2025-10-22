@@ -1,5 +1,5 @@
 <div class="p-4 min-h-screen bg-gray-50">
-  <!-- Page header with title and refresh button -->
+  <!-- Header Section -->
   <div class="mb-3">
     <p-panel>
       <ng-template pTemplate="header">
@@ -21,7 +21,6 @@
         </div>
       </ng-template>
 
-      <!-- Current user information display -->
       @if (currentUserRegion || currentUserCountry || currentUserName) {
         <div class="flex flex-wrap gap-2 p-2 bg-blue-50 rounded-md border-l-4 border-blue-600">
           @if (currentUserName) {
@@ -53,7 +52,7 @@
     </p-panel>
   </div>
 
-<!-- Modal dialog for viewing request details -->
+<!-- Request Details Modal -->
 <app-request-details
   [request]="selectedRequest"
   [isVisible]="isDetailsModalVisible"
@@ -62,7 +61,7 @@
   (reject)="onRejectFromModal($event)">
 </app-request-details>
 
-  <!-- Error message display with retry option -->
+  <!-- Error Message -->
   @if (errorMessage) {
     <p-message severity="error" styleClass="mb-3 w-full">
       <ng-template pTemplate>
@@ -84,7 +83,7 @@
     </p-message>
   }
 
-  <!-- Collapsible filters panel -->
+  <!-- Filters Section -->
   <p-panel [toggleable]="true" [(collapsed)]="isFiltersPanelCollapsed" styleClass="mb-3">
     <ng-template pTemplate="header">
       <div class="flex items-center justify-between w-full p-2">
@@ -107,7 +106,6 @@
       </div>
     </ng-template>
     <div class="flex flex-col gap-2">
-      <!-- Search input field -->
       <span class="p-input-icon-left w-full">
         <i class="pi pi-search text-sm"></i>
         <input
@@ -119,7 +117,6 @@
           class="w-full text-sm pl-8">
       </span>
 
-      <!-- Filter controls -->
       <div class="flex items-center gap-2 flex-wrap">
         <div class="flex items-center gap-2">
           <label for="statusFilter" class="text-xs text-gray-700">Status:</label>
@@ -144,7 +141,7 @@
     </div>
   </p-panel>
 
-  <!-- Main data table displaying requests -->
+  <!-- Table Section -->
   <p-table
     [value]="filteredRequests"
     [loading]="isLoading"
@@ -155,7 +152,6 @@
     [showCurrentPageReport]="true"
     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} requests">
 
-    <!-- Table header -->
     <ng-template pTemplate="header">
       <tr>
         <th class="text-xs uppercase py-2">Request ID</th>
@@ -171,7 +167,6 @@
       </tr>
     </ng-template>
 
-    <!-- Table body with request data -->
     <ng-template pTemplate="body" let-request>
       <tr class="hover:bg-blue-50 transition-colors">
         <td class="py-2">
@@ -227,7 +222,6 @@
           </span>
         </td>
         <td class="py-2">
-          <!-- Action buttons for each request -->
           <div class="flex gap-0.5">
             <p-button
               icon="pi pi-eye"
@@ -263,7 +257,6 @@
       </tr>
     </ng-template>
 
-    <!-- Empty state message -->
     <ng-template pTemplate="emptymessage">
       <tr>
         <td colspan="10" class="text-center py-8">
@@ -286,7 +279,7 @@
     </ng-template>
   </p-table>
 
-  <!-- Summary statistics panel -->
+  <!-- Summary Section -->
   @if (!isLoading && filteredRequests.length > 0) {
     <p-panel styleClass="mt-3">
       <ng-template pTemplate="header">

@@ -27,7 +27,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
 
   private subscriptions = new Subscription();
 
-  // Dashboard statistics for project progress tracking
+  // Dashboard statistics
   stats = {
     totalSites: 0,
     sitesWithPatterns: 0,
@@ -39,10 +39,10 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     activeWorkflows: 0
   };
 
-  // List of recent user activities for timeline display
+  // Recent activities
   recentActivities: any[] = [];
 
-  // System-wide metrics and status indicators
+  // System metrics
   systemMetrics = {
     projectStatus: 'Unknown',
     lastPatternUpdate: 'N/A',
@@ -60,7 +60,6 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     private unifiedDrillDataService: UnifiedDrillDataService
   ) {}
 
-  // Initialize dashboard on component load
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     if (this.currentUser) {
@@ -71,19 +70,17 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Clean up subscriptions to prevent memory leaks
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
   }
 
-  // Load all operator-specific data from backend
   private loadOperatorData(): void {
     if (!this.currentUser) return;
 
     this.isLoading = true;
     this.error = null;
 
-    // Fetch the project assignment for the current operator
+    // Get the project assigned to this operator
     const projectSub = this.projectService.getProjectByOperator(this.currentUser.id).subscribe({
       next: (project) => {
         this.assignedProject = project;
@@ -92,6 +89,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
         } else {
           console.log('No project assigned to this operator');
           this.isLoading = false;
+          // Show helpful message when no project is assigned
           this.error = 'No project is currently assigned to you. Please contact your administrator.';
         }
       },
@@ -105,9 +103,8 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.add(projectSub);
   }
 
-  // Load project sites and associated drilling data
   private loadProjectDetails(projectId: number): void {
-    // Retrieve all sites associated with the project
+    // Get all sites for this project
     const sitesSub = this.siteService.getProjectSites(projectId).subscribe({
       next: (sites) => {
         this.projectSites = sites.map(s => ({
@@ -116,11 +113,21 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
           updatedAt: new Date(s.updatedAt)
         }));
 
+        // Load drill holes for all sites
         this.loadDrillHolesForSites(projectId, sites);
+        
+        // Calculate dashboard statistics
         this.updateStatistics(sites, []);
+        
+        // Load site-specific drilling data
         this.loadSiteSpecificData();
+        
+        // Populate recent activity feed
         this.updateRecentActivities();
+        
+        // Update system status metrics
         this.updateSystemMetrics();
+        
         this.isLoading = false;
       },
       error: (err) => {
@@ -133,8 +140,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.add(sitesSub);
   }
 
-  // Fetch drill hole data for each site in the project
-  private loadDrillHolesForSites(projectId: number, sites: ProjectSite[]): void{
+  private loadDrillHolesForSites(projectId: number, sites: ProjectSite[]): void {
     let totalDrillHoles = 0;
     
     sites.forEach(site => {
@@ -151,17 +157,20 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Load drilling patterns and blast sequence data for sites
   private loadSiteSpecificData(): void {
     if (!this.assignedProject || this.projectSites.length === 0) return;
 
-    // Iterate through each site to gather pattern statistics
+    // Get drilling patterns and blast data for each site
     this.projectSites.forEach(site => {
+      // Get drill points for pattern statistics
       const drillPointsSub = this.unifiedDrillDataService.getDrillPoints(this.assignedProject!.id, site.id).subscribe({
         next: (drillPoints) => {
           if (drillPoints.length > 0) {
             this.stats.sitesWithPatterns++;
           }
+          
+          // Note: BlastSequence entity was removed as it's not used in the application
+          // Statistics for sitesWithSequences will be calculated differently if needed in the future
         },
         error: (err) => console.warn('Failed to load drill points for site', site.id, err)
       });
@@ -169,14 +178,13 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Calculate and update dashboard statistics
   private updateStatistics(sites: ProjectSite[], drillHoles: any[]): void {
     this.stats.totalSites = sites.length;
     this.stats.totalDrillHoles = drillHoles.length;
     this.stats.approvedPatterns = sites.filter(s => s.isPatternApproved).length;
     this.stats.confirmedSimulations = sites.filter(s => s.isSimulationConfirmed).length;
-
-    // Compute overall project completion percentage
+    
+    // Calculate project progress
     if (sites.length > 0) {
       const completedSites = sites.filter(s => s.isPatternApproved && s.isSimulationConfirmed).length;
       this.stats.projectProgress = Math.round((completedSites / sites.length) * 100);
@@ -185,8 +193,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     this.stats.activeWorkflows = sites.filter(s => !s.isPatternApproved || !s.isSimulationConfirmed).length;
   }
 
-  // Build recent activity timeline from project and site data
-  private updateRecentActivities(): void{
+  private updateRecentActivities(): void {
     this.recentActivities = [];
     
     if (this.assignedProject) {
@@ -200,7 +207,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Include recent site status updates
+    // Add site-related activities
     this.projectSites.slice(0, 3).forEach((site, index) => {
       this.recentActivities.push({
         id: index + 2,
@@ -212,10 +219,10 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
       });
     });
 
+    // Limit to 5 most recent activities
     this.recentActivities = this.recentActivities.slice(0, 5);
   }
 
-  // Update system-wide metrics and status indicators
   private updateSystemMetrics(): void {
     if (this.assignedProject) {
       this.systemMetrics.projectStatus = this.assignedProject.status;
@@ -233,7 +240,6 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Convert timestamp to human-readable relative time
   private formatRelativeTime(date?: Date): string {
     if (!date) return 'N/A';
     
@@ -251,12 +257,10 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Format date for display in localized format
   formatDate(date?: Date): string {
     return date ? new Date(date).toLocaleDateString() : '-';
   }
 
-  // Generate personalized welcome message based on time of day
   getUserWelcomeMessage(): string {
     if (!this.currentUser) return 'Welcome, Operator';
     
@@ -264,7 +268,6 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     return `${timeOfDay}, ${this.currentUser.name}`;
   }
 
-  // Extract user initials for avatar display
   getInitials(): string {
     if (!this.currentUser?.name) return 'OP';
     
@@ -275,7 +278,6 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     return names[0].substring(0, 2).toUpperCase();
   }
 
-  // Determine appropriate greeting based on current time
   private getTimeOfDayGreeting(): string {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -283,7 +285,6 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     return 'Good evening';
   }
 
-  // Map activity type to Material icon name
   getActivityIcon(type: string): string {
     switch (type) {
       case 'project': return 'assignment';
@@ -294,7 +295,6 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Get CSS class for activity status styling
   getActivityStatusColor(status: string): string {
     switch (status) {
       case 'active': return 'status-active';
@@ -305,7 +305,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Navigate to project overview page
+  // Navigation methods
   navigateToProject(): void {
     this.router.navigate(['/operator/my-project']);
   }
@@ -319,12 +319,10 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/operator/my-project/sites', siteId, 'pattern-view']);
   }
 
-  // Reload all dashboard data
   refreshDashboard(): void {
     this.loadOperatorData();
   }
 
-  // Track function for Angular's ngFor optimization
   trackActivity(index: number, activity: any): number {
     return activity.id;
   }

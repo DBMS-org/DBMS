@@ -1,5 +1,5 @@
 <div class="assignment-requests-container">
-  <!-- Page header with title and refresh button -->
+  <!-- Header Section -->
   <div class="header-section">
     <h2 class="page-title">Machine Assignment Requests</h2>
     <div class="header-actions">
@@ -10,7 +10,7 @@
     </div>
   </div>
 
-  <!-- Error notification display -->
+  <!-- Error Alert -->
   @if (error) {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
       <i class="material-icons">error</i>
@@ -19,7 +19,7 @@
     </div>
   }
 
-  <!-- Statistics overview cards -->
+  <!-- Statistics Cards -->
   <div class="stats-grid">
     <div class="stat-card pending">
       <div class="stat-icon">
@@ -59,7 +59,7 @@
     </div>
   </div>
 
-  <!-- Search and filter controls -->
+  <!-- Filters and search -->
   <div class="filters-section">
     <div class="filter-group search-group">
       <label for="search">Search</label>
@@ -111,7 +111,7 @@
     </div>
   </div>
 
-  <!-- Loading spinner -->
+  <!-- Loading State -->
   @if (isLoading) {
     <div class="loading-container">
       <div class="spinner-border text-primary" role="status">
@@ -121,7 +121,7 @@
     </div>
   }
 
-  <!-- Requests data table -->
+  <!-- Requests Table -->
   @if (!isLoading && filteredRequests.length > 0) {
     <div class="requests-table-container">
       <table class="table table-hover">
@@ -179,7 +179,7 @@
     </div>
   }
 
-  <!-- Empty state when no requests found -->
+  <!-- Empty State -->
   @if (!isLoading && filteredRequests.length === 0) {
     <div class="empty-state">
       <div class="empty-icon">

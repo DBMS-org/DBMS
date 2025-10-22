@@ -1,8 +1,11 @@
-<!-- Backdrop overlay that closes modal when clicked -->
+<!--
+  This component displays a modal form for adding a new machine.
+  It includes input fields for machine details, form validation, 
+  success/error alerts, and submit/cancel actions.
+-->
+
 <div class="modal-overlay" (click)="onCancel()">
-  <!-- Main modal container - prevents closing when clicked inside -->
   <div class="modal-content" (click)="$event.stopPropagation()">
-    <!-- Header with title and close button -->
     <div class="modal-header">
       <div class="header-content">
         <div class="header-icon">
@@ -18,7 +21,7 @@
       </button>
     </div>
 
-    <!-- Error message display -->
+    <!-- Error Alert in Modals -->
     @if (error) {
       <div class="error-alert">
         <div class="alert-icon">
@@ -34,7 +37,7 @@
       </div>
     }
 
-    <!-- Success message display -->
+    <!-- Success Alert -->
     @if (successMessage) {
       <div class="success-alert">
         <div class="alert-icon">
@@ -50,10 +53,9 @@
       </div>
     }
 
-    <!-- Machine details form -->
     <form [formGroup]="machineForm" (ngSubmit)="onSubmit()" class="add-machine-form">
-
-      <!-- Machine information card -->
+      
+      <!-- Machine Details Card -->
       <div class="form-card">
         <div class="card-header">
           <div class="card-header-content">
@@ -70,17 +72,15 @@
           </div>
         </div>
         <div class="card-body">
-          <!-- Input fields organized in a grid layout -->
           <div class="form-grid">
-            <!-- Machine name field -->
             <div class="form-group">
               <label for="name">
                 <i class="material-icons label-icon">badge</i>
                 Machine Name <span class="required">*</span>
               </label>
               <div class="input-wrapper">
-                <input
-                  type="text"
+                <input 
+                  type="text" 
                   id="name"
                   class="form-control"
                   [class.is-invalid]="isFieldInvalid('name')"
@@ -98,16 +98,15 @@
                 </div>
               }
             </div>
-
-            <!-- Optional operator name field -->
+            
             <div class="form-group">
               <label for="operatorName">
                 <i class="material-icons label-icon">person</i>
                 Operator Name <span class="optional">(Optional)</span>
               </label>
               <div class="input-wrapper">
-                <input
-                  type="text"
+                <input 
+                  type="text" 
                   id="operatorName"
                   class="form-control"
                   [class.is-invalid]="isFieldInvalid('operatorName')"
@@ -126,15 +125,14 @@
               }
             </div>
 
-            <!-- Machine model field -->
             <div class="form-group">
               <label for="model">
                 <i class="material-icons label-icon">model_training</i>
                 Model <span class="required">*</span>
               </label>
               <div class="input-wrapper">
-                <input
-                  type="text"
+                <input 
+                  type="text" 
                   id="model"
                   class="form-control"
                   [class.is-invalid]="isFieldInvalid('model')"
@@ -153,15 +151,14 @@
               }
             </div>
 
-            <!-- Serial number field -->
             <div class="form-group">
               <label for="serialNumber">
                 <i class="material-icons label-icon">qr_code</i>
                 Serial Number <span class="required">*</span>
               </label>
               <div class="input-wrapper">
-                <input
-                  type="text"
+                <input 
+                  type="text" 
                   id="serialNumber"
                   class="form-control"
                   [class.is-invalid]="isFieldInvalid('serialNumber')"
@@ -180,15 +177,14 @@
               }
             </div>
 
-            <!-- Rig number field -->
             <div class="form-group">
               <label for="rigNo">
                 <i class="material-icons label-icon">construction</i>
                 Rig No <span class="required">*</span>
               </label>
               <div class="input-wrapper">
-                <input
-                  type="text"
+                <input 
+                  type="text" 
                   id="rigNo"
                   class="form-control"
                   [class.is-invalid]="isFieldInvalid('rigNo')"
@@ -206,16 +202,15 @@
                 </div>
               }
             </div>
-
-            <!-- License plate number field -->
+            
             <div class="form-group">
               <label for="plateNo">
                 <i class="material-icons label-icon">local_shipping</i>
                 Plate No <span class="required">*</span>
               </label>
               <div class="input-wrapper">
-                <input
-                  type="text"
+                <input 
+                  type="text" 
                   id="plateNo"
                   class="form-control"
                   [class.is-invalid]="isFieldInvalid('plateNo')"
@@ -234,15 +229,16 @@
               }
             </div>
 
-            <!-- Year of manufacture field -->
+
+            
             <div class="form-group">
               <label for="manufacturingYear">
                 <i class="material-icons label-icon">calendar_today</i>
                 Manufacturing Year <span class="required">*</span>
               </label>
               <div class="input-wrapper">
-                <input
-                  type="number"
+                <input 
+                  type="number" 
                   id="manufacturingYear"
                   class="form-control"
                   [class.is-invalid]="isFieldInvalid('manufacturingYear')"
@@ -263,14 +259,13 @@
               }
             </div>
 
-            <!-- Chassis details text area (spans full width) -->
             <div class="form-group full-width">
               <label for="chassisDetails">
                 <i class="material-icons label-icon">directions_car</i>
                 Chassis Details <span class="required">*</span>
               </label>
               <div class="textarea-wrapper">
-                <textarea
+                <textarea 
                   id="chassisDetails"
                   class="form-control"
                   [class.is-invalid]="isFieldInvalid('chassisDetails')"
@@ -293,7 +288,7 @@
         </div>
       </div>
 
-      <!-- Form progress summary -->
+      <!-- Form Summary -->
       <div class="form-summary">
         <div class="summary-stats">
           <div class="stat-item">
@@ -317,18 +312,18 @@
         </div>
       </div>
 
-      <!-- Form submit and cancel buttons -->
+      <!-- Form Actions -->
       <div class="form-actions">
-        <button
-          type="button"
-          class="cancel-btn"
+        <button 
+          type="button" 
+          class="cancel-btn" 
           (click)="onCancel()"
           [disabled]="isSubmitting">
           <i class="material-icons">close</i>
           Cancel
         </button>
-        <button
-          type="submit"
+        <button 
+          type="submit" 
           class="save-btn"
           [disabled]="machineForm.invalid || isSubmitting">
           @if (isSubmitting) {

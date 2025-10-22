@@ -12,7 +12,8 @@ import { DrillLocation } from '../../../core/models/drilling.model';
 import { User } from '../../../core/models/user.model';
 import { Project } from '../../../core/models/project.model';
 
-// Dashboard component for blasting engineer overview and statistics
+
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -23,8 +24,7 @@ import { Project } from '../../../core/models/project.model';
 export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   private userSubscription: Subscription = new Subscription();
-
-  // Dashboard statistics for projects, sites, and drill holes
+  
   stats = {
     totalProjects: 0,
     activeProjects: 0,
@@ -42,8 +42,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   drillData: DrillHole[] = [];
   drillLocations: DrillLocation[] = [];
   recentUploads: any[] = [];
-
-  // Quick statistics for drill hole data
   quickStats = {
     averageDepth: 0,
     maxElevation: 0,
@@ -71,7 +69,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.userSubscription.unsubscribe();
   }
 
-  // Subscribe to current user authentication state
   private subscribeToCurrentUser() {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
@@ -86,8 +83,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadDashboardData();
   }
 
-  // Load all dashboard data from database
   private loadDashboardData() {
+    // Load real project, site, and drill hole statistics from database
     forkJoin({
       projects: this.projectService.getProjectsForCurrentUser(),
       allSites: this.siteService.getAllSites(),
@@ -95,21 +92,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: ({ projects, allSites, allDrillHoles }) => {
         this.userProjects = projects;
-
-        // Filter sites and drill holes for current user's projects
+        
+        // Filter sites that belong to user's projects
         const userProjectIds = projects.map(p => p.id);
         const userSites = allSites.filter(site => userProjectIds.includes(site.projectId));
+        
+        // Filter drill holes that belong to user's sites
         const userSiteIds = userSites.map(s => s.id);
-        const userDrillHoles = allDrillHoles.filter(hole =>
-          hole.projectId && hole.siteId &&
-          userProjectIds.includes(hole.projectId) &&
+        const userDrillHoles = allDrillHoles.filter(hole => 
+          hole.projectId && hole.siteId && 
+          userProjectIds.includes(hole.projectId) && 
           userSiteIds.includes(hole.siteId)
         );
-
-        // Calculate sites that have drill hole data
+        
+        // Calculate sites with drill holes
         const sitesWithDrillHoles = new Set(userDrillHoles.map(h => h.siteId));
-
-        // Update all statistics with real data
+        
+        // Calculate statistics with real data
         this.stats.totalProjects = projects.length;
         this.stats.activeProjects = projects.filter(p => p.status === 'Active').length;
         this.stats.totalSites = userSites.length;
@@ -119,14 +118,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.stats.uploadedDataSets = sitesWithDrillHoles.size;
         this.stats.completedPatterns = sitesWithDrillHoles.size;
         this.stats.pendingReviews = Math.max(0, this.stats.activeSites - sitesWithDrillHoles.size);
-
+        
+        // Update drill data with real database data
         this.drillData = userDrillHoles;
         this.calculateQuickStats();
         this.loadRecentUploadsFromDatabase(userDrillHoles);
+        
+        // Generate site-related activities and incorporate into recent activities
         this.generateSiteActivities(userSites);
         this.loadRecentActivities();
         this.isLoading = false;
-
+        
         console.log('📊 Dashboard Statistics:', {
           totalProjects: this.stats.totalProjects,
           activeProjects: this.stats.activeProjects,
@@ -139,7 +141,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading dashboard data:', error);
-        // Use fallback mock data if database load fails
+        // Fallback to mock data
         this.stats = {
           totalProjects: 12,
           activeProjects: 8,
@@ -157,11 +159,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Load drill data from unified service for immediate display
   private loadDrillData() {
+    // Try to get data from unified service first (for immediate display)
     this.drillLocations = this.unifiedDrillDataService.getDrillLocations();
-
-    // Convert drill locations to drill holes format
+    // Convert drill locations to drill holes for backward compatibility
     this.drillData = this.drillLocations.map(loc => ({
       id: loc.id,
       easting: loc.easting || loc.x,
@@ -180,9 +181,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } as DrillHole));
     this.calculateQuickStats();
     this.loadRecentUploads();
+    
+    // The real database data will be loaded in loadDashboardData()
   }
 
-  // Calculate statistics for drill hole data
   private calculateQuickStats() {
     if (this.drillData.length === 0) {
       this.quickStats = {
@@ -206,8 +208,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
   }
 
-  // Load sample recent uploads for display
   private loadRecentUploads() {
+    // Sample recent uploads data
     this.recentUploads = [
       {
         filename: 'drill_data_batch_1.csv',
@@ -230,8 +232,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ];
   }
 
-  // Load recent uploads from database drill holes
   private loadRecentUploadsFromDatabase(drillHoles: DrillHole[]) {
+    // Group drill holes by site for recent uploads
     const siteGroups = drillHoles.reduce((groups: any, hole) => {
       const siteKey = `${hole.projectId}-${hole.siteId}`;
       if (!groups[siteKey]) {
@@ -243,17 +245,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
         };
       }
       groups[siteKey].holes.push(hole);
-
-      // Track latest update timestamp
+      
+      // Track latest update
       const holeDate = hole.createdAt || hole.updatedAt;
       if (holeDate && (!groups[siteKey].latestUpdate || holeDate > groups[siteKey].latestUpdate)) {
         groups[siteKey].latestUpdate = holeDate;
       }
-
+      
       return groups;
     }, {});
 
-    // Convert to upload format and sort by date
+    // Convert to recent uploads format
     this.recentUploads = Object.values(siteGroups)
       .map((group: any) => ({
         filename: `Project_${group.projectId}_Site_${group.siteId}_drill_data.csv`,
@@ -264,23 +266,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
         siteId: group.siteId
       }))
       .sort((a: any, b: any) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
-      .slice(0, 5);
+      .slice(0, 5); // Show only latest 5 uploads
   }
 
-  // Load and filter recent user activities
   private loadRecentActivities() {
+    // Get all activities from the activity service
     const allActivities = this.userActivityService.getActivitiesPrioritizedByUserRegion();
-
-    // Filter out navigation activities, keep only important ones
+    
+    // Filter to show only important activities
     this.recentActivities = allActivities.filter(activity => {
       const action = activity.action.toLowerCase();
-
-      if (action.includes('dashboard access') ||
+      
+      // Filter out unimportant activities
+      if (action.includes('dashboard access') || 
           action.includes('accessed dashboard') ||
           action.includes('navigated to')) {
         return false;
       }
-
+      
+      // Keep important activities
       return action.includes('created') ||
              action.includes('uploaded') ||
              action.includes('completed') ||
@@ -293,24 +297,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Handle user logout
   logout() {
     this.userActivityService.trackActivity('logged out', 'User session ended', 'auth');
     this.authService.logoutWithConfirmation();
   }
 
-  // Generate personalized welcome message
   getUserWelcomeMessage(): string {
     if (!this.currentUser) return 'Welcome, Blasting Engineer';
-
+    
     const timeOfDay = this.getTimeOfDayGreeting();
     return `${timeOfDay}, ${this.currentUser.name}`;
   }
 
-  // Get user initials for avatar display
   getInitials(): string {
     if (!this.currentUser?.name) return 'BE';
-
+    
     const names = this.currentUser.name.split(' ');
     if (names.length >= 2) {
       return (names[0][0] + names[1][0]).toUpperCase();
@@ -318,7 +319,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return names[0].substring(0, 2).toUpperCase();
   }
 
-  // Get time-based greeting
   private getTimeOfDayGreeting(): string {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -328,16 +328,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getUserLocationInfo(): string {
     if (!this.currentUser) return '';
-
+    
     const parts = [];
     if (this.currentUser.region) parts.push(this.currentUser.region);
     if (this.currentUser.country) parts.push(this.currentUser.country);
-
+    
     return parts.length > 0 ? `Location: ${parts.join(', ')}` : '';
   }
 
   getLastLoginInfo(): string {
     if (!this.currentUser) return '';
+    
+    // In a real app, you'd get this from the user's last login data
     return 'Last login: Today at 8:45 AM';
   }
 
@@ -345,7 +347,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return activity.id;
   }
 
-  // Get appropriate icon for activity type
   getActivityIcon(action: string): string {
     if (action.includes('upload')) return 'cloud_upload';
     if (action.includes('design') || action.includes('pattern')) return 'grid_on';
@@ -358,7 +359,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return 'work';
   }
 
-  // Navigation methods
   navigateToUpload() {
     this.router.navigate(['/blasting-engineer/csv-upload']);
   }
@@ -371,7 +371,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/blasting-engineer/project-management']);
   }
 
-  // Determine data quality based on drill hole count
   getDataQualityStatus(): string {
     if (this.drillData.length === 0) return 'No Data';
     if (this.drillData.length < 50) return 'Limited';
@@ -384,17 +383,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return `quality-${status.toLowerCase().replace(' ', '-')}`;
   }
 
-  // Format date as relative time
   formatDate(date: Date | string): string {
     const now = new Date();
     const dateObj = date instanceof Date ? date : new Date(date);
-
+    
+    // Check if the date is valid
     if (isNaN(dateObj.getTime())) {
       return 'Invalid date';
     }
-
+    
     const diffInHours = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
-
+    
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${Math.floor(diffInHours)} hours ago`;
     if (diffInHours < 48) return 'Yesterday';
@@ -405,8 +404,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.formatDate(timestamp);
   }
 
-  // Generate activities from recent site creations
   private generateSiteActivities(sites: ProjectSite[]) {
+    // Get recent sites (created in last 7 days) and track as activities
     const recentSites = sites
       .filter(site => {
         const siteDate = new Date(site.createdAt);
@@ -414,8 +413,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return siteDate > weekAgo;
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 3);
+      .slice(0, 3); // Only show 3 most recent
 
+    // Track site creation activities
     recentSites.forEach(site => {
       this.userActivityService.trackActivity(
         `created site "${site.name}"`,
@@ -425,7 +425,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Navigate to drill visualization for specific site or general view
   navigateToDrillVisualization(projectId?: number, siteId?: number): void {
     if (projectId && siteId) {
       this.router.navigate(['/blasting-engineer/project-management', projectId, 'sites', siteId, 'drill-visualization']);
@@ -434,7 +433,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Refresh all dashboard data
+  // Method to refresh dashboard data manually
   refreshDashboard(): void {
     this.isLoading = true;
     this.loadUserSpecificData();

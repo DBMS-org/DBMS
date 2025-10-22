@@ -2,7 +2,6 @@
   padding: 1rem;
 }
 
-// Header section with gradient background
 .dashboard-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -12,7 +11,6 @@
   box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
 }
 
-// Header content layout
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -27,7 +25,6 @@
   }
 }
 
-// User information display
 .user-info {
   display: flex;
   align-items: center;
@@ -58,7 +55,6 @@
   }
 }
 
-// Refresh button styling
 .refresh-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -81,7 +77,6 @@
   }
 }
 
-// Loading state display
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -106,7 +101,6 @@
   }
 }
 
-// Spinner rotation animation
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -135,7 +129,6 @@
   }
 }
 
-// Statistics cards grid layout
 .dashboard-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -143,7 +136,6 @@
   margin-bottom: 2rem;
 }
 
-// Individual stat card styling
 .stat-card {
   background-color: white;
   border-radius: 12px;
@@ -208,7 +200,6 @@
   }
 }
 
-// System metrics monitoring panel
 .system-metrics-panel {
   background: white;
   border-radius: 12px;
@@ -269,7 +260,6 @@
   }
 }
 
-// Quick actions panel for common tasks
 .admin-actions-panel {
   background: white;
   border-radius: 12px;
@@ -346,7 +336,6 @@
   }
 }
 
-// Recent activities log panel
 .recent-activities {
   background: white;
   border-radius: 12px;
@@ -420,7 +409,6 @@
   }
 }
 
-// Responsive design for mobile devices
 @media (max-width: 768px) {
   .dashboard-stats {
     grid-template-columns: 1fr;
@@ -445,7 +433,7 @@
   }
 }
 
-// User profile section styling
+// User Profile Section
 .user-profile-section {
   background: white;
   border-radius: 12px;
@@ -527,7 +515,6 @@
       }
     }
 
-    // Profile details grid layout
     .profile-details-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

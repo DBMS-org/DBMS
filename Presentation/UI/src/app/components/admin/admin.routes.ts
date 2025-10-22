@@ -15,33 +15,23 @@ import { StoresComponent } from './stores/stores.component';
 import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/view-sequence-simulator/view-sequence-simulator.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 
-// Admin module route configuration
 export const ADMIN_ROUTES: Routes = [
     {
         path: '',
         component: AdminLayoutComponent,
         children: [
-            // Default redirect to dashboard
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-
-            // Main navigation routes
             { path: 'dashboard', component: DashboardComponent },
             { path: 'profile', component: UserProfileComponent },
-
-            // User management routes
             { path: 'users', component: UsersComponent },
             { path: 'users/:id', component: UserDetailsComponent },
             { path: 'users/:id/edit', component: EditUserComponent },
-
-            // Project management routes
             { path: 'project-management', component: ProjectManagementComponent },
             { path: 'project-management/new', component: AddProjectComponent },
             { path: 'project-management/:id', component: ProjectDetailsComponent },
             { path: 'project-management/:id/edit', component: EditProjectComponent },
             { path: 'project-management/:id/sites', component: ProjectSitesComponent },
             { path: 'project-management/:projectId/sites/:siteId/sequence-simulator', component: ViewSequenceSimulatorComponent },
-
-            // Machine and store management routes
             { path: 'machine-inventory', component: MachineInventoryComponent },
             { path: 'machine-assignments', component: MachineAssignmentsComponent },
             { path: 'stores', component: StoresComponent }
