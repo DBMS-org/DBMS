@@ -5,11 +5,11 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoginRequest } from '../../../core/models/user.model';
 
-// PrimeNG Components
-import { InputTextModule } from 'primeng/inputtext';
+// PrimeNG Standalone Components
+import { InputText } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
-import { PasswordModule } from 'primeng/password';
-import { MessageModule } from 'primeng/message';
+import { Password } from 'primeng/password';
+import { Message } from 'primeng/message';
 
 @Component({
   selector: 'app-login',
@@ -19,10 +19,10 @@ import { MessageModule } from 'primeng/message';
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    InputTextModule,
+    InputText,
     Button,
-    PasswordModule,
-    MessageModule
+    Password,
+    Message
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']

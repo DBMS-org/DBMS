@@ -15,22 +15,24 @@ import { Observable } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../shared/shared/components/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { DrillLocation } from '../../../../core/models/drilling.model';
 
 // PrimeNG Imports
 import { Button } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { ProgressBarModule } from 'primeng/progressbar';
-import { BadgeModule } from 'primeng/badge';
-import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
-import { CalendarModule } from 'primeng/calendar';
-import { TooltipModule } from 'primeng/tooltip';
-import { DividerModule } from 'primeng/divider';
-import { TagModule } from 'primeng/tag';
-import { ChipModule } from 'primeng/chip';
-import { SkeletonModule } from 'primeng/skeleton';
-import { MessageModule } from 'primeng/message';
+import { Card } from 'primeng/card';
+import { ProgressBar } from 'primeng/progressbar';
+import { Badge } from 'primeng/badge';
+import { Dialog } from 'primeng/dialog';
+import { InputText } from 'primeng/inputtext';
+import { InputTextarea } from 'primeng/inputtextarea';
+import { DatePicker } from 'primeng/datepicker';
+import { Tooltip } from 'primeng/tooltip';
+import { Divider } from 'primeng/divider';
+import { Tag } from 'primeng/tag';
+import { Chip } from 'primeng/chip';
+import { Skeleton } from 'primeng/skeleton';
+import { Message } from 'primeng/message';
+import { TableModule } from 'primeng/table';
 
 interface WorkflowStep {
   id: string;
@@ -50,19 +52,20 @@ interface WorkflowStep {
     CommonModule,
     FormsModule,
     Button,
-    CardModule,
-    ProgressBarModule,
-    BadgeModule,
-    DialogModule,
-    InputTextModule,
-    InputTextareaModule,
-    CalendarModule,
-    TooltipModule,
-    DividerModule,
-    TagModule,
-    ChipModule,
-    SkeletonModule,
-    MessageModule
+    Card,
+    ProgressBar,
+    Badge,
+    Dialog,
+    InputText,
+    InputTextarea,
+    DatePicker,
+    Tooltip,
+    Divider,
+    Tag,
+    Chip,
+    Skeleton,
+    Message,
+    TableModule
   ],
   templateUrl: './site-dashboard.component.html',
   styleUrls: ['./site-dashboard.component.scss']
@@ -92,6 +95,13 @@ export class SiteDashboardComponent implements OnInit {
 
   // Track explosive approval status
   hasPendingExplosiveRequest: boolean = false;
+
+  // Completed holes tracking
+  drillPoints: DrillLocation[] = [];
+  completedDrillPoints: DrillLocation[] = [];
+  loadingDrillPoints = false;
+  showCompletedHolesSection = false;
+  showCompletedHolesDialog = false;
 
   minDate: string = new Date().toISOString().split('T')[0];
 
@@ -168,6 +178,7 @@ export class SiteDashboardComponent implements OnInit {
       this.loadProject();
       this.loadSite();
       this.loadExplosiveCalculations();
+      this.loadDrillPoints();
       // loadWorkflowProgress() is now called from loadSite() after data is loaded
     }
   }
@@ -1028,5 +1039,55 @@ export class SiteDashboardComponent implements OnInit {
         this.totalEmulsion = 0;
       }
     });
+  }
+
+  loadDrillPoints() {
+    const projectId = this.stateService.currentState.activeProjectId;
+    const siteId = this.stateService.currentState.activeSiteId;
+
+    if (!projectId || !siteId) return;
+
+    this.loadingDrillPoints = true;
+    this.unifiedDrillDataService.getDrillPoints(projectId, siteId).subscribe({
+      next: (points) => {
+        this.drillPoints = points;
+        this.completedDrillPoints = points.filter(p => p.isCompleted);
+        this.showCompletedHolesSection = this.completedDrillPoints.length > 0 || this.site?.isOperatorCompleted || false;
+        this.loadingDrillPoints = false;
+      },
+      error: (error) => {
+        console.error('Error loading drill points:', error);
+        this.drillPoints = [];
+        this.completedDrillPoints = [];
+        this.loadingDrillPoints = false;
+      }
+    });
+  }
+
+  get completedHolesCount(): number {
+    return this.completedDrillPoints.length;
+  }
+
+  get totalHolesCount(): number {
+    return this.drillPoints.length;
+  }
+
+  get completionPercentage(): number {
+    if (this.totalHolesCount === 0) return 0;
+    return Math.round((this.completedHolesCount / this.totalHolesCount) * 100);
+  }
+
+  openCompletedHolesDialog(): void {
+    this.showCompletedHolesDialog = true;
+  }
+
+  closeCompletedHolesDialog(): void {
+    this.showCompletedHolesDialog = false;
+  }
+
+  onGlobalFilter(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // The filtering will be handled automatically by PrimeNG table's globalFilterFields
+    // This method is here for any additional custom logic if needed
   }
 }

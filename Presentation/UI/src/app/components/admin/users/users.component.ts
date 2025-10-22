@@ -9,10 +9,11 @@ import { User, CreateUserRequest } from '../../../core/models/user.model';
 import { NotificationService } from '../../../core/services/notification.service';
 
 // PrimeNG Components (v19+)
+// Note: Table still uses Module pattern, other components use standalone
 import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
-import { TooltipModule } from 'primeng/tooltip';
+import { Tag } from 'primeng/tag';
+import { Tooltip } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-users',
@@ -24,8 +25,8 @@ import { TooltipModule } from 'primeng/tooltip';
     AssignUserComponent,
     TableModule,
     Button,
-    TagModule,
-    TooltipModule
+    Tag,
+    Tooltip
   ],
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss']
