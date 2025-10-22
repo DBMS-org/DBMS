@@ -1,3 +1,4 @@
+<!-- Page header with user info and refresh button -->
 <header class="dashboard-header">
   <div class="header-content">
     <h1>Explosive Manager Dashboard</h1>
@@ -17,12 +18,15 @@
   </div>
 </header>
 
+<!-- Loading indicator while fetching data -->
 <div class="loading-container" *ngIf="isLoading">
   <div class="spinner"></div>
   <p>Loading dashboard...</p>
 </div>
 
+<!-- Main dashboard content -->
 <div class="dashboard-content" *ngIf="!isLoading">
+  <!-- Key statistics cards -->
   <div class="dashboard-stats">
     <div class="stat-card">
       <div class="stat-icon">
@@ -34,7 +38,7 @@
         <p class="stat-change positive">+2 from last week</p>
       </div>
     </div>
-    
+
     <div class="stat-card">
       <div class="stat-icon">
         <i class="material-icons">security</i>
@@ -47,7 +51,7 @@
     </div>
   </div>
 
-  <!-- System Metrics Panel -->
+  <!-- Environmental and security monitoring panel -->
   <div class="system-metrics-panel">
     <h3>
       <i class="material-icons">analytics</i>
@@ -85,7 +89,7 @@
     </div>
   </div>
 
-  <!-- Quick Actions Panel -->
+  <!-- Quick access actions for common tasks -->
   <div class="admin-actions-panel">
     <h3>
       <i class="material-icons">dashboard</i>
@@ -100,7 +104,7 @@
         <p>View and update explosive materials</p>
         <div class="action-status">{{ stats.totalInventory }} items</div>
       </div>
-      
+
       <div class="action-card safety-action" (click)="navigateToSafety()">
         <div class="action-icon">
           <i class="material-icons">security</i>
@@ -112,7 +116,7 @@
     </div>
   </div>
 
-  <!-- User Profile Section -->
+  <!-- User profile information section -->
   <div class="user-profile-section">
     <h3>
       <i class="material-icons">account_circle</i>
@@ -131,7 +135,8 @@
           </div>
         </div>
       </div>
-      
+
+      <!-- Detailed profile information grid -->
       <div class="profile-details-grid">
         <div class="profile-detail-item">
           <div class="detail-label">Specialization:</div>
