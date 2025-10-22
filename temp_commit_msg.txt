@@ -1,1 +1,10 @@
-Merge branch 'master' of https://github.com/DBMS-org/DBMS
+refactor: update styles and structure for accessories inventory component
+
+- Reduced padding and margin sizes for various elements to improve layout consistency.
+- Updated font sizes and weights for better readability and visual hierarchy.
+- Enhanced alert and statistics grid styles for a cleaner appearance.
+- Refined filter section and table styles, including pagination adjustments.
+- Removed unit price from accessory data structure and CSV export as it is no longer needed.
+- Introduced status severity method to determine accessory status based on quantity.
+- Updated filter options to use objects for better integration with PrimeNG components.
+- Cleaned up sorting and pagination methods, removing unnecessary complexity.
