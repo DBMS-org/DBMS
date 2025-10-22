@@ -31,15 +31,15 @@ export class AddMachineComponent {
     return new Date().getFullYear();
   }
 
+  // Set up the form with all required fields and validation rules
   private createForm(): FormGroup {
     return this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      operatorName: ['', [Validators.minLength(2)]], // Made optional
+      operatorName: ['', [Validators.minLength(2)]],
       model: ['', [Validators.required]],
       serialNumber: ['', [Validators.required]],
       rigNo: ['', [Validators.required]],
       plateNo: ['', [Validators.required]],
-
       chassisDetails: ['', [Validators.required, Validators.minLength(10)]],
       manufacturingYear: ['', [
         Validators.required,
@@ -49,16 +49,19 @@ export class AddMachineComponent {
     });
   }
 
+  // Check if a field is valid and has been touched by the user
   isFieldValid(fieldName: string): boolean {
     const field = this.machineForm.get(fieldName);
     return field ? field.valid && field.touched : false;
   }
 
+  // Check if a field is invalid and has been touched by the user
   isFieldInvalid(fieldName: string): boolean {
     const field = this.machineForm.get(fieldName);
     return field ? field.invalid && field.touched : false;
   }
 
+  // Generate a readable error message for a specific field
   getFieldError(fieldName: string): string {
     const field = this.machineForm.get(fieldName);
     if (!field || !field.errors) return '';
@@ -71,7 +74,6 @@ export class AddMachineComponent {
       serialNumber: 'Serial Number',
       rigNo: 'Rig No',
       plateNo: 'Plate No',
-
       chassisDetails: 'Chassis Details',
       manufacturingYear: 'Manufacturing Year'
     };
@@ -86,18 +88,21 @@ export class AddMachineComponent {
     return `${displayName} is invalid`;
   }
 
+  // Check if all required fields are filled correctly
   isFormComplete(): boolean {
     return this.machineForm.valid;
   }
 
+  // Calculate what percentage of the form is filled out correctly
   getCompletionPercentage(): number {
     const totalFields = Object.keys(this.machineForm.controls).length;
     const validFields = Object.keys(this.machineForm.controls)
       .filter(key => this.machineForm.get(key)?.valid).length;
-    
+
     return Math.round((validFields / totalFields) * 100);
   }
 
+  // Count how many fields have validation errors
   getTotalErrors(): number {
     let errorCount = 0;
     Object.keys(this.machineForm.controls).forEach(key => {
@@ -109,25 +114,27 @@ export class AddMachineComponent {
     return errorCount;
   }
 
+  // Save the new machine to the database
   onSubmit(): void {
     if (this.machineForm.valid) {
       this.isSubmitting = true;
       this.error = null;
 
+      // Combine form data with default values
       const machineData: Partial<Machine> = {
         ...this.machineForm.value,
-        status: 'Available', // Default status
-        type: 'Drill Rig', // Default type
-        currentLocation: 'Warehouse', // Default location
-        specifications: {} // Empty specifications object
+        status: 'Available',
+        type: 'Drill Rig',
+        currentLocation: 'Warehouse',
+        specifications: {}
       };
 
+      // Send data to the server
       this.machineService.addMachine(machineData as Machine).subscribe({
         next: (savedMachine) => {
           this.successMessage = 'Machine added successfully!';
           this.machineForm.reset();
-          
-          // Auto-close after success
+
           setTimeout(() => {
             this.machineSaved.emit(savedMachine);
           }, 1500);
@@ -150,6 +157,7 @@ export class AddMachineComponent {
     }
   }
 
+  // Close the modal without saving
   onCancel(): void {
     this.close.emit();
   }
