@@ -567,9 +567,17 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // TODO: Implement operator completion tracking in backend
-        this.isCompleted = true;
-        console.log(`Drilling pattern for Site ${this.siteId} marked as completed`);
+        // Call backend to mark site as completed
+        this.siteService.completeSite(this.siteId).subscribe({
+          next: () => {
+            this.isCompleted = true;
+            console.log(`Drilling pattern for Site ${this.siteId} marked as completed`);
+          },
+          error: (error) => {
+            console.error('Error marking pattern as completed:', error);
+            this.error = 'Failed to mark pattern as completed: ' + (error.error?.message || error.message || 'Unknown error');
+          }
+        });
       }
     });
   }
@@ -592,9 +600,9 @@ export class OperatorPatternViewComponent implements OnInit, AfterViewInit, OnDe
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // TODO: Implement operator completion revocation in backend
-        this.isCompleted = false;
-        console.log(`Drilling pattern completion for Site ${this.siteId} has been revoked`);
+        // Note: Backend endpoint for revoking completion needs to be implemented
+        console.warn('Revoke completion endpoint not yet implemented in backend');
+        this.error = 'Revoke completion feature is not yet available. Please contact administrator.';
       }
     });
   }

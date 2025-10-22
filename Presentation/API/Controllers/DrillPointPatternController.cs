@@ -142,6 +142,42 @@ namespace API.Controllers
                 var result = await _drillPointPatternService.ValidateDrillPointCountAsync(projectId, siteId, maxPoints);
                 return Ok(result);
             }
+
+        [HttpPost("drill-points/{pointId}/complete")]
+        [Authorize(Policy = "ManageDrillData")]
+        public async Task<IActionResult> MarkDrillPointAsCompleted(
+            string pointId,
+            [FromQuery] int projectId,
+            [FromQuery] int siteId)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out var userId))
+                {
+                    return Unauthorized(new { message = "User ID not found in token" });
+                }
+
+                var result = await _drillPointPatternService.MarkDrillPointAsCompletedAsync(pointId, projectId, siteId, userId);
+
+                if (result)
+                {
+                    return Ok(new { success = true, message = "Drill point marked as completed" });
+                }
+                else
+                {
+                    return NotFound(new { success = false, message = "Drill point not found" });
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while marking drill point as completed" });
+            }
+        }
     }
 
     public class ValidateCoordinatesRequest
