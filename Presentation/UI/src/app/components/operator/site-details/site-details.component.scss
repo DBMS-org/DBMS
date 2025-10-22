@@ -262,8 +262,9 @@
   }
 }
 
-// Drill Plan Tab
-.drill-plan-header {
+// Drill Plan Tab & Calculations Header
+.drill-plan-header,
+.calculations-header {
   margin-bottom: 25px;
 
   h3 {
@@ -278,8 +279,107 @@
   }
 }
 
-.drill-holes-table {
+.drill-holes-table,
+.calculations-table {
   overflow-x: auto;
+
+  // Override PrimeNG table styles to ensure visibility
+  ::ng-deep {
+    .p-datatable {
+      background: white !important;
+      color: #2c3e50 !important;
+
+      .p-datatable-wrapper {
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .p-datatable-thead > tr > th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        font-weight: 600;
+        padding: 1rem;
+        border: none;
+
+        .p-sortable-column-icon {
+          color: white;
+        }
+      }
+
+      .p-datatable-tbody > tr {
+        background: white !important;
+        color: #2c3e50 !important;
+
+        &:hover {
+          background: rgba(102, 126, 234, 0.05) !important;
+        }
+
+        > td {
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid #e9ecef;
+          color: #2c3e50 !important;
+          background: white !important;
+
+          strong {
+            color: #667eea;
+            font-weight: 600;
+          }
+        }
+      }
+
+      .p-paginator {
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        padding: 1rem;
+
+        .p-paginator-current {
+          color: #2c3e50;
+        }
+
+        .p-paginator-pages .p-paginator-page {
+          color: #2c3e50;
+
+          &.p-highlight {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+          }
+        }
+      }
+    }
+
+    // Tag styling
+    .p-tag {
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &.p-tag-warning {
+        color: white !important;
+      }
+    }
+
+    // Button styling
+    .p-button {
+      font-weight: 500;
+
+      &.p-button-success {
+        background: #10b981;
+        border-color: #10b981;
+
+        &:hover {
+          background: #059669;
+          border-color: #059669;
+        }
+      }
+
+      &.p-button-secondary {
+        background: #6c757d;
+        border-color: #6c757d;
+      }
+    }
+  }
 
   table {
     width: 100%;

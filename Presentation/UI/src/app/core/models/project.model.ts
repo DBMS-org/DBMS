@@ -39,16 +39,19 @@ export interface ProjectSite {
   projectId: number;
   name: string;
   location: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-  description?: string;
-  status?: string;
+  coordinates?: string; // Backend stores as string, not object
+  description: string;
+  status: string;
   createdAt: Date;
   updatedAt: Date;
-  lastUpdated?: Date;
-  isPatternApproved?: boolean;
-  isSimulationConfirmed?: boolean;
-  isOperatorCompleted?: boolean;
+  lastUpdated?: Date; // For display purposes
+  isPatternApproved: boolean;
+  isSimulationConfirmed: boolean;
+  isOperatorCompleted: boolean;
+  isCompleted: boolean;
+  completedAt?: Date;
+  completedByUserId?: number;
+  projectName?: string;
+  projectRegion?: string;
+  completedByUserName?: string;
 }
