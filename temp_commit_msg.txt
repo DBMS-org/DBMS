@@ -1,1 +1,7 @@
-Refactor UI components to replace 'warn' severity with 'warning' and update PrimeNG imports to use module syntax for better consistency and readability
+Refactor assignment requests component styles and layout
+
+- Updated SCSS for the assignment requests component to modernize styles, improve responsiveness, and enhance visual hierarchy.
+- Added new styles for page header, error alerts, statistics dashboard, and loading/empty states.
+- Improved layout structure with flexbox and grid for better alignment and spacing.
+- Integrated PrimeNG components for enhanced UI elements in the assignment requests component.
+- Adjusted machine manager layout styles for better overflow handling and responsiveness.
