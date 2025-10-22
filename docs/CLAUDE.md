@@ -1,16 +1,45 @@
 # CLAUDE.md – AI Assistant Context
 
-This document provides essential context for AI assistants working on the DBMS codebase.
+> **Document Type:** AI Assistant Context & Codebase Guide
+> **Version:** 2.0 | **Last Updated:** 2025-10-20
+> **Audience:** AI Assistants (Claude, ChatGPT, etc.)
+> **Purpose:** Provide essential context for code generation, analysis, and assistance
+> **Status:** 🟢 Current & Maintained
 
-## Project Overview
+---
+
+## 🎯 Quick Context Summary
 
 **DBMS (Drilling & Blasting Management System)** is a production-ready enterprise application for managing drilling operations, explosive calculations, and blasting workflows in mining/construction contexts.
 
-- **Architecture**: Clean Architecture (Onion)
-- **Backend**: ASP.NET Core 8 Web API (.NET 8)
-- **Frontend**: Angular 19 SPA
-- **Database**: SQL Server / SQL Express
-- **Authentication**: JWT (HS256) with BCrypt password hashing
+### Key Technologies at a Glance
+
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| **Architecture** | Clean Architecture (Onion) | - |
+| **Backend** | ASP.NET Core Web API | .NET 8 |
+| **Frontend** | Angular SPA | v19 |
+| **Database** | SQL Server / LocalDB | - |
+| **ORM** | Entity Framework Core | v8 |
+| **Authentication** | JWT (HS256) + BCrypt | - |
+| **Validation** | FluentValidation | v12 |
+| **Mapping** | AutoMapper | v12 |
+
+---
+
+## 📋 AI Assistant Quick Actions
+
+| Task Type | Recommended First Step |
+|-----------|----------------------|
+| Adding new feature | Read [ARCHITECTURE.md](#architecture-context) for layer guidance |
+| Fixing bug | Check [TROUBLESHOOTING.md](#troubleshooting-context) first |
+| Database work | Review [DATABASE.md](#database-context) for schema |
+| API endpoint | Consult [API.md](#api-context) for patterns |
+| Code review | Reference [PROJECT_ANALYSIS.md](#project-analysis) for standards |
+
+---
+
+## 📚 Project Overview
 
 ## Key Architecture Principles
 
@@ -309,6 +338,52 @@ When working on specific tasks, consult these reference documents:
 
 ---
 
-**Last Updated**: October 2, 2025
-**For**: Claude Code Assistant
-**Maintained By**: Development Team
+## 📖 Document Information
+
+| Attribute | Value |
+|-----------|-------|
+| **Document Version** | 2.0 |
+| **Last Updated** | 2025-10-20 |
+| **Target Audience** | AI Assistants (Claude, ChatGPT, GitHub Copilot) |
+| **Maintained By** | Development Team |
+| **Review Status** | ✅ Current |
+| **Lines of Context** | 300+ lines |
+
+---
+
+## 🤖 AI Assistant Best Practices
+
+### Code Generation Guidelines
+1. **Follow Clean Architecture** - Respect layer boundaries
+2. **Use Existing Patterns** - Match established coding styles
+3. **Validate Input** - Use FluentValidation for DTOs
+4. **Handle Errors** - Use try-catch with proper logging
+5. **Document Code** - Add XML comments for public APIs
+
+### Common Pitfalls to Avoid
+❌ Don't put business logic in controllers
+❌ Don't bypass repository pattern for database access
+❌ Don't return domain entities from APIs (use DTOs)
+❌ Don't hardcode configuration values
+❌ Don't ignore async/await patterns
+
+✅ Do follow established naming conventions
+✅ Do use dependency injection
+✅ Do implement proper error handling
+✅ Do write unit tests for new features
+✅ Do update documentation after changes
+
+---
+
+## 📝 Change Log
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.0 | 2025-10-20 | Enhanced formatting, added quick reference tables, improved navigation |
+| 1.0 | 2025-10-02 | Initial creation with core context |
+
+---
+
+**Document Maintained By**: Development Team
+**Last Updated**: October 20, 2025
+**For**: AI Code Assistants (Claude, ChatGPT, GitHub Copilot)
