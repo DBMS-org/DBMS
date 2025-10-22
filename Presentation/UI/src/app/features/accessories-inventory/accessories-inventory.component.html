@@ -67,55 +67,56 @@
         <div class="stat-label">Out of Stock</div>
       </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon total-value">
-        <i class="fas fa-dollar-sign"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">${{ statistics.totalValue | number:'1.0-0' }}</div>
-        <div class="stat-label">Total Value</div>
-      </div>
-    </div>
   </div>
 
   <!-- Filters Section -->
   <div class="filters-section">
     <div class="filters-row">
       <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input 
-          type="text" 
-          placeholder="Search accessories..." 
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          placeholder="Search accessories..."
           [(ngModel)]="searchTerm"
           (input)="onSearchChange()"
           class="search-input">
         <button *ngIf="searchTerm" class="clear-search" (click)="clearSearch()">
-          <i class="fas fa-times"></i>
+          <i class="pi pi-times"></i>
         </button>
       </div>
-      
+
       <div class="filter-group">
-        <select [(ngModel)]="selectedCategory" (change)="onCategoryFilterChange()" class="filter-select">
-          <option value="">All Categories</option>
-          <option *ngFor="let category of categoryOptions" [value]="category">{{ category }}</option>
-        </select>
+        <p-dropdown
+          [(ngModel)]="selectedCategory"
+          [options]="categoryOptions"
+          placeholder="All Categories"
+          [showClear]="true"
+          (onChange)="onCategoryFilterChange()"
+          styleClass="filter-dropdown">
+        </p-dropdown>
       </div>
 
       <div class="filter-group">
-        <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()" class="filter-select">
-          <option value="">All Status</option>
-          <option value="available">Available</option>
-          <option value="low-stock">Low Stock</option>
-          <option value="out-of-stock">Out of Stock</option>
-          <option value="discontinued">Discontinued</option>
-        </select>
+        <p-dropdown
+          [(ngModel)]="selectedStatus"
+          [options]="statusOptions"
+          placeholder="All Status"
+          [showClear]="true"
+          (onChange)="onStatusFilterChange()"
+          styleClass="filter-dropdown">
+        </p-dropdown>
       </div>
 
       <div class="filter-group">
-        <select [(ngModel)]="selectedSupplier" (change)="onSupplierFilterChange()" class="filter-select">
-          <option value="">All Suppliers</option>
-          <option *ngFor="let supplier of supplierOptions" [value]="supplier">{{ supplier }}</option>
-        </select>
+        <p-dropdown
+          [(ngModel)]="selectedSupplier"
+          [options]="supplierOptions"
+          placeholder="All Suppliers"
+          [showClear]="true"
+          (onChange)="onSupplierFilterChange()"
+          styleClass="filter-dropdown">
+        </p-dropdown>
       </div>
     </div>
 
@@ -123,22 +124,22 @@
       <span class="filter-label">Active filters:</span>
       <span class="filter-tag" *ngIf="searchTerm">
         Search: "{{ searchTerm }}"
-        <button (click)="clearSearch()"><i class="fas fa-times"></i></button>
+        <button (click)="clearSearch()"><i class="pi pi-times"></i></button>
       </span>
       <span class="filter-tag" *ngIf="selectedCategory">
         Category: {{ selectedCategory }}
-        <button (click)="selectedCategory = ''; onCategoryFilterChange()"><i class="fas fa-times"></i></button>
+        <button (click)="selectedCategory = null; onCategoryFilterChange()"><i class="pi pi-times"></i></button>
       </span>
       <span class="filter-tag" *ngIf="selectedStatus">
         Status: {{ selectedStatus }}
-        <button (click)="selectedStatus = ''; onStatusFilterChange()"><i class="fas fa-times"></i></button>
+        <button (click)="selectedStatus = null; onStatusFilterChange()"><i class="pi pi-times"></i></button>
       </span>
       <span class="filter-tag" *ngIf="selectedSupplier">
         Supplier: {{ selectedSupplier }}
-        <button (click)="selectedSupplier = ''; onSupplierFilterChange()"><i class="fas fa-times"></i></button>
+        <button (click)="selectedSupplier = null; onSupplierFilterChange()"><i class="pi pi-times"></i></button>
       </span>
       <button class="clear-all-filters" (click)="clearAllFilters()">
-        <i class="fas fa-times"></i> Clear All
+        <i class="pi pi-times"></i> Clear All
       </button>
     </div>
   </div>
@@ -151,53 +152,74 @@
     </div>
   </div>
 
-  <!-- Accessories Table -->
+  <!-- PrimeNG Table -->
   <div class="table-container" *ngIf="!isLoading">
-    <table class="accessories-table">
-      <thead>
+    <p-table
+      [value]="filteredAccessories"
+      [paginator]="true"
+      [rows]="rows"
+      [first]="first"
+      [rowsPerPageOptions]="[10, 25, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} accessories"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      styleClass="p-datatable-gridlines p-datatable-striped"
+      [rowHover]="true"
+      [sortField]="'name'"
+      [sortOrder]="1"
+      dataKey="id">
+
+      <!-- Empty State -->
+      <ng-template pTemplate="emptymessage">
         <tr>
-          <th class="sortable" (click)="sortBy('name')">
-            Name
-            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'name' && sortDirection === 'asc'" 
-               [class.fa-sort-down]="sortField === 'name' && sortDirection === 'desc'"></i>
+          <td colspan="9" class="empty-state">
+            <div class="empty-icon">
+              <i class="pi pi-inbox" style="font-size: 4rem; color: #bdc3c7;"></i>
+            </div>
+            <h3>No Accessories Found</h3>
+            <p *ngIf="hasActiveFilters()">No accessories match your current filters. Try adjusting your search criteria.</p>
+            <p *ngIf="!hasActiveFilters()">No accessories have been added to the inventory yet.</p>
+            <button class="btn btn-primary" (click)="openAddAccessoryModal()" *ngIf="!hasActiveFilters()">
+              <i class="pi pi-plus"></i>
+              Add First Accessory
+            </button>
+            <button class="btn btn-secondary" (click)="clearAllFilters()" *ngIf="hasActiveFilters()">
+              <i class="pi pi-times"></i>
+              Clear Filters
+            </button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="name">
+            Name <p-sortIcon field="name"></p-sortIcon>
           </th>
-          <th class="sortable" (click)="sortBy('category')">
-            Category
-            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'category' && sortDirection === 'asc'" 
-               [class.fa-sort-down]="sortField === 'category' && sortDirection === 'desc'"></i>
+          <th pSortableColumn="category">
+            Category <p-sortIcon field="category"></p-sortIcon>
           </th>
-          <th class="sortable" (click)="sortBy('partNumber')">
-            Part Number
-            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'partNumber' && sortDirection === 'asc'" 
-               [class.fa-sort-down]="sortField === 'partNumber' && sortDirection === 'desc'"></i>
+          <th pSortableColumn="partNumber">
+            Part Number <p-sortIcon field="partNumber"></p-sortIcon>
           </th>
-          <th class="sortable" (click)="sortBy('quantity')">
-            Quantity
-            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'quantity' && sortDirection === 'asc'" 
-               [class.fa-sort-down]="sortField === 'quantity' && sortDirection === 'desc'"></i>
-          </th>
-          <th class="sortable" (click)="sortBy('unitPrice')">
-            Unit Price
-            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'unitPrice' && sortDirection === 'asc'" 
-               [class.fa-sort-down]="sortField === 'unitPrice' && sortDirection === 'desc'"></i>
+          <th pSortableColumn="quantity">
+            Quantity <p-sortIcon field="quantity"></p-sortIcon>
           </th>
           <th>Status</th>
-          <th class="sortable" (click)="sortBy('supplier')">
-            Supplier
-            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'supplier' && sortDirection === 'asc'" 
-               [class.fa-sort-down]="sortField === 'supplier' && sortDirection === 'desc'"></i>
+          <th pSortableColumn="supplier">
+            Supplier <p-sortIcon field="supplier"></p-sortIcon>
           </th>
-          <th class="sortable" (click)="sortBy('lastUpdated')">
-            Last Updated
-            <i class="fas fa-sort" [class.fa-sort-up]="sortField === 'lastUpdated' && sortDirection === 'asc'" 
-               [class.fa-sort-down]="sortField === 'lastUpdated' && sortDirection === 'desc'"></i>
+          <th pSortableColumn="lastUpdated">
+            Last Updated <p-sortIcon field="lastUpdated"></p-sortIcon>
           </th>
-          <th class="actions-column">Actions</th>
+          <th style="width: 180px;">Actions</th>
         </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let accessory of paginatedAccessories; trackBy: trackByAccessoryId" 
-            class="accessory-row" [class.low-stock-row]="accessory.quantity <= accessory.minStockLevel">
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-accessory>
+        <tr [ngClass]="{'low-stock-row': accessory.quantity <= accessory.minStockLevel}">
           <td class="accessory-name">
             <div class="name-cell">
               <strong>{{ accessory.name }}</strong>
@@ -205,7 +227,7 @@
             </div>
           </td>
           <td>
-            <span class="category-badge">{{ accessory.category }}</span>
+            <p-tag [value]="accessory.category" [style]="{'background': '#ecf0f1', 'color': '#2c3e50'}"></p-tag>
           </td>
           <td class="part-number">{{ accessory.partNumber }}</td>
           <td class="quantity-cell">
@@ -217,106 +239,69 @@
               <small class="min-stock">Min: {{ accessory.minStockLevel }}</small>
             </div>
           </td>
-          <td class="price-cell">${{ accessory.unitPrice | number:'1.2-2' }}</td>
           <td>
-            <span class="status-badge" [ngClass]="getStatusClass(accessory)">
-              {{ getStatusDisplay(accessory) }}
-            </span>
+            <p-tag
+              [value]="getStatusDisplay(accessory)"
+              [severity]="getStatusSeverity(accessory)">
+            </p-tag>
           </td>
           <td class="supplier-cell">{{ accessory.supplier }}</td>
           <td class="date-cell">{{ accessory.lastUpdated | date:'short' }}</td>
           <td class="actions-cell">
             <div class="action-buttons">
-              <button class="btn-icon btn-primary" (click)="viewAccessoryDetails(accessory)" 
-                      title="View Details">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn-icon btn-secondary" (click)="editAccessory(accessory)" 
-                      title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn-icon btn-warning" (click)="adjustStock(accessory)" 
-                      title="Adjust Stock">
-                <i class="fas fa-plus-minus"></i>
-              </button>
-              <button class="btn-icon btn-danger" (click)="deleteAccessory(accessory)" 
-                      title="Delete">
-                <i class="fas fa-trash"></i>
-              </button>
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                (onClick)="viewAccessoryDetails(accessory)"
+                pTooltip="View Details"
+                tooltipPosition="top">
+              </p-button>
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                (onClick)="editAccessory(accessory)"
+                pTooltip="Edit"
+                tooltipPosition="top">
+              </p-button>
+              <p-button
+                icon="pi pi-plus-circle"
+                [rounded]="true"
+                [text]="true"
+                severity="warn"
+                (onClick)="adjustStock(accessory)"
+                pTooltip="Adjust Stock"
+                tooltipPosition="top">
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                (onClick)="deleteAccessory(accessory)"
+                pTooltip="Delete"
+                tooltipPosition="top">
+              </p-button>
             </div>
           </td>
         </tr>
-      </tbody>
-    </table>
-
-    <!-- Empty State -->
-    <div class="empty-state" *ngIf="filteredAccessories.length === 0">
-      <div class="empty-icon">
-        <i class="fas fa-toolbox"></i>
-      </div>
-      <h3>No Accessories Found</h3>
-      <p *ngIf="hasActiveFilters()">No accessories match your current filters. Try adjusting your search criteria.</p>
-      <p *ngIf="!hasActiveFilters()">No accessories have been added to the inventory yet.</p>
-      <button class="btn btn-primary" (click)="openAddAccessoryModal()" *ngIf="!hasActiveFilters()">
-        <i class="fas fa-plus"></i>
-        Add First Accessory
-      </button>
-      <button class="btn btn-secondary" (click)="clearAllFilters()" *ngIf="hasActiveFilters()">
-        <i class="fas fa-times"></i>
-        Clear Filters
-      </button>
-    </div>
-  </div>
-
-  <!-- Pagination -->
-  <div class="pagination-container" *ngIf="filteredAccessories.length > 0">
-    <div class="pagination-info">
-      Showing {{ getStartIndex() + 1 }} to {{ getEndIndex() }} of {{ filteredAccessories.length }} accessories
-    </div>
-    <div class="pagination-controls">
-      <button class="btn btn-sm" (click)="goToPage(currentPage - 1)" 
-              [disabled]="currentPage === 1">
-        <i class="fas fa-chevron-left"></i>
-        Previous
-      </button>
-      
-      <div class="page-numbers">
-        <button *ngFor="let page of getVisiblePages()" 
-                class="btn btn-sm page-btn" 
-                [class.active]="page === currentPage"
-                (click)="goToPage(page)">
-          {{ page }}
-        </button>
-      </div>
-      
-      <button class="btn btn-sm" (click)="goToPage(currentPage + 1)" 
-              [disabled]="currentPage === totalPages">
-        Next
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-    <div class="page-size-selector">
-      <label>Show:</label>
-      <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
-        <option value="10">10</option>
-        <option value="25">25</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-      </select>
-      <span>per page</span>
-    </div>
+      </ng-template>
+    </p-table>
   </div>
 </div>
 
 <!-- Add/Edit Accessory Modal -->
-<div class="modal-overlay" *ngIf="showAccessoryModal" (click)="closeAccessoryModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ isEditMode ? 'Edit Accessory' : 'Add New Accessory' }}</h3>
-      <button class="modal-close" (click)="closeAccessoryModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
+<p-dialog
+  [(visible)]="showAccessoryModal"
+  [header]="isEditMode ? 'Edit Accessory' : 'Add New Accessory'"
+  [modal]="true"
+  [style]="{width: '600px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <ng-template pTemplate="content">
     <div class="modal-body">
       <form class="accessory-form">
         <div class="form-row">
@@ -377,17 +362,10 @@
           </div>
         </div>
         
-        <div class="form-row">
-          <div class="form-group">
-            <label for="minStockLevel">Minimum Stock Level *</label>
-            <input type="number" id="minStockLevel" [(ngModel)]="accessoryForm.minStockLevel" 
-                   name="minStockLevel" class="form-control" min="0" required>
-          </div>
-          <div class="form-group">
-            <label for="unitPrice">Unit Price ($) *</label>
-            <input type="number" id="unitPrice" [(ngModel)]="accessoryForm.unitPrice" 
-                   name="unitPrice" class="form-control" min="0" step="0.01" required>
-          </div>
+        <div class="form-group">
+          <label for="minStockLevel">Minimum Stock Level *</label>
+          <input type="number" id="minStockLevel" [(ngModel)]="accessoryForm.minStockLevel"
+                 name="minStockLevel" class="form-control" min="0" required>
         </div>
         
         <div class="form-group">
@@ -403,24 +381,26 @@
         </div>
       </form>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeAccessoryModal()">Cancel</button>
-      <button class="btn btn-primary" (click)="saveAccessory()" [disabled]="!isAccessoryFormValid()">
-        {{ isEditMode ? 'Update' : 'Add' }} Accessory
-      </button>
-    </div>
-  </div>
-</div>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="closeAccessoryModal()"></p-button>
+    <p-button
+      [label]="isEditMode ? 'Update Accessory' : 'Add Accessory'"
+      (onClick)="saveAccessory()"
+      [disabled]="!isAccessoryFormValid()">
+    </p-button>
+  </ng-template>
+</p-dialog>
 
 <!-- Stock Adjustment Modal -->
-<div class="modal-overlay" *ngIf="showStockModal" (click)="closeStockModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Adjust Stock - {{ selectedAccessory?.name }}</h3>
-      <button class="modal-close" (click)="closeStockModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
+<p-dialog
+  [(visible)]="showStockModal"
+  [header]="'Adjust Stock - ' + (selectedAccessory?.name || '')"
+  [modal]="true"
+  [style]="{width: '500px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <ng-template pTemplate="content">
     <div class="modal-body">
       <div class="current-stock-info">
         <p><strong>Current Stock:</strong> {{ selectedAccessory?.quantity }} {{ selectedAccessory?.unit }}</p>
@@ -471,25 +451,26 @@
         </div>
       </form>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeStockModal()">Cancel</button>
-      <button class="btn btn-primary" (click)="applyStockAdjustment()" 
-              [disabled]="!stockAdjustment.quantity || stockAdjustment.quantity <= 0">
-        Apply Adjustment
-      </button>
-    </div>
-  </div>
-</div>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" (onClick)="closeStockModal()"></p-button>
+    <p-button
+      label="Apply Adjustment"
+      (onClick)="applyStockAdjustment()"
+      [disabled]="!stockAdjustment.quantity || stockAdjustment.quantity <= 0">
+    </p-button>
+  </ng-template>
+</p-dialog>
 
 <!-- Accessory Details Modal -->
-<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
-  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ selectedAccessory?.name }} - Details</h3>
-      <button class="modal-close" (click)="closeDetailsModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
+<p-dialog
+  [(visible)]="showDetailsModal"
+  [header]="(selectedAccessory?.name || '') + ' - Details'"
+  [modal]="true"
+  [style]="{width: '800px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <ng-template pTemplate="content">
     <div class="modal-body">
       <div class="details-grid" *ngIf="selectedAccessory">
         <div class="detail-section">
@@ -521,14 +502,6 @@
           <div class="detail-row">
             <span class="label">Minimum Stock Level:</span>
             <span class="value">{{ selectedAccessory.minStockLevel }} {{ selectedAccessory.unit }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Unit Price:</span>
-            <span class="value">${{ selectedAccessory.unitPrice | number:'1.2-2' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Total Value:</span>
-            <span class="value">${{ (selectedAccessory.quantity * selectedAccessory.unitPrice) | number:'1.2-2' }}</span>
           </div>
         </div>
         
@@ -565,12 +538,13 @@
         </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeDetailsModal()">Close</button>
-      <button class="btn btn-primary" (click)="editAccessory(selectedAccessory!)">
-        <i class="fas fa-edit"></i>
-        Edit Accessory
-      </button>
-    </div>
-  </div>
-</div>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <p-button label="Close" severity="secondary" (onClick)="closeDetailsModal()"></p-button>
+    <p-button
+      label="Edit Accessory"
+      icon="pi pi-pencil"
+      (onClick)="editAccessory(selectedAccessory!)">
+    </p-button>
+  </ng-template>
+</p-dialog>
