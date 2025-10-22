@@ -1,7 +1,11 @@
 <div class="mechanical-engineer-layout">
+  <!-- Top navigation bar -->
   <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
+
+  <!-- Content area with sidebar and routed components -->
   <div class="mechanical-engineer-content" [class.sidebar-collapsed]="isSidebarCollapsed">
     <app-sidebar [isCollapsed]="isSidebarCollapsed"></app-sidebar>
+
     <main class="main-content">
       <router-outlet></router-outlet>
     </main>

@@ -1,7 +1,14 @@
+<!-- Main layout container for store manager interface -->
 <div class="store-manager-layout">
+  <!-- Top navigation bar with sidebar toggle -->
   <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
+
+  <!-- Content area with sidebar and main content -->
   <div class="store-manager-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+    <!-- Collapsible sidebar navigation -->
     <app-sidebar [isCollapsed]="isSidebarCollapsed"></app-sidebar>
+
+    <!-- Main content area for routed components -->
     <main class="main-content">
       <router-outlet></router-outlet>
     </main>
