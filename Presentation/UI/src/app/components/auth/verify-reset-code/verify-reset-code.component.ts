@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-// PrimeNG Standalone Components
-import { InputText } from 'primeng/inputtext';
+// PrimeNG Components
+import { InputTextModule } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
 
 @Component({
@@ -14,7 +14,7 @@ import { Button } from 'primeng/button';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    InputText,
+    InputTextModule,
     Button
   ],
   templateUrl: './verify-reset-code.component.html',
