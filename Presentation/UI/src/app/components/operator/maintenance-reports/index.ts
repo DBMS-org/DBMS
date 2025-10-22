@@ -1,12 +1,12 @@
-// Main component
+// Export main maintenance reports component
 export { MaintenanceReportsComponent } from './maintenance-reports.component';
 
-// Models and interfaces
+// Export models and type definitions
 export * from './models/maintenance-report.models';
 
-// Services
+// Export service layer
 export { MaintenanceReportService } from './services/maintenance-report.service';
 
-// Shared components
+// Export shared UI components
 export { StatusBadgeComponent } from './shared/status-badge/status-badge.component';
 export { ProblemCategoryIconsComponent } from './shared/problem-category-icons/problem-category-icons.component';

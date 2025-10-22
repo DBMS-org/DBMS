@@ -14,7 +14,7 @@ import { User } from '../../../../core/models/user.model';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   @Output() toggleSidebar = new EventEmitter<void>();
-  
+
   currentUser: User | null = null;
   private userSubscription: Subscription = new Subscription();
 
@@ -23,28 +23,34 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private router: Router
   ) {}
 
+  // Subscribe to current user data
   ngOnInit() {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
     });
   }
 
+  // Clean up subscription
   ngOnDestroy() {
     this.userSubscription.unsubscribe();
   }
 
+  // Emit sidebar toggle event
   onToggleSidebar() {
     this.toggleSidebar.emit();
   }
 
+  // Get user name or default text
   getUserDisplayName(): string {
     return this.currentUser?.name || 'Mechanical Engineer';
   }
 
+  // Navigate to profile page
   navigateToProfile() {
     this.router.navigate(['/mechanical-engineer/profile']);
   }
 
+  // Log out current user
   logout() {
     this.authService.logout();
   }
