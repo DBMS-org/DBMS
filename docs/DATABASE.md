@@ -1,14 +1,75 @@
 # Database Schema & Migration Guide
 
-Complete database documentation for DBMS (Drilling & Blasting Management System).
-
-**Database Provider**: SQL Server / SQL Server LocalDB
-**ORM**: Entity Framework Core 8
-**Migration Strategy**: Code-First with EF Core Migrations
+> **Document Type:** Database Reference & Migration Guide
+> **Version:** 2.0 | **Last Updated:** 2025-10-20
+> **Database Provider:** SQL Server / SQL Server LocalDB
+> **ORM:** Entity Framework Core 8
+> **Migration Strategy:** Code-First with EF Core Migrations
+> **Status:** 🟢 Production-Ready
 
 ---
 
-## Table of Contents
+## 🚀 Quick Start
+
+```bash
+# Create and update database
+cd Presentation/API
+dotnet ef database update
+
+# Create new migration after model changes
+dotnet ef migrations add YourMigrationName
+
+# Rollback to previous migration
+dotnet ef database update PreviousMigrationName
+```
+
+---
+
+## 📋 Database Quick Reference
+
+| Aspect | Details |
+|--------|---------|
+| **Total Tables** | 20+ tables |
+| **Database Size** | Varies by data volume |
+| **Connection String** | `appsettings.json` → `DefaultConnection` |
+| **Seed Data** | Roles, Permissions, Regions |
+| **Backup Strategy** | Manual or scheduled SQL backups |
+
+---
+
+## 📊 Entity Relationship Overview
+
+```
+┌─────────────────┐
+│     Users       │────┐
+└─────────────────┘    │
+         │             │
+         ├─────────────┼─────────────┐
+         │             │             │
+         ▼             ▼             ▼
+  ┌──────────┐  ┌──────────┐  ┌──────────┐
+  │ Projects │  │  Stores  │  │ Machines │
+  └──────────┘  └──────────┘  └──────────┘
+       │              │              │
+       ▼              ▼              ▼
+┌─────────────┐ ┌────────────┐ ┌──────────┐
+│ProjectSites │ │ Inventory  │ │Assignments│
+└─────────────┘ └────────────┘ └──────────┘
+       │              │
+       ▼              ▼
+┌─────────────┐ ┌──────────────┐
+│ DrillHoles  │ │Transactions  │
+└─────────────┘ └──────────────┘
+       │
+       ▼
+┌──────────────────────┐
+│ExplosiveCalculations │
+└──────────────────────┘
+```
+
+---
+
+## 📚 Table of Contents
 
 1. [Database Overview](#database-overview)
 2. [Entity Relationships](#entity-relationships)
@@ -702,4 +763,50 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#database-issues) for detailed soluti
 
 ---
 
-**Last Updated**: October 2, 2025
+## 📖 Document Information
+
+| Attribute | Value |
+|-----------|-------|
+| **Document Version** | 2.0 |
+| **Last Updated** | 2025-10-20 |
+| **Database Schema Version** | Latest Migration |
+| **Review Status** | ✅ Current |
+| **Total Tables Documented** | 20+ |
+
+---
+
+## 🔗 Related Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Clean Architecture patterns and layer responsibilities
+- [API.md](API.md) - REST API endpoints that interact with these tables
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Database troubleshooting guide
+- [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) - Code quality and architecture analysis
+
+---
+
+## 💡 Best Practices
+
+### Database Development
+1. Always create migrations for schema changes
+2. Test migrations on development database first
+3. Never modify generated migration files manually
+4. Keep migration names descriptive and timestamped
+5. Document breaking changes in migration comments
+
+### Query Optimization
+1. Use indexes on frequently queried columns
+2. Implement pagination for large result sets
+3. Use `.AsNoTracking()` for read-only queries
+4. Profile queries with EF Core logging
+5. Avoid SELECT * - specify required columns
+
+### Data Integrity
+1. Use foreign key constraints
+2. Implement business rules in domain entities
+3. Use transactions for multi-step operations
+4. Validate data before saving to database
+5. Keep audit trails with timestamps
+
+---
+
+**Last Updated**: October 20, 2025
