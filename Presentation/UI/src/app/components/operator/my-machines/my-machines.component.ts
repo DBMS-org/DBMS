@@ -169,17 +169,25 @@ import {
                 <div class="machine-actions">
                   <h3>Machine Actions</h3>
                   <div class="action-buttons">
-                    <button
-                      mat-raised-button
-                      color="warn"
+                    <button 
+                      mat-raised-button 
+                      color="warn" 
                       class="report-issue-btn"
                       (click)="reportIssue()">
                       <mat-icon>report_problem</mat-icon>
                       Report Issue
                     </button>
-
-                    <button
-                      mat-raised-button
+                    
+                    <button 
+                      mat-stroked-button 
+                      color="primary"
+                      class="view-history-btn"
+                      (click)="viewMaintenanceHistory()">
+                      <mat-icon>history</mat-icon>
+                      Maintenance History
+                    </button>
+                    <button 
+                      mat-raised-button 
                       color="primary"
                       class="log-usage-btn"
                       (click)="dialog.open(logUsageDialog)">
@@ -1058,19 +1066,25 @@ export class MyMachinesComponent implements OnInit {
   
   reportIssue() {
     if (!this.assignedMachine()) return;
-
+    
     const dialogRef = this.dialog.open(MachineReportDialogComponent, {
       width: '600px',
       data: { machine: this.assignedMachine() }
     });
-
+    
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.refreshData();
       }
     });
   }
-
+  
+  viewMaintenanceHistory() {
+    // Navigate to maintenance history page
+    // This would be implemented in a real application
+    console.log('View maintenance history for machine:', this.assignedMachine());
+  }
+  
   viewReportDetails(report: ProblemReport) {
     // Open report details dialog or navigate to details page
     // This would be implemented in a real application

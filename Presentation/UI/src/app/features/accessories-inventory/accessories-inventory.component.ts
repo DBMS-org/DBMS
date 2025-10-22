@@ -2,6 +2,15 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { TagModule } from 'primeng/tag';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextarea } from 'primeng/inputtextarea';
+import { InputNumber } from 'primeng/inputnumber';
+import { TooltipModule } from 'primeng/tooltip';
 
 // Interfaces
 interface Accessory {
@@ -13,7 +22,6 @@ interface Accessory {
   quantity: number;
   unit: string;
   minStockLevel: number;
-  unitPrice: number;
   supplier: string;
   location?: string;
   createdAt: Date;
@@ -28,7 +36,6 @@ interface AccessoryForm {
   quantity: number;
   unit: string;
   minStockLevel: number;
-  unitPrice: number;
   supplier: string;
   location: string;
 }
@@ -44,13 +51,24 @@ interface InventoryStatistics {
   totalAvailable: number;
   lowStock: number;
   outOfStock: number;
-  totalValue: number;
 }
 
 @Component({
   selector: 'app-accessories-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    TagModule,
+    DialogModule,
+    InputTextarea,
+    InputNumber,
+    TooltipModule
+  ],
   templateUrl: './accessories-inventory.component.html',
   styleUrl: './accessories-inventory.component.scss'
 })
@@ -58,24 +76,24 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   // Data properties
   accessories: Accessory[] = [];
   filteredAccessories: Accessory[] = [];
-  paginatedAccessories: Accessory[] = [];
-  
+
   // Filter properties
   searchTerm = '';
-  selectedCategory = '';
-  selectedStatus = '';
-  selectedSupplier = '';
-  categoryOptions: string[] = [];
-  supplierOptions: string[] = [];
-  
-  // Sorting properties
-  sortField = 'name';
-  sortDirection: 'asc' | 'desc' = 'asc';
-  
-  // Pagination properties
-  currentPage = 1;
-  pageSize = 25;
-  totalPages = 0;
+  selectedCategory: any = null;
+  selectedStatus: any = null;
+  selectedSupplier: any = null;
+  categoryOptions: any[] = [];
+  supplierOptions: any[] = [];
+  statusOptions: any[] = [
+    { label: 'Available', value: 'available' },
+    { label: 'Low Stock', value: 'low-stock' },
+    { label: 'Out of Stock', value: 'out-of-stock' },
+    { label: 'Discontinued', value: 'discontinued' }
+  ];
+
+  // PrimeNG Table properties
+  first = 0;
+  rows = 25;
   
   // UI state properties
   isLoading = false;
@@ -87,8 +105,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   statistics: InventoryStatistics = {
     totalAvailable: 0,
     lowStock: 0,
-    outOfStock: 0,
-    totalValue: 0
+    outOfStock: 0
   };
   
   // Modal properties
@@ -107,7 +124,6 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
     quantity: 0,
     unit: '',
     minStockLevel: 0,
-    unitPrice: 0,
     supplier: '',
     location: ''
   };
@@ -175,7 +191,6 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
         quantity,
         unit,
         minStockLevel: minStock,
-        unitPrice: Math.round((Math.random() * 500 + 10) * 100) / 100,
         supplier,
         location: `Warehouse ${String.fromCharCode(65 + Math.floor(Math.random() * 5))}-${Math.floor(Math.random() * 20) + 1}`,
         createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
@@ -203,16 +218,18 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   }
 
   private extractFilterOptions(): void {
-    this.categoryOptions = [...new Set(this.accessories.map(a => a.category))].sort();
-    this.supplierOptions = [...new Set(this.accessories.map(a => a.supplier))].sort();
+    const categories = [...new Set(this.accessories.map(a => a.category))].sort();
+    this.categoryOptions = categories.map(cat => ({ label: cat, value: cat }));
+
+    const suppliers = [...new Set(this.accessories.map(a => a.supplier))].sort();
+    this.supplierOptions = suppliers.map(sup => ({ label: sup, value: sup }));
   }
 
   private calculateStatistics(): void {
     this.statistics = {
       totalAvailable: this.accessories.filter(a => a.quantity > a.minStockLevel).length,
       lowStock: this.accessories.filter(a => a.quantity <= a.minStockLevel && a.quantity > 0).length,
-      outOfStock: this.accessories.filter(a => a.quantity === 0).length,
-      totalValue: this.accessories.reduce((sum, a) => sum + (a.quantity * a.unitPrice), 0)
+      outOfStock: this.accessories.filter(a => a.quantity === 0).length
     };
   }
 
@@ -235,7 +252,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
 
   private applyFilters(): void {
     let filtered = [...this.accessories];
-    
+
     // Apply search filter
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
@@ -247,12 +264,12 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
         (accessory.description && accessory.description.toLowerCase().includes(term))
       );
     }
-    
+
     // Apply category filter
     if (this.selectedCategory) {
       filtered = filtered.filter(accessory => accessory.category === this.selectedCategory);
     }
-    
+
     // Apply status filter
     if (this.selectedStatus) {
       filtered = filtered.filter(accessory => {
@@ -270,15 +287,13 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
         }
       });
     }
-    
+
     // Apply supplier filter
     if (this.selectedSupplier) {
       filtered = filtered.filter(accessory => accessory.supplier === this.selectedSupplier);
     }
-    
+
     this.filteredAccessories = filtered;
-    this.applySorting();
-    this.updatePagination();
   }
 
   clearSearch(): void {
@@ -288,112 +303,14 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
 
   clearAllFilters(): void {
     this.searchTerm = '';
-    this.selectedCategory = '';
-    this.selectedStatus = '';
-    this.selectedSupplier = '';
+    this.selectedCategory = null;
+    this.selectedStatus = null;
+    this.selectedSupplier = null;
     this.applyFilters();
   }
 
   hasActiveFilters(): boolean {
     return !!(this.searchTerm || this.selectedCategory || this.selectedStatus || this.selectedSupplier);
-  }
-
-  // Sorting methods
-  sortBy(field: keyof Accessory): void {
-    if (this.sortField === field) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortField = field;
-      this.sortDirection = 'asc';
-    }
-    this.applySorting();
-    this.updatePagination();
-  }
-
-  private applySorting(): void {
-    this.filteredAccessories.sort((a, b) => {
-      const aRaw = a[this.sortField as keyof Accessory];
-      const bRaw = b[this.sortField as keyof Accessory];
-
-      let av: number | string;
-      let bv: number | string;
-
-      if (aRaw instanceof Date) {
-        av = aRaw.getTime();
-      } else if (typeof aRaw === 'string') {
-        av = aRaw.toLowerCase();
-      } else {
-        av = (aRaw as number) ?? 0;
-      }
-
-      if (bRaw instanceof Date) {
-        bv = bRaw.getTime();
-      } else if (typeof bRaw === 'string') {
-        bv = bRaw.toLowerCase();
-      } else {
-        bv = (bRaw as number) ?? 0;
-      }
-
-      if (av < bv) {
-        return this.sortDirection === 'asc' ? -1 : 1;
-      }
-      if (av > bv) {
-        return this.sortDirection === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-  }
-
-  // Pagination methods
-  private updatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredAccessories.length / this.pageSize);
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = Math.max(1, this.totalPages);
-    }
-    this.updatePaginatedAccessories();
-  }
-
-  private updatePaginatedAccessories(): void {
-    const startIndex = (this.currentPage - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    this.paginatedAccessories = this.filteredAccessories.slice(startIndex, endIndex);
-  }
-
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.updatePaginatedAccessories();
-    }
-  }
-
-  onPageSizeChange(): void {
-    this.currentPage = 1;
-    this.updatePagination();
-  }
-
-  getStartIndex(): number {
-    return (this.currentPage - 1) * this.pageSize;
-  }
-
-  getEndIndex(): number {
-    return Math.min(this.getStartIndex() + this.pageSize, this.filteredAccessories.length);
-  }
-
-  getVisiblePages(): number[] {
-    const pages: number[] = [];
-    const maxVisible = 5;
-    let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(this.totalPages, start + maxVisible - 1);
-    
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-    
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    
-    return pages;
   }
 
   // Accessory management methods
@@ -415,7 +332,6 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       quantity: accessory.quantity,
       unit: accessory.unit,
       minStockLevel: accessory.minStockLevel,
-      unitPrice: accessory.unitPrice,
       supplier: accessory.supplier,
       location: accessory.location || ''
     };
@@ -479,7 +395,6 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       quantity: 0,
       unit: '',
       minStockLevel: 0,
-      unitPrice: 0,
       supplier: '',
       location: ''
     };
@@ -493,8 +408,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       this.accessoryForm.unit &&
       this.accessoryForm.supplier &&
       this.accessoryForm.quantity >= 0 &&
-      this.accessoryForm.minStockLevel >= 0 &&
-      this.accessoryForm.unitPrice >= 0
+      this.accessoryForm.minStockLevel >= 0
     );
   }
 
@@ -578,6 +492,16 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
     }
   }
 
+  getStatusSeverity(accessory: Accessory): 'success' | 'warn' | 'danger' | 'info' {
+    if (accessory.quantity === 0) {
+      return 'danger';
+    } else if (accessory.quantity <= accessory.minStockLevel) {
+      return 'warn';
+    } else {
+      return 'success';
+    }
+  }
+
   trackByAccessoryId(index: number, accessory: Accessory): string {
     return accessory.id;
   }
@@ -596,7 +520,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   }
 
   private generateCSVContent(): string {
-    const headers = ['Name', 'Category', 'Part Number', 'Quantity', 'Unit', 'Min Stock', 'Unit Price', 'Total Value', 'Supplier', 'Status', 'Location'];
+    const headers = ['Name', 'Category', 'Part Number', 'Quantity', 'Unit', 'Min Stock', 'Supplier', 'Status', 'Location'];
     const rows = this.filteredAccessories.map(accessory => [
       accessory.name,
       accessory.category,
@@ -604,13 +528,11 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       accessory.quantity.toString(),
       accessory.unit,
       accessory.minStockLevel.toString(),
-      accessory.unitPrice.toFixed(2),
-      (accessory.quantity * accessory.unitPrice).toFixed(2),
       accessory.supplier,
       this.getStatusDisplay(accessory),
       accessory.location || ''
     ]);
-    
+
     return [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
   }
 

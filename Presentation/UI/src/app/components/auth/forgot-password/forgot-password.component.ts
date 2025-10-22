@@ -4,10 +4,10 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
-// PrimeNG Components
-import { InputTextModule } from 'primeng/inputtext';
+// PrimeNG Standalone Components
+import { InputText } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
-import { MessageModule } from 'primeng/message';
+import { Message } from 'primeng/message';
 
 @Component({
   selector: 'app-forgot-password',
@@ -16,9 +16,9 @@ import { MessageModule } from 'primeng/message';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextModule,
+    InputText,
     Button,
-    MessageModule
+    Message
   ],
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.scss']

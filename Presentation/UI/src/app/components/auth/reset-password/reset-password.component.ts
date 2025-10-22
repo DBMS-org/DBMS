@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-// PrimeNG Components
+// PrimeNG Standalone Components
 import { Button } from 'primeng/button';
-import { PasswordModule } from 'primeng/password';
+import { Password } from 'primeng/password';
 
 @Component({
   selector: 'app-reset-password',
@@ -15,7 +15,7 @@ import { PasswordModule } from 'primeng/password';
     FormsModule,
     ReactiveFormsModule,
     Button,
-    PasswordModule
+    Password
   ],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss']
