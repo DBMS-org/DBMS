@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { DropdownModule } from 'primeng/dropdown';
+import { TooltipModule } from 'primeng/tooltip';
 
 // Data model interfaces for maintenance management system
 interface MaintenanceRecord {
@@ -84,7 +88,14 @@ interface ConfirmModalData {
 @Component({
   selector: 'app-maintenance-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    TableModule,
+    DropdownModule,
+    TooltipModule
+  ],
   templateUrl: './maintenance-management.component.html',
   styleUrls: ['./maintenance-management.component.scss']
 })
