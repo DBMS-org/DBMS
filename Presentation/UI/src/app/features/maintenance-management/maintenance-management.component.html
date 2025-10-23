@@ -109,13 +109,18 @@
         <i class="material-icons">tune</i>
         <span>Filters</span>
       </div>
-      <button class="clear-filters-btn" (click)="clearAllFilters()" type="button">
-        <i class="material-icons">clear_all</i>
-        Clear All
-      </button>
+      <div class="filter-header-actions">
+        <button class="clear-filters-btn" (click)="clearAllFilters()" type="button">
+          <i class="material-icons">clear_all</i>
+          Clear All
+        </button>
+        <button class="toggle-filters-btn" (click)="toggleFilterExpansion()" type="button">
+          <i class="material-icons">{{ isFilterExpanded ? 'expand_less' : 'expand_more' }}</i>
+        </button>
+      </div>
     </div>
 
-    <div class="filter-grid">
+    <div class="filter-grid" *ngIf="isFilterExpanded">
       <!-- Search Input -->
       <div class="filter-item search-item">
         <label class="filter-label">

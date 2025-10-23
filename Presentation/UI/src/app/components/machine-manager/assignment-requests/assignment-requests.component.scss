@@ -310,7 +310,13 @@
   }
 }
 
-.clear-filters-btn {
+.filter-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-filters-btn, .toggle-filters-btn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -332,6 +338,16 @@
 
   i {
     font-size: 14px;
+  }
+}
+
+.toggle-filters-btn {
+  padding: 6px;
+  min-width: 32px;
+  justify-content: center;
+
+  i {
+    font-size: 18px;
   }
 }
 
