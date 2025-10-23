@@ -125,6 +125,8 @@ export class MaintenanceManagementComponent implements OnInit {
   selectedStatus = '';
   selectedType = '';
   selectedPriority = '';
+  // Filter expansion state
+  isFilterExpanded: boolean = true;
 
   // Data sorting configuration
   sortField = 'scheduledDate';
@@ -376,6 +378,10 @@ export class MaintenanceManagementComponent implements OnInit {
     this.selectedPriority = '';
     this.currentPage = 1;
     this.applyFilters();
+  }
+
+  toggleFilterExpansion(): void {
+    this.isFilterExpanded = !this.isFilterExpanded;
   }
 
   hasActiveFilters(): boolean {
