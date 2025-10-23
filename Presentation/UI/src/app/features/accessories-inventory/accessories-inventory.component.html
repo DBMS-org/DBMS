@@ -1,195 +1,241 @@
 <div class="accessories-inventory">
-  <!-- Header Section -->
+  <!-- Modern Page Header -->
   <div class="page-header">
     <div class="header-content">
-      <div class="title-section">
-        <h1 class="page-title">
-          <i class="fas fa-toolbox"></i>
-          Accessories Inventory
-        </h1>
-        <p class="page-subtitle">Manage machine accessories, parts, and consumables</p>
+      <div class="header-title-section">
+        <div class="icon-wrapper">
+          <i class="material-icons">inventory_2</i>
+        </div>
+        <div class="title-content">
+          <h1 class="page-title">Accessories Inventory</h1>
+          <p class="page-subtitle">Manage machine accessories, parts, and consumables</p>
+        </div>
       </div>
       <div class="header-actions">
-        <button class="btn btn-secondary" (click)="exportInventory()" [disabled]="isLoading">
-          <i class="fas fa-download"></i>
-          Export
-        </button>
-        <button class="btn btn-primary" (click)="refreshInventory()" [disabled]="isRefreshing">
-          <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
-          Refresh
-        </button>
-        <button class="btn btn-success" (click)="openAddAccessoryModal()">
-          <i class="fas fa-plus"></i>
-          Add Accessory
-        </button>
-      </div>
-    </div>
-    <div class="timestamp">
-      Last updated: {{ lastUpdated | date:'medium' }}
-    </div>
-  </div>
-
-  <!-- Error Alert -->
-  <div class="alert alert-danger" *ngIf="errorMessage">
-    <i class="fas fa-exclamation-triangle"></i>
-    {{ errorMessage }}
-    <button class="alert-close" (click)="errorMessage = ''">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-
-  <!-- Statistics Cards -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon available">
-        <i class="fas fa-check-circle"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics.totalAvailable }}</div>
-        <div class="stat-label">Available</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon low-stock">
-        <i class="fas fa-exclamation-triangle"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics.lowStock }}</div>
-        <div class="stat-label">Low Stock</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon out-of-stock">
-        <i class="fas fa-times-circle"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics.outOfStock }}</div>
-        <div class="stat-label">Out of Stock</div>
+        <p-button
+          icon="pi pi-download"
+          label="Export"
+          (onClick)="exportInventory()"
+          [disabled]="isLoading"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="export-btn">
+        </p-button>
+        <p-button
+          icon="pi pi-refresh"
+          label="Refresh"
+          (onClick)="refreshInventory()"
+          [disabled]="isRefreshing"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="refresh-btn">
+        </p-button>
+        <p-button
+          icon="pi pi-plus"
+          label="Add Accessory"
+          (onClick)="openAddAccessoryModal()"
+          severity="success"
+          styleClass="add-btn">
+        </p-button>
       </div>
     </div>
   </div>
 
-  <!-- Filters Section -->
-  <div class="filters-section">
-    <div class="filters-row">
-      <div class="search-box">
-        <i class="pi pi-search"></i>
-        <input
-          pInputText
-          type="text"
-          placeholder="Search accessories..."
-          [(ngModel)]="searchTerm"
-          (input)="onSearchChange()"
-          class="search-input">
-        <button *ngIf="searchTerm" class="clear-search" (click)="clearSearch()">
-          <i class="pi pi-times"></i>
-        </button>
+  <!-- Error notification display -->
+  @if (errorMessage) {
+    <div class="error-alert">
+      <div class="error-content">
+        <i class="material-icons">error_outline</i>
+        <span>{{ errorMessage }}</span>
       </div>
-
-      <div class="filter-group">
-        <p-dropdown
-          [(ngModel)]="selectedCategory"
-          [options]="categoryOptions"
-          placeholder="All Categories"
-          [showClear]="true"
-          (onChange)="onCategoryFilterChange()"
-          styleClass="filter-dropdown">
-        </p-dropdown>
-      </div>
-
-      <div class="filter-group">
-        <p-dropdown
-          [(ngModel)]="selectedStatus"
-          [options]="statusOptions"
-          placeholder="All Status"
-          [showClear]="true"
-          (onChange)="onStatusFilterChange()"
-          styleClass="filter-dropdown">
-        </p-dropdown>
-      </div>
-
-      <div class="filter-group">
-        <p-dropdown
-          [(ngModel)]="selectedSupplier"
-          [options]="supplierOptions"
-          placeholder="All Suppliers"
-          [showClear]="true"
-          (onChange)="onSupplierFilterChange()"
-          styleClass="filter-dropdown">
-        </p-dropdown>
-      </div>
-    </div>
-
-    <div class="active-filters" *ngIf="hasActiveFilters()">
-      <span class="filter-label">Active filters:</span>
-      <span class="filter-tag" *ngIf="searchTerm">
-        Search: "{{ searchTerm }}"
-        <button (click)="clearSearch()"><i class="pi pi-times"></i></button>
-      </span>
-      <span class="filter-tag" *ngIf="selectedCategory">
-        Category: {{ selectedCategory }}
-        <button (click)="selectedCategory = null; onCategoryFilterChange()"><i class="pi pi-times"></i></button>
-      </span>
-      <span class="filter-tag" *ngIf="selectedStatus">
-        Status: {{ selectedStatus }}
-        <button (click)="selectedStatus = null; onStatusFilterChange()"><i class="pi pi-times"></i></button>
-      </span>
-      <span class="filter-tag" *ngIf="selectedSupplier">
-        Supplier: {{ selectedSupplier }}
-        <button (click)="selectedSupplier = null; onSupplierFilterChange()"><i class="pi pi-times"></i></button>
-      </span>
-      <button class="clear-all-filters" (click)="clearAllFilters()">
-        <i class="pi pi-times"></i> Clear All
+      <button class="error-close" (click)="errorMessage = ''" type="button" aria-label="Close error">
+        <i class="material-icons">close</i>
       </button>
     </div>
-  </div>
+  }
 
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="isLoading">
-    <div class="loading-spinner">
-      <div class="spinner"></div>
-      <p>Loading accessories inventory...</p>
+  <!-- Modern Statistics Dashboard -->
+  <div class="stats-dashboard">
+    <div class="stat-card stat-available">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <span class="stat-label">Available</span>
+      </div>
+      <div class="stat-value">{{ statistics.totalAvailable }}</div>
+      <div class="stat-footer">In Stock</div>
+    </div>
+
+    <div class="stat-card stat-low-stock">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">warning</i>
+        </div>
+        <span class="stat-label">Low Stock</span>
+      </div>
+      <div class="stat-value">{{ statistics.lowStock }}</div>
+      <div class="stat-footer">Below Minimum</div>
+    </div>
+
+    <div class="stat-card stat-out-of-stock">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">cancel</i>
+        </div>
+        <span class="stat-label">Out of Stock</span>
+      </div>
+      <div class="stat-value">{{ statistics.outOfStock }}</div>
+      <div class="stat-footer">Needs Restocking</div>
+    </div>
+
+    <div class="stat-card stat-total">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">inventory</i>
+        </div>
+        <span class="stat-label">Total Items</span>
+      </div>
+      <div class="stat-value">{{ statistics.totalAvailable + statistics.lowStock + statistics.outOfStock }}</div>
+      <div class="stat-footer">All Accessories</div>
     </div>
   </div>
 
-  <!-- PrimeNG Table -->
-  <div class="table-container" *ngIf="!isLoading">
-    <p-table
-      [value]="filteredAccessories"
-      [paginator]="true"
-      [rows]="rows"
-      [first]="first"
-      [rowsPerPageOptions]="[10, 25, 50, 100]"
-      [showCurrentPageReport]="true"
-      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} accessories"
-      [tableStyle]="{ 'min-width': '50rem' }"
-      styleClass="p-datatable-gridlines p-datatable-striped"
-      [rowHover]="true"
-      [sortField]="'name'"
-      [sortOrder]="1"
-      dataKey="id">
+  <!-- Modern Filter Section -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <div class="filter-title">
+        <i class="material-icons">tune</i>
+        <span>Filters</span>
+      </div>
+      <button class="clear-filters-btn" (click)="clearAllFilters()" type="button">
+        <i class="material-icons">clear_all</i>
+        Clear All
+      </button>
+    </div>
 
-      <!-- Empty State -->
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="9" class="empty-state">
-            <div class="empty-icon">
-              <i class="pi pi-inbox" style="font-size: 4rem; color: #bdc3c7;"></i>
-            </div>
-            <h3>No Accessories Found</h3>
-            <p *ngIf="hasActiveFilters()">No accessories match your current filters. Try adjusting your search criteria.</p>
-            <p *ngIf="!hasActiveFilters()">No accessories have been added to the inventory yet.</p>
-            <button class="btn btn-primary" (click)="openAddAccessoryModal()" *ngIf="!hasActiveFilters()">
-              <i class="pi pi-plus"></i>
-              Add First Accessory
-            </button>
-            <button class="btn btn-secondary" (click)="clearAllFilters()" *ngIf="hasActiveFilters()">
-              <i class="pi pi-times"></i>
-              Clear Filters
-            </button>
-          </td>
-        </tr>
-      </ng-template>
+    <div class="filter-grid">
+      <!-- Search Input -->
+      <div class="filter-item search-item">
+        <label class="filter-label">
+          <i class="material-icons">search</i>
+          Search
+        </label>
+        <input
+          type="text"
+          class="filter-input search-input"
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+          placeholder="Search accessories..." />
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Category</label>
+        <p-dropdown
+          [options]="categoryOptions"
+          [(ngModel)]="selectedCategory"
+          (onChange)="onCategoryFilterChange()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="All Categories"
+          [showClear]="true"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Status</label>
+        <p-dropdown
+          [options]="statusOptions"
+          [(ngModel)]="selectedStatus"
+          (onChange)="onStatusFilterChange()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="All Status"
+          [showClear]="true"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <!-- Supplier Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Supplier</label>
+        <p-dropdown
+          [options]="supplierOptions"
+          [(ngModel)]="selectedSupplier"
+          (onChange)="onSupplierFilterChange()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="All Suppliers"
+          [showClear]="true"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modern Table Section -->
+  <div class="table-section">
+    <div class="table-header">
+      <div class="table-title">
+        <i class="material-icons">view_list</i>
+        <span>Accessories List</span>
+        <span class="request-count">{{ filteredAccessories.length }}</span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="loader-spinner"></div>
+        <p>Loading accessories inventory...</p>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!isLoading && filteredAccessories.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="material-icons">inbox</i>
+        </div>
+        <h3>No Accessories Found</h3>
+        <p>
+          @if (hasActiveFilters()) {
+            No accessories match your current filters.
+          } @else {
+            No accessories have been added to the inventory yet.
+          }
+        </p>
+        @if (!hasActiveFilters()) {
+          <button class="empty-action-btn" (click)="openAddAccessoryModal()" type="button">
+            Add First Accessory
+          </button>
+        } @else {
+          <button class="empty-action-btn" (click)="clearAllFilters()" type="button">
+            Clear Filters
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Modern Table -->
+    @if (!isLoading && filteredAccessories.length > 0) {
+      <div class="accessories-table-wrapper">
+        <p-table
+          [value]="filteredAccessories"
+          styleClass="modern-table"
+          responsiveLayout="scroll"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50, 100]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+          [rowHover]="true"
+          [sortField]="'name'"
+          [sortOrder]="1"
+          dataKey="id">
 
       <!-- Header -->
       <ng-template pTemplate="header">
@@ -288,8 +334,10 @@
             </div>
           </td>
         </tr>
-      </ng-template>
-    </p-table>
+          </ng-template>
+        </p-table>
+      </div>
+    }
   </div>
 </div>
 
