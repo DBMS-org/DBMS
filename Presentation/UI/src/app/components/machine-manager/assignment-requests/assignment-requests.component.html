@@ -13,6 +13,15 @@
       </div>
       <div class="header-actions">
         <p-button
+          icon="pi pi-download"
+          label="Export"
+          (onClick)="exportRequests()"
+          [disabled]="isLoading"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="export-btn">
+        </p-button>
+        <p-button
           icon="pi pi-refresh"
           label="Refresh"
           (onClick)="refreshRequests()"
@@ -32,7 +41,7 @@
         <i class="material-icons">error_outline</i>
         <span>{{ error }}</span>
       </div>
-      <button class="error-close" (click)="error = null">
+      <button class="error-close" (click)="error = null" type="button" aria-label="Close error">
         <i class="material-icons">close</i>
       </button>
     </div>
@@ -92,7 +101,7 @@
         <i class="material-icons">tune</i>
         <span>Filters</span>
       </div>
-      <button class="clear-filters-btn" (click)="clearFilters()">
+      <button class="clear-filters-btn" (click)="clearFilters()" type="button">
         <i class="material-icons">clear_all</i>
         Clear All
       </button>
@@ -199,7 +208,7 @@
         </div>
         <h3>No Requests Found</h3>
         <p>There are no assignment requests matching your current filters.</p>
-        <button class="empty-action-btn" (click)="clearFilters()">
+        <button class="empty-action-btn" (click)="clearFilters()" type="button">
           Clear Filters
         </button>
       </div>
@@ -310,18 +319,24 @@
               <td class="col-actions">
                 @if (request.status === 'PENDING') {
                   <div class="action-buttons">
-                    <button
-                      class="action-btn approve-btn"
-                      (click)="approveRequest(request)"
-                      title="Approve Request">
-                      <i class="material-icons">check</i>
-                    </button>
-                    <button
-                      class="action-btn reject-btn"
-                      (click)="rejectRequest(request)"
-                      title="Reject Request">
-                      <i class="material-icons">close</i>
-                    </button>
+                    <p-button
+                      icon="pi pi-check"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="success"
+                      (onClick)="approveRequest(request)"
+                      pTooltip="Approve Request"
+                      tooltipPosition="top">
+                    </p-button>
+                    <p-button
+                      icon="pi pi-times"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="danger"
+                      (onClick)="rejectRequest(request)"
+                      pTooltip="Reject Request"
+                      tooltipPosition="top">
+                    </p-button>
                   </div>
                 } @else {
                   <span class="no-actions">—</span>

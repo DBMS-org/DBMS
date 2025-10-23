@@ -158,6 +158,36 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     this.notificationService.showSuccess('Assignment requests refreshed successfully');
   }
 
+  exportRequests(): void {
+    // In a real application, this would generate and download a CSV/Excel file
+    const csvContent = this.generateCSVContent();
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `assignment-requests-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    this.notificationService.showSuccess('Assignment requests exported successfully');
+  }
+
+  private generateCSVContent(): string {
+    const headers = ['ID', 'Date', 'Requester', 'Email', 'Project', 'Machine Type', 'Quantity', 'Urgency', 'Status'];
+    const rows = this.filteredRequests.map(request => [
+      request.id,
+      this.formatDate(request.requestedAt),
+      request.requesterName,
+      request.requesterEmail,
+      request.projectName,
+      request.machineType,
+      request.quantity.toString(),
+      request.urgency,
+      request.status
+    ]);
+
+    return [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  }
+
   // Filter methods
   applyFilters(): void {
     this.filteredRequests = this.assignmentRequests.filter(request => {

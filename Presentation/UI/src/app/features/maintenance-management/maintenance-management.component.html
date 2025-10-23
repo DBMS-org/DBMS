@@ -1,334 +1,393 @@
 <!-- Maintenance Management Component -->
 <div class="maintenance-management">
-  <!-- Page Header -->
+  <!-- Modern Page Header -->
   <div class="page-header">
     <div class="header-content">
-      <div class="title-section">
-        <h1 class="page-title">
-          <i class="fas fa-tools"></i>
-          Maintenance Management
-        </h1>
-        <p class="page-subtitle">Schedule, track, and manage machine maintenance activities</p>
+      <div class="header-title-section">
+        <div class="icon-wrapper">
+          <i class="material-icons">build</i>
+        </div>
+        <div class="title-content">
+          <h1 class="page-title">Maintenance Management</h1>
+          <p class="page-subtitle">Schedule, track, and manage machine maintenance activities</p>
+        </div>
       </div>
       <div class="header-actions">
-        <button class="btn btn-success" (click)="openScheduleModal()">
-          <i class="fas fa-plus"></i>
-          Schedule Maintenance
-        </button>
-        <button class="btn btn-secondary" (click)="exportMaintenanceData()" [disabled]="isExporting">
-          <i class="fas fa-download" [class.fa-spin]="isExporting"></i>
-          Export Data
-        </button>
-        <button class="btn btn-primary" (click)="refreshData()" [disabled]="isLoading">
-          <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
-          Refresh
-        </button>
-      </div>
-    </div>
-    <div class="timestamp">
-      Last updated: {{ lastUpdated | date:'medium' }}
-    </div>
-  </div>
-
-  <!-- Error Alert -->
-  <div class="alert alert-danger" *ngIf="errorMessage">
-    <div class="alert-content">
-      <i class="fas fa-exclamation-triangle"></i>
-      <span>{{ errorMessage }}</span>
-    </div>
-    <button class="alert-close" (click)="clearError()">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-
-  <!-- Statistics Grid -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon scheduled">
-        <i class="fas fa-calendar-check"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics.scheduled }}</div>
-        <div class="stat-label">Scheduled</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon in-progress">
-        <i class="fas fa-wrench"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics.inProgress }}</div>
-        <div class="stat-label">In Progress</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon overdue">
-        <i class="fas fa-exclamation-circle"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics.overdue }}</div>
-        <div class="stat-label">Overdue</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon completed">
-        <i class="fas fa-check-circle"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ statistics.completed }}</div>
-        <div class="stat-label">Completed</div>
+        <p-button
+          icon="pi pi-plus"
+          label="Schedule Maintenance"
+          (onClick)="openScheduleModal()"
+          severity="success"
+          styleClass="schedule-btn">
+        </p-button>
+        <p-button
+          icon="pi pi-download"
+          label="Export"
+          (onClick)="exportMaintenanceData()"
+          [disabled]="isExporting"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="export-btn">
+        </p-button>
+        <p-button
+          icon="pi pi-refresh"
+          label="Refresh"
+          (onClick)="refreshData()"
+          [disabled]="isLoading"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="refresh-btn">
+        </p-button>
       </div>
     </div>
   </div>
 
-  <!-- Filters Section -->
-  <div class="filters-section">
-    <div class="filters-row">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input 
-          type="text" 
-          class="search-input" 
-          placeholder="Search by machine name, maintenance type, or technician..."
-          [(ngModel)]="searchTerm"
-          (input)="applyFilters()"
-        >
-        <button class="clear-search" *ngIf="searchTerm" (click)="clearSearch()">
-          <i class="fas fa-times"></i>
-        </button>
+  <!-- Error notification display -->
+  @if (errorMessage) {
+    <div class="error-alert">
+      <div class="error-content">
+        <i class="material-icons">error_outline</i>
+        <span>{{ errorMessage }}</span>
       </div>
-      <div class="filter-group">
-        <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
-          <option value="">All Status</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="overdue">Overdue</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+      <button class="error-close" (click)="clearError()" type="button" aria-label="Close error">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+  }
+
+  <!-- Modern Statistics Dashboard -->
+  <div class="stats-dashboard">
+    <div class="stat-card stat-scheduled">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">event</i>
+        </div>
+        <span class="stat-label">Scheduled</span>
       </div>
-      <div class="filter-group">
-        <select class="filter-select" [(ngModel)]="selectedType" (change)="onTypeFilterChange()">
-          <option value="">All Types</option>
-          <option value="preventive">Preventive</option>
-          <option value="corrective">Corrective</option>
-          <option value="emergency">Emergency</option>
-          <option value="inspection">Inspection</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <select class="filter-select" [(ngModel)]="selectedPriority" (change)="onPriorityFilterChange()">
-          <option value="">All Priorities</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="critical">Critical</option>
-        </select>
-      </div>
+      <div class="stat-value">{{ statistics.scheduled }}</div>
+      <div class="stat-footer">Upcoming</div>
     </div>
 
-    <!-- Active Filters -->
-    <div class="active-filters" *ngIf="hasActiveFilters()">
-      <span class="filter-label">Active Filters:</span>
-      <span class="filter-tag" *ngIf="selectedStatus">
-        Status: {{ selectedStatus }}
-        <button (click)="clearStatusFilter()"><i class="fas fa-times"></i></button>
-      </span>
-      <span class="filter-tag" *ngIf="selectedType">
-        Type: {{ selectedType }}
-        <button (click)="clearTypeFilter()"><i class="fas fa-times"></i></button>
-      </span>
-      <span class="filter-tag" *ngIf="selectedPriority">
-        Priority: {{ selectedPriority }}
-        <button (click)="clearPriorityFilter()"><i class="fas fa-times"></i></button>
-      </span>
-      <span class="filter-tag" *ngIf="searchTerm">
-        Search: "{{ searchTerm }}"
-        <button (click)="clearSearch()"><i class="fas fa-times"></i></button>
-      </span>
-      <button class="clear-all-filters" (click)="clearAllFilters()">
-        <i class="fas fa-times"></i>
+    <div class="stat-card stat-in-progress">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">build_circle</i>
+        </div>
+        <span class="stat-label">In Progress</span>
+      </div>
+      <div class="stat-value">{{ statistics.inProgress }}</div>
+      <div class="stat-footer">Active Now</div>
+    </div>
+
+    <div class="stat-card stat-overdue">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">error</i>
+        </div>
+        <span class="stat-label">Overdue</span>
+      </div>
+      <div class="stat-value">{{ statistics.overdue }}</div>
+      <div class="stat-footer">Needs Attention</div>
+    </div>
+
+    <div class="stat-card stat-completed">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <span class="stat-label">Completed</span>
+      </div>
+      <div class="stat-value">{{ statistics.completed }}</div>
+      <div class="stat-footer">This Month</div>
+    </div>
+  </div>
+
+  <!-- Modern Filter Section -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <div class="filter-title">
+        <i class="material-icons">tune</i>
+        <span>Filters</span>
+      </div>
+      <button class="clear-filters-btn" (click)="clearAllFilters()" type="button">
+        <i class="material-icons">clear_all</i>
         Clear All
       </button>
     </div>
-  </div>
 
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="isLoading">
-    <div class="loading-spinner">
-      <div class="spinner"></div>
-      <p>Loading maintenance records...</p>
+    <div class="filter-grid">
+      <!-- Search Input -->
+      <div class="filter-item search-item">
+        <label class="filter-label">
+          <i class="material-icons">search</i>
+          Search
+        </label>
+        <input
+          type="text"
+          class="filter-input search-input"
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+          placeholder="Search maintenance records..." />
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Status</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Status', value: ''},
+            {label: 'Scheduled', value: 'scheduled'},
+            {label: 'In Progress', value: 'in-progress'},
+            {label: 'Completed', value: 'completed'},
+            {label: 'Overdue', value: 'overdue'},
+            {label: 'Cancelled', value: 'cancelled'}
+          ]"
+          [(ngModel)]="selectedStatus"
+          (onChange)="onStatusFilterChange()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <!-- Type Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Type</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Types', value: ''},
+            {label: 'Preventive', value: 'preventive'},
+            {label: 'Corrective', value: 'corrective'},
+            {label: 'Emergency', value: 'emergency'},
+            {label: 'Inspection', value: 'inspection'}
+          ]"
+          [(ngModel)]="selectedType"
+          (onChange)="onTypeFilterChange()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <!-- Priority Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Priority</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Priorities', value: ''},
+            {label: 'Low', value: 'low'},
+            {label: 'Medium', value: 'medium'},
+            {label: 'High', value: 'high'},
+            {label: 'Critical', value: 'critical'}
+          ]"
+          [(ngModel)]="selectedPriority"
+          (onChange)="onPriorityFilterChange()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
     </div>
   </div>
 
-  <!-- Maintenance Table -->
-  <div class="table-container" *ngIf="!isLoading">
-    <table class="maintenance-table" *ngIf="paginatedMaintenanceRecords.length > 0">
-      <thead>
-        <tr>
-          <th class="sortable" (click)="sortBy('machineId')">
-            Machine
-            <i class="fas fa-sort" *ngIf="sortField !== 'machineId'"></i>
-            <i class="fas fa-sort-up" *ngIf="sortField === 'machineId' && sortDirection === 'asc'"></i>
-            <i class="fas fa-sort-down" *ngIf="sortField === 'machineId' && sortDirection === 'desc'"></i>
-          </th>
-          <th class="sortable" (click)="sortBy('type')">
-            Type
-            <i class="fas fa-sort" *ngIf="sortField !== 'type'"></i>
-            <i class="fas fa-sort-up" *ngIf="sortField === 'type' && sortDirection === 'asc'"></i>
-            <i class="fas fa-sort-down" *ngIf="sortField === 'type' && sortDirection === 'desc'"></i>
-          </th>
-          <th class="sortable" (click)="sortBy('priority')">
-            Priority
-            <i class="fas fa-sort" *ngIf="sortField !== 'priority'"></i>
-            <i class="fas fa-sort-up" *ngIf="sortField === 'priority' && sortDirection === 'asc'"></i>
-            <i class="fas fa-sort-down" *ngIf="sortField === 'priority' && sortDirection === 'desc'"></i>
-          </th>
-          <th class="sortable" (click)="sortBy('scheduledDate')">
-            Scheduled Date
-            <i class="fas fa-sort" *ngIf="sortField !== 'scheduledDate'"></i>
-            <i class="fas fa-sort-up" *ngIf="sortField === 'scheduledDate' && sortDirection === 'asc'"></i>
-            <i class="fas fa-sort-down" *ngIf="sortField === 'scheduledDate' && sortDirection === 'desc'"></i>
-          </th>
-          <th>Status</th>
-          <th>Technician</th>
-          <th>Duration</th>
-          <th class="actions-column">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="maintenance-row" 
-            *ngFor="let record of paginatedMaintenanceRecords"
-            [class.overdue-row]="record.status === 'overdue'"
-            [class.critical-row]="record.priority === 'critical'">
-          <td class="machine-cell">
-            <div class="machine-info">
-              <strong>{{ record.machineName }}</strong>
-              <small>{{ record.machineModel }} - {{ record.rigNo }}</small>
-            </div>
-          </td>
-          <td class="type-cell">
-            <span class="type-badge" [class]="'type-' + record.type">
-              {{ record.type | titlecase }}
-            </span>
-          </td>
-          <td class="priority-cell">
-            <span class="priority-badge" [class]="'priority-' + record.priority">
-              {{ record.priority | titlecase }}
-            </span>
-          </td>
-          <td class="date-cell">
-            <div class="date-info">
-              <strong>{{ record.scheduledDate | date:'MMM dd, yyyy' }}</strong>
-              <small>{{ record.scheduledTime }}</small>
-            </div>
-          </td>
-          <td class="status-cell">
-            <span class="status-badge" [class]="'status-' + record.status">
-              {{ record.status | titlecase }}
-            </span>
-          </td>
-          <td class="technician-cell">
-            {{ record.assignedTechnician }}
-          </td>
-          <td class="duration-cell">
-            {{ record.estimatedDuration }}h
-          </td>
-          <td class="actions-cell">
-            <div class="action-buttons">
-              <button class="btn-icon btn-primary" 
-                      (click)="viewMaintenanceDetails(record)"
-                      title="View Details">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn-icon btn-secondary" 
-                      (click)="editMaintenance(record)"
-                      title="Edit"
-                      *ngIf="record.status !== 'completed'">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn-icon btn-success" 
-                      (click)="startMaintenance(record)"
-                      title="Start Maintenance"
-                      *ngIf="record.status === 'scheduled'">
-                <i class="fas fa-play"></i>
-              </button>
-              <button class="btn-icon btn-warning" 
-                      (click)="completeMaintenance(record)"
-                      title="Complete Maintenance"
-                      *ngIf="record.status === 'in-progress'">
-                <i class="fas fa-check"></i>
-              </button>
-              <button class="btn-icon btn-danger" 
-                      (click)="cancelMaintenance(record)"
-                      title="Cancel"
-                      *ngIf="record.status === 'scheduled'">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Modern Table Section -->
+  <div class="table-section">
+    <div class="table-header">
+      <div class="table-title">
+        <i class="material-icons">view_list</i>
+        <span>Maintenance Records</span>
+        <span class="request-count">{{ filteredMaintenanceRecords.length }}</span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="loading-state">
+        <div class="loader-spinner"></div>
+        <p>Loading maintenance records...</p>
+      </div>
+    }
 
     <!-- Empty State -->
-    <div class="empty-state" *ngIf="paginatedMaintenanceRecords.length === 0">
-      <div class="empty-icon">
-        <i class="fas fa-tools"></i>
+    @if (!isLoading && filteredMaintenanceRecords.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="material-icons">inbox</i>
+        </div>
+        <h3>No Maintenance Records Found</h3>
+        <p>
+          @if (hasActiveFilters() || searchTerm) {
+            No maintenance records match your current filters.
+          } @else {
+            No maintenance activities have been scheduled yet.
+          }
+        </p>
+        @if (!hasActiveFilters() && !searchTerm) {
+          <button class="empty-action-btn" (click)="openScheduleModal()" type="button">
+            Schedule First Maintenance
+          </button>
+        } @else {
+          <button class="empty-action-btn" (click)="clearAllFilters()" type="button">
+            Clear Filters
+          </button>
+        }
       </div>
-      <h3>No Maintenance Records Found</h3>
-      <p>
-        <span *ngIf="!hasActiveFilters() && !searchTerm">No maintenance activities have been scheduled yet.</span>
-        <span *ngIf="hasActiveFilters() || searchTerm">No maintenance records match your current filters.</span>
-      </p>
-      <button class="btn btn-primary" (click)="openScheduleModal()" *ngIf="!hasActiveFilters() && !searchTerm">
-        <i class="fas fa-plus"></i>
-        Schedule First Maintenance
-      </button>
-      <button class="btn btn-secondary" (click)="clearAllFilters()" *ngIf="hasActiveFilters() || searchTerm">
-        <i class="fas fa-times"></i>
-        Clear Filters
-      </button>
-    </div>
-  </div>
+    }
 
-  <!-- Pagination -->
-  <div class="pagination-container" *ngIf="!isLoading && filteredMaintenanceRecords.length > 0">
-    <div class="pagination-info">
-      Showing {{ getStartIndex() + 1 }} to {{ getEndIndex() }} of {{ filteredMaintenanceRecords.length }} records
-    </div>
-    <div class="pagination-controls">
-      <button class="btn btn-secondary btn-sm" 
-              (click)="previousPage()" 
-              [disabled]="currentPage === 1">
-        <i class="fas fa-chevron-left"></i>
-        Previous
-      </button>
-      <div class="page-numbers">
-        <button class="btn btn-sm page-btn"
-                *ngFor="let page of getPageNumbers()"
-                [class.active]="page === currentPage"
-                (click)="goToPage(page)">
-          {{ page }}
-        </button>
+    <!-- Modern Table -->
+    @if (!isLoading && filteredMaintenanceRecords.length > 0) {
+      <div class="maintenance-table-wrapper">
+        <p-table
+          [value]="filteredMaintenanceRecords"
+          styleClass="modern-table"
+          responsiveLayout="scroll"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+          [rowHover]="true"
+          dataKey="id">
+
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="machineName" class="col-machine">
+                Machine
+                <p-sortIcon field="machineName"></p-sortIcon>
+              </th>
+              <th pSortableColumn="type" class="col-type">
+                Type
+                <p-sortIcon field="type"></p-sortIcon>
+              </th>
+              <th pSortableColumn="priority" class="col-priority">
+                Priority
+                <p-sortIcon field="priority"></p-sortIcon>
+              </th>
+              <th pSortableColumn="scheduledDate" class="col-date">
+                Scheduled Date
+                <p-sortIcon field="scheduledDate"></p-sortIcon>
+              </th>
+              <th pSortableColumn="status" class="col-status">
+                Status
+                <p-sortIcon field="status"></p-sortIcon>
+              </th>
+              <th class="col-technician">Technician</th>
+              <th class="col-duration">Duration</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-record>
+            <tr [ngClass]="{'overdue-row': record.status === 'overdue', 'critical-row': record.priority === 'critical'}">
+              <td class="col-machine">
+                <div class="machine-cell">
+                  <i class="material-icons">precision_manufacturing</i>
+                  <div class="machine-info">
+                    <span class="machine-name">{{ record.machineName }}</span>
+                    <span class="machine-detail">{{ record.machineModel }} - {{ record.rigNo }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="col-type">
+                <span class="type-badge type-{{ record.type }}">
+                  {{ record.type | titlecase }}
+                </span>
+              </td>
+              <td class="col-priority">
+                <span class="priority-badge priority-{{ record.priority }}">
+                  {{ record.priority | titlecase }}
+                </span>
+              </td>
+              <td class="col-date">
+                <div class="date-cell">
+                  <i class="material-icons">event</i>
+                  <div class="date-info">
+                    <span>{{ record.scheduledDate | date:'MMM dd, yyyy' }}</span>
+                    <small>{{ record.scheduledTime }}</small>
+                  </div>
+                </div>
+              </td>
+              <td class="col-status">
+                <span class="status-badge status-{{ record.status }}">
+                  <i class="material-icons">
+                    {{ record.status === 'completed' ? 'check_circle' :
+                       record.status === 'in-progress' ? 'build_circle' :
+                       record.status === 'overdue' ? 'error' : 'schedule' }}
+                  </i>
+                  {{ record.status | titlecase }}
+                </span>
+              </td>
+              <td class="col-technician">
+                <div class="technician-cell">
+                  <i class="material-icons">person</i>
+                  <span>{{ record.assignedTechnician }}</span>
+                </div>
+              </td>
+              <td class="col-duration">
+                <span class="duration-badge">{{ record.estimatedDuration }}h</span>
+              </td>
+              <td class="col-actions">
+                <div class="action-buttons">
+                  <p-button
+                    icon="pi pi-eye"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="info"
+                    (onClick)="viewMaintenanceDetails(record)"
+                    pTooltip="View Details"
+                    tooltipPosition="top">
+                  </p-button>
+                  @if (record.status !== 'completed') {
+                    <p-button
+                      icon="pi pi-pencil"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="secondary"
+                      (onClick)="editMaintenance(record)"
+                      pTooltip="Edit"
+                      tooltipPosition="top">
+                    </p-button>
+                  }
+                  @if (record.status === 'scheduled') {
+                    <p-button
+                      icon="pi pi-play"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="success"
+                      (onClick)="startMaintenance(record)"
+                      pTooltip="Start Maintenance"
+                      tooltipPosition="top">
+                    </p-button>
+                  }
+                  @if (record.status === 'in-progress') {
+                    <p-button
+                      icon="pi pi-check"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="success"
+                      (onClick)="completeMaintenance(record)"
+                      pTooltip="Complete"
+                      tooltipPosition="top">
+                    </p-button>
+                  }
+                  @if (record.status === 'scheduled') {
+                    <p-button
+                      icon="pi pi-times"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="danger"
+                      (onClick)="cancelMaintenance(record)"
+                      pTooltip="Cancel"
+                      tooltipPosition="top">
+                    </p-button>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       </div>
-      <button class="btn btn-secondary btn-sm" 
-              (click)="nextPage()" 
-              [disabled]="currentPage === totalPages">
-        Next
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-    <div class="page-size-selector">
-      <span>Show:</span>
-      <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
-        <option value="10">10</option>
-        <option value="25">25</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-      </select>
-      <span>per page</span>
-    </div>
+    }
   </div>
 </div>
 
