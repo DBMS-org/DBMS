@@ -94,6 +94,8 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   selectedMachineType: string = 'ALL';
   // Free-text search
   searchQuery: string = '';
+  // Filter expansion state
+  isFilterExpanded: boolean = true;
 
   // Sorting and pagination
   sortBy: 'requestedAt' | 'urgency' | 'status' | 'machineType' | 'projectName' | 'requesterName' | 'id' = 'requestedAt';
@@ -291,6 +293,10 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     }
     this.sortRequests();
     this.updateDisplayedRequests();
+  }
+
+  toggleFilterExpansion(): void {
+    this.isFilterExpanded = !this.isFilterExpanded;
   }
 
   onPageChange(page: number): void {

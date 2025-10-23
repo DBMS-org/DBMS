@@ -82,6 +82,8 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   selectedCategory: any = null;
   selectedStatus: any = null;
   selectedSupplier: any = null;
+  // Filter expansion state
+  isFilterExpanded: boolean = true;
   categoryOptions: any[] = [];
   supplierOptions: any[] = [];
   statusOptions: any[] = [
@@ -307,6 +309,10 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
     this.selectedStatus = null;
     this.selectedSupplier = null;
     this.applyFilters();
+  }
+
+  toggleFilterExpansion(): void {
+    this.isFilterExpanded = !this.isFilterExpanded;
   }
 
   hasActiveFilters(): boolean {
