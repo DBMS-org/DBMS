@@ -1,1 +1,1 @@
-mimi
+Added and aligned functional requirements and descriptive use cases with current project implementation
