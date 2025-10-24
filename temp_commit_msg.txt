@@ -1,7 +1,1 @@
-Add Machine Assignment Entities and Update Permissions, Regions, and Roles Data
-
-- Created new tables: MachineAssignmentRequests and MachineAssignments.
-- Defined columns for both tables including foreign keys to Projects, Machines, and Users.
-- Added indexes for efficient querying on various columns.
-- Updated CreatedAt and UpdatedAt timestamps for existing Permissions, Regions, and Roles.
-- Ensured referential integrity with appropriate foreign key constraints.
+refactor: update severity levels from 'warn' to 'warning' and improve styling in accessories inventory component
