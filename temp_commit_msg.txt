@@ -1,1 +1,1 @@
-added button and transitions in edit-user and login components for improved usability and consistency
+refactor button in add-user and forgot-password components for improved consistency and usability
