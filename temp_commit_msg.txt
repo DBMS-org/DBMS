@@ -1,1 +1,1 @@
-refactor: update navbar and dashboard styles for improved layout and responsiveness; fix InputTextarea import in blasting engineer requests component
+refactor: adjust button padding and hover effects in machine inventory; update navbar icon size and alignment; add margin to project description
