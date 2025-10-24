@@ -243,40 +243,59 @@
             &.project-actions {
               .action-buttons {
                 display: flex;
-                gap: var(--space-sm);
+                gap: 0.5rem;
+                align-items: center;
                 justify-content: center;
 
                 .action-btn {
-                  width: 35px;
-                  height: 35px;
-                  border-radius: 50%;
+                  width: 40px;
+                  height: 40px;
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   border: none;
+                  border-radius: 10px;
                   cursor: pointer;
-                  transition: var(--transition-base);
+                  transition: all 0.2s ease;
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+                  i {
+                    font-size: 1.125rem;
+                    color: white;
+                  }
 
                   &:hover {
                     transform: translateY(-2px);
-                    box-shadow: var(--shadow-md);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                   }
 
-                  i {
-                    font-size: var(--font-size-base);
-                    color: var(--text-light);
+                  &:active {
+                    transform: translateY(0);
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                   }
 
-                  &.btn-info {
-                    background: linear-gradient(135deg, var(--info-color), #2563eb);
+                  &.view-btn {
+                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+
+                    &:hover {
+                      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                    }
                   }
 
-                  &.btn-primary {
-                    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+                  &.edit-btn {
+                    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+
+                    &:hover {
+                      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+                    }
                   }
 
-                  &.btn-danger {
-                    background: linear-gradient(135deg, var(--error-color), #dc2626);
+                  &.delete-btn {
+                    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+
+                    &:hover {
+                      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                    }
                   }
                 }
               }

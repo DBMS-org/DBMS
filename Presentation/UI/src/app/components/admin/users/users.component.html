@@ -117,34 +117,25 @@
               ></p-tag>
             </td>
             <td>
-              <div class="flex gap-2">
-                <p-button
-                  icon="pi pi-eye"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="info"
-                  (onClick)="showUserDetails(user)"
-                  [pTooltip]="'View Details'"
-                  tooltipPosition="top"
-                ></p-button>
-                <p-button
-                  icon="pi pi-pencil"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="warning"
-                  (onClick)="editUser(user.id)"
-                  [pTooltip]="'Edit User'"
-                  tooltipPosition="top"
-                ></p-button>
-                <p-button
-                  icon="pi pi-trash"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="danger"
-                  (onClick)="deleteUser(user.id)"
-                  [pTooltip]="'Delete User'"
-                  tooltipPosition="top"
-                ></p-button>
+              <div class="action-buttons">
+                <button
+                  class="action-btn view-btn"
+                  (click)="showUserDetails(user)"
+                  title="View Details">
+                  <i class="pi pi-eye"></i>
+                </button>
+                <button
+                  class="action-btn edit-btn"
+                  (click)="editUser(user.id)"
+                  title="Edit User">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button
+                  class="action-btn delete-btn"
+                  (click)="deleteUser(user.id)"
+                  title="Delete User">
+                  <i class="pi pi-trash"></i>
+                </button>
               </div>
             </td>
           </tr>
