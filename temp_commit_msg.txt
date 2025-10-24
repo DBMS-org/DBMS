@@ -1,1 +1,1 @@
-refactor: update styles for assignment requests and dashboard components; adjust button sizes, paddings, and hover effects for improved UI consistency
+refactor: enhance button styles and layout across components; improve padding, font sizes, and hover effects for better UI consistency
