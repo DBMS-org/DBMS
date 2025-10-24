@@ -1,1 +1,1 @@
-refactor: enhance button styles and layout across components; improve padding, font sizes, and hover effects for better UI consistency
+refactor: update button styles across anfo edit, emulsion inventory, and stores components; enhance padding, font sizes, and hover effects for improved UI consistency
