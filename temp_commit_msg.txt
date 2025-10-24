@@ -1,1 +1,1 @@
-refactor button in machine inventory and project management components for improved consistency and usability; update padding, font sizes, and transition effects
+refactor routing configuration to use direct children for admin and engineer modules; improve readability and maintainability
