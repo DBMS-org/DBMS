@@ -1,1 +1,1 @@
-refactor: update severity levels from 'warn' to 'warning' and improve styling in accessories inventory component
+refactor: enhance dashboard and navbar UI components for improved styling and consistency
