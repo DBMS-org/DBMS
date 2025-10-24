@@ -22,10 +22,15 @@
     border: none;
     margin-right: 1rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
 
     i {
-      font-size: 28px;
+      font-size: 24px;
       color: #555;
+      line-height: 1;
     }
   }
 
@@ -34,6 +39,7 @@
     font-size: 1.25rem;
     font-weight: 600;
     color: #2c3e50;
+    line-height: 1;
   }
 }
 
