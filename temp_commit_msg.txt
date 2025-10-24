@@ -1,1 +1,1 @@
-refactor button styles and layout in navbar and users components for improved consistency and usability; update padding, font sizes, and transition effects
+refactor button in machine inventory and project management components for improved consistency and usability; update padding, font sizes, and transition effects
