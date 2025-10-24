@@ -36,13 +36,14 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.875rem 1.5rem;
+      padding: 0.75rem 1.5rem;
       border-radius: 8px;
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 500;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       text-decoration: none;
       border: none;
+      cursor: pointer;
 
       &.btn-secondary {
         background: rgba(255, 255, 255, 0.2);
@@ -56,6 +57,10 @@
           transform: translateY(-2px);
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
+
+        &:active {
+          transform: translateY(0);
+        }
       }
 
       &.btn-info {
@@ -67,6 +72,10 @@
           background: rgba(23, 162, 184, 1);
           transform: translateY(-2px);
           box-shadow: 0 4px 20px rgba(23, 162, 184, 0.4);
+        }
+
+        &:active {
+          transform: translateY(0);
         }
       }
 
@@ -82,10 +91,14 @@
           box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
         }
 
+        &:active {
+          transform: translateY(0);
+        }
+
         &:disabled {
           opacity: 0.6;
           cursor: not-allowed;
-          transform: none;
+          transform: none !important;
           box-shadow: none;
         }
 
@@ -105,6 +118,14 @@
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+
+      i, .material-icons, .fa, .fas {
+        font-size: 1.125rem;
       }
     }
   }
