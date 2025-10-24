@@ -18,20 +18,20 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { DrillLocation } from '../../../../core/models/drilling.model';
 
 // PrimeNG Imports
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { ProgressBar } from 'primeng/progressbar';
-import { Badge } from 'primeng/badge';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
-import { DatePicker } from 'primeng/datepicker';
-import { Tooltip } from 'primeng/tooltip';
-import { Divider } from 'primeng/divider';
-import { Tag } from 'primeng/tag';
-import { Chip } from 'primeng/chip';
-import { Skeleton } from 'primeng/skeleton';
-import { Message } from 'primeng/message';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { BadgeModule } from 'primeng/badge';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { CalendarModule } from 'primeng/calendar';
+import { TooltipModule } from 'primeng/tooltip';
+import { DividerModule } from 'primeng/divider';
+import { TagModule } from 'primeng/tag';
+import { ChipModule } from 'primeng/chip';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 
 interface WorkflowStep {
@@ -51,20 +51,20 @@ interface WorkflowStep {
   imports: [
     CommonModule,
     FormsModule,
-    Button,
-    Card,
-    ProgressBar,
-    Badge,
-    Dialog,
-    InputText,
-    InputTextarea,
-    DatePicker,
-    Tooltip,
-    Divider,
-    Tag,
-    Chip,
-    Skeleton,
-    Message,
+    ButtonModule,
+    CardModule,
+    ProgressBarModule,
+    BadgeModule,
+    DialogModule,
+    InputTextModule,
+    InputTextareaModule,
+    CalendarModule,
+    TooltipModule,
+    DividerModule,
+    TagModule,
+    ChipModule,
+    SkeletonModule,
+    MessageModule,
     TableModule
   ],
   templateUrl: './site-dashboard.component.html',
