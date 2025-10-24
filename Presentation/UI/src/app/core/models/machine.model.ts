@@ -79,44 +79,35 @@ export interface UpdateMachineRequest {
 }
 
 export interface MachineAssignmentRequest {
-  id: number;
-  projectId: number;
-  projectName?: string;
-  machineType: MachineType | string;
+  id: string;
+  projectId: string;
+  machineType: MachineType;
   quantity: number;
   requestedBy: string;
   requestedDate: Date;
-  status: AssignmentRequestStatus | string;
-  urgency: RequestUrgency | string;
+  status: AssignmentRequestStatus;
+  urgency: RequestUrgency;
   detailsOrExplanation?: string;
   approvedBy?: string;
   approvedDate?: Date;
-  assignedMachines?: number[];
+  assignedMachines?: string[];
   comments?: string;
   expectedUsageDuration?: string;
   expectedReturnDate?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 export interface MachineAssignment {
-  id: number;
-  machineId: number;
-  machineName?: string;
-  machineSerialNumber?: string;
-  projectId: number;
-  projectName?: string;
-  operatorId: number;
-  operatorName?: string;
+  id: string;
+  machineId: string;
+  projectId: string;
+  operatorId: string;
   assignedBy: string;
   assignedDate: Date;
   expectedReturnDate?: Date;
   actualReturnDate?: Date;
-  status: AssignmentStatus | string;
+  status: AssignmentStatus;
   location?: string;
   notes?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 export enum MachineType {

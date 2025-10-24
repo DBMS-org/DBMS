@@ -138,14 +138,13 @@ export class MachineService {
     return this.http.get<any>(`${this.apiUrl}/statistics`);
   }
 
-  // Machine Assignment Operations
+  // Machine Assignment Operations (Mock implementation for development)
   /**
    * Retrieves all pending and processed assignment requests
+   * Currently uses mock data for development purposes
    */
   getAllAssignmentRequests(): Observable<MachineAssignmentRequest[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/assignment-requests`).pipe(
-      map(requests => requests.map(r => this.mapAssignmentRequest(r)))
-    );
+    return of(this.getMockAssignmentRequests());
   }
 
   /**
@@ -153,34 +152,28 @@ export class MachineService {
    * Validates request details and business rules before submission
    */
   submitAssignmentRequest(request: MachineAssignmentRequest): Observable<MachineAssignmentRequest> {
-    return this.http.post<any>(`${this.apiUrl}/assignment-requests`, request).pipe(
-      map(r => this.mapAssignmentRequest(r))
-    );
+    return this.http.post<MachineAssignmentRequest>(`${this.apiUrl}/assignment-requests`, request);
   }
 
   /**
    * Approves an assignment request and assigns specified machines
    * Updates machine status and creates assignment records
    */
-  approveAssignmentRequest(requestId: number, assignedMachines: number[], comments?: string): Observable<MachineAssignmentRequest> {
-    return this.http.patch<any>(`${this.apiUrl}/assignment-requests/${requestId}/approve`, {
+  approveAssignmentRequest(requestId: string, assignedMachines: string[], comments?: string): Observable<MachineAssignmentRequest> {
+    return this.http.patch<MachineAssignmentRequest>(`${this.apiUrl}/assignment-requests/${requestId}/approve`, {
       assignedMachines,
       comments
-    }).pipe(
-      map(r => this.mapAssignmentRequest(r))
-    );
+    });
   }
 
   /**
    * Rejects an assignment request with mandatory comments
    * Notifies requester and logs rejection reason
    */
-  rejectAssignmentRequest(requestId: number, comments: string): Observable<MachineAssignmentRequest> {
-    return this.http.patch<any>(`${this.apiUrl}/assignment-requests/${requestId}/reject`, {
+  rejectAssignmentRequest(requestId: string, comments: string): Observable<MachineAssignmentRequest> {
+    return this.http.patch<MachineAssignmentRequest>(`${this.apiUrl}/assignment-requests/${requestId}/reject`, {
       comments
-    }).pipe(
-      map(r => this.mapAssignmentRequest(r))
-    );
+    });
   }
 
   /**
@@ -188,9 +181,7 @@ export class MachineService {
    * Includes assignment details, duration, and return dates
    */
   getActiveAssignments(): Observable<MachineAssignment[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/assignments/active`).pipe(
-      map(assignments => assignments.map(a => this.mapAssignment(a)))
-    );
+    return this.http.get<MachineAssignment[]>(`${this.apiUrl}/assignments/active`);
   }
 
   /**
@@ -198,19 +189,15 @@ export class MachineService {
    * Updates machine status and tracks assignment lifecycle
    */
   assignMachine(assignment: MachineAssignment): Observable<MachineAssignment> {
-    return this.http.post<any>(`${this.apiUrl}/assignments`, assignment).pipe(
-      map(a => this.mapAssignment(a))
-    );
+    return this.http.post<MachineAssignment>(`${this.apiUrl}/assignments`, assignment);
   }
 
   /**
    * Processes machine return from assignment
    * Updates machine status and closes assignment record
    */
-  returnMachine(assignmentId: number): Observable<MachineAssignment> {
-    return this.http.patch<any>(`${this.apiUrl}/assignments/${assignmentId}/return`, {}).pipe(
-      map(a => this.mapAssignment(a))
-    );
+  returnMachine(assignmentId: string): Observable<MachineAssignment> {
+    return this.http.patch<MachineAssignment>(`${this.apiUrl}/assignments/${assignmentId}/return`, {});
   }
 
   /**
@@ -228,44 +215,14 @@ export class MachineService {
   }
 
   /**
-   * Helper method to map assignment request response to frontend model
-   * Handles date conversions
-   */
-  private mapAssignmentRequest(request: any): MachineAssignmentRequest {
-    return {
-      ...request,
-      requestedDate: new Date(request.requestedDate),
-      approvedDate: request.approvedDate ? new Date(request.approvedDate) : undefined,
-      expectedReturnDate: request.expectedReturnDate ? new Date(request.expectedReturnDate) : undefined,
-      createdAt: request.createdAt ? new Date(request.createdAt) : undefined,
-      updatedAt: request.updatedAt ? new Date(request.updatedAt) : undefined
-    };
-  }
-
-  /**
-   * Helper method to map assignment response to frontend model
-   * Handles date conversions
-   */
-  private mapAssignment(assignment: any): MachineAssignment {
-    return {
-      ...assignment,
-      assignedDate: new Date(assignment.assignedDate),
-      expectedReturnDate: assignment.expectedReturnDate ? new Date(assignment.expectedReturnDate) : undefined,
-      actualReturnDate: assignment.actualReturnDate ? new Date(assignment.actualReturnDate) : undefined,
-      createdAt: assignment.createdAt ? new Date(assignment.createdAt) : undefined,
-      updatedAt: assignment.updatedAt ? new Date(assignment.updatedAt) : undefined
-    };
-  }
-
-  /**
    * Provides mock assignment request data for development and testing
    * Simulates realistic assignment scenarios with various statuses
    */
   private getMockAssignmentRequests(): MachineAssignmentRequest[] {
     return [
       {
-        id: 1,
-        projectId: 1,
+        id: '1',
+        projectId: 'proj-001',
         machineType: MachineType.DRILL_RIG,
         quantity: 2,
         requestedBy: 'John Smith',
@@ -277,8 +234,8 @@ export class MachineService {
         expectedReturnDate: new Date('2024-07-10')
       },
       {
-        id: 2,
-        projectId: 2,
+        id: '2',
+        projectId: 'proj-002',
         machineType: MachineType.EXCAVATOR,
         quantity: 1,
         requestedBy: 'Sarah Johnson',
@@ -288,7 +245,7 @@ export class MachineService {
         detailsOrExplanation: 'Required for site preparation and material handling.',
         approvedBy: 'Mike Wilson',
         approvedDate: new Date('2024-01-09'),
-        assignedMachines: [2],
+        assignedMachines: ['2'],
         expectedUsageDuration: '3 months'
       }
     ];
