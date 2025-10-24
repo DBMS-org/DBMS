@@ -1,1 +1,1 @@
-refactor: adjust button padding and hover effects in machine inventory; update navbar icon size and alignment; add margin to project description
+refactor: update styles for assignment requests and dashboard components; adjust button sizes, paddings, and hover effects for improved UI consistency
