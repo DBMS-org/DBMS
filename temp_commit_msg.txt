@@ -1,1 +1,1 @@
-add button styles and layout in dashboard and navbar components; added padding, border-radius, and hover effects for improved UI consistency
+update button severity from 'warn' to 'warning' for consistency in site dashboard component
