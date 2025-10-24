@@ -1,1 +1,1 @@
-refactor: enhance dashboard and navbar UI components for improved styling and consistency
+refactor: improve navbar styling and update input textarea import in add-stock component
