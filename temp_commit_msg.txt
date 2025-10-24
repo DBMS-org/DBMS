@@ -1,1 +1,1 @@
-refactor: improve navbar styling and update input textarea import in add-stock component
+refactor: update navbar and dashboard styles for improved layout and responsiveness; fix InputTextarea import in blasting engineer requests component
