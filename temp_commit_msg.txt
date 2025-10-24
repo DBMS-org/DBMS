@@ -1,1 +1,1 @@
-refactor button in add-user and forgot-password components for improved consistency and usability
+refactor button styles and layout in navbar and users components for improved consistency and usability; update padding, font sizes, and transition effects
