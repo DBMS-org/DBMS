@@ -6,58 +6,57 @@
   // Page Header
   .page-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 4px rgba(102, 126, 234, 0.15);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
 
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 1rem;
     }
 
     .header-title-section {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 1rem;
     }
 
     .icon-wrapper {
-      width: 48px;
-      height: 48px;
+      width: 56px;
+      height: 56px;
       background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      border-radius: 10px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
 
       i {
-        font-size: 24px;
+        font-size: 28px;
         color: #fff;
+        line-height: 1;
       }
     }
 
     .title-content {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 0.25rem;
     }
 
     .page-title {
-      font-size: 22px;
+      font-size: 1.75rem;
       font-weight: 600;
       color: #fff;
       margin: 0;
-      letter-spacing: -0.3px;
+      line-height: 1;
     }
 
     .page-subtitle {
-      font-size: 14px;
+      font-size: 0.9rem;
       color: rgba(255, 255, 255, 0.9);
       margin: 0;
       font-weight: 400;
@@ -65,7 +64,7 @@
 
     .header-actions {
       display: flex;
-      gap: 10px;
+      gap: 0.75rem;
       flex-wrap: wrap;
 
       ::ng-deep .refresh-btn,
@@ -73,24 +72,7 @@
         background: rgba(255, 255, 255, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.3);
         color: #fff;
-        backdrop-filter: blur(10px);
         font-weight: 500;
-        padding: 8px 16px;
-        font-size: 13px;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.3);
-          transform: translateY(-1px);
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-        }
-
-        .p-button-label {
-          font-size: 13px;
-        }
-
-        .p-button-icon {
-          font-size: 14px;
-        }
       }
     }
   }
@@ -163,93 +145,58 @@
 
   .stat-card {
     background: #fff;
-    border-radius: 10px;
-    padding: 16px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    transition: all 0.2s ease;
-    border: 1px solid #f3f4f6;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--card-color-1), var(--card-color-2));
-    }
-
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    }
-  }
-
-  .stat-available {
-    --card-color-1: #10b981;
-    --card-color-2: #059669;
-  }
-
-  .stat-low-stock {
-    --card-color-1: #f59e0b;
-    --card-color-2: #f97316;
-  }
-
-  .stat-out-of-stock {
-    --card-color-1: #ef4444;
-    --card-color-2: #dc2626;
-  }
-
-  .stat-total {
-    --card-color-1: #3b82f6;
-    --card-color-2: #2563eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e9ecef;
   }
 
   .stat-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
   }
 
   .stat-icon-bg {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--card-color-1), var(--card-color-2));
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    flex-shrink: 0;
 
     i {
-      font-size: 20px;
+      font-size: 24px;
       color: #fff;
+      line-height: 1;
     }
   }
 
   .stat-label {
-    font-size: 12px;
+    font-size: 0.875rem;
     font-weight: 600;
-    color: #6b7280;
+    color: #6c757d;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
+    line-height: 1;
   }
 
   .stat-value {
-    font-size: 26px;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 6px 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0.75rem 0 0.5rem 0;
     line-height: 1;
   }
 
   .stat-footer {
-    font-size: 12px;
-    color: #9ca3af;
+    font-size: 0.875rem;
+    color: #6c757d;
     font-weight: 500;
+    line-height: 1;
   }
 
   // Filter Section
@@ -845,8 +792,11 @@
   }
 
   .p-tag {
-    font-size: 12px;
-    padding: 4px 10px;
+    font-size: 0.875rem;
+    padding: 0;
+    background: none !important;
+    color: #374151 !important;
+    font-weight: 500;
   }
 }
 
