@@ -1,1 +1,1 @@
-refactor: update button styles across anfo edit, emulsion inventory, and stores components; enhance padding, font sizes, and hover effects for improved UI consistency
+add button styles and sizes for dashboard, ANFO inventory, and emulsion-add components; include padding, typography, and hover states
