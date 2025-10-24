@@ -1,1 +1,1 @@
-update button severity from 'warn' to 'warning' for consistency in site dashboard component
+add button styles in verify reset code component; update transition timing and add padding for improved usability
