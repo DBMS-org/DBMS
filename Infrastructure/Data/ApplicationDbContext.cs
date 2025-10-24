@@ -35,6 +35,8 @@ namespace Infrastructure.Data
         public DbSet<SiteBlastingData> SiteBlastingData { get; set; }
         public DbSet<PasswordResetCode> PasswordResetCodes { get; set; }
         public DbSet<Machine> Machines { get; set; }
+        public DbSet<MachineAssignmentRequest> MachineAssignmentRequests { get; set; }
+        public DbSet<MachineAssignment> MachineAssignments { get; set; }
         public DbSet<Region> Regions { get; set; }
         public DbSet<DrillPoint> DrillPoints { get; set; }
         public DbSet<PatternSettings> PatternSettings { get; set; }
