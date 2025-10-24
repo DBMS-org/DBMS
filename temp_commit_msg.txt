@@ -1,1 +1,1 @@
-update PrimeNG imports to use module imports for better tree-shaking; add form control and button styles for improved UI consistency
+add button styles and layout in dashboard and navbar components; added padding, border-radius, and hover effects for improved UI consistency
