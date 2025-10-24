@@ -1,1 +1,1 @@
-add button styles and sizes for dashboard, ANFO inventory, and emulsion-add components; include padding, typography, and hover states
+update PrimeNG imports to use module imports for better tree-shaking; add form control and button styles for improved UI consistency
