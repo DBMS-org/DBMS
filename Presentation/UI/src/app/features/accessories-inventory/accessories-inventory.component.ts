@@ -11,10 +11,11 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
+import { AccessoryService, Accessory as AccessoryDto } from '../../core/services/accessory.service';
 
 // Interfaces
 interface Accessory {
-  id: string;
+  id: number;
   name: string;
   category: string;
   partNumber: string;
@@ -24,8 +25,10 @@ interface Accessory {
   minStockLevel: number;
   supplier: string;
   location?: string;
+  status?: string;
   createdAt: Date;
-  lastUpdated: Date;
+  updatedAt?: Date;
+  lastUpdated?: Date; // For backward compatibility with template
 }
 
 interface AccessoryForm {
@@ -139,7 +142,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   
   private subscriptions: Subscription[] = [];
 
-  constructor() {}
+  constructor(private accessoryService: AccessoryService) {}
 
   ngOnInit(): void {
     this.loadAccessories();
@@ -153,71 +156,71 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   private loadAccessories(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    
-    // Simulate API call with mock data
-    setTimeout(() => {
-      try {
-        this.accessories = this.generateMockAccessories();
+
+    const sub = this.accessoryService.getAccessories(
+      this.searchTerm || undefined,
+      this.selectedCategory || undefined,
+      this.selectedSupplier || undefined,
+      this.selectedStatus || undefined
+    ).subscribe({
+      next: (data) => {
+        this.accessories = (data || []).map(dto => this.mapDtoToAccessory(dto));
         this.extractFilterOptions();
         this.applyFilters();
-        this.calculateStatistics();
+        this.loadStatistics();
         this.lastUpdated = new Date();
         this.isLoading = false;
-      } catch (error) {
+      },
+      error: (error) => {
+        console.error('Error loading accessories:', error);
         this.errorMessage = 'Failed to load accessories inventory. Please try again.';
         this.isLoading = false;
       }
-    }, 1000);
+    });
+
+    this.subscriptions.push(sub);
   }
 
-  private generateMockAccessories(): Accessory[] {
-    const categories = ['Engine Parts', 'Hydraulic Parts', 'Electrical Components', 'Filters', 'Belts & Hoses', 'Lubricants', 'Safety Equipment', 'Tools'];
-    const suppliers = ['CAT Parts Inc.', 'Hydraulic Solutions', 'ElectroTech', 'FilterMax', 'Industrial Supply Co.', 'SafetyFirst', 'ToolMaster'];
-    const units = ['pcs', 'kg', 'ltr', 'm', 'box', 'set'];
-    
-    const accessories: Accessory[] = [];
-    
-    for (let i = 1; i <= 50; i++) {
-      const category = categories[Math.floor(Math.random() * categories.length)];
-      const supplier = suppliers[Math.floor(Math.random() * suppliers.length)];
-      const unit = units[Math.floor(Math.random() * units.length)];
-      const quantity = Math.floor(Math.random() * 100) + 1;
-      const minStock = Math.floor(Math.random() * 20) + 5;
-      
-      accessories.push({
-        id: `ACC-${i.toString().padStart(3, '0')}`,
-        name: this.generateAccessoryName(category),
-        category,
-        partNumber: `PN-${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
-        description: `High-quality ${category.toLowerCase()} for industrial machinery`,
-        quantity,
-        unit,
-        minStockLevel: minStock,
-        supplier,
-        location: `Warehouse ${String.fromCharCode(65 + Math.floor(Math.random() * 5))}-${Math.floor(Math.random() * 20) + 1}`,
-        createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
-        lastUpdated: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-      });
-    }
-    
-    return accessories;
+  private loadStatistics(): void {
+    const sub = this.accessoryService.getStatistics().subscribe({
+      next: (stats) => {
+        this.statistics = {
+          totalAvailable: stats.totalAvailable,
+          lowStock: stats.lowStock,
+          outOfStock: stats.outOfStock
+        };
+      },
+      error: (error) => {
+        console.error('Error loading statistics:', error);
+        // Use calculated statistics as fallback
+        this.calculateStatistics();
+      }
+    });
+
+    this.subscriptions.push(sub);
   }
 
-  private generateAccessoryName(category: string): string {
-    const names: { [key: string]: string[] } = {
-      'Engine Parts': ['Oil Filter', 'Air Filter', 'Fuel Filter', 'Spark Plug', 'Piston Ring', 'Gasket Set', 'Valve Cover'],
-      'Hydraulic Parts': ['Hydraulic Pump', 'Cylinder Seal', 'Hydraulic Hose', 'Pressure Valve', 'Flow Control Valve'],
-      'Electrical Components': ['Alternator', 'Starter Motor', 'Wiring Harness', 'Relay Switch', 'Fuse Set', 'Battery'],
-      'Filters': ['Oil Filter', 'Air Filter', 'Fuel Filter', 'Hydraulic Filter', 'Cabin Filter'],
-      'Belts & Hoses': ['Drive Belt', 'Timing Belt', 'Radiator Hose', 'Fuel Hose', 'Hydraulic Hose'],
-      'Lubricants': ['Engine Oil', 'Hydraulic Oil', 'Gear Oil', 'Grease', 'Coolant'],
-      'Safety Equipment': ['Safety Helmet', 'Safety Vest', 'Work Gloves', 'Safety Glasses', 'First Aid Kit'],
-      'Tools': ['Wrench Set', 'Socket Set', 'Screwdriver Set', 'Multimeter', 'Torque Wrench']
+  private mapDtoToAccessory(dto: AccessoryDto): Accessory {
+    const updatedDate = dto.updatedAt ? new Date(dto.updatedAt) : undefined;
+    return {
+      id: dto.id,
+      name: dto.name,
+      category: dto.category,
+      partNumber: dto.partNumber,
+      description: dto.description,
+      quantity: dto.quantity,
+      unit: dto.unit,
+      minStockLevel: dto.minStockLevel,
+      supplier: dto.supplier,
+      location: dto.location,
+      status: dto.status,
+      createdAt: new Date(dto.createdAt),
+      updatedAt: updatedDate,
+      lastUpdated: updatedDate // For backward compatibility with template
     };
-    
-    const categoryNames = names[category] || ['Generic Part'];
-    return categoryNames[Math.floor(Math.random() * categoryNames.length)];
   }
+
+  // Mock data methods removed - now using real API
 
   private extractFilterOptions(): void {
     const categories = [...new Set(this.accessories.map(a => a.category))].sort();
@@ -347,43 +350,89 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
 
   saveAccessory(): void {
     if (!this.isAccessoryFormValid()) return;
-    
+
     if (this.isEditMode && this.selectedAccessory) {
       // Update existing accessory
-      const index = this.accessories.findIndex(a => a.id === this.selectedAccessory!.id);
-      if (index !== -1) {
-        this.accessories[index] = {
-          ...this.accessories[index],
-          ...this.accessoryForm,
-          lastUpdated: new Date()
-        };
-      }
-    } else {
-      // Add new accessory
-      const newAccessory: Accessory = {
-        id: `ACC-${(this.accessories.length + 1).toString().padStart(3, '0')}`,
-        ...this.accessoryForm,
-        createdAt: new Date(),
-        lastUpdated: new Date()
+      const updateRequest = {
+        name: this.accessoryForm.name,
+        category: this.accessoryForm.category,
+        partNumber: this.accessoryForm.partNumber,
+        description: this.accessoryForm.description,
+        unit: this.accessoryForm.unit,
+        minStockLevel: this.accessoryForm.minStockLevel,
+        supplier: this.accessoryForm.supplier,
+        location: this.accessoryForm.location
       };
-      this.accessories.push(newAccessory);
+
+      const sub = this.accessoryService.updateAccessory(this.selectedAccessory.id, updateRequest).subscribe({
+        next: (updated) => {
+          const index = this.accessories.findIndex(a => a.id === this.selectedAccessory!.id);
+          if (index !== -1) {
+            this.accessories[index] = this.mapDtoToAccessory(updated);
+          }
+          this.extractFilterOptions();
+          this.applyFilters();
+          this.loadStatistics();
+          this.closeAccessoryModal();
+        },
+        error: (error) => {
+          console.error('Error updating accessory:', error);
+          this.errorMessage = error.error?.error || 'Failed to update accessory. Please try again.';
+        }
+      });
+
+      this.subscriptions.push(sub);
+    } else {
+      // Create new accessory
+      const createRequest = {
+        name: this.accessoryForm.name,
+        category: this.accessoryForm.category,
+        partNumber: this.accessoryForm.partNumber,
+        description: this.accessoryForm.description,
+        quantity: this.accessoryForm.quantity,
+        unit: this.accessoryForm.unit,
+        minStockLevel: this.accessoryForm.minStockLevel,
+        supplier: this.accessoryForm.supplier,
+        location: this.accessoryForm.location
+      };
+
+      const sub = this.accessoryService.createAccessory(createRequest).subscribe({
+        next: (created) => {
+          this.accessories.push(this.mapDtoToAccessory(created));
+          this.extractFilterOptions();
+          this.applyFilters();
+          this.loadStatistics();
+          this.closeAccessoryModal();
+        },
+        error: (error) => {
+          console.error('Error creating accessory:', error);
+          this.errorMessage = error.error?.error || 'Failed to create accessory. Please try again.';
+        }
+      });
+
+      this.subscriptions.push(sub);
     }
-    
-    this.extractFilterOptions();
-    this.applyFilters();
-    this.calculateStatistics();
-    this.closeAccessoryModal();
   }
 
   deleteAccessory(accessory: Accessory): void {
     if (confirm(`Are you sure you want to delete "${accessory.name}"? This action cannot be undone.`)) {
-      const index = this.accessories.findIndex(a => a.id === accessory.id);
-      if (index !== -1) {
-        this.accessories.splice(index, 1);
-        this.extractFilterOptions();
-        this.applyFilters();
-        this.calculateStatistics();
-      }
+      const sub = this.accessoryService.deleteAccessory(accessory.id).subscribe({
+        next: () => {
+          const index = this.accessories.findIndex(a => a.id === accessory.id);
+          if (index !== -1) {
+            this.accessories.splice(index, 1);
+            this.extractFilterOptions();
+            this.applyFilters();
+            this.loadStatistics();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting accessory:', error);
+          this.errorMessage = error.error?.error || 'Failed to delete accessory. Please try again.';
+        }
+      });
+
+      this.subscriptions.push(sub);
     }
   }
 
@@ -447,18 +496,31 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
 
   applyStockAdjustment(): void {
     if (!this.selectedAccessory || !this.stockAdjustment.quantity) return;
-    
-    const newQuantity = this.calculateNewStock();
-    const index = this.accessories.findIndex(a => a.id === this.selectedAccessory!.id);
-    
-    if (index !== -1) {
-      this.accessories[index].quantity = newQuantity;
-      this.accessories[index].lastUpdated = new Date();
-      
-      this.applyFilters();
-      this.calculateStatistics();
-      this.closeStockModal();
-    }
+
+    const adjustmentRequest = {
+      type: this.stockAdjustment.type.charAt(0).toUpperCase() + this.stockAdjustment.type.slice(1), // Capitalize first letter
+      quantity: this.stockAdjustment.quantity,
+      reason: this.stockAdjustment.reason.charAt(0).toUpperCase() + this.stockAdjustment.reason.slice(1),
+      notes: this.stockAdjustment.notes
+    };
+
+    const sub = this.accessoryService.adjustStock(this.selectedAccessory.id, adjustmentRequest).subscribe({
+      next: (updated) => {
+        const index = this.accessories.findIndex(a => a.id === this.selectedAccessory!.id);
+        if (index !== -1) {
+          this.accessories[index] = this.mapDtoToAccessory(updated);
+        }
+        this.applyFilters();
+        this.loadStatistics();
+        this.closeStockModal();
+      },
+      error: (error) => {
+        console.error('Error adjusting stock:', error);
+        this.errorMessage = error.error?.error || 'Failed to adjust stock. Please try again.';
+      }
+    });
+
+    this.subscriptions.push(sub);
   }
 
   closeStockModal(): void {
@@ -489,13 +551,8 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   }
 
   getStatusDisplay(accessory: Accessory): string {
-    if (accessory.quantity === 0) {
-      return 'Out of Stock';
-    } else if (accessory.quantity <= accessory.minStockLevel) {
-      return 'Low Stock';
-    } else {
-      return 'Available';
-    }
+    return accessory.status || (accessory.quantity === 0 ? 'Out of Stock' :
+           accessory.quantity <= accessory.minStockLevel ? 'Low Stock' : 'Available');
   }
 
   getStatusSeverity(accessory: Accessory): 'success' | 'warning' | 'danger' | 'info' {
@@ -508,45 +565,41 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
     }
   }
 
-  trackByAccessoryId(index: number, accessory: Accessory): string {
+  trackByAccessoryId(index: number, accessory: Accessory): number {
     return accessory.id;
   }
 
   // Export and refresh methods
   exportInventory(): void {
-    // In a real application, this would generate and download a CSV/Excel file
-    const csvContent = this.generateCSVContent();
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `accessories-inventory-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-  }
+    const sub = this.accessoryService.exportToCsv(
+      this.searchTerm || undefined,
+      this.selectedCategory || undefined,
+      this.selectedSupplier || undefined,
+      this.selectedStatus || undefined
+    ).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `accessories-inventory-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Error exporting inventory:', error);
+        this.errorMessage = 'Failed to export inventory. Please try again.';
+      }
+    });
 
-  private generateCSVContent(): string {
-    const headers = ['Name', 'Category', 'Part Number', 'Quantity', 'Unit', 'Min Stock', 'Supplier', 'Status', 'Location'];
-    const rows = this.filteredAccessories.map(accessory => [
-      accessory.name,
-      accessory.category,
-      accessory.partNumber,
-      accessory.quantity.toString(),
-      accessory.unit,
-      accessory.minStockLevel.toString(),
-      accessory.supplier,
-      this.getStatusDisplay(accessory),
-      accessory.location || ''
-    ]);
-
-    return [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    this.subscriptions.push(sub);
   }
 
   refreshInventory(): void {
     this.isRefreshing = true;
+    this.loadAccessories();
+    // Set isRefreshing to false after a short delay for visual feedback
     setTimeout(() => {
-      this.loadAccessories();
       this.isRefreshing = false;
-    }, 1000);
+    }, 500);
   }
 }

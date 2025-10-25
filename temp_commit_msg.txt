@@ -1,1 +1,1 @@
-refactor: Update Accessory API responses and improve inventory component forms
+Corrected issue with actions buttons.
