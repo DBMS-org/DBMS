@@ -66,106 +66,15 @@
   }
 
   .p-button {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
+    transition: all 0.3s ease;
   }
 
   .p-button:not(:disabled):hover {
     transform: translateY(-2px);
   }
 
-  .p-button:not(:disabled):active {
-    transform: translateY(0);
-  }
-
-  // Password wrapper to contain everything
-  .password-wrapper {
-    position: relative;
-    width: 100%;
-  }
-
-  // Custom password field styling - match username exactly
+  // Custom password field styling
   .p-password {
-    width: 100% !important;
-    display: block !important;
-
-    // Main wrapper spans
-    > span,
-    > .p-password-input-wrapper,
-    > .p-input-icon-right {
-      width: 100% !important;
-      display: block !important;
-      position: relative !important;
-    }
-
-    // The actual password input - match username field exactly
-    input.p-password-input,
-    .p-password-input {
-      width: 100% !important;
-      height: 42px !important;
-      padding: 0.625rem 0.875rem !important;
-      padding-right: 2.75rem !important;
-      font-size: 0.9rem !important;
-      border: 1px solid #d1d5db !important;
-      border-radius: 0.375rem !important;
-      box-sizing: border-box !important;
-      background: white !important;
-    }
-
-    // Eye icon button - position it inside the input on the right
-    button.p-password-toggle-mask-icon,
-    button[type="button"] {
-      position: absolute !important;
-      right: 0.75rem !important;
-      top: 50% !important;
-      transform: translateY(-50%) !important;
-      background: transparent !important;
-      border: none !important;
-      padding: 0.25rem !important;
-      margin: 0 !important;
-      color: #6b7280 !important;
-      cursor: pointer !important;
-      z-index: 10 !important;
-      width: auto !important;
-      height: auto !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      outline: none !important;
-      box-shadow: none !important;
-
-      &:hover {
-        color: #4b5563 !important;
-        background: transparent !important;
-      }
-
-      &:focus {
-        box-shadow: none !important;
-      }
-
-      svg,
-      .p-icon,
-      i {
-        width: 1.125rem !important;
-        height: 1.125rem !important;
-      }
-    }
-  }
-
-  // Ensure input fields have consistent height and styling
-  .p-inputtext {
-    height: 42px;
-    padding: 0.625rem 0.875rem;
-    font-size: 0.9rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
     width: 100%;
-  }
-
-  // Remove password strength panel
-  .p-password-panel {
-    display: none !important;
   }
 }

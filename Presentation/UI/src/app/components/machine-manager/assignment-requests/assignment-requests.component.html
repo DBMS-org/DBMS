@@ -1,122 +1,189 @@
 <div class="assignment-requests-container">
-  <!-- Page Header -->
-  <div class="requests-header">
-    <h1>Assignment Requests</h1>
-    <div class="header-actions">
-      <button
-        class="export-btn"
-        (click)="exportRequests()"
-        [disabled]="isLoading">
-        <i class="material-icons">download</i>
-        Export
-      </button>
-      <button
-        class="refresh-btn"
-        (click)="refreshRequests()"
-        [disabled]="isLoading">
-        <i class="material-icons">refresh</i>
-        Refresh
-      </button>
+  <!-- Modern Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-title-section">
+        <div class="icon-wrapper">
+          <i class="material-icons">assignment_turned_in</i>
+        </div>
+        <div class="title-content">
+          <h1 class="page-title">Assignment Requests</h1>
+          <p class="page-subtitle">Manage and review machine assignment requests</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <p-button
+          icon="pi pi-download"
+          label="Export"
+          (onClick)="exportRequests()"
+          [disabled]="isLoading"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="export-btn">
+        </p-button>
+        <p-button
+          icon="pi pi-refresh"
+          label="Refresh"
+          (onClick)="refreshRequests()"
+          [disabled]="isLoading"
+          severity="secondary"
+          [outlined]="true"
+          styleClass="refresh-btn">
+        </p-button>
+      </div>
     </div>
   </div>
 
-  <!-- Error Alert -->
+  <!-- Error notification display -->
   @if (error) {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      <i class="material-icons">error</i>
-      {{ error }}
-      <button type="button" class="btn-close" (click)="error = null"></button>
+    <div class="error-alert">
+      <div class="error-content">
+        <i class="material-icons">error_outline</i>
+        <span>{{ error }}</span>
+      </div>
+      <button class="error-close" (click)="error = null" type="button" aria-label="Close error">
+        <i class="material-icons">close</i>
+      </button>
     </div>
   }
 
-  <!-- Statistics Grid -->
-  <div class="stats-grid">
-    <div class="stat-card pending">
-      <div class="stat-icon">
-        <i class="material-icons">pending_actions</i>
+  <!-- Modern Statistics Dashboard -->
+  <div class="stats-dashboard">
+    <div class="stat-card stat-pending">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">pending_actions</i>
+        </div>
+        <span class="stat-label">Pending</span>
       </div>
-      <div class="stat-content">
-        <h3>{{ statistics.pending }}</h3>
-        <p>Pending</p>
-      </div>
+      <div class="stat-value">{{ statistics.pending }}</div>
+      <div class="stat-footer">Awaiting Review</div>
     </div>
 
-    <div class="stat-card approved">
-      <div class="stat-icon">
-        <i class="material-icons">check_circle</i>
+    <div class="stat-card stat-approved">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <span class="stat-label">Approved</span>
       </div>
-      <div class="stat-content">
-        <h3>{{ statistics.approved }}</h3>
-        <p>Approved</p>
-      </div>
+      <div class="stat-value">{{ statistics.approved }}</div>
+      <div class="stat-footer">Today</div>
     </div>
 
-    <div class="stat-card rejected">
-      <div class="stat-icon">
-        <i class="material-icons">cancel</i>
+    <div class="stat-card stat-rejected">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">cancel</i>
+        </div>
+        <span class="stat-label">Rejected</span>
       </div>
-      <div class="stat-content">
-        <h3>{{ statistics.rejected }}</h3>
-        <p>Rejected</p>
-      </div>
+      <div class="stat-value">{{ statistics.rejected }}</div>
+      <div class="stat-footer">Today</div>
     </div>
 
-    <div class="stat-card total">
-      <div class="stat-icon">
-        <i class="material-icons">inventory_2</i>
+    <div class="stat-card stat-total">
+      <div class="stat-header">
+        <div class="stat-icon-bg">
+          <i class="material-icons">inventory_2</i>
+        </div>
+        <span class="stat-label">Total</span>
       </div>
-      <div class="stat-content">
-        <h3>{{ statistics.total }}</h3>
-        <p>Total Requests</p>
-      </div>
+      <div class="stat-value">{{ statistics.total }}</div>
+      <div class="stat-footer">All Requests</div>
     </div>
   </div>
 
-  <!-- Search and Filter Section -->
-  <div class="search-filter-section">
-    <div class="search-box">
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Search requests..."
-        [(ngModel)]="searchQuery"
-        (input)="applyAll()">
+  <!-- Modern Filter Section -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <div class="filter-title">
+        <i class="material-icons">tune</i>
+        <span>Filters</span>
+      </div>
+      <div class="filter-header-actions">
+        <button class="clear-filters-btn" (click)="clearFilters()" type="button">
+          <i class="material-icons">clear_all</i>
+          Clear All
+        </button>
+        <button class="toggle-filters-btn" (click)="toggleFilterExpansion()" type="button">
+          <i class="material-icons">{{ isFilterExpanded ? 'expand_less' : 'expand_more' }}</i>
+        </button>
+      </div>
     </div>
 
-    <div class="filter-section">
-      <select
-        class="form-select"
-        [(ngModel)]="selectedStatus"
-        (ngModelChange)="applyAll()">
-        <option value="ALL">All Status</option>
-        <option value="PENDING">Pending</option>
-        <option value="APPROVED">Approved</option>
-        <option value="REJECTED">Rejected</option>
-      </select>
+    <div class="filter-grid" *ngIf="isFilterExpanded">
+      <!-- Search Input -->
+      <div class="filter-item search-item">
+        <label class="filter-label">
+          <i class="material-icons">search</i>
+          Search
+        </label>
+        <input
+          type="text"
+          class="filter-input search-input"
+          [(ngModel)]="searchQuery"
+          (input)="applyAll()"
+          placeholder="Search requests..." />
+      </div>
 
-      <select
-        class="form-select"
-        [(ngModel)]="selectedUrgency"
-        (ngModelChange)="applyAll()">
-        <option value="ALL">All Urgency</option>
-        <option value="LOW">Low</option>
-        <option value="MEDIUM">Medium</option>
-        <option value="HIGH">High</option>
-        <option value="URGENT">Urgent</option>
-      </select>
+      <!-- Status Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Status</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Status', value: 'ALL'},
+            {label: 'Pending', value: 'PENDING'},
+            {label: 'Approved', value: 'APPROVED'},
+            {label: 'Rejected', value: 'REJECTED'}
+          ]"
+          [(ngModel)]="selectedStatus"
+          (onChange)="applyAll()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
 
-      <select
-        class="form-select"
-        [(ngModel)]="selectedMachineType"
-        (ngModelChange)="applyAll()">
-        <option value="ALL">All Types</option>
-        <option value="EXCAVATOR">Excavator</option>
-        <option value="BULLDOZER">Bulldozer</option>
-        <option value="LOADER">Loader</option>
-        <option value="DUMP_TRUCK">Dump Truck</option>
-        <option value="DRILL_RIG">Drill Rig</option>
-        <option value="CRANE">Crane</option>
-      </select>
+      <!-- Urgency Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Urgency</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Urgency', value: 'ALL'},
+            {label: 'Low', value: 'LOW'},
+            {label: 'Medium', value: 'MEDIUM'},
+            {label: 'High', value: 'HIGH'},
+            {label: 'Urgent', value: 'URGENT'}
+          ]"
+          [(ngModel)]="selectedUrgency"
+          (onChange)="applyAll()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
+
+      <!-- Machine Type Filter -->
+      <div class="filter-item">
+        <label class="filter-label">Machine Type</label>
+        <p-dropdown
+          [options]="[
+            {label: 'All Types', value: 'ALL'},
+            {label: 'Excavator', value: 'EXCAVATOR'},
+            {label: 'Bulldozer', value: 'BULLDOZER'},
+            {label: 'Loader', value: 'LOADER'},
+            {label: 'Dump Truck', value: 'DUMP_TRUCK'},
+            {label: 'Drill Rig', value: 'DRILL_RIG'},
+            {label: 'Crane', value: 'CRANE'}
+          ]"
+          [(ngModel)]="selectedMachineType"
+          (onChange)="applyAll()"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full filter-dropdown">
+        </p-dropdown>
+      </div>
     </div>
   </div>
 

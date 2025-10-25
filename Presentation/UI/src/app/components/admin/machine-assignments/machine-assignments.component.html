@@ -84,11 +84,15 @@
           {{ status }}
         </option>
       </select>
-
+      
       <select class="form-select" [(ngModel)]="selectedUrgency" (change)="onUrgencyFilterChange()">
         <option value="ALL">All Urgencies</option>
         <option *ngFor="let urgency of urgencyOptions" [value]="urgency">{{ urgency }}</option>
       </select>
+      
+      <button class="btn btn-secondary filter-btn" (click)="applyFilters()">
+        <i class="fas fa-filter"></i> Filter
+      </button>
     </div>
   </div>
 
@@ -174,16 +178,18 @@
           
           <td class="request-actions">
             <div class="action-buttons" *ngIf="request.status === AssignmentRequestStatus.PENDING">
-              <button
-                class="action-btn approve-btn"
+              <button 
+                class="btn btn-sm btn-success action-btn" 
                 (click)="openApprovalModal(request)"
-                title="Approve Request">
+                title="Approve Request"
+              >
                 <i class="fas fa-check"></i>
               </button>
-              <button
-                class="action-btn reject-btn"
+              <button 
+                class="btn btn-sm btn-danger action-btn" 
                 (click)="openRejectionModal(request)"
-                title="Reject Request">
+                title="Reject Request"
+              >
                 <i class="fas fa-times"></i>
               </button>
             </div>

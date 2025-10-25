@@ -23,28 +23,20 @@
     .add-btn {
       background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
       border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 1rem;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      color: white;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-weight: var(--font-weight-medium);
+      transition: var(--transition-base);
+      color: var(--text-light);
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-      }
-
-      &:active {
-        transform: translateY(0);
+        box-shadow: var(--shadow-lg);
       }
 
       i {
-        font-size: 1.125rem;
+        margin-right: var(--space-sm);
+        font-size: var(--font-size-base);
       }
     }
   }
@@ -62,27 +54,14 @@
       flex: 1;
 
       .form-control {
-        border-radius: 8px;
-        border: 2px solid #e9ecef;
-        padding: 0.875rem 1rem;
-        font-size: 1rem;
-        transition: all 0.2s ease;
-        background-color: #f8f9fa;
-
-        &:hover {
-          border-color: #667eea;
-          background-color: white;
-        }
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-light);
+        padding: 12px 16px;
+        transition: var(--transition-fast);
 
         &:focus {
-          outline: none;
-          border-color: #667eea;
-          background-color: white;
+          border-color: var(--primary-color);
           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        &::placeholder {
-          color: #9ca3af;
         }
       }
     }
@@ -94,23 +73,13 @@
 
       .form-select {
         min-width: 150px;
-        border-radius: 8px;
-        border: 2px solid #e9ecef;
-        padding: 0.875rem 1rem;
-        font-size: 1rem;
-        transition: all 0.2s ease;
-        background-color: #f8f9fa;
-        cursor: pointer;
-
-        &:hover {
-          border-color: #667eea;
-          background-color: white;
-        }
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border-light);
+        padding: 12px 16px;
+        transition: var(--transition-fast);
 
         &:focus {
-          outline: none;
-          border-color: #667eea;
-          background-color: white;
+          border-color: var(--primary-color);
           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
       }
@@ -118,21 +87,15 @@
       .filter-btn {
         background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
         border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        color: white;
-        font-weight: 600;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        color: var(--text-light);
+        font-weight: var(--font-weight-medium);
+        transition: var(--transition-base);
 
         &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        &:active {
-          transform: translateY(0);
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-md);
         }
       }
     }
@@ -243,59 +206,40 @@
             &.project-actions {
               .action-buttons {
                 display: flex;
-                gap: 0.5rem;
-                align-items: center;
+                gap: var(--space-sm);
                 justify-content: center;
 
                 .action-btn {
-                  width: 40px;
-                  height: 40px;
+                  width: 35px;
+                  height: 35px;
+                  border-radius: 50%;
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   border: none;
-                  border-radius: 10px;
                   cursor: pointer;
-                  transition: all 0.2s ease;
-                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-                  i {
-                    font-size: 1.125rem;
-                    color: white;
-                  }
+                  transition: var(--transition-base);
 
                   &:hover {
                     transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    box-shadow: var(--shadow-md);
                   }
 
-                  &:active {
-                    transform: translateY(0);
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                  i {
+                    font-size: var(--font-size-base);
+                    color: var(--text-light);
                   }
 
-                  &.view-btn {
-                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-
-                    &:hover {
-                      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-                    }
+                  &.btn-info {
+                    background: linear-gradient(135deg, var(--info-color), #2563eb);
                   }
 
-                  &.edit-btn {
-                    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-
-                    &:hover {
-                      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-                    }
+                  &.btn-primary {
+                    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
                   }
 
-                  &.delete-btn {
-                    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-
-                    &:hover {
-                      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-                    }
+                  &.btn-danger {
+                    background: linear-gradient(135deg, var(--error-color), #dc2626);
                   }
                 }
               }

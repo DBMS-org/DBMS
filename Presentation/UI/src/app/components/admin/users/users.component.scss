@@ -35,15 +35,15 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 1.5rem;
     background: rgba(255, 255, 255, 0.2);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     backdrop-filter: blur(10px);
 
     &:hover {
@@ -58,7 +58,7 @@
     }
 
     i {
-      font-size: 1.125rem;
+      font-size: 1.1rem;
     }
   }
 
@@ -66,15 +66,15 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 1.5rem;
     background: rgba(255, 255, 255, 0.2);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     backdrop-filter: blur(10px);
 
     &:hover {
@@ -89,7 +89,7 @@
     }
 
     i {
-      font-size: 1.125rem;
+      font-size: 1.1rem;
     }
   }
 
@@ -97,7 +97,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 1.75rem;
     background: rgba(255, 255, 255, 0.9);
     color: #667eea;
     border: none;
@@ -105,7 +105,7 @@
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 
     &:hover {
@@ -119,7 +119,7 @@
     }
 
     i {
-      font-size: 1.125rem;
+      font-size: 1.25rem;
     }
   }
 }
@@ -511,65 +511,5 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-// Professional Action Buttons - Icon Only Style
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: center;
-
-  .action-btn {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-    i {
-      font-size: 1.125rem;
-      color: white;
-    }
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    &:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-  }
-
-  .view-btn {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-
-    &:hover {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    }
-  }
-
-  .edit-btn {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-
-    &:hover {
-      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-    }
-  }
-
-  .delete-btn {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-
-    &:hover {
-      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-    }
   }
 }

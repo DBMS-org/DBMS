@@ -7,13 +7,6 @@ import {
 } from './components/auth';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
-import { ADMIN_ROUTES } from './components/admin/admin.routes';
-import { BLASTING_ENGINEER_ROUTES } from './components/blasting-engineer/blasting-engineer.routes';
-import { MECHANICAL_ENGINEER_ROUTES } from './components/mechanical-engineer/mechanical-engineer.routes';
-import { MACHINE_MANAGER_ROUTES } from './components/machine-manager/machine-manager.routes';
-import { OPERATOR_ROUTES } from './components/operator/operator.routes';
-import { EXPLOSIVE_MANAGER_ROUTES } from './components/explosive-manager/explosive-manager.routes';
-import { STORE_MANAGER_ROUTES } from './components/store-manager/store-manager.routes';
 
 // Application route configuration with role-based access control
 export const routes: Routes = [
@@ -26,7 +19,7 @@ export const routes: Routes = [
   // Protected admin module routes
   {
     path: 'admin',
-    children: ADMIN_ROUTES,
+    loadChildren: () => import('./components/admin/admin.routes').then(m => m.ADMIN_ROUTES),
     canActivate: [authGuard, roleGuard],
     data: { role: 'Admin' }
   },
@@ -34,7 +27,7 @@ export const routes: Routes = [
   // Protected blasting engineer module routes
   {
     path: 'blasting-engineer',
-    children: BLASTING_ENGINEER_ROUTES,
+    loadChildren: () => import('./components/blasting-engineer/blasting-engineer.routes').then(m => m.BLASTING_ENGINEER_ROUTES),
     canActivate: [authGuard, roleGuard],
     data: { role: 'BlastingEngineer' }
   },
@@ -42,7 +35,7 @@ export const routes: Routes = [
   // Protected mechanical engineer module routes
   {
     path: 'mechanical-engineer',
-    children: MECHANICAL_ENGINEER_ROUTES,
+    loadChildren: () => import('./components/mechanical-engineer/mechanical-engineer.routes').then(m => m.MECHANICAL_ENGINEER_ROUTES),
     canActivate: [authGuard, roleGuard],
     data: { role: 'MechanicalEngineer' }
   },
@@ -50,7 +43,7 @@ export const routes: Routes = [
   // Protected machine manager module routes
   {
     path: 'machine-manager',
-    children: MACHINE_MANAGER_ROUTES,
+    loadChildren: () => import('./components/machine-manager/machine-manager.routes').then(m => m.MACHINE_MANAGER_ROUTES),
     canActivate: [authGuard, roleGuard],
     data: { role: 'MachineManager' }
   },
@@ -58,7 +51,7 @@ export const routes: Routes = [
   // Protected operator module routes
   {
     path: 'operator',
-    children: OPERATOR_ROUTES,
+    loadChildren: () => import('./components/operator/operator.routes').then(m => m.OPERATOR_ROUTES),
     canActivate: [authGuard, roleGuard],
     data: { role: 'Operator' }
   },
@@ -66,7 +59,7 @@ export const routes: Routes = [
   // Protected explosive manager module routes
   {
     path: 'explosive-manager',
-    children: EXPLOSIVE_MANAGER_ROUTES,
+    loadChildren: () => import('./components/explosive-manager/explosive-manager.routes').then(m => m.EXPLOSIVE_MANAGER_ROUTES),
     canActivate: [authGuard, roleGuard],
     data: { role: 'ExplosiveManager' }
   },
@@ -74,7 +67,7 @@ export const routes: Routes = [
   // Protected store manager module routes
   {
     path: 'store-manager',
-    children: STORE_MANAGER_ROUTES,
+    loadChildren: () => import('./components/store-manager/store-manager.routes').then(m => m.STORE_MANAGER_ROUTES),
     canActivate: [authGuard, roleGuard],
     data: { role: 'StoreManager' }
   },

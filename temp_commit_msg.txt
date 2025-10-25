@@ -1,1 +1,8 @@
-refactor routing configuration to use direct children for admin and engineer modules; improve readability and maintainability
+Components for Assignment Requests and Machine Inventory
+
+- Added new action button styles for view, edit, and delete actions in users and machine inventory components.
+- Refactored the assignment requests component HTML structure for improved readability and accessibility.
+- Updated styles for the assignment requests and machine inventory headers to enhance visual appeal.
+- Improved error alert display in the assignment requests component.
+- Streamlined filter and search sections in the machine inventory component for better user experience.
+- Adjusted navbar styles in both machine manager and store manager components for consistency and improved aesthetics.
