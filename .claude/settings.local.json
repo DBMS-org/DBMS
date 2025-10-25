@@ -15,7 +15,8 @@
       "Read(//c/Users/**)",
       "Bash(dotnet ef migrations add:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(dir /s /b \"c:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\*.cs\")"
     ],
     "deny": [],
     "ask": []
