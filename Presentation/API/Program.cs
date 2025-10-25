@@ -177,6 +177,9 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserApplicationService>();
 builder.Services.AddScoped<IAuthService, AuthApplicationService>();
 
+// Register Accessory services
+builder.Services.AddScoped<Application.Interfaces.MachineManagement.IAccessoryRepository, Infrastructure.Repositories.MachineManagement.AccessoryRepository>();
+
 // Register Store Management services
 builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreRepository, Infrastructure.Repositories.StoreManagement.StoreRepository>();
 builder.Services.AddScoped<Application.Interfaces.StoreManagement.IStoreService, Application.Services.StoreManagement.StoreApplicationService>();
