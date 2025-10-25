@@ -1,7 +1,1 @@
-feat: Implement Accessory Management API and Service
-
-- Added AccessoryRepository for data access with methods for CRUD operations and searching.
-- Created AccessoriesController to handle API requests for accessories, including endpoints for retrieving, creating, updating, and deleting accessories.
-- Implemented stock adjustment functionality in the controller.
-- Added AccessoryService in the Angular frontend for API interaction, including methods for managing accessories and exporting data to CSV.
-- Defined necessary DTOs for data transfer between the API and frontend.
+refactor: Update Accessory API responses and improve inventory component forms

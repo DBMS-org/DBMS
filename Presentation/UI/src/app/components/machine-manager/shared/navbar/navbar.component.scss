@@ -28,14 +28,18 @@
     padding: 0.5rem;
     border-radius: 10px;
     transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover {
       background-color: #f3f4f6;
     }
 
     i {
-      font-size: 28px;
+      font-size: 24px;
       color: #4b5563;
+      line-height: 1;
     }
   }
 
@@ -45,6 +49,7 @@
     font-weight: 700;
     color: #1f2937;
     letter-spacing: -0.3px;
+    line-height: 1;
   }
 }
 

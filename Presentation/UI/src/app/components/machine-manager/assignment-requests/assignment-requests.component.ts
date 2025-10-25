@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
 import { MachineService } from '../../../core/services/machine.service';
-import { MachineAssignmentRequest, Machine as GlobalMachine } from '../../../core/models/machine.model';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -14,6 +13,38 @@ import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageModule } from 'primeng/message';
 import { MatIconModule } from '@angular/material/icon';
+
+export interface AssignmentRequest {
+  id: string;
+  requesterName: string;
+  requesterEmail: string;
+  projectId: string;
+  projectName: string;
+  machineType: string;
+  quantity: number;
+  urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  description?: string;
+  requestedAt: Date;
+  processedAt?: Date;
+  processedBy?: string;
+  rejectionReason?: string;
+  assignedMachines?: string[];
+  approvalNotes?: string;
+}
+
+export interface Machine {
+  id: string;
+  name: string;
+  model: string;
+  serialNumber: string;
+  type: string;
+  status: 'AVAILABLE' | 'ASSIGNED' | 'UNDER_MAINTENANCE';
+  currentLocation?: string;
+  rigNo?: string;
+  plateNo?: string;
+  company?: string;
+}
 
 export interface RequestStatistics {
   pending: number;
@@ -45,11 +76,11 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   // Data properties
-  assignmentRequests: MachineAssignmentRequest[] = [];
-  filteredRequests: MachineAssignmentRequest[] = [];
+  assignmentRequests: AssignmentRequest[] = [];
+  filteredRequests: AssignmentRequest[] = [];
   // Add displayed slice for pagination
-  displayedRequests: MachineAssignmentRequest[] = [];
-  availableMachines: GlobalMachine[] = [];
+  displayedRequests: AssignmentRequest[] = [];
+  availableMachines: Machine[] = [];
   statistics: RequestStatistics = {
     pending: 0,
     approved: 0,
@@ -67,7 +98,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   isFilterExpanded: boolean = true;
 
   // Sorting and pagination
-  sortBy: 'requestedDate' | 'urgency' | 'status' | 'machineType' | 'projectName' | 'requestedBy' | 'id' = 'requestedDate';
+  sortBy: 'requestedAt' | 'urgency' | 'status' | 'machineType' | 'projectName' | 'requesterName' | 'id' = 'requestedAt';
   sortDirection: 'asc' | 'desc' = 'desc';
   pageSize: number = 10;
   currentPage: number = 1;
@@ -75,13 +106,13 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
   // Modal properties
   // selectedRequest property removed as view details functionality is no longer used
-  requestToApprove: MachineAssignmentRequest | null = null;
-  requestToReject: MachineAssignmentRequest | null = null;
+  requestToApprove: AssignmentRequest | null = null;
+  requestToReject: AssignmentRequest | null = null;
 
   // Form properties
   approvalNotes: string = '';
   rejectionReason: string = '';
-  selectedMachinesForAssignment: number[] = [];
+  selectedMachinesForAssignment: string[] = [];
 
   // State properties
   isLoading: boolean = false;
@@ -110,35 +141,18 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
 
-    this.machineService.getAllAssignmentRequests()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (requests) => {
-          this.assignmentRequests = requests;
-          this.calculateStatistics();
-          this.applyAll();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading assignment requests:', error);
-          this.error = 'Failed to load assignment requests';
-          this.isLoading = false;
-          this.notificationService.showError('Failed to load assignment requests');
-        }
-      });
+    // Simulate API call with mock data
+    setTimeout(() => {
+      this.assignmentRequests = this.generateMockRequests();
+      this.calculateStatistics();
+      this.applyAll();
+      this.isLoading = false;
+    }, 1000);
   }
 
   loadAvailableMachines(): void {
-    this.machineService.getAllMachines()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (machines) => {
-          this.availableMachines = machines.filter(m => m.status === 'Available');
-        },
-        error: (error) => {
-          console.error('Error loading machines:', error);
-        }
-      });
+    // Simulate API call with mock data
+    this.availableMachines = this.generateMockMachines();
   }
 
   refreshRequests(): void {
@@ -160,12 +174,13 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   private generateCSVContent(): string {
-    const headers = ['ID', 'Date', 'Requester', 'Project', 'Machine Type', 'Quantity', 'Urgency', 'Status'];
+    const headers = ['ID', 'Date', 'Requester', 'Email', 'Project', 'Machine Type', 'Quantity', 'Urgency', 'Status'];
     const rows = this.filteredRequests.map(request => [
       request.id,
-      this.formatDate(request.requestedDate),
-      request.requestedBy,
-      request.projectName || '',
+      this.formatDate(request.requestedAt),
+      request.requesterName,
+      request.requesterEmail,
+      request.projectName,
       request.machineType,
       request.quantity.toString(),
       request.urgency,
@@ -183,11 +198,12 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
       const typeMatch = this.selectedMachineType === 'ALL' || request.machineType === this.selectedMachineType;
       const search = this.searchQuery.trim().toLowerCase();
       const searchMatch = !search || (
-        request.id.toString().includes(search) ||
-        request.requestedBy.toLowerCase().includes(search) ||
-        (request.projectName || '').toLowerCase().includes(search) ||
-        request.projectId.toString().includes(search) ||
-        (typeof request.machineType === 'string' ? request.machineType : '').toLowerCase().includes(search)
+        request.id.toLowerCase().includes(search) ||
+        request.requesterName.toLowerCase().includes(search) ||
+        (request.requesterEmail || '').toLowerCase().includes(search) ||
+        request.projectName.toLowerCase().includes(search) ||
+        request.projectId.toLowerCase().includes(search) ||
+        request.machineType.toLowerCase().includes(search)
       );
       return statusMatch && urgencyMatch && typeMatch && searchMatch;
     });
@@ -206,39 +222,35 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
       let av: any;
       let bv: any;
       switch (this.sortBy) {
-        case 'requestedDate':
-          av = new Date(a.requestedDate).getTime();
-          bv = new Date(b.requestedDate).getTime();
+        case 'requestedAt':
+          av = new Date(a.requestedAt).getTime();
+          bv = new Date(b.requestedAt).getTime();
           break;
         case 'urgency':
-          // Handle string urgency values
-          const urgencyStr = (val: string | any) => typeof val === 'string' ? val.toUpperCase() : '';
-          const order: Record<string, number> = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 4, CRITICAL: 5 };
-          av = order[urgencyStr(a.urgency)] || 0;
-          bv = order[urgencyStr(b.urgency)] || 0;
+          const order = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 4 } as const;
+          av = order[a.urgency];
+          bv = order[b.urgency];
           break;
         case 'status':
-          // Handle string status values
-          const statusStr = (val: string | any) => typeof val === 'string' ? val.toUpperCase() : '';
-          const sOrder: Record<string, number> = { PENDING: 1, APPROVED: 2, REJECTED: 3, PARTIALLYFULFILLED: 4, COMPLETED: 5, CANCELLED: 6 };
-          av = sOrder[statusStr(a.status)] || 0;
-          bv = sOrder[statusStr(b.status)] || 0;
+          const sOrder = { PENDING: 1, APPROVED: 2, REJECTED: 3 } as const;
+          av = sOrder[a.status];
+          bv = sOrder[b.status];
           break;
         case 'machineType':
-          av = (typeof a.machineType === 'string' ? a.machineType : '').toLowerCase();
-          bv = (typeof b.machineType === 'string' ? b.machineType : '').toLowerCase();
+          av = a.machineType.toLowerCase();
+          bv = b.machineType.toLowerCase();
           break;
         case 'projectName':
-          av = (a.projectName || '').toLowerCase();
-          bv = (b.projectName || '').toLowerCase();
+          av = a.projectName.toLowerCase();
+          bv = b.projectName.toLowerCase();
           break;
-        case 'requestedBy':
-          av = a.requestedBy.toLowerCase();
-          bv = b.requestedBy.toLowerCase();
+        case 'requesterName':
+          av = a.requesterName.toLowerCase();
+          bv = b.requesterName.toLowerCase();
           break;
         case 'id':
-          av = a.id;
-          bv = b.id;
+          av = a.id.toLowerCase();
+          bv = b.id.toLowerCase();
           break;
         default:
           av = 0; bv = 0;
@@ -309,7 +321,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   // Removed exportCSV functionality as per request
-  getRowClass(request: MachineAssignmentRequest): string {
+  getRowClass(request: AssignmentRequest): string {
     switch (request.urgency) {
       case 'URGENT': return 'urgent-row';
       case 'HIGH': return 'high-row';
@@ -318,9 +330,9 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     }
   }
 
-  getRequestAgeLabel(request: MachineAssignmentRequest): string {
+  getRequestAgeLabel(request: AssignmentRequest): string {
     const now = new Date().getTime();
-    const then = new Date(request.requestedDate).getTime();
+    const then = new Date(request.requestedAt).getTime();
     let diff = Math.max(0, Math.floor((now - then) / 1000)); // seconds
     const days = Math.floor(diff / 86400); diff %= 86400;
     const hours = Math.floor(diff / 3600); diff %= 3600;
@@ -335,15 +347,17 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const statusStr = (val: string | any) => typeof val === 'string' ? val.toUpperCase() : val.toString().toUpperCase();
-
     this.statistics = {
-      pending: this.assignmentRequests.filter(r => statusStr(r.status) === 'PENDING').length,
-      approved: this.assignmentRequests.filter(r =>
-        statusStr(r.status) === 'APPROVED' || statusStr(r.status) === 'PARTIALLYFULFILLED'
+      pending: this.assignmentRequests.filter(r => r.status === 'PENDING').length,
+      approved: this.assignmentRequests.filter(r => 
+        r.status === 'APPROVED' && 
+        r.processedAt && 
+        new Date(r.processedAt) >= today
       ).length,
-      rejected: this.assignmentRequests.filter(r =>
-        statusStr(r.status) === 'REJECTED'
+      rejected: this.assignmentRequests.filter(r => 
+        r.status === 'REJECTED' && 
+        r.processedAt && 
+        new Date(r.processedAt) >= today
       ).length,
       total: this.assignmentRequests.length
     };
@@ -351,11 +365,9 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
   // Modal methods
   // Removed viewRequestDetails method as the eye/view details action has been removed
-  approveRequest(request: MachineAssignmentRequest): void {
-    // Get machineType as string
-    const machineType = typeof request.machineType === 'string' ? request.machineType : '';
+  approveRequest(request: AssignmentRequest): void {
     // Auto-assign the first N available machines matching the request type
-    const available = this.getAvailableMachinesForType(machineType);
+    const available = this.getAvailableMachinesForType(request.machineType);
 
     if (available.length < request.quantity) {
       this.notificationService.showWarning('Not enough available machines to fulfill this request.');
@@ -368,14 +380,32 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
     // Call backend to approve request
     this.machineService.approveAssignmentRequest(request.id, assignedIds, this.approvalNotes || '')
-      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (resp) => {
-          // Reload data from backend
-          this.loadAssignmentRequests();
-          this.loadAvailableMachines();
+          const requestIndex = this.assignmentRequests.findIndex(r => r.id === request.id);
+          if (requestIndex > -1) {
+            this.assignmentRequests[requestIndex] = {
+              ...this.assignmentRequests[requestIndex],
+              status: 'APPROVED',
+              processedAt: new Date(),
+              processedBy: 'Machine Manager',
+              assignedMachines: assignedIds,
+              approvalNotes: this.approvalNotes || ''
+            };
+          }
 
+          // Update machine statuses in local list
+          assignedIds.forEach(machineId => {
+            const machine = this.availableMachines.find(m => m.id === machineId);
+            if (machine) {
+              machine.status = 'ASSIGNED';
+            }
+          });
+
+          this.calculateStatistics();
+          this.applyAll();
           this.notificationService.showSuccess('Assignment request approved successfully');
+          this.sendAssignmentNotifications(request, assignedIds);
           this.isProcessing = false;
         },
         error: (err) => {
@@ -386,19 +416,29 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
       });
   }
 
-  rejectRequest(request: MachineAssignmentRequest): void {
+  rejectRequest(request: AssignmentRequest): void {
     this.isProcessing = true;
     const comments = 'Rejected by manager';
 
     // Call backend to reject request
     this.machineService.rejectAssignmentRequest(request.id, comments)
-      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (resp) => {
-          // Reload data from backend
-          this.loadAssignmentRequests();
+          const requestIndex = this.assignmentRequests.findIndex(r => r.id === request.id);
+          if (requestIndex > -1) {
+            this.assignmentRequests[requestIndex] = {
+              ...this.assignmentRequests[requestIndex],
+              status: 'REJECTED',
+              processedAt: new Date(),
+              processedBy: 'Machine Manager',
+              rejectionReason: comments
+            };
+          }
 
+          this.calculateStatistics();
+          this.applyAll();
           this.notificationService.showSuccess('Assignment request rejected');
+          this.sendRejectionNotification(request, comments);
           this.isProcessing = false;
         },
         error: (err) => {
@@ -442,17 +482,17 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   // Machine selection methods
-  getAvailableMachinesForType(machineType: string): GlobalMachine[] {
-    return this.availableMachines.filter(machine =>
-      machine.type === machineType && machine.status === 'Available'
+  getAvailableMachinesForType(machineType: string): Machine[] {
+    return this.availableMachines.filter(machine => 
+      machine.type === machineType && machine.status === 'AVAILABLE'
     );
   }
 
-  isMachineSelected(machineId: number): boolean {
+  isMachineSelected(machineId: string): boolean {
     return this.selectedMachinesForAssignment.includes(machineId);
   }
 
-  toggleMachineSelection(machineId: number): void {
+  toggleMachineSelection(machineId: string): void {
     const index = this.selectedMachinesForAssignment.indexOf(machineId);
     if (index > -1) {
       this.selectedMachinesForAssignment.splice(index, 1);
@@ -471,14 +511,35 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
     // Call backend to approve request with selected machines
     this.machineService.approveAssignmentRequest(this.requestToApprove.id, [...this.selectedMachinesForAssignment], this.approvalNotes || '')
-      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          // Reload data from backend
-          this.loadAssignmentRequests();
-          this.loadAvailableMachines();
+          const requestIndex = this.assignmentRequests.findIndex(r => r.id === this.requestToApprove!.id);
+          if (requestIndex > -1) {
+            this.assignmentRequests[requestIndex] = {
+              ...this.assignmentRequests[requestIndex],
+              status: 'APPROVED',
+              processedAt: new Date(),
+              processedBy: 'Machine Manager',
+              assignedMachines: [...this.selectedMachinesForAssignment],
+              approvalNotes: this.approvalNotes
+            };
 
-          this.notificationService.showSuccess('Assignment request approved successfully');
+            // Update machine statuses
+            this.selectedMachinesForAssignment.forEach(machineId => {
+              const machine = this.availableMachines.find(m => m.id === machineId);
+              if (machine) {
+                machine.status = 'ASSIGNED';
+              }
+            });
+
+            this.calculateStatistics();
+            this.applyAll();
+            this.notificationService.showSuccess('Assignment request approved successfully');
+            if (this.requestToApprove) {
+              this.sendAssignmentNotifications(this.requestToApprove, this.selectedMachinesForAssignment);
+            }
+          }
+
           this.isProcessing = false;
           this.closeModals();
         },
@@ -499,13 +560,26 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
     // Call backend to reject request with reason
     this.machineService.rejectAssignmentRequest(this.requestToReject.id, this.rejectionReason)
-      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          // Reload data from backend
-          this.loadAssignmentRequests();
+          const requestIndex = this.assignmentRequests.findIndex(r => r.id === this.requestToReject!.id);
+          if (requestIndex > -1) {
+            this.assignmentRequests[requestIndex] = {
+              ...this.assignmentRequests[requestIndex],
+              status: 'REJECTED',
+              processedAt: new Date(),
+              processedBy: 'Machine Manager',
+              rejectionReason: this.rejectionReason
+            };
 
-          this.notificationService.showSuccess('Assignment request rejected');
+            this.calculateStatistics();
+            this.applyAll();
+            this.notificationService.showSuccess('Assignment request rejected');
+            if (this.requestToReject) {
+              this.sendRejectionNotification(this.requestToReject, this.rejectionReason);
+            }
+          }
+
           this.isProcessing = false;
           this.closeModals();
         },
@@ -518,19 +592,19 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   // Notification methods
-  private sendAssignmentNotifications(request: MachineAssignmentRequest, machineIds: number[]): void {
+  private sendAssignmentNotifications(request: AssignmentRequest, machineIds: string[]): void {
     // In real implementation, this would call a notification service
     console.log('Sending assignment notifications:', {
-      requester: request.requestedBy,
+      requester: request.requesterEmail,
       machines: machineIds,
       project: request.projectName
     });
   }
 
-  private sendRejectionNotification(request: MachineAssignmentRequest, reason: string): void {
+  private sendRejectionNotification(request: AssignmentRequest, reason: string): void {
     // In real implementation, this would call a notification service
     console.log('Sending rejection notification:', {
-      requester: request.requestedBy,
+      requester: request.requesterEmail,
       reason: reason,
       project: request.projectName
     });
@@ -566,11 +640,9 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Mock data generation methods (deprecated - using real API now)
-  private generateMockRequests(): MachineAssignmentRequest[] {
-    // No longer used - data comes from API
-    return [];
-    /* const mockRequests: MachineAssignmentRequest[] = [
+  // Mock data generation methods
+  private generateMockRequests(): AssignmentRequest[] {
+    const mockRequests: AssignmentRequest[] = [
       {
         id: 'REQ-001',
         requesterName: 'John Smith',
@@ -632,13 +704,11 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
       }
     ];
 
-    return mockRequests; */
+    return mockRequests;
   }
 
-  private generateMockMachines(): GlobalMachine[] {
-    // No longer used - data comes from API
-    return [];
-    /* const mockMachines: GlobalMachine[] = [
+  private generateMockMachines(): Machine[] {
+    const mockMachines: Machine[] = [
       {
         id: 'MACH-001',
         name: 'CAT 320D Excavator',
@@ -689,7 +759,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
       }
     ];
 
-    return mockMachines; */
+    return mockMachines;
   }
 
 }

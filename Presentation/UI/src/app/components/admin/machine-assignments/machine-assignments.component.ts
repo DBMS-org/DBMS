@@ -144,11 +144,10 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
 
   applyFilters(): void {
     this.filteredRequests = this.assignmentRequests.filter(request => {
-      const machineType = typeof request.machineType === 'string' ? request.machineType : '';
-      const matchesSearch = !this.searchTerm ||
+      const matchesSearch = !this.searchTerm || 
         request.requestedBy.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        request.projectId.toString().includes(this.searchTerm.toLowerCase()) ||
-        machineType.toLowerCase().includes(this.searchTerm.toLowerCase());
+        request.projectId.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        request.machineType.toLowerCase().includes(this.searchTerm.toLowerCase());
       
       const matchesStatus = this.selectedStatus === 'ALL' || request.status === this.selectedStatus;
       const matchesUrgency = this.selectedUrgency === 'ALL' || request.urgency === this.selectedUrgency;
@@ -210,7 +209,7 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
     const formValue = this.assignmentRequestForm.value;
     
     const request: MachineAssignmentRequest = {
-      id: 0, // Will be assigned by backend
+      id: Date.now().toString(),
       projectId: formValue.projectId,
       machineType: formValue.machineType,
       quantity: formValue.quantity,
@@ -282,19 +281,14 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
-  getStatusClass(status: AssignmentRequestStatus | string): string {
-    const statusStr = typeof status === 'string' ? status.toUpperCase() : status;
-    switch (statusStr) {
-      case 'PENDING':
+  getStatusClass(status: AssignmentRequestStatus): string {
+    switch (status) {
       case AssignmentRequestStatus.PENDING:
         return 'bg-warning text-dark';
-      case 'APPROVED':
       case AssignmentRequestStatus.APPROVED:
         return 'bg-success';
-      case 'REJECTED':
       case AssignmentRequestStatus.REJECTED:
         return 'bg-danger';
-      case 'COMPLETED':
       case AssignmentRequestStatus.COMPLETED:
         return 'bg-primary';
       default:
@@ -302,19 +296,14 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  getUrgencyClass(urgency: RequestUrgency | string): string {
-    const urgencyStr = typeof urgency === 'string' ? urgency.toUpperCase() : urgency;
-    switch (urgencyStr) {
-      case 'LOW':
+  getUrgencyClass(urgency: RequestUrgency): string {
+    switch (urgency) {
       case RequestUrgency.LOW:
         return 'bg-success';
-      case 'MEDIUM':
       case RequestUrgency.MEDIUM:
         return 'bg-warning text-dark';
-      case 'HIGH':
       case RequestUrgency.HIGH:
         return 'bg-danger';
-      case 'CRITICAL':
       case RequestUrgency.CRITICAL:
         return 'bg-dark';
       default:
