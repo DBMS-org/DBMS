@@ -1,8 +1,7 @@
-Components for Assignment Requests and Machine Inventory
+feat: Implement Accessory Management API and Service
 
-- Added new action button styles for view, edit, and delete actions in users and machine inventory components.
-- Refactored the assignment requests component HTML structure for improved readability and accessibility.
-- Updated styles for the assignment requests and machine inventory headers to enhance visual appeal.
-- Improved error alert display in the assignment requests component.
-- Streamlined filter and search sections in the machine inventory component for better user experience.
-- Adjusted navbar styles in both machine manager and store manager components for consistency and improved aesthetics.
+- Added AccessoryRepository for data access with methods for CRUD operations and searching.
+- Created AccessoriesController to handle API requests for accessories, including endpoints for retrieving, creating, updating, and deleting accessories.
+- Implemented stock adjustment functionality in the controller.
+- Added AccessoryService in the Angular frontend for API interaction, including methods for managing accessories and exporting data to CSV.
+- Defined necessary DTOs for data transfer between the API and frontend.
