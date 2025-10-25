@@ -164,7 +164,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       this.selectedStatus || undefined
     ).subscribe({
       next: (data) => {
-        this.accessories = data.map(dto => this.mapDtoToAccessory(dto));
+        this.accessories = (data || []).map(dto => this.mapDtoToAccessory(dto));
         this.extractFilterOptions();
         this.applyFilters();
         this.loadStatistics();
