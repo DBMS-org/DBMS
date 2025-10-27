@@ -291,11 +291,6 @@
     tbody {
       .request-row {
         border-bottom: 1px solid #ecf0f1;
-        transition: background-color 0.2s ease;
-
-        &:hover {
-          background: #f8f9fa;
-        }
 
         td {
           padding: 1rem;
@@ -329,9 +324,13 @@
           flex-direction: column;
           gap: 0.25rem;
 
-          .badge {
+          span, .badge {
             width: fit-content;
             font-size: 0.8rem;
+            color: #2c3e50 !important;
+            background: none !important;
+            padding: 0;
+            font-weight: 500;
           }
         }
       }
@@ -353,27 +352,67 @@
       }
     }
 
+    // Remove badge backgrounds
+    .machine-type,
+    .quantity,
+    .urgency,
+    .status {
+      .badge {
+        background: none !important;
+        color: #2c3e50 !important;
+        font-weight: 500;
+        padding: 0;
+      }
+    }
+
     .request-actions {
       .action-buttons {
         display: flex;
         gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
 
         .action-btn {
-          padding: 0.5rem;
-          border-radius: 6px;
-          font-size: 0.875rem;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          min-width: 40px;
+          border: none;
+          border-radius: 10px;
+          cursor: pointer;
           transition: all 0.2s ease;
-
-          &:hover {
-            transform: translateY(-1px);
-          }
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
           i {
-            font-size: 0.875rem;
+            font-size: 1.125rem;
+            color: white;
+          }
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+
+          &:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+
+          &.approve-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+
+            &:hover {
+              background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            }
+          }
+
+          &.reject-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+
+            &:hover {
+              background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            }
           }
         }
       }
