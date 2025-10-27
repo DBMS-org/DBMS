@@ -22,7 +22,10 @@
       "Bash(cmd /c \"taskkill /F /PID 24952\")",
       "Bash(cmd /c \"taskkill /F /PID 13204\")",
       "Bash(cat:*)",
-      "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\my-machines\\*.html\")"
+      "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\my-machines\\*.html\")",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
