@@ -1,1 +1,7 @@
-Refactor Accessories Inventory Component: Replace p-dropdown with p-select for category, status, and supplier filters; enhance styling with backdrop filters; improve error handling and logging in TypeScript; add validation for UpdateMachineRequest; implement machine inventory UI with search and filter functionality; optimize maintenance service with offline support and performance enhancements.
+Resolve merge conflicts in accessories-inventory component
+
+- Kept current implementation using PrimeNG p-select components
+- Resolved conflicts in accessories-inventory.component.html and .scss
+- Maintained consistency with PrimeNG migration throughout the project
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
