@@ -1,1 +1,1 @@
-Merge remote changes from origin/master - resolved conflicts by keeping current UI enhancements
+Refactor Accessories Inventory Component: Replace p-dropdown with p-select for category, status, and supplier filters; enhance styling with backdrop filters; improve error handling and logging in TypeScript; add validation for UpdateMachineRequest; implement machine inventory UI with search and filter functionality; optimize maintenance service with offline support and performance enhancements.
