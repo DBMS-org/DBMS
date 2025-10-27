@@ -66,15 +66,129 @@
   }
 
   .p-button {
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
   }
 
   .p-button:not(:disabled):hover {
     transform: translateY(-2px);
   }
 
-  // Custom password field styling
+  .p-button:not(:disabled):active {
+    transform: translateY(0);
+  }
+
+  // Password wrapper to contain everything - THIS IS KEY
+  .password-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  // Custom password field styling - match username exactly
   .p-password {
+    width: 100% !important;
+    display: block !important;
+    position: relative !important;
+
+    // CRITICAL: All wrapper elements must be relative positioned
+    .p-password-input-wrapper,
+    .p-input-icon-right,
+    > span,
+    span {
+      width: 100% !important;
+      display: block !important;
+      position: relative !important;
+    }
+
+    // The actual password input - match username field exactly
+    input.p-password-input,
+    .p-password-input,
+    input[type="password"],
+    input[type="text"],
+    input {
+      width: 100% !important;
+      height: 42px !important;
+      padding: 0.625rem 0.875rem !important;
+      padding-right: 2.75rem !important; // Space for eye icon
+      font-size: 0.9rem !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 0.375rem !important;
+      box-sizing: border-box !important;
+      background: white !important;
+      display: block !important;
+    }
+  }
+
+  // CRITICAL FIX: Target the eye icon button MORE AGGRESSIVELY
+  // This targets it both inside .p-password and inside .password-wrapper
+  .password-wrapper,
+  .p-password {
+
+    // Eye icon button - position ABSOLUTE inside the password field
+    button,
+    button.p-password-toggle-mask-icon,
+    button[type="button"],
+    .p-password-toggle-mask-icon,
+    a.p-password-toggle-mask-icon,
+    .p-button-icon-only {
+      position: absolute !important;
+      right: 0.75rem !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0.25rem !important;
+      margin: 0 !important;
+      color: #6b7280 !important;
+      cursor: pointer !important;
+      z-index: 10 !important;
+      width: auto !important;
+      height: auto !important;
+      min-width: auto !important;
+      min-height: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      outline: none !important;
+      box-shadow: none !important;
+
+      &:hover {
+        color: #4b5563 !important;
+        background: transparent !important;
+      }
+
+      &:focus {
+        box-shadow: none !important;
+        outline: none !important;
+      }
+
+      svg,
+      .p-icon,
+      i,
+      .pi {
+        width: 1.125rem !important;
+        height: 1.125rem !important;
+        display: block !important;
+        font-size: 1.125rem !important;
+      }
+    }
+  }
+
+  // Ensure input fields have consistent height and styling
+  .p-inputtext {
+    height: 42px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
     width: 100%;
+  }
+
+  // Remove password strength panel
+  .p-password-panel {
+    display: none !important;
   }
 }

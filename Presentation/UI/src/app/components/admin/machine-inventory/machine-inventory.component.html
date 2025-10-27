@@ -28,17 +28,13 @@
           {{ status }}
         </option>
       </select>
-      
+
       <select class="form-select" [(ngModel)]="selectedType" (change)="onTypeFilterChange()">
         <option value="ALL">All Types</option>
         <option *ngFor="let type of machineTypeOptions" [value]="type">
           {{ type }}
         </option>
       </select>
-      
-      <button class="btn btn-secondary filter-btn" (click)="applyFilters()">
-        <i class="fas fa-filter"></i> Filter
-      </button>
     </div>
   </div>
 
@@ -81,13 +77,11 @@
           </td>
           
           <td class="machine-type">
-            <span class="badge bg-primary">{{ machine.type }}</span>
+            <span>{{ machine.type }}</span>
           </td>
-          
+
           <td class="machine-status">
-            <span class="badge" [ngClass]="getStatusClass(machine.status)">
-              {{ machine.status }}
-            </span>
+            <span>{{ machine.status }}</span>
           </td>
           
           <td class="machine-location">
@@ -104,21 +98,17 @@
           
           <td class="machine-actions">
             <div class="action-buttons">
-              <button 
-                class="btn btn-sm btn-outline-info action-btn" 
+              <button
+                class="action-btn view-btn"
                 (click)="viewMachine(machine)"
-                title="View Details"
-              >
+                title="View Details">
                 <i class="fas fa-eye"></i>
-                View
               </button>
-              <button 
-                class="btn btn-sm btn-outline-danger action-btn" 
+              <button
+                class="action-btn delete-btn"
                 (click)="deleteMachine(machine)"
-                title="Delete Machine"
-              >
+                title="Delete Machine">
                 <i class="fas fa-trash"></i>
-                Delete
               </button>
             </div>
           </td>

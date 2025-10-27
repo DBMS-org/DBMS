@@ -1,20 +1,20 @@
 <div class="machine-inventory-container">
   <!-- Header Section -->
-  <div class="header-section">
-    <h2 class="page-title">Machine Inventory</h2>
+  <div class="inventory-header">
+    <h1>Machine Inventory</h1>
     <div class="header-actions">
-      <button 
-        class="btn btn-outline-primary"
+      <button
+        class="assignment-requests-btn"
         (click)="navigateToAssignmentRequests()"
         [disabled]="isLoading">
         <i class="material-icons">assignment</i>
         Assignment Requests
         @if (statistics.pendingRequests > 0) {
-          <span class="badge bg-danger ms-1">{{ statistics.pendingRequests }}</span>
+          <span class="badge-count">{{ statistics.pendingRequests }}</span>
         }
       </button>
-      <button 
-        class="btn btn-primary add-btn"
+      <button
+        class="add-machine-btn"
         (click)="openAddMachineModal()"
         [disabled]="isLoading">
         <i class="material-icons">add</i>
@@ -122,9 +122,9 @@
         }
       </select>
       
-      <select 
-        class="form-select" 
-        [(ngModel)]="selectedProject" 
+      <select
+        class="form-select"
+        [(ngModel)]="selectedProject"
         (ngModelChange)="onProjectFilterChange()">
         <option value="ALL">All Projects</option>
         <option value="UNASSIGNED">Unassigned</option>
@@ -132,10 +132,6 @@
           <option [value]="project">{{ project }}</option>
         }
       </select>
-      
-      <button class="btn btn-secondary filter-btn" (click)="applyFilters()">
-        Filter
-      </button>
     </div>
   </div>
 
@@ -184,20 +180,20 @@
           <td class="machine-location">{{ machine.currentLocation || 'N/A' }}</td>
           <td class="machine-actions">
             <div class="action-buttons">
-              <button 
-                class="btn btn-sm btn-info action-btn" 
+              <button
+                class="action-btn view-btn"
                 (click)="openMachineDetailsModal(machine)"
                 title="View Details">
                 <i class="material-icons">visibility</i>
               </button>
-              <button 
-                class="btn btn-sm btn-primary action-btn" 
+              <button
+                class="action-btn edit-btn"
                 (click)="openEditMachineModal(machine)"
                 title="Edit Machine">
                 <i class="material-icons">edit</i>
               </button>
-              <button 
-                class="btn btn-sm btn-danger action-btn" 
+              <button
+                class="action-btn delete-btn"
                 (click)="openDeleteConfirmModal(machine)"
                 title="Delete Machine">
                 <i class="material-icons">delete</i>

@@ -8,8 +8,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextarea } from 'primeng/inputtextarea';
-import { InputNumber } from 'primeng/inputnumber';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
 import { AccessoryService, Accessory as AccessoryDto } from '../../core/services/accessory.service';
 
@@ -68,8 +68,8 @@ interface InventoryStatistics {
     Select,
     TagModule,
     DialogModule,
-    InputTextarea,
-    InputNumber,
+    InputTextareaModule,
+    InputNumberModule,
     TooltipModule
   ],
   templateUrl: './accessories-inventory.component.html',
@@ -608,11 +608,11 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
            accessory.quantity <= accessory.minStockLevel ? 'Low Stock' : 'Available');
   }
 
-  getStatusSeverity(accessory: Accessory): 'success' | 'warn' | 'danger' | 'info' {
+  getStatusSeverity(accessory: Accessory): 'success' | 'warning' | 'danger' | 'info' {
     if (accessory.quantity === 0) {
       return 'danger';
     } else if (accessory.quantity <= accessory.minStockLevel) {
-      return 'warn';
+      return 'warning';
     } else {
       return 'success';
     }
