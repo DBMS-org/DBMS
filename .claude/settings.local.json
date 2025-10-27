@@ -16,7 +16,13 @@
       "Bash(dotnet ef migrations add:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(dir /s /b \"c:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\*.cs\")"
+      "Bash(dir /s /b \"c:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\*.cs\")",
+      "Bash(timeout:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c \"taskkill /F /PID 24952\")",
+      "Bash(cmd /c \"taskkill /F /PID 13204\")",
+      "Bash(cat:*)",
+      "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\my-machines\\*.html\")"
     ],
     "deny": [],
     "ask": []
