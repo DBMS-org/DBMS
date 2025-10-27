@@ -50,9 +50,6 @@
     border-radius: 12px;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
     &::before {
       content: '';
@@ -82,12 +79,11 @@
     }
 
     i {
-      font-size: 24px;
+      font-size: 28px;
       color: #4b5563;
       transition: color 0.25s ease;
       position: relative;
       z-index: 1;
-      line-height: 1;
     }
   }
 
@@ -97,7 +93,6 @@
     font-weight: 700;
     color: #1f2937;
     letter-spacing: -0.3px;
-    line-height: 1;
   }
 }
 

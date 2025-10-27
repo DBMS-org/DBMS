@@ -56,15 +56,10 @@
     border: 2px solid rgba(255, 255, 255, 0.3);
     cursor: pointer;
     color: white;
-    padding: 0.5rem;
-    min-width: 40px;
-    height: 40px;
+    padding: 0.75rem;
     border-radius: 8px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
     &:hover {
       background: rgba(255, 255, 255, 0.25);
@@ -72,12 +67,8 @@
       transform: scale(1.05);
     }
 
-    &:active {
-      transform: scale(1);
-    }
-
     i {
-      font-size: 1.25rem;
+      font-size: 1.5rem;
     }
   }
 }
@@ -182,20 +173,16 @@
   border-top: 2px solid rgba(102, 126, 234, 0.1);
 
   button {
-    padding: 0.75rem 1.5rem;
+    padding: 1rem 2rem;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-
-    i {
-      font-size: 1.125rem;
-    }
 
     &.cancel-btn {
       background: rgba(102, 126, 234, 0.1);
@@ -208,13 +195,9 @@
         transform: translateY(-2px);
       }
 
-      &:active {
-        transform: translateY(0);
-      }
-
       &::before {
         content: '✕';
-        font-size: 1rem;
+        font-size: 0.9rem;
       }
     }
 
@@ -232,15 +215,9 @@
         transform: translateY(0);
       }
 
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none !important;
-      }
-
       &::before {
         content: '✓';
-        font-size: 1rem;
+        font-size: 1.1rem;
       }
     }
   }

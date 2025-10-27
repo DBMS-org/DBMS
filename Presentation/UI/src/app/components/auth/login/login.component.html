@@ -67,17 +67,15 @@
             <i class="pi pi-lock text-purple-600"></i>
             Password
           </label>
-          <div class="password-wrapper">
-            <p-password
-              formControlName="password"
-              placeholder="Enter your password"
-              [toggleMask]="true"
-              [feedback]="false"
-              styleClass="w-full"
-              inputStyleClass="w-full"
-              [ngClass]="{'ng-invalid ng-dirty': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
-            ></p-password>
-          </div>
+          <p-password
+            formControlName="password"
+            placeholder="Enter your password"
+            [toggleMask]="true"
+            [feedback]="false"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [ngClass]="{'ng-invalid ng-dirty': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
+          ></p-password>
           <small
             class="text-red-500 text-xs font-medium flex items-center gap-1"
             *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"

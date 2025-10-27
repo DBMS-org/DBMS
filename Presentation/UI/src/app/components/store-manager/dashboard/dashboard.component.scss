@@ -6,32 +6,6 @@
   100% { transform: rotate(360deg); }
 }
 
-// Ensure consistent button styling across dashboard
-button {
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-  }
-}
-
-// Stat card consistency
-.stat-card-icon {
-  min-width: 60px;
-  min-height: 60px;
-  max-width: 60px;
-  max-height: 60px;
-}
-
-// Loading spinner consistency
-.pi-spinner {
-  width: 48px;
-  height: 48px;
-  font-size: 48px !important;
-}
-
 // Responsive adjustments
 @media (max-width: 768px) {
   header {
@@ -42,19 +16,9 @@ button {
     }
 
     button {
-      padding: 0.75rem 1.5rem !important;
-
       span {
-        display: inline;
+        display: none;
       }
     }
-  }
-
-  // Make stat cards stack nicely on mobile
-  .stat-card-icon {
-    min-width: 48px;
-    min-height: 48px;
-    max-width: 48px;
-    max-height: 48px;
   }
 }
