@@ -465,62 +465,54 @@
   .machine-actions {
     text-align: center;
     vertical-align: middle;
-    width: 80px;
-    min-width: 80px;
 
     .action-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.3rem;
-      justify-items: center;
+      display: flex;
+      gap: 0.5rem;
       align-items: center;
-      width: 100%;
-      max-width: 72px;
-      margin: 0 auto;
+      justify-content: center;
 
       .action-btn {
-        width: 30px;
-        height: 30px;
-        border-radius: 6px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s ease;
-        cursor: pointer;
         border: none;
-        font-size: 0.75rem;
-
-        &:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
         .material-icons {
-          font-size: 0.9rem;
+          font-size: 1.125rem;
+          color: white;
         }
 
-        &.btn-info {
-          background: #3b82f6;
-          color: white;
-          &:hover { background: #2563eb; }
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        &.btn-primary {
-          background: #667eea;
-          color: white;
-          &:hover { background: #5a67d8; }
+        &:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        &.btn-warning {
-          background: #f59e0b;
-          color: white;
-          &:hover { background: #d97706; }
+        &.view-btn {
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+
+          &:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          }
         }
 
-        &.btn-danger {
-          background: #ef4444;
-          color: white;
-          &:hover { background: #dc2626; }
+        &.assign-btn {
+          background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+
+          &:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+          }
         }
       }
     }

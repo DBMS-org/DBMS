@@ -1,44 +1,29 @@
 <!-- Maintenance Management Component -->
 <div class="maintenance-management">
-  <!-- Modern Page Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-title-section">
-        <div class="icon-wrapper">
-          <i class="material-icons">build</i>
-        </div>
-        <div class="title-content">
-          <h1 class="page-title">Maintenance Management</h1>
-          <p class="page-subtitle">Schedule, track, and manage machine maintenance activities</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <p-button
-          icon="pi pi-plus"
-          label="Schedule Maintenance"
-          (onClick)="openScheduleModal()"
-          severity="success"
-          styleClass="schedule-btn">
-        </p-button>
-        <p-button
-          icon="pi pi-download"
-          label="Export"
-          (onClick)="exportMaintenanceData()"
-          [disabled]="isExporting"
-          severity="secondary"
-          [outlined]="true"
-          styleClass="export-btn">
-        </p-button>
-        <p-button
-          icon="pi pi-refresh"
-          label="Refresh"
-          (onClick)="refreshData()"
-          [disabled]="isLoading"
-          severity="secondary"
-          [outlined]="true"
-          styleClass="refresh-btn">
-        </p-button>
-      </div>
+  <!-- Page Header -->
+  <div class="maintenance-header">
+    <h1>Maintenance Management</h1>
+    <div class="header-actions">
+      <button
+        class="schedule-btn"
+        (click)="openScheduleModal()">
+        <i class="material-icons">add</i>
+        Schedule Maintenance
+      </button>
+      <button
+        class="export-btn"
+        (click)="exportMaintenanceData()"
+        [disabled]="isExporting">
+        <i class="material-icons">download</i>
+        Export
+      </button>
+      <button
+        class="refresh-btn"
+        (click)="refreshData()"
+        [disabled]="isLoading">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
     </div>
   </div>
 
@@ -55,142 +40,102 @@
     </div>
   }
 
-  <!-- Modern Statistics Dashboard -->
-  <div class="stats-dashboard">
-    <div class="stat-card stat-scheduled">
-      <div class="stat-header">
-        <div class="stat-icon-bg">
-          <i class="material-icons">event</i>
-        </div>
-        <span class="stat-label">Scheduled</span>
+  <!-- Statistics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card scheduled">
+      <div class="stat-icon">
+        <i class="material-icons">event</i>
       </div>
-      <div class="stat-value">{{ statistics.scheduled }}</div>
-      <div class="stat-footer">Upcoming</div>
+      <div class="stat-content">
+        <h3>{{ statistics.scheduled }}</h3>
+        <p>Scheduled</p>
+      </div>
     </div>
 
-    <div class="stat-card stat-in-progress">
-      <div class="stat-header">
-        <div class="stat-icon-bg">
-          <i class="material-icons">build_circle</i>
-        </div>
-        <span class="stat-label">In Progress</span>
+    <div class="stat-card in-progress">
+      <div class="stat-icon">
+        <i class="material-icons">build_circle</i>
       </div>
-      <div class="stat-value">{{ statistics.inProgress }}</div>
-      <div class="stat-footer">Active Now</div>
+      <div class="stat-content">
+        <h3>{{ statistics.inProgress }}</h3>
+        <p>In Progress</p>
+      </div>
     </div>
 
-    <div class="stat-card stat-overdue">
-      <div class="stat-header">
-        <div class="stat-icon-bg">
-          <i class="material-icons">error</i>
-        </div>
-        <span class="stat-label">Overdue</span>
+    <div class="stat-card overdue">
+      <div class="stat-icon">
+        <i class="material-icons">error</i>
       </div>
-      <div class="stat-value">{{ statistics.overdue }}</div>
-      <div class="stat-footer">Needs Attention</div>
+      <div class="stat-content">
+        <h3>{{ statistics.overdue }}</h3>
+        <p>Overdue</p>
+      </div>
     </div>
 
-    <div class="stat-card stat-completed">
-      <div class="stat-header">
-        <div class="stat-icon-bg">
-          <i class="material-icons">check_circle</i>
-        </div>
-        <span class="stat-label">Completed</span>
+    <div class="stat-card completed">
+      <div class="stat-icon">
+        <i class="material-icons">check_circle</i>
       </div>
-      <div class="stat-value">{{ statistics.completed }}</div>
-      <div class="stat-footer">This Month</div>
+      <div class="stat-content">
+        <h3>{{ statistics.completed }}</h3>
+        <p>Completed</p>
+      </div>
     </div>
   </div>
 
-  <!-- Modern Filter Section -->
-  <div class="filter-section">
-    <div class="filter-header">
-      <div class="filter-title">
-        <i class="material-icons">tune</i>
-        <span>Filters</span>
-      </div>
-      <div class="filter-header-actions">
-        <button class="clear-filters-btn" (click)="clearAllFilters()" type="button">
-          <i class="material-icons">clear_all</i>
-          Clear All
-        </button>
-        <button class="toggle-filters-btn" (click)="toggleFilterExpansion()" type="button">
-          <i class="material-icons">{{ isFilterExpanded ? 'expand_less' : 'expand_more' }}</i>
-        </button>
-      </div>
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section">
+    <div class="search-box">
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+        placeholder="Search maintenance records..." />
     </div>
 
-    <div class="filter-grid" *ngIf="isFilterExpanded">
-      <!-- Search Input -->
-      <div class="filter-item search-item">
-        <label class="filter-label">
-          <i class="material-icons">search</i>
-          Search
-        </label>
-        <input
-          type="text"
-          class="filter-input search-input"
-          [(ngModel)]="searchTerm"
-          (input)="applyFilters()"
-          placeholder="Search maintenance records..." />
-      </div>
-
-      <!-- Status Filter -->
-      <div class="filter-item">
+    <div class="filter-section">
+      <div class="filter-group">
         <label class="filter-label">Status</label>
-        <p-dropdown
-          [options]="[
-            {label: 'All Status', value: ''},
-            {label: 'Scheduled', value: 'scheduled'},
-            {label: 'In Progress', value: 'in-progress'},
-            {label: 'Completed', value: 'completed'},
-            {label: 'Overdue', value: 'overdue'},
-            {label: 'Cancelled', value: 'cancelled'}
-          ]"
+        <select
+          class="form-select"
           [(ngModel)]="selectedStatus"
-          (onChange)="onStatusFilterChange()"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full filter-dropdown">
-        </p-dropdown>
+          (ngModelChange)="onStatusFilterChange()">
+          <option value="">All Status</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="overdue">Overdue</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
       </div>
 
-      <!-- Type Filter -->
-      <div class="filter-item">
+      <div class="filter-group">
         <label class="filter-label">Type</label>
-        <p-dropdown
-          [options]="[
-            {label: 'All Types', value: ''},
-            {label: 'Preventive', value: 'preventive'},
-            {label: 'Corrective', value: 'corrective'},
-            {label: 'Emergency', value: 'emergency'},
-            {label: 'Inspection', value: 'inspection'}
-          ]"
+        <select
+          class="form-select"
           [(ngModel)]="selectedType"
-          (onChange)="onTypeFilterChange()"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full filter-dropdown">
-        </p-dropdown>
+          (ngModelChange)="onTypeFilterChange()">
+          <option value="">All Types</option>
+          <option value="preventive">Preventive</option>
+          <option value="corrective">Corrective</option>
+          <option value="emergency">Emergency</option>
+          <option value="inspection">Inspection</option>
+        </select>
       </div>
 
-      <!-- Priority Filter -->
-      <div class="filter-item">
+      <div class="filter-group">
         <label class="filter-label">Priority</label>
-        <p-dropdown
-          [options]="[
-            {label: 'All Priorities', value: ''},
-            {label: 'Low', value: 'low'},
-            {label: 'Medium', value: 'medium'},
-            {label: 'High', value: 'high'},
-            {label: 'Critical', value: 'critical'}
-          ]"
+        <select
+          class="form-select"
           [(ngModel)]="selectedPriority"
-          (onChange)="onPriorityFilterChange()"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full filter-dropdown">
-        </p-dropdown>
+          (ngModelChange)="onPriorityFilterChange()">
+          <option value="">All Priorities</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
       </div>
     </div>
   </div>
@@ -333,58 +278,43 @@
               </td>
               <td class="col-actions">
                 <div class="action-buttons">
-                  <p-button
-                    icon="pi pi-eye"
-                    [rounded]="true"
-                    [text]="true"
-                    severity="info"
-                    (onClick)="viewMaintenanceDetails(record)"
-                    pTooltip="View Details"
-                    tooltipPosition="top">
-                  </p-button>
+                  <button
+                    class="action-btn view-btn"
+                    (click)="viewMaintenanceDetails(record)"
+                    title="View Details">
+                    <i class="material-icons">visibility</i>
+                  </button>
                   @if (record.status !== 'completed') {
-                    <p-button
-                      icon="pi pi-pencil"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="secondary"
-                      (onClick)="editMaintenance(record)"
-                      pTooltip="Edit"
-                      tooltipPosition="top">
-                    </p-button>
+                    <button
+                      class="action-btn edit-btn"
+                      (click)="editMaintenance(record)"
+                      title="Edit">
+                      <i class="material-icons">edit</i>
+                    </button>
                   }
                   @if (record.status === 'scheduled') {
-                    <p-button
-                      icon="pi pi-play"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="success"
-                      (onClick)="startMaintenance(record)"
-                      pTooltip="Start Maintenance"
-                      tooltipPosition="top">
-                    </p-button>
+                    <button
+                      class="action-btn start-btn"
+                      (click)="startMaintenance(record)"
+                      title="Start Maintenance">
+                      <i class="material-icons">play_arrow</i>
+                    </button>
                   }
                   @if (record.status === 'in-progress') {
-                    <p-button
-                      icon="pi pi-check"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="success"
-                      (onClick)="completeMaintenance(record)"
-                      pTooltip="Complete"
-                      tooltipPosition="top">
-                    </p-button>
+                    <button
+                      class="action-btn complete-btn"
+                      (click)="completeMaintenance(record)"
+                      title="Complete">
+                      <i class="material-icons">check</i>
+                    </button>
                   }
                   @if (record.status === 'scheduled') {
-                    <p-button
-                      icon="pi pi-times"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="danger"
-                      (onClick)="cancelMaintenance(record)"
-                      pTooltip="Cancel"
-                      tooltipPosition="top">
-                    </p-button>
+                    <button
+                      class="action-btn cancel-btn"
+                      (click)="cancelMaintenance(record)"
+                      title="Cancel">
+                      <i class="material-icons">close</i>
+                    </button>
                   }
                 </div>
               </td>

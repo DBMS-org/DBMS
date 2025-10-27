@@ -231,13 +231,52 @@
   }
 }
 
+// ==========================================
+// CRITICAL Z-INDEX FIX - MAXIMUM PRIORITY
+// ==========================================
+
+// Dialog backdrop/mask - MUST appear above all content
+.p-dialog-mask {
+  z-index: 99998 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(2px) !important;
+  position: fixed !important;
+}
+
+// Sidebar backdrop/mask
+.p-sidebar-mask {
+  z-index: 99998 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(2px) !important;
+  position: fixed !important;
+}
+
+// Confirm dialog backdrop
+.p-confirm-dialog-mask {
+  z-index: 99998 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(2px) !important;
+  position: fixed !important;
+}
+
+// Dynamic dialog backdrop
+.p-dynamic-dialog-mask {
+  z-index: 99998 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(2px) !important;
+  position: fixed !important;
+}
+
 // Dialogs - Enhanced styling with proper spacing
 .p-dialog {
+  z-index: 99999 !important;
   border-radius: 12px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  background: #ffffff !important;
+  background-color: #ffffff !important;
 
   .p-dialog-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: white;
     border-radius: 12px 12px 0 0;
     padding: 1.5rem 2rem;
@@ -273,12 +312,15 @@
   .p-dialog-content {
     padding: 2rem;
     line-height: 1.6;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
   }
 
   .p-dialog-footer {
     padding: 1.5rem 2rem;
     border-top: 1px solid #e9ecef;
-    background: #f8f9fa;
+    background: #f8f9fa !important;
+    background-color: #f8f9fa !important;
     gap: 1rem;
     display: flex;
     justify-content: flex-end;
@@ -287,6 +329,26 @@
       margin: 0;
     }
   }
+}
+
+// Sidebar container
+.p-sidebar {
+  z-index: 99999 !important;
+}
+
+// Confirm dialog container
+.p-confirm-dialog {
+  z-index: 99999 !important;
+}
+
+// Dynamic dialog container
+.p-dynamic-dialog {
+  z-index: 99999 !important;
+}
+
+// Toast notifications above modals
+.p-toast {
+  z-index: 999999 !important;
 }
 
 // Input Fields - Enhanced styling with proper spacing
