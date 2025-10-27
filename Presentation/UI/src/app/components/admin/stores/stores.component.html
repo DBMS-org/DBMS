@@ -106,10 +106,6 @@
         }
       </select>
 
-      <button class="filter-btn" (click)="clearFilters()">
-        <i class="material-icons">clear</i>
-        Clear Filters
-      </button>
     </div>
   </div>
 
@@ -180,13 +176,13 @@
               <td class="machine-actions">
                 <div class="action-buttons">
                   <button
-                    class="action-btn btn-info"
+                    class="action-btn view-btn"
                     (click)="openViewStoreModal(store)"
                     title="View details">
                     <i class="material-icons">visibility</i>
                   </button>
                   <button
-                    class="action-btn btn-primary"
+                    class="action-btn assign-btn"
                     (click)="openAssignManagerModal(store)"
                     title="Assign manager">
                     <i class="material-icons">person_add</i>
