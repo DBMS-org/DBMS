@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { Select } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextarea } from 'primeng/inputtextarea';
@@ -65,7 +65,7 @@ interface InventoryStatistics {
     TableModule,
     ButtonModule,
     InputTextModule,
-    DropdownModule,
+    Select,
     TagModule,
     DialogModule,
     InputTextarea,
@@ -157,6 +157,8 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
 
+    console.log('Loading accessories from API...');
+
     const sub = this.accessoryService.getAccessories(
       this.searchTerm || undefined,
       this.selectedCategory || undefined,
@@ -164,7 +166,11 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       this.selectedStatus || undefined
     ).subscribe({
       next: (data) => {
-        this.accessories = (data || []).map(dto => this.mapDtoToAccessory(dto));
+        console.log('Accessories loaded successfully:', data);
+        this.accessories = (data || [])
+          .map(dto => this.mapDtoToAccessory(dto))
+          .filter((acc): acc is Accessory => acc !== null);
+        console.log('Mapped accessories:', this.accessories);
         this.extractFilterOptions();
         this.applyFilters();
         this.loadStatistics();
@@ -173,6 +179,12 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading accessories:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.message,
+          error: error.error
+        });
         this.errorMessage = 'Failed to load accessories inventory. Please try again.';
         this.isLoading = false;
       }
@@ -200,8 +212,16 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
     this.subscriptions.push(sub);
   }
 
-  private mapDtoToAccessory(dto: AccessoryDto): Accessory {
-    const updatedDate = dto.updatedAt ? new Date(dto.updatedAt) : undefined;
+  private mapDtoToAccessory(dto: AccessoryDto): Accessory | null {
+    // Return null if dto is invalid
+    if (!dto || !dto.id) {
+      console.warn('Invalid DTO received:', dto);
+      return null;
+    }
+
+    // Safely handle updatedAt - use createdAt as fallback
+    const updatedDate = dto?.updatedAt ? new Date(dto.updatedAt) :
+                       dto?.createdAt ? new Date(dto.createdAt) : new Date();
     return {
       id: dto.id,
       name: dto.name,
@@ -331,8 +351,17 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   }
 
   editAccessory(accessory: Accessory): void {
+    console.log('editAccessory called with:', accessory);
+
+    // Close details modal first (before setting selectedAccessory)
+    this.showDetailsModal = false;
+
+    // Now set edit mode and selected accessory
     this.isEditMode = true;
     this.selectedAccessory = accessory;
+    console.log('isEditMode set to:', this.isEditMode);
+    console.log('selectedAccessory set to:', this.selectedAccessory);
+
     this.accessoryForm = {
       name: accessory.name,
       category: accessory.category,
@@ -345,10 +374,13 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       location: accessory.location || ''
     };
     this.showAccessoryModal = true;
-    this.closeDetailsModal();
   }
 
   saveAccessory(): void {
+    console.log('saveAccessory called');
+    console.log('isEditMode:', this.isEditMode);
+    console.log('selectedAccessory:', this.selectedAccessory);
+
     if (!this.isAccessoryFormValid()) return;
 
     if (this.isEditMode && this.selectedAccessory) {
@@ -364,11 +396,17 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
         location: this.accessoryForm.location
       };
 
+      console.log('Updating accessory ID:', this.selectedAccessory.id);
+      console.log('Update request:', updateRequest);
+
       const sub = this.accessoryService.updateAccessory(this.selectedAccessory.id, updateRequest).subscribe({
         next: (updated) => {
           const index = this.accessories.findIndex(a => a.id === this.selectedAccessory!.id);
           if (index !== -1) {
-            this.accessories[index] = this.mapDtoToAccessory(updated);
+            const updatedAccessory = this.mapDtoToAccessory(updated);
+            if (updatedAccessory) {
+              this.accessories[index] = updatedAccessory;
+            }
           }
           this.extractFilterOptions();
           this.applyFilters();
@@ -377,7 +415,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error updating accessory:', error);
-          this.errorMessage = error.error?.error || 'Failed to update accessory. Please try again.';
+          this.errorMessage = error.error?.message || 'Failed to update accessory. Please try again.';
         }
       });
 
@@ -398,15 +436,27 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
 
       const sub = this.accessoryService.createAccessory(createRequest).subscribe({
         next: (created) => {
-          this.accessories.push(this.mapDtoToAccessory(created));
-          this.extractFilterOptions();
-          this.applyFilters();
-          this.loadStatistics();
-          this.closeAccessoryModal();
+          const newAccessory = this.mapDtoToAccessory(created);
+          if (newAccessory) {
+            this.accessories.push(newAccessory);
+            this.extractFilterOptions();
+            this.applyFilters();
+            this.loadStatistics();
+            this.closeAccessoryModal();
+          }
         },
         error: (error) => {
           console.error('Error creating accessory:', error);
-          this.errorMessage = error.error?.error || 'Failed to create accessory. Please try again.';
+          // Handle different error types
+          if (error.status === 409) {
+            this.errorMessage = error.error?.message || 'An accessory with this part number already exists.';
+          } else if (error.status === 400) {
+            this.errorMessage = error.error?.message || 'Invalid accessory data. Please check your inputs.';
+          } else if (error.status === 401 || error.status === 403) {
+            this.errorMessage = 'You do not have permission to create accessories.';
+          } else {
+            this.errorMessage = error.error?.message || 'Failed to create accessory. Please try again.';
+          }
         }
       });
 
@@ -428,7 +478,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error deleting accessory:', error);
-          this.errorMessage = error.error?.error || 'Failed to delete accessory. Please try again.';
+          this.errorMessage = error.error?.message || 'Failed to delete accessory. Please try again.';
         }
       });
 
@@ -508,7 +558,10 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       next: (updated) => {
         const index = this.accessories.findIndex(a => a.id === this.selectedAccessory!.id);
         if (index !== -1) {
-          this.accessories[index] = this.mapDtoToAccessory(updated);
+          const updatedAccessory = this.mapDtoToAccessory(updated);
+          if (updatedAccessory) {
+            this.accessories[index] = updatedAccessory;
+          }
         }
         this.applyFilters();
         this.loadStatistics();
@@ -516,7 +569,7 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error adjusting stock:', error);
-        this.errorMessage = error.error?.error || 'Failed to adjust stock. Please try again.';
+        this.errorMessage = error.error?.message || 'Failed to adjust stock. Please try again.';
       }
     });
 

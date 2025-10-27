@@ -137,7 +137,7 @@
       <!-- Category Filter -->
       <div class="filter-item">
         <label class="filter-label">Category</label>
-        <p-dropdown
+        <p-select
           [options]="categoryOptions"
           [(ngModel)]="selectedCategory"
           (onChange)="onCategoryFilterChange()"
@@ -146,13 +146,13 @@
           placeholder="All Categories"
           [showClear]="true"
           styleClass="w-full filter-dropdown">
-        </p-dropdown>
+        </p-select>
       </div>
 
       <!-- Status Filter -->
       <div class="filter-item">
         <label class="filter-label">Status</label>
-        <p-dropdown
+        <p-select
           [options]="statusOptions"
           [(ngModel)]="selectedStatus"
           (onChange)="onStatusFilterChange()"
@@ -161,13 +161,13 @@
           placeholder="All Status"
           [showClear]="true"
           styleClass="w-full filter-dropdown">
-        </p-dropdown>
+        </p-select>
       </div>
 
       <!-- Supplier Filter -->
       <div class="filter-item">
         <label class="filter-label">Supplier</label>
-        <p-dropdown
+        <p-select
           [options]="supplierOptions"
           [(ngModel)]="selectedSupplier"
           (onChange)="onSupplierFilterChange()"
@@ -176,7 +176,7 @@
           placeholder="All Suppliers"
           [showClear]="true"
           styleClass="w-full filter-dropdown">
-        </p-dropdown>
+        </p-select>
       </div>
     </div>
   </div>

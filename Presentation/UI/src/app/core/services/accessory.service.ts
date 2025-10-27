@@ -4,15 +4,9 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-// API Response wrapper interface
-interface ApiResponse<T> {
-  data: T;
-  statusCode: number;
-  message: string;
-  success: boolean;
-  timestamp: string;
-  version: string;
-}
+// Note: API responses are wrapped in ApiResponse<T> by the backend,
+// but the dataInterceptor automatically unwraps them to just T.
+// So all HTTP calls receive the unwrapped data directly.
 
 export interface Accessory {
   id: number;
@@ -103,50 +97,70 @@ export class AccessoryService {
     if (supplier) params = params.set('supplier', supplier);
     if (status) params = params.set('status', status);
 
-    return this.http.get<ApiResponse<Accessory[]>>(this.apiUrl, { params })
-      .pipe(map(response => response?.data || []));
+    console.log('Fetching accessories from:', this.apiUrl, 'with params:', params.toString());
+
+    // Note: dataInterceptor automatically unwraps ApiResponse<T> to T
+    return this.http.get<Accessory[]>(this.apiUrl, { params })
+      .pipe(map(response => {
+        console.log('Response after dataInterceptor:', response);
+        return response || [];
+      }));
   }
 
   // Get single accessory by ID
   getAccessory(id: number): Observable<Accessory> {
-    return this.http.get<ApiResponse<Accessory>>(`${this.apiUrl}/${id}`)
-      .pipe(map(response => response.data));
+    // Note: dataInterceptor automatically unwraps ApiResponse<T> to T
+    return this.http.get<Accessory>(`${this.apiUrl}/${id}`);
   }
 
   // Get stock adjustment history
   getStockHistory(id: number): Observable<StockAdjustmentHistory[]> {
-    return this.http.get<ApiResponse<StockAdjustmentHistory[]>>(`${this.apiUrl}/${id}/stock-history`)
-      .pipe(map(response => response?.data || []));
+    // Note: dataInterceptor automatically unwraps ApiResponse<T> to T
+    return this.http.get<StockAdjustmentHistory[]>(`${this.apiUrl}/${id}/stock-history`)
+      .pipe(map(response => response || []));
   }
 
   // Get statistics
   getStatistics(): Observable<AccessoryStatistics> {
-    return this.http.get<ApiResponse<AccessoryStatistics>>(`${this.apiUrl}/statistics`)
-      .pipe(map(response => response?.data || { totalAvailable: 0, lowStock: 0, outOfStock: 0, totalItems: 0 }));
+    // Note: dataInterceptor automatically unwraps ApiResponse<T> to T
+    return this.http.get<AccessoryStatistics>(`${this.apiUrl}/statistics`)
+      .pipe(map(response => response || { totalAvailable: 0, lowStock: 0, outOfStock: 0, totalItems: 0 }));
   }
 
   // Create new accessory
   createAccessory(request: CreateAccessoryRequest): Observable<Accessory> {
-    return this.http.post<ApiResponse<Accessory>>(this.apiUrl, request)
-      .pipe(map(response => response.data));
+    // Note: dataInterceptor automatically unwraps ApiResponse<T> to T
+    return this.http.post<Accessory>(this.apiUrl, request)
+      .pipe(map(response => {
+        console.log('Create accessory response:', response);
+        return response;
+      }));
   }
 
   // Update existing accessory
   updateAccessory(id: number, request: UpdateAccessoryRequest): Observable<Accessory> {
-    return this.http.put<ApiResponse<Accessory>>(`${this.apiUrl}/${id}`, request)
-      .pipe(map(response => response.data));
+    // Note: dataInterceptor automatically unwraps ApiResponse<T> to T
+    return this.http.put<Accessory>(`${this.apiUrl}/${id}`, request)
+      .pipe(map(response => {
+        console.log('Update accessory response:', response);
+        return response;
+      }));
   }
 
   // Adjust stock levels
   adjustStock(id: number, request: StockAdjustmentRequest): Observable<Accessory> {
-    return this.http.post<ApiResponse<Accessory>>(`${this.apiUrl}/${id}/adjust-stock`, request)
-      .pipe(map(response => response.data));
+    // Note: dataInterceptor automatically unwraps ApiResponse<T> to T
+    return this.http.post<Accessory>(`${this.apiUrl}/${id}/adjust-stock`, request)
+      .pipe(map(response => {
+        console.log('Adjust stock response:', response);
+        return response;
+      }));
   }
 
   // Delete accessory
   deleteAccessory(id: number): Observable<any> {
-    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/${id}`)
-      .pipe(map(response => response.data));
+    // Note: dataInterceptor automatically unwraps ApiResponse<T> to T
+    return this.http.delete<any>(`${this.apiUrl}/${id}`);
   }
 
   // Export to CSV

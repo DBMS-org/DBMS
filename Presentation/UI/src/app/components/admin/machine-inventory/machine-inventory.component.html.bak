@@ -217,7 +217,7 @@
                 <i class="material-icons">person</i>
                 Operator Name
               </div>
-              <div class="detail-value">{{ selectedMachine.assignedToOperator || selectedMachine.operatorName || 'Not assigned' }}</div>
+              <div class="detail-value">{{ selectedMachine.operatorName || 'Not assigned' }}</div>
             </div>
 
             <div class="detail-item">

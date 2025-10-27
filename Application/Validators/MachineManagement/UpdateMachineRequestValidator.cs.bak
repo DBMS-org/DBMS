@@ -7,7 +7,9 @@ namespace Application.Validators.MachineManagement
     {
         public UpdateMachineRequestValidator()
         {
-            // Id is not required in the request body since it comes from the route parameter
+            RuleFor(x => x.Id)
+                .NotEmpty()
+                .WithMessage("Machine ID is required");
 
             RuleFor(x => x.Name)
                 .NotEmpty()
@@ -39,8 +41,8 @@ namespace Application.Validators.MachineManagement
                 .WithMessage("Serial number is required and must not exceed 100 characters");
 
             RuleFor(x => x.Status)
-                .NotEmpty()
-                .WithMessage("Machine status is required");
+                .IsInEnum()
+                .WithMessage("Valid machine status is required");
 
             RuleFor(x => x.Location)
                 .MaximumLength(200)
@@ -53,4 +55,4 @@ namespace Application.Validators.MachineManagement
                 .When(x => !string.IsNullOrEmpty(x.Description));
         }
     }
-}
+} 
