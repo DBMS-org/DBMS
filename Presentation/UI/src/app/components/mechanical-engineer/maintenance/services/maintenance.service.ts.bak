@@ -8,7 +8,6 @@ import { MaintenanceLoadingService } from './maintenance-loading.service';
 import { PerformanceOptimizationService } from './performance-optimization.service';
 import { OfflineStorageService } from './offline-storage.service';
 import { SyncService } from './sync.service';
-import { environment } from '../../../../../environments/environment';
 import {
   MaintenanceJob,
   MaintenanceAlert,
@@ -35,7 +34,7 @@ export class MaintenanceService {
   private performanceService = inject(PerformanceOptimizationService);
   private offlineStorage = inject(OfflineStorageService);
   private syncService = inject(SyncService);
-  private readonly apiUrl = `${environment.apiUrl}/api/maintenance`;
+  private readonly apiUrl = '/api/maintenance';
 
   // Dashboard and Stats - Using mock data for development with offline support
   getMaintenanceStats(): Observable<MaintenanceStats> {
@@ -240,18 +239,14 @@ export class MaintenanceService {
   }
 
   bulkAssignJobs(jobIds: string[], assignedTo: string[]): Observable<void> {
-    // TODO: Replace with actual API call when backend is ready
-    return of(void 0);  // Return void until backend is ready
-    // return this.http.patch<void>(`${this.apiUrl}/jobs/bulk/assign`, { jobIds, assignedTo })
-    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
+    return this.http.patch<void>(`${this.apiUrl}/jobs/bulk/assign`, { jobIds, assignedTo })
+      .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
   // Machine History
   getMachineMaintenanceHistory(machineId: string): Observable<MachineMaintenanceHistory> {
-    // TODO: Replace with actual API call when backend is ready
-    return of({} as MachineMaintenanceHistory);  // Return empty object until backend is ready
-    // return this.http.get<MachineMaintenanceHistory>(`${this.apiUrl}/machines/${machineId}/history`)
-    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
+    return this.http.get<MachineMaintenanceHistory>(`${this.apiUrl}/machines/${machineId}/history`)
+      .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
   // Calendar and Timeline - Using mock data for development
@@ -298,17 +293,13 @@ export class MaintenanceService {
 
   // Configuration
   getServiceIntervalConfigs(): Observable<ServiceIntervalConfig[]> {
-    // TODO: Replace with actual API call when backend is ready
-    return of([]);  // Return empty array until backend is ready
-    // return this.http.get<ServiceIntervalConfig[]>(`${this.apiUrl}/config/service-intervals`)
-    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
+    return this.http.get<ServiceIntervalConfig[]>(`${this.apiUrl}/config/service-intervals`)
+      .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
   updateServiceIntervalConfig(config: ServiceIntervalConfig): Observable<ServiceIntervalConfig> {
-    // TODO: Replace with actual API call when backend is ready
-    return of(config);  // Return config until backend is ready
-    // return this.http.put<ServiceIntervalConfig>(`${this.apiUrl}/config/service-intervals`, config)
-    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
+    return this.http.put<ServiceIntervalConfig>(`${this.apiUrl}/config/service-intervals`, config)
+      .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
   getNotificationPreferences(): Observable<NotificationPreferences> {
@@ -330,17 +321,13 @@ export class MaintenanceService {
     const formData = new FormData();
     formData.append('file', file);
 
-    // TODO: Replace with actual API call when backend is ready
-    return of({ success: true });  // Return success until backend is ready
-    // return this.http.post(`${this.apiUrl}/jobs/${jobId}/files`, formData)
-    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
+    return this.http.post(`${this.apiUrl}/jobs/${jobId}/files`, formData)
+      .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
   deleteMaintenanceFile(jobId: string, fileId: string): Observable<void> {
-    // TODO: Replace with actual API call when backend is ready
-    return of(void 0);  // Return void until backend is ready
-    // return this.http.delete<void>(`${this.apiUrl}/jobs/${jobId}/files/${fileId}`)
-    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
+    return this.http.delete<void>(`${this.apiUrl}/jobs/${jobId}/files/${fileId}`)
+      .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
   // Search and Filtering - Using mock data for development
