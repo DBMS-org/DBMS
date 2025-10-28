@@ -47,7 +47,6 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   // Data properties
   assignmentRequests: MachineAssignmentRequest[] = [];
   filteredRequests: MachineAssignmentRequest[] = [];
-  // Add displayed slice for pagination
   displayedRequests: MachineAssignmentRequest[] = [];
   availableMachines: GlobalMachine[] = [];
   statistics: RequestStatistics = {
@@ -57,13 +56,10 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     total: 0
   };
 
-  // Filter properties
   selectedStatus: string = 'ALL';
   selectedUrgency: string = 'ALL';
   selectedMachineType: string = 'ALL';
-  // Free-text search
   searchQuery: string = '';
-  // Filter expansion state
   isFilterExpanded: boolean = true;
 
   // Sorting and pagination
@@ -73,8 +69,6 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   currentPage: number = 1;
   pageNumbers: number[] = [];
 
-  // Modal properties
-  // selectedRequest property removed as view details functionality is no longer used
   requestToApprove: MachineAssignmentRequest | null = null;
   requestToReject: MachineAssignmentRequest | null = null;
 
@@ -147,7 +141,6 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   exportRequests(): void {
-    // In a real application, this would generate and download a CSV/Excel file
     const csvContent = this.generateCSVContent();
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -349,12 +342,8 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     };
   }
 
-  // Modal methods
-  // Removed viewRequestDetails method as the eye/view details action has been removed
   approveRequest(request: MachineAssignmentRequest): void {
-    // Get machineType as string
     const machineType = typeof request.machineType === 'string' ? request.machineType : '';
-    // Auto-assign the first N available machines matching the request type
     const available = this.getAvailableMachinesForType(machineType);
 
     if (available.length < request.quantity) {
@@ -410,13 +399,11 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   closeModals(): void {
-    // Removed requestDetailsModal hide since details modal was removed
     this.triggerModal('approveRequestModal', 'hide');
     this.triggerModal('rejectRequestModal', 'hide');
 
     // Reset properties after a short delay to allow modals to close gracefully
     setTimeout(() => {
-      // Removed selectedRequest reset since it no longer exists
       this.requestToApprove = null;
       this.requestToReject = null;
       this.approvalNotes = '';
@@ -528,7 +515,6 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   private sendRejectionNotification(request: MachineAssignmentRequest, reason: string): void {
-    // In real implementation, this would call a notification service
     console.log('Sending rejection notification:', {
       requester: request.requestedBy,
       reason: reason,
@@ -566,130 +552,13 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Mock data generation methods (deprecated - using real API now)
   private generateMockRequests(): MachineAssignmentRequest[] {
-    // No longer used - data comes from API
     return [];
-    /* const mockRequests: MachineAssignmentRequest[] = [
-      {
-        id: 'REQ-001',
-        requesterName: 'John Smith',
-        requesterEmail: 'john.smith@company.com',
-        projectId: 'PROJ-2024-001',
-        projectName: 'Highway Construction Phase 1',
-        machineType: 'EXCAVATOR',
-        quantity: 2,
-        urgency: 'HIGH',
-        status: 'PENDING',
-        description: 'Need 2 excavators for foundation work starting next week',
-        requestedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 'REQ-002',
-        requesterName: 'Sarah Johnson',
-        requesterEmail: 'sarah.johnson@company.com',
-        projectId: 'PROJ-2024-002',
-        projectName: 'Building Complex Development',
-        machineType: 'CRANE',
-        quantity: 1,
-        urgency: 'URGENT',
-        status: 'PENDING',
-        description: 'Urgent need for crane for high-rise construction',
-        requestedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 'REQ-003',
-        requesterName: 'Mike Wilson',
-        requesterEmail: 'mike.wilson@company.com',
-        projectId: 'PROJ-2024-003',
-        projectName: 'Road Maintenance Project',
-        machineType: 'BULLDOZER',
-        quantity: 1,
-        urgency: 'MEDIUM',
-        status: 'APPROVED',
-        description: 'Road clearing and leveling work',
-        requestedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        processedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        processedBy: 'Machine Manager',
-        assignedMachines: ['MACH-001'],
-        approvalNotes: 'Approved for immediate deployment'
-      },
-      {
-        id: 'REQ-004',
-        requesterName: 'Lisa Brown',
-        requesterEmail: 'lisa.brown@company.com',
-        projectId: 'PROJ-2024-004',
-        projectName: 'Mining Operation Expansion',
-        machineType: 'DUMP_TRUCK',
-        quantity: 3,
-        urgency: 'LOW',
-        status: 'REJECTED',
-        description: 'Need dump trucks for material transport',
-        requestedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        processedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        processedBy: 'Machine Manager',
-        rejectionReason: 'All dump trucks currently assigned to higher priority projects'
-      }
-    ];
-
-    return mockRequests; */
   }
 
   private generateMockMachines(): GlobalMachine[] {
-    // No longer used - data comes from API
     return [];
-    /* const mockMachines: GlobalMachine[] = [
-      {
-        id: 'MACH-001',
-        name: 'CAT 320D Excavator',
-        model: '320D',
-        serialNumber: 'CAT320D001',
-        type: 'EXCAVATOR',
-        status: 'AVAILABLE',
-        currentLocation: 'Warehouse A',
-        rigNo: 'RIG-001',
-        plateNo: 'ABC-123',
-        company: 'Caterpillar'
-      },
-      {
-        id: 'MACH-002',
-        name: 'CAT 330D Excavator',
-        model: '330D',
-        serialNumber: 'CAT330D001',
-        type: 'EXCAVATOR',
-        status: 'AVAILABLE',
-        currentLocation: 'Warehouse B',
-        rigNo: 'RIG-002',
-        plateNo: 'DEF-456',
-        company: 'Caterpillar'
-      },
-      {
-        id: 'MACH-003',
-        name: 'Liebherr LTM 1050',
-        model: 'LTM 1050',
-        serialNumber: 'LIE1050001',
-        type: 'CRANE',
-        status: 'AVAILABLE',
-        currentLocation: 'Site C',
-        rigNo: 'RIG-003',
-        plateNo: 'GHI-789',
-        company: 'Liebherr'
-      },
-      {
-        id: 'MACH-004',
-        name: 'CAT D6T Bulldozer',
-        model: 'D6T',
-        serialNumber: 'CATD6T001',
-        type: 'BULLDOZER',
-        status: 'ASSIGNED',
-        currentLocation: 'Project Site 1',
-        rigNo: 'RIG-004',
-        plateNo: 'JKL-012',
-        company: 'Caterpillar'
-      }
-    ];
-
-    return mockMachines; */
+    
   }
 
 }
