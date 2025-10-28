@@ -21,7 +21,6 @@ export const BLASTING_ENGINEER_ROUTES: Routes = [
         path: '',
         component: BlastingEngineerLayoutComponent,
         children: [
-            // Default route redirects to dashboard
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
             // Main navigation routes
