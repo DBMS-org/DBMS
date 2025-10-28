@@ -8,7 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
 import { AccessoryService, Accessory as AccessoryDto } from '../../core/services/accessory.service';
@@ -68,7 +68,7 @@ interface InventoryStatistics {
     Select,
     TagModule,
     DialogModule,
-    InputTextareaModule,
+    InputTextarea,
     InputNumberModule,
     TooltipModule
   ],

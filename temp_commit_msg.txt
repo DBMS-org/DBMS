@@ -1,7 +1,1 @@
-Resolve merge conflicts in accessories-inventory component
-
-- Kept current implementation using PrimeNG p-select components
-- Resolved conflicts in accessories-inventory.component.html and .scss
-- Maintained consistency with PrimeNG migration throughout the project
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+feat: Add git commands to permissions in settings.local.json
