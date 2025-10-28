@@ -1,18 +1,25 @@
 import { Component, OnInit, signal, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
+
+// PrimeNG Imports
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { TableModule } from 'primeng/table';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputTextarea } from 'primeng/inputtextarea';
+import { SelectModule } from 'primeng/select';
+import { TagModule } from 'primeng/tag';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { BadgeModule } from 'primeng/badge';
+import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog';
 
 import { MaintenanceReportService } from './services/maintenance-report.service';
 import { 
@@ -27,847 +34,408 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [
     CommonModule,
     RouterModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatProgressSpinnerModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
     FormsModule,
-    MatTableModule,
-    MatSnackBarModule,
     DatePipe,
     NgIf,
-    NgFor
+    NgFor,
+    ButtonModule,
+    CardModule,
+    TableModule,
+    InputTextModule,
+    InputTextarea,
+    SelectModule,
+    TagModule,
+    ProgressSpinnerModule,
+    ToastModule,
+    IconFieldModule,
+    InputIconModule,
+    BadgeModule,
+    TooltipModule,
+    DialogModule
   ],
+  providers: [MessageService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="maintenance-reports-container">
+    <p-toast />
+
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
       <!-- Page Header -->
-      <header class="page-header">
-        <div class="header-content">
-          <div class="header-title">
-            <mat-icon class="header-icon">description</mat-icon>
-            <div class="title-text">
-              <h1>Maintenance Reports</h1>
-              <p class="subtitle">Submit and track machine maintenance reports</p>
+      <div class="mb-6 backdrop-blur-xl bg-white/70 rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <i class="pi pi-file-edit text-4xl text-white"></i>
+              </div>
+              <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-white mb-1">Maintenance Reports</h1>
+                <p class="text-white/80 text-sm md:text-base">Submit and track machine maintenance reports</p>
+              </div>
             </div>
-          </div>
-          <div class="header-actions">
-            <button
-              mat-raised-button
-              color="primary"
-              class="submit-report-btn"
-              (click)="toggleReportForm()"
-              [attr.aria-expanded]="showReportForm()"
-              aria-controls="report-form">
-              <mat-icon>{{ showReportForm() ? 'close' : 'add' }}</mat-icon>
-              {{ showReportForm() ? 'Cancel' : 'Submit Report' }}
-            </button>
+            <p-button
+              label="Submit Report"
+              icon="pi pi-plus"
+              (onClick)="toggleReportForm()"
+              severity="warn"
+              [raised]="true"
+              styleClass="bg-white/20 border-white/30 hover:bg-white/30 text-white font-semibold px-6" />
           </div>
         </div>
-      </header>
+      </div>
 
       @if (isLoading()) {
-        <div class="loading-container">
-          <mat-spinner diameter="40"></mat-spinner>
-          <p>Loading reports...</p>
+        <div class="flex flex-col items-center justify-center py-20 backdrop-blur-xl bg-white/70 rounded-3xl shadow-xl">
+          <p-progressSpinner styleClass="w-16 h-16" strokeWidth="3" />
+          <p class="mt-4 text-slate-600 font-medium">Loading reports...</p>
         </div>
       }
 
-      <!-- Submit Report Form -->
-      @if (showReportForm()) {
-        <mat-card class="submit-form-card" id="report-form">
-          <mat-card-header>
-            <mat-card-title>Submit Maintenance Report</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <form (ngSubmit)="submitReport()" #reportForm="ngForm">
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Problem Description</mat-label>
-                  <textarea matInput [(ngModel)]="newReport.customDescription" name="description" required rows="3"></textarea>
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Affected Part</mat-label>
-                  <select matNativeControl [(ngModel)]="newReport.affectedPart" name="affectedPart" required>
-                    <option value="DRILL_BIT">Drill Bit</option>
-                    <option value="DRILL_ROD">Drill Rod</option>
-                    <option value="SHANK">Shank</option>
-                    <option value="ENGINE">Engine</option>
-                    <option value="HYDRAULIC_SYSTEM">Hydraulic System</option>
-                    <option value="ELECTRICAL_SYSTEM">Electrical System</option>
-                    <option value="MECHANICAL_COMPONENTS">Mechanical Components</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Problem Category</mat-label>
-                  <select matNativeControl [(ngModel)]="newReport.problemCategory" name="problemCategory" required>
-                    <option value="ENGINE_ISSUES">Engine Issues</option>
-                    <option value="HYDRAULIC_PROBLEMS">Hydraulic Problems</option>
-                    <option value="ELECTRICAL_FAULTS">Electrical Faults</option>
-                    <option value="MECHANICAL_BREAKDOWN">Mechanical Breakdown</option>
-                    <option value="DRILL_BIT_ISSUES">Drill Bit Issues</option>
-                    <option value="DRILL_ROD_PROBLEMS">Drill Rod Problems</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Severity Level</mat-label>
-                  <select matNativeControl [(ngModel)]="newReport.severity" name="severity" required>
-                    <option value="LOW">Low - Maintenance Needed</option>
-                    <option value="MEDIUM">Medium - Minor Issues</option>
-                    <option value="HIGH">High - Performance Issues</option>
-                    <option value="CRITICAL">Critical - Machine Down</option>
-                  </select>
-                </mat-form-field>
-              </div>
-              
-              <div class="form-actions">
-                <button type="button" mat-button (click)="toggleReportForm()">Cancel</button>
-                <button type="submit" mat-raised-button color="primary" 
-                       [disabled]="!reportForm.form.valid">Submit Report</button>
-              </div>
-            </form>
-          </mat-card-content>
-        </mat-card>
-      }
+      <!-- Submit Report Dialog -->
+      <p-dialog
+        [(visible)]="showReportForm"
+        [modal]="true"
+        [closable]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '50vw'}"
+        [breakpoints]="{'960px': '75vw', '640px': '95vw'}"
+        styleClass="report-dialog">
+        <ng-template pTemplate="header">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+              <i class="pi pi-plus-circle text-xl text-white"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800">Submit Maintenance Report</h2>
+              <p class="text-sm text-slate-500 mt-1">Report a machine issue or maintenance need</p>
+            </div>
+          </div>
+        </ng-template>
 
-      <!-- Reports Summary -->
-      <div class="reports-summary">
-        <div class="stat-cards">
-          <mat-card class="stat-card pending">
-            <mat-card-content>
-              <div class="stat-item">
-                <span class="stat-number">{{ pendingCount() }}</span>
-                <span class="stat-label">Pending</span>
-              </div>
-            </mat-card-content>
-          </mat-card>
-          
-          <mat-card class="stat-card in-progress">
-            <mat-card-content>
-              <div class="stat-item">
-                <span class="stat-number">{{ inProgressCount() }}</span>
-                <span class="stat-label">In Progress</span>
-              </div>
-            </mat-card-content>
-          </mat-card>
-          
-          <mat-card class="stat-card completed">
-            <mat-card-content>
-              <div class="stat-item">
-                <span class="stat-number">{{ completedCount() }}</span>
-                <span class="stat-label">Completed</span>
-              </div>
-            </mat-card-content>
-          </mat-card>
+        <form (ngSubmit)="submitReport()" #reportForm="ngForm" class="space-y-6 py-4">
+          <!-- Problem Description -->
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-slate-700">
+              Problem Description <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              pInputTextarea
+              [(ngModel)]="newReport.customDescription"
+              name="description"
+              required
+              rows="4"
+              placeholder="Describe the problem in detail..."
+              class="w-full border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"></textarea>
+          </div>
+
+          <!-- Affected Part & Problem Category -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-slate-700">
+                Affected Part <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                [(ngModel)]="newReport.affectedPart"
+                name="affectedPart"
+                [options]="affectedPartOptions()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select affected part"
+                styleClass="w-full" />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-slate-700">
+                Problem Category <span class="text-red-500">*</span>
+              </label>
+              <p-select
+                [(ngModel)]="newReport.problemCategory"
+                name="problemCategory"
+                [options]="problemCategoryOptions()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select problem category"
+                styleClass="w-full" />
+            </div>
+          </div>
+
+          <!-- Severity Level -->
+          <div class="space-y-2">
+            <label class="block text-sm font-semibold text-slate-700">
+              Severity Level <span class="text-red-500">*</span>
+            </label>
+            <p-select
+              [(ngModel)]="newReport.severity"
+              name="severity"
+              [options]="severityOptions()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select severity level"
+              styleClass="w-full" />
+          </div>
+        </form>
+
+        <ng-template pTemplate="footer">
+          <div class="flex justify-end gap-3">
+            <p-button
+              label="Cancel"
+              icon="pi pi-times"
+              severity="secondary"
+              [outlined]="true"
+              (onClick)="toggleReportForm()"
+              styleClass="px-6" />
+            <p-button
+              label="Submit Report"
+              icon="pi pi-check"
+              severity="success"
+              [disabled]="!reportForm.form.valid"
+              (onClick)="submitReport()"
+              styleClass="px-6" />
+          </div>
+        </ng-template>
+      </p-dialog>
+
+      <!-- Reports Summary Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <!-- Pending Card -->
+        <div class="backdrop-blur-xl bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-6 border-2 border-amber-200 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg">
+              <i class="pi pi-clock text-2xl text-white"></i>
+            </div>
+            <p-badge [value]="pendingCount().toString()" severity="warn" styleClass="text-lg px-3 py-1" />
+          </div>
+          <h3 class="text-4xl font-bold text-amber-700 mb-1">{{ pendingCount() }}</h3>
+          <p class="text-sm font-semibold text-amber-600 uppercase tracking-wider">Pending Reports</p>
+        </div>
+
+        <!-- In Progress Card -->
+        <div class="backdrop-blur-xl bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg">
+              <i class="pi pi-sync text-2xl text-white"></i>
+            </div>
+            <p-badge [value]="inProgressCount().toString()" severity="info" styleClass="text-lg px-3 py-1" />
+          </div>
+          <h3 class="text-4xl font-bold text-blue-700 mb-1">{{ inProgressCount() }}</h3>
+          <p class="text-sm font-semibold text-blue-600 uppercase tracking-wider">In Progress</p>
+        </div>
+
+        <!-- Completed Card -->
+        <div class="backdrop-blur-xl bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl p-6 border-2 border-emerald-200 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg">
+              <i class="pi pi-check-circle text-2xl text-white"></i>
+            </div>
+            <p-badge [value]="completedCount().toString()" severity="success" styleClass="text-lg px-3 py-1" />
+          </div>
+          <h3 class="text-4xl font-bold text-emerald-700 mb-1">{{ completedCount() }}</h3>
+          <p class="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Completed</p>
         </div>
       </div>
 
       <!-- Report History -->
-      <mat-card class="report-history-card">
-        <mat-card-header>
-          <mat-card-title>Report History</mat-card-title>
-          <mat-card-subtitle>{{ reports().length }} total reports</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          @if (reports().length === 0) {
-            <div class="empty-state">
-              <mat-icon>assignment</mat-icon>
-              <p>No reports submitted yet</p>
-              <small>Click "Submit Report" to create your first maintenance report</small>
+      <p-card styleClass="backdrop-blur-xl bg-white/80 border-2 border-indigo-200 shadow-2xl">
+        <ng-template pTemplate="header">
+          <div class="px-6 pt-6 pb-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-1">Report History</h2>
+                <p class="text-sm text-slate-600">{{ reports().length }} total reports</p>
+              </div>
+              <p-iconField iconPosition="left" styleClass="w-full md:w-80">
+                <p-inputIcon styleClass="pi pi-search" />
+                <input
+                  pInputText
+                  type="text"
+                  [(ngModel)]="searchValue"
+                  (input)="onSearch()"
+                  placeholder="Search reports..."
+                  class="w-full border-2 border-slate-200 rounded-xl focus:border-indigo-500" />
+              </p-iconField>
             </div>
-          } @else {
-            <div class="table-container">
-              <table mat-table [dataSource]="reports()" class="reports-table">
-                  <ng-container matColumnDef="title">
-                    <th mat-header-cell *matHeaderCellDef>Problem Description</th>
-                    <td mat-cell *matCellDef="let report">
-                      <div class="description-cell">
-                        <span class="description-text">{{ report.customDescription | slice:0:50 }}{{ report.customDescription.length > 50 ? '...' : '' }}</span>
-                        <small class="ticket-id">{{ report.ticketId }}</small>
-                      </div>
-                    </td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="affectedPart">
-                    <th mat-header-cell *matHeaderCellDef>Affected Part</th>
-                    <td mat-cell *matCellDef="let report">
-                      <div class="part-cell">
-                        <mat-icon class="part-icon">{{ getPartIcon(report.affectedPart) }}</mat-icon>
-                        <span>{{ getPartDisplay(report.affectedPart) }}</span>
-                      </div>
-                    </td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="severity">
-                    <th mat-header-cell *matHeaderCellDef>Severity</th>
-                    <td mat-cell *matCellDef="let report">
-                      <span class="severity-badge" [ngClass]="getSeverityClass(report.severity)">
-                        <mat-icon class="severity-icon">{{ getSeverityIcon(report.severity) }}</mat-icon>
-                        {{ getSeverityDisplay(report.severity) }}
-                      </span>
-                    </td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="status">
-                    <th mat-header-cell *matHeaderCellDef>Status</th>
-                    <td mat-cell *matCellDef="let report">
-                      <span class="status-badge" [ngClass]="getStatusClass(report.status)">
-                        <mat-icon class="status-icon">{{ getStatusIcon(report.status) }}</mat-icon>
-                        {{ getStatusDisplay(report.status) }}
-                      </span>
-                    </td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="reportedAt">
-                    <th mat-header-cell *matHeaderCellDef>Reported</th>
-                    <td mat-cell *matCellDef="let report">
-                      <div class="date-cell">
-                        <span class="date">{{ report.reportedAt | date:'MMM d, y' }}</span>
-                        <small class="time">{{ report.reportedAt | date:'h:mm a' }}</small>
-                      </div>
-                    </td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="actions">
-                    <th mat-header-cell *matHeaderCellDef>Actions</th>
-                    <td mat-cell *matCellDef="let report">
-                      <button mat-icon-button 
-                              (click)="viewReportDetails(report)"
-                              matTooltip="View Details"
-                              class="action-button">
-                        <mat-icon>visibility</mat-icon>
-                      </button>
-                    </td>
-                  </ng-container>
-                  
-                  <tr mat-header-row *matHeaderRowDef="reportColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: reportColumns;" class="report-row"></tr>
-                </table>
+          </div>
+        </ng-template>
+
+        @if (reports().length === 0) {
+          <div class="flex flex-col items-center justify-center py-16 text-center">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mb-6">
+              <i class="pi pi-file text-5xl text-slate-400"></i>
             </div>
-          }
-        </mat-card-content>
-      </mat-card>
+            <h3 class="text-xl font-semibold text-slate-700 mb-2">No reports submitted yet</h3>
+            <p class="text-slate-500 mb-6">Click "Submit Report" to create your first maintenance report</p>
+            <p-button
+              label="Submit First Report"
+              icon="pi pi-plus"
+              (onClick)="toggleReportForm()"
+              severity="info"
+              [raised]="true" />
+          </div>
+        } @else {
+          <p-table
+            [value]="filteredReports()"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[5, 10, 20, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} reports"
+            styleClass="p-datatable-sm p-datatable-striped"
+            [tableStyle]="{'min-width': '60rem'}">
+
+            <!-- Problem Description Column -->
+            <ng-template pTemplate="header">
+              <tr class="bg-gradient-to-r from-slate-50 to-slate-100">
+                <th class="font-bold text-slate-700 py-4">Problem Description</th>
+                <th class="font-bold text-slate-700 py-4">Affected Part</th>
+                <th class="font-bold text-slate-700 py-4">Severity</th>
+                <th class="font-bold text-slate-700 py-4">Status</th>
+                <th class="font-bold text-slate-700 py-4">Reported</th>
+                <th class="font-bold text-slate-700 py-4 text-center">Actions</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-report>
+              <tr class="hover:bg-indigo-50/50 transition-colors">
+                <!-- Description -->
+                <td class="py-4">
+                  <div class="space-y-1">
+                    <div class="font-medium text-slate-800 line-clamp-2">
+                      {{ report.customDescription }}
+                    </div>
+                    <div class="text-xs text-slate-500 font-mono">
+                      {{ report.ticketId }}
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Affected Part -->
+                <td class="py-4">
+                  <div class="flex items-center gap-2">
+                    <i [class]="'pi ' + getPartIcon(report.affectedPart) + ' text-slate-600'"></i>
+                    <span class="text-sm font-medium text-slate-700">{{ getPartDisplay(report.affectedPart) }}</span>
+                  </div>
+                </td>
+
+                <!-- Severity -->
+                <td class="py-4">
+                  <p-tag
+                    [value]="getSeverityDisplay(report.severity)"
+                    [severity]="getSeveritySeverity(report.severity)"
+                    [icon]="'pi ' + getSeverityIcon(report.severity)"
+                    styleClass="font-semibold" />
+                </td>
+
+                <!-- Status -->
+                <td class="py-4">
+                  <p-tag
+                    [value]="getStatusDisplay(report.status)"
+                    [severity]="getStatusSeverity(report.status)"
+                    [icon]="'pi ' + getStatusIcon(report.status)"
+                    styleClass="font-semibold" />
+                </td>
+
+                <!-- Date -->
+                <td class="py-4">
+                  <div class="space-y-1">
+                    <div class="text-sm font-medium text-slate-700">
+                      {{ report.reportedAt | date:'MMM d, y' }}
+                    </div>
+                    <div class="text-xs text-slate-500">
+                      {{ report.reportedAt | date:'h:mm a' }}
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Actions -->
+                <td class="py-4 text-center">
+                  <p-button
+                    icon="pi pi-eye"
+                    [rounded]="true"
+                    [outlined]="true"
+                    severity="info"
+                    size="small"
+                    (onClick)="viewReportDetails(report)"
+                    pTooltip="View Details"
+                    tooltipPosition="left" />
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center py-8">
+                  <div class="text-slate-500">No reports found matching your search</div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </p-card>
     </div>
   `,
   styles: [`
-    /* ============================================ */
-    /* OPERATOR MAINTENANCE REPORTS - PROFESSIONAL DESIGN */
-    /* ============================================ */
-
-    .maintenance-reports-container {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-      padding: 2rem;
-    }
-
-    /* ============================================ */
-    /* PAGE HEADER */
-    /* ============================================ */
-
-    .page-header {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      border-radius: 16px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 2rem;
-    }
-
-    .header-title {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    .header-icon {
-      width: 56px;
-      height: 56px;
-      font-size: 56px;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .title-text h1 {
-      margin: 0 0 0.5rem 0;
-      font-size: 2rem;
-      font-weight: 700;
-      color: white;
-      letter-spacing: -0.5px;
-    }
-
-    .subtitle {
-      margin: 0;
-      font-size: 1rem;
-      color: rgba(255, 255, 255, 0.85);
-      font-weight: 400;
-    }
-
-    .header-actions .submit-report-btn {
-      padding: 0.75rem 1.5rem;
-      background: rgba(255, 255, 255, 0.2);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      min-height: 44px;
-      backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .header-actions .submit-report-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .submit-report-btn mat-icon {
-      font-size: 1.2rem;
-    }
-
-    /* ============================================ */
-    /* LOADING STATE */
-    /* ============================================ */
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem 2rem;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      gap: 1.5rem;
-    }
-
-    .loading-container p {
-      font-size: 1.1rem;
-      color: #6b7280;
-      font-weight: 500;
-    }
-
-    /* ============================================ */
-    /* SUBMIT FORM CARD */
-    /* ============================================ */
-
-    .submit-form-card {
-      margin-bottom: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      border: 2px solid #667eea;
-      overflow: hidden;
-    }
-
-    .submit-form-card ::ng-deep .mat-mdc-card-header {
-      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
-      border-bottom: 1px solid #e5e7eb;
-      padding: 1.5rem;
-    }
-
-    .submit-form-card ::ng-deep .mat-mdc-card-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #1f2937;
-    }
-
-    /* ============================================ */
-    /* FORM ELEMENTS */
-    /* ============================================ */
-
-    .form-row {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .full-width {
-      width: 100%;
-    }
-
-    .half-width {
-      flex: 1;
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 1rem;
-      padding-top: 1.5rem;
-      margin-top: 1.5rem;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    .form-actions button {
-      padding: 0.75rem 1.5rem;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      min-height: 44px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .form-actions button mat-icon {
-      font-size: 1.2rem;
-    }
-
-    /* ============================================ */
-    /* REPORTS SUMMARY */
-    /* ============================================ */
-
-    .reports-summary {
-      margin-bottom: 2rem;
-    }
-
-    .stat-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .stat-card {
-      text-align: center;
-      border-radius: 16px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      border: 2px solid transparent;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-
-    .stat-card.pending {
-      border-color: #f59e0b;
-      background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
-    }
-
-    .stat-card.in-progress {
-      border-color: #3b82f6;
-      background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%);
-    }
-
-    .stat-card.completed {
-      border-color: #10b981;
-      background: linear-gradient(135deg, #d1fae5 0%, #ffffff 100%);
-    }
-
-    .stat-card ::ng-deep .mat-mdc-card-content {
-      padding: 2rem 1.5rem;
-    }
-
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .stat-number {
-      font-size: 3rem;
-      font-weight: 800;
-      line-height: 1;
-      letter-spacing: -1px;
-    }
-
-    .stat-card.pending .stat-number {
-      color: #f59e0b;
-    }
-
-    .stat-card.in-progress .stat-number {
-      color: #3b82f6;
-    }
-
-    .stat-card.completed .stat-number {
-      color: #10b981;
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 700;
-    }
-
-    /* ============================================ */
-    /* REPORT HISTORY CARD */
-    /* ============================================ */
-
-    .report-history-card {
-      border-radius: 16px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      border: 2px solid #667eea;
-      overflow: hidden;
-    }
-
-    .report-history-card ::ng-deep .mat-mdc-card-header {
-      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
-      border-bottom: 1px solid #e5e7eb;
-      padding: 1.5rem;
-    }
-
-    .report-history-card ::ng-deep .mat-mdc-card-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #1f2937;
-    }
-
-    .report-history-card ::ng-deep .mat-mdc-card-subtitle {
-      color: #6b7280;
-      font-weight: 500;
-      margin-top: 0.25rem;
-    }
-
-    /* ============================================ */
-    /* EMPTY STATE */
-    /* ============================================ */
-
-    .empty-state {
-      text-align: center;
-      padding: 4rem 2rem;
-      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
-      border-radius: 12px;
-      border: 2px dashed #d1d5db;
-    }
-
-    .empty-state mat-icon {
-      font-size: 4rem;
-      width: 4rem;
-      height: 4rem;
-      color: #9ca3af;
-      margin-bottom: 1.5rem;
-    }
-
-    .empty-state p {
-      color: #4b5563;
-      font-weight: 600;
-      font-size: 1.125rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .empty-state small {
-      color: #6b7280;
-      font-size: 0.938rem;
-    }
-
-    /* ============================================ */
-    /* TABLE CONTAINER */
-    /* ============================================ */
-
-    .table-container {
-      overflow-x: auto;
-      border-radius: 12px;
-      background: white;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    }
-
-    .reports-table {
-      width: 100%;
-      min-width: 900px;
-    }
-
-    .reports-table th {
-      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
-      font-weight: 700;
-      color: #1f2937;
-      padding: 1rem 1.5rem;
-      border-bottom: 2px solid #e5e7eb;
-      text-transform: uppercase;
-      font-size: 0.813rem;
-      letter-spacing: 0.5px;
-    }
-
-    .reports-table td {
-      padding: 1.25rem 1.5rem;
-      color: #374151;
-      border-bottom: 1px solid #f3f4f6;
-    }
-
-    .reports-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .category-badge,
-    .priority-badge,
-    .status-badge {
-      padding: 0.25rem 0.5rem;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .category-badge {
-      background-color: #e3f2fd;
-      color: #1976d2;
-    }
-
-    .severity-low {
-      background-color: #e8f5e8;
-      color: #2e7d32;
-      border: 1px solid #4caf50;
-    }
-
-    .severity-medium {
-      background-color: #fffde7;
-      color: #f57f17;
-      border: 1px solid #ffeb3b;
-    }
-
-    .severity-high {
-      background-color: #fff3e0;
-      color: #ef6c00;
-      border: 1px solid #ff9800;
-    }
-
-    .severity-critical {
-      background-color: #ffebee;
-      color: #c62828;
-      border: 1px solid #ef5350;
-    }
-
-    /* Enhanced table styling */
-    .reports-table {
-      width: 100%;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .mat-mdc-header-cell {
-      background-color: #f8f9fa;
-      font-weight: 600;
-      color: #495057;
-      border-bottom: 2px solid #e9ecef;
-    }
-
-    .report-row {
-      transition: background-color 0.2s;
-
-      &:hover {
-        background-color: #f9f9f9;
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
-    .description-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .animate-fade-in {
+      animation: fade-in 0.3s ease-out;
     }
 
-    .description-text {
-      font-weight: 500;
-      color: #212529;
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
-    .ticket-id {
-      color: #6c757d;
-      font-size: 0.75rem;
-      font-weight: 400;
-    }
-
-    .part-cell {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .part-icon {
-      color: #6c757d;
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-
-    .date-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .date {
-      font-weight: 500;
-      color: #333;
-    }
-
-    .time {
-      font-size: 12px;
-      color: #666;
-    }
-
-    .action-button {
-      color: #007bff;
+    ::ng-deep .p-datatable .p-datatable-tbody > tr {
       transition: all 0.2s ease;
     }
 
-    .action-button:hover {
-      background-color: rgba(0, 123, 255, 0.1);
-      transform: scale(1.05);
+    ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+      background-color: rgba(99, 102, 241, 0.05) !important;
     }
 
-    /* Enhanced badge styling */
-    .severity-badge, .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 0 12px;
-      min-height: 24px;
-      height: 24px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    /* Dialog Styling */
+    ::ng-deep .report-dialog .p-dialog-header {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-bottom: 2px solid #e2e8f0;
+      padding: 1.5rem;
     }
 
-    .severity-icon, .status-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
+    ::ng-deep .report-dialog .p-dialog-content {
+      background: white;
+      padding: 1.5rem;
     }
 
-    /* Severity badge colors */
-    .severity-critical {
-      background-color: #dc3545;
-      color: white;
+    ::ng-deep .report-dialog .p-dialog-footer {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-top: 2px solid #e2e8f0;
+      padding: 1.25rem 1.5rem;
     }
 
-    .severity-high {
-      background-color: #fd7e14;
-      color: white;
-    }
-
-    .severity-medium {
-      background-color: #ffc107;
-      color: #212529;
-    }
-
-    .severity-low {
-      background-color: #28a745;
-      color: white;
-    }
-
-    /* Status badge colors */
-    .status-reported {
-      background-color: #6c757d;
-      color: white;
-    }
-
-    .status-acknowledged {
-      background-color: #17a2b8;
-      color: white;
-    }
-
-    .status-in_progress {
-      background-color: #007bff;
-      color: white;
-    }
-
-    .status-resolved {
-      background-color: #28a745;
-      color: white;
-    }
-
-    .status-closed {
-      background-color: #6f42c1;
-      color: white;
-    }
-
-    /* ============================================ */
-    /* RESPONSIVE DESIGN */
-    /* ============================================ */
-
-    @media (max-width: 768px) {
-      .maintenance-reports-container {
-        padding: 1rem;
-      }
-
-      .page-header {
-        padding: 1.5rem;
-      }
-
-      .header-content {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .header-title {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      .header-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 48px;
-      }
-
-      .title-text h1 {
-        font-size: 1.75rem;
-      }
-
-      .form-row {
-        flex-direction: column;
-      }
-
-      .half-width {
-        width: 100%;
-      }
-
-      .stat-cards {
-        grid-template-columns: 1fr;
-      }
-
-      .submit-report-btn {
-        width: 100%;
-      }
-
-      .form-actions {
-        flex-direction: column;
-      }
-
-      .form-actions button {
-        width: 100%;
-      }
+    ::ng-deep .report-dialog {
+      border-radius: 1rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
   `]
 
 })
 export class MaintenanceReportsComponent implements OnInit {
-  showReportForm = signal(false);
+  showReportForm = false;
   operatorMachine = signal<OperatorMachine | null>(null);
   reports = signal<ProblemReport[]>([]);
   isLoading = signal(false);
-  reportColumns = ['title', 'affectedPart', 'severity', 'status', 'reportedAt', 'actions'];
-  
+  searchValue = '';
+
   newReport = {
     affectedPart: 'OTHER' as any,
     problemCategory: 'OTHER' as any,
@@ -875,29 +443,73 @@ export class MaintenanceReportsComponent implements OnInit {
     symptoms: [] as string[],
     severity: 'MEDIUM' as any
   };
-  
+
   private maintenanceReportService = inject(MaintenanceReportService);
   private authService = inject(AuthService);
-  private snackBar = inject(MatSnackBar);
+  private messageService = inject(MessageService);
 
   // Status tracking computed properties
-  pendingCount = computed(() => 
-    this.reports().filter(report => 
+  pendingCount = computed(() =>
+    this.reports().filter(report =>
       report.status === 'REPORTED'
     ).length
   );
 
-  inProgressCount = computed(() => 
-    this.reports().filter(report => 
+  inProgressCount = computed(() =>
+    this.reports().filter(report =>
       report.status === 'ACKNOWLEDGED' || report.status === 'IN_PROGRESS'
     ).length
   );
 
-  completedCount = computed(() => 
-    this.reports().filter(report => 
+  completedCount = computed(() =>
+    this.reports().filter(report =>
       report.status === 'RESOLVED' || report.status === 'CLOSED'
     ).length
   );
+
+  // Filtered reports based on search
+  filteredReports = computed(() => {
+    if (!this.searchValue) {
+      return this.reports();
+    }
+    const search = this.searchValue.toLowerCase();
+    return this.reports().filter(report =>
+      report.customDescription.toLowerCase().includes(search) ||
+      report.ticketId.toLowerCase().includes(search) ||
+      this.getPartDisplay(report.affectedPart).toLowerCase().includes(search) ||
+      this.getSeverityDisplay(report.severity).toLowerCase().includes(search) ||
+      this.getStatusDisplay(report.status).toLowerCase().includes(search)
+    );
+  });
+
+  // Dropdown options
+  affectedPartOptions = computed(() => [
+    { label: 'Drill Bit', value: 'DRILL_BIT' },
+    { label: 'Drill Rod', value: 'DRILL_ROD' },
+    { label: 'Shank', value: 'SHANK' },
+    { label: 'Engine', value: 'ENGINE' },
+    { label: 'Hydraulic System', value: 'HYDRAULIC_SYSTEM' },
+    { label: 'Electrical System', value: 'ELECTRICAL_SYSTEM' },
+    { label: 'Mechanical Components', value: 'MECHANICAL_COMPONENTS' },
+    { label: 'Other', value: 'OTHER' }
+  ]);
+
+  problemCategoryOptions = computed(() => [
+    { label: 'Engine Issues', value: 'ENGINE_ISSUES' },
+    { label: 'Hydraulic Problems', value: 'HYDRAULIC_PROBLEMS' },
+    { label: 'Electrical Faults', value: 'ELECTRICAL_FAULTS' },
+    { label: 'Mechanical Breakdown', value: 'MECHANICAL_BREAKDOWN' },
+    { label: 'Drill Bit Issues', value: 'DRILL_BIT_ISSUES' },
+    { label: 'Drill Rod Problems', value: 'DRILL_ROD_PROBLEMS' },
+    { label: 'Other', value: 'OTHER' }
+  ]);
+
+  severityOptions = computed(() => [
+    { label: 'Low - Maintenance Needed', value: 'LOW' },
+    { label: 'Medium - Minor Issues', value: 'MEDIUM' },
+    { label: 'High - Performance Issues', value: 'HIGH' },
+    { label: 'Critical - Machine Down', value: 'CRITICAL' }
+  ]);
   
   ngOnInit() {
     this.loadOperatorMachine();
@@ -936,15 +548,25 @@ export class MaintenanceReportsComponent implements OnInit {
   }
   
   toggleReportForm() {
-    this.showReportForm.update(show => !show);
+    this.showReportForm = !this.showReportForm;
   }
-  
+
+  onSearch() {
+    // Search is handled by the filteredReports computed signal
+    // This method exists to trigger change detection on input events
+  }
+
   async submitReport() {
     const currentUser = this.authService.getCurrentUser();
     const machine = this.operatorMachine();
-    
+
     if (!currentUser || !machine) {
-      this.snackBar.open('Unable to submit report. Please try again.', 'Dismiss', { duration: 3000 });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Unable to submit report. Please try again.',
+        life: 3000
+      });
       return;
     }
 
@@ -964,12 +586,22 @@ export class MaintenanceReportsComponent implements OnInit {
     try {
       const report = await this.maintenanceReportService.submitProblemReport(reportData);
       this.reports.update(reports => [report, ...reports]);
-      this.snackBar.open('Report submitted successfully', 'OK', { duration: 2500 });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Report submitted successfully',
+        life: 3000
+      });
       this.resetReportForm();
-      this.showReportForm.set(false);
+      this.showReportForm = false;
     } catch (error: any) {
       console.error('Failed to submit report:', error);
-      this.snackBar.open('Failed to submit report. Please try again.', 'Dismiss', { duration: 3000 });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to submit report. Please try again.',
+        life: 3000
+      });
     }
   }
 
@@ -999,16 +631,16 @@ export class MaintenanceReportsComponent implements OnInit {
 
   getPartIcon(part: string): string {
     const iconMap: { [key: string]: string } = {
-      'DRILL_BIT': 'build',
-      'DRILL_ROD': 'construction',
-      'SHANK': 'hardware',
-      'ENGINE': 'settings',
-      'HYDRAULIC_SYSTEM': 'water_drop',
-      'ELECTRICAL_SYSTEM': 'electrical_services',
-      'MECHANICAL_COMPONENTS': 'precision_manufacturing',
-      'OTHER': 'help_outline'
+      'DRILL_BIT': 'pi-wrench',
+      'DRILL_ROD': 'pi-bolt',
+      'SHANK': 'pi-cog',
+      'ENGINE': 'pi-cog',
+      'HYDRAULIC_SYSTEM': 'pi-filter',
+      'ELECTRICAL_SYSTEM': 'pi-bolt',
+      'MECHANICAL_COMPONENTS': 'pi-cog',
+      'OTHER': 'pi-question-circle'
     };
-    return iconMap[part] || 'help_outline';
+    return iconMap[part] || 'pi-question-circle';
   }
 
   getSeverityDisplay(severity: string): string {
@@ -1027,23 +659,44 @@ export class MaintenanceReportsComponent implements OnInit {
 
   getSeverityIcon(severity: string): string {
     const iconMap: { [key: string]: string } = {
-      'LOW': 'info',
-      'MEDIUM': 'warning',
-      'HIGH': 'error',
-      'CRITICAL': 'dangerous'
+      'LOW': 'pi-info-circle',
+      'MEDIUM': 'pi-exclamation-triangle',
+      'HIGH': 'pi-exclamation-circle',
+      'CRITICAL': 'pi-times-circle'
     };
-    return iconMap[severity] || 'info';
+    return iconMap[severity] || 'pi-info-circle';
+  }
+
+  getSeveritySeverity(severity: string): 'success' | 'info' | 'warn' | 'danger' {
+    const severityMap: { [key: string]: 'success' | 'info' | 'warn' | 'danger' } = {
+      'LOW': 'success',
+      'MEDIUM': 'warn',
+      'HIGH': 'warn',
+      'CRITICAL': 'danger'
+    };
+    return severityMap[severity] || 'info';
   }
 
   getStatusIcon(status: string): string {
     const iconMap: { [key: string]: string } = {
-      'REPORTED': 'send',
-      'ACKNOWLEDGED': 'visibility',
-      'IN_PROGRESS': 'build',
-      'RESOLVED': 'check_circle',
-      'CLOSED': 'done_all'
+      'REPORTED': 'pi-clock',
+      'ACKNOWLEDGED': 'pi-eye',
+      'IN_PROGRESS': 'pi-sync',
+      'RESOLVED': 'pi-check-circle',
+      'CLOSED': 'pi-check'
     };
-    return iconMap[status] || 'help_outline';
+    return iconMap[status] || 'pi-question-circle';
+  }
+
+  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    const severityMap: { [key: string]: 'success' | 'info' | 'warn' | 'danger' | 'secondary' } = {
+      'REPORTED': 'warn',
+      'ACKNOWLEDGED': 'info',
+      'IN_PROGRESS': 'info',
+      'RESOLVED': 'success',
+      'CLOSED': 'success'
+    };
+    return severityMap[status] || 'secondary';
   }
 
   getStatusDisplay(status: string): string {
@@ -1079,6 +732,11 @@ export class MaintenanceReportsComponent implements OnInit {
   viewReportDetails(report: ProblemReport) {
     // This could open a dialog or navigate to a details page
     console.log('View report details:', report);
-    this.snackBar.open(`Viewing details for: ${report.customDescription}`, 'OK', { duration: 2000 });
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Report Details',
+      detail: `Viewing: ${report.ticketId}`,
+      life: 2000
+    });
   }
 }
