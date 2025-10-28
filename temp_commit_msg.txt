@@ -1,1 +1,1 @@
-feat: Add git commands to permissions in settings.local.json
+refactor: Change button severity from 'warning' to 'warn' for consistency; update InputTextarea import in multiple components
