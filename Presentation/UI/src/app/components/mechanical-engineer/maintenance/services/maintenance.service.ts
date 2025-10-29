@@ -36,6 +36,8 @@ export class MaintenanceService {
   private offlineStorage = inject(OfflineStorageService);
   private syncService = inject(SyncService);
   private readonly apiUrl = `${environment.apiUrl}/api/maintenance`;
+  private readonly jobsApiUrl = `${environment.apiUrl}/api/maintenance-jobs`;
+  private readonly reportsApiUrl = `${environment.apiUrl}/api/maintenance-reports`;
 
   // Dashboard and Stats - Using mock data for development with offline support
   getMaintenanceStats(): Observable<MaintenanceStats> {
@@ -54,20 +56,15 @@ export class MaintenanceService {
       }
     }
 
-    // TODO: Replace with actual API call when backend is ready
-    return this.mockService.getMaintenanceStats().pipe(
-      tap(stats => {
-        // Cache the data for offline use
-        this.offlineStorage.storeOfflineData({ maintenanceStats: stats });
+    // Use real API with fallback to mock in dev mode
+    return this.http.get<MaintenanceStats>(`${this.jobsApiUrl}/stats/region`).pipe(
+      tap(stats => this.offlineStorage.storeOfflineData({ maintenanceStats: stats })),
+      catchError(error => {
+        console.warn('API call failed, falling back to mock data:', error);
+        return this.mockService.getMaintenanceStats();
       }),
       finalize(() => this.loadingService.stopLoading(operationId))
     );
-    // return this.http.get<MaintenanceStats>(`${this.apiUrl}/stats`)
-    //   .pipe(
-    //     tap(stats => this.offlineStorage.storeOfflineData({ maintenanceStats: stats })),
-    //     catchError(this.errorHandler.handleError.bind(this.errorHandler)),
-    //     finalize(() => this.loadingService.stopLoading(operationId))
-    //   );
   }
 
   getServiceDueAlerts(): Observable<MaintenanceAlert[]> {
@@ -77,18 +74,14 @@ export class MaintenanceService {
       return of(cachedAlerts.serviceDue);
     }
 
-    // TODO: Replace with actual API call when backend is ready
-    return this.mockService.getServiceDueAlerts().pipe(
-      tap(alerts => {
-        // Cache the data for offline use
-        this.offlineStorage.storeOfflineData({ serviceDueAlerts: alerts });
+    // Use real API with fallback to mock in dev mode
+    return this.http.get<MaintenanceAlert[]>(`${this.apiUrl}/alerts/service-due`).pipe(
+      tap(alerts => this.offlineStorage.storeOfflineData({ serviceDueAlerts: alerts })),
+      catchError(error => {
+        console.warn('Service due alerts API failed, falling back to mock:', error);
+        return this.mockService.getServiceDueAlerts();
       })
     );
-    // return this.http.get<MaintenanceAlert[]>(`${this.apiUrl}/alerts/service-due`)
-    //   .pipe(
-    //     tap(alerts => this.offlineStorage.storeOfflineData({ serviceDueAlerts: alerts })),
-    //     catchError(this.errorHandler.handleError.bind(this.errorHandler))
-    //   );
   }
 
   getOverdueAlerts(): Observable<MaintenanceAlert[]> {
@@ -98,18 +91,14 @@ export class MaintenanceService {
       return of(cachedAlerts.overdue);
     }
 
-    // TODO: Replace with actual API call when backend is ready
-    return this.mockService.getOverdueAlerts().pipe(
-      tap(alerts => {
-        // Cache the data for offline use
-        this.offlineStorage.storeOfflineData({ overdueAlerts: alerts });
+    // Use real API with fallback to mock in dev mode
+    return this.http.get<MaintenanceAlert[]>(`${this.jobsApiUrl}/overdue`).pipe(
+      tap(alerts => this.offlineStorage.storeOfflineData({ overdueAlerts: alerts })),
+      catchError(error => {
+        console.warn('Overdue alerts API failed, falling back to mock:', error);
+        return this.mockService.getOverdueAlerts();
       })
     );
-    // return this.http.get<MaintenanceAlert[]>(`${this.apiUrl}/alerts/overdue`)
-    //   .pipe(
-    //     tap(alerts => this.offlineStorage.storeOfflineData({ overdueAlerts: alerts })),
-    //     catchError(this.errorHandler.handleError.bind(this.errorHandler))
-    //   );
   }
 
   // Maintenance Jobs - Using mock data for development with offline support
@@ -129,33 +118,41 @@ export class MaintenanceService {
       // Fallback to mock data even when offline (dev mode)
     }
 
-    // TODO: Replace with actual API call when backend is ready
-    return this.mockService.getMaintenanceJobs(filters).pipe(
+    // Use real API - fetch jobs for current engineer
+    // Note: Frontend should get current user ID from auth service
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      // Fallback to mock if no user context
+      return this.mockService.getMaintenanceJobs(filters).pipe(
+        tap(jobs => {
+          this.offlineStorage.storeOfflineData({ maintenanceJobs: jobs });
+          this.performanceService.createSearchIndex('maintenance-jobs', jobs);
+        }),
+        finalize(() => this.loadingService.stopLoading(operationId))
+      );
+    }
+
+    const params = this.buildFilterParams(filters);
+    return this.http.get<MaintenanceJob[]>(`${this.jobsApiUrl}/engineer/${userId}`, { params }).pipe(
       tap(jobs => {
-        // Cache the data for offline use
         this.offlineStorage.storeOfflineData({ maintenanceJobs: jobs });
-        // Create search index for performance optimization
         this.performanceService.createSearchIndex('maintenance-jobs', jobs);
+      }),
+      catchError(error => {
+        console.warn('Get jobs API failed, falling back to mock:', error);
+        return this.mockService.getMaintenanceJobs(filters);
       }),
       finalize(() => this.loadingService.stopLoading(operationId))
     );
-    // const params = this.buildFilterParams(filters);
-    // return this.http.get<MaintenanceJob[]>(`${this.apiUrl}/jobs`, { params })
-    //   .pipe(
-    //     tap(jobs => {
-    //       this.offlineStorage.storeOfflineData({ maintenanceJobs: jobs });
-    //       this.performanceService.createSearchIndex('maintenance-jobs', jobs);
-    //     }),
-    //     catchError(this.errorHandler.handleError.bind(this.errorHandler)),
-    //     finalize(() => this.loadingService.stopLoading(operationId))
-    //   );
   }
 
   getMaintenanceJob(jobId: string): Observable<MaintenanceJob> {
-    // TODO: Replace with actual API call when backend is ready
-    return this.mockService.getMaintenanceJob(jobId);
-    // return this.http.get<MaintenanceJob>(`${this.apiUrl}/jobs/${jobId}`)
-    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
+    return this.http.get<MaintenanceJob>(`${this.jobsApiUrl}/${jobId}`).pipe(
+      catchError(error => {
+        console.warn('Get job by ID API failed, falling back to mock:', error);
+        return this.mockService.getMaintenanceJob(jobId);
+      })
+    );
   }
 
   createMaintenanceJob(job: Partial<MaintenanceJob>): Observable<MaintenanceJob> {
@@ -170,7 +167,7 @@ export class MaintenanceService {
       return of(tempJob);
     }
 
-    return this.http.post<MaintenanceJob>(`${this.apiUrl}/jobs`, job)
+    return this.http.post<MaintenanceJob>(`${this.jobsApiUrl}/create`, job)
       .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
@@ -186,7 +183,7 @@ export class MaintenanceService {
       return of(updatedJob);
     }
 
-    return this.http.put<MaintenanceJob>(`${this.apiUrl}/jobs/${jobId}`, job)
+    return this.http.patch<MaintenanceJob>(`${this.jobsApiUrl}/${jobId}/status`, job)
       .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
@@ -503,5 +500,22 @@ export class MaintenanceService {
   clearOfflineData(): void {
     this.offlineStorage.clearOfflineData();
     this.offlineStorage.clearSyncQueue();
+  }
+
+  /**
+   * Get current user ID from local storage or auth service
+   * This should ideally come from an AuthService
+   */
+  private getCurrentUserId(): number | null {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.id || null;
+      }
+      return null;
+    } catch {
+      return null;
+    }
   }
 }

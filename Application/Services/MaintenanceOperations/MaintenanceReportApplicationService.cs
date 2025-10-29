@@ -1,6 +1,7 @@
 using Application.DTOs.MaintenanceOperations;
 using Application.DTOs.Shared;
 using Application.Interfaces.MaintenanceOperations;
+using Application.Interfaces.MachineManagement;
 using Application.Interfaces.Infrastructure;
 using Domain.Entities.MaintenanceOperations;
 using Domain.Entities.MaintenanceOperations.Enums;
@@ -13,22 +14,28 @@ namespace Application.Services.MaintenanceOperations
     {
         private readonly IMaintenanceReportRepository _reportRepository;
         private readonly IMaintenanceJobRepository _jobRepository;
+        private readonly IMachineRepository _machineRepository;
         private readonly IMappingService _mappingService;
         private readonly ILogger<MaintenanceReportApplicationService> _logger;
         private readonly IMaintenanceJobService _jobService;
+        private readonly IStatusSynchronizationService _statusSyncService;
 
         public MaintenanceReportApplicationService(
             IMaintenanceReportRepository reportRepository,
             IMaintenanceJobRepository jobRepository,
+            IMachineRepository machineRepository,
             IMappingService mappingService,
             ILogger<MaintenanceReportApplicationService> logger,
-            IMaintenanceJobService jobService)
+            IMaintenanceJobService jobService,
+            IStatusSynchronizationService statusSyncService)
         {
             _reportRepository = reportRepository;
             _jobRepository = jobRepository;
+            _machineRepository = machineRepository;
             _mappingService = mappingService;
             _logger = logger;
             _jobService = jobService;
+            _statusSyncService = statusSyncService;
         }
 
         public async Task<Result<MaintenanceReportDto>> SubmitReportAsync(SubmitMaintenanceReportRequest request)
@@ -60,6 +67,12 @@ namespace Application.Services.MaintenanceOperations
                 var createdReport = await _reportRepository.CreateAsync(report);
 
                 _logger.LogInformation("Maintenance report created with ticket {TicketId}", createdReport.TicketId);
+
+                // Update machine status based on report severity
+                await _statusSyncService.UpdateMachineStatusAsync(
+                    request.MachineId,
+                    Enum.Parse<SeverityLevel>(request.Severity),
+                    ReportStatus.Reported);
 
                 // Auto-create and assign maintenance job
                 await _jobService.CreateJobFromReportAsync(createdReport.Id);
@@ -136,10 +149,31 @@ namespace Application.Services.MaintenanceOperations
         {
             try
             {
-                // This would typically query the machine repository
-                // For now, returning a placeholder response
-                _logger.LogWarning("GetOperatorMachine not fully implemented");
-                return Result.Failure<OperatorMachineDto>("Not implemented");
+                _logger.LogInformation("Getting machine details for operator {OperatorId}", operatorId);
+
+                var machine = await _machineRepository.GetByOperatorIdAsync(operatorId);
+                if (machine == null)
+                {
+                    return Result.Failure<OperatorMachineDto>("No machine assigned to this operator");
+                }
+
+                var dto = new OperatorMachineDto
+                {
+                    Id = machine.Id,
+                    Name = machine.Name,
+                    Type = machine.Type,
+                    Model = machine.Model,
+                    Manufacturer = machine.Manufacturer,
+                    SerialNumber = machine.SerialNumber,
+                    Status = machine.Status.ToString(),
+                    CurrentLocation = machine.CurrentLocation,
+                    LastMaintenanceDate = machine.LastMaintenanceDate,
+                    NextMaintenanceDate = machine.NextMaintenanceDate,
+                    ProjectName = machine.Project?.Name,
+                    RegionName = machine.Region?.Name
+                };
+
+                return Result<OperatorMachineDto>.Success(dto);
             }
             catch (Exception ex)
             {
@@ -178,7 +212,7 @@ namespace Application.Services.MaintenanceOperations
         {
             try
             {
-                var report = await _reportRepository.GetByIdAsync(id);
+                var report = await _reportRepository.GetWithDetailsAsync(id);
                 if (report == null)
                 {
                     return Result.Failure<MaintenanceReportDto>("Report not found");
@@ -188,6 +222,12 @@ namespace Application.Services.MaintenanceOperations
                 report.UpdateStatus(newStatus);
 
                 await _reportRepository.UpdateAsync(report);
+
+                // Synchronize machine status based on report status change
+                await _statusSyncService.UpdateMachineStatusAsync(report.MachineId, report.Severity, newStatus);
+
+                // Synchronize with job if exists
+                await _statusSyncService.SynchronizeReportAndJobAsync(id);
 
                 var dto = _mappingService.Map<MaintenanceReportDto>(report);
                 return Result<MaintenanceReportDto>.Success(dto);
