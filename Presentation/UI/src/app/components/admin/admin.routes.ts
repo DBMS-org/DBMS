@@ -14,6 +14,7 @@ import { MachineAssignmentsComponent } from './machine-assignments/machine-assig
 import { StoresComponent } from './stores/stores.component';
 import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/view-sequence-simulator/view-sequence-simulator.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
+import { ReportsComponent } from './reports/reports.component';
 
 // Admin module route configuration
 export const ADMIN_ROUTES: Routes = [
@@ -44,7 +45,10 @@ export const ADMIN_ROUTES: Routes = [
             // Machine and store management routes
             { path: 'machine-inventory', component: MachineInventoryComponent },
             { path: 'machine-assignments', component: MachineAssignmentsComponent },
-            { path: 'stores', component: StoresComponent }
+            { path: 'stores', component: StoresComponent },
+
+            // Reports route
+            { path: 'reports', component: ReportsComponent }
         ]
     }
 ];

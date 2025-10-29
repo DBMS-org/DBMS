@@ -9,8 +9,8 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
-import { SelectModule } from 'primeng/select';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { DropdownModule } from 'primeng/dropdown';
 import { TagModule } from 'primeng/tag';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ToastModule } from 'primeng/toast';
@@ -42,8 +42,8 @@ import { AuthService } from '../../../core/services/auth.service';
     CardModule,
     TableModule,
     InputTextModule,
-    InputTextarea,
-    SelectModule,
+    InputTextareaModule,
+    DropdownModule,
     TagModule,
     ProgressSpinnerModule,
     ToastModule,
@@ -76,7 +76,7 @@ import { AuthService } from '../../../core/services/auth.service';
               label="Submit Report"
               icon="pi pi-plus"
               (onClick)="toggleReportForm()"
-              severity="warn"
+              severity="warning"
               [raised]="true"
               styleClass="bg-white/20 border-white/30 hover:bg-white/30 text-white font-semibold px-6" />
           </div>
@@ -134,7 +134,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <label class="block text-xs font-semibold text-slate-700">
                 Affected Part <span class="text-red-500">*</span>
               </label>
-              <p-select
+              <p-dropdown
                 [(ngModel)]="newReport.affectedPart"
                 name="affectedPart"
                 [options]="affectedPartOptions()"
@@ -148,7 +148,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <label class="block text-xs font-semibold text-slate-700">
                 Problem Category <span class="text-red-500">*</span>
               </label>
-              <p-select
+              <p-dropdown
                 [(ngModel)]="newReport.problemCategory"
                 name="problemCategory"
                 [options]="problemCategoryOptions()"
@@ -164,7 +164,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <label class="block text-xs font-semibold text-slate-700">
               Severity Level <span class="text-red-500">*</span>
             </label>
-            <p-select
+            <p-dropdown
               [(ngModel)]="newReport.severity"
               name="severity"
               [options]="severityOptions()"
@@ -203,7 +203,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center shadow-md">
               <i class="pi pi-clock text-lg text-white"></i>
             </div>
-            <p-badge [value]="pendingCount().toString()" severity="warn" styleClass="text-sm px-2 py-0.5" />
+            <p-badge [value]="pendingCount().toString()" severity="warning" styleClass="text-sm px-2 py-0.5" />
           </div>
           <h3 class="text-2xl font-bold text-amber-700 mb-0.5">{{ pendingCount() }}</h3>
           <p class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Pending Reports</p>
@@ -667,11 +667,11 @@ export class MaintenanceReportsComponent implements OnInit {
     return iconMap[severity] || 'pi-info-circle';
   }
 
-  getSeveritySeverity(severity: string): 'success' | 'info' | 'warn' | 'danger' {
-    const severityMap: { [key: string]: 'success' | 'info' | 'warn' | 'danger' } = {
+  getSeveritySeverity(severity: string): 'success' | 'info' | 'secondary' | 'contrast' | 'warning' | 'danger' {
+    const severityMap: { [key: string]: 'success' | 'info' | 'secondary' | 'contrast' | 'warning' | 'danger' } = {
       'LOW': 'success',
-      'MEDIUM': 'warn',
-      'HIGH': 'warn',
+      'MEDIUM': 'warning',
+      'HIGH': 'warning',
       'CRITICAL': 'danger'
     };
     return severityMap[severity] || 'info';
@@ -688,9 +688,9 @@ export class MaintenanceReportsComponent implements OnInit {
     return iconMap[status] || 'pi-question-circle';
   }
 
-  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    const severityMap: { [key: string]: 'success' | 'info' | 'warn' | 'danger' | 'secondary' } = {
-      'REPORTED': 'warn',
+  getStatusSeverity(status: string): 'success' | 'info' | 'secondary' | 'contrast' | 'warning' | 'danger' {
+    const severityMap: { [key: string]: 'success' | 'info' | 'secondary' | 'contrast' | 'warning' | 'danger' } = {
+      'REPORTED': 'warning',
       'ACKNOWLEDGED': 'info',
       'IN_PROGRESS': 'info',
       'RESOLVED': 'success',
