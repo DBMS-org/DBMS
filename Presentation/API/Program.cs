@@ -195,6 +195,17 @@ builder.Services.AddScoped<Application.Interfaces.ExplosiveInventory.ICentralInv
 builder.Services.AddScoped<Application.Interfaces.ExplosiveInventory.IInventoryTransferService, Application.Services.ExplosiveInventory.InventoryTransferApplicationService>();
 builder.Services.AddScoped<Domain.Services.ExplosiveInventory.InventoryValidationDomainService>();
 
+
+// Register Maintenance Operations services
+builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceReportRepository, Infrastructure.Repositories.MaintenanceOperations.MaintenanceReportRepository>();
+builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceJobRepository, Infrastructure.Repositories.MaintenanceOperations.MaintenanceJobRepository>();
+builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceReportService, Application.Services.MaintenanceOperations.MaintenanceReportApplicationService>();
+builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceJobService, Application.Services.MaintenanceOperations.MaintenanceJobApplicationService>();
+builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IStatusSynchronizationService, Application.Services.MaintenanceOperations.StatusSynchronizationService>();
+
+// Register Machine Management services
+builder.Services.AddScoped<Application.Interfaces.MachineManagement.IMachineRepository, Infrastructure.Repositories.MachineManagement.MachineRepository>();
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, Infrastructure.Services.UserContext>();
 
