@@ -1,1 +1,1 @@
-Add repositories for MaintenanceJob and MaintenanceReport with comprehensive CRUD and query operations
+Add DTOs and AutoMapper profile for Maintenance Operations, including job requests, reports, and statistics
