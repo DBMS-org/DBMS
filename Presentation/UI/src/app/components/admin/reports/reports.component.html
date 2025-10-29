@@ -1,0 +1,408 @@
+<div class="reports-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">Project Reports</h2>
+    <p class="page-subtitle">Comprehensive project-wise reports with sites, machinery, personnel, and materials</p>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section">
+    <div class="search-box">
+      <i class="fas fa-search search-icon"></i>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search by project name, region, or ID..."
+        [(ngModel)]="searchQuery"
+        (input)="onSearch()"
+      />
+    </div>
+
+    <div class="filter-section">
+      <select class="form-select" [(ngModel)]="statusFilter" (change)="onFilter()">
+        <option value="">All Status</option>
+        <option *ngFor="let status of statusOptions.slice(1)" [value]="status">{{status}}</option>
+      </select>
+
+      <select class="form-select" [(ngModel)]="regionFilter" (change)="onFilter()">
+        <option value="">All Regions</option>
+        <option *ngFor="let region of regionOptions.slice(1)" [value]="region">{{region}}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ error }}
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p>Loading reports...</p>
+  </div>
+
+  <!-- Reports List -->
+  <div class="reports-list" *ngIf="!loading">
+    <div *ngFor="let report of filteredReports" class="report-card">
+      <!-- Project Header -->
+      <div class="report-header" (click)="toggleProjectExpansion(report.project.id)">
+        <div class="header-left">
+          <div class="project-icon">
+            <i class="fas fa-project-diagram"></i>
+          </div>
+          <div class="project-info">
+            <h3 class="project-name">{{ report.project.name }}</h3>
+            <div class="project-meta">
+              <span class="meta-item">
+                <i class="fas fa-map-marker-alt"></i>
+                {{ report.project.region }}
+              </span>
+              <span class="meta-item">
+                <i class="fas fa-calendar"></i>
+                {{ formatDate(report.project.startDate) }} - {{ formatDate(report.project.endDate) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <span class="status-badge" [ngClass]="getStatusClass(report.project.status)">
+            {{ report.project.status }}
+          </span>
+          <button class="expand-btn" [class.expanded]="isProjectExpanded(report.project.id)">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="statistics-row">
+        <div class="stat-item">
+          <div class="stat-icon sites">
+            <i class="fas fa-map-marked-alt"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value">{{ report.statistics.totalSites }}</span>
+            <span class="stat-label">Total Sites</span>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon active">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value">{{ report.statistics.activeSites }}</span>
+            <span class="stat-label">Active Sites</span>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon machines">
+            <i class="fas fa-cogs"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value">{{ report.statistics.totalMachines }}</span>
+            <span class="stat-label">Machines</span>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon personnel">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value">{{ report.statistics.totalPersonnel }}</span>
+            <span class="stat-label">Personnel</span>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon materials">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-value">{{ report.statistics.totalMaterialsUsed }}</span>
+            <span class="stat-label">Materials</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expanded Details -->
+      <div class="report-details" *ngIf="isProjectExpanded(report.project.id)">
+        <!-- Project Description -->
+        <div class="detail-section" *ngIf="report.project.description">
+          <h4 class="section-title">
+            <i class="fas fa-info-circle"></i>
+            Project Description
+          </h4>
+          <p class="description-text">{{ report.project.description }}</p>
+        </div>
+
+        <!-- Sites Section -->
+        <div class="detail-section">
+          <h4 class="section-title">
+            <i class="fas fa-map-marked-alt"></i>
+            Project Sites ({{ report.sites.length }})
+          </h4>
+          <div class="table-responsive">
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>Site Name</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Pattern</th>
+                  <th>Simulation</th>
+                  <th>Completed</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let site of report.sites">
+                  <td class="font-semibold">{{ site.name }}</td>
+                  <td>{{ site.location }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="getStatusClass(site.status)">
+                      {{ site.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <i class="fas" [class.fa-check-circle]="site.isPatternApproved"
+                       [class.fa-times-circle]="!site.isPatternApproved"
+                       [class.text-success]="site.isPatternApproved"
+                       [class.text-danger]="!site.isPatternApproved"></i>
+                  </td>
+                  <td>
+                    <i class="fas" [class.fa-check-circle]="site.isSimulationConfirmed"
+                       [class.fa-times-circle]="!site.isSimulationConfirmed"
+                       [class.text-success]="site.isSimulationConfirmed"
+                       [class.text-danger]="!site.isSimulationConfirmed"></i>
+                  </td>
+                  <td>
+                    <i class="fas" [class.fa-check-circle]="site.isCompleted"
+                       [class.fa-times-circle]="!site.isCompleted"
+                       [class.text-success]="site.isCompleted"
+                       [class.text-danger]="!site.isCompleted"></i>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Machinery Section -->
+        <div class="detail-section">
+          <h4 class="section-title">
+            <i class="fas fa-cogs"></i>
+            Assigned Machinery ({{ report.machineAssignments.length }})
+          </h4>
+          <div class="table-responsive">
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>Machine Name</th>
+                  <th>Type</th>
+                  <th>Operator</th>
+                  <th>Assigned Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let machine of report.machineAssignments">
+                  <td class="font-semibold">{{ machine.machineName }}</td>
+                  <td>{{ machine.machineType }}</td>
+                  <td>{{ machine.operatorName }}</td>
+                  <td>{{ formatDate(machine.assignedDate) }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="getStatusClass(machine.status)">
+                      {{ machine.status }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Personnel Section -->
+        <div class="detail-section">
+          <h4 class="section-title">
+            <i class="fas fa-users"></i>
+            Project Personnel ({{ report.personnel.length }})
+          </h4>
+          <div class="table-responsive">
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Email</th>
+                  <th>Assigned Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let person of report.personnel">
+                  <td class="font-semibold">{{ person.name }}</td>
+                  <td>
+                    <span class="role-badge">{{ person.role }}</span>
+                  </td>
+                  <td>{{ person.email }}</td>
+                  <td>{{ formatDate(person.assignedDate) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Materials Section -->
+        <div class="detail-section">
+          <h4 class="section-title">
+            <i class="fas fa-box"></i>
+            Material Usage ({{ report.materialUsage.length }})
+          </h4>
+          <div class="table-responsive">
+            <table class="detail-table">
+              <thead>
+                <tr>
+                  <th>Material Type</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
+                  <th>Site</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let material of report.materialUsage">
+                  <td class="font-semibold">{{ material.materialType }}</td>
+                  <td class="quantity-value">{{ material.quantity }}</td>
+                  <td>{{ material.unit }}</td>
+                  <td>{{ material.site }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-section">
+          <button class="btn btn-primary" (click)="viewDetailedReport(report)">
+            <i class="fas fa-eye"></i> View Detailed Report
+          </button>
+          <button class="btn btn-outline-primary" (click)="exportReport(report)">
+            <i class="fas fa-download"></i> Export Report
+          </button>
+          <button class="btn btn-outline-primary" (click)="printReport(report)">
+            <i class="fas fa-print"></i> Print Report
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Reports Message -->
+    <div *ngIf="filteredReports.length === 0" class="no-reports">
+      <div class="empty-state">
+        <i class="fas fa-file-alt fa-4x"></i>
+        <h3>No Reports Found</h3>
+        <p>No reports match your current filters. Try adjusting your search criteria.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detailed Report Modal -->
+<div class="modal-overlay" *ngIf="showDetailModal && selectedReport">
+  <div class="modal-content detailed-report-modal">
+    <div class="modal-header">
+      <h2>
+        <i class="fas fa-file-alt"></i>
+        Detailed Report: {{ selectedReport.project.name }}
+      </h2>
+      <button class="close-btn" (click)="closeDetailModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Project Summary -->
+      <div class="summary-section">
+        <h3>Project Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="label">Project ID:</span>
+            <span class="value">{{ selectedReport.project.id }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Region:</span>
+            <span class="value">{{ selectedReport.project.region }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Status:</span>
+            <span class="status-badge" [ngClass]="getStatusClass(selectedReport.project.status)">
+              {{ selectedReport.project.status }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Start Date:</span>
+            <span class="value">{{ formatDate(selectedReport.project.startDate) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">End Date:</span>
+            <span class="value">{{ formatDate(selectedReport.project.endDate) }}</span>
+          </div>
+          <div class="summary-item full-width" *ngIf="selectedReport.project.description">
+            <span class="label">Description:</span>
+            <span class="value">{{ selectedReport.project.description }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overall Statistics -->
+      <div class="summary-section">
+        <h3>Overall Statistics</h3>
+        <div class="stats-grid-modal">
+          <div class="stat-card-modal">
+            <i class="fas fa-map-marked-alt"></i>
+            <div class="stat-info">
+              <span class="stat-number">{{ selectedReport.statistics.totalSites }}</span>
+              <span class="stat-text">Total Sites</span>
+            </div>
+          </div>
+          <div class="stat-card-modal">
+            <i class="fas fa-check-circle"></i>
+            <div class="stat-info">
+              <span class="stat-number">{{ selectedReport.statistics.activeSites }}</span>
+              <span class="stat-text">Active Sites</span>
+            </div>
+          </div>
+          <div class="stat-card-modal">
+            <i class="fas fa-cogs"></i>
+            <div class="stat-info">
+              <span class="stat-number">{{ selectedReport.statistics.totalMachines }}</span>
+              <span class="stat-text">Machines</span>
+            </div>
+          </div>
+          <div class="stat-card-modal">
+            <i class="fas fa-users"></i>
+            <div class="stat-info">
+              <span class="stat-number">{{ selectedReport.statistics.totalPersonnel }}</span>
+              <span class="stat-text">Personnel</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="exportReport(selectedReport)">
+        <i class="fas fa-download"></i> Export
+      </button>
+      <button class="btn btn-outline-primary" (click)="printReport(selectedReport)">
+        <i class="fas fa-print"></i> Print
+      </button>
+      <button class="btn btn-secondary" (click)="closeDetailModal()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
