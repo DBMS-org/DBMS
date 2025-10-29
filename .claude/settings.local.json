@@ -31,7 +31,8 @@
       "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\maintenance-reports\\*.scss\")",
       "Bash(dir /s /b \"Domain\\Entities\")",
       "Bash(dir /b \"Domain\\Entities\")",
-      "Bash(dotnet ef database update:*)"
+      "Bash(dotnet ef database update:*)",
+      "Bash(powershell -Command:*)"
     ],
     "deny": [],
     "ask": []
