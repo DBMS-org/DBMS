@@ -1,1 +1,7 @@
-Clean up unused properties in AssignmentRequestsComponent; remove default route in blasting-engineer.routes
+Add comprehensive Maintenance System Workflow and Implementation Plan
+
+- Introduced My-Machines component for enhanced diagnostic reporting
+- Detailed system overview and complete workflow for issue reporting and maintenance job management
+- Defined frontend and backend implementation requirements, including new database entities and API endpoints
+- Established status synchronization logic and region-based assignment rules
+- Outlined implementation phases, success criteria, and key decisions for project execution
