@@ -1,10 +1,1 @@
-feat: Implement maintenance job and report synchronization services
-
-- Added IMachineRepository interface for machine management operations.
-- Introduced IStatusSynchronizationService interface to handle synchronization between maintenance reports, jobs, and machine statuses.
-- Developed StatusSynchronizationService class to implement the synchronization logic, including methods for updating machine status based on report severity and job completion.
-- Created MachineRepository class to manage machine data access, including methods for retrieving and updating machine information.
-- Added MaintenanceAnalyticsController to expose endpoints for fetching service due alerts and maintenance history.
-- Implemented MaintenanceJobsController for managing maintenance jobs, including creation, retrieval, and status updates.
-- Updated MaintenanceReportsController to handle report submissions and retrievals, including operator-specific data.
-- Enhanced MaintenanceService to utilize real API calls for fetching maintenance stats, alerts, and jobs with fallback to mock data in development.
+feat: Add comprehensive reports component for blasting and explosive management
