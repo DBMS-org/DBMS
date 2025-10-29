@@ -6,6 +6,7 @@ using Domain.Entities.BlastingOperations;
 using Domain.Entities.MachineManagement;
 using Domain.Entities.StoreManagement;
 using Domain.Entities.ExplosiveInventory;
+using Domain.Entities.MaintenanceOperations;
 using Domain.Common;
 using Application.Interfaces.Infrastructure;
 using System.Threading;
@@ -56,6 +57,11 @@ namespace Infrastructure.Data
         public DbSet<EmulsionTechnicalProperties> EmulsionTechnicalProperties { get; set; }
         public DbSet<InventoryTransferRequest> InventoryTransferRequests { get; set; }
         public DbSet<QualityCheckRecord> QualityCheckRecords { get; set; }
+
+        // Maintenance Operations DbSets
+        public DbSet<MaintenanceReport> MaintenanceReports { get; set; }
+        public DbSet<MaintenanceJob> MaintenanceJobs { get; set; }
+        public DbSet<MaintenanceJobAssignment> MaintenanceJobAssignments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
