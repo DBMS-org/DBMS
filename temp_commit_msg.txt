@@ -1,1 +1,1 @@
-Implement code changes to enhance functionality and improve performance
+Clean up unused properties in AssignmentRequestsComponent; remove default route in blasting-engineer.routes

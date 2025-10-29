@@ -58,18 +58,18 @@ import { AuthService } from '../../../core/services/auth.service';
   template: `
     <p-toast />
 
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-3">
       <!-- Page Header -->
-      <div class="mb-6 backdrop-blur-xl bg-white/70 rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
-        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div class="flex items-center gap-4">
-              <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <i class="pi pi-file-edit text-4xl text-white"></i>
+      <div class="mb-4 backdrop-blur-xl bg-white/70 rounded-2xl shadow-2xl border border-white/50 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <i class="pi pi-file-edit text-2xl text-white"></i>
               </div>
               <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-white mb-1">Maintenance Reports</h1>
-                <p class="text-white/80 text-sm md:text-base">Submit and track machine maintenance reports</p>
+                <h1 class="text-2xl md:text-3xl font-bold text-white mb-0.5">Maintenance Reports</h1>
+                <p class="text-white/80 text-xs md:text-sm">Submit and track machine maintenance reports</p>
               </div>
             </div>
             <p-button
@@ -84,9 +84,9 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
 
       @if (isLoading()) {
-        <div class="flex flex-col items-center justify-center py-20 backdrop-blur-xl bg-white/70 rounded-3xl shadow-xl">
-          <p-progressSpinner styleClass="w-16 h-16" strokeWidth="3" />
-          <p class="mt-4 text-slate-600 font-medium">Loading reports...</p>
+        <div class="flex flex-col items-center justify-center py-12 backdrop-blur-xl bg-white/70 rounded-2xl shadow-lg">
+          <p-progressSpinner styleClass="w-12 h-12" strokeWidth="3" />
+          <p class="mt-3 text-slate-600 text-sm font-medium">Loading reports...</p>
         </div>
       }
 
@@ -101,21 +101,21 @@ import { AuthService } from '../../../core/services/auth.service';
         [breakpoints]="{'960px': '75vw', '640px': '95vw'}"
         styleClass="report-dialog">
         <ng-template pTemplate="header">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-              <i class="pi pi-plus-circle text-xl text-white"></i>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+              <i class="pi pi-plus-circle text-lg text-white"></i>
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-slate-800">Submit Maintenance Report</h2>
-              <p class="text-sm text-slate-500 mt-1">Report a machine issue or maintenance need</p>
+              <h2 class="text-xl font-bold text-slate-800">Submit Maintenance Report</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Report a machine issue or maintenance need</p>
             </div>
           </div>
         </ng-template>
 
-        <form (ngSubmit)="submitReport()" #reportForm="ngForm" class="space-y-6 py-4">
+        <form (ngSubmit)="submitReport()" #reportForm="ngForm" class="space-y-4 py-2">
           <!-- Problem Description -->
-          <div class="space-y-2">
-            <label class="block text-sm font-semibold text-slate-700">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-slate-700">
               Problem Description <span class="text-red-500">*</span>
             </label>
             <textarea
@@ -123,15 +123,15 @@ import { AuthService } from '../../../core/services/auth.service';
               [(ngModel)]="newReport.customDescription"
               name="description"
               required
-              rows="4"
+              rows="3"
               placeholder="Describe the problem in detail..."
-              class="w-full border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"></textarea>
+              class="w-full border-2 border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-sm"></textarea>
           </div>
 
           <!-- Affected Part & Problem Category -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-slate-700">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold text-slate-700">
                 Affected Part <span class="text-red-500">*</span>
               </label>
               <p-select
@@ -141,11 +141,11 @@ import { AuthService } from '../../../core/services/auth.service';
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Select affected part"
-                styleClass="w-full" />
+                styleClass="w-full text-sm" />
             </div>
 
-            <div class="space-y-2">
-              <label class="block text-sm font-semibold text-slate-700">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold text-slate-700">
                 Problem Category <span class="text-red-500">*</span>
               </label>
               <p-select
@@ -155,13 +155,13 @@ import { AuthService } from '../../../core/services/auth.service';
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Select problem category"
-                styleClass="w-full" />
+                styleClass="w-full text-sm" />
             </div>
           </div>
 
           <!-- Severity Level -->
-          <div class="space-y-2">
-            <label class="block text-sm font-semibold text-slate-700">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-slate-700">
               Severity Level <span class="text-red-500">*</span>
             </label>
             <p-select
@@ -171,12 +171,12 @@ import { AuthService } from '../../../core/services/auth.service';
               optionLabel="label"
               optionValue="value"
               placeholder="Select severity level"
-              styleClass="w-full" />
+              styleClass="w-full text-sm" />
           </div>
         </form>
 
         <ng-template pTemplate="footer">
-          <div class="flex justify-end gap-3">
+          <div class="flex justify-end gap-2">
             <p-button
               label="Cancel"
               icon="pi pi-times"
@@ -196,52 +196,52 @@ import { AuthService } from '../../../core/services/auth.service';
       </p-dialog>
 
       <!-- Reports Summary Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <!-- Pending Card -->
-        <div class="backdrop-blur-xl bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-6 border-2 border-amber-200 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg">
-              <i class="pi pi-clock text-2xl text-white"></i>
+        <div class="backdrop-blur-xl bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 border border-amber-200 shadow-lg hover:shadow-xl transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <div class="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center shadow-md">
+              <i class="pi pi-clock text-lg text-white"></i>
             </div>
-            <p-badge [value]="pendingCount().toString()" severity="warn" styleClass="text-lg px-3 py-1" />
+            <p-badge [value]="pendingCount().toString()" severity="warn" styleClass="text-sm px-2 py-0.5" />
           </div>
-          <h3 class="text-4xl font-bold text-amber-700 mb-1">{{ pendingCount() }}</h3>
-          <p class="text-sm font-semibold text-amber-600 uppercase tracking-wider">Pending Reports</p>
+          <h3 class="text-2xl font-bold text-amber-700 mb-0.5">{{ pendingCount() }}</h3>
+          <p class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Pending Reports</p>
         </div>
 
         <!-- In Progress Card -->
-        <div class="backdrop-blur-xl bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg">
-              <i class="pi pi-sync text-2xl text-white"></i>
+        <div class="backdrop-blur-xl bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-200 shadow-lg hover:shadow-xl transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <div class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shadow-md">
+              <i class="pi pi-sync text-lg text-white"></i>
             </div>
-            <p-badge [value]="inProgressCount().toString()" severity="info" styleClass="text-lg px-3 py-1" />
+            <p-badge [value]="inProgressCount().toString()" severity="info" styleClass="text-sm px-2 py-0.5" />
           </div>
-          <h3 class="text-4xl font-bold text-blue-700 mb-1">{{ inProgressCount() }}</h3>
-          <p class="text-sm font-semibold text-blue-600 uppercase tracking-wider">In Progress</p>
+          <h3 class="text-2xl font-bold text-blue-700 mb-0.5">{{ inProgressCount() }}</h3>
+          <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide">In Progress</p>
         </div>
 
         <!-- Completed Card -->
-        <div class="backdrop-blur-xl bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl p-6 border-2 border-emerald-200 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg">
-              <i class="pi pi-check-circle text-2xl text-white"></i>
+        <div class="backdrop-blur-xl bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-3 border border-emerald-200 shadow-lg hover:shadow-xl transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center shadow-md">
+              <i class="pi pi-check-circle text-lg text-white"></i>
             </div>
-            <p-badge [value]="completedCount().toString()" severity="success" styleClass="text-lg px-3 py-1" />
+            <p-badge [value]="completedCount().toString()" severity="success" styleClass="text-sm px-2 py-0.5" />
           </div>
-          <h3 class="text-4xl font-bold text-emerald-700 mb-1">{{ completedCount() }}</h3>
-          <p class="text-sm font-semibold text-emerald-600 uppercase tracking-wider">Completed</p>
+          <h3 class="text-2xl font-bold text-emerald-700 mb-0.5">{{ completedCount() }}</h3>
+          <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Completed</p>
         </div>
       </div>
 
       <!-- Report History -->
-      <p-card styleClass="backdrop-blur-xl bg-white/80 border-2 border-indigo-200 shadow-2xl">
+      <p-card styleClass="backdrop-blur-xl bg-white/80 border border-indigo-200 shadow-xl">
         <ng-template pTemplate="header">
-          <div class="px-6 pt-6 pb-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div class="px-4 pt-4 pb-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-1">Report History</h2>
-                <p class="text-sm text-slate-600">{{ reports().length }} total reports</p>
+                <h2 class="text-xl font-bold text-slate-800 mb-0.5">Report History</h2>
+                <p class="text-xs text-slate-600">{{ reports().length }} total reports</p>
               </div>
               <p-iconField iconPosition="left" styleClass="w-full md:w-80">
                 <p-inputIcon styleClass="pi pi-search" />
@@ -258,12 +258,12 @@ import { AuthService } from '../../../core/services/auth.service';
         </ng-template>
 
         @if (reports().length === 0) {
-          <div class="flex flex-col items-center justify-center py-16 text-center">
-            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mb-6">
-              <i class="pi pi-file text-5xl text-slate-400"></i>
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mb-4">
+              <i class="pi pi-file text-3xl text-slate-400"></i>
             </div>
-            <h3 class="text-xl font-semibold text-slate-700 mb-2">No reports submitted yet</h3>
-            <p class="text-slate-500 mb-6">Click "Submit Report" to create your first maintenance report</p>
+            <h3 class="text-lg font-semibold text-slate-700 mb-1">No reports submitted yet</h3>
+            <p class="text-sm text-slate-500 mb-4">Click "Submit Report" to create your first maintenance report</p>
             <p-button
               label="Submit First Report"
               icon="pi pi-plus"
@@ -285,19 +285,19 @@ import { AuthService } from '../../../core/services/auth.service';
             <!-- Problem Description Column -->
             <ng-template pTemplate="header">
               <tr class="bg-gradient-to-r from-slate-50 to-slate-100">
-                <th class="font-bold text-slate-700 py-4">Problem Description</th>
-                <th class="font-bold text-slate-700 py-4">Affected Part</th>
-                <th class="font-bold text-slate-700 py-4">Severity</th>
-                <th class="font-bold text-slate-700 py-4">Status</th>
-                <th class="font-bold text-slate-700 py-4">Reported</th>
-                <th class="font-bold text-slate-700 py-4 text-center">Actions</th>
+                <th class="font-bold text-slate-700 py-2">Problem Description</th>
+                <th class="font-bold text-slate-700 py-2">Affected Part</th>
+                <th class="font-bold text-slate-700 py-2">Severity</th>
+                <th class="font-bold text-slate-700 py-2">Status</th>
+                <th class="font-bold text-slate-700 py-2">Reported</th>
+                <th class="font-bold text-slate-700 py-2 text-center">Actions</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-report>
               <tr class="hover:bg-indigo-50/50 transition-colors">
                 <!-- Description -->
-                <td class="py-4">
+                <td class="py-2">
                   <div class="space-y-1">
                     <div class="font-medium text-slate-800 line-clamp-2">
                       {{ report.customDescription }}
@@ -309,7 +309,7 @@ import { AuthService } from '../../../core/services/auth.service';
                 </td>
 
                 <!-- Affected Part -->
-                <td class="py-4">
+                <td class="py-2">
                   <div class="flex items-center gap-2">
                     <i [class]="'pi ' + getPartIcon(report.affectedPart) + ' text-slate-600'"></i>
                     <span class="text-sm font-medium text-slate-700">{{ getPartDisplay(report.affectedPart) }}</span>
@@ -317,26 +317,26 @@ import { AuthService } from '../../../core/services/auth.service';
                 </td>
 
                 <!-- Severity -->
-                <td class="py-4">
+                <td class="py-2">
                   <p-tag
                     [value]="getSeverityDisplay(report.severity)"
                     [severity]="getSeveritySeverity(report.severity)"
                     [icon]="'pi ' + getSeverityIcon(report.severity)"
-                    styleClass="font-semibold" />
+                    styleClass="font-semibold text-xs" />
                 </td>
 
                 <!-- Status -->
-                <td class="py-4">
+                <td class="py-2">
                   <p-tag
                     [value]="getStatusDisplay(report.status)"
                     [severity]="getStatusSeverity(report.status)"
                     [icon]="'pi ' + getStatusIcon(report.status)"
-                    styleClass="font-semibold" />
+                    styleClass="font-semibold text-xs" />
                 </td>
 
                 <!-- Date -->
-                <td class="py-4">
-                  <div class="space-y-1">
+                <td class="py-2">
+                  <div class="space-y-0.5">
                     <div class="text-sm font-medium text-slate-700">
                       {{ report.reportedAt | date:'MMM d, y' }}
                     </div>
@@ -347,7 +347,7 @@ import { AuthService } from '../../../core/services/auth.service';
                 </td>
 
                 <!-- Actions -->
-                <td class="py-4 text-center">
+                <td class="py-2 text-center">
                   <p-button
                     icon="pi pi-eye"
                     [rounded]="true"
@@ -408,18 +408,18 @@ import { AuthService } from '../../../core/services/auth.service';
     ::ng-deep .report-dialog .p-dialog-header {
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
       border-bottom: 2px solid #e2e8f0;
-      padding: 1.5rem;
+      padding: 1rem;
     }
 
     ::ng-deep .report-dialog .p-dialog-content {
       background: white;
-      padding: 1.5rem;
+      padding: 1rem;
     }
 
     ::ng-deep .report-dialog .p-dialog-footer {
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
       border-top: 2px solid #e2e8f0;
-      padding: 1.25rem 1.5rem;
+      padding: 0.75rem 1rem;
     }
 
     ::ng-deep .report-dialog {
