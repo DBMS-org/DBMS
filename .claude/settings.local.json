@@ -28,7 +28,10 @@
       "Bash(git commit:*)",
       "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\maintenance-reports\\*.html\")",
       "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\maintenance-reports\\*.css\")",
-      "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\maintenance-reports\\*.scss\")"
+      "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\maintenance-reports\\*.scss\")",
+      "Bash(dir /s /b \"Domain\\Entities\")",
+      "Bash(dir /b \"Domain\\Entities\")",
+      "Bash(dotnet ef database update:*)"
     ],
     "deny": [],
     "ask": []
