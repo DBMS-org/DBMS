@@ -1,1 +1,1 @@
-Add Maintenance Operations: Create tables for MaintenanceReports, MaintenanceJobs, and MaintenanceJobAssignments with necessary columns and relationships. Update existing data for Permissions, Regions, RolePermissions, and Roles to reflect new changes.
+Add repositories for MaintenanceJob and MaintenanceReport with comprehensive CRUD and query operations
