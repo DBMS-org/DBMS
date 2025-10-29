@@ -17,19 +17,22 @@ namespace Application.Services.MaintenanceOperations
         private readonly IUserRepository _userRepository;
         private readonly IMappingService _mappingService;
         private readonly ILogger<MaintenanceJobApplicationService> _logger;
+        private readonly IStatusSynchronizationService _statusSyncService;
 
         public MaintenanceJobApplicationService(
             IMaintenanceJobRepository jobRepository,
             IMaintenanceReportRepository reportRepository,
             IUserRepository userRepository,
             IMappingService mappingService,
-            ILogger<MaintenanceJobApplicationService> logger)
+            ILogger<MaintenanceJobApplicationService> logger,
+            IStatusSynchronizationService statusSyncService)
         {
             _jobRepository = jobRepository;
             _reportRepository = reportRepository;
             _userRepository = userRepository;
             _mappingService = mappingService;
             _logger = logger;
+            _statusSyncService = statusSyncService;
         }
 
         public async Task<Result<MaintenanceJobDto>> CreateJobFromReportAsync(int reportId)
@@ -347,6 +350,9 @@ namespace Application.Services.MaintenanceOperations
                         await _reportRepository.UpdateAsync(report);
                     }
                 }
+
+                // Handle job completion (update machine status, maintenance date, etc.)
+                await _statusSyncService.HandleJobCompletionAsync(id);
 
                 var jobWithDetails = await _jobRepository.GetWithDetailsAsync(id);
                 var dto = _mappingService.Map<MaintenanceJobDto>(jobWithDetails);
