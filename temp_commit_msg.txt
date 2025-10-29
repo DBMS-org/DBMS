@@ -1,1 +1,1 @@
-Add DTOs and AutoMapper profile for Maintenance Operations, including job requests, reports, and statistics
+Implement Maintenance Job and Report Services with comprehensive CRUD operations and job assignment logic

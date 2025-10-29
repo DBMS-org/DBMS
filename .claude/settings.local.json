@@ -32,7 +32,11 @@
       "Bash(dir /s /b \"Domain\\Entities\")",
       "Bash(dir /b \"Domain\\Entities\")",
       "Bash(dotnet ef database update:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(powershell:*)",
+      "Bash(del add_services.ps1)",
+      "Bash(dir /s /b \"c:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Application\\Interfaces\")",
+      "Bash(Select-String -Pattern \"Error\\(s\\)|Build succeeded|Build FAILED\" -Context 1)"
     ],
     "deny": [],
     "ask": []
