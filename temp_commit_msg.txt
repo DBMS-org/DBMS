@@ -1,1 +1,1 @@
-feat: Add comprehensive reports component for blasting and explosive management
+feat: Add reports component styles for blasting engineer, explosive manager, and store manager
