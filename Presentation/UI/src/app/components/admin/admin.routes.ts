@@ -15,6 +15,7 @@ import { StoresComponent } from './stores/stores.component';
 import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/view-sequence-simulator/view-sequence-simulator.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 import { ReportsComponent } from './reports/reports.component';
+import { NotificationsComponent } from './notifications/notifications.component';
 
 // Admin module route configuration
 export const ADMIN_ROUTES: Routes = [
@@ -48,7 +49,10 @@ export const ADMIN_ROUTES: Routes = [
             { path: 'stores', component: StoresComponent },
 
             // Reports route
-            { path: 'reports', component: ReportsComponent }
+            { path: 'reports', component: ReportsComponent },
+
+            // Notifications route
+            { path: 'notifications', component: NotificationsComponent }
         ]
     }
 ];

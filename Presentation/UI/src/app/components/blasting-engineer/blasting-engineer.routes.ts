@@ -14,6 +14,8 @@ import { SiteDashboardComponent } from './project-management/site-dashboard/site
 import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/view-sequence-simulator/view-sequence-simulator.component';
 import { ProposalHistoryComponent } from './proposal-history/proposal-history.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
+import { ReportsComponent } from './reports/reports.component';
+import { NotificationsComponent } from './notifications/notifications.component';
 
 // Route configuration for all blasting engineer pages
 export const BLASTING_ENGINEER_ROUTES: Routes = [
@@ -27,6 +29,8 @@ export const BLASTING_ENGINEER_ROUTES: Routes = [
             { path: 'dashboard', component: BlastingEngineerDashboardComponent },
             { path: 'profile', component: UserProfileComponent },
             { path: 'proposal-history', component: ProposalHistoryComponent },
+            { path: 'reports', component: ReportsComponent },
+            { path: 'notifications', component: NotificationsComponent },
             { path: 'csv-upload', component: CsvUploadComponent },
             { path: 'drilling-pattern', component: DrillingPatternCreatorComponent },
             { path: 'blast-sequence-designer', component: BlastSequenceDesignerComponent },
