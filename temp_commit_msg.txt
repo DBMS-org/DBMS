@@ -1,1 +1,1 @@
-feat: add notifications component for blasting engineer with settings and real-time updates
+feat: add notifications component styles for blasting engineer
