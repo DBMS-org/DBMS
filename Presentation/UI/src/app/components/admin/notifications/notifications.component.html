@@ -1,0 +1,281 @@
+<div class="notifications-container">
+  <!-- Header -->
+  <div class="notifications-header">
+    <div class="header-content">
+      <h2>
+        <mat-icon>notifications</mat-icon>
+        Notifications
+        @if (getUnreadCount() > 0) {
+          <span class="unread-badge">{{ getUnreadCount() }}</span>
+        }
+      </h2>
+      <p>Stay updated with user management, project updates, and system notifications</p>
+    </div>
+    <div class="header-actions">
+      <button mat-button (click)="markAllAsRead()" [disabled]="getUnreadCount() === 0">
+        <mat-icon>done_all</mat-icon>
+        Mark All as Read
+      </button>
+      <button mat-icon-button (click)="toggleSettings()" [class.active]="showSettings()">
+        <mat-icon>settings</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Real-time indicator -->
+  <div class="status-bar">
+    <div class="status-indicator" [class.online]="isOnline()">
+      <mat-icon>{{ isOnline() ? 'wifi' : 'wifi_off' }}</mat-icon>
+      <span>{{ isOnline() ? 'Connected' : 'Offline' }}</span>
+    </div>
+    <div class="last-update">
+      Last updated: {{ lastUpdate() | date:'short' }}
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  @if (showSettings()) {
+    <div class="settings-panel">
+      <h3>Notification Settings</h3>
+      <div class="settings-grid">
+        <div class="setting-group">
+          <h4>User Management</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().userManagementPush"
+                (change)="updateSetting('userManagementPush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().userManagementEmail"
+                (change)="updateSetting('userManagementEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Project Updates</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().projectUpdatePush"
+                (change)="updateSetting('projectUpdatePush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().projectUpdateEmail"
+                (change)="updateSetting('projectUpdateEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Machine Assignments</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().machineAssignmentPush"
+                (change)="updateSetting('machineAssignmentPush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().machineAssignmentEmail"
+                (change)="updateSetting('machineAssignmentEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>System Alerts</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().systemAlertPush"
+                (change)="updateSetting('systemAlertPush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().systemAlertEmail"
+                (change)="updateSetting('systemAlertEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Store Updates</h4>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().storeUpdatePush"
+                (change)="updateSetting('storeUpdatePush', $any($event.target).checked)">
+              Push Notification
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input
+                type="checkbox"
+                [checked]="settings().storeUpdateEmail"
+                (change)="updateSetting('storeUpdateEmail', $any($event.target).checked)">
+              Email Notification
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h4>Urgency Level Filter</h4>
+          <div class="setting-item">
+            <select
+              [value]="settings().urgencyLevel"
+              (change)="updateSetting('urgencyLevel', $any($event.target).value)">
+              <option value="ALL">All notifications</option>
+              <option value="HIGH">High priority only</option>
+              <option value="CRITICAL">Critical only</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'all'"
+      (click)="setFilter('all')">
+      All
+      <span class="count">{{ notifications().length }}</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'unread'"
+      (click)="setFilter('unread')">
+      Unread
+      <span class="count">{{ getUnreadCount() }}</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'users'"
+      (click)="setFilter('users')">
+      <mat-icon>people</mat-icon>
+      Users
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'projects'"
+      (click)="setFilter('projects')">
+      <mat-icon>work</mat-icon>
+      Projects
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'machines'"
+      (click)="setFilter('machines')">
+      <mat-icon>precision_manufacturing</mat-icon>
+      Machines
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'system'"
+      (click)="setFilter('system')">
+      <mat-icon>settings</mat-icon>
+      System
+    </button>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-list">
+    @if (filteredNotifications().length === 0) {
+      <div class="empty-state">
+        <mat-icon>notifications_none</mat-icon>
+        <h3>No Notifications</h3>
+        <p>You're all caught up!</p>
+      </div>
+    } @else {
+      @for (notification of filteredNotifications(); track notification.id) {
+        <div
+          class="notification-item"
+          [class]="getNotificationClass(notification)"
+          [class.unread]="!notification.read"
+          (click)="navigateToContext(notification)">
+          <div class="notification-icon">
+            <mat-icon>{{ notification.icon }}</mat-icon>
+          </div>
+          <div class="notification-content">
+            <div class="notification-header">
+              <h4>{{ notification.title }}</h4>
+              <span class="notification-time">{{ getTimeAgo(notification.date) }}</span>
+            </div>
+            <p>{{ notification.message }}</p>
+            <div class="notification-meta">
+              <mat-chip class="priority-chip" [class]="'priority-' + notification.priority.toLowerCase()">
+                {{ notification.priority }}
+              </mat-chip>
+              @if (notification.relatedUserId) {
+                <span class="meta-info">
+                  <mat-icon>person</mat-icon>
+                  {{ notification.relatedUserId }}
+                </span>
+              }
+              @if (notification.relatedProjectId) {
+                <span class="meta-info">
+                  <mat-icon>work</mat-icon>
+                  {{ notification.relatedProjectId }}
+                </span>
+              }
+              @if (notification.relatedMachineId) {
+                <span class="meta-info">
+                  <mat-icon>precision_manufacturing</mat-icon>
+                  {{ notification.relatedMachineId }}
+                </span>
+              }
+            </div>
+          </div>
+          <div class="notification-actions">
+            @if (!notification.read) {
+              <button
+                mat-icon-button
+                (click)="markAsRead(notification); $event.stopPropagation()"
+                title="Mark as read">
+                <mat-icon>done</mat-icon>
+              </button>
+            }
+            <button
+              mat-icon-button
+              (click)="deleteNotification(notification); $event.stopPropagation()"
+              title="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
