@@ -1,1 +1,8 @@
-feat: Add reports component styles for blasting engineer, explosive manager, and store manager
+feat: add reports section to sidebar and implement reports components for blasting engineer and store manager
+
+- Updated SidebarComponent to include a new Reports link.
+- Created ReportsComponent for Blasting Engineer with filtering and export functionality.
+- Created a placeholder ReportsComponent for Store Manager.
+- Refactored InputTextarea imports to InputTextareaModule across various components.
+- Updated MaintenanceReportsComponent to use DropdownModule instead of Select.
+- Enhanced severity handling in MaintenanceReportsComponent.
