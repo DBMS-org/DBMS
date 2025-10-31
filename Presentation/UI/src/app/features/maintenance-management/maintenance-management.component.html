@@ -11,11 +11,10 @@
         Schedule Maintenance
       </button>
       <button
-        class="export-btn"
-        (click)="exportMaintenanceData()"
-        [disabled]="isExporting">
-        <i class="material-icons">download</i>
-        Export
+        class="issue-reports-btn"
+        (click)="openIssueReports()">
+        <i class="material-icons">report_problem</i>
+        Issue Reports
       </button>
       <button
         class="refresh-btn"
@@ -657,13 +656,329 @@
       <button type="button" class="btn btn-secondary" (click)="closeConfirmModal()">
         Cancel
       </button>
-      <button type="button" 
-              class="btn" 
-              [class]="confirmModalData.confirmButtonClass" 
-              (click)="confirmModalData.onConfirm()" 
+      <button type="button"
+              class="btn"
+              [class]="confirmModalData.confirmButtonClass"
+              (click)="confirmModalData.onConfirm()"
               [disabled]="isSaving">
         <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
         {{ confirmModalData.confirmButtonText }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Issue Reports Modal -->
+<div class="modal-overlay" *ngIf="showIssueReportsModal" (click)="closeIssueReportsModal()">
+  <div class="modal-content issue-reports-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Operator Issue Reports</h3>
+      <button class="modal-close" (click)="closeIssueReportsModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Issue Statistics -->
+      <div class="issue-stats-grid">
+        <div class="issue-stat-card total">
+          <div class="stat-icon">
+            <i class="material-icons">list_alt</i>
+          </div>
+          <div class="stat-content">
+            <h4>{{ issueStats.total }}</h4>
+            <p>Total Issues</p>
+          </div>
+        </div>
+
+        <div class="issue-stat-card reported">
+          <div class="stat-icon">
+            <i class="material-icons">report_problem</i>
+          </div>
+          <div class="stat-content">
+            <h4>{{ issueStats.reported }}</h4>
+            <p>Pending Review</p>
+          </div>
+        </div>
+
+        <div class="issue-stat-card critical">
+          <div class="stat-icon">
+            <i class="material-icons">error</i>
+          </div>
+          <div class="stat-content">
+            <h4>{{ issueStats.critical }}</h4>
+            <p>Critical</p>
+          </div>
+        </div>
+
+        <div class="issue-stat-card resolved">
+          <div class="stat-icon">
+            <i class="material-icons">check_circle</i>
+          </div>
+          <div class="stat-content">
+            <h4>{{ issueStats.resolved }}</h4>
+            <p>Resolved</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="issue-filters-section">
+        <div class="search-box">
+          <i class="material-icons">search</i>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="issueSearchTerm"
+            (input)="onIssueSearchChange()"
+            placeholder="Search by ticket ID, machine, operator, or description..." />
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Status</label>
+            <select
+              class="form-select"
+              [(ngModel)]="issueStatusFilter"
+              (ngModelChange)="onIssueStatusFilterChange()">
+              <option value="">All Status</option>
+              <option value="Reported">Reported</option>
+              <option value="Acknowledged">Acknowledged</option>
+              <option value="InProgress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Severity</label>
+            <select
+              class="form-select"
+              [(ngModel)]="issueSeverityFilter"
+              (ngModelChange)="onIssueSeverityFilterChange()">
+              <option value="">All Severities</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issues Table -->
+      <div class="issues-table-wrapper">
+        @if (isLoading) {
+          <div class="loading-state">
+            <div class="loader-spinner"></div>
+            <p>Loading issues...</p>
+          </div>
+        }
+
+        @if (!isLoading && filteredIssues.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="material-icons">inbox</i>
+            </div>
+            <h4>No Issues Found</h4>
+            <p>No operator issues match your current filters.</p>
+          </div>
+        }
+
+        @if (!isLoading && filteredIssues.length > 0) {
+          <p-table
+            [value]="filteredIssues"
+            styleClass="issues-table"
+            responsiveLayout="scroll"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} issues"
+            [rowHover]="true"
+            dataKey="id">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Ticket ID</th>
+                <th>Machine</th>
+                <th>Operator</th>
+                <th>Issue</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Reported</th>
+                <th>Actions</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-issue>
+              <tr [ngClass]="{'critical-issue-row': issue.severityLevel === 'Critical'}">
+                <td>
+                  <span class="ticket-id">{{ issue.ticketId }}</span>
+                </td>
+                <td>
+                  <div class="machine-cell">
+                    <i class="material-icons">precision_manufacturing</i>
+                    <div>
+                      <div class="machine-name">{{ issue.machineName }}</div>
+                      <div class="machine-model">{{ issue.machineModel }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="operator-cell">
+                    <i class="material-icons">person</i>
+                    <span>{{ issue.operatorName }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="issue-cell">
+                    <div class="issue-category">{{ issue.problemCategory }}</div>
+                    <div class="issue-desc">{{ issue.description | slice:0:60 }}{{ issue.description.length > 60 ? '...' : '' }}</div>
+                  </div>
+                </td>
+                <td>
+                  <span class="severity-badge severity-{{ issue.severityLevel.toLowerCase() }}">
+                    <i class="material-icons">
+                      {{ issue.severityLevel === 'Critical' ? 'error' :
+                         issue.severityLevel === 'High' ? 'warning' :
+                         issue.severityLevel === 'Medium' ? 'info' : 'check_circle' }}
+                    </i>
+                    {{ issue.severityLevel }}
+                  </span>
+                </td>
+                <td>
+                  <span class="issue-status-badge status-{{ issue.status.toLowerCase() }}">
+                    {{ issue.status }}
+                  </span>
+                </td>
+                <td>
+                  <div class="date-cell">
+                    <i class="material-icons">schedule</i>
+                    <span>{{ issue.reportedAt | date:'MMM dd, HH:mm' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button
+                      class="action-btn view-btn"
+                      (click)="viewIssueDetails(issue)"
+                      title="View Details">
+                      <i class="material-icons">visibility</i>
+                    </button>
+                    @if (issue.status === 'Reported') {
+                      <button
+                        class="action-btn acknowledge-btn"
+                        (click)="acknowledgeIssue(issue)"
+                        title="Acknowledge Issue">
+                        <i class="material-icons">done</i>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeIssueReportsModal()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Issue Details Modal -->
+<div class="modal-overlay" *ngIf="showIssueDetailsModal" (click)="closeIssueDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Issue Details</h3>
+      <button class="modal-close" (click)="closeIssueDetailsModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedIssue as issue">
+      <div class="issue-details-grid">
+        <div class="detail-row">
+          <span class="label">Ticket ID</span>
+          <span class="value ticket-id">{{ issue.ticketId }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Machine</span>
+          <span class="value">{{ issue.machineName }} ({{ issue.machineModel }})</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Reported By</span>
+          <span class="value">{{ issue.operatorName }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Reported At</span>
+          <span class="value">{{ issue.reportedAt | date:'fullDate' }} at {{ issue.reportedAt | date:'shortTime' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Affected Part</span>
+          <span class="value">{{ issue.affectedPart }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Problem Category</span>
+          <span class="value">{{ issue.problemCategory }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Severity</span>
+          <span class="severity-badge severity-{{ issue.severityLevel.toLowerCase() }}">
+            {{ issue.severityLevel }}
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="label">Status</span>
+          <span class="issue-status-badge status-{{ issue.status.toLowerCase() }}">
+            {{ issue.status }}
+          </span>
+        </div>
+
+        <div class="detail-section full-width" *ngIf="issue.symptoms && issue.symptoms.length > 0">
+          <span class="label">Symptoms</span>
+          <div class="symptoms-list">
+            <span class="symptom-tag" *ngFor="let symptom of issue.symptoms">
+              <i class="material-icons">check_circle</i>
+              {{ symptom }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-section full-width" *ngIf="issue.errorCodes">
+          <span class="label">Error Codes</span>
+          <span class="value error-codes">{{ issue.errorCodes }}</span>
+        </div>
+
+        <div class="detail-section full-width">
+          <span class="label">Description</span>
+          <p class="description-text">{{ issue.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeIssueDetailsModal()">
+        Close
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="scheduleMaintenanceFromIssue(selectedIssue!)"
+        *ngIf="selectedIssue">
+        <i class="material-icons">build</i>
+        Schedule Maintenance
       </button>
     </div>
   </div>
