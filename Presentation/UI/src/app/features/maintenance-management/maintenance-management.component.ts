@@ -73,6 +73,25 @@ interface ConfirmModalData {
   onConfirm: () => void;
 }
 
+interface OperatorIssue {
+  id: number;
+  ticketId: string;
+  machineId: number;
+  machineName: string;
+  machineModel: string;
+  operatorId: number;
+  operatorName: string;
+  affectedPart: string;
+  problemCategory: string;
+  description: string;
+  severityLevel: 'Low' | 'Medium' | 'High' | 'Critical';
+  status: 'Reported' | 'Acknowledged' | 'InProgress' | 'Resolved' | 'Closed';
+  reportedAt: string;
+  acknowledgedAt?: string;
+  symptoms?: string[];
+  errorCodes?: string;
+}
+
 /**
  * Maintenance Management Component
  * 
@@ -142,6 +161,8 @@ export class MaintenanceManagementComponent implements OnInit {
   showDetailsModal = false;
   showCompleteModal = false;
   showConfirmModal = false;
+  showIssueReportsModal = false;
+  showIssueDetailsModal = false;
 
   // Form data objects for maintenance operations
   maintenanceFormData: MaintenanceFormData = this.getEmptyFormData();
@@ -161,6 +182,20 @@ export class MaintenanceManagementComponent implements OnInit {
   // Currently selected maintenance records for operations
   selectedMaintenance: MaintenanceRecord | null = null;
   editingMaintenance: MaintenanceRecord | null = null;
+
+  // Issue Reports data
+  operatorIssues: OperatorIssue[] = [];
+  filteredIssues: OperatorIssue[] = [];
+  selectedIssue: OperatorIssue | null = null;
+  issueSearchTerm = '';
+  issueStatusFilter = '';
+  issueSeverityFilter = '';
+  issueStats = {
+    total: 0,
+    reported: 0,
+    critical: 0,
+    resolved: 0
+  };
 
   ngOnInit(): void {
     this.loadMaintenanceData();
@@ -756,6 +791,12 @@ export class MaintenanceManagementComponent implements OnInit {
     this.loadMaintenanceData();
   }
 
+  openIssueReports(): void {
+    // Navigate to issue reports modal/component
+    this.showIssueReportsModal = true;
+    this.loadOperatorIssues();
+  }
+
   exportMaintenanceData(): void {
     this.isExporting = true;
 
@@ -806,5 +847,207 @@ export class MaintenanceManagementComponent implements OnInit {
 
   clearError(): void {
     this.errorMessage = '';
+  }
+
+  // Issue Reports Methods
+  loadOperatorIssues(): void {
+    this.isLoading = true;
+    // Simulate API call - in production this would call the backend
+    setTimeout(() => {
+      this.operatorIssues = this.generateMockIssueData();
+      this.applyIssueFilters();
+      this.calculateIssueStats();
+      this.isLoading = false;
+    }, 800);
+  }
+
+  applyIssueFilters(): void {
+    this.filteredIssues = this.operatorIssues.filter(issue => {
+      const matchesSearch = !this.issueSearchTerm ||
+        issue.ticketId.toLowerCase().includes(this.issueSearchTerm.toLowerCase()) ||
+        issue.machineName.toLowerCase().includes(this.issueSearchTerm.toLowerCase()) ||
+        issue.operatorName.toLowerCase().includes(this.issueSearchTerm.toLowerCase()) ||
+        issue.description.toLowerCase().includes(this.issueSearchTerm.toLowerCase());
+
+      const matchesStatus = !this.issueStatusFilter || issue.status === this.issueStatusFilter;
+      const matchesSeverity = !this.issueSeverityFilter || issue.severityLevel === this.issueSeverityFilter;
+
+      return matchesSearch && matchesStatus && matchesSeverity;
+    });
+  }
+
+  calculateIssueStats(): void {
+    this.issueStats = {
+      total: this.operatorIssues.length,
+      reported: this.operatorIssues.filter(i => i.status === 'Reported').length,
+      critical: this.operatorIssues.filter(i => i.severityLevel === 'Critical').length,
+      resolved: this.operatorIssues.filter(i => i.status === 'Resolved' || i.status === 'Closed').length
+    };
+  }
+
+  onIssueSearchChange(): void {
+    this.applyIssueFilters();
+  }
+
+  onIssueStatusFilterChange(): void {
+    this.applyIssueFilters();
+  }
+
+  onIssueSeverityFilterChange(): void {
+    this.applyIssueFilters();
+  }
+
+  viewIssueDetails(issue: OperatorIssue): void {
+    this.selectedIssue = issue;
+    this.showIssueDetailsModal = true;
+  }
+
+  closeIssueDetailsModal(): void {
+    this.showIssueDetailsModal = false;
+    this.selectedIssue = null;
+  }
+
+  closeIssueReportsModal(): void {
+    this.showIssueReportsModal = false;
+    this.issueSearchTerm = '';
+    this.issueStatusFilter = '';
+    this.issueSeverityFilter = '';
+  }
+
+  scheduleMaintenanceFromIssue(issue: OperatorIssue): void {
+    // Pre-fill the maintenance form with issue details
+    const machine = this.availableMachines.find(m => m.id === issue.machineId.toString());
+    if (machine) {
+      this.maintenanceFormData = {
+        machineId: issue.machineId.toString(),
+        type: issue.severityLevel === 'Critical' ? 'emergency' : 'corrective',
+        priority: issue.severityLevel.toLowerCase(),
+        description: `Issue ${issue.ticketId}: ${issue.description}`,
+        notes: `Reported by ${issue.operatorName} on ${new Date(issue.reportedAt).toLocaleDateString()}\nAffected Part: ${issue.affectedPart}\nProblem Category: ${issue.problemCategory}`,
+        scheduledDate: '',
+        scheduledTime: '',
+        assignedTechnician: '',
+        estimatedDuration: 0,
+        cost: 0
+      };
+    }
+    this.closeIssueDetailsModal();
+    this.closeIssueReportsModal();
+    this.showScheduleModal = true;
+  }
+
+  acknowledgeIssue(issue: OperatorIssue): void {
+    // In production, this would call the backend API
+    issue.status = 'Acknowledged';
+    issue.acknowledgedAt = new Date().toISOString();
+    this.calculateIssueStats();
+    this.applyIssueFilters();
+  }
+
+  generateMockIssueData(): OperatorIssue[] {
+    const issues: OperatorIssue[] = [
+      {
+        id: 1,
+        ticketId: 'MR-20251030-001',
+        machineId: 1,
+        machineName: 'Loader CAT-950',
+        machineModel: 'CAT-950M',
+        operatorId: 101,
+        operatorName: 'John Smith',
+        affectedPart: 'Hydraulic System',
+        problemCategory: 'Hydraulic Problems',
+        description: 'Hydraulic fluid leaking from main cylinder, pressure dropping during operation',
+        severityLevel: 'Critical',
+        status: 'Reported',
+        reportedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        symptoms: ['Fluid Leaks', 'Loss of Power', 'Unusual Noise']
+      },
+      {
+        id: 2,
+        ticketId: 'MR-20251030-002',
+        machineId: 2,
+        machineName: 'Excavator EX-200',
+        machineModel: 'EX-200LC',
+        operatorId: 102,
+        operatorName: 'Sarah Johnson',
+        affectedPart: 'Engine',
+        problemCategory: 'Engine Issues',
+        description: 'Engine overheating during extended operation, temperature gauge reading high',
+        severityLevel: 'High',
+        status: 'Acknowledged',
+        reportedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        acknowledgedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+        symptoms: ['Overheating', 'Performance Issues']
+      },
+      {
+        id: 3,
+        ticketId: 'MR-20251029-015',
+        machineId: 3,
+        machineName: 'Bulldozer D8T',
+        machineModel: 'D8T',
+        operatorId: 103,
+        operatorName: 'Mike Williams',
+        affectedPart: 'Drill Bit',
+        problemCategory: 'Drill Bit Issues',
+        description: 'Excessive wear on drill bit, reduced penetration rate',
+        severityLevel: 'Medium',
+        status: 'InProgress',
+        reportedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        acknowledgedAt: new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString(),
+        symptoms: ['Excessive Wear', 'Vibration']
+      },
+      {
+        id: 4,
+        ticketId: 'MR-20251029-008',
+        machineId: 4,
+        machineName: 'Crane Liebherr-LTM',
+        machineModel: 'LTM-1100',
+        operatorId: 104,
+        operatorName: 'Emily Davis',
+        affectedPart: 'Electrical System',
+        problemCategory: 'Electrical Faults',
+        description: 'Intermittent electrical failure, dashboard lights flickering',
+        severityLevel: 'High',
+        status: 'Reported',
+        reportedAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
+        symptoms: ['Intermittent Failure', 'Warning Lights On'],
+        errorCodes: 'P0562, U0100'
+      },
+      {
+        id: 5,
+        ticketId: 'MR-20251028-022',
+        machineId: 5,
+        machineName: 'Dump Truck DT-450',
+        machineModel: 'DT-450X',
+        operatorId: 105,
+        operatorName: 'Robert Brown',
+        affectedPart: 'Mechanical Components',
+        problemCategory: 'Mechanical Breakdown',
+        description: 'Transmission slipping between gears, difficulty shifting',
+        severityLevel: 'Critical',
+        status: 'Acknowledged',
+        reportedAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+        acknowledgedAt: new Date(Date.now() - 46 * 60 * 60 * 1000).toISOString(),
+        symptoms: ['Slipping', 'Difficulty Shifting']
+      },
+      {
+        id: 6,
+        ticketId: 'MR-20251027-010',
+        machineId: 1,
+        machineName: 'Loader CAT-950',
+        machineModel: 'CAT-950M',
+        operatorId: 101,
+        operatorName: 'John Smith',
+        affectedPart: 'Drill Rod',
+        problemCategory: 'Drill Rod Problems',
+        description: 'Drill rod showing signs of metal fatigue, needs inspection',
+        severityLevel: 'Low',
+        status: 'Resolved',
+        reportedAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+        acknowledgedAt: new Date(Date.now() - 70 * 60 * 60 * 1000).toISOString(),
+        symptoms: ['Excessive Wear', 'Vibration']
+      }
+    ];
+    return issues;
   }
 }
