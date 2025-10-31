@@ -1,34 +1,45 @@
 .notifications-container {
-  padding: 24px;
-  max-width: 1200px;
+  padding: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  min-height: 100vh;
 }
 
 .notifications-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  color: white;
 
   .header-content {
     h2 {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin: 0 0 8px 0;
-      font-size: 28px;
+      margin: 0 0 0.25rem 0;
+      font-size: 2rem;
       font-weight: 600;
-      color: #1a1a1a;
+      color: white;
+      letter-spacing: -0.5px;
 
       mat-icon {
-        color: #2196f3;
+        color: white;
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
       }
 
       .unread-badge {
-        background: #f44336;
+        background: rgba(244, 67, 54, 0.9);
         color: white;
         border-radius: 12px;
-        padding: 2px 8px;
+        padding: 4px 12px;
         font-size: 14px;
         font-weight: 600;
       }
@@ -36,17 +47,46 @@
 
     p {
       margin: 0;
-      color: #666;
-      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.95rem;
     }
   }
 
   .header-actions {
     button {
+      padding: 0.75rem 1.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       mat-icon {
         margin-right: 8px;
       }
     }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 }
 
