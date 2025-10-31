@@ -1,1 +1,3 @@
-ts implementation
+Limit recent reports display to show only the most recent report
+
+Modified the reports list in the HTML template to display only the first report using slice(0, 1) to improve UI clarity and reduce clutter in the my-machines component.
