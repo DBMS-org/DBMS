@@ -1,211 +1,130 @@
-<div class="accessories-inventory">
-  <!-- Modern Page Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="header-title-section">
-        <div class="icon-wrapper">
-          <i class="material-icons">inventory_2</i>
-        </div>
-        <div class="title-content">
-          <h1 class="page-title">Accessories Inventory</h1>
-          <p class="page-subtitle">Manage machine accessories, parts, and consumables</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <p-button
-          icon="pi pi-download"
-          label="Export"
-          (onClick)="exportInventory()"
-          [disabled]="isLoading"
-          severity="secondary"
-          [outlined]="true"
-          styleClass="export-btn">
-        </p-button>
-        <p-button
-          icon="pi pi-refresh"
-          label="Refresh"
-          (onClick)="refreshInventory()"
-          [disabled]="isRefreshing"
-          severity="secondary"
-          [outlined]="true"
-          styleClass="refresh-btn">
-        </p-button>
-        <p-button
-          icon="pi pi-plus"
-          label="Add Accessory"
-          (onClick)="openAddAccessoryModal()"
-          severity="success"
-          styleClass="add-btn">
-        </p-button>
-      </div>
+<div class="accessories-inventory-container">
+  <!-- Header Section -->
+  <div class="inventory-header">
+    <h1>Accessories Inventory</h1>
+    <div class="header-actions">
+      <button
+        class="export-btn"
+        (click)="exportInventory()"
+        [disabled]="isLoading">
+        <i class="material-icons">download</i>
+        Export
+      </button>
+      <button
+        class="refresh-btn"
+        (click)="refreshInventory()"
+        [disabled]="isRefreshing">
+        <i class="material-icons">refresh</i>
+        Refresh
+      </button>
+      <button
+        class="add-accessory-btn"
+        (click)="openAddAccessoryModal()"
+        [disabled]="isLoading">
+        <i class="material-icons">add</i>
+        Add Accessory
+      </button>
     </div>
   </div>
 
-  <!-- Error notification display -->
+  <!-- Error Alert -->
   @if (errorMessage) {
-    <div class="error-alert">
-      <div class="error-content">
-        <i class="material-icons">error_outline</i>
-        <span>{{ errorMessage }}</span>
-      </div>
-      <button class="error-close" (click)="errorMessage = ''" type="button" aria-label="Close error">
-        <i class="material-icons">close</i>
-      </button>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="material-icons">error</i>
+      {{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
     </div>
   }
 
-  <!-- Modern Statistics Dashboard -->
-  <div class="stats-dashboard">
-    <div class="stat-card stat-available">
-      <div class="stat-header">
-        <div class="stat-icon-bg">
-          <i class="material-icons">check_circle</i>
-        </div>
-        <span class="stat-label">Available</span>
+  <!-- Statistics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card available">
+      <div class="stat-icon">
+        <i class="material-icons">check_circle</i>
       </div>
-      <div class="stat-value">{{ statistics.totalAvailable }}</div>
-      <div class="stat-footer">In Stock</div>
-    </div>
-
-    <div class="stat-card stat-low-stock">
-      <div class="stat-header">
-        <div class="stat-icon-bg">
-          <i class="material-icons">warning</i>
-        </div>
-        <span class="stat-label">Low Stock</span>
-      </div>
-      <div class="stat-value">{{ statistics.lowStock }}</div>
-      <div class="stat-footer">Below Minimum</div>
-    </div>
-
-    <div class="stat-card stat-out-of-stock">
-      <div class="stat-header">
-        <div class="stat-icon-bg">
-          <i class="material-icons">cancel</i>
-        </div>
-        <span class="stat-label">Out of Stock</span>
-      </div>
-      <div class="stat-value">{{ statistics.outOfStock }}</div>
-      <div class="stat-footer">Needs Restocking</div>
-    </div>
-
-    <div class="stat-card stat-total">
-      <div class="stat-header">
-        <div class="stat-icon-bg">
-          <i class="material-icons">inventory</i>
-        </div>
-        <span class="stat-label">Total Items</span>
-      </div>
-      <div class="stat-value">{{ statistics.totalAvailable + statistics.lowStock + statistics.outOfStock }}</div>
-      <div class="stat-footer">All Accessories</div>
-    </div>
-  </div>
-
-  <!-- Modern Filter Section -->
-  <div class="filter-section">
-    <div class="filter-header">
-      <div class="filter-title">
-        <i class="material-icons">tune</i>
-        <span>Filters</span>
-      </div>
-      <div class="filter-header-actions">
-        <button class="clear-filters-btn" (click)="clearAllFilters()" type="button">
-          <i class="material-icons">clear_all</i>
-          Clear All
-        </button>
-        <button class="toggle-filters-btn" (click)="toggleFilterExpansion()" type="button">
-          <i class="material-icons">{{ isFilterExpanded ? 'expand_less' : 'expand_more' }}</i>
-        </button>
+      <div class="stat-content">
+        <h3>{{ statistics.totalAvailable }}</h3>
+        <p>Available</p>
       </div>
     </div>
-
-    <div class="filter-grid" *ngIf="isFilterExpanded">
-      <!-- Search Input -->
-      <div class="filter-item search-item">
-        <label class="filter-label">
-          <i class="material-icons">search</i>
-          Search
-        </label>
-        <input
-          type="text"
-          class="filter-input search-input"
-          [(ngModel)]="searchTerm"
-          (input)="onSearchChange()"
-          placeholder="Search accessories..." />
+    <div class="stat-card low-stock">
+      <div class="stat-icon">
+        <i class="material-icons">warning</i>
       </div>
-
-      <!-- Category Filter -->
-      <div class="filter-item">
-        <label class="filter-label">Category</label>
-        <p-dropdown
-          [options]="categoryOptions"
-          [(ngModel)]="selectedCategory"
-          (onChange)="onCategoryFilterChange()"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="All Categories"
-          [showClear]="true"
-          styleClass="w-full filter-dropdown">
-        </p-dropdown>
+      <div class="stat-content">
+        <h3>{{ statistics.lowStock }}</h3>
+        <p>Low Stock</p>
       </div>
-
-      <!-- Status Filter -->
-      <div class="filter-item">
-        <label class="filter-label">Status</label>
-        <p-dropdown
-          [options]="statusOptions"
-          [(ngModel)]="selectedStatus"
-          (onChange)="onStatusFilterChange()"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="All Status"
-          [showClear]="true"
-          styleClass="w-full filter-dropdown">
-        </p-dropdown>
+    </div>
+    <div class="stat-card out-of-stock">
+      <div class="stat-icon">
+        <i class="material-icons">cancel</i>
       </div>
-
-      <!-- Supplier Filter -->
-      <div class="filter-item">
-        <label class="filter-label">Supplier</label>
-        <p-dropdown
-          [options]="supplierOptions"
-          [(ngModel)]="selectedSupplier"
-          (onChange)="onSupplierFilterChange()"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="All Suppliers"
-          [showClear]="true"
-          styleClass="w-full filter-dropdown">
-        </p-dropdown>
+      <div class="stat-content">
+        <h3>{{ statistics.outOfStock }}</h3>
+        <p>Out of Stock</p>
+      </div>
+    </div>
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <i class="material-icons">inventory</i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ statistics.totalAvailable + statistics.lowStock + statistics.outOfStock }}</h3>
+        <p>Total Items</p>
       </div>
     </div>
   </div>
 
-  <!-- Modern Table Section -->
-  <div class="table-section">
-    <div class="table-header">
-      <div class="table-title">
-        <i class="material-icons">view_list</i>
-        <span>Accessories List</span>
-        <span class="request-count">{{ filteredAccessories.length }}</span>
-      </div>
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section">
+    <div class="search-box">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search accessories..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()">
     </div>
+    <div class="filter-section">
+      <select
+        class="form-select"
+        [(ngModel)]="selectedCategory"
+        (ngModelChange)="onCategoryFilterChange()">
+        <option [value]="null">All Categories</option>
+        <option *ngFor="let cat of categoryOptions" [value]="cat.value">{{ cat.label }}</option>
+      </select>
+      <select
+        class="form-select"
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="onStatusFilterChange()">
+        <option [value]="null">All Status</option>
+        <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
+      </select>
+      <select
+        class="form-select"
+        [(ngModel)]="selectedSupplier"
+        (ngModelChange)="onSupplierFilterChange()">
+        <option [value]="null">All Suppliers</option>
+        <option *ngFor="let supplier of supplierOptions" [value]="supplier.value">{{ supplier.label }}</option>
+      </select>
+    </div>
+  </div>
 
-    <!-- Loading State -->
-    @if (isLoading) {
-      <div class="loading-state">
-        <div class="loader-spinner"></div>
-        <p>Loading accessories inventory...</p>
-      </div>
-    }
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary"></div>
+      <p>Loading accessories inventory...</p>
+    </div>
+  }
 
-    <!-- Empty State -->
-    @if (!isLoading && filteredAccessories.length === 0) {
+  <!-- Empty State -->
+  @if (!isLoading && filteredAccessories.length === 0) {
+    <div class="no-machines">
       <div class="empty-state">
-        <div class="empty-icon">
-          <i class="material-icons">inbox</i>
-        </div>
-        <h3>No Accessories Found</h3>
+        <i class="material-icons">inbox</i>
+        <h4>No Accessories Found</h4>
         <p>
           @if (hasActiveFilters()) {
             No accessories match your current filters.
@@ -213,137 +132,74 @@
             No accessories have been added to the inventory yet.
           }
         </p>
-        @if (!hasActiveFilters()) {
-          <button class="empty-action-btn" (click)="openAddAccessoryModal()" type="button">
-            Add First Accessory
-          </button>
-        } @else {
-          <button class="empty-action-btn" (click)="clearAllFilters()" type="button">
-            Clear Filters
-          </button>
-        }
       </div>
-    }
+    </div>
+  }
 
-    <!-- Modern Table -->
-    @if (!isLoading && filteredAccessories.length > 0) {
-      <div class="accessories-table-wrapper">
-        <p-table
-          [value]="filteredAccessories"
-          styleClass="modern-table"
-          responsiveLayout="scroll"
-          [paginator]="true"
-          [rows]="10"
-          [rowsPerPageOptions]="[10, 25, 50, 100]"
-          [showCurrentPageReport]="true"
-          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-          [rowHover]="true"
-          [sortField]="'name'"
-          [sortOrder]="1"
-          dataKey="id">
-
-      <!-- Header -->
-      <ng-template pTemplate="header">
-        <tr>
-          <th pSortableColumn="name">
-            Name <p-sortIcon field="name"></p-sortIcon>
-          </th>
-          <th pSortableColumn="category">
-            Category <p-sortIcon field="category"></p-sortIcon>
-          </th>
-          <th pSortableColumn="partNumber">
-            Part Number <p-sortIcon field="partNumber"></p-sortIcon>
-          </th>
-          <th pSortableColumn="quantity">
-            Quantity <p-sortIcon field="quantity"></p-sortIcon>
-          </th>
-          <th>Status</th>
-          <th pSortableColumn="supplier">
-            Supplier <p-sortIcon field="supplier"></p-sortIcon>
-          </th>
-          <th pSortableColumn="lastUpdated">
-            Last Updated <p-sortIcon field="lastUpdated"></p-sortIcon>
-          </th>
-          <th style="width: 180px;">Actions</th>
-        </tr>
-      </ng-template>
-
-      <!-- Body -->
-      <ng-template pTemplate="body" let-accessory>
-        <tr [ngClass]="{'low-stock-row': accessory.quantity <= accessory.minStockLevel}">
-          <td class="accessory-name">
-            <div class="name-cell">
+  <!-- Table -->
+  @if (!isLoading && filteredAccessories.length > 0) {
+    <div class="table-container">
+      <table class="machines-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Part Number</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Supplier</th>
+            <th>Last Updated</th>
+            <th style="width: 200px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let accessory of filteredAccessories" class="machine-row">
+            <td>
               <strong>{{ accessory.name }}</strong>
-              <small *ngIf="accessory.description">{{ accessory.description }}</small>
-            </div>
-          </td>
-          <td>
-            <p-tag [value]="accessory.category" [style]="{'background': '#ecf0f1', 'color': '#2c3e50'}"></p-tag>
-          </td>
-          <td class="part-number">{{ accessory.partNumber }}</td>
-          <td class="quantity-cell">
-            <div class="quantity-info">
-              <span class="current-quantity" [class.low-stock]="accessory.quantity <= accessory.minStockLevel">
-                {{ accessory.quantity }}
+              <small *ngIf="accessory.description" class="text-muted d-block">{{ accessory.description }}</small>
+            </td>
+            <td>
+              <span class="status-badge bg-secondary">{{ accessory.category }}</span>
+            </td>
+            <td><code>{{ accessory.partNumber }}</code></td>
+            <td>
+              <strong [ngClass]="{
+                'text-success': accessory.quantity > accessory.minStockLevel,
+                'text-warning': accessory.quantity <= accessory.minStockLevel && accessory.quantity > 0,
+                'text-danger': accessory.quantity === 0
+              }">
+                {{ accessory.quantity }} {{ accessory.unit }}
+              </strong>
+              <small class="text-muted d-block">Min: {{ accessory.minStockLevel }}</small>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(accessory)">
+                {{ getStatusDisplay(accessory) }}
               </span>
-              <span class="unit">{{ accessory.unit }}</span>
-              <small class="min-stock">Min: {{ accessory.minStockLevel }}</small>
-            </div>
-          </td>
-          <td>
-            <p-tag
-              [value]="getStatusDisplay(accessory)"
-              [severity]="getStatusSeverity(accessory)">
-            </p-tag>
-          </td>
-          <td class="supplier-cell">{{ accessory.supplier }}</td>
-          <td class="date-cell">{{ accessory.lastUpdated | date:'short' }}</td>
-          <td class="actions-cell">
-            <div class="action-buttons">
-              <p-button
-                icon="pi pi-eye"
-                [rounded]="true"
-                [text]="true"
-                severity="info"
-                (onClick)="viewAccessoryDetails(accessory)"
-                pTooltip="View Details"
-                tooltipPosition="top">
-              </p-button>
-              <p-button
-                icon="pi pi-pencil"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                (onClick)="editAccessory(accessory)"
-                pTooltip="Edit"
-                tooltipPosition="top">
-              </p-button>
-              <p-button
-                icon="pi pi-plus-circle"
-                [rounded]="true"
-                [text]="true"
-                severity="warning"
-                (onClick)="adjustStock(accessory)"
-                pTooltip="Adjust Stock"
-                tooltipPosition="top">
-              </p-button>
-              <p-button
-                icon="pi pi-trash"
-                [rounded]="true"
-                [text]="true"
-                severity="danger"
-                (onClick)="deleteAccessory(accessory)"
-                pTooltip="Delete"
-                tooltipPosition="top">
-              </p-button>
-            </div>
-          </td>
-        </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    }
-  </div>
+            </td>
+            <td>{{ accessory.supplier }}</td>
+            <td>{{ accessory.lastUpdated | date:'short' }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="action-btn view-btn" (click)="viewAccessoryDetails(accessory)" title="View Details">
+                  <i class="material-icons">visibility</i>
+                </button>
+                <button class="action-btn edit-btn" (click)="editAccessory(accessory)" title="Edit">
+                  <i class="material-icons">edit</i>
+                </button>
+                <button class="action-btn stock-btn" (click)="adjustStock(accessory)" title="Adjust Stock">
+                  <i class="material-icons">add_circle</i>
+                </button>
+                <button class="action-btn delete-btn" (click)="deleteAccessory(accessory)" title="Delete">
+                  <i class="material-icons">delete</i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  }
 </div>
 
 <!-- Add/Edit Accessory Modal -->
