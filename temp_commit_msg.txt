@@ -1,1 +1,1 @@
-feat: add notifications component styles for blasting engineer
+feat: add notifications component and routes for blasting engineer and admin
