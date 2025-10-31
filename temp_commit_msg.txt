@@ -1,1 +1,1 @@
-design and styling
+ts implementation
