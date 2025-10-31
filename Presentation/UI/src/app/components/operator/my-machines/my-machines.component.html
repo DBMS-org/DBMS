@@ -312,7 +312,7 @@
                 <p class="no-reports-message">No recent reports for this machine.</p>
               } @else {
                 <div class="reports-list">
-                  @for (report of recentReports(); track report.id) {
+                  @for (report of recentReports().slice(0, 1); track report.id) {
                     <div class="report-item" [ngClass]="getReportStatusClass(report.status)">
                       <div class="report-header">
                         <span class="report-id">Ticket #{{ report.ticketId }}</span>
