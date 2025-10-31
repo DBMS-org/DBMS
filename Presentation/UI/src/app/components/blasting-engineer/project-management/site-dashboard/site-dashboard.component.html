@@ -203,7 +203,7 @@
             label="Cleanup Data"
             icon="pi pi-trash"
             (onClick)="cleanupSiteData()"
-            severity="warning"
+            severity="warn"
             pTooltip="Clean up inconsistent data"
             styleClass="w-full"
           ></p-button>
@@ -432,7 +432,7 @@
                 label="Request Explosive Approval"
                 icon="pi pi-exclamation-triangle"
                 (onClick)="requestExplosiveApproval()"
-                severity="warning"
+                severity="warn"
               ></p-button>
               <ng-container *ngIf="isExplosiveApprovalRequested">
                 <p-chip label="Request Submitted" icon="pi pi-verified" styleClass="bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold"></p-chip>
