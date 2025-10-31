@@ -1,1 +1,19 @@
-feat: add notifications component and routes for blasting engineer and admin
+feat: Add My Machines component for managing assigned drilling machines
+
+- Implemented the My Machines component with detailed machine information, usage metrics, and actions.
+- Added loading, error, and empty states for better user experience.
+- Integrated a dialog for logging machine usage with comprehensive form fields.
+- Enhanced recent reports display with status indicators and action buttons.
+
+refactor: Update Accessories Inventory component for improved UI
+
+- Redesigned the Accessories Inventory component header and actions for consistency.
+- Simplified error notifications and statistics display.
+- Improved search and filter functionality with a more intuitive layout.
+- Updated the table structure for displaying accessories with action buttons.
+
+feat: Introduce Issue Reports modal in Maintenance Management
+
+- Added a modal for viewing operator issue reports with statistics and filters.
+- Implemented a table for displaying issues with search and filter capabilities.
+- Enhanced issue details modal with comprehensive information and action buttons for scheduling maintenance.
