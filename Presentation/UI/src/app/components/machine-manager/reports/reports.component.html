@@ -1,213 +1,508 @@
 <div class="reports-container">
-  <!-- Page Header -->
-  <header class="page-header">
-    <div class="header-content">
-      <div class="header-title">
-        <mat-icon class="header-icon">analytics</mat-icon>
-        <div class="title-text">
-          <h1>Machine Reports</h1>
-          <p class="subtitle">Generate comprehensive machine management reports</p>
+  <!-- Header Section -->
+  <div class="header-section">
+    <h2 class="page-title">Machine Reports</h2>
+    <p class="page-subtitle">Comprehensive machine-wise reports including assignments, maintenance, and utilization data</p>
+  </div>
+
+  <!-- Overall Statistics -->
+  @if (statistics()) {
+    <div class="statistics-overview">
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <mat-icon>precision_manufacturing</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ statistics()!.totalMachines }}</span>
+          <span class="stat-label">Total Machines</span>
         </div>
       </div>
-      <div class="header-actions">
-        <button mat-raised-button color="primary" (click)="refreshReports()" class="action-btn">
-          <mat-icon>refresh</mat-icon>
-          Refresh
-        </button>
+
+      <div class="stat-card">
+        <div class="stat-icon active">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ statistics()!.activeMachines }}</span>
+          <span class="stat-label">Active Machines</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon maintenance">
+          <mat-icon>build_circle</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ statistics()!.underMaintenanceMachines }}</span>
+          <span class="stat-label">Under Maintenance</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon idle">
+          <mat-icon>pause_circle</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ statistics()!.idleMachines }}</span>
+          <span class="stat-label">Idle Machines</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon utilization">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ formatNumber(statistics()!.totalUtilizationHours) }}h</span>
+          <span class="stat-label">Total Utilization</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon cost">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ formatCurrency(statistics()!.totalMaintenanceCost) }}</span>
+          <span class="stat-label">Maintenance Costs</span>
+        </div>
       </div>
     </div>
-  </header>
+  }
 
-  <!-- Loading State -->
+  <!-- Search and Filter Section -->
+  <div class="search-filter-section" [formGroup]="filterForm">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Machine Type</mat-label>
+      <mat-icon matPrefix>category</mat-icon>
+      <mat-select formControlName="machineType" (selectionChange)="applyFilters()">
+        @for (type of machineTypes; track type) {
+          <mat-option [value]="type === 'All Types' ? '' : type">{{ type }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Status</mat-label>
+      <mat-icon matPrefix>info</mat-icon>
+      <mat-select formControlName="status" (selectionChange)="applyFilters()">
+        @for (status of statusOptions; track status) {
+          <mat-option [value]="status === 'All Status' ? '' : status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>From Date</mat-label>
+      <input matInput [matDatepicker]="pickerFrom" formControlName="dateFrom">
+      <mat-datepicker-toggle matSuffix [for]="pickerFrom"></mat-datepicker-toggle>
+      <mat-datepicker #pickerFrom></mat-datepicker>
+      <mat-icon matPrefix>event</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>To Date</mat-label>
+      <input matInput [matDatepicker]="pickerTo" formControlName="dateTo">
+      <mat-datepicker-toggle matSuffix [for]="pickerTo"></mat-datepicker-toggle>
+      <mat-datepicker #pickerTo></mat-datepicker>
+      <mat-icon matPrefix>event</mat-icon>
+    </mat-form-field>
+
+    <button mat-raised-button color="accent" (click)="resetFilters()" class="reset-btn">
+      <mat-icon>refresh</mat-icon>
+      Reset
+    </button>
+
+    <button mat-raised-button color="primary" (click)="refreshReports()" class="refresh-btn">
+      <mat-icon>sync</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Loading Spinner -->
   @if (isLoading()) {
     <div class="loading-container">
       <mat-spinner diameter="48"></mat-spinner>
-      <p class="loading-text">Loading reports...</p>
+      <p class="loading-text">Loading machine reports...</p>
     </div>
   }
 
-  <!-- Main Content -->
-  <div class="main-content" *ngIf="!isLoading()">
-    <!-- Reports Grid -->
-    <div class="reports-section">
-      <div class="section-header">
-        <h2 class="section-title">
-          <mat-icon>library_books</mat-icon>
-          Available Reports
-        </h2>
-        <span class="report-count">{{ reports().length }} reports</span>
-      </div>
-
-      <div class="reports-grid">
-        @for (report of reports(); track report.id) {
-          <mat-card
-            class="report-card"
-            [class.selected]="selectedReport()?.id === report.id"
-            (click)="selectReport(report)">
-            <mat-card-header>
-              <div class="card-icon" [class]="'icon-' + report.category">
-                <mat-icon>{{ report.icon }}</mat-icon>
-              </div>
-              <div class="card-header-text">
-                <mat-card-title>{{ report.name }}</mat-card-title>
-                <mat-card-subtitle>{{ report.category | titlecase }}</mat-card-subtitle>
-              </div>
-            </mat-card-header>
-
-            <mat-card-content>
-              <p class="report-description">{{ report.description }}</p>
-
-              <div class="report-meta">
-                <div class="meta-item">
+  <!-- Machine Reports List -->
+  <div class="reports-list" *ngIf="!isLoading()">
+    @for (machine of filteredMachines(); track machine.machineId) {
+      <div class="report-card">
+        <!-- Machine Header -->
+        <div class="report-header" (click)="toggleMachineExpansion(machine.machineId)">
+          <div class="header-left">
+            <div class="machine-icon">
+              <mat-icon>precision_manufacturing</mat-icon>
+            </div>
+            <div class="machine-info">
+              <h3 class="machine-name">{{ machine.machineName }}</h3>
+              <div class="machine-meta">
+                <span class="meta-item">
                   <mat-icon>category</mat-icon>
-                  <span>{{ report.category | titlecase }}</span>
+                  {{ machine.machineType }}
+                </span>
+                <span class="meta-item">
+                  <mat-icon>tag</mat-icon>
+                  {{ machine.serialNumber }}
+                </span>
+                <span class="meta-item">
+                  <mat-icon>location_on</mat-icon>
+                  {{ machine.currentLocation }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="header-right">
+            <span class="status-badge" [ngClass]="getStatusClass(machine.status)">
+              {{ machine.status }}
+            </span>
+            <button mat-icon-button class="expand-btn" [class.expanded]="isMachineExpanded(machine.machineId)">
+              <mat-icon>expand_more</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Statistics -->
+        <div class="quick-stats">
+          <div class="quick-stat-item">
+            <mat-icon>schedule</mat-icon>
+            <div class="quick-stat-details">
+              <span class="quick-stat-value">{{ formatNumber(machine.totalUtilizationHours) }}h</span>
+              <span class="quick-stat-label">Utilization</span>
+            </div>
+          </div>
+
+          <div class="quick-stat-item">
+            <mat-icon>payments</mat-icon>
+            <div class="quick-stat-details">
+              <span class="quick-stat-value">{{ formatCurrency(machine.totalMaintenanceCost) }}</span>
+              <span class="quick-stat-label">Maintenance Cost</span>
+            </div>
+          </div>
+
+          <div class="quick-stat-item">
+            <mat-icon>assignment</mat-icon>
+            <div class="quick-stat-details">
+              <span class="quick-stat-value">{{ machine.assignmentHistory.length }}</span>
+              <span class="quick-stat-label">Assignments</span>
+            </div>
+          </div>
+
+          <div class="quick-stat-item">
+            <mat-icon>warning</mat-icon>
+            <div class="quick-stat-details">
+              <span class="quick-stat-value">{{ machine.problemReportsCount }}</span>
+              <span class="quick-stat-label">Problem Reports</span>
+            </div>
+          </div>
+
+          @if (machine.currentOperator) {
+            <div class="quick-stat-item">
+              <mat-icon>person</mat-icon>
+              <div class="quick-stat-details">
+                <span class="quick-stat-value">{{ machine.currentOperator }}</span>
+                <span class="quick-stat-label">Current Operator</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Expanded Details -->
+        @if (isMachineExpanded(machine.machineId)) {
+          <div class="report-details">
+            <!-- Machine Information -->
+            <div class="detail-section">
+              <h4 class="section-title">
+                <mat-icon>info</mat-icon>
+                Machine Information
+              </h4>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Serial Number:</span>
+                  <span class="info-value">{{ machine.serialNumber }}</span>
                 </div>
-                <div class="meta-item">
-                  <mat-icon>schedule</mat-icon>
-                  <span>Real-time data</span>
+                <div class="info-item">
+                  <span class="info-label">Type:</span>
+                  <span class="info-value">{{ machine.machineType }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Current Location:</span>
+                  <span class="info-value">{{ machine.currentLocation }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Current Project:</span>
+                  <span class="info-value">{{ machine.currentProject || 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Last Maintenance:</span>
+                  <span class="info-value">{{ formatDate(machine.lastMaintenanceDate) }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Next Maintenance:</span>
+                  <span class="info-value">{{ formatDate(machine.nextMaintenanceDate) }}</span>
                 </div>
               </div>
-            </mat-card-content>
+            </div>
 
-            <mat-card-actions class="card-actions">
-              <button
-                mat-stroked-button
-                class="export-btn pdf"
-                (click)="exportReport('pdf', report); $event.stopPropagation()"
-                [disabled]="isGenerating()">
+            <!-- Assignment History -->
+            <div class="detail-section">
+              <h4 class="section-title">
+                <mat-icon>assignment</mat-icon>
+                Assignment History ({{ machine.assignmentHistory.length }})
+              </h4>
+              <div class="table-responsive">
+                <table class="detail-table">
+                  <thead>
+                    <tr>
+                      <th>Project</th>
+                      <th>Operator</th>
+                      <th>Assigned Date</th>
+                      <th>Return Date</th>
+                      <th>Location</th>
+                      <th>Hours</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (assignment of machine.assignmentHistory; track assignment.assignmentId) {
+                      <tr>
+                        <td class="font-semibold">{{ assignment.projectName }}</td>
+                        <td>{{ assignment.operatorName }}</td>
+                        <td>{{ formatDate(assignment.assignedDate) }}</td>
+                        <td>{{ formatDate(assignment.returnDate) || 'Active' }}</td>
+                        <td>{{ assignment.location }}</td>
+                        <td class="numeric">{{ formatNumber(assignment.utilizationHours) }}</td>
+                        <td>
+                          <span class="status-badge" [ngClass]="getStatusClass(assignment.status)">
+                            {{ assignment.status }}
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Maintenance History -->
+            <div class="detail-section">
+              <h4 class="section-title">
+                <mat-icon>build</mat-icon>
+                Maintenance History ({{ machine.maintenanceHistory.length }})
+              </h4>
+              <div class="table-responsive">
+                <table class="detail-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Scheduled Date</th>
+                      <th>Completed Date</th>
+                      <th>Assigned To</th>
+                      <th>Cost</th>
+                      <th>Downtime</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (maintenance of machine.maintenanceHistory; track maintenance.jobId) {
+                      <tr>
+                        <td class="font-semibold">{{ maintenance.type }}</td>
+                        <td>{{ formatDate(maintenance.scheduledDate) }}</td>
+                        <td>{{ formatDate(maintenance.completedDate) || 'Pending' }}</td>
+                        <td>{{ maintenance.assignedTo }}</td>
+                        <td class="numeric">{{ formatCurrency(maintenance.actualCost || maintenance.estimatedCost) }}</td>
+                        <td class="numeric">{{ maintenance.downtime }}h</td>
+                        <td>
+                          <span class="status-badge" [ngClass]="getStatusClass(maintenance.status)">
+                            {{ maintenance.status }}
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Recent Usage Logs -->
+            <div class="detail-section">
+              <h4 class="section-title">
+                <mat-icon>history</mat-icon>
+                Recent Usage Logs (Last 7 Days)
+              </h4>
+              <div class="table-responsive">
+                <table class="detail-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Operator</th>
+                      <th>Project</th>
+                      <th>Engine Hours</th>
+                      <th>Working Hours</th>
+                      <th>Idle Hours</th>
+                      <th>Fuel (L)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (log of machine.usageLogs; track log.logId) {
+                      <tr>
+                        <td class="font-semibold">{{ formatDate(log.date) }}</td>
+                        <td>{{ log.operatorName }}</td>
+                        <td>{{ log.projectName }}</td>
+                        <td class="numeric">{{ formatNumber(log.engineHours) }}</td>
+                        <td class="numeric">{{ formatNumber(log.workingHours) }}</td>
+                        <td class="numeric">{{ formatNumber(log.idleHours) }}</td>
+                        <td class="numeric">{{ formatNumber(log.fuelConsumed) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-section">
+              <button mat-raised-button color="primary" (click)="viewDetailedReport(machine)">
+                <mat-icon>visibility</mat-icon>
+                View Detailed Report
+              </button>
+              <button mat-stroked-button color="primary" (click)="exportReport(machine, 'pdf')">
                 <mat-icon>picture_as_pdf</mat-icon>
-                PDF
+                Export PDF
               </button>
-              <button
-                mat-stroked-button
-                class="export-btn csv"
-                (click)="exportReport('csv', report); $event.stopPropagation()"
-                [disabled]="isGenerating()">
+              <button mat-stroked-button color="primary" (click)="exportReport(machine, 'excel')">
                 <mat-icon>table_chart</mat-icon>
-                CSV
+                Export Excel
               </button>
-            </mat-card-actions>
-          </mat-card>
+              <button mat-stroked-button color="primary" (click)="printReport(machine)">
+                <mat-icon>print</mat-icon>
+                Print
+              </button>
+            </div>
+          </div>
         }
       </div>
-    </div>
-
-    <!-- Filters Panel -->
-    @if (showFilters() && selectedReport()) {
-      <div class="filters-container">
-        <mat-card class="filters-panel">
-          <mat-card-header>
-            <div class="panel-header-content">
-              <div class="panel-title">
-                <mat-icon>filter_list</mat-icon>
-                <h3>Filter Options</h3>
-              </div>
-              <button mat-icon-button (click)="closeFilters()" aria-label="Close filters">
-                <mat-icon>close</mat-icon>
-              </button>
-            </div>
-          </mat-card-header>
-
-          <mat-card-content>
-            <div class="filter-subtitle">
-              <mat-icon>analytics</mat-icon>
-              <span>{{ selectedReport()?.name }}</span>
-            </div>
-
-            <form [formGroup]="filterForm" class="filter-form">
-              <!-- Machine Filter -->
-              <div class="form-group">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Machine</mat-label>
-                  <mat-icon matPrefix>precision_manufacturing</mat-icon>
-                  <mat-select formControlName="machine">
-                    <mat-option value="">All Machines</mat-option>
-                    @for (machine of machines(); track machine.id) {
-                      <mat-option [value]="machine.id">{{ machine.name }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-              </div>
-
-              <!-- Date Range -->
-              <div class="form-group date-range">
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>From Date</mat-label>
-                  <input matInput [matDatepicker]="pickerFrom" formControlName="dateFrom">
-                  <mat-datepicker-toggle matSuffix [for]="pickerFrom"></mat-datepicker-toggle>
-                  <mat-datepicker #pickerFrom></mat-datepicker>
-                  <mat-icon matPrefix>event</mat-icon>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>To Date</mat-label>
-                  <input matInput [matDatepicker]="pickerTo" formControlName="dateTo">
-                  <mat-datepicker-toggle matSuffix [for]="pickerTo"></mat-datepicker-toggle>
-                  <mat-datepicker #pickerTo></mat-datepicker>
-                  <mat-icon matPrefix>event</mat-icon>
-                </mat-form-field>
-              </div>
-
-              <!-- Report Type Filter -->
-              <div class="form-group">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Report Type</mat-label>
-                  <mat-icon matPrefix>analytics</mat-icon>
-                  <mat-select formControlName="reportType">
-                    <mat-option value="">All Types</mat-option>
-                    @for (type of reportTypes; track type) {
-                      <mat-option [value]="type">{{ type }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-              </div>
-
-              <!-- Filter Actions -->
-              <div class="filter-actions">
-                <button
-                  mat-button
-                  type="button"
-                  (click)="resetFilters()"
-                  class="reset-btn">
-                  <mat-icon>clear</mat-icon>
-                  Reset Filters
-                </button>
-                <button
-                  mat-raised-button
-                  color="primary"
-                  (click)="generateReport()"
-                  [disabled]="isGenerating()"
-                  class="generate-btn">
-                  @if (isGenerating()) {
-                    <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
-                  } @else {
-                    <mat-icon>file_download</mat-icon>
-                  }
-                  Generate Report
-                </button>
-              </div>
-            </form>
-
-            @if (hasNoData()) {
-              <div class="no-data-message">
-                <mat-icon>info</mat-icon>
-                <p>No data available for the selected filters.</p>
-              </div>
-            }
-          </mat-card-content>
-        </mat-card>
+    } @empty {
+      <div class="no-reports">
+        <div class="empty-state">
+          <mat-icon>precision_manufacturing</mat-icon>
+          <h3>No Machines Found</h3>
+          <p>No machines match your current filters. Try adjusting your search criteria.</p>
+        </div>
       </div>
     }
   </div>
+</div>
 
-  <!-- Generating Overlay -->
-  @if (isGenerating()) {
-    <div class="generating-overlay">
-      <div class="overlay-content">
-        <mat-spinner diameter="56"></mat-spinner>
-        <h3>Generating Report...</h3>
-        <p>Please wait while we prepare your report</p>
+<!-- Detailed Report Modal -->
+@if (showDetailModal() && selectedMachine()) {
+  <div class="modal-overlay" (click)="closeDetailModal()">
+    <div class="modal-content detailed-report-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <mat-icon>analytics</mat-icon>
+          Detailed Report: {{ selectedMachine()!.machineName }}
+        </h2>
+        <button mat-icon-button (click)="closeDetailModal()" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Machine Summary -->
+        <div class="summary-section">
+          <h3>Machine Summary</h3>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="label">Machine Name:</span>
+              <span class="value">{{ selectedMachine()!.machineName }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Type:</span>
+              <span class="value">{{ selectedMachine()!.machineType }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Serial Number:</span>
+              <span class="value">{{ selectedMachine()!.serialNumber }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Status:</span>
+              <span class="status-badge" [ngClass]="getStatusClass(selectedMachine()!.status)">
+                {{ selectedMachine()!.status }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Current Location:</span>
+              <span class="value">{{ selectedMachine()!.currentLocation }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Current Project:</span>
+              <span class="value">{{ selectedMachine()!.currentProject || 'N/A' }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Total Utilization:</span>
+              <span class="value">{{ formatNumber(selectedMachine()!.totalUtilizationHours) }} hours</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Maintenance Cost:</span>
+              <span class="value">{{ formatCurrency(selectedMachine()!.totalMaintenanceCost) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="summary-section">
+          <h3>Performance Metrics</h3>
+          <div class="stats-grid-modal">
+            <div class="stat-card-modal">
+              <mat-icon>assignment</mat-icon>
+              <div class="stat-info">
+                <span class="stat-number">{{ selectedMachine()!.assignmentHistory.length }}</span>
+                <span class="stat-text">Total Assignments</span>
+              </div>
+            </div>
+            <div class="stat-card-modal">
+              <mat-icon>build</mat-icon>
+              <div class="stat-info">
+                <span class="stat-number">{{ selectedMachine()!.maintenanceHistory.length }}</span>
+                <span class="stat-text">Maintenance Jobs</span>
+              </div>
+            </div>
+            <div class="stat-card-modal">
+              <mat-icon>warning</mat-icon>
+              <div class="stat-info">
+                <span class="stat-number">{{ selectedMachine()!.problemReportsCount }}</span>
+                <span class="stat-text">Problem Reports</span>
+              </div>
+            </div>
+            <div class="stat-card-modal">
+              <mat-icon>schedule</mat-icon>
+              <div class="stat-info">
+                <span class="stat-number">{{ formatNumber(selectedMachine()!.totalUtilizationHours) }}h</span>
+                <span class="stat-text">Total Hours</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button mat-raised-button color="primary" (click)="exportReport(selectedMachine()!, 'pdf')">
+          <mat-icon>download</mat-icon>
+          Export
+        </button>
+        <button mat-stroked-button color="primary" (click)="printReport(selectedMachine()!)">
+          <mat-icon>print</mat-icon>
+          Print
+        </button>
+        <button mat-button (click)="closeDetailModal()">
+          Close
+        </button>
       </div>
     </div>
-  }
-</div>
+  </div>
+}
