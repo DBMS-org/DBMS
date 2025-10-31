@@ -1,0 +1,447 @@
+.my-machines-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  color: white;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+
+    .header-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: white;
+    }
+
+    h1 {
+      margin: 0 0 0.25rem 0;
+      font-size: 2rem;
+      font-weight: 600;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.95rem;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .header-actions {
+      width: 100%;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.loading-container, .error-container, .no-machines-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  margin-top: 2rem;
+}
+
+.error-container mat-icon, .no-machines-container mat-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 1rem;
+}
+
+.error-container mat-icon {
+  color: #f44336;
+}
+
+.no-machines-container mat-icon {
+  color: #757575;
+}
+
+.machine-card {
+  margin-bottom: 2rem;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.machine-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1976d2;
+  color: white;
+}
+
+.machine-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+/* Usage metrics layout */
+.usage-metrics { margin: 1rem 0; }
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+.usage-item {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 0.75rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.usage-item:hover {
+  background: #fdfdfd;
+  border-color: #e6e6e6;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.usage-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #616161;
+  font-size: 0.875rem;
+}
+.usage-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #212121;
+}
+.last-updated { margin-top: 0.5rem; font-size: 0.8rem; color: #757575; }
+
+/* Log usage dialog styles */
+.log-usage-content {
+  display: block;
+  min-width: 400px;
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.usage-log-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fafafa;
+}
+
+.form-section h4 {
+  margin: 0 0 1rem 0;
+  color: #424242;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.hours-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.downtime-checkbox {
+  margin-bottom: 1rem;
+}
+
+.downtime-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.file-upload-area {
+  text-align: center;
+  padding: 1rem;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.upload-hint {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.selected-files {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.selected-files h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: #424242;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.dialog-actions {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.full-width {
+  width: 100%;
+}
+@media (min-width: 600px) {
+  .current-metrics { grid-template-columns: repeat(3, 1fr); }
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #757575;
+  font-size: 0.9rem;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.section-divider {
+  margin: 1.5rem 0;
+}
+
+.machine-actions {
+  margin: 1.5rem 0;
+}
+
+.machine-actions h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.report-issue-btn, .view-history-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recent-reports h3 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.no-reports-message {
+  color: #757575;
+  font-style: italic;
+}
+
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.report-item {
+  border-left: 4px solid #ccc;
+  padding: 0.75rem 1rem;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+.report-item:hover { background-color: #f3f6ff; transform: translateY(-1px); }
+.report-item.status-reported {
+  border-left-color: #2196f3;
+}
+
+.report-item.status-acknowledged {
+  border-left-color: #ff9800;
+}
+
+.report-item.status-in-progress {
+  border-left-color: #9c27b0;
+}
+
+.report-item.status-resolved {
+  border-left-color: #4caf50;
+}
+
+.report-item.status-closed {
+  border-left-color: #757575;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: #757575;
+}
+
+.report-content h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.report-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.report-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.report-status {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background-color: #e0e0e0;
+}
+
+.status-operational {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.status-under-maintenance {
+  color: #ff9800;
+  font-weight: 500;
+}
+
+.status-down-for-repair {
+  color: #f44336;
+  font-weight: 500;
+}
+
+.status-offline {
+  color: #757575;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .page-header h1 { font-size: 1.5rem; }
+  .my-machines-container { padding: 0.75rem; }
+  .machine-info-grid { grid-template-columns: 1fr; }
+  .action-buttons { flex-direction: column; }
+  .action-buttons button { width: 100%; }
+}
