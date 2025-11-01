@@ -39,8 +39,8 @@ export class MaintenanceService {
   private readonly jobsApiUrl = `${environment.apiUrl}/api/maintenance-jobs`;
   private readonly reportsApiUrl = `${environment.apiUrl}/api/maintenance-reports`;
 
-  // Dashboard and Stats - Connected to backend API
-  getMaintenanceStats(regionId?: number): Observable<MaintenanceStats> {
+  // Dashboard and Stats - Using mock data for development with offline support
+  getMaintenanceStats(): Observable<MaintenanceStats> {
     const operationId = 'maintenance-stats';
     this.loadingService.startLoading(operationId, 'Loading maintenance statistics...');
 
@@ -56,20 +56,11 @@ export class MaintenanceService {
       }
     }
 
-    // Get region ID from user if not provided
-    const effectiveRegionId = regionId || this.getUserRegionId();
-    if (!effectiveRegionId) {
-      console.warn('No region ID found, falling back to mock data');
-      return this.mockService.getMaintenanceStats().pipe(
-        finalize(() => this.loadingService.stopLoading(operationId))
-      );
-    }
-
-    // Call real backend API
-    return this.http.get<MaintenanceStats>(`${this.jobsApiUrl}/stats/region/${effectiveRegionId}`).pipe(
+    // Use real API with fallback to mock in dev mode
+    return this.http.get<MaintenanceStats>(`${this.jobsApiUrl}/stats/region`).pipe(
       tap(stats => this.offlineStorage.storeOfflineData({ maintenanceStats: stats })),
       catchError(error => {
-        console.error('Get maintenance stats API failed:', error);
+        console.warn('API call failed, falling back to mock data:', error);
         return this.mockService.getMaintenanceStats();
       }),
       finalize(() => this.loadingService.stopLoading(operationId))
@@ -110,7 +101,7 @@ export class MaintenanceService {
     );
   }
 
-  // Maintenance Jobs - Connected to real backend API
+  // Maintenance Jobs - Using mock data for development with offline support
   getMaintenanceJobs(filters?: JobFilters): Observable<MaintenanceJob[]> {
     const operationId = 'maintenance-jobs';
     this.loadingService.startLoading(operationId, 'Loading maintenance jobs...');
@@ -127,11 +118,11 @@ export class MaintenanceService {
       // Fallback to mock data even when offline (dev mode)
     }
 
-    // Get current user ID from auth service
+    // Use real API - fetch jobs for current engineer
+    // Note: Frontend should get current user ID from auth service
     const userId = this.getCurrentUserId();
     if (!userId) {
       // Fallback to mock if no user context
-      console.warn('No user ID found, falling back to mock data');
       return this.mockService.getMaintenanceJobs(filters).pipe(
         tap(jobs => {
           this.offlineStorage.storeOfflineData({ maintenanceJobs: jobs });
@@ -141,31 +132,25 @@ export class MaintenanceService {
       );
     }
 
-    // Build query params
     const params = this.buildFilterParams(filters);
-
-    // Call real backend API
     return this.http.get<MaintenanceJob[]>(`${this.jobsApiUrl}/engineer/${userId}`, { params }).pipe(
-      map(jobs => this.transformJobDates(jobs)),
       tap(jobs => {
         this.offlineStorage.storeOfflineData({ maintenanceJobs: jobs });
         this.performanceService.createSearchIndex('maintenance-jobs', jobs);
       }),
       catchError(error => {
-        console.error('Get jobs API failed:', error);
-        // Fallback to mock data in development
+        console.warn('Get jobs API failed, falling back to mock:', error);
         return this.mockService.getMaintenanceJobs(filters);
       }),
       finalize(() => this.loadingService.stopLoading(operationId))
     );
   }
 
-  getMaintenanceJob(jobId: number): Observable<MaintenanceJob> {
+  getMaintenanceJob(jobId: string): Observable<MaintenanceJob> {
     return this.http.get<MaintenanceJob>(`${this.jobsApiUrl}/${jobId}`).pipe(
-      map(job => this.transformJobDates([job])[0]),
       catchError(error => {
-        console.error('Get job by ID API failed:', error);
-        return this.mockService.getMaintenanceJob(jobId.toString());
+        console.warn('Get job by ID API failed, falling back to mock:', error);
+        return this.mockService.getMaintenanceJob(jobId);
       })
     );
   }
@@ -186,10 +171,10 @@ export class MaintenanceService {
       .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
-  updateMaintenanceJob(jobId: number, job: Partial<MaintenanceJob>): Observable<MaintenanceJob> {
+  updateMaintenanceJob(jobId: string, job: Partial<MaintenanceJob>): Observable<MaintenanceJob> {
     // If offline, queue the operation for sync
     if (this.offlineStorage.isOffline()) {
-      this.syncService.queueJobUpdate(jobId.toString(), job);
+      this.syncService.queueJobUpdate(jobId, job);
       // Return updated job for optimistic updates
       const updatedJob: MaintenanceJob = {
         id: jobId,
@@ -202,31 +187,32 @@ export class MaintenanceService {
       .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
-  updateJobStatus(jobId: number, status: MaintenanceStatus): Observable<void> {
+  updateJobStatus(jobId: string, status: MaintenanceStatus): Observable<void> {
     const operationId = `update-job-${jobId}`;
     this.loadingService.startLoading(operationId, 'Updating job status...');
 
     // If offline, queue the operation for sync
     if (this.offlineStorage.isOffline()) {
-      this.syncService.queueJobStatusUpdate(jobId.toString(), status);
+      this.syncService.queueJobStatusUpdate(jobId, status);
       this.loadingService.stopLoading(operationId);
       return of(void 0);
     }
 
-    // Call real backend API
-    return this.http.patch<void>(`${this.jobsApiUrl}/${jobId}/status`, { status }).pipe(
-      catchError(error => {
-        console.error('Update job status API failed:', error);
-        return this.errorHandler.handleError(error);
-      }),
+    // TODO: Replace with actual API call when backend is ready
+    return this.mockService.updateJobStatus(jobId, status).pipe(
       finalize(() => this.loadingService.stopLoading(operationId))
     );
+    // return this.http.patch<void>(`${this.apiUrl}/jobs/${jobId}/status`, { status })
+    //   .pipe(
+    //     catchError(this.errorHandler.handleError.bind(this.errorHandler)),
+    //     finalize(() => this.loadingService.stopLoading(operationId))
+    //   );
   }
 
-  deleteMaintenanceJob(jobId: number): Observable<void> {
+  deleteMaintenanceJob(jobId: string): Observable<void> {
     // If offline, queue the operation for sync
     if (this.offlineStorage.isOffline()) {
-      this.syncService.queueJobDeletion(jobId.toString());
+      this.syncService.queueJobDeletion(jobId);
       return of(void 0);
     }
 
@@ -234,29 +220,31 @@ export class MaintenanceService {
       .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
-  // Bulk operations - Connected to backend API
-  bulkUpdateJobStatus(jobIds: number[], status: MaintenanceStatus): Observable<void> {
-    // Call real backend API
-    return this.http.post<void>(`${this.jobsApiUrl}/bulk-update-status`, { jobIds, status }).pipe(
-      catchError(error => {
-        console.error('Bulk update status API failed:', error);
-        return this.errorHandler.handleError(error);
-      })
-    );
+  // Bulk operations - Using mock data for development
+  bulkUpdateJobStatus(jobIds: string[], status: MaintenanceStatus): Observable<void> {
+    // TODO: Replace with actual API call when backend is ready
+    // For now, update each job individually using mock service
+    return new Observable(observer => {
+      Promise.all(jobIds.map(id => this.mockService.updateJobStatus(id, status).toPromise()))
+        .then(() => {
+          observer.next();
+          observer.complete();
+        })
+        .catch(error => observer.error(error));
+    });
+    // return this.http.patch<void>(`${this.apiUrl}/jobs/bulk/status`, { jobIds, status })
+    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
-  bulkAssignJobs(jobIds: number[], engineerId: number): Observable<void> {
-    // Call real backend API
-    return this.http.post<void>(`${this.jobsApiUrl}/bulk-assign`, { jobIds, engineerId }).pipe(
-      catchError(error => {
-        console.error('Bulk assign API failed:', error);
-        return this.errorHandler.handleError(error);
-      })
-    );
+  bulkAssignJobs(jobIds: string[], assignedTo: string[]): Observable<void> {
+    // TODO: Replace with actual API call when backend is ready
+    return of(void 0);  // Return void until backend is ready
+    // return this.http.patch<void>(`${this.apiUrl}/jobs/bulk/assign`, { jobIds, assignedTo })
+    //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
   // Machine History
-  getMachineMaintenanceHistory(machineId: number): Observable<MachineMaintenanceHistory> {
+  getMachineMaintenanceHistory(machineId: string): Observable<MachineMaintenanceHistory> {
     // TODO: Replace with actual API call when backend is ready
     return of({} as MachineMaintenanceHistory);  // Return empty object until backend is ready
     // return this.http.get<MachineMaintenanceHistory>(`${this.apiUrl}/machines/${machineId}/history`)
@@ -335,7 +323,7 @@ export class MaintenanceService {
   }
 
   // File Upload
-  uploadMaintenanceFile(jobId: number, file: File): Observable<any> {
+  uploadMaintenanceFile(jobId: string, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -345,7 +333,7 @@ export class MaintenanceService {
     //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
-  deleteMaintenanceFile(jobId: number, fileId: string): Observable<void> {
+  deleteMaintenanceFile(jobId: string, fileId: string): Observable<void> {
     // TODO: Replace with actual API call when backend is ready
     return of(void 0);  // Return void until backend is ready
     // return this.http.delete<void>(`${this.apiUrl}/jobs/${jobId}/files/${fileId}`)
@@ -529,45 +517,5 @@ export class MaintenanceService {
     } catch {
       return null;
     }
-  }
-
-  /**
-   * Get user's region ID from local storage or auth service
-   */
-  private getUserRegionId(): number | null {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        return user.regionId || null;
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Transform date strings from API to Date objects and map backend fields to frontend
-   */
-  private transformJobDates(jobs: MaintenanceJob[]): MaintenanceJob[] {
-    return jobs.map(job => ({
-      ...job,
-      // Map projectName to project for backward compatibility with existing components
-      project: job.projectName || '',
-      // Ensure serialNumber is defined
-      serialNumber: job.serialNumber || '',
-      // Ensure assignedTo array is populated from assignments
-      assignedTo: job.assignments?.map(a => a.mechanicalEngineerName || `Engineer ${a.mechanicalEngineerId}`) || [],
-      // Transform dates
-      scheduledDate: new Date(job.scheduledDate),
-      completedDate: job.completedDate ? new Date(job.completedDate) : undefined,
-      createdAt: job.createdAt ? new Date(job.createdAt) : undefined,
-      updatedAt: job.updatedAt ? new Date(job.updatedAt) : undefined,
-      assignments: job.assignments?.map(a => ({
-        ...a,
-        assignedAt: new Date(a.assignedAt)
-      }))
-    }));
   }
 }

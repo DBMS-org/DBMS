@@ -6,17 +6,11 @@ namespace Application.DTOs.MaintenanceOperations
         public string TicketId { get; set; } = string.Empty;
         public int OperatorId { get; set; }
         public string OperatorName { get; set; } = string.Empty;
-        public string? OperatorEmail { get; set; }
-        public string? OperatorPhone { get; set; }
         public int MachineId { get; set; }
         public string MachineName { get; set; } = string.Empty;
         public string? MachineModel { get; set; }
         public string? SerialNumber { get; set; }
         public string? Location { get; set; }
-        public string? ProjectName { get; set; }
-        public int? ProjectId { get; set; }
-        public string? RegionName { get; set; }
-        public int? RegionId { get; set; }
         public string AffectedPart { get; set; } = string.Empty;
         public string ProblemCategory { get; set; } = string.Empty;
         public string CustomDescription { get; set; } = string.Empty;
@@ -31,8 +25,6 @@ namespace Application.DTOs.MaintenanceOperations
         public DateTime? ClosedAt { get; set; }
         public int? MechanicalEngineerId { get; set; }
         public string? MechanicalEngineerName { get; set; }
-        public string? MechanicalEngineerEmail { get; set; }
-        public string? MechanicalEngineerPhone { get; set; }
         public string? ResolutionNotes { get; set; }
         public string? EstimatedResponseTime { get; set; }
     }

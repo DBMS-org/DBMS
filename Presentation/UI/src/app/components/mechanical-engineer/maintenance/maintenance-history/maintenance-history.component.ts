@@ -83,8 +83,8 @@ export class MaintenanceHistoryComponent implements OnInit {
     if (search) {
       records = records.filter(r =>
         r.machineName.toLowerCase().includes(search) ||
-        (r.serialNumber && r.serialNumber.toLowerCase().includes(search)) ||
-        (r.project && r.project.toLowerCase().includes(search)) ||
+        r.serialNumber.toLowerCase().includes(search) ||
+        r.project.toLowerCase().includes(search) ||
         r.reason.toLowerCase().includes(search) ||
         (r.observations && r.observations.toLowerCase().includes(search))
       );

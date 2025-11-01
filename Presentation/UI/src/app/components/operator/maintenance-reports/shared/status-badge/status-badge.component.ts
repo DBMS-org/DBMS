@@ -7,7 +7,6 @@ import { ReportStatus, REPORT_STATUS_OPTIONS } from '../../models/maintenance-re
 
 @Component({
   selector: 'app-status-badge',
-  standalone: true,
   imports: [
     CommonModule,
     MatChipsModule,

@@ -22,15 +22,14 @@ import { AuthService } from '../../../core/services/auth.service';
 import { MaintenanceReportService } from '../maintenance-reports/services/maintenance-report.service';
 import { OperatorMachine, ProblemReport } from '../maintenance-reports/models/maintenance-report.models';
 import { MachineReportDialogComponent } from './machine-report-dialog/machine-report-dialog.component';
-import { ReportDetailsDialogComponent } from '../maintenance-reports/report-details-dialog/report-details-dialog.component';
 import { MaintenanceService } from '../../mechanical-engineer/maintenance/services/maintenance.service';
 import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maintenance.models';
-import {
-  MachineUsageLog,
-  CreateUsageLogRequest,
-  UsageLogFormData,
+import { 
+  MachineUsageLog, 
+  CreateUsageLogRequest, 
+  UsageLogFormData, 
   UsageLogUtils,
-  UsageLogValidation
+  UsageLogValidation 
 } from './models/usage-log.models';
 
 @Component({
@@ -361,11 +360,9 @@ export class MyMachinesComponent implements OnInit {
   }
 
   viewReportDetails(report: ProblemReport) {
-    this.dialog.open(ReportDetailsDialogComponent, {
-      width: '800px',
-      maxWidth: '90vw',
-      data: { report }
-    });
+    // Open report details dialog or navigate to details page
+    // This would be implemented in a real application
+    console.log('View report details:', report);
   }
   
   getMachineStatusClass(status: string): string {

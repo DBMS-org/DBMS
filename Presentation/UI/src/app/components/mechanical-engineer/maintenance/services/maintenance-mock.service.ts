@@ -339,13 +339,11 @@ export class MaintenanceMockService {
         }
         
         const job: MaintenanceJob = {
-          id: jobs.length + 1,
-          machineId: typeof machine.id === 'string' ? parseInt(machine.id.replace('M', ''), 10) || jobs.length + 1 : machine.id,
+          id: `${jobs.length + 1}`,
+          machineId: machine.id,
           machineName: machine.name,
-          machineModel: this.extractMachineModel(machine.name),
           serialNumber: machine.serial,
           project: project,
-          projectName: project,
           scheduledDate: jobDate,
           type: type,
           status: status,
@@ -513,9 +511,9 @@ export class MaintenanceMockService {
       
       if (filters.searchTerm) {
         const searchTerm = filters.searchTerm.toLowerCase();
-        filteredJobs = filteredJobs.filter(job =>
+        filteredJobs = filteredJobs.filter(job => 
           job.machineName.toLowerCase().includes(searchTerm) ||
-          (job.project && job.project.toLowerCase().includes(searchTerm)) ||
+          job.project.toLowerCase().includes(searchTerm) ||
           job.reason.toLowerCase().includes(searchTerm)
         );
       }
@@ -525,8 +523,7 @@ export class MaintenanceMockService {
   }
 
   getMaintenanceJob(jobId: string): Observable<MaintenanceJob> {
-    const numericId = parseInt(jobId, 10);
-    const job = this.mockJobs.find(j => j.id === numericId);
+    const job = this.mockJobs.find(j => j.id === jobId);
     if (job) {
       return of(job);
     }
@@ -535,13 +532,11 @@ export class MaintenanceMockService {
 
   createMaintenanceJob(job: Partial<MaintenanceJob>): Observable<MaintenanceJob> {
     const newJob: MaintenanceJob = {
-      id: this.mockJobs.length + 1,
-      machineId: job.machineId || 0,
+      id: (this.mockJobs.length + 1).toString(),
+      machineId: job.machineId || '',
       machineName: job.machineName || '',
-      machineModel: job.machineModel || '',
       serialNumber: job.serialNumber || '',
-      project: job.project || job.projectName || '',
-      projectName: job.projectName || '',
+      project: job.project || '',
       scheduledDate: job.scheduledDate || new Date(),
       type: job.type || MaintenanceType.PREVENTIVE,
       status: job.status || MaintenanceStatus.SCHEDULED,
@@ -554,14 +549,13 @@ export class MaintenanceMockService {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-
+    
     this.mockJobs.push(newJob);
     return of(newJob);
   }
 
   updateMaintenanceJob(jobId: string, job: Partial<MaintenanceJob>): Observable<MaintenanceJob> {
-    const numericId = parseInt(jobId, 10);
-    const index = this.mockJobs.findIndex(j => j.id === numericId);
+    const index = this.mockJobs.findIndex(j => j.id === jobId);
     if (index !== -1) {
       this.mockJobs[index] = { ...this.mockJobs[index], ...job, updatedAt: new Date() };
       return of(this.mockJobs[index]);
@@ -570,8 +564,7 @@ export class MaintenanceMockService {
   }
 
   updateJobStatus(jobId: string, status: MaintenanceStatus): Observable<void> {
-    const numericId = parseInt(jobId, 10);
-    const job = this.mockJobs.find(j => j.id === numericId);
+    const job = this.mockJobs.find(j => j.id === jobId);
     if (job) {
       job.status = status;
       job.updatedAt = new Date();
@@ -581,8 +574,7 @@ export class MaintenanceMockService {
   }
 
   deleteMaintenanceJob(jobId: string): Observable<void> {
-    const numericId = parseInt(jobId, 10);
-    const index = this.mockJobs.findIndex(j => j.id === numericId);
+    const index = this.mockJobs.findIndex(j => j.id === jobId);
     if (index !== -1) {
       this.mockJobs.splice(index, 1);
       return of(void 0);
@@ -600,9 +592,9 @@ export class MaintenanceMockService {
 
   // Search and Filtering
   searchMaintenanceJobs(searchTerm: string): Observable<MaintenanceJob[]> {
-    const filteredJobs = this.mockJobs.filter(job =>
+    const filteredJobs = this.mockJobs.filter(job => 
       job.machineName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (job.project && job.project.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      job.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.reason.toLowerCase().includes(searchTerm.toLowerCase())
     );
     return of(filteredJobs);
@@ -890,19 +882,5 @@ export class MaintenanceMockService {
     // In a real implementation, this would save to the backend
     // For now, just return the updated preferences
     return of(preferences);
-  }
-
-  /**
-   * Extract machine model from machine name
-   * Example: "Excavator CAT 320" -> "CAT 320"
-   */
-  private extractMachineModel(machineName: string): string {
-    // Remove the machine type prefix and extract the model
-    const parts = machineName.split(' ');
-    if (parts.length > 1) {
-      // Return everything except the first word (machine type)
-      return parts.slice(1).join(' ');
-    }
-    return machineName;
   }
 }

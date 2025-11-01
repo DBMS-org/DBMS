@@ -122,7 +122,7 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
                 <div class="virtual-cell column-serialNumber">{{ job.serialNumber }}</div>
 
                 <!-- Project -->
-                <div class="virtual-cell column-project">{{ job.project || job.projectName || 'N/A' }}</div>
+                <div class="virtual-cell column-project">{{ job.project }}</div>
 
                 <!-- Scheduled Date -->
                 <div class="virtual-cell column-scheduledDate">
@@ -150,11 +150,11 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
                 <!-- Assigned To -->
                 <div class="virtual-cell column-assignedTo">
                   <div class="assigned-to">
-                    @if (job.assignedTo && job.assignedTo.length === 1) {
+                    @if (job.assignedTo.length === 1) {
                       <span>{{ job.assignedTo[0] }}</span>
-                    } @else if (job.assignedTo && job.assignedTo.length > 1) {
+                    } @else if (job.assignedTo.length > 1) {
                       <span>{{ job.assignedTo[0] }}</span>
-                      <mat-chip class="count-chip" [matTooltip]="getAssignedTooltip(job.assignedTo!)">
+                      <mat-chip class="count-chip" [matTooltip]="getAssignedTooltip(job.assignedTo)">
                         +{{ job.assignedTo.length - 1 }}
                       </mat-chip>
                     } @else {
@@ -1030,7 +1030,7 @@ export class JobListComponent implements AfterViewInit, OnDestroy {
     console.log('Virtual scroll index changed:', index);
   }
 
-  trackByJobId(index: number, job: MaintenanceJob): number {
+  trackByJobId(index: number, job: MaintenanceJob): string {
     return job.id;
   }
 

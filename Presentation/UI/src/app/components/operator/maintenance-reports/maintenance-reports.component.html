@@ -5,8 +5,14 @@
       <mat-icon class="header-icon">build_circle</mat-icon>
       <div>
         <h1>Machine Issues</h1>
-        <p class="subtitle">View and track your machine maintenance requests</p>
+        <p class="subtitle">Report machine issues to request maintenance from Machine Manager</p>
       </div>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="toggleReportForm()" class="action-btn">
+        <mat-icon>add</mat-icon>
+        Report Issue
+      </button>
     </div>
   </header>
 
@@ -79,7 +85,11 @@
             <mat-icon>build_circle</mat-icon>
             <h3>No Issue Requests Found</h3>
             <p *ngIf="searchValue">No requests match your search criteria.</p>
-            <p *ngIf="!searchValue">No machine issues have been reported yet.</p>
+            <p *ngIf="!searchValue">You haven't reported any machine issues yet.</p>
+            <button mat-raised-button color="primary" (click)="toggleReportForm()">
+              <mat-icon>add</mat-icon>
+              Report Your First Issue
+            </button>
           </div>
         } @else {
           <div class="reports-list">
@@ -120,4 +130,89 @@
       </mat-card-content>
     </mat-card>
   </div>
+
+  <!-- Submit Report Dialog -->
+  @if (showReportForm) {
+    <div class="dialog-backdrop" (click)="toggleReportForm()"></div>
+    <div class="dialog-container">
+      <mat-card class="report-form-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>build_circle</mat-icon>
+            Report Machine Issue
+          </mat-card-title>
+          <button mat-icon-button (click)="toggleReportForm()" class="close-btn">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-card-header>
+
+        <mat-card-content>
+          <p class="form-instruction">
+            <mat-icon>info</mat-icon>
+            Report any machine issues here. The Machine Manager will review and schedule maintenance.
+          </p>
+          <form #reportFormRef="ngForm" (ngSubmit)="submitReport()">
+            <!-- Problem Description -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Issue Description</mat-label>
+              <textarea
+                matInput
+                [(ngModel)]="newReport.customDescription"
+                name="description"
+                required
+                rows="3"
+                placeholder="Describe the machine issue in detail..."></textarea>
+              <mat-error>Description is required</mat-error>
+              <mat-hint>Be specific about what's wrong with the machine</mat-hint>
+            </mat-form-field>
+
+            <!-- Affected Part & Problem Category -->
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Affected Part</mat-label>
+                <mat-select [(ngModel)]="newReport.affectedPart" name="affectedPart" required>
+                  @for (part of affectedPartOptions(); track part.value) {
+                    <mat-option [value]="part.value">{{ part.label }}</mat-option>
+                  }
+                </mat-select>
+                <mat-error>Affected part is required</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Problem Category</mat-label>
+                <mat-select [(ngModel)]="newReport.problemCategory" name="problemCategory" required>
+                  @for (category of problemCategoryOptions(); track category.value) {
+                    <mat-option [value]="category.value">{{ category.label }}</mat-option>
+                  }
+                </mat-select>
+                <mat-error>Problem category is required</mat-error>
+              </mat-form-field>
+            </div>
+
+            <!-- Severity Level -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Severity Level</mat-label>
+              <mat-select [(ngModel)]="newReport.severity" name="severity" required>
+                @for (severity of severityOptions(); track severity.value) {
+                  <mat-option [value]="severity.value">{{ severity.label }}</mat-option>
+                }
+              </mat-select>
+              <mat-error>Severity level is required</mat-error>
+            </mat-form-field>
+          </form>
+        </mat-card-content>
+
+        <mat-card-actions align="end">
+          <button mat-button (click)="toggleReportForm()" type="button">
+            <mat-icon>close</mat-icon>
+            Cancel
+          </button>
+          <button mat-raised-button color="primary" (click)="submitReport()" [disabled]="!reportFormRef.form.valid">
+            <mat-icon>send</mat-icon>
+            Send to Machine Manager
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  }
 </div>

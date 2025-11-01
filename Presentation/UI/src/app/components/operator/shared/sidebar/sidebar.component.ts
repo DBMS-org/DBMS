@@ -25,7 +25,6 @@ export class OperatorSidebarComponent {
     { icon: 'dashboard', label: 'Dashboard', route: '/operator/dashboard' },
     { icon: 'assignment', label: 'My Assigned Project', route: '/operator/my-project' },
     { icon: 'precision_manufacturing', label: 'My Machine', route: '/operator/my-machines' },
-    { icon: 'build', label: 'Maintenance Reports', route: '/operator/maintenance-reports' },
     { icon: 'notifications', label: 'Notifications', route: '/operator/notifications' }
   ];
 }

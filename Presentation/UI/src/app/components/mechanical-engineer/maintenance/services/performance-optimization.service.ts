@@ -3,7 +3,7 @@ import { debounceTime, distinctUntilChanged, Subject, Observable } from 'rxjs';
 import { MaintenanceJob, JobFilters } from '../models/maintenance.models';
 
 export interface SearchIndex {
-  id: number | string;
+  id: string;
   searchableText: string;
   originalItem: MaintenanceJob;
 }
@@ -174,14 +174,14 @@ export class PerformanceOptimizationService {
     // Project filter
     if (filters.project && filters.project.length > 0) {
       const projectSet = new Set(filters.project);
-      filteredItems = filteredItems.filter(job => projectSet.has(job.project || ''));
+      filteredItems = filteredItems.filter(job => projectSet.has(job.project));
     }
 
     // Assigned to filter
     if (filters.assignedTo && filters.assignedTo.length > 0) {
       const assignedToSet = new Set(filters.assignedTo);
-      filteredItems = filteredItems.filter(job =>
-        job.assignedTo?.some(tech => assignedToSet.has(tech)) || false
+      filteredItems = filteredItems.filter(job => 
+        job.assignedTo.some(tech => assignedToSet.has(tech))
       );
     }
 
@@ -253,12 +253,12 @@ export class PerformanceOptimizationService {
   private createSearchableText(item: MaintenanceJob): string {
     return [
       item.machineName,
-      item.serialNumber || '',
-      item.project || '',
+      item.serialNumber,
+      item.project,
       item.reason,
       item.type,
       item.status,
-      ...(item.assignedTo || [])
+      ...item.assignedTo
     ].join(' ').toLowerCase();
   }
 
