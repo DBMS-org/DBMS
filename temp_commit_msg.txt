@@ -1,1 +1,8 @@
-operater part finished
+Merge remote-tracking branch 'origin/master' - resolve my-machines component conflict
+
+Resolved conflict in my-machines.component.html by keeping remote version
+that displays only 1 recent report instead of all reports.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
