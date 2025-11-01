@@ -1,1 +1,1 @@
-style: add responsive styles for tabbed reports layout
+refactor: redesign reports with tab navigation and improved UX
