@@ -27,28 +27,49 @@ export enum Priority {
 
 // Core Interfaces
 export interface MaintenanceJob {
-  id: string;
-  machineId: string;
+  id: number;
+  machineId: number;
   machineName: string;
-  serialNumber: string;
-  project: string;
+  machineModel: string;
+  serialNumber?: string;
+  projectId?: number;
+  projectName?: string;
+  project?: string; // Kept for backward compatibility with components
+  maintenanceReportId?: number;
+  reportTicketId?: string;
   scheduledDate: Date;
+  completedDate?: Date;
   type: MaintenanceType;
   status: MaintenanceStatus;
-  assignedTo: string[];
+  assignedTo?: string[];
+  assignments?: MaintenanceJobAssignment[];
   estimatedHours: number;
   actualHours?: number;
   reason: string;
   observations?: string;
   partsReplaced?: string[];
+
+  // From linked report for context
+  symptoms?: string[];
+  errorCodes?: string;
+  severity?: string;
+
   attachments?: FileAttachment[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface MaintenanceJobAssignment {
+  id: number;
+  maintenanceJobId: number;
+  mechanicalEngineerId: number;
+  mechanicalEngineerName?: string;
+  assignedAt: Date;
 }
 
 export interface MaintenanceAlert {
   id: string;
-  machineId: string;
+  machineId: number;
   machineName: string;
   alertType: AlertType;
   message: string;

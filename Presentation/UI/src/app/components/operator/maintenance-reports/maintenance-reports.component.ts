@@ -14,8 +14,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { MaintenanceReportService } from './services/maintenance-report.service';
+import { ReportDetailsDialogComponent } from './report-details-dialog/report-details-dialog.component';
 import {
   ProblemReport,
   OperatorMachine,
@@ -39,7 +41,8 @@ import { AuthService } from '../../../core/services/auth.service';
     MatProgressSpinnerModule,
     MatChipsModule,
     MatTooltipModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatDialogModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './maintenance-reports.component.html',
@@ -63,6 +66,7 @@ export class MaintenanceReportsComponent implements OnInit {
   private maintenanceReportService = inject(MaintenanceReportService);
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   // Status tracking computed properties
   pendingCount = computed(() =>
@@ -154,7 +158,17 @@ export class MaintenanceReportsComponent implements OnInit {
       const currentUser = this.authService.getCurrentUser();
       if (currentUser?.id) {
         this.maintenanceReportService.getOperatorReports(currentUser.id).subscribe({
-          next: (reports) => this.reports.set(reports),
+          next: (reports) => {
+            console.log('=== LOADED REPORTS FROM API ===');
+            console.log('Total reports:', reports.length);
+            if (reports.length > 0) {
+              console.log('First report sample:', reports[0]);
+              console.log('First report - Project Name:', reports[0].projectName);
+              console.log('First report - Region Name:', reports[0].regionName);
+            }
+            console.log('==============================');
+            this.reports.set(reports);
+          },
           error: (error) => console.error('Failed to load reports:', error)
         });
       }
@@ -288,10 +302,27 @@ export class MaintenanceReportsComponent implements OnInit {
   }
 
   viewReportDetails(report: ProblemReport) {
-    // This could open a dialog or navigate to a details page
-    console.log('View issue request details:', report);
-    this.snackBar.open(`Viewing request: ${report.ticketId}`, 'Close', {
-      duration: 2000
+    console.log('=== MAINTENANCE REPORT DETAILS ===');
+    console.log('Full Report Object:', report);
+    console.log('Machine Name:', report.machineName);
+    console.log('Machine Model:', report.machineModel);
+    console.log('Serial Number:', report.serialNumber);
+    console.log('Location:', report.location);
+    console.log('Project Name:', report.projectName);
+    console.log('Project ID:', report.projectId);
+    console.log('Region Name:', report.regionName);
+    console.log('Region ID:', report.regionId);
+    console.log('Operator Name:', report.operatorName);
+    console.log('Operator Email:', report.operatorEmail);
+    console.log('Operator Phone:', report.operatorPhone);
+    console.log('==================================');
+
+    this.dialog.open(ReportDetailsDialogComponent, {
+      data: { report },
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      autoFocus: false
     });
   }
 }
