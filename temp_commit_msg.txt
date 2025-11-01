@@ -1,1 +1,1 @@
-refactor: redesign reports with tab navigation and improved UX
+error fix: update PrimeNG imports to use InputTextareaModule
