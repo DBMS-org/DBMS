@@ -133,6 +133,12 @@ namespace Infrastructure.Repositories.MaintenanceOperations
             try
             {
                 return await _context.MaintenanceReports
+                    .Include(r => r.Machine)
+                        .ThenInclude(m => m.Project)
+                    .Include(r => r.Machine)
+                        .ThenInclude(m => m.Region)
+                    .Include(r => r.Operator)
+                    .Include(r => r.MechanicalEngineer)
                     .Where(r => r.OperatorId == operatorId && r.IsActive)
                     .OrderByDescending(r => r.ReportedAt)
                     .ToListAsync();

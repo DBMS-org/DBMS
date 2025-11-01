@@ -441,12 +441,12 @@ export class JobFiltersComponent implements OnInit {
     this.availableMachineTypes.set(machineTypes.filter(type => type));
 
     // Extract unique projects
-    const projects = [...new Set(jobsList.map(job => job.project))];
-    this.availableProjects.set(projects.filter(project => project));
+    const projects = [...new Set(jobsList.map(job => job.project || job.projectName))];
+    this.availableProjects.set(projects.filter(project => project) as string[]);
 
     // Extract unique technicians
-    const technicians = [...new Set(jobsList.flatMap(job => job.assignedTo))];
-    this.availableTechnicians.set(technicians.filter(tech => tech));
+    const technicians = [...new Set(jobsList.flatMap(job => job.assignedTo || []))];
+    this.availableTechnicians.set(technicians.filter(tech => tech) as string[]);
   }
 
   private extractMachineType(machineName: string): string {

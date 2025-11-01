@@ -56,6 +56,38 @@ import { StatusBadgeComponent } from '../shared/status-badge/status-badge.compon
 
         <mat-divider></mat-divider>
 
+        <!-- Operator Information -->
+        <section class="detail-section">
+          <div class="section-header">
+            <mat-icon>person</mat-icon>
+            <h3>Reported By</h3>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Operator Name</span>
+              <span class="info-value">{{ report.operatorName }}</span>
+            </div>
+            @if (report.operatorEmail) {
+              <div class="info-item">
+                <span class="info-label">Email</span>
+                <span class="info-value">
+                  <a [href]="'mailto:' + report.operatorEmail">{{ report.operatorEmail }}</a>
+                </span>
+              </div>
+            }
+            @if (report.operatorPhone) {
+              <div class="info-item">
+                <span class="info-label">Phone</span>
+                <span class="info-value">
+                  <a [href]="'tel:' + report.operatorPhone">{{ report.operatorPhone }}</a>
+                </span>
+              </div>
+            }
+          </div>
+        </section>
+
+        <mat-divider></mat-divider>
+
         <!-- Machine Information -->
         <section class="detail-section">
           <div class="section-header">
@@ -65,19 +97,27 @@ import { StatusBadgeComponent } from '../shared/status-badge/status-badge.compon
           <div class="info-grid">
             <div class="info-item">
               <span class="info-label">Machine Name</span>
-              <span class="info-value">{{ report.machineName }}</span>
+              <span class="info-value">{{ report.machineName || 'N/A' }}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Model</span>
-              <span class="info-value">{{ report.machineModel }}</span>
+              <span class="info-value">{{ report.machineModel || 'N/A' }}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Serial Number</span>
-              <span class="info-value">{{ report.serialNumber }}</span>
+              <span class="info-value">{{ report.serialNumber || 'N/A' }}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Location</span>
-              <span class="info-value">{{ report.location }}</span>
+              <span class="info-value">{{ report.location || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Project</span>
+              <span class="info-value">{{ report.projectName || 'Not Assigned' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Region</span>
+              <span class="info-value">{{ report.regionName || 'Not Assigned' }}</span>
             </div>
           </div>
         </section>
@@ -384,6 +424,17 @@ import { StatusBadgeComponent } from '../shared/status-badge/status-badge.compon
       font-size: 1rem;
       color: #333;
       font-weight: 500;
+    }
+
+    .info-value a {
+      color: #667eea;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .info-value a:hover {
+      color: #764ba2;
+      text-decoration: underline;
     }
 
     .description-box,
