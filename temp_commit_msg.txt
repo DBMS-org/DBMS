@@ -1,1 +1,1 @@
-error fix: correct PrimeNG Message severity attribute from 'warn' to 'warning'
+feat: implement tabbed interface for mechanical engineer reports
