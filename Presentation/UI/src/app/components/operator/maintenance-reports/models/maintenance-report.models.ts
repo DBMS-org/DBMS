@@ -47,11 +47,17 @@ export interface ProblemReport {
   id: string;
   operatorId: string;
   operatorName: string;
+  operatorEmail?: string;
+  operatorPhone?: string;
   machineId: string;
   machineName: string;
   machineModel: string;
   serialNumber: string;
   location: string;
+  projectName?: string;
+  projectId?: string;
+  regionName?: string;
+  regionId?: string;
   affectedPart: MachinePart;
   problemCategory: ProblemCategory;
   customDescription: string;
@@ -68,6 +74,8 @@ export interface ProblemReport {
   closedAt?: Date;
   mechanicalEngineerId?: string;
   mechanicalEngineerName?: string;
+  mechanicalEngineerEmail?: string;
+  mechanicalEngineerPhone?: string;
   resolutionNotes?: string;
   estimatedResponseTime?: string;
 }
