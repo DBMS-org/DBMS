@@ -1,1 +1,1 @@
-feat: implement tabbed interface for mechanical engineer reports
+style: add responsive styles for tabbed reports layout
