@@ -130,6 +130,9 @@ export class JobListComponent implements AfterViewInit, OnDestroy {
   pageSizeOptions = [10, 25, 50, 100];
   availableStatuses = Object.values(MaintenanceStatus);
 
+  // Expose enum to template
+  MaintenanceStatus = MaintenanceStatus;
+
   // Selection
   selection = new SelectionModel<MaintenanceJob>(true, []);
 
@@ -226,6 +229,7 @@ export class JobListComponent implements AfterViewInit, OnDestroy {
   }
 
   getStatusDisplayName(status: MaintenanceStatus): string {
+    if (!status) return 'Unknown';
     const statusNames = {
       [MaintenanceStatus.SCHEDULED]: 'Scheduled',
       [MaintenanceStatus.IN_PROGRESS]: 'In Progress',
@@ -233,10 +237,11 @@ export class JobListComponent implements AfterViewInit, OnDestroy {
       [MaintenanceStatus.CANCELLED]: 'Cancelled',
       [MaintenanceStatus.OVERDUE]: 'Overdue'
     };
-    return statusNames[status];
+    return statusNames[status] || 'Unknown';
   }
 
   getStatusIcon(status: MaintenanceStatus): string {
+    if (!status) return 'help_outline';
     const statusIcons = {
       [MaintenanceStatus.SCHEDULED]: 'schedule',
       [MaintenanceStatus.IN_PROGRESS]: 'play_circle',
@@ -244,29 +249,36 @@ export class JobListComponent implements AfterViewInit, OnDestroy {
       [MaintenanceStatus.CANCELLED]: 'cancel',
       [MaintenanceStatus.OVERDUE]: 'warning'
     };
-    return statusIcons[status];
+    return statusIcons[status] || 'help_outline';
   }
 
   getStatusChipClass(status: MaintenanceStatus): string {
-    return `status-${status.toLowerCase().replace('_', '-')}`;
+    if (!status) return 'status-unknown';
+    // Convert PascalCase to kebab-case (e.g., InProgress -> in-progress)
+    return `status-${status.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`;
   }
 
   getStatusIconClass(status: MaintenanceStatus): string {
-    return `icon-${status.toLowerCase().replace('_', '-')}`;
+    if (!status) return 'icon-unknown';
+    // Convert PascalCase to kebab-case (e.g., InProgress -> in-progress)
+    return `icon-${status.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`;
   }
 
   getTypeDisplayName(type: MaintenanceType): string {
+    if (!type) return 'Unknown';
     const typeNames = {
       [MaintenanceType.PREVENTIVE]: 'Preventive',
       [MaintenanceType.CORRECTIVE]: 'Corrective',
       [MaintenanceType.PREDICTIVE]: 'Predictive',
       [MaintenanceType.EMERGENCY]: 'Emergency'
     };
-    return typeNames[type];
+    return typeNames[type] || 'Unknown';
   }
 
   getTypeChipClass(type: MaintenanceType): string {
-    return `type-${type.toLowerCase()}`;
+    if (!type) return 'type-unknown';
+    // Convert PascalCase to kebab-case (e.g., Preventive -> preventive)
+    return `type-${type.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`;
   }
 
   getAssignedTooltip(assignedTo: string[]): string {
