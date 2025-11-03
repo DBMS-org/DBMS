@@ -41,7 +41,7 @@
                 <mat-spinner diameter="40"></mat-spinner>
                 <p>Loading machine details...</p>
               </div>
-            } @else if (machineHistory()) {
+            } @else {
               <div class="machine-overview">
                 <!-- Machine Information Card -->
                 <mat-card class="info-card">
@@ -55,15 +55,15 @@
                     <div class="info-grid">
                       <div class="info-item">
                         <label>Machine Name:</label>
-                        <span>{{ machineHistory()?.machineName }}</span>
+                        <span>{{ machineHistory()?.machineName || selectedJob()?.machineName }}</span>
                       </div>
                       <div class="info-item">
                         <label>Model:</label>
-                        <span>{{ machineHistory()?.model }}</span>
+                        <span>{{ machineHistory()?.model || selectedJob()?.machineModel }}</span>
                       </div>
                       <div class="info-item">
                         <label>Serial Number:</label>
-                        <span>{{ machineHistory()?.serialNumber }}</span>
+                        <span>{{ machineHistory()?.serialNumber || selectedJob()?.serialNumber }}</span>
                       </div>
                       <div class="info-item">
                         <label>Current Status:</label>
@@ -112,11 +112,6 @@
                     </div>
                   </mat-card-content>
                 </mat-card>
-              </div>
-            } @else {
-              <div class="error-message">
-                <mat-icon>error</mat-icon>
-                <p>Unable to load machine details</p>
               </div>
             }
           </div>

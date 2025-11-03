@@ -91,7 +91,9 @@ export class JobDetailPanelComponent implements OnInit {
 
     this.maintenanceService.getMachineMaintenanceHistory(job.machineId).subscribe({
       next: (history) => {
-        this.machineHistory.set(history);
+        // Check if history has actual data (backend returns empty object when not ready)
+        const hasData = history && (history.machineName || history.model || history.serialNumber);
+        this.machineHistory.set(hasData ? history : null);
         this.isLoadingHistory.set(false);
       },
       error: (error) => {
@@ -171,11 +173,15 @@ export class JobDetailPanelComponent implements OnInit {
   }
 
   getStatusChipClass(status: MaintenanceStatus): string {
-    return `status-${status.toLowerCase().replace('_', '-')}`;
+    if (!status) return 'status-unknown';
+    // Convert PascalCase to kebab-case (e.g., InProgress -> in-progress)
+    return `status-${status.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`;
   }
 
   getStatusIconClass(status: MaintenanceStatus): string {
-    return `icon-${status.toLowerCase().replace('_', '-')}`;
+    if (!status) return 'icon-unknown';
+    // Convert PascalCase to kebab-case (e.g., InProgress -> in-progress)
+    return `icon-${status.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`;
   }
 
   // === TYPE DISPLAY UTILITIES ===
@@ -200,11 +206,15 @@ export class JobDetailPanelComponent implements OnInit {
   }
 
   getTypeChipClass(type: MaintenanceType): string {
-    return `type-${type.toLowerCase()}`;
+    if (!type) return 'type-unknown';
+    // Convert PascalCase to kebab-case (e.g., Preventive -> preventive)
+    return `type-${type.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`;
   }
 
   getTypeIconClass(type: MaintenanceType): string {
-    return `type-icon-${type.toLowerCase()}`;
+    if (!type) return 'type-icon-unknown';
+    // Convert PascalCase to kebab-case (e.g., Preventive -> preventive)
+    return `type-icon-${type.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}`;
   }
 
   // === FILE UTILITIES ===

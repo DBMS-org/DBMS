@@ -1,17 +1,17 @@
-// Enums and Types
+// Enums and Types - Must match backend enum values exactly
 export enum MaintenanceType {
-  PREVENTIVE = 'PREVENTIVE',
-  CORRECTIVE = 'CORRECTIVE',
-  PREDICTIVE = 'PREDICTIVE',
-  EMERGENCY = 'EMERGENCY'
+  PREVENTIVE = 'Preventive',
+  CORRECTIVE = 'Corrective',
+  PREDICTIVE = 'Predictive',
+  EMERGENCY = 'Emergency'
 }
 
 export enum MaintenanceStatus {
-  SCHEDULED = 'SCHEDULED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  OVERDUE = 'OVERDUE'
+  SCHEDULED = 'Scheduled',
+  IN_PROGRESS = 'InProgress',
+  COMPLETED = 'Completed',
+  CANCELLED = 'Cancelled',
+  OVERDUE = 'Overdue'
 }
 
 export enum AlertType {

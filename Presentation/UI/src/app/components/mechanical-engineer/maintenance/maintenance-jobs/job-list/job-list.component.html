@@ -77,7 +77,7 @@
           <div *cdkVirtualFor="let job of displayedJobs(); trackBy: trackByJobId"
                class="virtual-table-row"
                [class.selected]="selection.isSelected(job)"
-               [class.overdue]="job.status === 'OVERDUE'"
+               [class.overdue]="job.status === MaintenanceStatus.OVERDUE"
                (click)="onRowClick(job)">
 
             <!-- Selection -->
@@ -348,7 +348,7 @@
                 *matRowDef="let job; columns: displayedColumns;"
                 class="job-row"
                 [class.selected]="selection.isSelected(job)"
-                [class.overdue]="job.status === 'OVERDUE'"
+                [class.overdue]="job.status === MaintenanceStatus.OVERDUE"
                 (click)="onRowClick(job)">
             </tr>
           </table>
