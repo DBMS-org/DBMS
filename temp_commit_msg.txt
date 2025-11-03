@@ -1,1 +1,1 @@
-error fix: correct PrimeNG Message severity attribute from 'warn' to 'warning'
+update PrimeNG imports to use InputTextareaModule

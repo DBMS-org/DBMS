@@ -1,0 +1,115 @@
+// Maintenance Jobs Component - Clean & Professional
+.maintenance-jobs-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fafafa;
+  padding: 20px;
+  gap: 20px;
+  position: relative; // For absolute positioned detail panel
+}
+
+// Page Header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+.header-left {
+  flex: 1;
+}
+
+.page-title {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+// Header Right - Stats
+.header-right {
+  display: flex;
+  gap: 12px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+}
+
+.stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 24px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  min-width: 100px;
+
+  @media (max-width: 768px) {
+    flex: 1;
+  }
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1976d2;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Filters Section
+.filters-section {
+  // Spacing handled by gap in container
+}
+
+// Main Content
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .maintenance-jobs-container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .page-header {
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+}
