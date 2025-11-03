@@ -1,0 +1,413 @@
+// Job Filters Component - Clean & Professional
+.job-filters-container {
+  margin-bottom: 0;
+}
+
+// Expansion Panel
+.modern-expansion-panel {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+// Filter Header
+.filter-header {
+  padding: 16px 20px;
+  background: #fafafa;
+
+  &.mat-expanded {
+    background: #1976d2;
+
+    .filter-title,
+    .filter-description {
+      color: white;
+    }
+
+    .filter-icon {
+      color: white;
+    }
+
+    .active-filters-badge {
+      background: white;
+      color: #1976d2;
+    }
+  }
+}
+
+.filter-title {
+  display: flex;
+  align-items: center;
+}
+
+.title-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #1976d2;
+}
+
+.title-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.active-filters-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: #1976d2;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.filter-description {
+  margin-top: 4px;
+}
+
+.description-text {
+  font-size: 12px;
+  color: #666;
+}
+
+// Filter Content
+.filter-content {
+  padding: 20px;
+}
+
+.filters-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// Search Section
+.search-section {
+  // Spacing handled by form gap
+}
+
+.search-field {
+  width: 100%;
+
+  .label-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  .prefix-icon {
+    color: #1976d2;
+    font-size: 20px;
+  }
+
+  .clear-button {
+    mat-icon {
+      color: #666;
+    }
+
+    &:hover mat-icon {
+      color: #d32f2f;
+    }
+  }
+}
+
+// Filter Controls Grid
+.filter-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Filter Group
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.group-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #1976d2;
+}
+
+.group-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+// Date Range Fields
+.date-range-fields {
+  display: flex;
+  gap: 10px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+}
+
+.date-field {
+  flex: 1;
+}
+
+// Select Field
+.select-field {
+  width: 100%;
+}
+
+// Status and Option Content
+.status-option,
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  span {
+    font-size: 13px;
+  }
+}
+
+// Status Icons
+.icon-scheduled { color: #1976d2; }
+.icon-in-progress { color: #f57c00; }
+.icon-completed { color: #388e3c; }
+.icon-cancelled { color: #c2185b; }
+.icon-overdue { color: #d32f2f; }
+
+// Active Filters Section
+.active-filters-section {
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.active-filters-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #1976d2;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .filter-count {
+    font-size: 12px;
+    color: #666;
+  }
+}
+
+// Filter Chips Container
+.filter-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+
+  .chip-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .chip-label {
+    font-weight: 600;
+  }
+
+  .chip-value {
+    font-weight: 400;
+  }
+
+  button[matChipRemove] {
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// Chip Type Styles
+.search-chip {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.date-chip {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.status-chip {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.machine-chip {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.project-chip {
+  background: #fff9c4;
+  color: #f57f17;
+}
+
+.assignee-chip {
+  background: #fce4ec;
+  color: #c2185b;
+}
+
+// Filter Actions
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+.reset-button {
+  min-width: 140px;
+
+  &:not([disabled]):hover {
+    background-color: #f5f5f5;
+    border-color: #d32f2f;
+    color: #d32f2f;
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+  }
+}
+
+.apply-button {
+  min-width: 140px;
+  background: #1976d2;
+
+  &:hover {
+    background: #1565c0;
+  }
+}
+
+// Form Field Customization
+::ng-deep {
+  .job-filters-container {
+    .mat-mdc-form-field {
+      &.mat-focused {
+        .mat-mdc-notched-outline {
+          border-color: #1976d2;
+        }
+
+        .mat-mdc-floating-label {
+          color: #1976d2;
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .filter-content {
+    padding: 16px;
+  }
+
+  .filter-header {
+    padding: 14px 16px;
+  }
+
+  .filters-form {
+    gap: 20px;
+  }
+
+  .filter-controls-grid {
+    gap: 16px;
+  }
+
+  .active-filters-section {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-content {
+    padding: 14px;
+  }
+
+  .title-text {
+    font-size: 14px;
+  }
+
+  .filters-form {
+    gap: 16px;
+  }
+
+  .filter-chip {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed, OnDestroy } from '@angular
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import { ChangeDetectionStrategy } from '@angular/core';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
@@ -23,6 +24,7 @@ import { OfflineIndicatorComponent } from '../shared/offline-indicator/offline-i
     CommonModule,
     MatDialogModule,
     MatSnackBarModule,
+    MatIconModule,
     JobListComponent,
     JobFiltersComponent,
     JobDetailPanelComponent,
@@ -30,83 +32,8 @@ import { OfflineIndicatorComponent } from '../shared/offline-indicator/offline-i
     OfflineIndicatorComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="maintenance-jobs-container">
-      <!-- Page Header -->
-      <div class="page-header">
-        <h2>Maintenance Jobs</h2>
-        <p>Manage and track maintenance jobs for all machines</p>
-        
-        <!-- Global Loading Indicator -->
-        @if (isLoading()) {
-          <app-loading-spinner 
-            size="small" 
-            type="linear" 
-            message="Loading maintenance jobs...">
-          </app-loading-spinner>
-        }
-
-        <!-- Offline Status Indicator -->
-        <app-offline-indicator></app-offline-indicator>
-      </div>
-
-      <!-- Filters -->
-      <app-job-filters
-        [jobs]="allJobs()"
-        [initialFilters]="currentFilters()"
-        (filtersChanged)="onFiltersChanged($event)"
-        (searchChanged)="onSearchChanged($event)">
-      </app-job-filters>
-
-      <!-- Job Detail Panel Container -->
-      <!-- NOTE: Edit functionality removed for Mechanical Engineer role -->
-      <app-job-detail-panel
-        [selectedJob]="selectedJob()"
-        [isOpen]="isDetailPanelOpen()"
-        (panelClosed)="onDetailPanelClosed()"
-        (updateStatus)="onUpdateJobStatus($event)">
-        
-        <!-- Job List -->
-        <app-job-list
-          [jobs]="filteredJobs()"
-          (machineClicked)="onMachineClicked($event)"
-          (jobSelected)="onJobSelected($event)"
-          (jobStatusChanged)="onJobStatusChanged($event)"
-          (bulkStatusChanged)="onBulkStatusChanged($event)">
-        </app-job-list>
-      </app-job-detail-panel>
-    </div>
-  `,
-  styles: [`
-    .maintenance-jobs-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      padding: 16px;
-    }
-
-    .page-header {
-      margin-bottom: 24px;
-    }
-
-    .page-header h2 {
-      margin: 0 0 8px 0;
-      font-size: 28px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: -0.5px;
-    }
-
-    .page-header p {
-      margin: 0;
-      color: #6b7280;
-      font-size: 15px;
-      font-weight: 500;
-    }
-  `]
+  templateUrl: './maintenance-jobs.component.html',
+  styleUrls: ['./maintenance-jobs.component.scss']
 })
 export class MaintenanceJobsComponent implements OnInit, OnDestroy {
   private maintenanceService = inject(MaintenanceService);

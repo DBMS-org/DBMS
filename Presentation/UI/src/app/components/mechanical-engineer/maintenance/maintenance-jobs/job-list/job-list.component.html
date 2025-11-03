@@ -1,0 +1,450 @@
+<div class="job-list-container">
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <app-skeleton-loader type="table" [rows]="10" [columns]="8"></app-skeleton-loader>
+    </div>
+  } @else {
+    <!-- Performance Metrics (Development Only) -->
+    @if (showPerformanceMetrics()) {
+      <div class="performance-metrics">
+        <mat-chip class="metric-chip">
+          <mat-icon>timer</mat-icon>
+          Filter Time: {{ lastFilterTime() }}ms
+        </mat-chip>
+        <mat-chip class="metric-chip">
+          <mat-icon>list_alt</mat-icon>
+          Items: {{ totalJobs() }} → {{ displayedJobs().length }}
+        </mat-chip>
+        <mat-chip class="metric-chip">
+          <mat-icon>{{ useVirtualScrolling() ? 'check_circle' : 'cancel' }}</mat-icon>
+          Virtual Scroll: {{ useVirtualScrolling() ? 'ON' : 'OFF' }}
+        </mat-chip>
+      </div>
+    }
+
+    <!-- Bulk Actions Bar -->
+    @if (selection.hasValue()) {
+      <div class="bulk-actions-bar">
+        <div class="bulk-actions-content">
+          <mat-icon class="selection-icon">check_circle</mat-icon>
+          <span class="selected-count">
+            <strong>{{ selection.selected.length }}</strong> job{{ selection.selected.length !== 1 ? 's' : '' }} selected
+          </span>
+        </div>
+        <div class="bulk-actions">
+          <button mat-raised-button color="primary" [matMenuTriggerFor]="bulkStatusMenu">
+            <mat-icon>update</mat-icon>
+            Update Status
+          </button>
+          <button mat-stroked-button (click)="clearSelection()">
+            <mat-icon>clear</mat-icon>
+            Clear Selection
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Jobs Table Container -->
+    <div class="table-wrapper">
+      @if (useVirtualScrolling() && displayedJobs().length > virtualScrollThreshold()) {
+        <!-- Virtual Scrolling Table for Large Datasets -->
+        <cdk-virtual-scroll-viewport
+          itemSize="72"
+          class="virtual-scroll-viewport"
+          (scrolledIndexChange)="onVirtualScrollIndexChange($event)">
+
+          <!-- Virtual Table Header -->
+          <div class="virtual-table-header">
+            <div class="virtual-header-row">
+              <div class="virtual-header-cell column-select">
+                <mat-checkbox
+                  (change)="$event ? toggleAllRows() : null"
+                  [checked]="selection.hasValue() && isAllSelected()"
+                  [indeterminate]="selection.hasValue() && !isAllSelected()">
+                </mat-checkbox>
+              </div>
+              @for (column of displayedColumns.slice(1); track column) {
+                <div class="virtual-header-cell" [class]="'column-' + column">
+                  <span class="column-title">{{ getColumnDisplayName(column) }}</span>
+                  <mat-icon class="sort-icon">unfold_more</mat-icon>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Virtual Table Rows -->
+          <div *cdkVirtualFor="let job of displayedJobs(); trackBy: trackByJobId"
+               class="virtual-table-row"
+               [class.selected]="selection.isSelected(job)"
+               [class.overdue]="job.status === 'OVERDUE'"
+               (click)="onRowClick(job)">
+
+            <!-- Selection -->
+            <div class="virtual-cell column-select">
+              <mat-checkbox
+                (click)="$event.stopPropagation()"
+                (change)="$event ? selection.toggle(job) : null"
+                [checked]="selection.isSelected(job)">
+              </mat-checkbox>
+            </div>
+
+            <!-- Machine -->
+            <div class="virtual-cell column-machine">
+              <button mat-button class="machine-link" (click)="onMachineClick(job); $event.stopPropagation()">
+                <mat-icon class="machine-icon">precision_manufacturing</mat-icon>
+                <div class="machine-details">
+                  <div class="machine-name">{{ job.machineName }}</div>
+                  <div class="machine-id">ID: {{ job.machineId }}</div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Serial Number -->
+            <div class="virtual-cell column-serialNumber">
+              <span class="cell-text">{{ job.serialNumber }}</span>
+            </div>
+
+            <!-- Project -->
+            <div class="virtual-cell column-project">
+              <span class="cell-text">{{ job.project || job.projectName || 'N/A' }}</span>
+            </div>
+
+            <!-- Scheduled Date -->
+            <div class="virtual-cell column-scheduledDate">
+              <div class="date-display">
+                <mat-icon class="date-icon">event</mat-icon>
+                <div class="date-info">
+                  <div class="date">{{ formatDate(job.scheduledDate) }}</div>
+                  <div class="time">{{ formatTime(job.scheduledDate) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Type -->
+            <div class="virtual-cell column-type">
+              <mat-chip [class]="getTypeChipClass(job.type)" class="modern-chip">
+                {{ getTypeDisplayName(job.type) }}
+              </mat-chip>
+            </div>
+
+            <!-- Status -->
+            <div class="virtual-cell column-status">
+              <mat-chip [class]="getStatusChipClass(job.status)" class="modern-chip status-chip">
+                <mat-icon [class]="getStatusIconClass(job.status)">{{ getStatusIcon(job.status) }}</mat-icon>
+                {{ getStatusDisplayName(job.status) }}
+              </mat-chip>
+            </div>
+
+            <!-- Assigned To -->
+            <div class="virtual-cell column-assignedTo">
+              <div class="assigned-to">
+                @if (job.assignedTo && job.assignedTo.length === 1) {
+                  <mat-chip class="assignee-chip">
+                    <mat-icon>person</mat-icon>
+                    {{ job.assignedTo[0] }}
+                  </mat-chip>
+                } @else if (job.assignedTo && job.assignedTo.length > 1) {
+                  <mat-chip class="assignee-chip">
+                    <mat-icon>person</mat-icon>
+                    {{ job.assignedTo[0] }}
+                  </mat-chip>
+                  <mat-chip class="count-chip" [matTooltip]="getAssignedTooltip(job.assignedTo!)">
+                    +{{ job.assignedTo.length - 1 }}
+                  </mat-chip>
+                } @else {
+                  <span class="unassigned">
+                    <mat-icon>person_off</mat-icon>
+                    Unassigned
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="virtual-cell column-actions">
+              <button mat-icon-button
+                      [matMenuTriggerFor]="actionMenu"
+                      [matMenuTriggerData]="{job: job}"
+                      (click)="$event.stopPropagation()"
+                      class="action-button">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+            </div>
+          </div>
+        </cdk-virtual-scroll-viewport>
+      } @else {
+        <!-- Standard Material Table for Smaller Datasets -->
+        <div class="standard-table-container">
+          <table mat-table
+                 [dataSource]="paginatedJobs()"
+                 matSort
+                 (matSortChange)="onSortChange($event)"
+                 class="jobs-table">
+
+            <!-- Selection Column -->
+            <ng-container matColumnDef="select">
+              <th mat-header-cell *matHeaderCellDef class="select-header">
+                <mat-checkbox
+                  (change)="$event ? toggleAllRows() : null"
+                  [checked]="selection.hasValue() && isAllSelected()"
+                  [indeterminate]="selection.hasValue() && !isAllSelected()">
+                </mat-checkbox>
+              </th>
+              <td mat-cell *matCellDef="let job">
+                <mat-checkbox
+                  (click)="$event.stopPropagation()"
+                  (change)="$event ? selection.toggle(job) : null"
+                  [checked]="selection.isSelected(job)">
+                </mat-checkbox>
+              </td>
+            </ng-container>
+
+            <!-- Machine Column -->
+            <ng-container matColumnDef="machine">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="machineName">
+                <div class="header-content">
+                  <mat-icon>precision_manufacturing</mat-icon>
+                  Machine
+                </div>
+              </th>
+              <td mat-cell *matCellDef="let job">
+                <button mat-button class="machine-link" (click)="onMachineClick(job); $event.stopPropagation()">
+                  <mat-icon class="machine-icon">precision_manufacturing</mat-icon>
+                  <div class="machine-details">
+                    <div class="machine-name">{{ job.machineName }}</div>
+                    <div class="machine-id">ID: {{ job.machineId }}</div>
+                  </div>
+                </button>
+              </td>
+            </ng-container>
+
+            <!-- Serial Number Column -->
+            <ng-container matColumnDef="serialNumber">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="serialNumber">
+                <div class="header-content">
+                  <mat-icon>tag</mat-icon>
+                  Serial No.
+                </div>
+              </th>
+              <td mat-cell *matCellDef="let job">
+                <span class="cell-text">{{ job.serialNumber }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Project Column -->
+            <ng-container matColumnDef="project">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="project">
+                <div class="header-content">
+                  <mat-icon>folder</mat-icon>
+                  Project
+                </div>
+              </th>
+              <td mat-cell *matCellDef="let job">
+                <span class="cell-text">{{ job.project }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Scheduled Date Column -->
+            <ng-container matColumnDef="scheduledDate">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="scheduledDate">
+                <div class="header-content">
+                  <mat-icon>event</mat-icon>
+                  Scheduled Date
+                </div>
+              </th>
+              <td mat-cell *matCellDef="let job">
+                <div class="date-display">
+                  <mat-icon class="date-icon">event</mat-icon>
+                  <div class="date-info">
+                    <div class="date">{{ formatDate(job.scheduledDate) }}</div>
+                    <div class="time">{{ formatTime(job.scheduledDate) }}</div>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="type">
+                <div class="header-content">
+                  <mat-icon>category</mat-icon>
+                  Type
+                </div>
+              </th>
+              <td mat-cell *matCellDef="let job">
+                <mat-chip [class]="getTypeChipClass(job.type)" class="modern-chip">
+                  {{ getTypeDisplayName(job.type) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="status">
+                <div class="header-content">
+                  <mat-icon>analytics</mat-icon>
+                  Status
+                </div>
+              </th>
+              <td mat-cell *matCellDef="let job">
+                <mat-chip [class]="getStatusChipClass(job.status)" class="modern-chip status-chip">
+                  <mat-icon [class]="getStatusIconClass(job.status)">{{ getStatusIcon(job.status) }}</mat-icon>
+                  {{ getStatusDisplayName(job.status) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Assigned To Column -->
+            <ng-container matColumnDef="assignedTo">
+              <th mat-header-cell *matHeaderCellDef>
+                <div class="header-content">
+                  <mat-icon>people</mat-icon>
+                  Assigned To
+                </div>
+              </th>
+              <td mat-cell *matCellDef="let job">
+                <div class="assigned-to">
+                  @if (job.assignedTo.length === 1) {
+                    <mat-chip class="assignee-chip">
+                      <mat-icon>person</mat-icon>
+                      {{ job.assignedTo[0] }}
+                    </mat-chip>
+                  } @else if (job.assignedTo.length > 1) {
+                    <mat-chip class="assignee-chip">
+                      <mat-icon>person</mat-icon>
+                      {{ job.assignedTo[0] }}
+                    </mat-chip>
+                    <mat-chip class="count-chip" [matTooltip]="getAssignedTooltip(job.assignedTo)">
+                      +{{ job.assignedTo.length - 1 }}
+                    </mat-chip>
+                  } @else {
+                    <span class="unassigned">
+                      <mat-icon>person_off</mat-icon>
+                      Unassigned
+                    </span>
+                  }
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
+              <td mat-cell *matCellDef="let job">
+                <button mat-icon-button
+                        [matMenuTriggerFor]="actionMenu"
+                        [matMenuTriggerData]="{job: job}"
+                        (click)="$event.stopPropagation()"
+                        class="action-button">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <!-- Table Rows -->
+            <tr mat-header-row *matHeaderRowDef="displayedColumns" class="table-header-row"></tr>
+            <tr mat-row
+                *matRowDef="let job; columns: displayedColumns;"
+                class="job-row"
+                [class.selected]="selection.isSelected(job)"
+                [class.overdue]="job.status === 'OVERDUE'"
+                (click)="onRowClick(job)">
+            </tr>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Paginator -->
+    @if (!useVirtualScrolling() || displayedJobs().length <= virtualScrollThreshold()) {
+      <mat-paginator
+        [length]="totalJobs()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="pageSizeOptions"
+        [pageIndex]="currentPage()"
+        (page)="onPageChange($event)"
+        showFirstLastButtons
+        class="modern-paginator">
+      </mat-paginator>
+    }
+  }
+
+  <!-- Action Menu Template -->
+  <mat-menu #actionMenu="matMenu" class="action-menu-modern">
+    <ng-template matMenuContent let-job="job">
+      <div class="menu-header">
+        <mat-icon>settings</mat-icon>
+        <span class="menu-title">Job Actions</span>
+      </div>
+
+      <button mat-menu-item (click)="onViewJobDetails(job)" class="menu-item-primary">
+        <div class="menu-item-content">
+          <mat-icon class="menu-icon">description</mat-icon>
+          <div class="menu-text">
+            <span class="menu-label">View Details</span>
+            <span class="menu-description">View complete job information</span>
+          </div>
+        </div>
+      </button>
+
+      <button mat-menu-item (click)="onViewMachineOverview(job)" class="menu-item-primary">
+        <div class="menu-item-content">
+          <mat-icon class="menu-icon">precision_manufacturing</mat-icon>
+          <div class="menu-text">
+            <span class="menu-label">Machine Overview</span>
+            <span class="menu-description">View machine details and history</span>
+          </div>
+        </div>
+      </button>
+
+      <mat-divider class="menu-divider"></mat-divider>
+
+      <button mat-menu-item
+              [matMenuTriggerFor]="statusSubmenu"
+              [matMenuTriggerData]="{job: job}"
+              class="menu-item-action">
+        <div class="menu-item-content">
+          <mat-icon class="menu-icon status-icon">update</mat-icon>
+          <div class="menu-text">
+            <span class="menu-label">Update Status</span>
+            <span class="menu-description">Change job status</span>
+          </div>
+          <mat-icon class="submenu-arrow">chevron_right</mat-icon>
+        </div>
+      </button>
+    </ng-template>
+  </mat-menu>
+
+  <!-- Status Submenu -->
+  <mat-menu #statusSubmenu="matMenu" class="status-submenu">
+    <ng-template matMenuContent let-job="job">
+      @for (status of availableStatuses; track status) {
+        <button mat-menu-item
+                (click)="onStatusChange(job, status)"
+                [disabled]="job.status === status"
+                class="status-menu-item">
+          <mat-icon [class]="getStatusIconClass(status)">{{ getStatusIcon(status) }}</mat-icon>
+          <span>{{ getStatusDisplayName(status) }}</span>
+          @if (job.status === status) {
+            <mat-icon class="current-status-icon">check</mat-icon>
+          }
+        </button>
+      }
+    </ng-template>
+  </mat-menu>
+
+  <!-- Bulk Status Menu -->
+  <mat-menu #bulkStatusMenu="matMenu" class="bulk-status-menu">
+    <div class="menu-header">
+      <mat-icon>update</mat-icon>
+      <span class="menu-title">Update Status</span>
+    </div>
+    @for (status of availableStatuses; track status) {
+      <button mat-menu-item (click)="onBulkStatusChange(status)" class="status-menu-item">
+        <mat-icon [class]="getStatusIconClass(status)">{{ getStatusIcon(status) }}</mat-icon>
+        <span>{{ getStatusDisplayName(status) }}</span>
+      </button>
+    }
+  </mat-menu>
+</div>

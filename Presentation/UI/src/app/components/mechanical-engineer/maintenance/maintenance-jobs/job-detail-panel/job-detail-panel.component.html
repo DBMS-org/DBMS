@@ -1,291 +1,284 @@
-<mat-sidenav-container class="detail-panel-container">
-  <mat-sidenav
-    #sidenav
-    position="end"
-    mode="over"
-    class="detail-panel"
-    [opened]="isOpen()"
-    (openedChange)="onOpenedChange($event)">
+<!-- Backdrop -->
+@if (isOpen()) {
+  <div class="detail-panel-backdrop" (click)="closePanel()"></div>
+}
 
-    @if (selectedJob()) {
-      <div class="panel-header">
-        <div class="header-top">
-          <div class="header-title">
-            <mat-icon class="header-icon">assignment</mat-icon>
-            <h2>Job Details</h2>
-          </div>
-          <button mat-icon-button (click)="closePanel()" class="close-btn" aria-label="Close panel">
-            <mat-icon>close</mat-icon>
-          </button>
+<!-- Side Panel -->
+<div class="detail-panel" [class.open]="isOpen()">
+  @if (selectedJob()) {
+    <div class="panel-header">
+      <div class="header-top">
+        <div class="header-title">
+          <mat-icon class="header-icon">assignment</mat-icon>
+          <h2>Job Details</h2>
         </div>
-
-        <div class="job-info-header">
-          <div class="machine-name">
-            <mat-icon>precision_manufacturing</mat-icon>
-            <h3>{{ selectedJob()?.machineName }}</h3>
-          </div>
-          <mat-chip [class]="getStatusChipClass(selectedJob()?.status!)">
-            <mat-icon [class]="getStatusIconClass(selectedJob()?.status!)">
-              {{ getStatusIcon(selectedJob()?.status!) }}
-            </mat-icon>
-            {{ getStatusDisplayName(selectedJob()?.status!) }}
-          </mat-chip>
-        </div>
+        <button mat-icon-button (click)="closePanel()" class="close-btn" aria-label="Close panel">
+          <mat-icon>close</mat-icon>
+        </button>
       </div>
 
-      <div class="panel-content">
-        <mat-tab-group>
-          <!-- Machine Overview Tab -->
-          <mat-tab label="Machine Overview">
-            <div class="tab-content">
-              @if (isLoadingHistory()) {
-                <div class="loading-container">
-                  <mat-spinner diameter="40"></mat-spinner>
-                  <p>Loading machine details...</p>
-                </div>
-              } @else if (machineHistory()) {
-                <div class="machine-overview">
-                  <!-- Machine Information Card -->
-                  <mat-card class="info-card">
-                    <mat-card-header>
-                      <mat-card-title>
-                        <mat-icon>precision_manufacturing</mat-icon>
-                        Machine Information
-                      </mat-card-title>
-                    </mat-card-header>
-                    <mat-card-content>
-                      <div class="info-grid">
-                        <div class="info-item">
-                          <label>Machine Name:</label>
-                          <span>{{ machineHistory()?.machineName }}</span>
-                        </div>
-                        <div class="info-item">
-                          <label>Model:</label>
-                          <span>{{ machineHistory()?.model }}</span>
-                        </div>
-                        <div class="info-item">
-                          <label>Serial Number:</label>
-                          <span>{{ machineHistory()?.serialNumber }}</span>
-                        </div>
-                        <div class="info-item">
-                          <label>Current Status:</label>
-                          <span class="status-text">{{ machineHistory()?.currentStatus }}</span>
-                        </div>
-                        <div class="info-item">
-                          <label>Last Service Date:</label>
-                          <span>{{ formatDate(machineHistory()?.lastServiceDate!) }}</span>
-                        </div>
-                        <div class="info-item">
-                          <label>Next Service Date:</label>
-                          <span [class]="getNextServiceClass()">
-                            {{ formatDate(machineHistory()?.nextServiceDate!) }}
-                          </span>
-                        </div>
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
+      <div class="job-info-header">
+        <div class="machine-name">
+          <mat-icon>precision_manufacturing</mat-icon>
+          <h3>{{ selectedJob()?.machineName }}</h3>
+        </div>
+        <mat-chip [class]="getStatusChipClass(selectedJob()?.status!)">
+          <mat-icon [class]="getStatusIconClass(selectedJob()?.status!)">
+            {{ getStatusIcon(selectedJob()?.status!) }}
+          </mat-icon>
+          {{ getStatusDisplayName(selectedJob()?.status!) }}
+        </mat-chip>
+      </div>
+    </div>
 
-                  <!-- Usage Metrics Card -->
-                  <mat-card class="info-card">
-                    <mat-card-header>
-                      <mat-card-title>
-                        <mat-icon>analytics</mat-icon>
-                        Usage Metrics
-                      </mat-card-title>
-                    </mat-card-header>
-                    <mat-card-content>
-                      <div class="metrics-grid">
-                        <div class="metric-item">
-                          <div class="metric-value">{{ machineHistory()?.engineHours || 0 }}</div>
-                          <div class="metric-label">Engine Hours</div>
-                        </div>
-                        <div class="metric-item">
-                          <div class="metric-value">{{ machineHistory()?.serviceHours || 0 }}</div>
-                          <div class="metric-label">Service Hours</div>
-                        </div>
-                        <div class="metric-item">
-                          <div class="metric-value">{{ machineHistory()?.idleHours || 0 }}</div>
-                          <div class="metric-label">Idle Hours</div>
-                        </div>
-                        <div class="metric-item">
-                          <div class="metric-value">{{ getHoursSinceLastService() }}</div>
-                          <div class="metric-label">Hours Since Last Service</div>
-                        </div>
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
-                </div>
-              } @else {
-                <div class="error-message">
-                  <mat-icon>error</mat-icon>
-                  <p>Unable to load machine details</p>
-                </div>
-              }
-            </div>
-          </mat-tab>
-
-          <!-- Job Information Tab -->
-          <mat-tab label="Job Details">
-            <div class="tab-content">
-              <div class="current-job-details">
-                <!-- Job Information Card -->
+    <div class="panel-content">
+      <mat-tab-group>
+        <!-- Machine Overview Tab -->
+        <mat-tab label="Machine Overview">
+          <div class="tab-content">
+            @if (isLoadingHistory()) {
+              <div class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Loading machine details...</p>
+              </div>
+            } @else if (machineHistory()) {
+              <div class="machine-overview">
+                <!-- Machine Information Card -->
                 <mat-card class="info-card">
                   <mat-card-header>
                     <mat-card-title>
-                      <mat-icon>assignment</mat-icon>
-                      Job Information
+                      <mat-icon>precision_manufacturing</mat-icon>
+                      Machine Information
                     </mat-card-title>
                   </mat-card-header>
                   <mat-card-content>
                     <div class="info-grid">
                       <div class="info-item">
-                        <label>Job ID:</label>
-                        <span>{{ selectedJob()?.id }}</span>
+                        <label>Machine Name:</label>
+                        <span>{{ machineHistory()?.machineName }}</span>
                       </div>
                       <div class="info-item">
-                        <label>Project:</label>
-                        <span>{{ selectedJob()?.project }}</span>
+                        <label>Model:</label>
+                        <span>{{ machineHistory()?.model }}</span>
                       </div>
                       <div class="info-item">
-                        <label>Scheduled Date/Time:</label>
-                        <span>{{ formatDateTime(selectedJob()?.scheduledDate!) }}</span>
+                        <label>Serial Number:</label>
+                        <span>{{ machineHistory()?.serialNumber }}</span>
                       </div>
                       <div class="info-item">
-                        <label>Type:</label>
-                        <mat-chip [class]="getTypeChipClass(selectedJob()?.type!)">
-                          {{ getTypeDisplayName(selectedJob()?.type!) }}
+                        <label>Current Status:</label>
+                        <span class="status-text">{{ machineHistory()?.currentStatus }}</span>
+                      </div>
+                      <div class="info-item">
+                        <label>Last Service Date:</label>
+                        <span>{{ formatDate(machineHistory()?.lastServiceDate!) }}</span>
+                      </div>
+                      <div class="info-item">
+                        <label>Next Service Date:</label>
+                        <span [class]="getNextServiceClass()">
+                          {{ formatDate(machineHistory()?.nextServiceDate!) }}
+                        </span>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Usage Metrics Card -->
+                <mat-card class="info-card">
+                  <mat-card-header>
+                    <mat-card-title>
+                      <mat-icon>analytics</mat-icon>
+                      Usage Metrics
+                    </mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="metrics-grid">
+                      <div class="metric-item">
+                        <div class="metric-value">{{ machineHistory()?.engineHours || 0 }}</div>
+                        <div class="metric-label">Engine Hours</div>
+                      </div>
+                      <div class="metric-item">
+                        <div class="metric-value">{{ machineHistory()?.serviceHours || 0 }}</div>
+                        <div class="metric-label">Service Hours</div>
+                      </div>
+                      <div class="metric-item">
+                        <div class="metric-value">{{ machineHistory()?.idleHours || 0 }}</div>
+                        <div class="metric-label">Idle Hours</div>
+                      </div>
+                      <div class="metric-item">
+                        <div class="metric-value">{{ getHoursSinceLastService() }}</div>
+                        <div class="metric-label">Hours Since Last Service</div>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            } @else {
+              <div class="error-message">
+                <mat-icon>error</mat-icon>
+                <p>Unable to load machine details</p>
+              </div>
+            }
+          </div>
+        </mat-tab>
+
+        <!-- Job Information Tab -->
+        <mat-tab label="Job Details">
+          <div class="tab-content">
+            <div class="current-job-details">
+              <!-- Job Information Card -->
+              <mat-card class="info-card">
+                <mat-card-header>
+                  <mat-card-title>
+                    <mat-icon>assignment</mat-icon>
+                    Job Information
+                  </mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="info-grid">
+                    <div class="info-item">
+                      <label>Job ID:</label>
+                      <span>{{ selectedJob()?.id }}</span>
+                    </div>
+                    <div class="info-item">
+                      <label>Project:</label>
+                      <span>{{ selectedJob()?.project }}</span>
+                    </div>
+                    <div class="info-item">
+                      <label>Scheduled Date/Time:</label>
+                      <span>{{ formatDateTime(selectedJob()?.scheduledDate!) }}</span>
+                    </div>
+                    <div class="info-item">
+                      <label>Type:</label>
+                      <mat-chip [class]="getTypeChipClass(selectedJob()?.type!)">
+                        {{ getTypeDisplayName(selectedJob()?.type!) }}
+                      </mat-chip>
+                    </div>
+                    <div class="info-item">
+                      <label>Reason:</label>
+                      <span>{{ selectedJob()?.reason }}</span>
+                    </div>
+                    <div class="info-item">
+                      <label>Estimated Hours:</label>
+                      <span>{{ selectedJob()?.estimatedHours }}h</span>
+                    </div>
+                    @if (selectedJob()?.actualHours) {
+                      <div class="info-item">
+                        <label>Actual Hours:</label>
+                        <span>{{ selectedJob()?.actualHours }}h</span>
+                      </div>
+                    }
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Assigned Technicians Card -->
+              <mat-card class="info-card">
+                <mat-card-header>
+                  <mat-card-title>
+                    <mat-icon>group</mat-icon>
+                    Assigned Technicians
+                  </mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  @if (selectedJob()?.assignedTo && selectedJob()?.assignedTo!.length > 0) {
+                    <div class="technicians-list">
+                      @for (technician of selectedJob()?.assignedTo; track technician) {
+                        <mat-chip class="technician-chip">
+                          <mat-icon>person</mat-icon>
+                          {{ technician }}
                         </mat-chip>
+                      }
+                    </div>
+                  } @else {
+                    <div class="empty-state-small">
+                      <mat-icon>person_off</mat-icon>
+                      <span>No technicians assigned</span>
+                    </div>
+                  }
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Job Progress Card -->
+              @if (selectedJob()?.observations || selectedJob()?.partsReplaced?.length) {
+                <mat-card class="info-card">
+                  <mat-card-header>
+                    <mat-card-title>
+                      <mat-icon>progress_activity</mat-icon>
+                      Job Progress
+                    </mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    @if (selectedJob()?.observations) {
+                      <div class="progress-item">
+                        <label>Observations:</label>
+                        <p class="observations">{{ selectedJob()?.observations }}</p>
                       </div>
-                      <div class="info-item">
-                        <label>Reason:</label>
-                        <span>{{ selectedJob()?.reason }}</span>
+                    }
+                    @if (selectedJob()?.partsReplaced && selectedJob()?.partsReplaced!.length > 0) {
+                      <div class="progress-item">
+                        <label>Parts Replaced:</label>
+                        <div class="parts-list">
+                          @for (part of selectedJob()?.partsReplaced; track part) {
+                            <mat-chip class="part-chip">{{ part }}</mat-chip>
+                          }
+                        </div>
                       </div>
-                      <div class="info-item">
-                        <label>Estimated Hours:</label>
-                        <span>{{ selectedJob()?.estimatedHours }}h</span>
-                      </div>
-                      @if (selectedJob()?.actualHours) {
-                        <div class="info-item">
-                          <label>Actual Hours:</label>
-                          <span>{{ selectedJob()?.actualHours }}h</span>
+                    }
+                  </mat-card-content>
+                </mat-card>
+              }
+
+              <!-- Attachments Card -->
+              @if (selectedJob()?.attachments && selectedJob()?.attachments!.length > 0) {
+                <mat-card class="info-card">
+                  <mat-card-header>
+                    <mat-card-title>
+                      <mat-icon>attach_file</mat-icon>
+                      Attachments
+                    </mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="attachments-list">
+                      @for (attachment of selectedJob()?.attachments; track attachment.id) {
+                        <div class="attachment-item">
+                          <mat-icon>{{ getFileIcon(attachment.fileType) }}</mat-icon>
+                          <div class="attachment-info">
+                            <span class="filename">{{ attachment.fileName }}</span>
+                            <span class="filesize">{{ formatFileSize(attachment.fileSize) }}</span>
+                          </div>
+                          <button mat-icon-button
+                                  [matTooltip]="'Download ' + attachment.fileName"
+                                  (click)="downloadAttachment(attachment)">
+                            <mat-icon>download</mat-icon>
+                          </button>
                         </div>
                       }
                     </div>
                   </mat-card-content>
                 </mat-card>
-
-                <!-- Assigned Technicians Card -->
-                <mat-card class="info-card">
-                  <mat-card-header>
-                    <mat-card-title>
-                      <mat-icon>group</mat-icon>
-                      Assigned Technicians
-                    </mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    @if (selectedJob()?.assignedTo && selectedJob()?.assignedTo!.length > 0) {
-                      <div class="technicians-list">
-                        @for (technician of selectedJob()?.assignedTo; track technician) {
-                          <mat-chip class="technician-chip">
-                            <mat-icon>person</mat-icon>
-                            {{ technician }}
-                          </mat-chip>
-                        }
-                      </div>
-                    } @else {
-                      <div class="empty-state-small">
-                        <mat-icon>person_off</mat-icon>
-                        <span>No technicians assigned</span>
-                      </div>
-                    }
-                  </mat-card-content>
-                </mat-card>
-
-                <!-- Job Progress Card -->
-                @if (selectedJob()?.observations || selectedJob()?.partsReplaced?.length) {
-                  <mat-card class="info-card">
-                    <mat-card-header>
-                      <mat-card-title>
-                        <mat-icon>progress_activity</mat-icon>
-                        Job Progress
-                      </mat-card-title>
-                    </mat-card-header>
-                    <mat-card-content>
-                      @if (selectedJob()?.observations) {
-                        <div class="progress-item">
-                          <label>Observations:</label>
-                          <p class="observations">{{ selectedJob()?.observations }}</p>
-                        </div>
-                      }
-                      @if (selectedJob()?.partsReplaced && selectedJob()?.partsReplaced!.length > 0) {
-                        <div class="progress-item">
-                          <label>Parts Replaced:</label>
-                          <div class="parts-list">
-                            @for (part of selectedJob()?.partsReplaced; track part) {
-                              <mat-chip class="part-chip">{{ part }}</mat-chip>
-                            }
-                          </div>
-                        </div>
-                      }
-                    </mat-card-content>
-                  </mat-card>
-                }
-
-                <!-- Attachments Card -->
-                @if (selectedJob()?.attachments && selectedJob()?.attachments!.length > 0) {
-                  <mat-card class="info-card">
-                    <mat-card-header>
-                      <mat-card-title>
-                        <mat-icon>attach_file</mat-icon>
-                        Attachments
-                      </mat-card-title>
-                    </mat-card-header>
-                    <mat-card-content>
-                      <div class="attachments-list">
-                        @for (attachment of selectedJob()?.attachments; track attachment.id) {
-                          <div class="attachment-item">
-                            <mat-icon>{{ getFileIcon(attachment.fileType) }}</mat-icon>
-                            <div class="attachment-info">
-                              <span class="filename">{{ attachment.fileName }}</span>
-                              <span class="filesize">{{ formatFileSize(attachment.fileSize) }}</span>
-                            </div>
-                            <button mat-icon-button
-                                    [matTooltip]="'Download ' + attachment.fileName"
-                                    (click)="downloadAttachment(attachment)">
-                              <mat-icon>download</mat-icon>
-                            </button>
-                          </div>
-                        }
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
-                }
-              </div>
+              }
             </div>
-          </mat-tab>
-        </mat-tab-group>
-      </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
 
-      <!-- Panel Actions - Consolidated Status Update Only -->
-      <div class="panel-actions">
-        <button mat-raised-button
-                color="primary"
-                class="status-update-btn"
-                (click)="updateStatus.emit(selectedJob()!)">
-          <mat-icon>update</mat-icon>
-          Update Job Status
-        </button>
-      </div>
-    } @else {
-      <div class="empty-panel">
-        <mat-icon>assignment</mat-icon>
-        <h3>No Job Selected</h3>
-        <p>Select a job from the list to view details</p>
-      </div>
-    }
-  </mat-sidenav>
-
-  <mat-sidenav-content>
-    <ng-content></ng-content>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+    <!-- Panel Actions -->
+    <div class="panel-actions">
+      <button mat-raised-button
+              color="primary"
+              class="status-update-btn"
+              (click)="updateStatus.emit(selectedJob()!)">
+        <mat-icon>update</mat-icon>
+        Update Job Status
+      </button>
+    </div>
+  } @else {
+    <div class="empty-panel">
+      <mat-icon>assignment</mat-icon>
+      <h3>No Job Selected</h3>
+      <p>Select a job from the list to view details</p>
+    </div>
+  }
+</div>

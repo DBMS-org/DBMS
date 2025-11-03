@@ -1,0 +1,61 @@
+<div class="maintenance-jobs-container">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Maintenance Jobs</h1>
+      <p class="page-subtitle">Manage and track maintenance jobs for all machines</p>
+    </div>
+
+    <div class="header-right">
+      <div class="stat-badge">
+        <span class="stat-value">{{ filteredJobs().length }}</span>
+        <span class="stat-label">Filtered</span>
+      </div>
+      <div class="stat-badge">
+        <span class="stat-value">{{ allJobs().length }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Global Loading Indicator -->
+  @if (isLoading()) {
+    <app-loading-spinner
+      size="small"
+      type="linear"
+      message="Loading maintenance jobs...">
+    </app-loading-spinner>
+  }
+
+  <!-- Offline Status Indicator -->
+  <app-offline-indicator></app-offline-indicator>
+
+  <!-- Filters Section -->
+  <section class="filters-section">
+    <app-job-filters
+      [jobs]="allJobs()"
+      [initialFilters]="currentFilters()"
+      (filtersChanged)="onFiltersChanged($event)"
+      (searchChanged)="onSearchChanged($event)">
+    </app-job-filters>
+  </section>
+
+  <!-- Main Content Area with Job List -->
+  <main class="main-content">
+    <app-job-list
+      [jobs]="filteredJobs()"
+      (machineClicked)="onMachineClicked($event)"
+      (jobSelected)="onJobSelected($event)"
+      (jobStatusChanged)="onJobStatusChanged($event)"
+      (bulkStatusChanged)="onBulkStatusChanged($event)">
+    </app-job-list>
+  </main>
+
+  <!-- Job Detail Panel as Overlay/Sidenav -->
+  <app-job-detail-panel
+    [selectedJob]="selectedJob()"
+    [isOpen]="isDetailPanelOpen()"
+    (panelClosed)="onDetailPanelClosed()"
+    (updateStatus)="onUpdateJobStatus($event)">
+  </app-job-detail-panel>
+</div>

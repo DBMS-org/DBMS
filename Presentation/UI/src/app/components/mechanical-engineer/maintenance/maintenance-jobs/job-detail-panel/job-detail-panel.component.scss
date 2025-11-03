@@ -1,11 +1,44 @@
-// Job Detail Panel - Consistent System Theme
-.detail-panel-container {
-  height: 100%;
+// Job Detail Panel - Overlay/Sidebar Style
+// Backdrop
+.detail-panel-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Side Panel
 .detail-panel {
+  position: fixed;
+  top: 0;
+  right: -500px; // Hidden by default
   width: 480px;
   max-width: 90vw;
+  height: 100vh;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s ease;
+  overflow: hidden;
+
+  &.open {
+    right: 0; // Slide in when open
+  }
 }
 
 // Panel Header
@@ -13,6 +46,7 @@
   padding: 16px;
   background-color: #f5f5f5;
   border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }
 
 .header-top {
@@ -28,16 +62,16 @@
   gap: 8px;
 
   .header-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
     color: #1976d2;
   }
 
   h2 {
     margin: 0;
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 600;
   }
 }
 
@@ -59,15 +93,15 @@
   gap: 8px;
 
   mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
     color: #1976d2;
   }
 
   h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 15px;
     color: #333;
   }
 }
@@ -91,7 +125,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 // Info Grid
@@ -109,10 +143,12 @@
   label {
     font-weight: 500;
     color: #666;
+    font-size: 13px;
   }
 
   span {
     text-align: right;
+    font-size: 13px;
   }
 }
 
@@ -145,7 +181,7 @@
 }
 
 .metric-value {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
   color: #1976d2;
 }
@@ -194,7 +230,8 @@
   padding: 12px;
   background-color: #f8f9fa;
   border-radius: 4px;
-  border-left: 4px solid #1976d2;
+  border-left: 3px solid #1976d2;
+  font-size: 13px;
 }
 
 .parts-list {
@@ -232,6 +269,7 @@
 
 .filename {
   font-weight: 500;
+  font-size: 13px;
 }
 
 .filesize {
@@ -246,6 +284,7 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .status-update-btn {
@@ -264,7 +303,7 @@
 }
 
 .status-completed {
-  background-color: #e8f5e8;
+  background-color: #e8f5e9;
   color: #388e3c;
 }
 
@@ -279,7 +318,7 @@
 }
 
 .type-preventive {
-  background-color: #e8f5e8;
+  background-color: #e8f5e9;
   color: #388e3c;
 }
 
@@ -359,11 +398,20 @@
   height: 100%;
   text-align: center;
   color: #666;
+  padding: 40px;
 
   mat-icon {
     font-size: 64px;
     width: 64px;
     height: 64px;
     margin-bottom: 16px;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .detail-panel {
+    width: 100%;
+    max-width: 100vw;
   }
 }
