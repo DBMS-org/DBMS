@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { CheckboxModule } from 'primeng/checkbox';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { DividerModule } from 'primeng/divider';
@@ -44,7 +44,7 @@ interface DialogData {
     ButtonModule,
     DropdownModule,
     InputTextModule,
-    InputTextareaModule,
+    InputTextarea,
     CheckboxModule,
     RadioButtonModule,
     DividerModule,
