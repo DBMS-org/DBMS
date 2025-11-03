@@ -13,7 +13,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
-import { Textarea } from 'primeng/inputtextarea';
+import { InputTextareaModule } from 'primeng/inputtextarea';
 import { PanelModule } from 'primeng/panel';
 import { MessageModule } from 'primeng/message';
 
@@ -33,7 +33,7 @@ import { MessageModule } from 'primeng/message';
     InputIconModule,
     TooltipModule,
     DialogModule,
-    Textarea,
+    InputTextareaModule,
     PanelModule,
     MessageModule
   ],

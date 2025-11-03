@@ -1,1 +1,1 @@
-update PrimeNG imports to use InputTextareaModule
+Restructure component templates from inline to external HTML/SCSS files
