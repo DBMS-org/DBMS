@@ -1,1 +1,1 @@
-connect maintenece ME backe with frontend
+Fix endpoint usage: use POST /complete for completed jobs, PATCH /status for others
