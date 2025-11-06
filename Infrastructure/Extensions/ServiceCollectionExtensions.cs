@@ -8,10 +8,8 @@ namespace Infrastructure.Extensions
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
-            // Register dispatcher
             services.AddScoped<IDomainEventDispatcher, Services.DomainEventDispatcher>();
 
-            // Register all IDomainEventHandler<> implementations in this assembly
             var handlerInterfaceType = typeof(Services.IDomainEventHandler<>);
             var assembly = Assembly.GetExecutingAssembly();
 

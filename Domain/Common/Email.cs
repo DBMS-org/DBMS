@@ -1,10 +1,6 @@
 namespace Domain.Common
 {
-    /// <summary>
-    ///     Value Object that represents and validates an e-mail address.
-    ///     Implicit conversions are provided so existing code that expects
-    ///     a string will continue to work during the migration.
-    /// </summary>
+    // Email value object with validation and string conversion support
     public readonly record struct Email
     {
         public string Value { get; }
