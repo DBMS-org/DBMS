@@ -18,8 +18,7 @@ namespace Application.DTOs.StoreManagement
         public string? Supplier { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        
-        // Navigation properties (for detailed views)
+
         public string? StoreName { get; set; }
         public decimal AvailableQuantity { get; set; }
         public bool IsLowStock { get; set; }
