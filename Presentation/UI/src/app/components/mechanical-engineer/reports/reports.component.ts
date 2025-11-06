@@ -30,7 +30,6 @@ interface MaintenanceSummaryData {
 interface PartsUsageData {
   partName: string;
   quantity: number;
-  cost: number;
   machines: string[];
   trend: 'up' | 'down' | 'stable';
 }
@@ -43,19 +42,6 @@ interface MachinePerformanceData {
   mtbf: number; // Mean Time Between Failures
   mttr: number; // Mean Time To Repair
   efficiency: number;
-}
-
-interface CostAnalysisData {
-  totalCost: number;
-  laborCost: number;
-  partsCost: number;
-  byType: {
-    preventive: number;
-    corrective: number;
-    emergency: number;
-  };
-  costPerMachine: number;
-  trend: number; // percentage change
 }
 
 @Component({
@@ -176,7 +162,6 @@ export class ReportsComponent implements OnInit {
             partsMap.set(part, {
               partName: part,
               quantity: 0,
-              cost: 0,
               machines: [],
               trend: 'stable' as 'up' | 'down' | 'stable'
             });
@@ -184,7 +169,6 @@ export class ReportsComponent implements OnInit {
 
           const partData = partsMap.get(part)!;
           partData.quantity += 1;
-          partData.cost += 150; // Mock cost per part
           if (!partData.machines.includes(job.machineName)) {
             partData.machines.push(job.machineName);
           }
@@ -193,53 +177,6 @@ export class ReportsComponent implements OnInit {
     });
 
     return Array.from(partsMap.values()).slice(0, 10); // Top 10 parts
-  });
-
-  // Computed: Cost Analysis Data
-  costAnalysisData = computed<CostAnalysisData>(() => {
-    const jobs = this.maintenanceJobs();
-
-    const byType = {
-      preventive: 0,
-      corrective: 0,
-      emergency: 0
-    };
-
-    let totalCost = 0;
-    let laborCost = 0;
-    let partsCost = 0;
-
-    jobs.forEach(job => {
-      const jobCost = (job.actualHours || job.estimatedHours) * 75; // $75/hour labor
-      totalCost += jobCost;
-      laborCost += jobCost;
-
-      if (job.partsReplaced) {
-        const partsTotal = job.partsReplaced.length * 150; // $150 per part
-        partsCost += partsTotal;
-        totalCost += partsTotal;
-      }
-
-      if (job.type === MaintenanceType.PREVENTIVE) {
-        byType.preventive += jobCost;
-      } else if (job.type === MaintenanceType.CORRECTIVE) {
-        byType.corrective += jobCost;
-      } else if (job.type === MaintenanceType.EMERGENCY) {
-        byType.emergency += jobCost;
-      }
-    });
-
-    const uniqueMachines = new Set(jobs.map(j => j.machineId)).size;
-    const costPerMachine = uniqueMachines > 0 ? totalCost / uniqueMachines : 0;
-
-    return {
-      totalCost,
-      laborCost,
-      partsCost,
-      byType,
-      costPerMachine: Math.round(costPerMachine),
-      trend: 5.2 // Mock trend percentage
-    };
   });
 
   constructor(private maintenanceService: MaintenanceService) {}
@@ -359,13 +296,6 @@ export class ReportsComponent implements OnInit {
   }
 
   // Helper methods
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  }
-
   formatNumber(num: number): string {
     return new Intl.NumberFormat('en-US').format(num);
   }

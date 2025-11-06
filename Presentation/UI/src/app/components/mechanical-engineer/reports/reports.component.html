@@ -300,13 +300,6 @@
                     <div class="summary-label">Different Parts Used</div>
                   </div>
                 </div>
-                <div class="summary-card-inline">
-                  <i class="material-icons">attach_money</i>
-                  <div>
-                    <div class="summary-value">{{ formatCurrency(costAnalysisData().partsCost) }}</div>
-                    <div class="summary-label">Total Parts Cost</div>
-                  </div>
-                </div>
               </div>
 
               <div class="table-section">
@@ -316,21 +309,19 @@
                       <tr>
                         <th>Part Name</th>
                         <th>Quantity Used</th>
-                        <th>Est. Cost</th>
                         <th>Machines</th>
                       </tr>
                     </thead>
                     <tbody>
                       @if (partsUsageData().length === 0) {
                         <tr>
-                          <td colspan="4" class="no-data">No parts usage data available</td>
+                          <td colspan="3" class="no-data">No parts usage data available</td>
                         </tr>
                       }
                       @for (part of partsUsageData(); track part.partName) {
                         <tr>
                           <td class="font-semibold">{{ part.partName }}</td>
                           <td>{{ part.quantity }}</td>
-                          <td>{{ formatCurrency(part.cost) }}</td>
                           <td class="machines-cell">{{ part.machines.join(', ') }}</td>
                         </tr>
                       }
