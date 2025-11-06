@@ -223,6 +223,38 @@ export class MaintenanceService {
     );
   }
 
+  completeMaintenanceJob(jobId: number, observations: string, actualHours: number, partsReplaced?: string[]): Observable<MaintenanceJob> {
+    const operationId = `complete-job-${jobId}`;
+    this.loadingService.startLoading(operationId, 'Completing job...');
+
+    // If offline, queue the operation for sync
+    if (this.offlineStorage.isOffline()) {
+      this.syncService.queueJobUpdate(jobId.toString(), {
+        status: MaintenanceStatus.COMPLETED,
+        observations,
+        actualHours,
+        partsReplaced,
+        completedDate: new Date()
+      });
+      this.loadingService.stopLoading(operationId);
+      return of({ id: jobId, observations, actualHours, partsReplaced } as MaintenanceJob);
+    }
+
+    // Call real backend API
+    return this.http.post<MaintenanceJob>(`${this.jobsApiUrl}/${jobId}/complete`, {
+      observations,
+      actualHours,
+      partsReplaced
+    }).pipe(
+      map(job => this.transformJobDates([job])[0]),
+      catchError(error => {
+        console.error('Complete job API failed:', error);
+        return this.errorHandler.handleError(error);
+      }),
+      finalize(() => this.loadingService.stopLoading(operationId))
+    );
+  }
+
   deleteMaintenanceJob(jobId: number): Observable<void> {
     // If offline, queue the operation for sync
     if (this.offlineStorage.isOffline()) {
