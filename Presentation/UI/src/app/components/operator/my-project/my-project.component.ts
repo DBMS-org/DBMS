@@ -18,7 +18,6 @@ export class MyProjectComponent implements OnInit {
   error: string | null = null;
   project: Project | null = null;
 
-  // Added: sites state to combine Project + Sites in one page
   sites: ProjectSite[] = [];
   sitesLoading = false;
   sitesError: string | null = null;
@@ -40,11 +39,9 @@ export class MyProjectComponent implements OnInit {
       return;
     }
 
-    // Listen for query param to auto-show sites (from dashboard quick action)
     this.route.queryParams.subscribe(params => {
       if (params['showSites'] === 'true' || params['showSites'] === true) {
         this.showSites = true;
-        // If project and sites already loaded, scroll to section
         setTimeout(() => this.scrollToSitesSection(), 0);
       }
     });
@@ -71,7 +68,6 @@ export class MyProjectComponent implements OnInit {
       next: (sites) => {
         this.sites = sites;
         this.sitesLoading = false;
-        // If user came with showSites flag, ensure we scroll after sites load
         if (this.showSites) {
           setTimeout(() => this.scrollToSitesSection(), 0);
         }
@@ -122,7 +118,6 @@ export class MyProjectComponent implements OnInit {
     return this.sites ? this.sites.filter(site => site.isOperatorCompleted).length : 0;
   }
 
-  // Replaced: Instead of navigating to separate page, reveal sites section on the same page
   navigateToSites(): void {
     this.showSites = true;
     setTimeout(() => this.scrollToSitesSection(), 0);

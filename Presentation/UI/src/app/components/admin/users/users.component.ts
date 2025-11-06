@@ -115,14 +115,12 @@ export class UsersComponent implements OnInit {
         this.users.push(newUser);
         this.filteredUsers = [...this.users];
         this.showAddUserModal = false;
-        this.error = null; // Clear any previous errors
+        this.error = null;
         console.log('User created successfully:', newUser);
       },
       error: (error) => {
         this.error = error.message;
         console.error('Error creating user:', error);
-        // Don't close modal or add to local list when there's an error
-        // Keep the modal open so user can see the error and try again
       }
     });
   }
@@ -170,7 +168,6 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  // Test database connection
   testConnection() {
     this.userService.testConnection().subscribe({
       next: (result) => {
