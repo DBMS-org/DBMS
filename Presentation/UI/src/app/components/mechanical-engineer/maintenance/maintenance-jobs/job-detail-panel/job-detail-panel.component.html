@@ -65,20 +65,6 @@
                         <label>Serial Number:</label>
                         <span>{{ machineHistory()?.serialNumber || selectedJob()?.serialNumber }}</span>
                       </div>
-                      <div class="info-item">
-                        <label>Current Status:</label>
-                        <span class="status-text">{{ machineHistory()?.currentStatus }}</span>
-                      </div>
-                      <div class="info-item">
-                        <label>Last Service Date:</label>
-                        <span>{{ formatDate(machineHistory()?.lastServiceDate!) }}</span>
-                      </div>
-                      <div class="info-item">
-                        <label>Next Service Date:</label>
-                        <span [class]="getNextServiceClass()">
-                          {{ formatDate(machineHistory()?.nextServiceDate!) }}
-                        </span>
-                      </div>
                     </div>
                   </mat-card-content>
                 </mat-card>

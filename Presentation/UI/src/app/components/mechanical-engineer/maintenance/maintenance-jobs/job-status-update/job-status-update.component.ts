@@ -75,7 +75,7 @@ export interface JobStatusUpdateData {
             }
           </mat-form-field>
 
-          <!-- Maintenance Report Section (shown for In-Progress and Completed) -->
+          <!-- Maintenance Report Section (shown for Completed only) -->
           @if (showMaintenanceReport()) {
             <div class="maintenance-report-section">
               <h4>
@@ -86,10 +86,16 @@ export interface JobStatusUpdateData {
               <!-- Observations -->
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Observations</mat-label>
-                <textarea matInput 
-                         formControlName="observations" 
+                <textarea matInput
+                         formControlName="observations"
                          rows="4"
                          placeholder="Describe the work performed, findings, or issues encountered..."></textarea>
+                @if (statusForm.get('observations')?.hasError('required')) {
+                  <mat-error>Observations are required for completed jobs</mat-error>
+                }
+                @if (statusForm.get('observations')?.hasError('minlength')) {
+                  <mat-error>Observations must be at least 20 characters</mat-error>
+                }
                 @if (statusForm.get('observations')?.hasError('maxlength')) {
                   <mat-error>Observations cannot exceed 1000 characters</mat-error>
                 }
@@ -134,80 +140,6 @@ export interface JobStatusUpdateData {
               </mat-form-field>
             </div>
           }
-
-          <!-- File Upload Section -->
-          <div class="file-upload-section">
-            <h4>
-              <mat-icon>attach_file</mat-icon>
-              Attachments
-            </h4>
-
-            <!-- File Upload Area -->
-            <div class="file-upload-area" 
-                 (dragover)="onDragOver($event)" 
-                 (dragleave)="onDragLeave($event)"
-                 (drop)="onDrop($event)"
-                 [class.drag-over]="isDragOver()">
-              <input #fileInput 
-                     type="file" 
-                     multiple 
-                     accept=".jpg,.jpeg,.png,.pdf,.txt,.doc,.docx"
-                     (change)="onFileSelected($event)"
-                     style="display: none;">
-              
-              <div class="upload-content">
-                <mat-icon>cloud_upload</mat-icon>
-                <p>Drag and drop files here or <button type="button" mat-button (click)="fileInput.click()">browse</button></p>
-                <small>Supported formats: JPG, PNG, PDF, TXT, DOC (Max 10MB each)</small>
-              </div>
-            </div>
-
-            <!-- Selected Files List -->
-            @if (selectedFiles().length > 0) {
-              <div class="selected-files">
-                <h5>Selected Files:</h5>
-                @for (file of selectedFiles(); track file.name) {
-                  <div class="file-item">
-                    <mat-icon>{{ getFileIcon(file.type) }}</mat-icon>
-                    <div class="file-info">
-                      <span class="filename">{{ file.name }}</span>
-                      <span class="filesize">{{ formatFileSize(file.size) }}</span>
-                    </div>
-                    <button mat-icon-button 
-                            type="button"
-                            (click)="removeFile(file)"
-                            aria-label="Remove file">
-                      <mat-icon>close</mat-icon>
-                    </button>
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- File Upload Errors -->
-            @if (fileErrors().length > 0) {
-              <div class="file-errors">
-                @for (error of fileErrors(); track error) {
-                  <div class="error-message">
-                    <mat-icon>error</mat-icon>
-                    <span>{{ error }}</span>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-
-          <!-- Notification Options -->
-          <div class="notification-section">
-            <h4>
-              <mat-icon>notifications</mat-icon>
-              Notifications
-            </h4>
-            
-            <mat-checkbox formControlName="notifyMachineManager">
-              Notify Machine Manager automatically
-            </mat-checkbox>
-          </div>
         </form>
       </mat-dialog-content>
 
@@ -280,114 +212,19 @@ export interface JobStatusUpdateData {
       gap: 8px;
     }
 
-    .maintenance-report-section,
-    .file-upload-section,
-    .notification-section {
+    .maintenance-report-section {
       border: 1px solid #e0e0e0;
       border-radius: 4px;
       padding: 16px;
     }
 
-    .maintenance-report-section h4,
-    .file-upload-section h4,
-    .notification-section h4 {
+    .maintenance-report-section h4 {
       display: flex;
       align-items: center;
       gap: 8px;
       margin: 0 0 16px 0;
       font-size: 16px;
       font-weight: 500;
-    }
-
-    .file-upload-area {
-      border: 2px dashed #ccc;
-      border-radius: 4px;
-      padding: 32px;
-      text-align: center;
-      transition: border-color 0.3s, background-color 0.3s;
-      cursor: pointer;
-    }
-
-    .file-upload-area:hover {
-      border-color: #1976d2;
-      background-color: #f8f9fa;
-    }
-
-    .file-upload-area.drag-over {
-      border-color: #1976d2;
-      background-color: #e3f2fd;
-    }
-
-    .upload-content mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      color: #666;
-      margin-bottom: 16px;
-    }
-
-    .upload-content p {
-      margin: 0 0 8px 0;
-      font-size: 16px;
-    }
-
-    .upload-content small {
-      color: #666;
-      font-size: 12px;
-    }
-
-    .selected-files {
-      margin-top: 16px;
-    }
-
-    .selected-files h5 {
-      margin: 0 0 12px 0;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .file-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      margin-bottom: 8px;
-    }
-
-    .file-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .filename {
-      font-weight: 500;
-    }
-
-    .filesize {
-      font-size: 12px;
-      color: #666;
-    }
-
-    .file-errors {
-      margin-top: 16px;
-    }
-
-    .error-message {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #d32f2f;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .error-message mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
     }
 
     /* Status Chips */
@@ -448,9 +285,6 @@ export class JobStatusUpdateComponent implements OnInit {
   // Signals
   job = signal<MaintenanceJob>(this.data.job);
   isSubmitting = signal(false);
-  isDragOver = signal(false);
-  selectedFiles = signal<File[]>([]);
-  fileErrors = signal<string[]>([]);
   partsReplaced = signal<string[]>(this.data.job.partsReplaced || []);
 
   // Form
@@ -464,21 +298,11 @@ export class JobStatusUpdateComponent implements OnInit {
     { value: MaintenanceStatus.CANCELLED, label: 'Cancelled' }
   ];
 
-  maxFileSize = 10 * 1024 * 1024; // 10MB
-  allowedFileTypes = [
-    'image/jpeg', 'image/jpg', 'image/png',
-    'application/pdf',
-    'text/plain',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ];
-
   constructor() {
     this.statusForm = this.fb.group({
       status: [this.job().status, [Validators.required]],
       observations: [this.job().observations || '', [Validators.maxLength(1000)]],
-      actualHours: [this.job().actualHours || null],
-      notifyMachineManager: [true]
+      actualHours: [this.job().actualHours || null]
     });
   }
 
@@ -489,7 +313,9 @@ export class JobStatusUpdateComponent implements OnInit {
   // Computed properties
   showMaintenanceReport(): boolean {
     const status = this.statusForm.get('status')?.value;
-    return status === MaintenanceStatus.IN_PROGRESS || status === MaintenanceStatus.COMPLETED;
+    // Only show maintenance report section for completed status
+    // Backend only supports observations, actualHours, and partsReplaced on completion
+    return status === MaintenanceStatus.COMPLETED;
   }
 
   // Event Handlers
@@ -507,23 +333,29 @@ export class JobStatusUpdateComponent implements OnInit {
     }
 
     this.isSubmitting.set(true);
-    
+
     try {
       const formValue = this.statusForm.value;
-      const updatedJob: Partial<MaintenanceJob> = {
-        status: formValue.status,
-        observations: formValue.observations,
-        actualHours: formValue.actualHours,
-        partsReplaced: this.partsReplaced(),
-        updatedAt: new Date()
-      };
+      const newStatus = formValue.status;
 
-      // Update job status
-      await this.maintenanceService.updateMaintenanceJob(this.job().id, updatedJob).toPromise();
+      let result: any;
 
-      // Upload files if any
-      if (this.selectedFiles().length > 0) {
-        await this.uploadFiles();
+      // Use different endpoint based on status
+      if (newStatus === MaintenanceStatus.COMPLETED) {
+        // Complete endpoint requires observations, actualHours, and partsReplaced
+        result = await this.maintenanceService.completeMaintenanceJob(
+          this.job().id,
+          formValue.observations,
+          formValue.actualHours,
+          this.partsReplaced()
+        ).toPromise();
+      } else {
+        // Status update endpoint only accepts status
+        await this.maintenanceService.updateJobStatus(this.job().id, newStatus).toPromise();
+        result = {
+          ...this.job(),
+          status: newStatus
+        };
       }
 
       // Show success message
@@ -533,7 +365,7 @@ export class JobStatusUpdateComponent implements OnInit {
       });
 
       // Close dialog with updated job
-      this.dialogRef.close({ ...this.job(), ...updatedJob });
+      this.dialogRef.close(result);
 
     } catch (error) {
       console.error('Error updating job status:', error);
@@ -544,77 +376,6 @@ export class JobStatusUpdateComponent implements OnInit {
     } finally {
       this.isSubmitting.set(false);
     }
-  }
-
-  // File Handling
-  onDragOver(event: DragEvent) {
-    event.preventDefault();
-    this.isDragOver.set(true);
-  }
-
-  onDragLeave(event: DragEvent) {
-    event.preventDefault();
-    this.isDragOver.set(false);
-  }
-
-  onDrop(event: DragEvent) {
-    event.preventDefault();
-    this.isDragOver.set(false);
-    
-    const files = Array.from(event.dataTransfer?.files || []);
-    this.processFiles(files);
-  }
-
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files || []);
-    this.processFiles(files);
-    input.value = ''; // Reset input
-  }
-
-  private processFiles(files: File[]) {
-    const errors: string[] = [];
-    const validFiles: File[] = [];
-
-    files.forEach(file => {
-      // Check file type
-      if (!this.allowedFileTypes.includes(file.type)) {
-        errors.push(`${file.name}: Unsupported file type`);
-        return;
-      }
-
-      // Check file size
-      if (file.size > this.maxFileSize) {
-        errors.push(`${file.name}: File size exceeds 10MB limit`);
-        return;
-      }
-
-      // Check for duplicates
-      const existingFiles = this.selectedFiles();
-      if (existingFiles.some(f => f.name === file.name && f.size === file.size)) {
-        errors.push(`${file.name}: File already selected`);
-        return;
-      }
-
-      validFiles.push(file);
-    });
-
-    // Update signals
-    this.fileErrors.set(errors);
-    this.selectedFiles.update(current => [...current, ...validFiles]);
-  }
-
-  removeFile(fileToRemove: File) {
-    this.selectedFiles.update(files => files.filter(file => file !== fileToRemove));
-  }
-
-  private async uploadFiles(): Promise<void> {
-    const files = this.selectedFiles();
-    const uploadPromises = files.map(file => 
-      this.maintenanceService.uploadMaintenanceFile(this.job().id, file).toPromise()
-    );
-
-    await Promise.all(uploadPromises);
   }
 
   // Parts Management
@@ -633,21 +394,33 @@ export class JobStatusUpdateComponent implements OnInit {
   // Utility Methods
   private updateValidators() {
     const status = this.statusForm.get('status')?.value;
+    const observationsControl = this.statusForm.get('observations');
     const actualHoursControl = this.statusForm.get('actualHours');
 
     if (status === MaintenanceStatus.COMPLETED) {
+      // For completed status, observations and actualHours are required
+      observationsControl?.setValidators([
+        Validators.required,
+        Validators.minLength(20),
+        Validators.maxLength(1000)
+      ]);
       actualHoursControl?.setValidators([
         Validators.required,
-        Validators.min(0.5),
-        Validators.max(24)
+        Validators.min(0.1),
+        Validators.max(1000)
       ]);
     } else {
+      // For other statuses, only max length validation
+      observationsControl?.setValidators([
+        Validators.maxLength(1000)
+      ]);
       actualHoursControl?.setValidators([
-        Validators.min(0.5),
-        Validators.max(24)
+        Validators.min(0.1),
+        Validators.max(1000)
       ]);
     }
 
+    observationsControl?.updateValueAndValidity();
     actualHoursControl?.updateValueAndValidity();
   }
 
@@ -691,27 +464,5 @@ export class JobStatusUpdateComponent implements OnInit {
 
   getStatusIconClass(status: MaintenanceStatus): string {
     return `icon-${status.toLowerCase().replace('_', '-')}`;
-  }
-
-  getFileIcon(fileType: string): string {
-    if (fileType.startsWith('image/')) {
-      return 'image';
-    } else if (fileType === 'application/pdf') {
-      return 'picture_as_pdf';
-    } else if (fileType.startsWith('text/')) {
-      return 'description';
-    } else if (fileType.includes('word')) {
-      return 'description';
-    } else {
-      return 'attach_file';
-    }
-  }
-
-  formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 }
