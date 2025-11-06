@@ -63,8 +63,7 @@ export class ProjectDetailsComponent implements OnInit {
         this.error = error.message;
         this.loading = false;
         console.error('Error loading project:', error);
-        
-        // Fallback to mock data if API fails
+
         this.loadMockProject(id);
       }
     });
@@ -77,14 +76,12 @@ export class ProjectDetailsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading project sites:', error);
-        // Fallback to mock sites
         this.loadMockSites(projectId);
       }
     });
   }
 
   private loadMockProject(id: number) {
-    // Mock project data as fallback
     this.project = {
       id: id,
       name: 'Project Alpha - Muttrah Construction',
@@ -101,7 +98,6 @@ export class ProjectDetailsComponent implements OnInit {
   }
 
   private loadMockSites(projectId: number) {
-    // Mock sites data as fallback
     this.projectSites = [
       {
         id: 1,
@@ -154,7 +150,6 @@ export class ProjectDetailsComponent implements OnInit {
   toggleEdit() {
     this.isEditing = !this.isEditing;
     if (!this.isEditing) {
-      // Reset form when canceling edit
       this.initializeEditForm();
     }
   }
@@ -167,7 +162,6 @@ export class ProjectDetailsComponent implements OnInit {
 
     this.projectService.updateProject(this.project.id, this.editForm).subscribe({
       next: () => {
-        // Reload project data
         this.loadProject(this.project!.id);
         this.isEditing = false;
         console.log('Project updated successfully');
@@ -176,8 +170,7 @@ export class ProjectDetailsComponent implements OnInit {
         this.error = error.message;
         this.loading = false;
         console.error('Error updating project:', error);
-        
-        // Fallback: update local data
+
         if (this.project) {
           Object.assign(this.project, this.editForm, { updatedAt: new Date() });
           this.isEditing = false;
@@ -210,7 +203,6 @@ export class ProjectDetailsComponent implements OnInit {
 
   viewSiteDetails(site: ProjectSite) {
     console.log('View site details:', site);
-    // TODO: Navigate to site details or open site modal
   }
 
   getStatusClass(status: string): string {

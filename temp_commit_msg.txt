@@ -1,1 +1,1 @@
-Fix job completion
+remove unused and mock code, clean up redundant comments, and tidy up .cs files
