@@ -1,6 +1,6 @@
 namespace Domain.Common
 {
-    // Base entity with ID and domain events support
+    // Base entity with domain events
     public abstract class BaseEntity
     {
         public int Id { get; set; }

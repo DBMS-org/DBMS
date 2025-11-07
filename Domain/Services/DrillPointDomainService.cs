@@ -4,9 +4,9 @@ namespace Domain.Services
 {
     public class DrillPointDomainService
     {
-        private const double COORDINATE_PRECISION = 0.01; // meters
-        private const double GRID_PITCH_MIN_THRESHOLD = 0.5; // meters
-        private const double GRID_PITCH_SUPPORT_THRESHOLD = 0.10; // 10%
+        private const double COORDINATE_PRECISION = 0.01;
+        private const double GRID_PITCH_MIN_THRESHOLD = 0.5;
+        private const double GRID_PITCH_SUPPORT_THRESHOLD = 0.10;
         
         public bool ValidateCoordinates(double x, double y)
         {
@@ -32,8 +32,8 @@ namespace Domain.Services
             var dy = a.Y - b.Y;
             return Math.Sqrt(dx * dx + dy * dy);
         }
-        
-        // Estimates grid spacing and burden using statistical analysis
+
+        // Estimates grid spacing and burden
         public (double spacing, double burden) CalculateGridPitch(IEnumerable<DrillPoint> drillPoints)
         {
             var points = drillPoints.ToList();
@@ -82,8 +82,8 @@ namespace Domain.Services
             var median = deltas[deltas.Count / 2];
             return Math.Round(median * 10) / 10;
         }
-        
-        // Translates all points so minimum X,Y becomes 0,0
+
+        // Anchors points to origin (0,0)
         public IEnumerable<DrillPoint> AnchorPointsToOrigin(IEnumerable<DrillPoint> points)
         {
             var pointsList = points.ToList();
@@ -108,8 +108,8 @@ namespace Domain.Services
                 UpdatedAt = p.UpdatedAt
             });
         }
-        
-        // Calculates optimal stemming (20-30% of depth, minimum equals burden)
+
+        // Calculates optimal stemming depth
         public double CalculateOptimalStemming(double depth, double burden)
         {
             var stemmingByDepth = depth * 0.25;
@@ -121,8 +121,8 @@ namespace Domain.Services
             
             return Math.Round(Math.Max(minStemming, Math.Min(optimalStemming, maxStemming)), 1);
         }
-        
-        // Calculates optimal diameter based on burden and spacing (industry standard: 1/30 to 1/40 of burden)
+
+        // Calculates optimal drill hole diameter
         public double CalculateOptimalDiameter(double burden, double spacing)
         {
             var patternArea = burden * spacing;
@@ -135,8 +135,8 @@ namespace Domain.Services
             
             return optimalDiameter;
         }
-        
-        // Calculates powder factor (kg explosive per m³ rock)
+
+        // Calculates powder factor
         public double CalculatePowderFactor(double diameter, double depth, double stemming, double burden, double spacing, double explosiveDensity = 1.2)
         {
             var holeRadius = diameter / 2.0;
@@ -148,8 +148,8 @@ namespace Domain.Services
 
             return rockVolume > 0 ? explosiveWeight / rockVolume : 0;
         }
-        
-        // Validates stemming length (must be 0.5-50% of depth, min 60% of burden)
+
+        // Validates stemming length
         public bool ValidateStemming(double stemming, double depth, double burden)
         {
             if (stemming < 0 || depth <= 0 || burden <= 0) return false;
@@ -159,8 +159,8 @@ namespace Domain.Services
             
             return true;
         }
-        
-        // Validates diameter (must be 1/50 to 1/15 of burden, between 50-500mm)
+
+        // Validates drill hole diameter
         public bool ValidateDiameter(double diameter, double burden, double spacing)
         {
             if (diameter <= 0 || burden <= 0 || spacing <= 0) return false;
