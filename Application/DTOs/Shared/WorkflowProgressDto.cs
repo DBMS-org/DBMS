@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.Shared
 {
-    // DTO for workflow progress tracking
     public class SiteWorkflowProgressDto
     {
         public int ProjectId { get; set; }
@@ -23,7 +22,6 @@ namespace Application.DTOs.Shared
         public string? LastModifiedBy { get; set; }
     }
 
-    // DTO for bulk operations
     public class BulkSiteDataRequest
     {
         [Required]
@@ -38,7 +36,6 @@ namespace Application.DTOs.Shared
         public string? SimulationStateData { get; set; }
     }
 
-    // DTO for data cleanup operations
     public class CleanupSiteDataRequest
     {
         [Required]
@@ -48,8 +45,7 @@ namespace Application.DTOs.Shared
         public int SiteId { get; set; }
         
         public List<string> DataTypesToClean { get; set; } = new();
-        
-        // If empty, cleans all data types
+
         public bool CleanAll => !DataTypesToClean.Any();
     }
 } 

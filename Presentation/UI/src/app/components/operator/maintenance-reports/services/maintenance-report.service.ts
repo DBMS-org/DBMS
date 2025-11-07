@@ -21,11 +21,7 @@ export class MaintenanceReportService {
   private readonly apiUrl = `${this.baseUrl}/api/maintenance-reports`;
   private readonly machinesApiUrl = `${this.baseUrl}/api/machines`;
 
-  /**
-   * Create a new maintenance problem report
-   * @param reportData - The problem report data to submit
-   * @returns Promise<ProblemReport> - The created problem report with generated ID and ticket number
-   */
+  // Submit new maintenance problem report
   async submitProblemReport(reportData: CreateProblemReportRequest): Promise<ProblemReport> {
     try {
       const response = await firstValueFrom(
@@ -43,34 +39,23 @@ export class MaintenanceReportService {
     }
   }
 
-  /**
-   * Get all maintenance reports submitted by an operator
-   * @param operatorId - The ID of the operator
-   * @returns Observable<ProblemReport[]> - List of operator's problem reports
-   */
+  // Get all maintenance reports for an operator
   getOperatorReports(operatorId: number | string): Observable<ProblemReport[]> {
     return this.http.get<ProblemReport[]>(`${this.apiUrl}/operator/${operatorId}`)
       .pipe(
         catchError(error => {
           console.error('Failed to fetch operator reports:', error);
-          
-          // Return empty array for development when no reports exist
+
           if (error.status === 404) {
-            console.log('Creating default empty reports array since none were found');
             return of([]);
           }
-          
+
           return throwError(() => new Error('Failed to load your maintenance reports. Please try again.'));
         })
       );
   }
 
-  /**
-   * Get filtered problem reports for an operator
-   * @param operatorId - The ID of the operator
-   * @param filters - Filter criteria for reports
-   * @returns Observable<ProblemReport[]> - Filtered list of problem reports
-   */
+  // Get filtered problem reports for an operator
   getFilteredOperatorReports(operatorId: number | string, filters: ReportFilters): Observable<ProblemReport[]> {
     let params = new HttpParams();
     
@@ -104,25 +89,18 @@ export class MaintenanceReportService {
       );
   }
 
-  /**
-   * Get the machine assigned to an operator
-   * @param operatorId - The ID of the operator
-   * @returns Observable<OperatorMachine> - The operator's assigned machine details
-   */
+  // Get the machine assigned to an operator
   getOperatorMachine(operatorId: number | string): Observable<OperatorMachine> {
-    // First try the dedicated maintenance reports endpoint
     return this.http.get<OperatorMachine>(`${this.apiUrl}/operator/${operatorId}/machine`)
       .pipe(
         catchError(error => {
           console.error('Failed to fetch operator machine from maintenance API:', error);
-          
-          // Fall back to the machines API
+
           return this.http.get<any>(`${this.machinesApiUrl}/operator/${operatorId}`)
             .pipe(
               catchError(fallbackError => {
                 console.error('Failed to fetch operator machine from machines API:', fallbackError);
-                
-                // Return a default empty machine object for development/testing purposes
+
                 if (fallbackError.status === 404) {
                   console.log('Creating default machine object since none was found');
                   return of({
@@ -143,11 +121,7 @@ export class MaintenanceReportService {
       );
   }
 
-  /**
-   * Get summary statistics for an operator's reports
-   * @param operatorId - The ID of the operator
-   * @returns Observable<ProblemReportSummary> - Summary statistics
-   */
+  // Get summary statistics for an operator's reports
   getReportSummary(operatorId: number | string): Observable<ProblemReportSummary> {
     return this.http.get<ProblemReportSummary>(`${this.apiUrl}/operator/${operatorId}/summary`)
       .pipe(
@@ -158,11 +132,7 @@ export class MaintenanceReportService {
       );
   }
 
-  /**
-   * Get a specific problem report by ID
-   * @param reportId - The ID of the problem report
-   * @returns Observable<ProblemReport> - The problem report details
-   */
+  // Get a specific problem report by ID
   getReportById(reportId: string): Observable<ProblemReport> {
     return this.http.get<ProblemReport>(`${this.apiUrl}/${reportId}`)
       .pipe(
@@ -173,12 +143,7 @@ export class MaintenanceReportService {
       );
   }
 
-  /**
-   * Update the status of a problem report (typically used by mechanical engineers)
-   * @param reportId - The ID of the problem report
-   * @param statusUpdate - The status update data
-   * @returns Observable<void>
-   */
+  // Update the status of a problem report
   updateReportStatus(reportId: string, statusUpdate: UpdateReportStatusRequest): Observable<void> {
     return this.http.patch<void>(`${this.apiUrl}/${reportId}/status`, statusUpdate)
       .pipe(
@@ -189,19 +154,13 @@ export class MaintenanceReportService {
       );
   }
 
-  /**
-   * Check if there are any pending offline reports to sync
-   * @returns boolean - True if there are pending reports
-   */
+  // Check if there are any pending offline reports to sync
   hasPendingOfflineReports(): boolean {
     const pendingReports = localStorage.getItem('pending_maintenance_reports');
     return pendingReports ? JSON.parse(pendingReports).length > 0 : false;
   }
 
-  /**
-   * Save a report draft locally for offline scenarios
-   * @param draft - The draft report data
-   */
+  // Save a report draft locally for offline scenarios
   saveDraftReport(draft: Partial<CreateProblemReportRequest>): void {
     try {
       localStorage.setItem('maintenance_report_draft', JSON.stringify({
@@ -213,10 +172,7 @@ export class MaintenanceReportService {
     }
   }
 
-  /**
-   * Get saved draft report from local storage
-   * @returns Partial<CreateProblemReportRequest> | null - The draft report or null if none exists
-   */
+  // Get saved draft report from local storage
   getDraftReport(): Partial<CreateProblemReportRequest> | null {
     try {
       const draft = localStorage.getItem('maintenance_report_draft');
@@ -227,9 +183,7 @@ export class MaintenanceReportService {
     }
   }
 
-  /**
-   * Clear the saved draft report
-   */
+  // Clear the saved draft report
   clearDraftReport(): void {
     try {
       localStorage.removeItem('maintenance_report_draft');
@@ -238,10 +192,7 @@ export class MaintenanceReportService {
     }
   }
 
-  /**
-   * Save a report for offline submission when network is restored
-   * @param reportData - The report data to save for later submission
-   */
+  // Save a report for offline submission when network is restored
   saveOfflineReport(reportData: CreateProblemReportRequest): void {
     try {
       const existingReports = localStorage.getItem('pending_maintenance_reports');
@@ -259,10 +210,7 @@ export class MaintenanceReportService {
     }
   }
 
-  /**
-   * Get all pending offline reports
-   * @returns Array of pending reports
-   */
+  // Get all pending offline reports
   getPendingOfflineReports(): (CreateProblemReportRequest & { id: string; savedAt: string })[] {
     try {
       const pendingReports = localStorage.getItem('pending_maintenance_reports');
@@ -273,10 +221,7 @@ export class MaintenanceReportService {
     }
   }
 
-  /**
-   * Sync all pending offline reports when network is restored
-   * @returns Promise<number> - Number of successfully synced reports
-   */
+  // Sync all pending offline reports when network is restored
   async syncOfflineReports(): Promise<number> {
     const pendingReports = this.getPendingOfflineReports();
     if (pendingReports.length === 0) return 0;
@@ -295,7 +240,6 @@ export class MaintenanceReportService {
       }
     }
 
-    // Update localStorage with only the failed reports
     try {
       localStorage.setItem('pending_maintenance_reports', JSON.stringify(failedReports));
     } catch (error) {
@@ -305,11 +249,7 @@ export class MaintenanceReportService {
     return syncedCount;
   }
 
-  /**
-   * Handle submission errors and provide user-friendly messages
-   * @param error - The HTTP error response
-   * @returns Error with user-friendly message
-   */
+  // Handle submission errors and provide user-friendly messages
   private handleSubmissionError(error: any): Error {
     let errorMessage = 'Failed to submit problem report. Please try again.';
     

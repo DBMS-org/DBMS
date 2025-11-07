@@ -17,7 +17,6 @@ namespace Application.DTOs.StoreManagement
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-        // Navigation properties (for detailed views)
         public string? RegionName { get; set; }
         public string? ManagerUserName { get; set; }
         public string? ManagerUserEmail { get; set; }

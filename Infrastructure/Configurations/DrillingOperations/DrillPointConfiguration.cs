@@ -66,7 +66,6 @@ namespace Infrastructure.Configurations.DrillingOperations
                 .IsRequired()
                 .HasDefaultValue(0.0);
 
-            // Configure relationships to Project and Site
             entity.HasOne(e => e.Project)
                 .WithMany()
                 .HasForeignKey(e => e.ProjectId)
@@ -77,7 +76,6 @@ namespace Infrastructure.Configurations.DrillingOperations
                 .HasForeignKey(e => e.SiteId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Indexes for performance
             entity.HasIndex(e => new { e.ProjectId, e.SiteId });
             entity.HasIndex(e => new { e.X, e.Y, e.ProjectId, e.SiteId });
         }

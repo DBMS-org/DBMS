@@ -1,4 +1,3 @@
-// csv-upload.component.ts
 import { Component, EventEmitter, Output, Injectable, OnInit } from '@angular/core';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -16,21 +15,16 @@ interface DrillHole {
   elevation: number;
   length: number;
   depth: number;
-  azimuth?: number | null; // Made optional for 2D fallback
-  dip?: number | null;     // Made optional for 2D fallback
+  azimuth?: number | null;
+  dip?: number | null;
   actualDepth: number;
   stemming: number;
   createdAt?: string;
   updatedAt?: string;
-  
-  // Helper properties for 2D/3D detection
+
   has3DData?: boolean;
   requiresFallbackTo2D?: boolean;
 }
-
-// Service to share drill data between components
-// DrillDataService has been deprecated and replaced by UnifiedDrillDataService
-// This service is kept temporarily for backward compatibility but will be removed
 
 @Component({
   selector: 'app-csv-upload',
@@ -47,19 +41,16 @@ export class CsvUploadComponent implements OnInit {
   isUploading: boolean = false;
   uploadError: string | null = null;
 
-  // Site-specific properties
   siteId: string | null = null;
   siteName: string | null = null;
   projectId: string | null = null;
 
-  // Selector state
   selectorVisible: boolean = false;
   has3DData: boolean = false;
 
   constructor(private http: HttpClient, private router: Router, private unifiedDrillDataService: UnifiedDrillDataService, private activatedRoute: ActivatedRoute) {}
 
   ngOnInit(): void {
-    // Handle query parameters
     this.activatedRoute.queryParams.subscribe(params => {
       this.siteId = params['siteId'] || null;
       this.siteName = params['siteName'] || null;
@@ -71,15 +62,13 @@ export class CsvUploadComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      
-      // Enhanced file validation with detailed error messages
+
       const fileName = file.name.toLowerCase();
       const fileType = file.type;
       const fileSize = file.size;
-      
+
       console.log('File selected:', { name: file.name, type: fileType, size: fileSize });
-      
-      // Check file type
+
       if (!fileName.endsWith('.csv') && fileType !== 'text/csv') {
         if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
           this.uploadError = `Excel files (.xlsx/.xls) are not supported. Please convert "${file.name}" to CSV format first. In Excel: File → Save As → CSV (Comma delimited)`;
@@ -91,16 +80,14 @@ export class CsvUploadComponent implements OnInit {
         this.selectedFile = null;
         return;
       }
-      
-      // Check file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB
+
+      const maxSize = 10 * 1024 * 1024;
       if (fileSize > maxSize) {
         this.uploadError = `File is too large (${(fileSize / (1024 * 1024)).toFixed(1)}MB). Maximum allowed size is 10MB. Please reduce the file size or split it into smaller files.`;
         this.selectedFile = null;
         return;
       }
-      
-      // Check if file is empty
+
       if (fileSize === 0) {
         this.uploadError = `The selected file "${file.name}" is empty. Please select a file that contains drill hole data.`;
         this.selectedFile = null;
