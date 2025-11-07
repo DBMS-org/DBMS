@@ -2,8 +2,14 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { User } from '../../../core/models/user.model';
+import { StockRequestService } from '../../../core/services/stock-request.service';
+import { InventoryTransferService } from '../../../core/services/inventory-transfer.service';
+import { StockRequestStatistics } from '../../../core/models/stock-request.model';
+import { InventoryTransferRequest } from '../../../core/models/inventory-transfer.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,40 +21,28 @@ import { User } from '../../../core/models/user.model';
 export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   private userSubscription: Subscription = new Subscription();
-  
-  stats = {
-    pendingAddRequests: 5,
-    pendingEditRequests: 3,
-    pendingDeleteRequests: 2,
-    totalNotifications: 8,
-    dispatchOrders: 4,
-    rejectedRequests: 1,
-    approvedRequests: 12,
-    explosiveStockEntries: 156
-  };
 
-  recentActivities: any[] = [
-    { id: 1, action: 'Add Stock Request Submitted', item: 'C4 Explosives - Batch #C4-2024-001', time: '1 hour ago', type: 'add-request', status: 'pending' },
-    { id: 2, action: 'Edit Stock Request Approved', item: 'TNT - Batch #TNT-2024-045', time: '2 hours ago', type: 'edit-request', status: 'approved' },
-    { id: 3, action: 'Dispatch Notification Received', item: 'PETN - 25kg for Project Alpha', time: '3 hours ago', type: 'dispatch', status: 'prepare' },
-    { id: 4, action: 'Delete Request Rejected', item: 'Detonators - Batch #DET-2024-012', time: '4 hours ago', type: 'delete-request', status: 'rejected' },
-    { id: 5, action: 'Store Deletion Notification', item: 'Store Beta - Closure Notice', time: '6 hours ago', type: 'store-deletion', status: 'notification' }
-  ];
+  // Real statistics from APIs
+  stockRequestStats: StockRequestStatistics | null = null;
+  pendingTransfers: InventoryTransferRequest[] = [];
+  recentTransfers: InventoryTransferRequest[] = [];
 
-  systemMetrics = {
-    requestApprovalRate: '85%',
-    averageResponseTime: '2.5 hours',
-    dispatchEfficiency: '94%',
-    notificationStatus: 'All Read',
-    lastStockUpdate: '1 day ago',
-    totalBatches: 89
+  // Computed dashboard stats
+  dashboardStats = {
+    pendingInventoryRequests: 0,
+    readyToDispatch: 0,
+    completedThisMonth: 0,
+    totalTransfers: 0
   };
 
   isLoading = false;
+  lastRefreshed: Date = new Date();
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private stockRequestService: StockRequestService,
+    private inventoryTransferService: InventoryTransferService
   ) {}
 
   ngOnInit() {
@@ -67,30 +61,66 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDashboardData() {
-    // Load store manager specific data
     this.isLoading = true;
-    
-    // Simulate API call
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 1000);
+
+    // Load all data in parallel
+    forkJoin({
+      stockStats: this.stockRequestService.getStockRequestStatistics(),
+      transfers: this.inventoryTransferService.getTransferRequests({ pageSize: 100 }).pipe(
+        map(pagedList => pagedList.items)
+      )
+    }).subscribe({
+      next: (data) => {
+        this.stockRequestStats = data.stockStats;
+
+        // Filter pending transfers
+        this.pendingTransfers = data.transfers
+          .filter((t: InventoryTransferRequest) => t.status === 'Pending')
+          .slice(0, 5);
+
+        // Filter ready to dispatch
+        const readyToDispatch = data.transfers
+          .filter((t: InventoryTransferRequest) => t.status === 'Approved' && !t.dispatchDate);
+
+        // Get recent transfers (last 5 completed)
+        this.recentTransfers = data.transfers
+          .filter((t: InventoryTransferRequest) => t.status === 'Completed')
+          .sort((a: InventoryTransferRequest, b: InventoryTransferRequest) =>
+            new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime())
+          .slice(0, 5);
+
+        // Calculate completed this month
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const completedThisMonth = data.transfers.filter((t: InventoryTransferRequest) =>
+          t.status === 'Completed' &&
+          t.requestDate &&
+          new Date(t.requestDate) >= firstDayOfMonth
+        ).length;
+
+        // Update dashboard stats
+        this.dashboardStats = {
+          pendingInventoryRequests: this.pendingTransfers.length,
+          readyToDispatch: readyToDispatch.length,
+          completedThisMonth: completedThisMonth,
+          totalTransfers: data.transfers.length
+        };
+
+        this.lastRefreshed = new Date();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading dashboard data:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   getUserWelcomeMessage(): string {
     if (!this.currentUser) return 'Welcome, Store Manager';
-    
+
     const timeOfDay = this.getTimeOfDayGreeting();
     return `${timeOfDay}, ${this.currentUser.name}`;
-  }
-
-  getInitials(): string {
-    if (!this.currentUser?.name) return 'SM';
-    
-    const names = this.currentUser.name.split(' ');
-    if (names.length >= 2) {
-      return (names[0][0] + names[1][0]).toUpperCase();
-    }
-    return names[0].substring(0, 2).toUpperCase();
   }
 
   private getTimeOfDayGreeting(): string {
@@ -100,53 +130,69 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return 'Good evening';
   }
 
-  getActivityIcon(type: string): string {
-    switch (type) {
-      case 'add-request': return 'add_box';
-      case 'edit-request': return 'edit';
-      case 'delete-request': return 'delete';
-      case 'dispatch': return 'local_shipping';
-      case 'store-deletion': return 'store';
-      default: return 'notifications';
+  getStatusSeverity(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'approved':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'inprogress':
+      case 'in progress':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'completed':
+        return 'bg-teal-100 text-teal-800 border-teal-200';
+      case 'rejected':
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   }
 
-  getActivityStatusColor(status: string): string {
-    switch (status) {
-      case 'pending': return 'status-pending';
-      case 'approved': return 'status-approved';
-      case 'rejected': return 'status-rejected';
-      case 'prepare': return 'status-prepare';
-      case 'notification': return 'status-notification';
-      default: return '';
-    }
+  formatDate(date: Date | string | undefined): string {
+    if (!date) return 'N/A';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  getTimeAgo(date: Date | string | undefined): string {
+    if (!date) return 'N/A';
+    const now = new Date();
+    const past = new Date(date);
+    const diffMs = now.getTime() - past.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    return this.formatDate(date);
   }
 
   navigateToAddStock(): void {
     this.router.navigate(['/store-manager/add-stock']);
   }
 
-  navigateToEditStock(): void {
-    this.router.navigate(['/store-manager/edit-stock']);
+  navigateToRequestHistory(): void {
+    this.router.navigate(['/store-manager/request-history']);
   }
 
-  navigateToDeleteStock(): void {
-    this.router.navigate(['/store-manager/delete-stock']);
+  navigateToBlastingRequests(): void {
+    this.router.navigate(['/store-manager/blasting-engineer-requests']);
   }
 
-  navigateToNotifications(): void {
-    this.router.navigate(['/store-manager/notifications']);
-  }
-
-  navigateToDispatch(): void {
-    this.router.navigate(['/store-manager/dispatch']);
+  viewTransferDetails(transfer: InventoryTransferRequest): void {
+    this.router.navigate(['/store-manager/request-history'], {
+      queryParams: { requestId: transfer.requestNumber }
+    });
   }
 
   refreshDashboard(): void {
     this.loadDashboardData();
   }
 
-  trackActivity(index: number, activity: any): number {
-    return activity.id;
+  trackByRequestNumber(index: number, item: InventoryTransferRequest): string {
+    return item.requestNumber;
   }
 }
