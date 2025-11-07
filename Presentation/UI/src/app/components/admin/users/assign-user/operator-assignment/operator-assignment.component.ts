@@ -45,25 +45,21 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  // Data
   currentProject: OperatorProject | null = null;
   availableProjects: Project[] = [];
   availableMachines: Machine[] = [];
   allProjects: Project[] = [];
   allMachines: Machine[] = [];
 
-  // Form state
   selectedProjectId: number | null = null;
   selectedMachineId: number | null = null;
   reassignmentReason: string = '';
 
-  // UI state
   isLoading = false;
   error: string | null = null;
   successMessage: string | null = null;
   showConfirmDialog = false;
 
-  // Constants
   regionOptions = REGIONS;
   statusOptions = ['Active', 'Planning', 'In Progress', 'Completed', 'On Hold', 'Cancelled'];
 
@@ -236,17 +232,13 @@ export class OperatorAssignmentComponent implements OnInit, OnDestroy {
     console.log('Selected operator:', this.selectedOperator);
     console.log('Selected project ID:', this.selectedProjectId);
     console.log('Selected machine ID:', this.selectedMachineId);
-    
-    // Clear any previous errors
+
     this.error = null;
-    
+
     const operations: Observable<any>[] = [];
 
-    // Check if we're reassigning to the same project
     const isSameProject = this.currentProject && this.currentProject.id === this.selectedProjectId;
     console.log('Is same project:', isSameProject);
-
-    // 1. Update project assignment (skip if it's the same project to avoid bad request)
     if (!isSameProject) {
       const projectUpdate = this.projectService.getProject(this.selectedProjectId!).pipe(
         switchMap(project => {
