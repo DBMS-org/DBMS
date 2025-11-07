@@ -1,1 +1,1 @@
-Merge branch 'master' of https://github.com/DBMS-org/DBMS
+Remove excessive and redundant code and comments that were of no use.
