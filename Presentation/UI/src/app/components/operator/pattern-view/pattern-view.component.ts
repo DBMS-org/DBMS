@@ -163,7 +163,6 @@ export class PointsTableDialogComponent {
   sortedPoints: any[] = [];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: { points: any[] }) {
-    // Sort drill points by ID for organized display
     this.sortedPoints = [...data.points].sort((a, b) => a.id - b.id);
   }
 }
