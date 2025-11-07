@@ -15,7 +15,8 @@ namespace Application.DTOs.BlastingOperations
         public int SiteId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-
+        
+        // Navigation properties for UI
         public DrillPointDto? Point1DrillPoint { get; set; }
         public DrillPointDto? Point2DrillPoint { get; set; }
     }

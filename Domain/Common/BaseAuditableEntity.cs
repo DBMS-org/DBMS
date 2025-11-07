@@ -2,7 +2,7 @@ using System;
 
 namespace Domain.Common
 {
-    // Base entity with audit tracking
+    // Base entity with audit fields (CreatedAt, UpdatedAt, IsActive)
     public abstract class BaseAuditableEntity : BaseEntity
     {
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

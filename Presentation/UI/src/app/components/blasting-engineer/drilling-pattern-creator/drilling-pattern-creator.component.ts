@@ -121,12 +121,15 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   ) {}
 
   formatValue(value: number | undefined): string {
+    // Handle undefined or null values
     if (value === undefined || value === null) {
       return '0';
     }
+    // Show decimal places only if they're not .00
     return value % 1 === 0 ? value.toString() : value.toFixed(2);
   }
 
+  // Getter for accessing current scale through zoom service
   get scale(): number {
     return this.zoomService.getCurrentScale();
   }
@@ -136,8 +139,10 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   ngAfterViewInit(): void {
+    // Initialize site context from route parameters
     this.initializeSiteContext();
-
+    
+    // Determine read-only mode for operator
     if (this.authService.isOperator()) {
       this.siteService.getSite(this.currentSiteId).subscribe({
         next: site => {
@@ -154,10 +159,14 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
         }
       });
     }
-
+    
+    // Add a small delay to ensure the container is fully rendered
+    // This fixes the issue where grid doesn't show on initial navigation
     setTimeout(() => {
       this.initializeCanvas();
-
+      
+      // Initialize spacing and burden defaults after canvas initialization
+      // This ensures values are set immediately upon page load
       if (!this.isReadOnly) {
         this.initializeSpacingAndBurdenDefaults();
       }
@@ -165,6 +174,7 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   }
 
   private initializeSiteContext(): void {
+    // Get projectId and siteId from route URL pattern: /blasting-engineer/project-management/:projectId/sites/:siteId/pattern-creator
     const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
     const projectId = routeMatch ? +routeMatch[1] : null;
     const siteId = routeMatch ? +routeMatch[2] : null;
@@ -174,12 +184,15 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
       this.currentProjectId = projectId;
       this.currentSiteId = siteId;
       this.blastSequenceDataService.setSiteContext(projectId, siteId);
-
+      
+      // Load existing pattern data for this site
       this.loadExistingPatternData();
       this.loadBackendPatternData();
     } else {
       Logger.warn('Pattern Creator - Could not extract site context from route', this.router.url);
       Logger.warn('Route match result', routeMatch);
+      
+      // For testing purposes, use the known valid site combination
       Logger.info('Falling back to test site context: Project 1, Site 3');
       this.currentProjectId = 1;
       this.currentSiteId = 3;
@@ -192,9 +205,13 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private loadExistingPatternData(): void {
     const existingPatternData = this.blastSequenceDataService.getPatternData();
     if (existingPatternData && existingPatternData.drillPoints) {
+      // Load existing drill points
       this.drillPoints = [...existingPatternData.drillPoints];
+      
+      // Align loaded points to grid if they're misaligned
       this.alignAllPointsToGrid();
-
+      
+      // Update the currentId to continue from the highest existing ID
       if (this.drillPoints.length > 0) {
         const highestId = Math.max(...this.drillPoints.map(point => {
           const numericPart = parseInt(point.id.replace('DH', ''));

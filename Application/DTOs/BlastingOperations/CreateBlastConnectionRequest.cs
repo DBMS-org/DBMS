@@ -4,7 +4,7 @@ namespace Application.DTOs.BlastingOperations
 {
     public class CreateBlastConnectionRequest
     {
-        public string? Id { get; set; }
+        public string? Id { get; set; } // Optional ID for frontend-generated IDs
         public string Point1DrillPointId { get; set; } = string.Empty;
         public string Point2DrillPointId { get; set; } = string.Empty;
         public ConnectorType ConnectorType { get; set; }

@@ -22,11 +22,24 @@ namespace Domain.Entities.ProjectManagement
         public bool IsSimulationConfirmed { get; set; } = false;
         public bool IsOperatorCompleted { get; set; } = false;
 
+        /// <summary>
+        /// Indicates whether this project site has been marked as completed
+        /// </summary>
         public bool IsCompleted { get; set; } = false;
+
+        /// <summary>
+        /// Date and time when the site was marked as completed
+        /// </summary>
         public DateTime? CompletedAt { get; set; }
+
+        /// <summary>
+        /// User ID of the person who marked the site as completed
+        /// </summary>
         public int? CompletedByUserId { get; set; }
 
         public int OwningUserId => Project?.OwningUserId ?? 0;
+
+        // Navigation properties
         public virtual Project Project { get; set; } = null!;
         public virtual ICollection<ExplosiveApprovalRequest> ExplosiveApprovalRequests { get; set; } = new List<ExplosiveApprovalRequest>();
         public virtual User? CompletedByUser { get; set; }

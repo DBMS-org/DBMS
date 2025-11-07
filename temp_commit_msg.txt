@@ -1,1 +1,1 @@
-removed and cleared operator's unused code and excessive comments.
+Cleaned up typescript files by removing unused mockups, deprecated logic, and excessive commented sections.

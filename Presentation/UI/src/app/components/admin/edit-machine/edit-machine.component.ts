@@ -144,7 +144,8 @@ export class EditMachineComponent implements OnInit {
       this.machineService.updateMachine(this.machine.id, updatedMachine).subscribe({
         next: (savedMachine) => {
           this.successMessage = 'Machine updated successfully!';
-
+          
+          // Auto-close after success
           setTimeout(() => {
             this.machineSaved.emit(savedMachine);
           }, 1500);
@@ -159,6 +160,7 @@ export class EditMachineComponent implements OnInit {
         }
       });
     } else {
+      // Mark all fields as touched to show validation errors
       Object.keys(this.machineForm.controls).forEach(key => {
         this.machineForm.get(key)?.markAsTouched();
       });

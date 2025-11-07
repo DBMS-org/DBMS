@@ -6,6 +6,7 @@ namespace Domain.Entities.MachineManagement
 {
     public class Machine : BaseAuditableEntity
     {
+        // Identity comes from BaseEntity (Id)
         public string Name { get; set; } = string.Empty;
         
         public string Type { get; set; } = string.Empty;
@@ -36,13 +37,16 @@ namespace Domain.Entities.MachineManagement
         
         public DateTime? LastMaintenanceDate { get; set; }
         public DateTime? NextMaintenanceDate { get; set; }
-
+        
+        // JSON field for specifications
         public string? SpecificationsJson { get; set; }
-
+        
+        // Foreign key relationships
         public int? ProjectId { get; set; }
         public int? OperatorId { get; set; }
         public int? RegionId { get; set; }
-
+        
+        // Navigation properties
         public virtual Project? Project { get; private set; }
         public virtual User? Operator { get; private set; }
         public virtual Region? Region { get; private set; }

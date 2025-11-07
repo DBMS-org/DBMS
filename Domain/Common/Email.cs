@@ -1,6 +1,6 @@
 namespace Domain.Common
 {
-    // Email value object with validation
+    // Email value object with validation and string conversion support
     public readonly record struct Email
     {
         public string Value { get; }
