@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Application.DTOs.BlastingOperations
 {
-    // Main DTO for site blasting data operations
     public class SiteBlastingDataDto
     {
         public int Id { get; set; }
@@ -16,7 +15,6 @@ namespace Application.DTOs.BlastingOperations
         public string CreatedByName { get; set; } = string.Empty;
     }
 
-    // DTO for creating/updating site blasting data
     public class CreateSiteBlastingDataRequest
     {
         [Required]
