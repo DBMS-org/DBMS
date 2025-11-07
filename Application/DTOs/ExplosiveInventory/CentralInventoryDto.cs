@@ -3,9 +3,6 @@ using Domain.Entities.StoreManagement.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
-    /// <summary>
-    /// Response DTO for Central Warehouse Inventory
-    /// </summary>
     public class CentralInventoryDto
     {
         public int Id { get; set; }
@@ -33,7 +30,6 @@ namespace Application.DTOs.ExplosiveInventory
         public InventoryStatus Status { get; set; }
         public string StatusName { get; set; } = string.Empty;
 
-        // Only one will be populated based on explosive type
         public ANFOTechnicalPropertiesDto? ANFOProperties { get; set; }
         public EmulsionTechnicalPropertiesDto? EmulsionProperties { get; set; }
 

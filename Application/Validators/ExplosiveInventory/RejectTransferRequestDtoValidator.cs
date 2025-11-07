@@ -3,9 +3,6 @@ using FluentValidation;
 
 namespace Application.Validators.ExplosiveInventory
 {
-    /// <summary>
-    /// Validator for transfer request rejection
-    /// </summary>
     public class RejectTransferRequestDtoValidator : AbstractValidator<RejectTransferRequestDto>
     {
         public RejectTransferRequestDtoValidator()

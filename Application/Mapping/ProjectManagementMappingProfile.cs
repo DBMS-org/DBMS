@@ -4,9 +4,6 @@ using Domain.Entities.ProjectManagement;
 
 namespace Application.Mapping
 {
-    /// <summary>
-    /// AutoMapper profile for Project Management mappings
-    /// </summary>
     public class ProjectManagementMappingProfile : Profile
     {
         public ProjectManagementMappingProfile()

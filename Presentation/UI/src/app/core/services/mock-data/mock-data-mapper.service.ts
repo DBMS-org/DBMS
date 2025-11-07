@@ -2,10 +2,7 @@ import { Injectable } from '@angular/core';
 import { StockRequest, StockRequestStatus } from '../../models/stock-request.model';
 import { ExplosiveRequest, RequestStatus } from '../../../components/explosive-manager/requests/models/explosive-request.model';
 
-/**
- * Mock Data Mapper Service
- * Handles transformation between different data models used by components
- */
+// Transforms data between different model formats
 @Injectable({
   providedIn: 'root'
 })
@@ -13,9 +10,7 @@ export class MockDataMapperService {
 
   constructor() {}
 
-  /**
-   * Map StockRequest status to ExplosiveRequest status
-   */
+  // Map stock request status to explosive request status
   mapStockRequestStatusToExplosiveRequestStatus(stockStatus: StockRequestStatus): RequestStatus {
     const statusMap: { [key in StockRequestStatus]: RequestStatus } = {
       [StockRequestStatus.PENDING]: RequestStatus.PENDING,
@@ -31,9 +26,7 @@ export class MockDataMapperService {
     return statusMap[stockStatus] || RequestStatus.PENDING;
   }
 
-  /**
-   * Map ExplosiveRequest status to StockRequest status
-   */
+  // Map explosive request status to stock request status
   mapExplosiveRequestStatusToStockRequestStatus(explosiveStatus: RequestStatus): StockRequestStatus {
     const statusMap: { [key in RequestStatus]: StockRequestStatus } = {
       [RequestStatus.PENDING]: StockRequestStatus.PENDING,
@@ -48,11 +41,8 @@ export class MockDataMapperService {
     return statusMap[explosiveStatus] || StockRequestStatus.PENDING;
   }
 
-  /**
-   * Convert StockRequest to ExplosiveRequest format
-   */
+  // Convert StockRequest to ExplosiveRequest format
   stockRequestToExplosiveRequest(stockRequest: StockRequest): ExplosiveRequest {
-    // Get primary explosive type from first item
     const primaryItem = stockRequest.requestedItems[0];
     
     return {
@@ -83,9 +73,7 @@ export class MockDataMapperService {
     };
   }
 
-  /**
-   * Convert ExplosiveRequest to StockRequest format
-   */
+  // Convert ExplosiveRequest to StockRequest format
   explosiveRequestToStockRequest(explosiveRequest: ExplosiveRequest): StockRequest {
     return {
       id: explosiveRequest.id,
@@ -116,9 +104,7 @@ export class MockDataMapperService {
     };
   }
 
-  /**
-   * Ensure data consistency between formats
-   */
+  // Validate data consistency between formats
   validateDataConsistency(stockRequest: StockRequest, explosiveRequest: ExplosiveRequest): boolean {
     return (
       stockRequest.id === explosiveRequest.id &&
@@ -129,9 +115,7 @@ export class MockDataMapperService {
     );
   }
 
-  /**
-   * Get unified request data that can be used by both components
-   */
+  // Get unified request data for both components
   getUnifiedRequestData(baseData: any): { stockRequest: StockRequest; explosiveRequest: ExplosiveRequest } {
     let stockRequest: StockRequest;
     let explosiveRequest: ExplosiveRequest;

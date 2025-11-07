@@ -1,17 +1,11 @@
 namespace Application.Exceptions
 {
-    /// <summary>
-    /// Base exception for all application layer exceptions
-    /// </summary>
     public abstract class ApplicationException : Exception
     {
         protected ApplicationException(string message) : base(message) { }
         protected ApplicationException(string message, Exception innerException) : base(message, innerException) { }
     }
 
-    /// <summary>
-    /// Exception thrown when input validation fails
-    /// </summary>
     public class ValidationException : ApplicationException
     {
         public string[] ValidationErrors { get; }
@@ -27,9 +21,6 @@ namespace Application.Exceptions
         }
     }
 
-    /// <summary>
-    /// Exception thrown when a requested entity is not found
-    /// </summary>
     public class EntityNotFoundException : ApplicationException
     {
         public string EntityType { get; }
@@ -43,9 +34,6 @@ namespace Application.Exceptions
         }
     }
 
-    /// <summary>
-    /// Exception thrown when trying to create an entity that already exists
-    /// </summary>
     public class EntityAlreadyExistsException : ApplicationException
     {
         public string EntityType { get; }
@@ -61,9 +49,6 @@ namespace Application.Exceptions
         }
     }
 
-    /// <summary>
-    /// Exception thrown when a business rule is violated
-    /// </summary>
     public class BusinessRuleViolationException : ApplicationException
     {
         public string RuleName { get; }
@@ -75,9 +60,6 @@ namespace Application.Exceptions
         }
     }
 
-    /// <summary>
-    /// Exception thrown when external service operations fail
-    /// </summary>
     public class ExternalServiceException : ApplicationException
     {
         public string ServiceName { get; }
@@ -95,9 +77,6 @@ namespace Application.Exceptions
         }
     }
 
-    /// <summary>
-    /// Exception thrown when database operations fail
-    /// </summary>
     public class DataAccessException : ApplicationException
     {
         public string Operation { get; }
