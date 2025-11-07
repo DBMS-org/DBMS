@@ -1,1 +1,1 @@
-Cleaned up typescript files by removing unused mockups, deprecated logic, and excessive commented sections.
+store manager dashboard

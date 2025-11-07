@@ -22,8 +22,7 @@ namespace Domain.Entities.ProjectManagement
         public int? RegionId { get; set; }
         
         public int OwningUserId => AssignedUserId ?? 0;
-        
-        // Navigation properties
+
         public virtual User? AssignedUser { get; set; }
         public virtual Region? RegionNavigation { get; set; }
         public virtual ICollection<ProjectSite> ProjectSites { get; set; } = new List<ProjectSite>();

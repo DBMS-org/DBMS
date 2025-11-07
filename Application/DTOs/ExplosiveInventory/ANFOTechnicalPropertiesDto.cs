@@ -2,9 +2,6 @@ using Domain.Entities.ExplosiveInventory.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
-    /// <summary>
-    /// DTO for ANFO technical specifications
-    /// </summary>
     public class ANFOTechnicalPropertiesDto
     {
         public int Id { get; set; }
