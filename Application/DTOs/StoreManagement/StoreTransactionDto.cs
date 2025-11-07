@@ -19,8 +19,7 @@ namespace Application.DTOs.StoreManagement
         public DateTime TransactionDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        
-        // Navigation properties (for detailed views)
+
         public string? StoreName { get; set; }
         public string? RelatedStoreName { get; set; }
         public string? ProcessedByUserName { get; set; }
