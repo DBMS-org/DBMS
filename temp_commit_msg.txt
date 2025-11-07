@@ -1,1 +1,1 @@
-removed mock implementations, redundant code blocks, and obsolete comments
+removed and cleared operator's unused code and excessive comments.

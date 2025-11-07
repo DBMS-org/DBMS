@@ -77,12 +77,7 @@ export class DrillPointService {
     };
   }
 
-  /**
-   * Aligns coordinates to the nearest grid intersection based on spacing and burden
-   * For spacing=3, burden=3: valid coordinates are (0,0), (3,0), (6,0), (0,3), (3,3), (6,3), etc.
-   */
   private alignCoordinatesToGrid(x: number, y: number, spacing: number, burden: number): { x: number, y: number } {
-    // Safety check: ensure spacing and burden are valid numbers
     if (!spacing || spacing <= 0 || isNaN(spacing)) {
       console.error('Invalid spacing value:', spacing, 'using default:', CANVAS_CONSTANTS.DEFAULT_SETTINGS.spacing);
       spacing = CANVAS_CONSTANTS.DEFAULT_SETTINGS.spacing;
@@ -100,12 +95,8 @@ export class DrillPointService {
     return { x: alignedX, y: alignedY };
   }
 
-  /**
-   * Corrects existing drill points to align with their spacing and burden values
-   */
   alignExistingPointsToGrid(drillPoints: DrillPoint[]): DrillPoint[] {
     return drillPoints.map(point => {
-      // Safety check: ensure point has valid spacing and burden values
       const safeSpacing = point.spacing || CANVAS_CONSTANTS.DEFAULT_SETTINGS.spacing;
       const safeBurden = point.burden || CANVAS_CONSTANTS.DEFAULT_SETTINGS.burden;
       
@@ -121,9 +112,6 @@ export class DrillPointService {
     });
   }
 
-  /**
-   * Validates if a drill point's coordinates align with its spacing and burden values
-   */
   validatePointAlignment(point: DrillPoint): boolean {
     const tolerance = 0.01; // Small tolerance for floating point precision
     const expectedX = Math.round(point.x / point.spacing) * point.spacing;
@@ -132,11 +120,6 @@ export class DrillPointService {
     return Math.abs(point.x - expectedX) < tolerance && Math.abs(point.y - expectedY) < tolerance;
   }
 
-  /**
-   * Generates a regular grid pattern of drill points
-   * Option 1: Standard grid starting at (0,0): (0,0), (3,0), (6,0), (0,2.5), (3,2.5), (6,2.5)...
-   * Option 2: Grid starting at (spacing,burden): (3,2.5), (6,2.5), (9,2.5), (3,5), (6,5), (9,5)...
-   */
   generateGridPattern(
     rows: number, 
     columns: number, 
@@ -148,8 +131,6 @@ export class DrillPointService {
     startAtSpacingBurden: boolean = false
   ): DrillPoint[] {
     const points: DrillPoint[] = [];
-    
-    // If startAtSpacingBurden is true, adjust the starting position
     const actualStartX = startAtSpacingBurden ? spacing : startX;
     const actualStartY = startAtSpacingBurden ? burden : startY;
     
@@ -161,8 +142,8 @@ export class DrillPointService {
         points.push({
           x: Number(x.toFixed(2)),
           y: Number(y.toFixed(2)),
-          id: `DH${this.currentId++}`, // Use DH1, DH2 format for ID instead of GUID
-          displayName: `DH${this.currentId - 1}`, // Keep consistent with ID
+          id: `DH${this.currentId++}`,
+          displayName: `DH${this.currentId - 1}`,
           depth: depth,
           spacing: spacing,
           burden: burden,
@@ -192,12 +173,10 @@ export class DrillPointService {
     return [];
   }
 
-  // Method to reset hole numbering (if explicitly needed)
   resetHoleNumbering(): void {
     this.currentId = 1;
   }
 
-  // Methods to manage currentId for continuous numbering
   setCurrentId(id: number): void {
     this.currentId = id;
   }

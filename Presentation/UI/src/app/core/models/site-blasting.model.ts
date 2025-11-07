@@ -1,4 +1,3 @@
-// Site Blasting Data Models
 export interface SiteBlastingData {
   id?: number;
   projectId: number;
@@ -23,7 +22,6 @@ export interface UpdateSiteBlastingDataRequest {
 
 
 
-// Related Models (from existing drill-point.model.ts)
 export interface DrillPoint {
   x: number;
   y: number;
@@ -31,8 +29,6 @@ export interface DrillPoint {
   depth: number;
   spacing: number;
   burden: number;
-  
-  // Explosive Properties
   volume?: number;
   anfo?: number;
   emulsion?: number;
@@ -40,7 +36,6 @@ export interface DrillPoint {
 
 export interface BlastConnection {
   id: string;
-  // Support both naming conventions for compatibility
   point1DrillPointId: string;
   point2DrillPointId: string;
   fromHoleId: string;
@@ -48,13 +43,11 @@ export interface BlastConnection {
   connectorType: ConnectorType;
   delay: number;
   sequence: number;
-  // Starting hole for blast simulation
   isStartingHole?: boolean;
   projectId: number;
   siteId: number;
   createdAt?: Date;
   updatedAt?: Date;
-  // Navigation properties for UI
   point1DrillPoint?: DrillPoint;
   point2DrillPoint?: DrillPoint;
   startPoint?: {
