@@ -43,12 +43,14 @@ export class ProjectSitesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading project:', error);
+        // Fallback to mock data
         this.loadMockProject();
       }
     });
   }
 
   private loadMockProject() {
+    // Mock project data as fallback
     this.project = {
       id: this.projectId,
       name: 'Project Alpha - Muttrah Construction',
@@ -111,5 +113,6 @@ export class ProjectSitesComponent implements OnInit {
   addSite() {
     const projectName = this.project?.name || 'Default Project';
     console.log(`Adding new site for project: ${projectName}`);
+    // TODO: Navigate to add site component
   }
 }

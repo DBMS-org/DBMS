@@ -12,23 +12,25 @@ namespace Application.DTOs.DrillingOperations
         public double Elevation { get; set; }
         public double Length { get; set; }
         public double Depth { get; set; }
-
-        // Nullable for 2D/3D compatibility
+        
+        // Make these nullable to support 2D fallback when 3D data is unavailable
         public double? Azimuth { get; set; }
         public double? Dip { get; set; }
-
+        
         public double ActualDepth { get; set; }
         public double Stemming { get; set; }
-
+        
+        // Project and Site context - these will be camelCase from frontend
         [Required]
         public int ProjectId { get; set; }
-
+        
         [Required]
         public int SiteId { get; set; }
-
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
+        
+        // Helper properties to determine view type
         public bool Has3DData => Azimuth.HasValue && Dip.HasValue;
         public bool RequiresFallbackTo2D => !Has3DData;
     }

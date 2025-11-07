@@ -1,23 +1,30 @@
+// Enhanced Usage Logging Models
+
 export interface MachineUsageLog {
   id?: string;
   machineId: string;
   machineName: string;
   operatorId: string;
   logDate: Date;
-
-  engineHours: string;
-  idleHours: string;
-  workingHours: string;
-
-  fuelConsumed?: number;
-
+  
+  // Hours tracking
+  engineHours: string; // Format: "HH:MM"
+  idleHours: string; // Format: "HH:MM"
+  workingHours: string; // Format: "HH:MM"
+  
+  // Fuel consumption (optional)
+  fuelConsumed?: number; // in liters
+  
+  // Downtime/Breakdown tracking
   hasDowntime: boolean;
-  downtimeHours?: string;
-  breakdownDescription?: string;
-
-  remarks?: string;
-  attachments?: UsageLogAttachment[];
-
+  downtimeHours?: string; // Format: "HH:MM" - conditional field
+  breakdownDescription?: string; // conditional field
+  
+  // Additional information
+  remarks?: string; // Free text for operator observations
+  attachments?: UsageLogAttachment[]; // Optional file uploads
+  
+  // Metadata
   createdAt: Date;
   updatedAt: Date;
   status: UsageLogStatus;
@@ -81,6 +88,7 @@ export interface UsageLogFormData {
   attachments: File[];
 }
 
+// Validation helpers
 export interface UsageLogValidation {
   isValid: boolean;
   errors: {
@@ -96,6 +104,7 @@ export interface UsageLogValidation {
   };
 }
 
+// Time format utilities
 export interface TimeComponents {
   hours: number;
   minutes: number;
@@ -127,7 +136,9 @@ export class UsageLogUtils {
     const engine = this.convertTimeToDecimal(engineHours);
     const idle = this.convertTimeToDecimal(idleHours);
     const working = this.convertTimeToDecimal(workingHours);
-
+    
+    // Engine hours should be approximately equal to idle + working hours
+    // Allow for small discrepancies (within 0.5 hours)
     const totalOperational = idle + working;
     return Math.abs(engine - totalOperational) <= 0.5;
   }

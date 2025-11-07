@@ -39,9 +39,11 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // Get user ID from route parameters
     this.route.params.subscribe(params => {
       const userId = +params['id'];
       if (userId) {
+        // Force refresh data every time component loads
         this.loadUser(userId);
       }
     });
@@ -55,6 +57,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
+    // Add timestamp to avoid caching
+    const timestamp = new Date().getTime();
     const userObservable = this.userService.getUser(userId);
 
     userObservable.subscribe({
@@ -67,6 +71,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
         this.error = error.message;
         this.loading = false;
         console.error('Error loading user:', error);
+        
 
         this.loadUserActivitiesFromRealData(userId);
       }
@@ -75,7 +80,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   loadUserActivitiesFromRealData(userId: number) {
     this.loadingActivities = true;
-
+    
+    // Load both user data and projects to build comprehensive activity timeline
     const subscription = forkJoin({
       user: this.userService.getUser(userId),
       allProjects: this.projectService.getProjects()
@@ -86,6 +92,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading activity data:', error);
+        // Fall back to basic activities from user data only
         if (this.user) {
           this.activities = this.buildBasicActivitiesFromUser(this.user);
         }

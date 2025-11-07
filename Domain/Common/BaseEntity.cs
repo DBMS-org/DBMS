@@ -1,8 +1,13 @@
 namespace Domain.Common
 {
-    // Base entity with ID and domain events support
+    /// <summary>
+    ///     Minimal base entity with identity key and optional domain events support.
+    /// </summary>
     public abstract class BaseEntity
     {
+        /// <summary>
+        ///     Primary key – use int across the codebase for simplicity.
+        /// </summary>
         public int Id { get; set; }
 
         private readonly List<IDomainEvent> _domainEvents = new();

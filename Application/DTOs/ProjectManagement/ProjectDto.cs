@@ -13,7 +13,8 @@ namespace Application.DTOs.ProjectManagement
         public int? RegionId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-
+        
+        // Navigation properties (optional, for detailed views)
         public string? AssignedUserName { get; set; }
         public string? RegionName { get; set; }
         public int ProjectSitesCount { get; set; }

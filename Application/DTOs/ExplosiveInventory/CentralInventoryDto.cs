@@ -13,30 +13,36 @@ namespace Application.DTOs.ExplosiveInventory
         public ExplosiveType ExplosiveType { get; set; }
         public string ExplosiveTypeName { get; set; } = string.Empty;
 
+        // Quantity
         public decimal Quantity { get; set; }
         public decimal AllocatedQuantity { get; set; }
         public decimal AvailableQuantity { get; set; }
         public string Unit { get; set; } = string.Empty;
 
+        // Dates
         public DateTime ManufacturingDate { get; set; }
         public DateTime ExpiryDate { get; set; }
         public int DaysUntilExpiry { get; set; }
         public bool IsExpired { get; set; }
         public bool IsExpiringSoon { get; set; }
 
+        // Supplier
         public string Supplier { get; set; } = string.Empty;
         public string? ManufacturerBatchNumber { get; set; }
 
+        // Storage
         public string StorageLocation { get; set; } = string.Empty;
         public string CentralWarehouseName { get; set; } = string.Empty;
 
+        // Status
         public InventoryStatus Status { get; set; }
         public string StatusName { get; set; } = string.Empty;
 
-        // Only one will be populated based on explosive type
+        // Technical Properties (only one will be populated based on type)
         public ANFOTechnicalPropertiesDto? ANFOProperties { get; set; }
         public EmulsionTechnicalPropertiesDto? EmulsionProperties { get; set; }
 
+        // Metadata
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; }

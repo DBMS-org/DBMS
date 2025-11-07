@@ -1,1 +1,1 @@
-remove unused and mock code, clean up redundant comments, and tidy up .cs files
+refactor(ts): implemented refined structural patterns, removed obsolete code paths and mock layers, and introduced consistent state handling across core components to enhance system reliability

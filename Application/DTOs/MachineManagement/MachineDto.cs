@@ -26,7 +26,8 @@ namespace Application.DTOs.MachineManagement
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; }
-
+        
+        // Navigation properties (optional, for detailed views)
         public string? ProjectName { get; set; }
         public string? OperatorName { get; set; }
         public string? RegionName { get; set; }

@@ -26,7 +26,8 @@ namespace Domain.Entities.UserManagement
         public DateTime? LastLoginAt { get; set; }
         public string? PasswordResetCode { get; set; }
         public DateTime? PasswordResetCodeExpiry { get; set; }
-
+        
+        // Navigation properties
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public virtual ICollection<StoreManagement.Store> ManagedStores { get; set; } = new List<StoreManagement.Store>();
     }

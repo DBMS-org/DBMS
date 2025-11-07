@@ -85,16 +85,19 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   private loadDashboardData() {
+    // Load general dashboard statistics
     this.loadStats();
   }
 
   private loadUserSpecificData() {
     if (!this.currentUser) return;
 
+    // User-specific customizations can be added here if needed
     console.log('Loading user-specific data for:', this.currentUser.name);
   }
 
   private loadStats() {
+    // Load comprehensive admin statistics from database
     forkJoin({
       users: this.userService.getUsers(),
       projects: this.projectService.getProjects(),
@@ -105,30 +108,37 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       assignmentRequests: this.machineService.getAllAssignmentRequests()
     }).subscribe({
       next: ({ users, projects, sites, drillHoles, machines, machineStats, assignmentRequests }) => {
+        // User statistics from database
         this.stats.totalUsers = users.length;
         this.stats.activeUsers = users.filter((u: any) => u.status === 'Active').length;
         this.stats.deactivatedUsers = users.filter((u: any) => u.status === 'Inactive' || u.status === 'Deactivated').length;
-
+        
+        // Project statistics from database
         this.stats.totalProjects = projects.length;
         this.stats.activeProjects = projects.filter((p: any) => p.status === 'Active').length;
         this.stats.pendingProjects = projects.filter((p: any) => p.status === 'Pending').length;
         this.stats.completedProjects = projects.filter((p: any) => p.status === 'Completed').length;
         this.stats.archivedProjects = projects.filter((p: any) => p.status === 'Archived').length;
-
+        
+        // Site statistics from database
         this.stats.totalSites = sites.length;
         this.stats.activeSites = sites.filter((s: any) => s.status === 'Active').length;
-
+        
+        // Drill hole statistics from database
         this.stats.totalDrillHoles = drillHoles.length;
         const sitesWithDrillHoles = new Set(drillHoles.map((h: any) => h.siteId).filter((id: any) => id));
         this.stats.activeDrillSites = sitesWithDrillHoles.size;
-
+        
+        // Machine statistics from real API data
         this.stats.totalMachines = machineStats.totalMachines || machines.length || 0;
         this.stats.assignedMachines = machineStats.assignedMachines || machines.filter((m: Machine) => m.status === MachineStatus.ASSIGNED).length || 0;
         this.stats.pendingAssignments = assignmentRequests.filter((r: any) => r.status === 'Pending').length || 0;
         this.stats.machineRequests = assignmentRequests.length || 0;
-
+        
+        // Calculate drill analytics from database
         this.calculateDrillAnalytics(drillHoles);
-
+        
+        // Update system metrics with real data
         this.systemMetrics.totalDataUploads = sitesWithDrillHoles.size;
         this.systemMetrics.averageDrillDepth = this.quickStats.averageDepth;
         this.systemMetrics.dataQuality = drillHoles.length > 100 ? 'Excellent' : drillHoles.length > 50 ? 'Good' : 'Limited';
@@ -156,6 +166,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading admin dashboard data:', error);
+        // Set fallback values on error
         this.stats = {
           totalUsers: 0,
           activeUsers: 0,
@@ -209,7 +220,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
 
   getLastLoginInfo(): string {
     if (!this.currentUser) return '';
-
+    
+    // In a real app, you'd get this from the user's last login data
     return 'Last login: Today at 9:30 AM';
   }
 
@@ -246,11 +258,13 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     };
   }
 
+  // Method to refresh dashboard data manually
   refreshDashboard(): void {
     this.isLoading = true;
     this.loadDashboardData();
   }
 
+  // Navigation methods for admin actions
   navigateToUsers(): void {
     this.router.navigate(['/admin/users']);
   }
@@ -276,6 +290,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   submitMachineAssignmentRequest(): void {
+    // This would open a dialog or navigate to machine assignment request form
     console.log('Opening machine assignment request form...');
     this.router.navigate(['/admin/machine-assignments'], { queryParams: { action: 'request' } });
   }

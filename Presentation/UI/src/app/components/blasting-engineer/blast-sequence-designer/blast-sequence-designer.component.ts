@@ -64,6 +64,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   connections: BlastConnection[] = [];
   detonators: DetonatorInfo[] = [];
   
+  // UI State
   isConnectionMode = false;
   showConnections = true;
   showConnectionsPanel = true;
@@ -79,14 +80,16 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   currentSequence = 1;
   showHelp = false;
 
-  // Delay options in milliseconds
-  detonatingCordDelays = [17, 25, 42];
-  connectorsDelays = [17, 25, 42, 67];
+  // Predefined delay options for non-electric systems
+  detonatingCordDelays = [17, 25, 42]; // milliseconds - no 67ms for detonating cord
+  connectorsDelays = [17, 25, 42, 67]; // milliseconds - includes 67ms for connectors
   
+  // Visual elements
   private drillPointObjects: Map<string, Konva.Group> = new Map();
   private connectionObjects: Map<string, Konva.Group> = new Map();
   private temporaryLine: Konva.Line | null = null;
-
+  
+  // Zoom and Pan properties
   private scale = 1;
   private panX = 0;
   private panY = 0;
@@ -95,32 +98,39 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   private minScale = 0.1;
   private maxScale = 5;
   
+  // Enums for template
   ConnectorType = ConnectorType;
   DetonatorType = DetonatorType;
   
   private resizeTimeout: any;
   private isInitialized = false;
 
+  // Save functionality
   public isSaved = false;
   private saveTimeout: any;
 
+  // Site context
   private currentProjectId!: number;
   private currentSiteId!: number;
 
+  // Continuous connection throttling
   private lastHoverTime = 0;
-  private hoverThrottleDelay = 100;
+  private hoverThrottleDelay = 100; // milliseconds
   private lastHoveredHoleId: string | null = null;
 
+  // Context menu and starting hole functionality
   public showContextMenu = false;
   public contextMenuX = 0;
   public contextMenuY = 0;
   public contextMenuHole: any = null;
   public startingHoleId: string | null = null;
 
+  // Smart Hints System
   public showSmartHint = true;
   public currentHint: SmartHint | null = null;
   public dismissedHints: Set<string> = new Set();
 
+  // Progressive Workflow
   public showWizard = false;
   public wizardStep = 1;
   public isFirstTimeUser = true;
@@ -155,10 +165,12 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
     }
   ];
 
+  // Enhanced Status
   public completionPercentage = 0;
   public nextActionText = '';
   public nextActionIcon = '';
 
+  // Connection Preview
   public previewConnection: { from: DrillPoint, to: DrillPoint } | null = null;
   public hoveredHole: DrillPoint | null = null;
 
@@ -171,27 +183,36 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   ) {}
 
   ngAfterViewInit(): void {
+    // Check if user has completed wizard before
     const wizardCompleted = localStorage.getItem('blast-sequence-wizard-completed');
     if (!wizardCompleted) {
       this.isFirstTimeUser = true;
       setTimeout(() => this.startWizard(), 1000);
     }
 
+    // Apply intelligent defaults
     this.applyIntelligentDefaults();
+
+    // Initialize site context from route parameters
     this.initializeSiteContext();
+    
+    // Load pattern data first, then initialize canvas when data is available
     this.loadPatternData();
+    
+    // Initialize smart hints
     this.updateSmartHints();
   }
 
   private initializeSiteContext(): void {
+    // Simplified: extract project and site from route
     const routeMatch = this.router.url.match(/project-management\/(\d+)\/sites\/(\d+)/);
-    const projectId = routeMatch ? +routeMatch[1] : 4;
-    const siteId = routeMatch ? +routeMatch[2] : 3;
+    const projectId = routeMatch ? +routeMatch[1] : 4; // Default to project 4 for testing
+    const siteId = routeMatch ? +routeMatch[2] : 3;    // Default to site 3 for testing
 
     console.log('🔍 Sequence Designer - Setting site context', { projectId, siteId });
     this.currentProjectId = projectId;
     this.currentSiteId = siteId;
-
+    
     this.loadBackendSequenceData();
   }
 
@@ -204,13 +225,20 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
   private loadPatternData(): void {
     if (!this.patternData && this.currentProjectId && this.currentSiteId) {
+      // If no pattern data in memory, try to load from backend
       this.unifiedDrillDataService.loadPatternData(this.currentProjectId, this.currentSiteId)
         .subscribe({
           next: (patternData) => {
             if (patternData && patternData.drillLocations && patternData.drillLocations.length > 0) {
+              
+              // Use the pattern data directly - it's already in the correct format
               this.patternData = patternData;
+              
               console.log('✅ Loaded pattern from backend with', patternData.drillLocations.length, 'points');
+              
+              // Initialize canvas NOW that we have data
               this.initializeCanvasWithData();
+              
               this.cdr.detectChanges();
             } else {
               console.warn('⚠️ No pattern data available in backend. Please create a pattern first.');
@@ -229,16 +257,22 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
       this.notification.showError('No drill pattern found. Please create a pattern first.');
       this.backToPatternCreator();
     } else {
+      // Pattern data already exists, initialize canvas
       this.initializeCanvasWithData();
     }
-
+    
+    // Initialize empty connections - they will be loaded separately
     this.connections = [];
     this.updateFilteredConnections();
+    
     this.cdr.detectChanges();
   }
 
   private initializeCanvasWithData(): void {
-    setTimeout(() => this.initializeCanvas(), 100);
+    // Wait a bit for the DOM to be ready
+    setTimeout(() => {
+      this.initializeCanvas();
+    }, 100);
   }
 
   private loadBackendSequenceData(): void {
@@ -248,6 +282,7 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
 
     console.log('🔍 Loading sequence data for project', this.currentProjectId, 'site', this.currentSiteId);
 
+    // Try to load blast connections from the API
     this.siteBlastingService.getBlastConnections(this.currentProjectId, this.currentSiteId)
       .subscribe({
         next: (connections) => {

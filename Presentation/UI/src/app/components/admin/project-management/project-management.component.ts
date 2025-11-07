@@ -44,7 +44,8 @@ export class ProjectManagementComponent implements OnInit {
   loadProjects() {
     this.loading = true;
     this.error = null;
-
+    
+    // Use role-based project filtering
     this.projectService.getProjectsForCurrentUser().subscribe({
       next: (projects) => {
         this.projects = projects;
@@ -55,13 +56,15 @@ export class ProjectManagementComponent implements OnInit {
         this.error = error.message;
         this.loading = false;
         console.error('Error loading projects:', error);
-
+        
+        // Fallback to mock data if API fails
         this.loadMockData();
       }
     });
   }
 
   private loadMockData() {
+    // Mock data as fallback - filter based on user role and region
     const allMockProjects = [
       {
         id: 1,
@@ -101,6 +104,7 @@ export class ProjectManagementComponent implements OnInit {
       }
     ];
 
+    // Apply the same role-based filtering to mock data
     const currentUser = this.authService.getCurrentUser();
     
     if (this.authService.isAdmin()) {
@@ -127,6 +131,7 @@ export class ProjectManagementComponent implements OnInit {
   private applyFilters() {
     let filtered = [...this.projects];
 
+    // Apply search filter
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase().trim();
       filtered = filtered.filter(project => 
@@ -136,6 +141,7 @@ export class ProjectManagementComponent implements OnInit {
       );
     }
 
+    // Apply status filter
     if (this.statusFilter) {
       filtered = filtered.filter(project => project.status === this.statusFilter);
     }

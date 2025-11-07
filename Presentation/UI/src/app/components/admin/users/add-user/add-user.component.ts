@@ -41,6 +41,7 @@ export class AddUserComponent {
 
   onSubmit() {
     if (this.validatePassword()) {
+      // Remove confirmPassword before sending to backend
       const { confirmPassword, ...userToSave } = this.user;
       this.save.emit(userToSave);
     }

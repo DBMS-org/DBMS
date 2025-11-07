@@ -62,6 +62,7 @@ export class EditProjectComponent implements OnInit {
       }
     });
 
+    // Fetch operators for dropdown
     this.userService.getUsers().subscribe({
       next: users => this.operators = users.filter(u => u.role.toLowerCase() === 'operator'),
       error: err => console.error('Error loading operators list', err)
@@ -89,6 +90,7 @@ export class EditProjectComponent implements OnInit {
   }
 
   private loadMockProject() {
+    // Mock project data as fallback
     const mockProject: Project = {
       id: this.projectId,
       name: 'Project Alpha - Muttrah Construction',
@@ -122,6 +124,7 @@ export class EditProjectComponent implements OnInit {
     this.error = null;
     this.successMessage = null;
 
+    // Basic validation
     if (!this.validateForm()) {
       return;
     }
@@ -133,7 +136,8 @@ export class EditProjectComponent implements OnInit {
         this.loading = false;
         this.successMessage = 'Project updated successfully!';
         console.log('Project updated:', project);
-
+        
+        // Navigate back to project management after a short delay
         setTimeout(() => {
           this.router.navigate(['/admin/project-management']);
         }, 1500);
@@ -142,7 +146,8 @@ export class EditProjectComponent implements OnInit {
         this.loading = false;
         this.error = error.message;
         console.error('Error updating project:', error);
-
+        
+        // Fallback: Show success message anyway
         this.successMessage = 'Project updated successfully! (Using mock data)';
         setTimeout(() => {
           this.router.navigate(['/admin/project-management']);
@@ -182,7 +187,7 @@ export class EditProjectComponent implements OnInit {
   }
 
   resetForm() {
-    this.loadProject();
+    this.loadProject(); // Reload original data
   }
 
   formatDateForInput(date: Date | undefined): string {
@@ -211,6 +216,7 @@ export class EditProjectComponent implements OnInit {
           this.conflictProjectName = project.name;
           this.showOperatorConflictModal = true;
         } else {
+          // no conflict or same project
           this.conflictProjectName = null;
         }
       },
@@ -220,6 +226,7 @@ export class EditProjectComponent implements OnInit {
 
   confirmOperatorAssignment(): void {
     this.showOperatorConflictModal = false;
+    // Assignment kept as selected
   }
 
   cancelOperatorAssignment(): void {
