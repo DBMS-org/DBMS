@@ -1,11 +1,8 @@
 namespace Application.DTOs.Shared;
 
-/// <summary>
-/// Centralized error codes and messages for consistent error handling
-/// </summary>
+// Centralized error codes and messages
 public static class ErrorCodes
 {
-    // General errors
     public const string NotFound = "RESOURCE_NOT_FOUND";
     public const string AlreadyExists = "RESOURCE_ALREADY_EXISTS";
     public const string ValidationFailed = "VALIDATION_FAILED";
@@ -16,24 +13,20 @@ public static class ErrorCodes
     public const string ArgumentNull = "ARGUMENT_NULL";
     public const string ArgumentInvalid = "ARGUMENT_INVALID";
 
-    // User management errors
     public const string UserNotFound = "USER_NOT_FOUND";
     public const string UserAlreadyExists = "USER_ALREADY_EXISTS";
     public const string InvalidCredentials = "INVALID_CREDENTIALS";
     public const string WeakPassword = "WEAK_PASSWORD";
     public const string InvalidEmail = "INVALID_EMAIL";
 
-    // Project management errors
     public const string ProjectNotFound = "PROJECT_NOT_FOUND";
     public const string ProjectSiteNotFound = "PROJECT_SITE_NOT_FOUND";
     public const string InvalidProjectOwnership = "INVALID_PROJECT_OWNERSHIP";
 
-    // Machine management errors
     public const string MachineNotFound = "MACHINE_NOT_FOUND";
     public const string MachineAlreadyAssigned = "MACHINE_ALREADY_ASSIGNED";
     public const string MachineNotAvailable = "MACHINE_NOT_AVAILABLE";
 
-    // Drilling operations errors
     public const string DrillHoleNotFound = "DRILL_HOLE_NOT_FOUND";
     public const string DrillHoleAlreadyExists = "DRILL_HOLE_ALREADY_EXISTS";
     public const string InvalidCoordinates = "INVALID_COORDINATES";
@@ -44,11 +37,9 @@ public static class ErrorCodes
     public const string CsvValidationError = "CSV_VALIDATION_ERROR";
     public const string InvalidCsvFormat = "INVALID_CSV_FORMAT";
 
-    // Blasting operations errors
     public const string DrillPatternNotFound = "DRILL_PATTERN_NOT_FOUND";
     public const string InvalidDrillPatternOwnership = "INVALID_DRILL_PATTERN_OWNERSHIP";
 
-    // Error messages
     public static class Messages
     {
         public const string ResourceNotFound = "The requested resource was not found.";

@@ -13,7 +13,6 @@ namespace Application.DTOs.DrillingOperations
         public double Length { get; set; }
         public double Depth { get; set; }
 
-        // Nullable for 2D/3D compatibility
         public double? Azimuth { get; set; }
         public double? Dip { get; set; }
 
