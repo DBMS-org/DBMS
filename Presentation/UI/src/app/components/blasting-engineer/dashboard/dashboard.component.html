@@ -1,18 +1,13 @@
 <header class="dashboard-header">
   <div class="header-content">
-    <h1>Blasting Engineer Dashboard</h1>
-    <div class="user-info">
-      <div class="user-details" *ngIf="currentUser">
-        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
-        <div class="user-metadata">
-          <span class="user-role">Role: {{ currentUser.role }}</span>
-          <span class="user-location" *ngIf="getUserLocationInfo()">{{ getUserLocationInfo() }}</span>
-          <span class="last-login">{{ getLastLoginInfo() }}</span>
-        </div>
-      </div>
-      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
+    <div class="header-left">
+      <h1>Dashboard</h1>
+      <span class="welcome-message" *ngIf="currentUser">{{ getUserWelcomeMessage() }}</span>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
         <i class="material-icons">refresh</i>
-        Refresh
+        <span class="btn-text">Refresh</span>
       </button>
     </div>
   </div>
@@ -26,59 +21,89 @@
 <div class="dashboard-content" *ngIf="!isLoading">
   <!-- Main Stats Grid -->
   <div class="stats-grid">
-    <div class="stat-card projects">
+    <div class="stat-card projects interactive" (click)="navigateToProjects()">
       <div class="stat-icon">
         <i class="material-icons">work</i>
       </div>
       <div class="stat-content">
         <h3>Total Projects</h3>
         <p class="stat-number">{{ stats.totalProjects }}</p>
+        <div class="stat-trend positive" *ngIf="stats.totalProjects > 0">
+          <i class="material-icons">arrow_upward</i>
+          <span>Active</span>
+        </div>
       </div>
+      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card active">
+    <div class="stat-card active interactive" (click)="navigateToProjects()">
       <div class="stat-icon">
         <i class="material-icons">trending_up</i>
       </div>
       <div class="stat-content">
         <h3>Active Projects</h3>
         <p class="stat-number">{{ stats.activeProjects }}</p>
+        <div class="progress-bar" *ngIf="stats.totalProjects > 0">
+          <div class="progress-fill" [style.width.%]="(stats.activeProjects / stats.totalProjects) * 100"></div>
+        </div>
+        <p class="stat-subtitle">{{ stats.totalProjects > 0 ? ((stats.activeProjects / stats.totalProjects) * 100).toFixed(0) : 0 }}% of total</p>
       </div>
+      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card sites">
+    <div class="stat-card sites interactive" (click)="navigateToSites()">
       <div class="stat-icon">
         <i class="material-icons">place</i>
       </div>
       <div class="stat-content">
         <h3>Total Sites</h3>
         <p class="stat-number">{{ stats.totalSites }}</p>
+        <div class="stat-trend positive" *ngIf="stats.totalSites > 0">
+          <i class="material-icons">construction</i>
+          <span>Managed</span>
+        </div>
       </div>
+      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card active-sites">
+    <div class="stat-card active-sites interactive" (click)="navigateToSites()">
       <div class="stat-icon">
         <i class="material-icons">location_on</i>
       </div>
       <div class="stat-content">
         <h3>Active Sites</h3>
         <p class="stat-number">{{ stats.activeSites }}</p>
+        <div class="progress-bar" *ngIf="stats.totalSites > 0">
+          <div class="progress-fill" [style.width.%]="(stats.activeSites / stats.totalSites) * 100"></div>
+        </div>
+        <p class="stat-subtitle">{{ stats.totalSites > 0 ? ((stats.activeSites / stats.totalSites) * 100).toFixed(0) : 0 }}% operational</p>
       </div>
+      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card drill-holes">
+    <div class="stat-card drill-holes interactive" (click)="navigateToDrillVisualization()">
       <div class="stat-icon">
         <i class="material-icons">scatter_plot</i>
       </div>
       <div class="stat-content">
         <h3>Total Drill Holes</h3>
         <p class="stat-number">{{ stats.totalDrillHoles }}</p>
+        <div class="stat-trend positive" *ngIf="stats.totalDrillHoles > 0">
+          <i class="material-icons">check_circle</i>
+          <span>Mapped</span>
+        </div>
       </div>
+      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card patterns">
+    <div class="stat-card patterns interactive" (click)="navigateToDrillVisualization()">
       <div class="stat-icon">
         <i class="material-icons">grid_on</i>
       </div>
       <div class="stat-content">
         <h3>Active Drill Sites</h3>
         <p class="stat-number">{{ stats.activeDrillSites }}</p>
+        <div class="progress-bar" *ngIf="stats.totalSites > 0">
+          <div class="progress-fill" [style.width.%]="(stats.activeDrillSites / stats.totalSites) * 100"></div>
+        </div>
+        <p class="stat-subtitle">{{ stats.totalSites > 0 ? ((stats.activeDrillSites / stats.totalSites) * 100).toFixed(0) : 0 }}% with data</p>
       </div>
+      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
   </div>
 
@@ -142,11 +167,11 @@
     <h3>No Drill Data Available</h3>
     <p>No drill holes found in the database for your assigned projects and sites.</p>
     <div class="warning-actions">
-      <button class="btn btn-primary" (click)="navigateToUpload()">
+      <button type="button" class="btn btn-primary" (click)="navigateToUpload()">
         <i class="material-icons">cloud_upload</i>
         Upload Drill Data
       </button>
-      <button class="btn btn-secondary" (click)="navigateToProjects()">
+      <button type="button" class="btn btn-secondary" (click)="navigateToProjects()">
         <i class="material-icons">folder</i>
         Manage Projects
       </button>
@@ -157,18 +182,25 @@
   <section class="recent-uploads" *ngIf="recentUploads.length > 0">
     <h2>
       <i class="material-icons">database</i>
-      Recent Drill Data (Live Database)
+      Recent Drill Data
+      <span class="section-badge">Live</span>
     </h2>
     <div class="uploads-list">
-      <div *ngFor="let upload of recentUploads" 
+      <div *ngFor="let upload of recentUploads.slice(0, 5)"
            class="upload-item clickable"
            (click)="navigateToDrillVisualization(upload.projectId, upload.siteId)"
-           title="Click to view drill visualization">
+           title="Click to view 3D visualization">
         <div class="upload-icon">
           <i class="material-icons">scatter_plot</i>
         </div>
         <div class="upload-content">
-          <div class="upload-name">{{ upload.filename }}</div>
+          <div class="upload-header">
+            <div class="upload-name">Project {{ upload.projectId }} - Site {{ upload.siteId }}</div>
+            <span class="upload-action-indicator">
+              <i class="material-icons">visibility</i>
+              View
+            </span>
+          </div>
           <div class="upload-meta">
             <span class="upload-time">
               <i class="material-icons">schedule</i>
@@ -176,72 +208,178 @@
             </span>
             <span class="upload-count">
               <i class="material-icons">format_list_numbered</i>
-              {{ upload.recordCount }} drill holes
+              {{ upload.recordCount }} holes
             </span>
             <span class="upload-status status-{{ upload.status }}">
               <i class="material-icons">check_circle</i>
-              {{ upload.status }}
-            </span>
-            <span class="upload-action" *ngIf="upload.projectId && upload.siteId">
-              <i class="material-icons">visibility</i>
-              View 3D
+              Ready
             </span>
           </div>
+        </div>
+        <i class="material-icons chevron">chevron_right</i>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions Section -->
+  <section class="quick-actions">
+    <h2>
+      <i class="material-icons">bolt</i>
+      Quick Actions
+    </h2>
+    <div class="action-cards">
+      <div class="action-card" (click)="navigateToUpload()">
+        <div class="action-icon upload">
+          <i class="material-icons">cloud_upload</i>
+        </div>
+        <h3>Upload Drill Data</h3>
+        <p>Import CSV files with drill hole coordinates and specifications</p>
+        <div class="action-status">{{ stats.uploadedDataSets }} datasets uploaded</div>
+      </div>
+      <div class="action-card" (click)="navigateToProjects()">
+        <div class="action-icon projects">
+          <i class="material-icons">folder</i>
+        </div>
+        <h3>Manage Projects</h3>
+        <p>View and manage your mining projects and sites</p>
+        <div class="action-status">{{ stats.totalProjects }} active projects</div>
+      </div>
+      <div class="action-card patterns" (click)="navigateToPatternDesigner()">
+        <div class="action-icon">
+          <i class="material-icons">grid_on</i>
+        </div>
+        <h3>Pattern Designer</h3>
+        <p>Create and edit drilling patterns for blast sites</p>
+        <div class="action-status">{{ stats.completedPatterns }} patterns created</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Activities Timeline -->
+  <section class="recent-activities" *ngIf="recentActivities.length > 0">
+    <div class="section-header">
+      <h2>
+        <i class="material-icons">history</i>
+        Recent Activities
+      </h2>
+      <span class="filter-info" *ngIf="currentUser && currentUser.region">
+        <i class="material-icons">location_on</i>
+        {{ currentUser.region }}
+      </span>
+    </div>
+    <div class="activity-list">
+      <div *ngFor="let activity of recentActivities.slice(0, 8); trackBy: trackActivity" class="activity-item">
+        <div class="activity-icon">
+          <i class="material-icons">{{ getActivityIcon(activity.action) }}</i>
+        </div>
+        <div class="activity-content">
+          <div class="activity-main">
+            <span class="activity-user">{{ activity.userName || 'User' }}</span>
+            <span class="activity-action">{{ activity.action }}</span>
+          </div>
+          <div class="activity-meta">
+            <span class="activity-time">
+              <i class="material-icons">schedule</i>
+              {{ getTimeFromNow(activity.timestamp) }}
+            </span>
+            <span class="activity-region" *ngIf="activity.region">
+              <i class="material-icons">place</i>
+              {{ activity.region }}
+            </span>
+            <span class="activity-category">
+              <i class="material-icons">label</i>
+              {{ activity.category }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="recentActivities.length === 0" class="no-activities">
+      <i class="material-icons">info</i>
+      No recent activities to display
+    </div>
+  </section>
+
+  <!-- Project Health Overview -->
+  <section class="project-health-section">
+    <h2>
+      <i class="material-icons">monitor_heart</i>
+      Project Health Overview
+    </h2>
+    <div class="health-grid">
+      <div class="health-card" *ngIf="userProjects.length > 0">
+        <div class="health-icon success">
+          <i class="material-icons">check_circle</i>
+        </div>
+        <div class="health-content">
+          <h4>Active Projects</h4>
+          <p class="health-number">{{ stats.activeProjects }}</p>
+          <p class="health-status success">On Track</p>
+        </div>
+      </div>
+      <div class="health-card">
+        <div class="health-icon" [class.warning]="stats.pendingReviews > 0" [class.success]="stats.pendingReviews === 0">
+          <i class="material-icons">{{ stats.pendingReviews > 0 ? 'warning' : 'check_circle' }}</i>
+        </div>
+        <div class="health-content">
+          <h4>Pending Reviews</h4>
+          <p class="health-number">{{ stats.pendingReviews }}</p>
+          <p class="health-status" [class.warning]="stats.pendingReviews > 0" [class.success]="stats.pendingReviews === 0">
+            {{ stats.pendingReviews > 0 ? 'Needs Attention' : 'All Clear' }}
+          </p>
+        </div>
+      </div>
+      <div class="health-card">
+        <div class="health-icon" [class.success]="stats.activeDrillSites > 0" [class.neutral]="stats.activeDrillSites === 0">
+          <i class="material-icons">scatter_plot</i>
+        </div>
+        <div class="health-content">
+          <h4>Data Coverage</h4>
+          <p class="health-number">{{ stats.totalSites > 0 ? ((stats.activeDrillSites / stats.totalSites) * 100).toFixed(0) : 0 }}%</p>
+          <p class="health-status" [class.success]="stats.activeDrillSites > stats.totalSites / 2" [class.warning]="stats.activeDrillSites <= stats.totalSites / 2">
+            {{ stats.activeDrillSites > stats.totalSites / 2 ? 'Good Coverage' : 'Needs More Data' }}
+          </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- User Profile with Engineering Context -->
-  <div class="user-profile-section">
-    <h3>
-      <i class="material-icons">account_circle</i>
-      Blasting Engineer Profile
-    </h3>
-    <div class="profile-card" *ngIf="currentUser">
-      <div class="profile-header">
-        <div class="profile-avatar">
-          <span class="avatar-initials">{{ getInitials() }}</span>
+  <!-- Tasks & Notifications Widget -->
+  <section class="tasks-notifications-section">
+    <h2>
+      <i class="material-icons">assignment</i>
+      Tasks & Notifications
+    </h2>
+    <div class="tasks-grid">
+      <div class="task-card" *ngIf="stats.pendingReviews > 0" (click)="navigateToProjects()">
+        <div class="task-icon pending">
+          <i class="material-icons">rate_review</i>
         </div>
-        <div class="profile-main-info">
-          <h4>{{ currentUser.name }}</h4>
-          <p class="profile-email">{{ currentUser.email }}</p>
-          <div class="profile-role-badge">
-            <span class="role-badge">Blasting Engineer</span>
-          </div>
+        <div class="task-content">
+          <h4>Sites Awaiting Review</h4>
+          <p>{{ stats.pendingReviews }} site{{ stats.pendingReviews !== 1 ? 's' : '' }} need{{ stats.pendingReviews === 1 ? 's' : '' }} drill data</p>
         </div>
+        <i class="material-icons task-arrow">arrow_forward</i>
       </div>
-      
-      <div class="profile-details-grid">
-        <div class="profile-detail-item">
-          <div class="detail-label">Specialization:</div>
-          <div class="detail-value">Blasting Engineering</div>
+      <div class="task-card" *ngIf="drillData.length === 0" (click)="navigateToUpload()">
+        <div class="task-icon action">
+          <i class="material-icons">cloud_upload</i>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Operating Region:</div>
-          <div class="detail-value">{{ currentUser.region || 'All Regions' }}</div>
+        <div class="task-content">
+          <h4>Upload Drill Data</h4>
+          <p>Get started by uploading your first dataset</p>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Country:</div>
-          <div class="detail-value">{{ currentUser.country || 'Oman' }}</div>
+        <i class="material-icons task-arrow">arrow_forward</i>
+      </div>
+      <div class="task-card empty-state" *ngIf="stats.pendingReviews === 0 && drillData.length > 0">
+        <div class="task-icon success">
+          <i class="material-icons">task_alt</i>
         </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Contact:</div>
-          <div class="detail-value">{{ currentUser.omanPhone || currentUser.countryPhone || 'Not provided' }}</div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Status:</div>
-          <div class="detail-value">
-            <span class="status-badge" [class]="'status-' + (currentUser.status || 'active').toLowerCase()">
-              {{ currentUser.status || 'ACTIVE' }}
-            </span>
-          </div>
-        </div>
-        <div class="profile-detail-item">
-          <div class="detail-label">Data Sets:</div>
-          <div class="detail-value">{{ stats.totalProjects }} projects managed</div>
+        <div class="task-content">
+          <h4>All Caught Up!</h4>
+          <p>No pending tasks at the moment</p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </div>

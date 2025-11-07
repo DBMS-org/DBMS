@@ -439,4 +439,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.loadUserSpecificData();
   }
+
+  // Navigate to pattern designer
+  navigateToPatternDesigner(): void {
+    this.router.navigate(['/blasting-engineer/drilling-pattern']);
+  }
 }
