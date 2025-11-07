@@ -2,12 +2,8 @@ using Domain.Entities.ExplosiveInventory.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
-    /// <summary>
-    /// Request DTO for creating Emulsion inventory batch
-    /// </summary>
     public class CreateEmulsionInventoryRequest
     {
-        // Core Information
         public string BatchId { get; set; } = string.Empty;
         public decimal Quantity { get; set; }
         public string Unit { get; set; } = "kg";
@@ -39,7 +35,6 @@ namespace Application.DTOs.ExplosiveInventory
         public FumeClass FumeClass { get; set; } = FumeClass.Class1;
         public QualityStatus QualityStatus { get; set; } = QualityStatus.Pending;
 
-        // Additional
         public string? Notes { get; set; }
     }
 }

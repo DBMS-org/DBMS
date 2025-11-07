@@ -38,10 +38,8 @@ namespace Application.Services.DrillingOperations
             try
             {
                 // Note: Repository requires projectId and siteId, so we'll need to get all projects first
-                // This is a simplified implementation - in practice, you might want to add overloads
                 var allResults = new List<ExplosiveCalculationResult>();
                 
-                // If the user is a blasting engineer, filter by their region
                 if (_userContext.IsInRole("BlastingEngineer"))
                 {
                     var region = _userContext.Region;
@@ -57,9 +55,6 @@ namespace Application.Services.DrillingOperations
                 }
                 else
                 {
-                    // For non-blasting engineers, we need a different approach
-                    // This would typically require a repository method that gets all results
-                    // For now, return empty - this should be implemented based on business requirements
                     return Result.Success(Enumerable.Empty<ExplosiveCalculationResult>());
                 }
 
@@ -130,8 +125,6 @@ namespace Application.Services.DrillingOperations
                 }
 
                 // Note: Removed check for existing CalculationId since we now allow one calculation per site
-                // and delete existing calculations before creating new ones
-
                 var createdResult = await _explosiveCalculationResultRepository.AddAsync(explosiveCalculationResult);
                 return Result.Success(createdResult);
             }
@@ -291,10 +284,8 @@ namespace Application.Services.DrillingOperations
         {
             try
             {
-                // Get all results across all projects and sites and count them
                 var allResults = new List<ExplosiveCalculationResult>();
                 // Since we don't have a global count method, we'll need to aggregate
-                // This is a simplified implementation - in practice you might want to optimize this
                 var count = 0; // Placeholder - would need project/site iteration
                 return Result.Success(count);
             }
@@ -314,7 +305,6 @@ namespace Application.Services.DrillingOperations
                     return Result.Failure<int>(ErrorCodes.Messages.ArgumentNull);
                 }
 
-                // Get results by project and count them
                 var results = await _explosiveCalculationResultRepository.GetByProjectAsync(projectId);
                 var count = results.Count;
                 return Result.Success(count);
@@ -437,7 +427,6 @@ namespace Application.Services.DrillingOperations
 
                 var entity = _mapper.Map<ExplosiveCalculationResult>(request);
                 
-                // Check if existing calculations exist for the same site
                 if (entity.ProjectId > 0 && entity.SiteId > 0)
                 {
                     var existingCalculations = await GetExplosiveCalculationResultsBySiteIdAsync(entity.ProjectId, entity.SiteId);
@@ -475,7 +464,6 @@ namespace Application.Services.DrillingOperations
 
                 var entity = _mapper.Map<ExplosiveCalculationResult>(request);
                 
-                // Delete existing calculations for the same site after user confirmation
                 if (entity.ProjectId > 0 && entity.SiteId > 0)
                 {
                     _logger.LogInformation("Deleting existing calculations for project {ProjectId} and site {SiteId} after user confirmation", entity.ProjectId, entity.SiteId);
@@ -516,7 +504,6 @@ namespace Application.Services.DrillingOperations
 
                 var existingEntity = existingEntityResult.Value;
                 
-                // Update only non-null properties from the request
                 if (!string.IsNullOrEmpty(request.CalculationId))
                     existingEntity.CalculationId = request.CalculationId;
                 if (request.PatternSettingsId.HasValue)

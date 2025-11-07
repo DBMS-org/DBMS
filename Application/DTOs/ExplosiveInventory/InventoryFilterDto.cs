@@ -3,9 +3,6 @@ using Domain.Entities.StoreManagement.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
-    /// <summary>
-    /// Filter DTO for querying inventory
-    /// </summary>
     public class InventoryFilterDto
     {
         public ExplosiveType? ExplosiveType { get; set; }
