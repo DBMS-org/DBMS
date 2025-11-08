@@ -1,1 +1,1 @@
-update job list styles to match PrimeNG theme
+Replace Material table with virtual scrolling with PrimeNG DataTable component, update bulk actions toolbar, and simplify template structure.
