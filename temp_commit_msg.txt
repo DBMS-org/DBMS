@@ -1,1 +1,1 @@
-correct primeng import error
+Change import from InputTextarea to InputTextareaModule to resolve module import issue.
