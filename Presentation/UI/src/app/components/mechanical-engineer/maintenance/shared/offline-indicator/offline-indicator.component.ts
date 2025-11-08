@@ -20,79 +20,68 @@ import { SyncService } from '../../services/sync.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="offline-indicator" [class]="getIndicatorClass()">
-      @if (offlineStorage.isOffline()) {
-        <!-- Offline State -->
-        <div class="offline-status">
-          <mat-icon class="status-icon offline">cloud_off</mat-icon>
-          <div class="status-content">
-            <div class="status-title">You're offline</div>
-            <div class="status-subtitle">
-              @if (offlineStorage.hasPendingSync()) {
-                {{ offlineStorage.getSyncQueue().length }} changes will sync when online
-              } @else {
-                Using cached data
-              }
-            </div>
-          </div>
-        </div>
-      } @else {
-        <!-- Online State -->
-        @if (syncService.isSyncing()) {
-          <!-- Syncing State -->
-          <div class="sync-status">
-            <mat-icon class="status-icon syncing">sync</mat-icon>
+    @if (shouldShowIndicator()) {
+      <div class="offline-indicator" [class]="getIndicatorClass()">
+        @if (offlineStorage.isOffline()) {
+          <!-- Offline State -->
+          <div class="offline-status">
+            <mat-icon class="status-icon offline">cloud_off</mat-icon>
             <div class="status-content">
-              <div class="status-title">Syncing...</div>
-              <div class="status-subtitle">{{ syncService.syncProgress().current }}</div>
-              <mat-progress-bar 
-                mode="determinate" 
-                [value]="syncService.syncProgress().percentage"
-                class="sync-progress">
-              </mat-progress-bar>
-            </div>
-          </div>
-        } @else if (offlineStorage.hasPendingSync()) {
-          <!-- Pending Sync State -->
-          <div class="pending-sync-status">
-            <mat-icon class="status-icon pending">cloud_sync</mat-icon>
-            <div class="status-content">
-              <div class="status-title">{{ offlineStorage.getSyncQueue().length }} changes pending</div>
+              <div class="status-title">You're offline</div>
               <div class="status-subtitle">
-                <button 
-                  mat-button 
-                  class="sync-now-btn"
-                  (click)="syncNow()"
-                  [disabled]="syncService.isSyncing()">
-                  Sync now
-                </button>
+                @if (offlineStorage.hasPendingSync()) {
+                  {{ offlineStorage.getSyncQueue().length }} changes will sync when online
+                } @else {
+                  Using cached data
+                }
               </div>
             </div>
           </div>
         } @else {
-          <!-- Online and Synced State -->
-          <div class="online-status">
-            <mat-icon class="status-icon online">cloud_done</mat-icon>
-            <div class="status-content">
-              <div class="status-title">All synced</div>
-              @if (offlineStorage.lastSyncTime()) {
-                <div class="status-subtitle">
-                  Last sync: {{ formatLastSync(normalizeDate(offlineStorage.lastSyncTime()!)) }}
-                </div>
-              }
+          <!-- Online State -->
+          @if (syncService.isSyncing()) {
+            <!-- Syncing State -->
+            <div class="sync-status">
+              <mat-icon class="status-icon syncing">sync</mat-icon>
+              <div class="status-content">
+                <div class="status-title">Syncing...</div>
+                <div class="status-subtitle">{{ syncService.syncProgress().current }}</div>
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="syncService.syncProgress().percentage"
+                  class="sync-progress">
+                </mat-progress-bar>
+              </div>
             </div>
+          } @else if (offlineStorage.hasPendingSync()) {
+            <!-- Pending Sync State -->
+            <div class="pending-sync-status">
+              <mat-icon class="status-icon pending">cloud_sync</mat-icon>
+              <div class="status-content">
+                <div class="status-title">{{ offlineStorage.getSyncQueue().length }} changes pending</div>
+                <div class="status-subtitle">
+                  <button
+                    mat-button
+                    class="sync-now-btn"
+                    (click)="syncNow()"
+                    [disabled]="syncService.isSyncing()">
+                    Sync now
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        }
+
+        <!-- Storage Info (Development/Debug) -->
+        @if (showStorageInfo()) {
+          <div class="storage-info" [matTooltip]="getStorageTooltip()">
+            <mat-icon class="storage-icon">storage</mat-icon>
+            <span class="storage-text">{{ getStorageUsage() }}</span>
           </div>
         }
-      }
-
-      <!-- Storage Info (Development/Debug) -->
-      @if (showStorageInfo()) {
-        <div class="storage-info" [matTooltip]="getStorageTooltip()">
-          <mat-icon class="storage-icon">storage</mat-icon>
-          <span class="storage-text">{{ getStorageUsage() }}</span>
-        </div>
-      }
-    </div>
+      </div>
+    }
   `,
   styles: [`
     .offline-indicator {
@@ -269,6 +258,13 @@ export class OfflineIndicatorComponent {
 
   // Configuration
   showStorageInfo = () => false; // Set to true for development/debugging
+
+  // Only show indicator when there's an actual issue (offline, syncing, or pending)
+  shouldShowIndicator(): boolean {
+    return this.offlineStorage.isOffline() ||
+           this.syncService.isSyncing() ||
+           this.offlineStorage.hasPendingSync();
+  }
 
   getIndicatorClass(): string {
     if (this.offlineStorage.isOffline()) {
