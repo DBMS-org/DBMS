@@ -1,1 +1,1 @@
-added new filter style
+Fix incorrect import statement for PrimeNG InputTextarea component to use the correct module name InputTextareaModule.
