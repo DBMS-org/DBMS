@@ -1,1 +1,1 @@
-Change import from InputTextarea to InputTextareaModule to resolve module import issue.
+update job list styles to match PrimeNG theme
