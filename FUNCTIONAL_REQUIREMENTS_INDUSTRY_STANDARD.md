@@ -1,2504 +1,1058 @@
-# Previous FUNCTIONAL REQUIREMENTS SPECIFICATION
-3.3	Functional Requirements   
+# FUNCTIONAL REQUIREMENTS SPECIFICATION
+# Drilling & Blasting Management System (DBMS)
 
-3.3.1 Login & Role-Based Access 
+## 1. AUTHENTICATION & AUTHORIZATION
 
-The system shall display a login page with input fields for Username and Password. 
+### 1.1 User Authentication
 
-The system shall authenticate the credentials of the user against the stored user data. 
+**FR-1:** The system shall display a login page with input fields for email address and password.
 
-The system shall lock a user account after 5 consecutive failed login attempts. Upon account lock, the system shall display the message “Account locked – please reset your password”. 
+**FR-2:** The system shall authenticate user credentials using JWT token-based authentication.
 
-The system shall inform the user trying to log in if their account is currently locked.  
+**FR-3:** The system shall hash all passwords using BCrypt before storing them in the database.
 
-The system shall provide a "Forgot Password" feature accessible from the login page. 
+**FR-4:** The system shall generate a JWT access token upon successful authentication.
 
-The "Forgot Password" feature shall send a time-limited password reset code to the user's registered email address. 
+**FR-5:** The system shall attach the JWT token to all authenticated API requests via HTTP Authorization header.
 
-The password reset code shall expire after 10 minutes. 
+**FR-6:** The system shall validate the JWT token for each protected API endpoint.
 
-The system shall implement Role-Based Access Control. Access to specific modules, features, and data shall be restricted based on the user’s assigned role. 
+**FR-7:** The system shall provide a "Forgot Password" feature accessible from the login page.
 
-Upon successful login, the system shall display a role specific dashboard. 
+**FR-8:** The system shall generate a unique 6-digit verification code when a user requests password reset.
 
-The system shall automatically log out a user after 30 minutes of inactivity. 
+**FR-9:** The system shall send the verification code to the user's registered email address.
 
-Upon timeout due to inactivity, the system shall prompt the user for re-login to continue their session. 
+**FR-10:** The system shall expire the verification code after 10 minutes.
 
-3.3.2 User Management 
+**FR-11:** The system shall allow the user to reset their password using the valid verification code.
 
-The system shall provide a User Management interface accessible only to the admin after authentication. 
+**FR-12:** The system shall validate that the email address is in correct format using a value object pattern.
 
-The admin shall be able to create new user accounts via the User Management interface. The following fields shall be mandatory for user creation, Email, temporary password, First Name, Last Name, Home-Country Phone number, Resident-Country Phone number, Country of Origin, Address, and Role. 
+**FR-13:** The system shall prevent login if the user account status is Inactive or Suspended.
 
-The system shall reject the creation of a user account if the provided Email address is already registered. 
+**FR-14:** The system shall display appropriate error messages for invalid credentials.
 
-Upon successful user account creation, the system shall send an email notification to the newly created user. The email notification shall contain a temporary password that must be changed upon the first login.  
+### 1.2 Role-Based Access Control
 
-The admin shall be able to deactivate existing user accounts. 
+**FR-15:** The system shall support exactly seven user roles: Admin, Blasting Engineer, Mechanical Engineer, Machine Manager, Operator, Explosive Manager, and Store Manager.
 
-The admin shall be able to delete existing user accounts. 
+**FR-16:** The system shall enforce role-based access control for all modules and features.
 
-The system shall send email notifications to a user for any changes made to their account by admin. 
+**FR-17:** The system shall enforce permission-based authorization within each role.
 
-The User Management interface shall display a searchable list of all users. The list shall include Email, First Name, Last Name, Role, Status (Active or Deactivated), Creation Date excluding user password. 
+**FR-18:** The system shall define the following base permissions: Create, Read, Update, Delete, Approve, Export, Manage, and View.
 
-The list shall be filterable by role, status and creation date. 
+**FR-19:** The system shall assign specific module permissions to each role via role-permission mappings.
 
-3.3.3 Project Management 
+**FR-20:** The system shall restrict access to API endpoints based on user role and permissions.
 
-The system shall provide a Project Management interface accessible to general manager(admin). 
+**FR-21:** The system shall restrict access to frontend routes based on user role using route guards.
 
-General Manager (Admin) shall be able to create new projects. 
+**FR-22:** Upon successful login, the system shall redirect the user to a role-specific dashboard.
 
-The system shall require a unique Project ID, Project Name, Region, and Area of Operation. 
+**FR-23:** The system shall enforce resource ownership validation for sensitive operations.
 
-The system shall prompt to reenter details for the creation of a project upon entering if the provided Project ID or Project Name already exists. 
+**FR-24:** The system shall restrict regional users to access only data within their assigned region.
 
-The system shall require entering Task description under each project. 
+### 1.3 User Roles & Capabilities
 
-The system shall support uploading PDF and image files as attachments to a project. 
+**FR-25:** Admin users shall have full system access including user management, project management, machine inventory, and store management.
 
-General Manager (Admin) shall be able to edit the details of existing projects. 
+**FR-26:** Blasting Engineer users shall have access to drilling pattern creation, blast sequence design, explosive calculations, and explosive approval requests.
 
-General Manager (Admin) shall be able to update the status of a project. Available project statuses shall include Pending, In Progress, and Completed. 
+**FR-27:** Mechanical Engineer users shall have access to view maintenance reports, create maintenance jobs, complete maintenance work, and track maintenance analytics.
 
-The Project Management interface shall display a list of projects filterable by Region and Status. 
+**FR-28:** Machine Manager users shall have access to machine inventory management, assignment request approval, accessory inventory, and maintenance oversight.
 
-The system shall allow assignment of team members and inventory items (Machines, Accessories) to projects. 
+**FR-29:** Operator users shall have access to view assigned machines, view assigned project sites, submit maintenance reports, and mark drill points as completed.
 
-The system shall allow general manager to assign operator to machines. 
+**FR-30:** Explosive Manager users shall have access to central warehouse inventory management, transfer request approval, quality control, and batch tracking.
 
-The system shall notify assigned users when they are added to a project. 
-
-The system shall display a Project Dashboard showing Total, Pending, In Progress, and Completed Projects. 
-
-The system shall allow General Manager (Admin) to archive completed projects. 
-
-3.3.4 Project Site Management 
-
-The system shall display a list of all Projects and their associated Sites. 
-
-Blasting Engineers shall be able to select an assigned Project and create a new Site under that project. Site creation shall require a unique Site id, Name and Site Address for the Project. 
-
-The system shall prompt to reenter site details if a Site Name with the same name already exists within the selected Project. 
-
-Blasting Engineer shall be able to edit the details of existing Sites. 
-
-3.3.5 Machines Inventory & Assignment 
-
-The system shall provide a Machine Inventory interface accessible to Machine Manager and General Manager. 
-
-Machine Manager shall be able to add details for machines. Required details shall include machine name, model, Serial Number, Rig No, Plate No, Company, Chassis Details, and Manufacturing Year. 
-
-The system shall allow Machine manager to edit or delete existing machines. 
-
-The system shall display the real-time availability or assignment status of each machine. 
-
-The Machine Inventory interface shall support filtering of records. Filtering options shall include Model, Type, Status (Available, Assigned, Under Maintenance), and Project assignment. 
-
-The system shall maintain history of all machine assignments and maintenance events with timestamps. 
-
-The system shall allow General Manager to submit a machine assignment request specifying Project Id, Machine type, quantity and optional detail or explanation. 
-
-The system shall route all machine assignment requests to the machine manager. 
-
-The system shall allow machine manager to review all requests and assign or reject machines request with reason. 
-
-The system shall notify the assigned machine operator and requesting General Manager of the assignment via in app notification. 
-
-3.3.6 Explosive Management 
-
-The system shall allow the Explosive manager to add a new store by adding Store Name, Store Address, Store Manager’s Name and Contact Information, Store Type, Explosive Types Available and Storage Capacity. 
-
-The system shall generate and assign a unique Store ID upon successful store creation. 
-
-The system shall notify the designated Store Manager when the store is created. 
-
-The system shall allow the Explosive manager to edit any store’s details (name, address, manager information). 
-
-The system shall require confirmation before deleting a store. 
-
-Upon deletion confirmation, the system shall remove the store and all its active inventory records. 
-
-After deletion, the system shall notify the affected Store Manager. 
-
-The system shall allow the Explosive manager to deactivate a store while retaining all historical data. 
-
-The system shall allow the Explosive manager to view, search, and filter all stores by status, location, and Store Manager. 
-
-The system shall allow a Store Manager to submit a request for explosive stock entries, specifying batch number, quantity and expiry date. 
-
-The system shall allow a Store Manager to submit a request to explosive manager for addition of explosive to existing explosive stock entries. 
-
-The system shall route all add/edit/delete requests from Store Managers to the Explosive manager for approval. 
-
-The system shall allow the Explosive manager to approve or reject each stock-change request. 
-
-If a request is rejected, the system shall notify the originating Store Manager with a reason. 
-
-Upon approval, the system shall apply the stock changes immediately. 
-
-The system shall prevent Store Managers from making any stock changes unless approved by the Explosive manager. 
-
-The system shall allow blasting engineer to submit explosive usage requests. 
-
-Each request shall include quantity, project name and id, and a justification. 
-
-The system shall route all explosive requests to the respective store manager for review based on their location. 
-
-The system shall allow the Store manager to approve or deny each request with reason. 
-
-If denied, the system shall notify the requester with a justification. 
-
-The system shall mark approved quantities as "allocated" in the selected store. 
-
-The system shall notify the relevant Store Manager through in-app notification to prepare the explosives for dispatch. 
-
-The system shall log each assignment action with request details, approving actor, assigned store, and timestamp. 
-
-The system shall allow the Explosive manager to set and modify low-stock thresholds for each explosive type and equipments. 
-
-The system shall monitor stock levels across all stores and shall trigger a low-stock alert when stock falls below the defined threshold. 
-
-The system shall send in-app notifications to the Explosive manager for each low-stock alert. 
-
-The system shall allow to generate store-wise inventory reports. 
-
-The system shall support exporting all reports to PDF format. 
-
-3.3.7 Machine Accessories 
-
-The system shall provide an Accessories Inventory interface accessible to Machine manager. 
-
-Machin manager shall be able to track accessory items. Tracked fields shall include Name, Type, and Quantity. 
-
-The system shall generate alerts when the quantity of an accessory type falls below a configurable low-stock threshold. Alerts shall be delivered via in-app notifications. 
-
-The Accessories Inventory interface shall support filtering and searching of records. 
-
-The system shall allow editing of existing accessory records. 
-
-The system shall record the usage of accessories per Project. 
-
-3.3.8 Maintenance Management for Machines 
-
-The system shall provide a Maintenance Management interface accessible to Mechanical engineer and Machine Managers. 
-
-Machine manager shall be able to schedule machine for maintenance. 
-
-Machine operator shall be able to log daily usage data for machines. 
-
-Daily usage data shall include engine hours, idle hours, service hour. 
-
-The system shall calculate the remaining service hours for each machine based on logged usage and configured service intervals. 
-
-The system shall trigger alerts when a machine approaches its defined service threshold based on remaining service hours. 
-
-The system shall display the operational status of each machine, on machine inventory interface. The status shall reflect real-time conditions (Running, Idle, Under Maintenance, Breakdown, Available). 
-
-3.3.9 Drilling Pattern Design & Survey 
-
-The system shall provide a web-based 2D editor for designing drilling patterns. The editor shall support interactive zoom and pan functionality. 
-
-The system shall validate key drilling pattern parameters entered by the user. Parameters subject to validation shall include hole diameter, spacing, burden, stemming, and depth.  
-
-Users shall be able to save designed drilling patterns as named templates. 
-
-Users shall be able to manage saved drilling pattern templates. Template management shall include options for editing, duplication, and deletion. 
-
-The system shall allow users to assign millisecond delay timings and define connectors and detonators between holes in the pattern. 
-
-The system shall render a 3D visualization of the designed drilling pattern. The 3D visualization shall be interactive, supporting zoom, pan, and rotate controls to view holes length, angle and depth. The 3D visualization shall update to reflect changes made in the 2D editor. 
-
-The system shall simulate the blast sequence based on assigned delay timings. The simulation shall visually show the firing order of the holes. 
-
-The system shall allow the import of survey data. Supported import formats shall include Excel files. 
-
-Imported data shall include columns for Hole ID, Coordinates, Elevation, Depth, Azimuth, Dip, Stemming, Charge Type, and Charge Mass. 
-
-The system shall display imported survey data in a tabular format for review by the blasting engineer. 
-
-Blasting engineer shall be able to save or reject imported survey data after review. 
-
-The system shall be able to provide the blast design to the operator for drilling accordingly. 
-
-The system shall automatically calculate the total and per-hole explosive requirements. 
-
-Calculations shall be based on validated formulas and the imported survey data.  
-
-Blasting Engineers shall be able to manually override the automatically calculated explosive requirements. 
-
-The system shall provide a side-by-side display comparing the planned drilling pattern parameters and the actual imported survey data. 
-
-The system shall automatically recalculate explosive requirements whenever relevant survey data or pattern parameters are changed or overridden. 
-
-The system shall export a summary report for a given blast. 
-
-The report shall include a summary of survey data, the planned pattern image, and the explosive calculations. The report shall be exportable in PDF format. 
-
-3.3.10 Analytics & Reports 
-
-The system shall generate blast reports. Reports shall include details such as Project Name, Site, Pattern Image, Survey Data Summary, Explosive Usage, and Volume Calculations. 
-
-The system shall provide a preview interface for reports. 
-
-Reports shall be exportable in pdf formats. 
-
-3.3.11 User Profile Management 
-
-The system shall provide a User Profile page accessible to each logged-in user. 
-
-Users shall be able to view and edit their personal details on the User Profile page. Editable fields shall include: First Name, Last Name, Phone Numbers (Home-Country Phone, Resident-Country Phone), Country of Origin, and Address. 
-
-The system shall require the user to enter their current password before allowing a password change. 
-
-The system shall enforce a minimum password complexity requirement of 8 characters. Required character types shall include at least one uppercase letter, one lowercase letter, one numeric digit, and one special character. 
-
-The system shall validate the format of updated Phone Numbers and Address fields upon saving profile changes. 
-
-The system shall send an email notification to the user whenever their profile details are changed, including password updates. 
-
-The User Profile page shall include a "Save Changes" button. 
-
-The "Save Changes" button shall remain disabled until the user makes valid changes to editable fields. 
-
- 
-
-3.4	Non-functional requirements  
-
-There were no specific non-functional requirements for our system. 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-## 3. FUNCTIONAL REQUIREMENTS
+**FR-31:** Store Manager users shall have access to regional store inventory management, stock transactions, transfer request creation, and explosive approval requests from blasting engineers.
 
 ---
 
-## 3.1 Authentication & Authorization
+## 2. USER MANAGEMENT
 
-### 3.1.1 User Authentication
+### 2.1 User Account Creation
 
-**[REQ-AUTH-001]** The system shall provide a secure login interface requiring Username (Email) and Password credentials.
+**FR-32:** The system shall provide a User Management interface accessible only to Admin users.
 
-**[REQ-AUTH-002]** The system shall authenticate user credentials against the database using BCrypt password hashing with cryptographic salt.
+**FR-33:** Admin users shall be able to create new user accounts.
 
-**[REQ-AUTH-003]** The system shall issue a JSON Web Token (JWT) upon successful authentication, containing the following claims:
-- User ID
-- Full Name
-- Email Address
-- Primary Role
-- Assigned Region
+**FR-34:** The system shall require the following mandatory fields for user creation: Email, Password, First Name, Last Name, Phone Number, Region, and Role.
 
-**[REQ-AUTH-004]** The system shall use HS256 algorithm for JWT signature generation and validation.
+**FR-35:** The system shall reject user creation if the provided email address already exists in the system.
 
-**[REQ-AUTH-005]** The system shall validate JWT tokens on each authenticated API request, verifying signature, issuer, audience, and expiration.
+**FR-36:** The system shall validate email format using the Email value object before account creation.
 
-**[REQ-AUTH-006]** The system shall track and record the last login timestamp for each user upon successful authentication.
+**FR-37:** The system shall assign a default status of Active to newly created user accounts.
 
-**[REQ-AUTH-007]** The system shall provide a logout endpoint that invalidates the current session.
+**FR-38:** The system shall record the creation timestamp for each new user account.
 
-**[REQ-AUTH-008]** The system shall provide a token validation endpoint to verify token validity and extract user claims.
+### 2.2 User Account Management
 
-**[REQ-AUTH-009]** The system should implement automatic session timeout after 30 minutes of inactivity on the client side.
+**FR-39:** Admin users shall be able to view a list of all users in the system.
 
-**[REQ-AUTH-010]** Upon session timeout, the system shall prompt the user for re-authentication to continue their session.
+**FR-40:** The system shall display user information including Email, First Name, Last Name, Role, Status, Region, and Created Date.
 
-### 3.1.2 Account Security
+**FR-41:** The system shall exclude password information from all user list displays.
 
-**[REQ-AUTH-020]** The system should implement account lockout after a configurable number of consecutive failed login attempts (recommended: 5 attempts).
+**FR-42:** Admin users shall be able to filter the user list by role, status, region, and creation date.
 
-**[REQ-AUTH-021]** Upon account lockout, the system shall display the message: "Account locked – please reset your password".
+**FR-43:** Admin users shall be able to search for users by email, first name, or last name.
 
-**[REQ-AUTH-022]** The system shall prevent locked accounts from authenticating until password reset is completed.
+**FR-44:** Admin users shall be able to edit existing user account details.
 
-### 3.1.3 Password Reset Workflow
+**FR-45:** Admin users shall be able to change a user's assigned role.
 
-**[REQ-AUTH-030]** The system shall provide a "Forgot Password" feature accessible from the login interface.
+**FR-46:** Admin users shall be able to update a user's status to Active, Inactive, or Suspended.
 
-**[REQ-AUTH-031]** Upon password reset initiation, the system shall:
-1. Validate the provided email address exists in the system
-2. Generate a unique, time-limited password reset code
-3. Store the reset code with user association and expiration timestamp
-4. Send the reset code to the registered email address
+**FR-47:** Admin users shall be able to delete user accounts from the system.
 
-**[REQ-AUTH-032]** The password reset code shall expire after 10 minutes from generation.
+**FR-48:** The system shall record the last updated timestamp whenever user information is modified.
 
-**[REQ-AUTH-033]** The system shall provide an endpoint to verify reset code validity before allowing password change.
+### 2.3 User-Project Assignment
 
-**[REQ-AUTH-034]** The system shall require the following for password reset completion:
-- Valid reset code
-- User email address
-- New password meeting complexity requirements
+**FR-49:** Admin users shall be able to assign users to specific projects.
 
-**[REQ-AUTH-035]** Upon successful password reset, the system shall:
-1. Hash the new password using BCrypt
-2. Update the user's password in the database
-3. Invalidate the reset code
-4. Send confirmation email to the user
+**FR-50:** The system shall notify users when they are assigned to a project.
 
-**[REQ-AUTH-036]** The system shall enforce password complexity requirements for new passwords:
-- Minimum 8 characters in length
-- At least one uppercase letter (A-Z)
-- At least one lowercase letter (a-z)
-- At least one numeric digit (0-9)
-- At least one special character (!@#$%^&*, etc.)
+**FR-51:** The system shall restrict users to access only projects they are assigned to.
 
-### 3.1.4 Role-Based Access Control (RBAC)
+**FR-52:** Admin users shall be able to remove user assignments from projects.
 
-**[REQ-AUTH-040]** The system shall implement Role-Based Access Control for all protected resources.
+### 2.4 User Profile Management
 
-**[REQ-AUTH-041]** The system shall support the following predefined roles:
-1. **Admin** - Full system access and administrative privileges
-2. **Blasting Engineer** - Manage drilling patterns, blast sequences, and site operations
-3. **Mechanical Engineer** - Manage mechanical and maintenance operations
-4. **Machine Manager** - Manage machine inventory and assignments
-5. **Explosive Manager** - Manage explosive inventory and approve transfers
-6. **Store Manager** - Manage store operations and inventory
-7. **Operator** - Execute drilling operations and confirm completions
+**FR-53:** The system shall provide a User Profile page accessible to all logged-in users.
 
-**[REQ-AUTH-042]** The system shall support many-to-many relationship between users and roles (a user may have multiple roles).
+**FR-54:** Users shall be able to view their personal details on the User Profile page.
 
-**[REQ-AUTH-043]** The system shall implement granular permissions for each module with Create, Read, Update, and Delete operations.
+**FR-55:** Users shall be able to edit the following profile fields: First Name, Last Name, Phone Number, Region, and Address.
 
-**[REQ-AUTH-044]** The system shall enforce the following authorization policies:
+**FR-56:** Users shall not be able to edit their email address or role.
 
-| Policy Name | Authorized Roles |
-|------------|------------------|
-| RequireAdminRole | Admin, Administrator |
-| ReadDrillData | Admin, Blasting Engineer, Operator |
-| ManageDrillData | Blasting Engineer, Operator |
-| ManageProjectSites | Admin, Blasting Engineer, Operator |
-| ManageMachines | Admin, Machine Manager |
-| ReadProjectData | Admin, Blasting Engineer, Operator, Machine Manager |
-| ManageExplosiveRequests | Admin, Store Manager, Blasting Engineer |
-| ReadInventoryData | Admin, Store Manager, Explosive Manager, Blasting Engineer, Operator |
-| ManageInventory | Admin, Store Manager, Explosive Manager |
-| ApproveTransfers | Admin, Store Manager, Explosive Manager |
+**FR-57:** The system shall require the user to enter their current password before changing to a new password.
 
-**[REQ-AUTH-045]** The system shall implement resource ownership-based authorization, verifying that users can only modify resources they own or are authorized to access.
+**FR-58:** The system shall enforce password complexity requirements of minimum 8 characters.
 
-**[REQ-AUTH-046]** Upon successful authentication, the system shall redirect users to a role-specific dashboard based on their primary role.
+**FR-59:** The system shall validate that new passwords contain at least one uppercase letter, one lowercase letter, one number, and one special character.
+
+**FR-60:** The system shall save updated profile information when the user clicks "Save Changes".
+
+**FR-61:** The system shall display a success message after successfully updating profile information.
 
 ---
 
-## 3.2 User Management
+## 3. PROJECT MANAGEMENT
 
-### 3.2.1 User Registration & Creation
+### 3.1 Project Creation & Configuration
 
-**[REQ-USER-001]** The system shall provide a User Management interface accessible to users with Admin role after authentication.
+**FR-62:** The system shall provide a Project Management interface accessible to Admin users.
 
-**[REQ-USER-002]** The system shall allow Admins to register new user accounts with the following mandatory fields:
-- Email Address (unique identifier)
-- Password (meeting complexity requirements)
-- First Name
-- Last Name
-- Home-Country Phone Number
-- Resident-Country Phone Number
-- Country of Origin
-- Residential Address
-- Primary Role assignment
-- Regional assignment (optional)
+**FR-63:** Admin users shall be able to create new mining projects.
 
-**[REQ-USER-003]** The system shall validate that the Email Address is unique across all user accounts during registration.
+**FR-64:** The system shall require the following mandatory fields for project creation: Project Name, Description, Region, Start Date, and End Date.
 
-**[REQ-USER-004]** The system shall reject user account creation if the provided Email Address already exists, displaying an appropriate error message.
+**FR-65:** The system shall generate a unique Project ID automatically upon project creation.
 
-**[REQ-USER-005]** The system shall hash passwords using BCrypt algorithm with cryptographic salt before storage.
+**FR-66:** The system shall assign one of the 11 predefined regions in Oman to each project: Muscat, Dhofar, Musandam, Al Buraimi, Ad Dakhiliyah, Al Batinah North, Al Batinah South, Ash Sharqiyah North, Ash Sharqiyah South, Ad Dhahirah, or Al Wusta.
 
-**[REQ-USER-006]** The system shall never store or transmit passwords in plain text.
+**FR-67:** The system shall assign a default status of Planned to newly created projects.
 
-**[REQ-USER-007]** Upon successful user account creation, the system should send an email notification to the newly created user containing:
-- Welcome message
-- Temporary password (if applicable)
-- Instructions for first login
-- Password change requirement notice
+**FR-68:** The system shall allow Admin users to assign a project coordinator to each project.
 
-**[REQ-USER-008]** The system should require users with temporary passwords to change their password upon first login.
+**FR-69:** The system shall record creation and last updated timestamps for each project.
 
-### 3.2.2 User Account Management
+### 3.2 Project Status Management
 
-**[REQ-USER-020]** The system shall provide functionality for Admins to retrieve user account details by User ID.
+**FR-70:** The system shall support the following project statuses: Planned, Active, Completed, OnHold, and Cancelled.
 
-**[REQ-USER-021]** The system shall provide functionality to list all user accounts with the following information:
-- User ID
-- Email Address
-- First Name
-- Last Name
-- Assigned Roles
-- Account Status (Active, Inactive, Locked, Suspended)
-- Region Assignment
-- Creation Date
-- Last Login Timestamp
+**FR-71:** Admin users shall be able to update the status of a project.
 
-**[REQ-USER-022]** The system shall exclude password hash from all user listing and detail endpoints.
+**FR-72:** The system shall track the status change history for each project with timestamps.
 
-**[REQ-USER-023]** The system shall allow Admins to update existing user account information, including:
-- Personal information (name, phone numbers, address, country)
-- Role assignments
-- Regional assignment
-- Account status
+**FR-73:** The system shall prevent deletion of projects with Active status.
 
-**[REQ-USER-024]** The system shall allow Admins to deactivate user accounts without deleting historical data.
+### 3.3 Project Viewing & Filtering
 
-**[REQ-USER-025]** The system shall allow Admins to permanently delete user accounts.
+**FR-74:** The system shall display a list of all projects accessible to the user based on their role and region.
 
-**[REQ-USER-026]** The system should send email notifications to users when their account information is modified by an Admin.
+**FR-75:** The system shall allow filtering of projects by Region, Status, Coordinator, and Date Range.
 
-**[REQ-USER-027]** The email notification shall include:
-- Description of changes made
-- Timestamp of modification
-- Identity of the Admin who made the changes
+**FR-76:** The system shall allow searching for projects by name or description.
 
-### 3.2.3 User Search & Filtering
+**FR-77:** Admin users shall be able to view detailed information for each project.
 
-**[REQ-USER-030]** The User Management interface shall provide search functionality for user accounts.
+**FR-78:** Admin users shall be able to edit project details including name, description, dates, and coordinator.
 
-**[REQ-USER-031]** The system shall support filtering user lists by:
-- Role
-- Account Status (Active, Inactive, Locked, Suspended)
-- Creation Date range
-- Region
-- Email domain
+**FR-79:** The system shall display a Project Dashboard showing total projects, projects by status, and projects by region.
 
-**[REQ-USER-032]** The system shall support pagination for user lists to optimize performance with large datasets.
+### 3.4 Project Site Management
 
-**[REQ-USER-033]** The system shall support sorting user lists by Email, First Name, Last Name, Role, Status, and Creation Date.
+**FR-80:** The system shall allow users to create multiple project sites under a single project.
+
+**FR-81:** Blasting Engineer users shall be able to create new sites within their assigned projects.
+
+**FR-82:** The system shall require the following mandatory fields for site creation: Site Name, Description, and Location.
+
+**FR-83:** The system shall generate a unique Site ID automatically upon site creation.
+
+**FR-84:** The system shall enforce unique site names within each project.
+
+**FR-85:** The system shall assign a default status of Planned to newly created sites.
+
+**FR-86:** The system shall support the following site statuses: Planned, Active, InProgress, Completed, and OnHold.
+
+**FR-87:** Blasting Engineer users shall be able to update site status.
+
+**FR-88:** Blasting Engineer users shall be able to edit site details.
+
+**FR-89:** The system shall display all sites associated with a project in a list view.
+
+**FR-90:** The system shall track creation and last updated timestamps for each site.
 
 ---
 
-## 3.3 User Profile Management
+## 4. MACHINE MANAGEMENT
 
-### 3.3.1 Profile Access & Display
+### 4.1 Machine Inventory
 
-**[REQ-PROFILE-001]** The system shall provide a User Profile interface accessible to each authenticated user.
+**FR-91:** The system shall provide a Machine Inventory interface accessible to Machine Manager and Admin users.
 
-**[REQ-PROFILE-002]** The system shall display the current user's profile information, including:
-- Email Address (read-only)
-- First Name
-- Last Name
-- Home-Country Phone Number
-- Resident-Country Phone Number
-- Country of Origin
-- Residential Address
-- Assigned Roles (read-only)
-- Region Assignment (read-only)
-- Last Login timestamp (read-only)
+**FR-92:** Machine Manager users shall be able to add new machines to the inventory.
 
-### 3.3.2 Profile Updates
+**FR-93:** The system shall require the following mandatory fields for machine creation: Machine Name, Type, Model, Manufacturer, Serial Number, and Manufacturing Year.
 
-**[REQ-PROFILE-010]** Users shall be able to edit the following personal information on their profile:
-- First Name
-- Last Name
-- Home-Country Phone Number
-- Resident-Country Phone Number
-- Country of Origin
-- Residential Address
+**FR-94:** The system shall generate a unique Machine ID automatically upon machine creation.
 
-**[REQ-PROFILE-011]** The system shall validate the format of Phone Numbers upon saving profile changes.
+**FR-95:** The system shall assign a default status of Available to newly added machines.
 
-**[REQ-PROFILE-012]** The system shall validate the format of Address fields upon saving profile changes.
+**FR-96:** The system shall support the following machine statuses: Available, InUse, Maintenance, and OutOfService.
 
-**[REQ-PROFILE-013]** The User Profile interface shall include a "Save Changes" button.
+**FR-97:** Machine Manager users shall be able to edit machine details.
 
-**[REQ-PROFILE-014]** The "Save Changes" button shall remain disabled until the user makes valid modifications to editable fields.
+**FR-98:** Machine Manager users shall be able to delete machines with Available status.
 
-**[REQ-PROFILE-015]** Upon successful profile update, the system shall display a confirmation message to the user.
+**FR-99:** The system shall prevent deletion of machines with InUse or Maintenance status.
 
-### 3.3.3 Password Management
+**FR-100:** The system shall track the current location and region assignment for each machine.
 
-**[REQ-PROFILE-020]** Users shall be able to change their password from the User Profile interface.
+**FR-101:** The system shall display machine inventory with filtering options by Type, Status, Region, and Project Assignment.
 
-**[REQ-PROFILE-021]** The system shall require the user to enter their current password before allowing password change.
+**FR-102:** The system shall allow searching for machines by name, model, serial number, or manufacturer.
 
-**[REQ-PROFILE-022]** The system shall verify the current password against the stored password hash before proceeding with password update.
+### 4.2 Machine Assignment Workflow
 
-**[REQ-PROFILE-023]** The system shall enforce password complexity requirements for new passwords (as defined in REQ-AUTH-036).
+**FR-103:** The system shall allow users to create machine assignment requests.
 
-**[REQ-PROFILE-024]** Upon successful password change, the system shall:
-1. Hash the new password using BCrypt
-2. Update the password in the database
-3. Send email confirmation to the user
-4. Display a success message
+**FR-104:** Operator and Blasting Engineer users shall be able to submit machine assignment requests for their projects.
 
-**[REQ-PROFILE-025]** The system shall send an email notification to the user whenever their profile details are changed, including:
-- Description of fields modified
-- Timestamp of change
-- Source of change (user self-service or admin modification)
+**FR-105:** The system shall require the following fields for assignment requests: Project ID, Machine Type, Quantity, Expected Start Date, Expected End Date, and Justification.
+
+**FR-106:** The system shall route all machine assignment requests to the Machine Manager for approval.
+
+**FR-107:** Machine Manager users shall be able to view all pending assignment requests.
+
+**FR-108:** Machine Manager users shall be able to approve assignment requests by selecting specific machines.
+
+**FR-109:** Machine Manager users shall be able to reject assignment requests with a reason.
+
+**FR-110:** The system shall send notifications to the requester when their assignment request is approved or rejected.
+
+**FR-111:** Upon approval, the system shall create a Machine Assignment record linking the machine to the project and operator.
+
+**FR-112:** The system shall update the machine status to InUse when assigned.
+
+**FR-113:** The system shall record the expected return date for each assignment.
+
+**FR-114:** The system shall track the actual return date when the assignment is completed.
+
+**FR-115:** The system shall flag assignments as Overdue if not returned by the expected return date.
+
+**FR-116:** The system shall allow Machine Manager users to mark assignments as Completed.
+
+**FR-117:** The system shall update machine status to Available when assignment is completed.
+
+**FR-118:** The system shall maintain a complete history of all machine assignments with timestamps.
+
+**FR-119:** Machine Manager users shall be able to view assignment history for each machine.
+
+**FR-120:** The system shall allow cancellation of Active assignments with a cancellation reason.
+
+### 4.3 Accessory Inventory Management
+
+**FR-121:** The system shall provide an Accessories Inventory interface accessible to Machine Manager users.
+
+**FR-122:** Machine Manager users shall be able to add new accessories to the inventory.
+
+**FR-123:** The system shall require the following fields for accessory creation: Accessory Name, Category, Part Number, Quantity, Unit, Supplier, and Location.
+
+**FR-124:** The system shall support the following accessory categories: DrillBit, HydraulicHose, Filter, Bearing, Seal, Belt, Lubricant, CoolingFluid, and Other.
+
+**FR-125:** The system shall generate a unique Accessory ID automatically upon creation.
+
+**FR-126:** Machine Manager users shall be able to edit accessory details.
+
+**FR-127:** Machine Manager users shall be able to delete accessories from the inventory.
+
+**FR-128:** The system shall track current stock quantity for each accessory.
+
+**FR-129:** Machine Manager users shall be able to perform stock adjustments for accessories.
+
+**FR-130:** The system shall support the following stock adjustment types: Addition, Reduction, and Transfer.
+
+**FR-131:** The system shall require a reason for each stock adjustment.
+
+**FR-132:** The system shall record the adjusted quantity, adjustment reason, and timestamp for each stock adjustment.
+
+**FR-133:** The system shall update accessory quantity automatically after stock adjustments.
+
+**FR-134:** The system shall allow Machine Manager users to set minimum and maximum stock levels for each accessory.
+
+**FR-135:** The system shall trigger low stock alerts when accessory quantity falls below the minimum threshold.
+
+**FR-136:** The system shall send in-app notifications to Machine Manager users for low stock alerts.
+
+**FR-137:** The system shall display accessories inventory with filtering options by Category, Location, and Stock Level.
+
+**FR-138:** The system shall allow searching for accessories by name, part number, or supplier.
 
 ---
 
-## 3.4 Regional Management
+## 5. MAINTENANCE MANAGEMENT
 
-### 3.4.1 Region Configuration
+### 5.1 Maintenance Report Submission (Operator)
 
-**[REQ-REGION-001]** The system shall maintain a database of operational regions.
+**FR-139:** The system shall provide a Maintenance Report interface accessible to Operator users.
 
-**[REQ-REGION-002]** Each region shall have the following attributes:
-- Unique Region ID
-- Region Name
-- Geographic coordinates (optional)
+**FR-140:** Operator users shall be able to submit maintenance reports for their assigned machines.
 
-**[REQ-REGION-003]** The system shall pre-configure regions for Oman governorates:
-- Muscat
-- Dhofar
-- Musandam
-- Al Buraimi
-- Ad Dakhiliyah
-- Al Batinah North
-- Al Batinah South
-- Ash Sharqiyah North
-- Ash Sharqiyah South
-- Ad Dhahirah
-- Al Wusta
+**FR-141:** The system shall require the following fields for maintenance reports: Machine ID, Affected Part, Problem Category, Symptom Description, and Severity Level.
 
-**[REQ-REGION-004]** The system shall allow Admins to add, edit, or remove regions.
+**FR-142:** The system shall support the following machine parts: Engine, Hydraulics, Electrical, DrillHead, Transmission, Brakes, Cooling, Fuel, Chassis, and Other.
 
-**[REQ-REGION-005]** The system shall provide an API endpoint to retrieve all active regions for use in dropdowns and filters.
+**FR-143:** The system shall support the following severity levels: Critical, High, Medium, and Low.
 
-### 3.4.2 Regional Associations
+**FR-144:** The system shall allow Operator users to enter error codes if available.
 
-**[REQ-REGION-010]** The system shall support regional assignment for the following entities:
-- Users
-- Projects
-- Machines
-- Stores
+**FR-145:** The system shall generate a unique ticket ID in the format MR-YYYYMMDD-#### upon report submission.
 
-**[REQ-REGION-011]** The system shall use regional filters to optimize data access and reporting.
+**FR-146:** The system shall assign a default status of Reported to newly submitted maintenance reports.
 
----
+**FR-147:** The system shall record the timestamp when the maintenance report is submitted.
 
-## 3.5 Project Management
+**FR-148:** The system shall send notifications to Mechanical Engineer users when a new maintenance report is submitted.
 
-### 3.5.1 Project Creation
+**FR-149:** Operator users shall be able to view the status of their submitted maintenance reports.
 
-**[REQ-PROJECT-001]** The system shall provide a Project Management interface accessible to users with Admin and Blasting Engineer roles.
+### 5.2 Maintenance Report Processing (Mechanical Engineer)
 
-**[REQ-PROJECT-002]** General Managers (Admins) shall be able to create new projects with the following attributes:
-- Project ID (unique, auto-generated)
-- Project Name (unique, mandatory)
-- Description (mandatory)
-- Region (mandatory, from predefined regions)
-- Area of Operation (mandatory)
-- Start Date (optional)
-- Expected End Date (optional)
-- Assigned User/Manager (optional)
+**FR-150:** The system shall provide a Maintenance Management interface accessible to Mechanical Engineer users.
 
-**[REQ-PROJECT-003]** The system shall validate that the Project Name is unique across all projects.
+**FR-151:** Mechanical Engineer users shall be able to view all pending maintenance reports.
 
-**[REQ-PROJECT-004]** The system shall reject project creation if the provided Project Name already exists, displaying an error message.
+**FR-152:** The system shall support the following maintenance report statuses: Reported, Acknowledged, InProgress, Resolved, and Closed.
 
-**[REQ-PROJECT-005]** The system shall prompt the user to re-enter project details if validation fails.
+**FR-153:** Mechanical Engineer users shall be able to acknowledge received maintenance reports.
 
-**[REQ-PROJECT-006]** The system shall initialize new projects with a status of "Planned".
+**FR-154:** The system shall update report status to Acknowledged when the engineer acknowledges it.
 
-### 3.5.2 Project Status Management
+**FR-155:** Mechanical Engineer users shall be able to create maintenance jobs from maintenance reports.
 
-**[REQ-PROJECT-020]** The system shall support the following project statuses:
-1. **Planned** - Project is in planning phase
-2. **In Progress** - Active project with ongoing operations
-3. **On Hold** - Temporarily suspended project
-4. **Completed** - Project has been successfully completed
-5. **Cancelled** - Project has been terminated
+**FR-156:** The system shall allow Mechanical Engineer users to view maintenance report details including machine information, problem description, and severity.
 
-**[REQ-PROJECT-021]** Authorized users shall be able to update project status through the Project Management interface.
+**FR-157:** The system shall allow filtering of maintenance reports by Status, Severity, Machine, and Date Range.
 
-**[REQ-PROJECT-022]** The system shall record the timestamp of each status change.
+### 5.3 Maintenance Job Management
 
-**[REQ-PROJECT-023]** The system should notify assigned users when project status changes.
+**FR-158:** Mechanical Engineer users shall be able to create maintenance jobs manually or from maintenance reports.
 
-### 3.5.3 Project Updates & Deletion
+**FR-159:** The system shall require the following fields for job creation: Machine ID, Maintenance Type, Description, Scheduled Date, and Estimated Hours.
 
-**[REQ-PROJECT-030]** Admins and Blasting Engineers shall be able to edit the following project attributes:
-- Project Name
-- Description
-- Region
-- Area of Operation
-- Start Date
-- Expected End Date
-- Assigned User
-- Status
+**FR-160:** The system shall support the following maintenance types: Preventive, Corrective, Emergency, and Inspection.
 
-**[REQ-PROJECT-031]** The system shall maintain unique constraint validation on Project Name during updates.
+**FR-161:** The system shall generate a unique Job ID automatically upon job creation.
 
-**[REQ-PROJECT-032]** Admins shall be able to delete projects that have no associated sites or data.
+**FR-162:** The system shall assign a default status of Scheduled to newly created maintenance jobs.
 
-**[REQ-PROJECT-033]** The system shall prevent deletion of projects that have associated sites, drill data, or blast data.
+**FR-163:** The system shall support the following job statuses: Scheduled, InProgress, Completed, and Cancelled.
 
-**[REQ-PROJECT-034]** Before deleting a project, the system shall display a confirmation dialog listing all dependent data that will be affected.
+**FR-164:** Mechanical Engineer users shall be able to assign maintenance jobs to themselves or other engineers.
 
-### 3.5.4 Project Dashboard & Listing
+**FR-165:** The system shall allow Mechanical Engineer users to start a maintenance job by updating status to InProgress.
 
-**[REQ-PROJECT-040]** The system shall display a Project Dashboard showing:
-- Total number of projects
-- Number of projects in Planned status
-- Number of projects in In Progress status
-- Number of projects in On Hold status
-- Number of projects in Completed status
-- Number of projects in Cancelled status
+**FR-166:** The system shall update the linked maintenance report status to InProgress when the job starts.
 
-**[REQ-PROJECT-041]** The Project Management interface shall display a list of all projects accessible to the current user based on role and region.
+**FR-167:** Mechanical Engineer users shall be able to complete maintenance jobs by providing work observations and parts replaced.
 
-**[REQ-PROJECT-042]** The project list shall support filtering by:
-- Region
-- Status
-- Date range (start date, expected end date)
+**FR-168:** The system shall require the following fields when completing a job: Actual Hours, Work Observations, and Parts Replaced.
 
-**[REQ-PROJECT-043]** The system shall provide search functionality for projects by Name or Description.
+**FR-169:** The system shall update job status to Completed when the engineer marks it complete.
 
-**[REQ-PROJECT-044]** The system shall support pagination and sorting for project lists.
+**FR-170:** The system shall update the linked maintenance report status to Resolved when the job is completed.
 
-### 3.5.5 Project Archival
+**FR-171:** The system shall update machine status based on maintenance job completion.
 
-**[REQ-PROJECT-050]** The system shall allow Admins to archive completed projects.
+**FR-172:** The system shall flag jobs as Overdue if not completed by the scheduled date.
 
-**[REQ-PROJECT-051]** Archived projects shall remain in the database but be excluded from active project lists by default.
+**FR-173:** The system shall send notifications to assigned engineers for overdue jobs.
 
-**[REQ-PROJECT-052]** The system shall provide an option to view archived projects separately.
+**FR-174:** Mechanical Engineer users shall be able to cancel maintenance jobs with a cancellation reason.
 
-### 3.5.6 Resource Assignment
+**FR-175:** The system shall maintain a complete history of all maintenance jobs with timestamps.
 
-**[REQ-PROJECT-060]** The system shall allow assignment of machines to projects.
+**FR-176:** Mechanical Engineer users shall be able to view job history for each machine.
 
-**[REQ-PROJECT-061]** The system shall allow assignment of operators to projects.
+### 5.4 Status Synchronization
 
-**[REQ-PROJECT-062]** The system shall notify assigned users when they are added to a project.
+**FR-177:** The system shall automatically synchronize statuses between maintenance reports, maintenance jobs, and machines.
 
-**[REQ-PROJECT-063]** The system shall track resource assignments with timestamps.
+**FR-178:** The system shall update machine status to Maintenance when a maintenance job is in progress.
 
-### 3.5.7 Operator-Specific Access
+**FR-179:** The system shall update machine status to Available when a maintenance job is completed and no other jobs are pending.
 
-**[REQ-PROJECT-070]** The system shall provide an endpoint for operators to retrieve their assigned project.
+**FR-180:** The system shall ensure consistency between report status and job status at all times.
 
-**[REQ-PROJECT-071]** Operators shall only be able to view and interact with projects to which they are explicitly assigned.
+### 5.5 Maintenance Analytics
+
+**FR-181:** The system shall provide a Maintenance Analytics interface accessible to Mechanical Engineer users.
+
+**FR-182:** The system shall calculate and display average response time from report submission to job start.
+
+**FR-183:** The system shall calculate and display average resolution time from report submission to job completion.
+
+**FR-184:** The system shall display the most common maintenance issues by problem category.
+
+**FR-185:** The system shall calculate machine downtime based on maintenance job duration.
+
+**FR-186:** The system shall display maintenance job counts by status, type, and severity.
+
+**FR-187:** The system shall allow filtering of analytics by date range, machine, and engineer.
 
 ---
 
-## 3.6 Project Site Management
+## 6. DRILLING OPERATIONS
 
-### 3.6.1 Site Creation
+### 6.1 CSV Drill Hole Import
 
-**[REQ-SITE-001]** The system shall display a list of all projects and their associated sites to authorized users.
+**FR-188:** The system shall provide a CSV Import interface accessible to Blasting Engineer users.
 
-**[REQ-SITE-002]** Blasting Engineers and Operators shall be able to select an assigned project and create a new site under that project.
+**FR-189:** Blasting Engineer users shall be able to upload CSV files containing drill hole data.
 
-**[REQ-SITE-003]** Site creation shall require the following mandatory attributes:
-- Site ID (unique within project, auto-generated)
-- Site Name (unique within project)
-- Site Address (mandatory)
-- Project ID (parent project reference)
+**FR-190:** The system shall support CSV files with the following columns: Hole ID, X Coordinate, Y Coordinate, Z Coordinate, Depth, Azimuth, and Dip.
 
-**[REQ-SITE-004]** The system shall validate that the Site Name is unique within the selected project.
+**FR-191:** The system shall validate all CSV data before importing.
 
-**[REQ-SITE-005]** The system shall reject site creation if a Site Name with the same name already exists within the selected project, displaying an error message.
+**FR-192:** The system shall support both 2D coordinates (X, Y) and 3D coordinates (X, Y, Z).
 
-**[REQ-SITE-006]** The system shall prompt the user to re-enter site details if validation fails.
+**FR-193:** The system shall default Z coordinate to 0 if not provided in CSV file.
 
-**[REQ-SITE-007]** The system shall initialize new sites with a status of "Planned".
+**FR-194:** The system shall validate that Depth values are greater than 0.
 
-### 3.6.2 Site Status Management
+**FR-195:** The system shall validate that Azimuth values are between 0 and 360 degrees.
 
-**[REQ-SITE-020]** The system shall support the following site statuses:
-1. **Planned** - Site is in planning phase
-2. **Setup** - Site setup and preparation phase
-3. **InProgress** - Active site with ongoing operations
-4. **Blast** - Site ready for blasting operations
-5. **OnHold** - Temporarily suspended site
-6. **Completed** - Site operations have been successfully completed
-7. **Cancelled** - Site has been terminated
-8. **Archived** - Site is archived for historical reference
+**FR-196:** The system shall validate that Dip values are between -90 and 90 degrees.
 
-**[REQ-SITE-021]** Authorized users shall be able to update site status.
+**FR-197:** The system shall display validation errors with line numbers if CSV data is invalid.
 
-**[REQ-SITE-022]** The system shall record the timestamp of each status change.
+**FR-198:** The system shall allow Blasting Engineer users to review imported drill hole data before saving.
 
-### 3.6.3 Site Workflow Tracking
+**FR-199:** The system shall save all valid drill holes to the database when the engineer confirms import.
 
-**[REQ-SITE-030]** The system shall track the following workflow milestones for each site:
-- **IsPatternApproved** - Indicates drill pattern has been reviewed and approved
-- **IsSimulationConfirmed** - Indicates blast simulation has been reviewed and confirmed
-- **IsOperatorCompleted** - Indicates operator has completed drilling operations
-- **IsCompleted** - Indicates all site operations are complete
+**FR-200:** The system shall associate imported drill holes with the selected project and site.
 
-**[REQ-SITE-031]** The system shall record timestamps for each workflow milestone completion.
+**FR-201:** The system shall record the import timestamp for each drill hole batch.
 
-**[REQ-SITE-032]** The system shall track which user completed each workflow milestone.
+### 6.2 Interactive Drilling Pattern Creator
 
-**[REQ-SITE-033]** When a site is marked as completed, the system shall:
-1. Set IsCompleted flag to true
-2. Record CompletedAt timestamp
-3. Record CompletedByUserId
+**FR-202:** The system shall provide a Drilling Pattern Creator interface accessible to Blasting Engineer users.
 
-**[REQ-SITE-034]** The system shall allow authorized users to approve drill patterns for a site, setting IsPatternApproved to true.
+**FR-203:** The system shall render an interactive 2D canvas using Konva.js for pattern design.
 
-**[REQ-SITE-035]** The system shall allow authorized users to confirm blast simulations for a site, setting IsSimulationConfirmed to true.
+**FR-204:** Blasting Engineer users shall be able to add drill points by clicking on the canvas.
 
-**[REQ-SITE-036]** The system shall allow operators to mark drilling operations as complete, setting IsOperatorCompleted to true.
+**FR-205:** Blasting Engineer users shall be able to drag and reposition drill points on the canvas.
 
-### 3.6.4 Site Updates & Deletion
+**FR-206:** Blasting Engineer users shall be able to delete drill points from the canvas.
 
-**[REQ-SITE-040]** Blasting Engineers shall be able to edit the following site attributes:
-- Site Name
-- Site Address
-- Status
-- Workflow milestone flags
+**FR-207:** The system shall display a grid overlay on the canvas for alignment reference.
 
-**[REQ-SITE-041]** The system shall maintain unique constraint validation on Site Name within project during updates.
+**FR-208:** The system shall provide grid snapping functionality for precise drill point placement.
 
-**[REQ-SITE-042]** Authorized users shall be able to delete sites.
+**FR-209:** The system shall display ruler measurements on the canvas for distance reference.
 
-**[REQ-SITE-043]** The system shall cascade delete all associated drill data, blast data, and calculations when a site is deleted.
+**FR-210:** The system shall provide zoom in and zoom out controls for the canvas.
 
-**[REQ-SITE-044]** Before deleting a site, the system shall display a confirmation dialog listing all dependent data that will be removed.
+**FR-211:** The system shall provide pan functionality to navigate large patterns.
 
-### 3.6.5 Site Listing & Filtering
+**FR-212:** Blasting Engineer users shall be able to configure pattern settings for all drill points.
 
-**[REQ-SITE-050]** The system shall provide an endpoint to retrieve all sites for a specific project.
+**FR-213:** The system shall allow configuration of the following pattern parameters: Spacing, Burden, Depth, Diameter, and Stemming.
 
-**[REQ-SITE-051]** The system shall support filtering sites by status.
+**FR-214:** The system shall validate that Spacing values are greater than 0.
 
-**[REQ-SITE-052]** The system shall display site completion percentage based on workflow milestones.
+**FR-215:** The system shall validate that Burden values are greater than 0.
+
+**FR-216:** The system shall validate that Depth values are greater than 0.
+
+**FR-217:** The system shall validate that Diameter values are greater than 0.
+
+**FR-218:** The system shall validate that Stemming values are between 0 and Depth.
+
+**FR-219:** The system shall display real-time calculations of pattern metrics as points are added.
+
+**FR-220:** Blasting Engineer users shall be able to save the drilling pattern with a descriptive name.
+
+**FR-221:** The system shall associate saved patterns with the selected project and site.
+
+**FR-222:** Blasting Engineer users shall be able to load previously saved patterns for editing.
+
+**FR-223:** The system shall allow Blasting Engineer users to create pattern templates for reuse.
+
+**FR-224:** Blasting Engineer users shall be able to duplicate existing patterns to create variations.
+
+### 6.3 Drill Hole 3D Visualization
+
+**FR-225:** The system shall provide a Drill Visualization interface accessible to Blasting Engineer users.
+
+**FR-226:** The system shall render drill holes in 3D space using Three.js library.
+
+**FR-227:** The system shall display drill holes with their correct X, Y, and Z coordinates.
+
+**FR-228:** The system shall visualize drill hole depth as vertical cylinders in 3D space.
+
+**FR-229:** The system shall provide orbit camera controls for rotating the 3D view.
+
+**FR-230:** The system shall provide zoom controls for the 3D visualization.
+
+**FR-231:** The system shall provide pan controls for navigating the 3D space.
+
+**FR-232:** The system shall display coordinate axes (X, Y, Z) in the 3D visualization.
+
+**FR-233:** The system shall highlight selected drill holes in the 3D view.
+
+**FR-234:** The system shall display drill hole properties when hovering over holes in 3D view.
+
+### 6.4 Explosive Calculations
+
+**FR-235:** The system shall provide an Explosive Calculation interface accessible to Blasting Engineer users.
+
+**FR-236:** Blasting Engineer users shall be able to calculate explosive requirements for a project site.
+
+**FR-237:** The system shall calculate ANFO requirements based on drill hole parameters.
+
+**FR-238:** The system shall calculate Emulsion requirements based on drill hole parameters.
+
+**FR-239:** The system shall calculate explosive requirements per drill hole.
+
+**FR-240:** The system shall calculate total explosive requirements for the entire site.
+
+**FR-241:** The system shall use hole volume formulas based on depth and diameter.
+
+**FR-242:** The system shall account for stemming length when calculating charge length.
+
+**FR-243:** The system shall apply explosive density values when calculating mass requirements.
+
+**FR-244:** The system shall save calculation results with a descriptive name.
+
+**FR-245:** Blasting Engineer users shall be able to view previously saved calculation results.
+
+**FR-246:** Blasting Engineer users shall be able to duplicate calculation results to create variations.
+
+**FR-247:** The system shall associate calculation results with the selected project and site.
+
+**FR-248:** The system shall record the calculation timestamp for each result.
 
 ---
 
-## 3.7 Drilling Operations Management
+## 7. BLASTING OPERATIONS
 
-### 3.7.1 Drill Hole Creation
+### 7.1 Blast Sequence Designer
 
-**[REQ-DRILL-001]** The system shall allow Blasting Engineers and Operators to create drill holes for project sites.
+**FR-249:** The system shall provide a Blast Sequence Designer interface accessible to Blasting Engineer users.
 
-**[REQ-DRILL-002]** Each drill hole shall have the following attributes:
-- Drill Hole ID (unique, auto-generated)
-- Project ID (mandatory)
-- Project Site ID (mandatory)
-- Hole Number / Name (mandatory)
-- Serial Number (optional)
-- 3D Positioning Data (optional):
-  - Easting coordinate
-  - Northing coordinate
-  - Elevation
-  - Length
-  - Depth
-  - Azimuth (angle)
-  - Dip (angle)
-- 2D Positioning Data (used when 3D data unavailable):
-  - X coordinate
-  - Y coordinate
-- ActualDepth, Stemming
-- Drill Point collection (one or more drill points)
+**FR-250:** Blasting Engineer users shall be able to create connections between drill points.
 
-**[REQ-DRILL-003]** The system shall validate that drill holes are associated with valid projects and sites.
+**FR-251:** The system shall support the following connection types: DetonatingCord and Connectors.
 
-**[REQ-DRILL-004]** The system shall support batch creation of multiple drill holes in a single operation.
+**FR-252:** The system shall support the following detonator types: Electric, NonElectric, and Electronic.
 
-### 3.7.2 Drill Point Management
+**FR-253:** Blasting Engineer users shall be able to assign delay times to each connection in milliseconds.
 
-**[REQ-DRILL-010]** Each drill hole shall contain one or more drill points with the following attributes:
-- Drill Point ID (unique, auto-generated)
-- X Coordinate (ground position, mandatory)
-- Y Coordinate (ground position, mandatory)
-- Depth (vertical depth in meters, mandatory)
-- Spacing (horizontal distance to adjacent holes in meters)
-- Burden (distance to free face in meters)
-- Diameter (hole diameter in millimeters)
-- Stemming (length of stemming material in meters)
-- Subdrill (depth below bench floor in meters)
-- Volume (calculated rock volume to be fragmented)
-- ANFO (calculated ANFO quantity in kg)
-- Emulsion (calculated Emulsion quantity in kg)
+**FR-254:** Blasting Engineer users shall be able to assign sequence numbers to drill points.
 
-**[REQ-DRILL-011]** The system shall allow Blasting Engineers to manually enter drill point parameters.
+**FR-255:** Blasting Engineer users shall be able to designate starting holes for the blast sequence.
 
-**[REQ-DRILL-012]** The system shall validate drill point parameters against acceptable ranges:
-- Depth: 0-50 meters
-- Diameter: 50-500 millimeters
-- Spacing: 1-20 meters
-- Burden: 1-20 meters
-- Stemming: 0-10 meters
+**FR-256:** The system shall visually render connections between drill points as lines on the canvas.
 
-**[REQ-DRILL-013]** The system shall reject drill point creation if parameters are outside acceptable ranges, displaying appropriate error messages.
+**FR-257:** Blasting Engineer users shall be able to edit connection properties including delay time and detonator type.
 
-### 3.7.3 CSV Bulk Import
+**FR-258:** Blasting Engineer users shall be able to delete connections from the sequence.
 
-**[REQ-DRILL-020]** The system shall provide functionality to import drill data from CSV files.
+**FR-259:** The system shall save blast sequence data in JSON format.
 
-**[REQ-DRILL-021]** The CSV file shall support the following columns:
-- Hole ID
-- X Coordinate
-- Y Coordinate
-- Depth
-- Spacing
-- Burden
-- Diameter
-- Stemming
-- Subdrill
-- Volume (optional, can be calculated)
-- ANFO (optional, can be calculated)
-- Emulsion (optional, can be calculated)
+**FR-260:** The system shall associate blast sequences with the selected project and site.
 
-**[REQ-DRILL-022]** The system shall validate the CSV file format and structure before processing.
+**FR-261:** Blasting Engineer users shall be able to load previously saved blast sequences.
 
-**[REQ-DRILL-023]** The system shall display validation errors with row numbers for invalid data entries.
+### 7.2 Blast Sequence Simulator
 
-**[REQ-DRILL-024]** The system shall provide a preview of imported data before final save, allowing users to review and confirm.
+**FR-262:** The system shall provide a Blast Sequence Simulator interface accessible to Blasting Engineer users.
 
-**[REQ-DRILL-025]** Blasting Engineers shall be able to save or reject imported drill data after review.
+**FR-263:** The system shall render blast sequences in 3D space using Three.js library.
 
-**[REQ-DRILL-026]** Upon successful import, the system shall create drill holes and drill points from the CSV data.
+**FR-264:** The system shall animate the blast sequence based on assigned delay timings.
 
-**[REQ-DRILL-027]** The system shall support bulk updates to existing drill data through CSV re-import.
+**FR-265:** The system shall highlight drill holes as they fire in chronological order during simulation.
 
-### 3.7.4 Drill Pattern Configuration
+**FR-266:** The system shall provide a timeline display showing the current simulation time.
 
-**[REQ-DRILL-030]** The system shall maintain pattern settings for drill hole generation with the following configurable parameters:
-- Default Spacing (meters)
-- Default Burden (meters)
-- Default Depth (meters)
-- Default Diameter (millimeters)
-- Default Stemming (meters)
-- Grid layout parameters
+**FR-267:** The system shall provide Play, Pause, and Reset controls for simulation playback.
 
-**[REQ-DRILL-031]** The system shall allow Blasting Engineers to save drill patterns as named templates.
+**FR-268:** The system shall allow adjustment of simulation playback speed.
 
-**[REQ-DRILL-032]** Users shall be able to manage saved drill pattern templates with options for:
-- Editing template parameters
-- Duplicating templates
-- Deleting templates
-- Applying templates to new sites
+**FR-269:** The system shall calculate total blast duration based on delay timings.
 
-### 3.7.5 Drill Data Updates & Deletion
+**FR-270:** The system shall display the firing order of holes during simulation.
 
-**[REQ-DRILL-040]** Blasting Engineers and Operators shall be able to update drill point parameters after creation.
+**FR-271:** The system shall visualize connections between holes during simulation.
 
-**[REQ-DRILL-041]** The system shall validate updated parameters against acceptable ranges (as defined in REQ-DRILL-012).
-
-**[REQ-DRILL-042]** The system shall recalculate explosive requirements when drill point parameters are modified.
-
-**[REQ-DRILL-043]** Authorized users shall be able to delete individual drill holes or drill points.
-
-**[REQ-DRILL-044]** The system shall provide functionality to delete all drill data for a specific project site.
-
-**[REQ-DRILL-045]** Before deleting drill data, the system shall display a confirmation dialog indicating the number of drill holes and points that will be removed.
-
-### 3.7.6 Drill Point Completion Tracking
-
-**[REQ-DRILL-050]** The system shall track completion status for each drill point.
-
-**[REQ-DRILL-051]** Each drill point shall have the following completion attributes:
-- IsCompleted (boolean flag)
-- CompletedAt (timestamp)
-- CompletedByUserId (user who confirmed completion)
-
-**[REQ-DRILL-052]** Operators shall be able to mark drill points as completed after drilling operations.
-
-**[REQ-DRILL-053]** The system shall record the timestamp and operator identity when a drill point is marked complete.
-
-**[REQ-DRILL-054]** The system shall calculate and display the completion percentage for each site based on completed drill points.
-
-### 3.7.7 Drill Data Access & Listing
-
-**[REQ-DRILL-060]** The system shall provide endpoints to retrieve drill data with the following access patterns:
-- All drill holes (with pagination)
-- Drill holes by Project ID
-- Drill holes by Project Site ID
-- Individual drill hole by ID with all drill points
-
-**[REQ-DRILL-061]** The system shall enforce read authorization based on user role (ReadDrillData policy).
-
-**[REQ-DRILL-062]** The system shall support filtering drill data by:
-- Project
-- Site
-- Completion status
-- Date range
+**FR-272:** Blasting Engineer users shall be able to view simulation for previously saved blast sequences.
 
 ---
 
-## 3.8 Blasting Operations Management
+## 8. EXPLOSIVE INVENTORY MANAGEMENT
 
-### 3.8.1 Blast Connection Design
+### 8.1 Central Warehouse Inventory (Explosive Manager)
 
-**[REQ-BLAST-001]** The system shall provide functionality for designing blast connections between drill points.
+**FR-273:** The system shall provide a Central Inventory interface accessible to Explosive Manager users.
 
-**[REQ-BLAST-002]** Each blast connection shall link two drill points with the following attributes:
-- Connection ID (unique, auto-generated)
-- Project ID (mandatory)
-- Project Site ID (mandatory)
-- Point 1 ID (source drill point, mandatory)
-- Point 2 ID (target drill point, mandatory)
-- Connector Type (mandatory)
-- Delay (milliseconds, mandatory)
-- Sequence (blast order number, mandatory)
-- IsStartingHole (boolean flag)
+**FR-274:** Explosive Manager users shall be able to add ANFO inventory batches to the central warehouse.
 
-**[REQ-BLAST-003]** The system shall support the following connector types:
-1. **Detonating Cord** - Explosive cord connecting holes
-2. **Connectors** - Non-explosive connectors (surface or downline)
+**FR-275:** The system shall require the following fields for ANFO batches: Batch Number, Quantity, Manufacturing Date, Expiry Date, Supplier, and Storage Location.
 
-**[REQ-BLAST-004]** Blasting Engineers shall be able to create blast connections through a visual interface.
+**FR-276:** The system shall capture the following technical properties for ANFO: Density, Velocity of Detonation (VOD), Energy, Fume Class, Ammonium Nitrate Percentage, Fuel Oil Percentage, Sensitivity Type, and Grade.
 
-**[REQ-BLAST-005]** The system shall validate that both drill points exist before creating a connection.
+**FR-277:** Explosive Manager users shall be able to add Emulsion inventory batches to the central warehouse.
 
-**[REQ-BLAST-006]** The system shall prevent creation of duplicate connections between the same two drill points.
+**FR-278:** The system shall require the following fields for Emulsion batches: Batch Number, Quantity, Manufacturing Date, Expiry Date, Supplier, and Storage Location.
 
-**[REQ-BLAST-007]** The system shall allow designation of starting holes (initiation points) for the blast sequence.
+**FR-279:** The system shall capture the following technical properties for Emulsion: Density, Velocity of Detonation (VOD), Energy, Fume Class, Emulsion Percentage, Sensitizer Percentage, Sensitization Type, and Grade.
 
-### 3.8.2 Detonator Assignment
+**FR-280:** The system shall generate a unique Inventory ID automatically for each batch.
 
-**[REQ-BLAST-020]** The system shall support assignment of detonators to drill points.
+**FR-281:** The system shall assign a default status of Available to newly added inventory batches.
 
-**[REQ-BLAST-021]** The system shall support the following detonator types:
-1. **Electric** - Electrically initiated detonators
-2. **Non-Electric** - Shock tube detonators
-3. **Electronic** - Programmable electronic detonators
+**FR-282:** The system shall support the following inventory statuses: Available, Allocated, Depleted, Expired, and Quarantined.
 
-**[REQ-BLAST-022]** Each detonator assignment shall include:
-- Detonator Type
-- Delay time (milliseconds)
-- Sequence number
+**FR-283:** Explosive Manager users shall be able to edit inventory batch details.
 
-**[REQ-BLAST-023]** The system shall validate that delay times are within acceptable ranges (0-10000 milliseconds).
+**FR-284:** Explosive Manager users shall be able to update inventory batch status.
 
-### 3.8.3 Blast Sequence Simulation
+**FR-285:** The system shall track the total quantity, allocated quantity, and available quantity for each batch.
 
-**[REQ-BLAST-030]** The system shall provide a blast sequence simulation feature with visual timeline representation.
+**FR-286:** The system shall calculate available quantity as total quantity minus allocated quantity.
 
-**[REQ-BLAST-031]** The simulation shall display:
-- Firing order of drill holes based on delay times
-- Timeline visualization of detonation sequence
-- Visual highlighting of holes as they detonate in sequence
-- Total blast duration
+**FR-287:** The system shall prevent allocation of quantities exceeding available quantity.
 
-**[REQ-BLAST-032]** The simulation shall support interactive controls:
-- Play/Pause
-- Speed adjustment
-- Step-by-step advancement
-- Reset to beginning
+**FR-288:** Explosive Manager users shall be able to quarantine inventory batches for quality issues.
 
-**[REQ-BLAST-033]** The simulation shall visually update the 2D pattern view to reflect the blast sequence animation.
+**FR-289:** The system shall allow Explosive Manager users to create quality check records for inventory batches.
 
-**[REQ-BLAST-034]** Users shall be able to review and confirm blast simulations for approval.
+**FR-290:** The system shall trigger expiry alerts for batches within 30 days of expiry date.
 
-**[REQ-BLAST-035]** Upon simulation confirmation, the system shall set the IsSimulationConfirmed flag for the site.
+**FR-291:** The system shall send in-app notifications to Explosive Manager users for expiry alerts.
 
-### 3.8.4 Blasting Data Storage
+**FR-292:** The system shall automatically update batch status to Expired after expiry date.
 
-**[REQ-BLAST-040]** The system shall store blasting workflow data for each project site.
+**FR-293:** The system shall display central inventory with filtering options by Explosive Type, Status, Supplier, and Expiry Date Range.
 
-**[REQ-BLAST-041]** Blasting data shall be stored in JSON format to support flexible schema evolution.
+**FR-294:** The system shall allow searching for inventory batches by batch number or supplier.
 
-**[REQ-BLAST-042]** The stored blasting data shall include:
-- Drill pattern configuration
-- Blast connections
-- Detonator assignments
-- Simulation settings
-- Workflow state
+### 8.2 Inventory Transfer Workflow (Central to Stores)
 
-**[REQ-BLAST-043]** The system shall provide endpoints to retrieve and update blasting data for a specific project site.
+**FR-295:** Store Manager users shall be able to create inventory transfer requests from central warehouse to their store.
 
-### 3.8.5 Blast Connection Management
+**FR-296:** The system shall require the following fields for transfer requests: Explosive Type, Quantity, Destination Store, Required By Date, and Request Notes.
 
-**[REQ-BLAST-050]** Blasting Engineers shall be able to update existing blast connections, including:
-- Connector type
-- Delay timing
-- Sequence order
+**FR-297:** The system shall generate a unique Transfer Request ID automatically upon creation.
 
-**[REQ-BLAST-051]** Blasting Engineers shall be able to delete individual blast connections.
+**FR-298:** The system shall assign a default status of Pending to newly created transfer requests.
 
-**[REQ-BLAST-052]** The system shall provide functionality to delete all blasting workflow data for a specific project site.
+**FR-299:** The system shall support the following transfer request statuses: Pending, Approved, Rejected, InProgress, Completed, and Cancelled.
 
-**[REQ-BLAST-053]** Before deleting blasting data, the system shall display a confirmation dialog.
+**FR-300:** The system shall route all transfer requests to the Explosive Manager for approval.
 
-### 3.8.6 Blast Data Access
+**FR-301:** Explosive Manager users shall be able to view all pending transfer requests.
 
-**[REQ-BLAST-060]** The system shall provide endpoints to retrieve blast connections with the following access patterns:
-- All connections for a project site
-- Individual connection by ID
-- Connections by sequence order
+**FR-302:** Explosive Manager users shall be able to approve transfer requests with original or adjusted quantity.
 
-**[REQ-BLAST-061]** The system shall enforce authorization based on user role for blasting operations.
+**FR-303:** Explosive Manager users shall be able to reject transfer requests with a rejection reason.
+
+**FR-304:** The system shall send notifications to Store Manager users when their transfer request is approved or rejected.
+
+**FR-305:** The system shall update request status to Approved when the Explosive Manager approves it.
+
+**FR-306:** The system shall update request status to Rejected when the Explosive Manager rejects it.
+
+**FR-307:** Explosive Manager users shall be able to dispatch approved transfer requests.
+
+**FR-308:** The system shall require the following fields for dispatching: Truck Number, Driver Name, Driver Contact, and Dispatch Date/Time.
+
+**FR-309:** The system shall update request status to InProgress upon dispatch.
+
+**FR-310:** The system shall allocate the requested quantity in central warehouse inventory upon dispatch.
+
+**FR-311:** The system shall send notifications to Store Manager users when their request is dispatched.
+
+**FR-312:** Store Manager users shall be able to confirm delivery of transferred inventory.
+
+**FR-313:** The system shall update request status to Completed upon delivery confirmation.
+
+**FR-314:** The system shall create a stock-in transaction in the destination store upon delivery confirmation.
+
+**FR-315:** The system shall update store inventory quantity automatically upon delivery confirmation.
+
+**FR-316:** The system shall reduce central warehouse inventory quantity upon completed transfer.
+
+**FR-317:** The system shall maintain complete transfer history with timestamps and actor information.
+
+**FR-318:** Explosive Manager users shall be able to cancel transfer requests with a cancellation reason.
+
+### 8.3 Store Management
+
+**FR-319:** The system shall provide a Store Management interface accessible to Explosive Manager users.
+
+**FR-320:** Explosive Manager users shall be able to create new stores.
+
+**FR-321:** The system shall require the following fields for store creation: Store Name, Location, Region, and Store Manager.
+
+**FR-322:** The system shall generate a unique Store ID automatically upon store creation.
+
+**FR-323:** The system shall assign a default status of Operational to newly created stores.
+
+**FR-324:** The system shall support the following store statuses: Operational, Maintenance, and Decommissioned.
+
+**FR-325:** Explosive Manager users shall be able to edit store details.
+
+**FR-326:** Explosive Manager users shall be able to update store status.
+
+**FR-327:** The system shall send notifications to assigned Store Manager users when a store is created or modified.
+
+**FR-328:** The system shall display all stores with filtering options by Status, Region, and Store Manager.
+
+### 8.4 Store Inventory Management (Store Manager)
+
+**FR-329:** The system shall provide a Store Inventory interface accessible to Store Manager users.
+
+**FR-330:** Store Manager users shall be able to view inventory for their assigned stores.
+
+**FR-331:** The system shall track current quantity, reserved quantity, and available quantity for each explosive type in each store.
+
+**FR-332:** The system shall calculate available quantity as current quantity minus reserved quantity.
+
+**FR-333:** Store Manager users shall be able to set minimum and maximum stock levels for each explosive type.
+
+**FR-334:** The system shall trigger low stock alerts when quantity falls below the minimum threshold.
+
+**FR-335:** The system shall send in-app notifications to Store Manager users for low stock alerts.
+
+**FR-336:** The system shall record stock transactions for each inventory change.
+
+**FR-337:** The system shall support the following transaction types: StockIn, StockOut, Transfer, Adjustment, and Reservation.
+
+**FR-338:** The system shall record the following fields for each transaction: Transaction Type, Quantity, Transaction Date, Reference Number, and Notes.
+
+**FR-339:** Store Manager users shall be able to view complete transaction history for their stores.
+
+**FR-340:** The system shall allow filtering of transactions by Type, Date Range, and Explosive Type.
+
+**FR-341:** The system shall track batch numbers for inventory received from central warehouse.
+
+**FR-342:** The system shall track manufacturing and expiry dates for store inventory.
+
+**FR-343:** The system shall trigger expiry alerts for store inventory within 30 days of expiry.
 
 ---
 
-## 3.9 Machine Management
+## 9. EXPLOSIVE APPROVAL REQUESTS
 
-### 3.9.1 Machine Inventory
+### 9.1 Explosive Usage Request (Blasting Engineer)
 
-**[REQ-MACHINE-001]** The system shall provide a Machine Inventory interface accessible to Machine Managers and Admins.
+**FR-344:** The system shall provide an Explosive Approval Request interface accessible to Blasting Engineer users.
 
-**[REQ-MACHINE-002]** Machine Managers shall be able to add machines to the inventory with the following attributes:
-- Machine ID (unique, auto-generated)
-- Machine Name (mandatory)
-- Type (mandatory)
-- Model (mandatory)
-- Manufacturer (mandatory)
-- Serial Number (unique, mandatory)
-- Rig Number (optional)
-- Plate Number (optional)
-- Chassis Details (optional)
-- Manufacturing Year (mandatory)
-- Current Location (optional)
-- Specifications (flexible JSON field for additional technical details)
+**FR-345:** Blasting Engineer users shall be able to submit requests for explosive usage for their project sites.
 
-**[REQ-MACHINE-003]** The system shall validate that Serial Number is unique across all machines.
+**FR-346:** The system shall require the following fields for explosive requests: Project ID, Site ID, Explosive Type, Quantity, Expected Usage Date, Blasting Date/Time, and Justification.
 
-**[REQ-MACHINE-004]** The system shall reject machine creation if the provided Serial Number already exists.
+**FR-347:** The system shall allow Blasting Engineer users to add comments and safety notes to requests.
 
-### 3.9.2 Machine Status Management
+**FR-348:** The system shall require completion of a safety checklist for each request.
 
-**[REQ-MACHINE-020]** The system shall support the following machine statuses:
-1. **Available** - Machine is available for assignment
-2. **In Use** - Machine is currently assigned and operational
-3. **Under Maintenance** - Machine is undergoing maintenance
-4. **Out of Service** - Machine is not operational
+**FR-349:** The system shall require environmental assessment information for each request.
 
-**[REQ-MACHINE-021]** The system shall display the real-time availability or assignment status of each machine.
+**FR-350:** The system shall generate a unique Request ID automatically upon request creation.
 
-**[REQ-MACHINE-022]** Authorized users shall be able to update machine status.
+**FR-351:** The system shall assign a default status of Pending to newly created explosive requests.
 
-**[REQ-MACHINE-023]** The system shall automatically update machine status to "In Use" when assigned to a project or operator.
+**FR-352:** The system shall support the following request statuses: Pending, Approved, Rejected, Cancelled, and Expired.
 
-**[REQ-MACHINE-024]** The system shall automatically update machine status to "Available" when assignments are removed.
+**FR-353:** The system shall support the following request priorities: Low, Normal, High, and Critical.
 
-### 3.9.3 Machine Assignment
+**FR-354:** The system shall route explosive requests to the appropriate Store Manager based on project region.
 
-**[REQ-MACHINE-030]** The system shall allow assignment of machines to projects.
+### 9.2 Explosive Request Approval (Store Manager)
 
-**[REQ-MACHINE-031]** The system shall allow assignment of machines to operators.
+**FR-355:** Store Manager users shall be able to view all explosive requests for their region.
 
-**[REQ-MACHINE-032]** Each machine assignment shall record:
-- Assigned Project ID
-- Assigned Operator User ID
-- Assignment Date (timestamp)
+**FR-356:** Store Manager users shall be able to filter requests by Status, Priority, Explosive Type, and Date Range.
 
-**[REQ-MACHINE-033]** The system shall validate that operators exist before assigning machines.
+**FR-357:** Store Manager users shall be able to approve explosive requests.
 
-**[REQ-MACHINE-034]** The system shall notify assigned machine operators of new assignments via in-app notification.
+**FR-358:** Store Manager users shall be able to reject explosive requests with a rejection reason.
 
-**[REQ-MACHINE-035]** The system shall notify requesting General Managers when machine assignments are completed.
+**FR-359:** The system shall send notifications to Blasting Engineer users when their request is approved or rejected.
 
-**[REQ-MACHINE-036]** An operator shall be assigned to only one machine at a time.
+**FR-360:** The system shall update request status to Approved when the Store Manager approves it.
 
-**[REQ-MACHINE-037]** A machine shall be assigned to only one operator at a time.
+**FR-361:** The system shall update request status to Rejected when the Store Manager rejects it.
 
-**[REQ-MACHINE-038]** The system shall maintain a history of all machine assignments with timestamps.
+**FR-362:** The system shall reserve the approved quantity in store inventory upon approval.
 
-### 3.9.4 Machine Assignment Requests (Optional Enhancement)
+**FR-363:** The system shall create a reservation transaction in store inventory upon approval.
 
-**[REQ-MACHINE-040]** The system should allow General Managers to submit machine assignment requests specifying:
-- Project ID
-- Machine Type required
-- Quantity needed
-- Request justification or details
+**FR-364:** The system shall automatically expire requests if not approved within a configurable time period.
 
-**[REQ-MACHINE-041]** The system should route all machine assignment requests to Machine Managers for review.
-
-**[REQ-MACHINE-042]** Machine Managers should be able to review requests and:
-- Approve and assign specific machines
-- Reject requests with reason
-
-**[REQ-MACHINE-043]** The system should notify requesters of assignment request status changes.
-
-### 3.9.5 Maintenance Tracking
-
-**[REQ-MACHINE-050]** The system shall track maintenance dates for each machine with:
-- Last Maintenance Date
-- Next Maintenance Date
-
-**[REQ-MACHINE-051]** Machine Managers shall be able to schedule machines for maintenance.
-
-**[REQ-MACHINE-052]** The system should generate alerts when machines approach scheduled maintenance dates.
-
-**[REQ-MACHINE-053]** The system shall maintain a history of all maintenance events with timestamps.
-
-**[REQ-MACHINE-054]** Machine Operators should be able to log daily usage data for machines, including:
-- Engine hours
-- Idle hours
-- Service hours
-
-**[REQ-MACHINE-055]** The system should calculate remaining service hours based on logged usage and configured service intervals.
-
-**[REQ-MACHINE-056]** The system should trigger alerts when a machine approaches its defined service threshold based on remaining service hours.
-
-### 3.9.6 Machine Updates & Deletion
-
-**[REQ-MACHINE-060]** Machine Managers shall be able to edit existing machine details.
-
-**[REQ-MACHINE-061]** Machine Managers shall be able to delete machines from the inventory.
-
-**[REQ-MACHINE-062]** The system shall prevent deletion of machines that are currently assigned to projects or operators.
-
-**[REQ-MACHINE-063]** Before deleting a machine, the system shall display a confirmation dialog.
-
-### 3.9.7 Machine Listing & Filtering
-
-**[REQ-MACHINE-070]** The Machine Inventory interface shall support filtering by:
-- Model
-- Type
-- Status (Available, In Use, Under Maintenance, Out of Service)
-- Project assignment
-- Operator assignment
-- Region
-
-**[REQ-MACHINE-071]** The system shall provide an endpoint to retrieve a machine by assigned operator ID.
-
-**[REQ-MACHINE-072]** The system shall support search functionality for machines by Name, Serial Number, Rig Number, or Plate Number.
-
-**[REQ-MACHINE-073]** The system shall support pagination and sorting for machine lists.
+**FR-365:** The system shall maintain complete request history with timestamps and approver information.
 
 ---
 
-## 3.10 Store Management
+## 10. OPERATOR WORKFLOWS
 
-### 3.10.1 Store Creation & Configuration
+### 10.1 Operator Dashboard & Assignments
 
-**[REQ-STORE-001]** The system shall provide a Store Management interface accessible to Explosive Managers and Admins.
+**FR-366:** The system shall provide an Operator Dashboard accessible to Operator users.
 
-**[REQ-STORE-002]** Explosive Managers shall be able to create new stores with the following attributes:
-- Store ID (unique, auto-generated)
-- Store Name (mandatory, unique)
-- Store Address (mandatory)
-- City (mandatory)
-- Store Manager User ID (mandatory, must be a user with Store Manager role)
-- Region ID (mandatory)
-- Storage Capacity (total capacity in kg, mandatory)
-- Allowed Explosive Types (comma-separated list, mandatory)
+**FR-367:** Operator users shall be able to view their assigned project.
 
-**[REQ-STORE-003]** The system shall validate that Store Name is unique across all stores.
+**FR-368:** Operator users shall be able to view all sites within their assigned project.
 
-**[REQ-STORE-004]** The system shall validate that the assigned Store Manager has the Store Manager role.
+**FR-369:** Operator users shall be able to view their assigned machines.
 
-**[REQ-STORE-005]** The system shall support the following explosive types for stores:
-- ANFO (Ammonium Nitrate Fuel Oil)
-- Emulsion
+**FR-370:** The system shall display machine details including Type, Model, and Assignment Date for operator's machines.
 
-**[REQ-STORE-006]** Upon successful store creation, the system shall:
-1. Generate and assign a unique Store ID
-2. Initialize store with Operational status
-3. Create an empty inventory record
-4. Notify the designated Store Manager via email
+**FR-371:** Operator users shall be able to view drilling patterns for their assigned sites.
 
-**[REQ-STORE-007]** The email notification to the Store Manager shall include:
-- Store name and location
-- Assigned manager information
-- Storage capacity
-- Allowed explosive types
+**FR-372:** The system shall provide read-only access to drilling patterns for Operator users.
 
-### 3.10.2 Store Status Management
+**FR-373:** Operator users shall be able to view site details including location and status.
 
-**[REQ-STORE-020]** The system shall support the following store statuses:
-1. **Operational** - Store is active and functional
-2. **Under Maintenance** - Store is temporarily unavailable
-3. **Decommissioned** - Store is permanently closed
+### 10.2 Drill Point Completion Tracking
 
-**[REQ-STORE-021]** Explosive Managers shall be able to update store status.
+**FR-374:** Operator users shall be able to mark individual drill points as completed.
 
-**[REQ-STORE-022]** The system shall provide a dedicated endpoint to update store status.
+**FR-375:** The system shall update drill point status to Completed when marked by operator.
 
-**[REQ-STORE-023]** When a store status is changed to "Under Maintenance" or "Decommissioned", the system should notify:
-- Assigned Store Manager
-- Explosive Manager
-- Users with pending transfer requests to that store
+**FR-376:** The system shall record the completion timestamp for each drill point.
 
-### 3.10.3 Store Updates & Deletion
+**FR-377:** The system shall display completion progress for each site based on completed drill points.
 
-**[REQ-STORE-030]** Explosive Managers shall be able to edit store details, including:
-- Store Name
-- Store Address
-- City
-- Store Manager assignment
-- Storage Capacity
-- Allowed Explosive Types
-- Status
-
-**[REQ-STORE-031]** The system shall maintain unique constraint validation on Store Name during updates.
-
-**[REQ-STORE-032]** The system shall require confirmation before deleting a store.
-
-**[REQ-STORE-033]** Upon deletion confirmation, the system shall:
-1. Remove the store from the database
-2. Delete all associated inventory records
-3. Cancel all pending transfer requests to/from that store
-4. Notify the affected Store Manager via email
-
-**[REQ-STORE-034]** The system shall allow Explosive Managers to deactivate a store (set status to Decommissioned) while retaining all historical data.
-
-**[REQ-STORE-035]** Decommissioned stores shall be excluded from active store lists but remain accessible for historical reporting.
-
-### 3.10.4 Store Inventory Tracking
-
-**[REQ-STORE-040]** The system shall maintain inventory records for each store with the following attributes per explosive type:
-- Store ID (foreign key)
-- Explosive Type (ANFO, Emulsion)
-- Quantity (current available quantity in kg)
-- Reserved Quantity (allocated but not yet dispatched, in kg)
-- Unit (kg, lbs, tons)
-- Minimum Stock Level (threshold for low-stock alerts, in kg)
-- Maximum Stock Level (capacity limit, in kg)
-- Last Restocked Date (timestamp)
-- Expiry Date (optional)
-- Batch Number (optional)
-- Supplier (optional)
-
-**[REQ-STORE-041]** The system shall calculate available quantity as: Total Quantity - Reserved Quantity.
-
-**[REQ-STORE-042]** The system shall calculate current occupancy for each store based on sum of all inventory quantities.
-
-**[REQ-STORE-043]** The system shall prevent inventory additions that would exceed the store's storage capacity.
-
-**[REQ-STORE-044]** The system shall display a validation error if an inventory transaction would exceed storage capacity.
-
-### 3.10.5 Store Transaction Management
-
-**[REQ-STORE-050]** The system shall log all inventory transactions for each store.
-
-**[REQ-STORE-051]** Each transaction record shall include:
-- Transaction ID (unique, auto-generated)
-- Store ID
-- Transaction Type (Addition, Consumption, Reservation, Release, Transfer In, Transfer Out)
-- Explosive Type
-- Quantity (with positive/negative values based on transaction type)
-- Transaction Date (timestamp)
-- User ID (who performed the transaction)
-- Reference Number (optional, for linking to transfer requests or approvals)
-- Notes (optional)
-
-**[REQ-STORE-052]** The system shall automatically create transaction records when:
-- Inventory is received from central warehouse
-- Inventory is consumed for blasting operations
-- Inventory is reserved for approved requests
-- Reservations are released or cancelled
-
-### 3.10.6 Store Capacity & Utilization
-
-**[REQ-STORE-060]** The system shall calculate and display current occupancy for each store.
-
-**[REQ-STORE-061]** The system shall calculate utilization rate as: (Current Occupancy / Storage Capacity) × 100.
-
-**[REQ-STORE-062]** The system shall provide an endpoint to retrieve utilization percentage for a specific store.
-
-**[REQ-STORE-063]** The system shall display visual indicators (progress bars, color coding) for store capacity:
-- Green: < 70% utilization
-- Yellow: 70-90% utilization
-- Red: > 90% utilization
-
-### 3.10.7 Store Search & Filtering
-
-**[REQ-STORE-070]** The system shall allow Explosive Managers to view, search, and filter all stores.
-
-**[REQ-STORE-071]** The system shall support filtering stores by:
-- Status (Operational, Under Maintenance, Decommissioned)
-- Region
-- Store Manager
-- Allowed Explosive Types
-- Utilization percentage range
-
-**[REQ-STORE-072]** The system shall provide a dedicated search endpoint with query parameters for filtering.
-
-**[REQ-STORE-073]** The system shall support sorting stores by Name, City, Region, Storage Capacity, and Utilization.
-
-**[REQ-STORE-074]** The system shall provide an endpoint to retrieve stores by Region ID.
-
-**[REQ-STORE-075]** The system shall provide an endpoint to retrieve store(s) managed by a specific user.
-
-### 3.10.8 Store Statistics
-
-**[REQ-STORE-080]** The system shall provide aggregate statistics for the store network:
-- Total number of stores
-- Number of operational stores
-- Total storage capacity across all stores
-- Total current occupancy across all stores
-- Average utilization rate
-- Number of stores by region
-
-**[REQ-STORE-081]** The system shall provide a dedicated endpoint to retrieve store statistics.
+**FR-378:** The system shall calculate completion percentage as completed points divided by total points.
 
 ---
 
-## 3.11 Central Explosive Inventory Management
+## 11. DASHBOARDS & NOTIFICATIONS
 
-### 3.11.1 Central Warehouse Inventory
+### 11.1 Role-Specific Dashboards
 
-**[REQ-CENTRAL-001]** The system shall maintain a central warehouse inventory for explosive materials.
+**FR-379:** The system shall provide a unique dashboard for each user role upon login.
 
-**[REQ-CENTRAL-002]** Each inventory batch shall have the following attributes:
-- Inventory ID (unique, auto-generated)
-- Batch ID (unique identifier, mandatory)
-- Explosive Type (ANFO or Emulsion, mandatory)
-- Quantity (total quantity in kg, mandatory)
-- Allocated Quantity (quantity reserved for transfers, in kg)
-- Manufacturing Date (mandatory)
-- Expiry Date (mandatory)
-- Supplier (mandatory)
-- Manufacturer Batch Number (optional)
-- Storage Location within warehouse (mandatory)
-- Status (mandatory)
+**FR-380:** Admin dashboard shall display total users, total projects, total machines, and system-wide statistics.
 
-**[REQ-CENTRAL-003]** The system shall support the following inventory statuses:
-1. **Available** - Ready for allocation and transfer
-2. **Allocated** - Reserved for approved transfer requests
-3. **Depleted** - Fully consumed, zero quantity remaining
-4. **Expired** - Past expiry date, must not be used
-5. **Quarantined** - Under quality review, cannot be used
+**FR-381:** Blasting Engineer dashboard shall display active sites, pending calculations, recent patterns, and explosive requests.
 
-**[REQ-CENTRAL-004]** The system shall calculate Available Quantity as: Total Quantity - Allocated Quantity.
+**FR-382:** Operator dashboard shall display assigned machines, active sites, pending tasks, and recent notifications.
 
-**[REQ-CENTRAL-005]** The system shall calculate Days Until Expiry based on current date and Expiry Date.
+**FR-383:** Mechanical Engineer dashboard shall display pending reports, active jobs, overdue jobs, and maintenance statistics.
 
-**[REQ-CENTRAL-006]** The system shall automatically mark inventory as Expired when current date exceeds Expiry Date.
+**FR-384:** Machine Manager dashboard shall display machine availability, pending assignment requests, low stock accessories, and assignment statistics.
 
-**[REQ-CENTRAL-007]** The system shall flag inventory as "Expiring Soon" when Days Until Expiry is less than 30 days.
+**FR-385:** Explosive Manager dashboard shall display inventory levels, pending transfer requests, expiring batches, and low stock alerts.
 
-### 3.11.2 ANFO Technical Properties
+**FR-386:** Store Manager dashboard shall display store inventory levels, pending requests, low stock alerts, and recent transactions.
 
-**[REQ-CENTRAL-020]** For ANFO inventory items, the system shall store the following technical properties:
-- Fume Class (classification of toxic fumes produced)
-- Grade (quality grade of ANFO)
-- Sensitization Type (method of sensitization)
-- Density (g/cm³)
-- Velocity of Detonation (m/s)
-- Weight Strength (% relative to ANFO standard)
-- Bulk Strength (relative explosive energy)
+**FR-387:** All dashboards shall display the total count of unread notifications for the user.
 
-**[REQ-CENTRAL-021]** ANFO technical properties shall be linked to the central warehouse inventory record via foreign key relationship.
+**FR-388:** All dashboards shall provide quick access links to primary features for that role.
 
-### 3.11.3 Emulsion Technical Properties
+### 11.2 Notification System
 
-**[REQ-CENTRAL-030]** For Emulsion inventory items, the system shall store the following technical properties:
-- Density (g/cm³)
-- Velocity of Detonation (m/s)
-- Water Resistance rating
-- Sensitization method
-- Critical Diameter (minimum diameter for stable detonation, mm)
-- Cartridge Diameter (for cartridged emulsions, mm)
+**FR-389:** The system shall provide an in-app notification system accessible to all users.
 
-**[REQ-CENTRAL-031]** Emulsion technical properties shall be linked to the central warehouse inventory record via foreign key relationship.
+**FR-390:** The system shall send notifications for machine assignment approvals and rejections.
 
-### 3.11.4 Quality Control
+**FR-391:** The system shall send notifications when new maintenance reports are submitted.
 
-**[REQ-CENTRAL-040]** The system shall support quality check records for inventory batches.
+**FR-392:** The system shall send notifications when maintenance jobs are assigned to engineers.
 
-**[REQ-CENTRAL-041]** Each quality check record shall include:
-- Quality Check ID (unique, auto-generated)
-- Central Warehouse Inventory ID (foreign key)
-- Check Date (timestamp)
-- Performed By User ID
-- Quality Status (Pass, Fail, Pending)
-- Test Results (flexible JSON field for detailed test data)
-- Notes (optional)
+**FR-393:** The system shall send notifications when maintenance jobs are overdue.
 
-**[REQ-CENTRAL-042]** Quality Managers shall be able to create quality check records for inventory batches.
+**FR-394:** The system shall send notifications for inventory transfer request approvals and rejections.
 
-**[REQ-CENTRAL-043]** If a quality check fails, the system shall automatically update the inventory status to "Quarantined".
+**FR-395:** The system shall send notifications when transfer requests are dispatched.
 
-**[REQ-CENTRAL-044]** Quarantined inventory shall not be available for allocation or transfer until status is changed to "Available" by authorized personnel.
+**FR-396:** The system shall send notifications for explosive request approvals and rejections.
 
-### 3.11.5 Inventory Creation & Updates
+**FR-397:** The system shall send notifications for low stock alerts in accessories and store inventory.
 
-**[REQ-CENTRAL-050]** Explosive Managers shall be able to add new inventory batches to the central warehouse.
+**FR-398:** The system shall send notifications for expiry alerts in central and store inventory.
 
-**[REQ-CENTRAL-051]** The system shall validate that Batch ID is unique across all inventory records.
+**FR-399:** The system shall send notifications when users are assigned to projects.
 
-**[REQ-CENTRAL-052]** The system shall validate that Expiry Date is later than Manufacturing Date.
+**FR-400:** The system shall send notifications when stores are created or assigned to store managers.
 
-**[REQ-CENTRAL-053]** The system shall require technical properties (ANFO or Emulsion) to be provided based on Explosive Type.
+**FR-401:** The system shall display notification count badge on the notification icon.
 
-**[REQ-CENTRAL-054]** Explosive Managers shall be able to update existing inventory details, including:
-- Quantity (additions to stock)
-- Storage Location
-- Status
-- Technical properties
+**FR-402:** Users shall be able to view all their notifications in a notification panel.
 
-**[REQ-CENTRAL-055]** The system shall prevent updates that would result in negative Available Quantity.
+**FR-403:** Users shall be able to mark individual notifications as read.
 
-**[REQ-CENTRAL-056]** The system shall log all inventory quantity changes in an audit trail.
+**FR-404:** Users shall be able to mark all notifications as read.
 
-### 3.11.6 Inventory Deletion
+**FR-405:** The system shall display notification timestamp and sender information.
 
-**[REQ-CENTRAL-060]** Explosive Managers shall be able to delete inventory batches.
-
-**[REQ-CENTRAL-061]** The system shall prevent deletion of inventory batches that:
-- Have Allocated Quantity > 0
-- Are referenced in active transfer requests
-- Have status "Allocated" or "Quarantined"
-
-**[REQ-CENTRAL-062]** Before deleting an inventory batch, the system shall display a confirmation dialog.
-
-**[REQ-CENTRAL-063]** Upon deletion, the system shall cascade delete associated quality check records and technical properties.
-
-### 3.11.7 Inventory Search & Filtering
-
-**[REQ-CENTRAL-070]** The system shall provide advanced search functionality for central warehouse inventory.
-
-**[REQ-CENTRAL-071]** The system shall support filtering inventory by:
-- Explosive Type (ANFO, Emulsion)
-- Status (Available, Allocated, Depleted, Expired, Quarantined)
-- Supplier
-- Manufacturing Date range
-- Expiry Date range
-- Batch ID (partial match)
-
-**[REQ-CENTRAL-072]** The system shall support pagination for inventory lists to optimize performance with large datasets.
-
-**[REQ-CENTRAL-073]** The system shall support sorting inventory by Batch ID, Manufacturing Date, Expiry Date, Quantity, and Status.
-
-**[REQ-CENTRAL-074]** The system shall provide a search endpoint with query parameters for filtering.
-
-### 3.11.8 Low Stock & Expiry Monitoring
-
-**[REQ-CENTRAL-080]** Explosive Managers shall be able to set and modify low-stock thresholds for each explosive type.
-
-**[REQ-CENTRAL-081]** The system shall monitor total available quantity across all batches for each explosive type.
-
-**[REQ-CENTRAL-082]** The system shall trigger a low-stock alert when total available quantity falls below the defined threshold.
-
-**[REQ-CENTRAL-083]** Low-stock alerts shall be delivered via in-app notifications to Explosive Managers.
-
-**[REQ-CENTRAL-084]** The system shall generate daily reports listing all inventory batches expiring within 30 days.
-
-**[REQ-CENTRAL-085]** The system shall send email notifications to Explosive Managers for batches expiring within 7 days.
+**FR-406:** The system shall provide navigation links within notifications to relevant resources.
 
 ---
 
-## 3.12 Inventory Transfer Management
+## 12. REGION MANAGEMENT
 
-### 3.12.1 Transfer Request Creation
+**FR-407:** The system shall support exactly 11 regions based on Oman's governorates: Muscat, Dhofar, Musandam, Al Buraimi, Ad Dakhiliyah, Al Batinah North, Al Batinah South, Ash Sharqiyah North, Ash Sharqiyah South, Ad Dhahirah, and Al Wusta.
 
-**[REQ-TRANSFER-001]** Store Managers shall be able to submit inventory transfer requests from central warehouse to their assigned store.
+**FR-408:** The system shall assign each user to exactly one region.
 
-**[REQ-TRANSFER-002]** Each transfer request shall have the following attributes:
-- Transfer Request ID (unique, auto-generated)
-- Request Number (unique, formatted identifier)
-- Central Warehouse Inventory ID (source batch, mandatory)
-- Destination Store ID (mandatory)
-- Requested Quantity (in kg, mandatory)
-- Approved Quantity (in kg, set during approval)
-- Required By Date (target delivery date, optional)
-- Status (mandatory)
-- Priority (optional)
-- Request Notes (optional)
+**FR-409:** The system shall assign each project to exactly one region.
 
-**[REQ-TRANSFER-003]** The system shall validate that the requested quantity does not exceed the available quantity in the source inventory batch.
+**FR-410:** The system shall assign each store to exactly one region.
 
-**[REQ-TRANSFER-004]** The system shall validate that the destination store allows the explosive type being requested.
+**FR-411:** The system shall assign each machine to exactly one region.
 
-**[REQ-TRANSFER-005]** The system shall validate that the requested quantity + current store occupancy does not exceed the destination store's storage capacity.
+**FR-412:** The system shall restrict regional users to view and manage data only within their assigned region.
 
-**[REQ-TRANSFER-006]** Upon successful transfer request creation, the system shall:
-1. Generate and assign a unique Request Number
-2. Set status to "Pending"
-3. Record the requesting user ID
-4. Record the request date timestamp
-5. Route the request to Explosive Manager for approval
+**FR-413:** Admin users shall have access to data across all regions.
 
-**[REQ-TRANSFER-007]** The system shall notify the Explosive Manager of new pending transfer requests via in-app notification.
-
-### 3.12.2 Transfer Request Status Workflow
-
-**[REQ-TRANSFER-020]** The system shall support the following transfer request statuses:
-1. **Pending** - Awaiting approval from Explosive Manager
-2. **Approved** - Approved by Explosive Manager, ready for dispatch
-3. **Rejected** - Rejected by Explosive Manager
-4. **Dispatched** - Explosives have been sent from central warehouse
-5. **Delivered** - Explosives received at destination store
-6. **Cancelled** - Request cancelled by Store Manager or Admin
-
-**[REQ-TRANSFER-021]** The transfer request lifecycle shall follow this workflow:
-
-```
-Create Request → Pending
-    ↓
-Approve/Reject → Approved/Rejected
-    ↓ (if Approved)
-Mark Dispatched → Dispatched
-    ↓
-Confirm Delivery → Delivered
-```
-
-**[REQ-TRANSFER-022]** Each status transition shall be recorded with timestamp and user ID.
-
-### 3.12.3 Transfer Request Approval
-
-**[REQ-TRANSFER-030]** The system shall route all transfer requests from Store Managers to Explosive Managers for approval.
-
-**[REQ-TRANSFER-031]** Explosive Managers shall be able to review all pending transfer requests with details:
-- Source inventory batch information
-- Destination store information
-- Requested quantity
-- Available quantity in source batch
-- Destination store capacity and current occupancy
-- Required by date
-- Request notes
-
-**[REQ-TRANSFER-032]** Explosive Managers shall be able to approve transfer requests.
-
-**[REQ-TRANSFER-033]** Upon approval, the system shall:
-1. Update transfer request status to "Approved"
-2. Record approved quantity (may differ from requested quantity)
-3. Record approving user ID
-4. Record approval date timestamp
-5. Allocate the approved quantity in the source inventory (update Allocated Quantity)
-6. Record approval notes (optional)
-7. Notify the requesting Store Manager via in-app notification
-
-**[REQ-TRANSFER-034]** Explosive Managers shall be able to approve a quantity different from (less than or equal to) the requested quantity.
-
-**[REQ-TRANSFER-035]** The system shall validate that approved quantity does not exceed available quantity in source batch.
-
-### 3.12.4 Transfer Request Rejection
-
-**[REQ-TRANSFER-040]** Explosive Managers shall be able to reject transfer requests.
-
-**[REQ-TRANSFER-041]** Upon rejection, the system shall require a rejection reason.
-
-**[REQ-TRANSFER-042]** Upon rejection, the system shall:
-1. Update transfer request status to "Rejected"
-2. Record rejecting user ID
-3. Record rejection date timestamp
-4. Store rejection reason
-5. Notify the requesting Store Manager with justification via in-app notification
-
-**[REQ-TRANSFER-043]** Rejected transfer requests shall not allocate any inventory quantity.
-
-### 3.12.5 Dispatch Management
-
-**[REQ-TRANSFER-050]** Warehouse personnel shall be able to mark approved transfer requests as dispatched.
-
-**[REQ-TRANSFER-051]** When marking a request as dispatched, the system shall require:
-- Truck Number (vehicle identification)
-- Driver Name
-- Driver Contact Number
-- Dispatch Date (timestamp)
-
-**[REQ-TRANSFER-052]** Upon dispatch, the system shall:
-1. Update transfer request status to "Dispatched"
-2. Record dispatch date timestamp
-3. Deduct approved quantity from source inventory total quantity
-4. Maintain allocated quantity until delivery confirmation
-5. Notify the destination Store Manager with dispatch details
-
-**[REQ-TRANSFER-053]** The dispatch notification to Store Manager shall include:
-- Expected delivery information
-- Truck number
-- Driver contact details
-- Quantity being delivered
-- Source batch details
-
-### 3.12.6 Delivery Confirmation
-
-**[REQ-TRANSFER-060]** Store Managers shall be able to confirm delivery of dispatched transfer requests.
-
-**[REQ-TRANSFER-061]** Upon delivery confirmation, the system shall:
-1. Update transfer request status to "Delivered"
-2. Record delivery confirmation date timestamp
-3. Record confirming user ID (Store Manager)
-4. Release allocated quantity from source inventory
-5. Add delivered quantity to destination store inventory
-6. Create store transaction record for "Transfer In"
-7. Notify Explosive Manager of successful delivery
-
-**[REQ-TRANSFER-062]** If the destination store does not have an existing inventory record for the explosive type, the system shall create one.
-
-**[REQ-TRANSFER-063]** The system shall update the destination store inventory:
-- Increase total quantity by delivered amount
-- Update last restocked date
-- Copy batch number and expiry date from source
-
-**[REQ-TRANSFER-064]** Store Managers should be able to report discrepancies between dispatched and delivered quantities.
-
-**[REQ-TRANSFER-065]** If a discrepancy is reported, the system should flag the transfer for investigation and notify the Explosive Manager.
-
-### 3.12.7 Transfer Request Cancellation
-
-**[REQ-TRANSFER-070]** Store Managers shall be able to cancel transfer requests in "Pending" status.
-
-**[REQ-TRANSFER-071]** Admins and Explosive Managers shall be able to cancel transfer requests in "Pending" or "Approved" status.
-
-**[REQ-TRANSFER-072]** Upon cancellation, the system shall:
-1. Update transfer request status to "Cancelled"
-2. Release any allocated quantity in source inventory
-3. Record cancellation date and user
-4. Notify relevant parties (Store Manager, Explosive Manager)
-
-**[REQ-TRANSFER-073]** The system shall prevent cancellation of transfer requests in "Dispatched" or "Delivered" status.
-
-### 3.12.8 Transfer Request Updates
-
-**[REQ-TRANSFER-080]** Store Managers shall be able to update transfer requests in "Pending" status, modifying:
-- Requested quantity
-- Required by date
-- Request notes
-
-**[REQ-TRANSFER-081]** Explosive Managers shall be able to update transfer requests in any status except "Delivered" or "Cancelled".
-
-**[REQ-TRANSFER-082]** The system shall re-validate quantity constraints when a transfer request is updated.
-
-**[REQ-TRANSFER-083]** The system shall log all modifications to transfer requests in an audit trail.
-
-### 3.12.9 Transfer Request Listing & Filtering
-
-**[REQ-TRANSFER-090]** The system shall provide endpoints to retrieve transfer requests with appropriate filtering.
-
-**[REQ-TRANSFER-091]** The system shall support filtering transfer requests by:
-- Status (Pending, Approved, Rejected, Dispatched, Delivered, Cancelled)
-- Destination Store ID
-- Source Inventory Batch ID
-- Date range (request date, required by date, approval date, dispatch date, delivery date)
-- Requesting user
-- Approving user
-
-**[REQ-TRANSFER-092]** Store Managers shall only see transfer requests for stores they manage.
-
-**[REQ-TRANSFER-093]** Explosive Managers shall see all transfer requests across all stores.
-
-**[REQ-TRANSFER-094]** The system shall support pagination and sorting for transfer request lists.
+**FR-414:** The system shall allow filtering of data by region in all list views.
 
 ---
 
-## 3.13 Explosive Approval Requests
+## 13. DATA INTEGRITY & AUDIT
 
-### 3.13.1 Explosive Usage Request Creation
+**FR-415:** The system shall record creation timestamp for all entities upon creation.
 
-**[REQ-APPROVAL-001]** Blasting Engineers shall be able to submit explosive usage approval requests for project sites.
+**FR-416:** The system shall record last updated timestamp for all entities upon modification.
 
-**[REQ-APPROVAL-002]** Each approval request shall have the following attributes:
-- Approval Request ID (unique, auto-generated)
-- Project Site ID (mandatory)
-- Requested By User ID (auto-populated)
-- Approval Type (mandatory)
-- Priority (mandatory)
-- Expected Usage Date (optional)
-- Blasting Date (optional)
-- Blast Timing (time of day, optional)
-- Safety Checklist Completed (boolean, mandatory)
-- Environmental Assessment Completed (boolean, mandatory)
-- Request Notes (justification, optional)
-- Additional Data (flexible JSON field for extensibility)
-- Status (mandatory)
+**FR-417:** The system shall track the user who created each entity.
 
-**[REQ-APPROVAL-003]** The system shall support the following approval types:
-1. **Standard** - Regular blasting operations
-2. **Emergency** - Urgent safety-related blasting
-3. **Maintenance** - Maintenance-related explosive use
-4. **Testing** - Testing or trial blasts
-5. **Research** - Research and development purposes
+**FR-418:** The system shall track the user who last modified each entity.
 
-**[REQ-APPROVAL-004]** The system shall support the following priority levels:
-1. **Low** - Routine operations
-2. **Normal** - Standard priority
-3. **High** - Important, time-sensitive
-4. **Critical** - Urgent, safety-critical
+**FR-419:** The system shall support soft deletion using an IsActive flag for critical entities.
 
-**[REQ-APPROVAL-005]** The system shall require that Safety Checklist is completed (set to true) before allowing request submission.
+**FR-420:** The system shall prevent hard deletion of entities with dependent relationships.
 
-**[REQ-APPROVAL-006]** The system shall require that Environmental Assessment is completed (set to true) before allowing request submission.
+**FR-421:** The system shall cascade delete related entities when a parent entity is deleted where appropriate.
 
-**[REQ-APPROVAL-007]** Upon successful request creation, the system shall:
-1. Set status to "Pending"
-2. Record requesting user ID
-3. Record request date timestamp
-4. Route to appropriate Store Manager based on project site location
+**FR-422:** The system shall maintain referential integrity for all foreign key relationships.
 
-**[REQ-APPROVAL-008]** The system shall notify the Store Manager of new pending approval requests via in-app notification.
+**FR-423:** The system shall use optimistic concurrency control with UpdatedAt timestamps.
 
-### 3.13.2 Explosive Approval Workflow
+**FR-424:** The system shall validate all required fields before saving entities to the database.
 
-**[REQ-APPROVAL-020]** The system shall support the following approval request statuses:
-1. **Pending** - Awaiting Store Manager review
-2. **Approved** - Approved by Store Manager
-3. **Rejected** - Rejected by Store Manager
-4. **Cancelled** - Cancelled by requester
-5. **Expired** - Request expired due to passage of time
-
-**[REQ-APPROVAL-021]** Store Managers shall be able to review pending approval requests with details:
-- Project and site information
-- Requested explosive quantities (from drill plan calculations)
-- Approval type and priority
-- Expected usage date
-- Safety and environmental compliance status
-- Requester information and notes
-
-**[REQ-APPROVAL-022]** Store Managers shall be able to approve explosive usage requests.
-
-**[REQ-APPROVAL-023]** Upon approval, the system shall:
-1. Update request status to "Approved"
-2. Record approving user ID (Store Manager)
-3. Record approval date timestamp
-4. Mark explosive quantities as "allocated" in store inventory
-5. Notify the requesting Blasting Engineer via in-app notification
-
-**[REQ-APPROVAL-024]** Store Managers shall be able to reject explosive usage requests.
-
-**[REQ-APPROVAL-025]** Upon rejection, the system shall require a rejection reason.
-
-**[REQ-APPROVAL-026]** Upon rejection, the system shall:
-1. Update request status to "Rejected"
-2. Record rejecting user ID
-3. Record rejection date timestamp
-4. Store rejection reason
-5. Notify the requesting Blasting Engineer with justification
-
-**[REQ-APPROVAL-027]** Blasting Engineers shall be able to cancel their pending approval requests.
-
-**[REQ-APPROVAL-028]** The system should automatically expire approval requests if the expected usage date has passed and status is still "Pending".
-
-### 3.13.3 Safety & Environmental Compliance
-
-**[REQ-APPROVAL-040]** The system shall enforce that Safety Checklist must be completed before explosive usage request can be created.
-
-**[REQ-APPROVAL-041]** The system shall enforce that Environmental Assessment must be completed before explosive usage request can be created.
-
-**[REQ-APPROVAL-042]** The system should provide guidance or links to safety checklist requirements.
-
-**[REQ-APPROVAL-043]** The system should provide guidance or links to environmental assessment requirements.
-
-**[REQ-APPROVAL-044]** The system shall log all safety and environmental compliance data for audit purposes.
-
-### 3.13.4 Approval Request Listing & Filtering
-
-**[REQ-APPROVAL-050]** The system shall provide endpoints to retrieve approval requests with appropriate filtering.
-
-**[REQ-APPROVAL-051]** The system shall support filtering approval requests by:
-- Status (Pending, Approved, Rejected, Cancelled, Expired)
-- Priority (Low, Normal, High, Critical)
-- Approval Type
-- Project Site ID
-- Requesting user
-- Date range
-
-**[REQ-APPROVAL-052]** Blasting Engineers shall see approval requests they created.
-
-**[REQ-APPROVAL-053]** Store Managers shall see approval requests routed to them based on site location.
-
-**[REQ-APPROVAL-054]** Explosive Managers and Admins shall see all approval requests across all sites.
+**FR-425:** The system shall enforce unique constraints for unique identifiers (email, batch number, etc.).
 
 ---
 
-## 3.14 Explosive Calculation & Reporting
+## 14. SECURITY & VALIDATION
 
-### 3.14.1 Explosive Quantity Calculation
+**FR-426:** The system shall hash all passwords using BCrypt with a minimum work factor of 10.
 
-**[REQ-CALC-001]** The system shall automatically calculate explosive requirements for each drill point based on:
-- Hole depth
-- Diameter
-- Spacing
-- Burden
-- Rock volume to be fragmented
-- Validated explosive formulas
+**FR-427:** The system shall never store passwords in plain text.
 
-**[REQ-CALC-002]** The system shall calculate ANFO (Ammonium Nitrate Fuel Oil) quantity required per drill point in kilograms.
+**FR-428:** The system shall validate all API request payloads using FluentValidation library.
 
-**[REQ-CALC-003]** The system shall calculate Emulsion explosive quantity required per drill point in kilograms.
+**FR-429:** The system shall prevent SQL injection by using parameterized queries through Entity Framework.
 
-**[REQ-CALC-004]** The system shall store calculated explosive quantities with each drill point record.
+**FR-430:** The system shall sanitize all user inputs before processing.
 
-**[REQ-CALC-005]** The system shall provide aggregated explosive calculations for entire project sites, including:
-- Total ANFO required
-- Total Emulsion required
-- Total explosive weight
-- Number of holes
-- Total volume to be blasted
+**FR-431:** The system shall enforce CORS policies to restrict unauthorized domain access.
 
-**[REQ-CALC-006]** Blasting Engineers shall be able to manually override automatically calculated explosive requirements.
+**FR-432:** The system shall validate JWT tokens for all protected API endpoints.
 
-**[REQ-CALC-007]** The system shall validate manually overridden quantities against acceptable ranges to prevent unsafe conditions.
+**FR-433:** The system shall reject expired JWT tokens.
 
-**[REQ-CALC-008]** The system shall log all manual overrides with user ID and timestamp for audit purposes.
+**FR-434:** The system shall reject requests with invalid or missing authentication tokens.
 
-**[REQ-CALC-009]** The system shall automatically recalculate explosive requirements whenever relevant drill point parameters are changed.
+**FR-435:** The system shall enforce role-based authorization for all API endpoints using authorization policies.
 
-### 3.14.2 Explosive Calculation Results Storage
+**FR-436:** The system shall log all authentication failures for security monitoring.
 
-**[REQ-CALC-020]** The system shall maintain explosive calculation result records with the following attributes:
-- Calculation Result ID (unique, auto-generated)
-- Project ID
-- Project Site ID
-- Total ANFO (kg)
-- Total Emulsion (kg)
-- Total Explosive Weight (kg)
-- Number of Holes
-- Total Volume (m³)
-- Calculation Date (timestamp)
-- Calculated By User ID
-- Is Approved (boolean)
+**FR-437:** The system shall log all authorization failures for security monitoring.
 
-**[REQ-CALC-021]** The system shall provide endpoints to retrieve explosive calculation results for specific project sites.
+**FR-438:** The system shall validate email format using the Email value object pattern.
 
-**[REQ-CALC-022]** The system shall allow authorized users to approve explosive calculations, setting IsApproved flag to true.
+**FR-439:** The system shall validate that numeric values are within acceptable ranges.
 
-### 3.14.3 Comparison: Planned vs. Actual
-
-**[REQ-CALC-030]** The system shall provide a side-by-side comparison display of:
-- Planned drilling pattern parameters
-- Actual survey data parameters
-- Planned explosive quantities
-- Calculated explosive quantities based on actual data
-
-**[REQ-CALC-031]** The comparison shall highlight variances between planned and actual values exceeding configurable thresholds.
-
-**[REQ-CALC-032]** The system shall allow users to accept or adjust calculations based on the variance analysis.
+**FR-440:** The system shall validate that date values are logical (e.g., start date before end date).
 
 ---
 
-## 3.15 Maintenance Management
+## 15. PERFORMANCE & CACHING
 
-### 3.15.1 Maintenance Record Creation
+**FR-441:** The system shall implement in-memory caching for frequently accessed data.
 
-**[REQ-MAINT-001]** The system shall provide a Maintenance Management interface accessible to Mechanical Engineers and Machine Managers.
+**FR-442:** The system shall cache user session data to reduce database queries.
 
-**[REQ-MAINT-002]** Mechanical Engineers and Machine Managers shall be able to create maintenance records with the following attributes:
-- Maintenance Record ID (unique, auto-generated)
-- Machine ID (mandatory, reference to machine being maintained)
-- Machine Name, Model, Rig Number (auto-populated from machine)
-- Type (mandatory): Preventive, Corrective, Emergency, Inspection
-- Priority (mandatory): Low, Medium, High, Critical
-- Status (mandatory): Scheduled, In-Progress, Completed, Overdue, Cancelled
-- Description (mandatory, maintenance work description)
-- Scheduled Date and Time (mandatory)
-- Assigned Technician (mandatory, name or user reference)
-- Estimated Duration (hours, mandatory)
-- Actual Duration (hours, set upon completion)
-- Estimated Cost (optional)
-- Actual Cost (optional, set upon completion)
-- Notes (optional, additional maintenance notes)
-- Completion Notes (optional, recorded upon completion)
-- Completed Date (timestamp, set when status changed to Completed)
-- Created Date (timestamp, auto-generated)
-- Created By User ID (auto-populated)
+**FR-443:** The system shall cache role and permission data for authorization checks.
 
-**[REQ-MAINT-003]** The system shall validate that the Machine ID exists and is valid before creating a maintenance record.
+**FR-444:** The system shall invalidate cached data when underlying data is modified.
 
-**[REQ-MAINT-004]** The system shall auto-populate machine details (name, model, rig number) from the selected machine.
+**FR-445:** The system shall implement performance monitoring for all service operations.
 
-**[REQ-MAINT-005]** The system shall initialize new maintenance records with status "Scheduled" by default.
+**FR-446:** The system shall log performance metrics for operations exceeding threshold duration.
 
-### 3.15.2 Maintenance Status Management
+**FR-447:** The system shall use projection queries to retrieve only required fields for list views.
 
-**[REQ-MAINT-020]** The system shall support the following maintenance record statuses:
-1. **Scheduled** - Maintenance is scheduled for future date
-2. **In-Progress** - Maintenance work is currently being performed
-3. **Completed** - Maintenance work has been successfully completed
-4. **Overdue** - Scheduled maintenance date has passed without completion
-5. **Cancelled** - Maintenance has been cancelled
+**FR-448:** The system shall implement pagination for all list views to limit data transfer.
 
-**[REQ-MAINT-021]** Authorized users shall be able to update maintenance status.
-
-**[REQ-MAINT-022]** The system shall automatically mark maintenance records as "Overdue" when scheduled date/time has passed and status is still "Scheduled".
-
-**[REQ-MAINT-023]** When maintenance status is changed to "Completed", the system shall:
-1. Record the completion date timestamp
-2. Require completion notes to be entered
-3. Require actual duration to be recorded
-4. Optionally record actual cost
-
-**[REQ-MAINT-024]** When maintenance status is changed to "In-Progress", the system shall:
-1. Record the start timestamp
-2. Update the machine status to "UnderMaintenance" if not already set
-
-**[REQ-MAINT-025]** When maintenance status is changed to "Completed", the system should:
-1. Update the machine's LastMaintenanceDate to current date
-2. Calculate and update NextMaintenanceDate based on maintenance schedule
-3. Update machine status back to "Available" if no other maintenance is in progress
-
-### 3.15.3 Maintenance Tracking & Reporting
-
-**[REQ-MAINT-030]** The system shall provide maintenance statistics dashboard showing:
-- Total scheduled maintenance count
-- In-progress maintenance count
-- Overdue maintenance count
-- Completed maintenance count
-
-**[REQ-MAINT-031]** Operators shall be able to view maintenance records for their assigned machine.
-
-**[REQ-MAINT-032]** Mechanical Engineers shall be able to view all maintenance records across all machines.
-
-**[REQ-MAINT-033]** Machine Managers shall be able to view maintenance records for machines under their management.
-
-**[REQ-MAINT-034]** The system shall provide an endpoint for operators to retrieve their assigned machine information.
-
-**[REQ-MAINT-035]** The system shall provide an endpoint for operators to retrieve maintenance reports for their assigned machine.
-
-**[REQ-MAINT-036]** Operators shall be able to submit maintenance reports for their assigned machine through a dedicated form.
-
-### 3.15.4 Maintenance Record Updates & Deletion
-
-**[REQ-MAINT-040]** Authorized users shall be able to edit maintenance records, including:
-- Type, Priority, Status
-- Description and Notes
-- Scheduled Date and Time
-- Assigned Technician
-- Estimated/Actual Duration
-- Estimated/Actual Cost
-- Completion Notes
-
-**[REQ-MAINT-041]** The system shall maintain audit trail of all modifications to maintenance records.
-
-**[REQ-MAINT-042]** Authorized users shall be able to delete maintenance records.
-
-**[REQ-MAINT-043]** The system shall display a confirmation dialog before deleting maintenance records.
-
-### 3.15.5 Maintenance Search & Filtering
-
-**[REQ-MAINT-050]** The Maintenance Management interface shall support advanced filtering by:
-- Machine ID or Name
-- Maintenance Type (Preventive, Corrective, Emergency, Inspection)
-- Status (Scheduled, In-Progress, Completed, Overdue, Cancelled)
-- Priority (Low, Medium, High, Critical)
-- Date range (scheduled date, completed date)
-- Assigned Technician
-
-**[REQ-MAINT-051]** The system shall support search functionality for maintenance records by:
-- Machine name
-- Rig number
-- Description
-- Technician name
-
-**[REQ-MAINT-052]** The system shall support pagination for maintenance record lists.
-
-**[REQ-MAINT-053]** The system shall support sorting maintenance records by date, priority, status, and machine.
-
-### 3.15.6 Maintenance Cost Tracking
-
-**[REQ-MAINT-060]** The system shall track estimated and actual costs for maintenance activities.
-
-**[REQ-MAINT-061]** The system shall calculate variance between estimated and actual costs.
-
-**[REQ-MAINT-062]** The system shall provide cost summary reports showing:
-- Total estimated costs
-- Total actual costs
-- Cost variance
-- Cost breakdown by maintenance type
-- Cost breakdown by machine
-
-### 3.15.7 Maintenance Notifications & Alerts
-
-**[REQ-MAINT-070]** The system should send notifications to assigned technicians when maintenance is scheduled.
-
-**[REQ-MAINT-071]** The system should send alerts when maintenance becomes overdue.
-
-**[REQ-MAINT-072]** The system should notify Machine Managers when maintenance is completed.
-
-**[REQ-MAINT-073]** The system should alert when maintenance actual cost exceeds estimated cost by a configurable threshold.
+**FR-449:** The system shall use lazy loading for navigation properties to optimize query performance.
 
 ---
 
-## 3.16 Accessories Inventory Management
+## 16. LOGGING & ERROR HANDLING
 
-### 3.16.1 Accessory Creation & Configuration
+**FR-450:** The system shall implement structured logging with correlation IDs for request tracking.
 
-**[REQ-ACCESS-001]** The system shall provide an Accessories Inventory Management interface accessible to Machine Managers, Mechanical Engineers, and Admins.
+**FR-451:** The system shall log all API requests with method, endpoint, user, and timestamp.
 
-**[REQ-ACCESS-002]** Authorized users shall be able to add accessories to the inventory with the following attributes:
-- Accessory ID (unique, auto-generated)
-- Name (mandatory)
-- Category (mandatory): Engine Parts, Hydraulic, Electrical, Filters, Belts & Hoses, Lubricants, Safety Equipment, Tools
-- Part Number (optional, unique identifier)
-- Description (optional)
-- Quantity (mandatory, current stock quantity)
-- Unit (mandatory): pcs (pieces), kg (kilograms), ltr (liters), m (meters), box, set
-- Minimum Stock Level (mandatory, reorder threshold)
-- Supplier (optional)
-- Location (optional, storage location)
-- Created At (timestamp, auto-generated)
-- Last Updated (timestamp, auto-updated)
+**FR-452:** The system shall log all business rule violations as warnings.
 
-**[REQ-ACCESS-003]** The system shall validate that Part Number is unique across all accessories if provided.
+**FR-453:** The system shall log all validation failures with details of failed fields.
 
-**[REQ-ACCESS-004]** The system shall support the following accessory categories:
-1. **Engine Parts** - Engine components and spare parts
-2. **Hydraulic** - Hydraulic system components
-3. **Electrical** - Electrical components and wiring
-4. **Filters** - Oil filters, air filters, fuel filters
-5. **Belts & Hoses** - Drive belts, hydraulic hoses
-6. **Lubricants** - Oils, greases, lubricating fluids
-7. **Safety Equipment** - Personal protective equipment and safety devices
-8. **Tools** - Hand tools, specialized equipment
+**FR-454:** The system shall log all database errors with query context.
 
-**[REQ-ACCESS-005]** The system shall support the following units of measurement:
-- pcs (pieces) - for countable items
-- kg (kilograms) - for weight-based items
-- ltr (liters) - for liquid volumes
-- m (meters) - for length-based items
-- box - for boxed items
-- set - for sets of items
+**FR-455:** The system shall log all unhandled exceptions with stack traces.
 
-### 3.16.2 Stock Level Management
+**FR-456:** The system shall implement global exception handling middleware to catch all errors.
 
-**[REQ-ACCESS-020]** The system shall track current stock quantity for each accessory.
+**FR-457:** The system shall return appropriate HTTP status codes for different error types.
 
-**[REQ-ACCESS-021]** The system shall calculate stock status based on current quantity:
-- **Available** - Quantity > Minimum Stock Level
-- **Low Stock** - 0 < Quantity <= Minimum Stock Level
-- **Out of Stock** - Quantity = 0
-- **Discontinued** - Item marked as discontinued (special flag)
+**FR-458:** The system shall return user-friendly error messages for client-facing errors.
 
-**[REQ-ACCESS-022]** The system shall provide visual indicators for stock status:
-- Green badge for Available
-- Yellow/Orange badge for Low Stock
-- Red badge for Out of Stock
-- Gray badge for Discontinued
+**FR-459:** The system shall hide sensitive implementation details in error messages.
 
-**[REQ-ACCESS-023]** The system shall display inventory statistics showing:
-- Total Available items (quantity > minimum stock level)
-- Low Stock items count (quantity <= minimum stock level && quantity > 0)
-- Out of Stock items count (quantity = 0)
-
-### 3.16.3 Stock Adjustment Operations
-
-**[REQ-ACCESS-030]** The system shall provide stock adjustment functionality with the following operations:
-1. **Add** - Increase stock quantity (receiving new items)
-2. **Remove** - Decrease stock quantity (issuing/consuming items)
-3. **Set** - Set absolute stock quantity (inventory correction)
-
-**[REQ-ACCESS-031]** For "Add" operation, the system shall:
-1. Display current quantity
-2. Accept adjustment quantity (positive number)
-3. Calculate new quantity = current quantity + adjustment quantity
-4. Update stock quantity
-5. Update Last Updated timestamp
-
-**[REQ-ACCESS-032]** For "Remove" operation, the system shall:
-1. Display current quantity
-2. Accept adjustment quantity (positive number)
-3. Validate that adjustment quantity <= current quantity
-4. Calculate new quantity = current quantity - adjustment quantity
-5. Update stock quantity
-6. Update Last Updated timestamp
-
-**[REQ-ACCESS-033]** For "Set" operation, the system shall:
-1. Display current quantity
-2. Accept new absolute quantity
-3. Set stock quantity to new value
-4. Update Last Updated timestamp
-
-**[REQ-ACCESS-034]** The system shall prevent stock removal if the operation would result in negative quantity.
-
-**[REQ-ACCESS-035]** The system shall display validation error if insufficient stock for removal operation.
-
-**[REQ-ACCESS-036]** The system shall record all stock adjustments in an audit trail with:
-- Adjustment type (Add, Remove, Set)
-- Previous quantity
-- New quantity
-- Adjustment amount
-- User who performed adjustment
-- Timestamp
-- Notes (optional)
-
-### 3.16.4 Accessory Updates & Deletion
-
-**[REQ-ACCESS-040]** Authorized users shall be able to edit existing accessory details, including:
-- Name
-- Category
-- Part Number
-- Description
-- Unit
-- Minimum Stock Level
-- Supplier
-- Location
-
-**[REQ-ACCESS-041]** The system shall maintain unique constraint validation on Part Number during updates.
-
-**[REQ-ACCESS-042]** Authorized users shall be able to delete accessories from inventory.
-
-**[REQ-ACCESS-043]** The system shall display a confirmation dialog before deleting accessories.
-
-**[REQ-ACCESS-044]** The system shall provide option to mark accessories as "Discontinued" instead of deletion to preserve historical data.
-
-### 3.16.5 Accessories Search & Filtering
-
-**[REQ-ACCESS-050]** The Accessories Inventory interface shall provide comprehensive search functionality.
-
-**[REQ-ACCESS-051]** The system shall support search by:
-- Name (partial match, case-insensitive)
-- Part Number (partial match)
-- Category
-- Supplier
-- Description (partial match)
-
-**[REQ-ACCESS-052]** The system shall support filtering accessories by:
-- Category (Engine Parts, Hydraulic, Electrical, Filters, Belts & Hoses, Lubricants, Safety Equipment, Tools)
-- Status (Available, Low Stock, Out of Stock, Discontinued)
-- Supplier
-- Stock level range
-
-**[REQ-ACCESS-053]** The system shall support combined filters (multiple filters applied simultaneously).
-
-**[REQ-ACCESS-054]** The system shall support pagination for accessory lists with configurable page size (default: 25 items per page).
-
-**[REQ-ACCESS-055]** The system shall support sorting accessories by:
-- Name (alphabetical)
-- Part Number
-- Category
-- Quantity
-- Minimum Stock Level
-- Last Updated date
-
-### 3.16.6 Low Stock Alerts & Monitoring
-
-**[REQ-ACCESS-060]** The system shall automatically identify accessories with low stock (quantity <= minimum stock level).
-
-**[REQ-ACCESS-061]** The system shall display low stock warnings on the accessories list with visual indicators.
-
-**[REQ-ACCESS-062]** The system should send notifications to Machine Managers when accessories reach low stock level.
-
-**[REQ-ACCESS-063]** The system shall provide a dedicated "Low Stock Items" view showing all accessories requiring reorder.
-
-**[REQ-ACCESS-064]** The system should send notifications when accessories become out of stock.
-
-### 3.16.7 Accessories Reporting & Export
-
-**[REQ-ACCESS-070]** The system shall provide accessories inventory reports showing:
-- Complete inventory list with quantities
-- Low stock items
-- Out of stock items
-- Stock value by category
-- Items by supplier
-
-**[REQ-ACCESS-071]** The system shall support exporting accessories data to CSV format.
-
-**[REQ-ACCESS-072]** The CSV export shall include all accessory fields and current stock status.
-
-**[REQ-ACCESS-073]** The system shall allow users to filter data before export.
-
-### 3.16.8 Accessories Usage Tracking (Optional Enhancement)
-
-**[REQ-ACCESS-080]** The system should track which accessories are used for which machines.
-
-**[REQ-ACCESS-081]** The system should maintain usage history showing:
-- Date of usage
-- Machine used on
-- Quantity used
-- User who recorded usage
-- Maintenance record reference (if applicable)
-
-**[REQ-ACCESS-082]** The system should provide usage analytics showing:
-- Most frequently used accessories
-- Usage trends over time
-- Cost analysis by accessory type
+**FR-460:** The system shall implement the Result pattern to handle operation outcomes without exceptions.
 
 ---
 
-## 3.17 Analytics & Reporting
-
-### 3.15.1 Blast Reports
-
-**[REQ-REPORT-001]** The system shall generate comprehensive blast reports with the following sections:
-- Project Information (name, region, area)
-- Site Information (name, address, status)
-- Drill Pattern Image (2D visualization)
-- Survey Data Summary (tabular format with all drill points)
-- Explosive Usage Summary (ANFO, Emulsion quantities)
-- Volume Calculations (total rock volume)
-- Blast Sequence Information (if available)
-- Safety and Compliance Data
-
-**[REQ-REPORT-002]** The system shall provide a preview interface for blast reports before export.
-
-**[REQ-REPORT-003]** Blast reports shall be exportable in PDF format.
-
-**[REQ-REPORT-004]** The system shall include timestamp and generated-by user information in all reports.
-
-**[REQ-REPORT-005]** The system shall allow customization of report templates (optional enhancement).
-
-### 3.15.2 Inventory Reports
-
-**[REQ-REPORT-020]** The system shall generate store-wise inventory reports showing:
-- Store details (name, location, manager, capacity)
-- Current inventory levels by explosive type
-- Reserved quantities
-- Available quantities
-- Utilization percentage
-- Last restocked dates
-- Expiry dates
-
-**[REQ-REPORT-021]** The system shall generate central warehouse inventory reports showing:
-- Total inventory by explosive type
-- Inventory by status (Available, Allocated, Expired, etc.)
-- Batches expiring within configurable time periods
-- Low-stock alerts
-- Quality check summaries
-
-**[REQ-REPORT-022]** The system shall support exporting inventory reports to PDF format.
-
-**[REQ-REPORT-023]** The system should support exporting inventory data to Excel format for further analysis.
-
-### 3.15.3 Transfer Activity Reports
-
-**[REQ-REPORT-030]** The system shall generate transfer activity reports showing:
-- All transfer requests within a date range
-- Transfer request status distribution
-- Average approval time
-- Average delivery time
-- Transfer volumes by explosive type
-- Store-wise transfer statistics
-
-**[REQ-REPORT-031]** The system shall provide filtering options for transfer reports by status, date range, store, and explosive type.
-
-### 3.15.4 Project Progress Reports
-
-**[REQ-REPORT-040]** The system shall generate project progress reports showing:
-- Project overview (name, region, status, dates)
-- Number of sites and their statuses
-- Completion percentages for each site
-- Total drill points and completion status
-- Machine assignments
-- Operator assignments
-
-**[REQ-REPORT-041]** The system shall provide visual indicators (charts, graphs) for project progress.
-
-### 3.15.5 Machine Utilization Reports
-
-**[REQ-REPORT-050]** The system should generate machine utilization reports showing:
-- Machine inventory summary
-- Status distribution (Available, In Use, Under Maintenance, Out of Service)
-- Assignment history
-- Maintenance schedules and completion
-- Usage hours (if tracked)
-
-### 3.15.6 Dashboard Analytics
-
-**[REQ-REPORT-060]** The system shall provide role-specific dashboards with key performance indicators:
-
-**Admin Dashboard:**
-- Total projects (by status)
-- Total sites (by status)
-- Total users (by role)
-- Total machines (by status)
-- Total stores (by status)
-- Pending approval requests
-
-**Blasting Engineer Dashboard:**
-- Assigned projects
-- Sites in progress
-- Pending explosive approvals
-- Recent blast calculations
-
-**Machine Manager Dashboard:**
-- Total machines (by status)
-- Pending maintenance schedules
-- Machine assignment requests
-- Utilization statistics
-
-**Explosive Manager Dashboard:**
-- Total inventory (central warehouse)
-- Pending transfer requests
-- Low-stock alerts
-- Expiring inventory warnings
-- Store utilization overview
-
-**Store Manager Dashboard:**
-- Store inventory levels
-- Pending incoming transfers
-- Pending explosive approval requests
-- Utilization status
-
-**[REQ-REPORT-061]** Dashboard data shall refresh in near real-time (configurable refresh interval).
-
----
-
-## 3.16 System Administration
-
-### 3.16.1 Role & Permission Management
-
-**[REQ-ADMIN-001]** The system shall provide an administrative interface for managing roles and permissions.
-
-**[REQ-ADMIN-002]** Admins shall be able to create custom roles (optional enhancement beyond predefined roles).
-
-**[REQ-ADMIN-003]** Admins shall be able to assign permissions to roles at the module and operation level (Create, Read, Update, Delete).
-
-**[REQ-ADMIN-004]** The system shall maintain a many-to-many relationship between roles and permissions.
-
-**[REQ-ADMIN-005]** Changes to role permissions shall take effect immediately for all users with that role.
-
-### 3.16.2 System Configuration
-
-**[REQ-ADMIN-020]** The system shall provide configuration settings for:
-- JWT token expiration time
-- Password complexity requirements
-- Account lockout threshold and duration
-- Password reset code expiration time
-- Session timeout duration
-- Low-stock thresholds for explosive types
-- Maintenance alert thresholds for machines
-- Expiry warning periods for inventory
-
-**[REQ-ADMIN-021]** Admins shall be able to update system configuration settings through a secure interface.
-
-**[REQ-ADMIN-022]** Configuration changes shall be logged in an audit trail with timestamp and admin identity.
-
-### 3.16.3 Audit Trail & Logging
-
-**[REQ-ADMIN-030]** The system shall maintain comprehensive audit logs for:
-- User authentication events (login, logout, failed attempts)
-- User account modifications
-- Role and permission changes
-- Project and site creation, updates, deletions
-- Drill data modifications
-- Blast sequence modifications
-- Machine assignments and status changes
-- Inventory transactions
-- Transfer request lifecycle events
-- Approval request lifecycle events
-- Configuration changes
-
-**[REQ-ADMIN-031]** Each audit log entry shall include:
-- Event type
-- Timestamp
-- User ID (who performed the action)
-- Resource type and ID (what was affected)
-- Action performed (Create, Read, Update, Delete)
-- Before and after values (for updates)
-- IP address (if applicable)
-
-**[REQ-ADMIN-032]** Audit logs shall be retained for a configurable period (recommended: minimum 2 years).
-
-**[REQ-ADMIN-033]** Admins shall be able to search and filter audit logs by event type, user, date range, and resource.
-
-**[REQ-ADMIN-034]** The system shall provide the ability to export audit logs for compliance and investigation purposes.
-
-### 3.16.4 System Health Monitoring
-
-**[REQ-ADMIN-040]** The system should provide health monitoring dashboards showing:
-- API response times
-- Database query performance
-- Error rates
-- Active user sessions
-- Resource utilization (CPU, memory, disk)
-
-**[REQ-ADMIN-041]** The system should trigger alerts when performance metrics exceed configurable thresholds.
-
-**[REQ-ADMIN-042]** The system shall log all unhandled exceptions with full stack traces for debugging.
-
-### 3.16.5 Data Backup & Recovery
-
-**[REQ-ADMIN-050]** The system should support automated database backups on a configurable schedule.
-
-**[REQ-ADMIN-051]** Admins shall be able to initiate manual database backups.
-
-**[REQ-ADMIN-052]** The system should provide functionality to restore from backup.
-
-**[REQ-ADMIN-053]** Backup and restore operations shall be logged in the audit trail.
-
-### 3.16.6 Data Export & Import
-
-**[REQ-ADMIN-060]** Admins shall be able to export data in standard formats (CSV, JSON, Excel) for:
-- User lists
-- Project and site data
-- Drill data
-- Inventory data
-- Transfer history
-
-**[REQ-ADMIN-061]** The system should support bulk data import for initial system setup or migration.
-
-**[REQ-ADMIN-062]** Data imports shall be validated before application to prevent data corruption.
-
----
-
-## 4. NON-FUNCTIONAL REQUIREMENTS (SUMMARY)
-
-### 4.1 Performance
-
-**[REQ-PERF-001]** The system shall respond to API requests within 2 seconds for 95% of requests under normal load.
-
-**[REQ-PERF-002]** The system shall support at least 100 concurrent users without performance degradation.
-
-**[REQ-PERF-003]** The system shall use pagination for large data sets to optimize response times.
-
-**[REQ-PERF-004]** The system shall implement caching for frequently accessed data (user lists, regions, etc.).
-
-### 4.2 Security
-
-**[REQ-SEC-001]** The system shall use HTTPS for all communications between client and server.
-
-**[REQ-SEC-002]** The system shall hash all passwords using BCrypt with cryptographic salt before storage.
-
-**[REQ-SEC-003]** The system shall never expose password hashes in API responses.
-
-**[REQ-SEC-004]** The system shall implement JWT-based authentication with signature verification.
-
-**[REQ-SEC-005]** The system shall enforce role-based access control on all protected endpoints.
-
-**[REQ-SEC-006]** The system shall implement CORS (Cross-Origin Resource Sharing) with restricted allowed origins.
-
-**[REQ-SEC-007]** The system shall validate and sanitize all user inputs to prevent injection attacks.
-
-### 4.3 Reliability
-
-**[REQ-REL-001]** The system shall have 99.5% uptime during business hours (8 AM - 8 PM local time).
-
-**[REQ-REL-002]** The system shall implement global exception handling to prevent unhandled errors from crashing the application.
-
-**[REQ-REL-003]** The system shall log all errors with sufficient context for debugging and resolution.
-
-### 4.4 Scalability
-
-**[REQ-SCALE-001]** The system architecture shall support horizontal scaling of the API tier.
-
-**[REQ-SCALE-002]** The database schema shall be optimized with proper indexing for query performance.
-
-**[REQ-SCALE-003]** The system shall support regional data partitioning for improved performance in multi-region deployments.
-
-### 4.5 Usability
-
-**[REQ-USE-001]** The user interface shall be responsive and accessible on desktop browsers (minimum resolution 1366x768).
-
-**[REQ-USE-002]** The system shall provide clear error messages for validation failures.
-
-**[REQ-USE-003]** The system shall display loading indicators during asynchronous operations.
-
-**[REQ-USE-004]** The system shall provide tooltips and help text for complex features.
-
-### 4.6 Compatibility
-
-**[REQ-COMPAT-001]** The system shall be compatible with the following browsers:
-- Google Chrome (latest 2 versions)
-- Mozilla Firefox (latest 2 versions)
-- Microsoft Edge (latest 2 versions)
-
-**[REQ-COMPAT-002]** The backend API shall follow RESTful design principles.
-
-**[REQ-COMPAT-003]** The system shall use JSON for all API request and response payloads.
-
----
-
-## 5. GLOSSARY
-
-| Term | Definition |
-|------|------------|
-| ANFO | Ammonium Nitrate Fuel Oil - A widely used bulk blasting explosive |
-| Blast Sequence | The timed order in which drill holes are detonated |
-| Burden | The distance from a drill hole to the nearest free face |
-| Clean Architecture | Software architecture pattern with separation of concerns across layers |
-| Detonator | A device used to trigger the detonation of explosives |
-| Drill Point | A specific location where a hole is to be drilled |
-| Emulsion | A water-in-oil emulsion explosive |
-| JWT | JSON Web Token - A token-based authentication mechanism |
-| RBAC | Role-Based Access Control |
-| Spacing | The horizontal distance between adjacent drill holes |
-| Stemming | Non-explosive material placed at the top of a charged drill hole |
-| Subdrill | The depth of drilling below the designed floor elevation |
-
----
-
-## 6. REVISION HISTORY
-
-| Version | Date | Description | Author |
-|---------|------|-------------|--------|
-| 1.0 | Oct 13, 2025 | Initial draft based on requirements | Project Team |
-| 2.0 | Oct 22, 2025 | Comprehensive rewrite based on actual implementation analysis | System Analyst |
-
----
-
-## 7. APPROVAL
-
-This Functional Requirements Specification is submitted for review and approval.
-
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| Product Owner | _______________ | _______________ | ________ |
-| Technical Lead | _______________ | _______________ | ________ |
-| Quality Assurance | _______________ | _______________ | ________ |
-| Project Manager | _______________ | _______________ | ________ |
-
----
-
-**END OF DOCUMENT**
+## TOTAL FUNCTIONAL REQUIREMENTS: 460
