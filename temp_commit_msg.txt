@@ -1,1 +1,1 @@
-Replace Material table with virtual scrolling with PrimeNG DataTable component, update bulk actions toolbar, and simplify template structure.
+added new filter style
