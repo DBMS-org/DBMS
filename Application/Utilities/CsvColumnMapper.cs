@@ -64,27 +64,21 @@ namespace Application.Utilities
             }
         };
 
-        // Required columns for basic drill hole data (2D minimum)
         private static readonly List<string> RequiredColumns = new() 
         { 
             "id", "easting", "northing", "elevation"
         };
 
-        // Optional columns that provide additional functionality
         private static readonly List<string> OptionalColumns = new() 
         { 
             "name", "length", "depth", "azimuth", "dip", "stemming"
         };
 
-        /// <summary>
-        /// Normalizes a header string by removing special characters, spaces, and converting to lowercase
-        /// </summary>
         public static string NormalizeHeader(string header)
         {
             if (string.IsNullOrWhiteSpace(header))
                 return string.Empty;
 
-            // Remove parentheses, brackets, and common punctuation
             string normalized = Regex.Replace(header, @"[()[\]{}]", "");
             
             // Replace multiple spaces/underscores/dashes with single space
@@ -96,9 +90,6 @@ namespace Application.Utilities
             return normalized;
         }
 
-        /// <summary>
-        /// Maps CSV headers to standardized column names
-        /// </summary>
         public static Dictionary<string, string> MapHeaders(string[] headers)
         {
             var mappedHeaders = new Dictionary<string, string>();
@@ -112,7 +103,6 @@ namespace Application.Utilities
                 {
                     var normalizedHeader = normalizedHeaders[i];
                     
-                    // Check if this header matches any of the aliases for this standard column
                     if (aliases.Any(alias => normalizedHeader.Equals(alias, StringComparison.OrdinalIgnoreCase)))
                     {
                         mappedHeaders[headers[i]] = standardColumn; // Store original header as key
@@ -124,9 +114,6 @@ namespace Application.Utilities
             return mappedHeaders;
         }
 
-        /// <summary>
-        /// Validates that required columns are present in the mapped headers
-        /// </summary>
         public static (bool IsValid, List<string> MissingColumns) ValidateRequiredColumns(Dictionary<string, string> mappedHeaders)
         {
             var missingColumns = new List<string>();
@@ -143,26 +130,17 @@ namespace Application.Utilities
             return (missingColumns.Count == 0, missingColumns);
         }
 
-        /// <summary>
-        /// Gets the standardized column name for a given original header
-        /// </summary>
         public static string? GetStandardColumnName(string originalHeader, Dictionary<string, string> mappedHeaders)
         {
             return mappedHeaders.TryGetValue(originalHeader, out var standardName) ? standardName : null;
         }
 
-        /// <summary>
-        /// Checks if the CSV has sufficient data for 3D visualization
-        /// </summary>
         public static bool Has3DCapability(Dictionary<string, string> mappedHeaders)
         {
             var mappedStandardColumns = mappedHeaders.Values.ToHashSet();
             return mappedStandardColumns.Contains("azimuth") && mappedStandardColumns.Contains("dip");
         }
 
-        /// <summary>
-        /// Gets all possible column variations for documentation/help purposes
-        /// </summary>
         public static Dictionary<string, List<string>> GetAllColumnVariations()
         {
             return new Dictionary<string, List<string>>(ColumnMappings);

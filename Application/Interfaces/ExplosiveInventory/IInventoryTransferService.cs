@@ -3,12 +3,8 @@ using Application.DTOs.ExplosiveInventory;
 
 namespace Application.Interfaces.ExplosiveInventory
 {
-    /// <summary>
-    /// Service interface for inventory transfer request management
-    /// </summary>
     public interface IInventoryTransferService
     {
-        // ===== Create & Manage Requests =====
         Task<Result<TransferRequestDto>> CreateTransferRequestAsync(CreateTransferRequestDto request, int requestedByUserId, CancellationToken cancellationToken = default);
         Task<Result<TransferRequestDto>> ApproveTransferRequestAsync(int requestId, ApproveTransferRequestDto approval, int approvedByUserId, CancellationToken cancellationToken = default);
         Task<Result<TransferRequestDto>> RejectTransferRequestAsync(int requestId, RejectTransferRequestDto rejection, int rejectedByUserId, CancellationToken cancellationToken = default);

@@ -2,22 +2,10 @@ using System.Diagnostics;
 
 namespace Application.Utilities
 {
-    /// <summary>
-    /// Utility class for resource management patterns across application services
-    /// </summary>
     public static class ResourceManager
     {
-        /// <summary>
-        /// Default timeout for operations that don't specify one
-        /// </summary>
         public const int DEFAULT_OPERATION_TIMEOUT_MINUTES = 15;
 
-        /// <summary>
-        /// Creates a combined cancellation token with timeout and optional parent token
-        /// </summary>
-        /// <param name="timeoutMinutes">Timeout in minutes</param>
-        /// <param name="parentToken">Optional parent cancellation token</param>
-        /// <returns>Combined cancellation token source (must be disposed)</returns>
         public static CancellationTokenSource CreateTimeoutToken(int timeoutMinutes = DEFAULT_OPERATION_TIMEOUT_MINUTES, CancellationToken parentToken = default)
         {
             var timeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(timeoutMinutes));
@@ -33,15 +21,6 @@ namespace Application.Utilities
             return combinedCts;
         }
 
-        /// <summary>
-        /// Executes an operation with timeout and cancellation support
-        /// </summary>
-        /// <typeparam name="T">Return type</typeparam>
-        /// <param name="operation">Operation to execute</param>
-        /// <param name="operationName">Name for logging</param>
-        /// <param name="timeoutMinutes">Timeout in minutes</param>
-        /// <param name="cancellationToken">Optional cancellation token</param>
-        /// <returns>Result of the operation</returns>
         public static async Task<T> ExecuteWithTimeoutAsync<T>(
             Func<CancellationToken, Task<T>> operation,
             string operationName,
@@ -60,13 +39,6 @@ namespace Application.Utilities
             }
         }
 
-        /// <summary>
-        /// Executes an operation with timeout and cancellation support (void return)
-        /// </summary>
-        /// <param name="operation">Operation to execute</param>
-        /// <param name="operationName">Name for logging</param>
-        /// <param name="timeoutMinutes">Timeout in minutes</param>
-        /// <param name="cancellationToken">Optional cancellation token</param>
         public static async Task ExecuteWithTimeoutAsync(
             Func<CancellationToken, Task> operation,
             string operationName,
@@ -85,10 +57,6 @@ namespace Application.Utilities
             }
         }
 
-        /// <summary>
-        /// Safely disposes multiple disposable resources
-        /// </summary>
-        /// <param name="disposables">Resources to dispose</param>
         public static void SafeDispose(params IDisposable?[] disposables)
         {
             foreach (var disposable in disposables)
@@ -99,15 +67,10 @@ namespace Application.Utilities
                 }
                 catch
                 {
-                    // Swallow disposal exceptions to prevent masking original exceptions
                 }
             }
         }
 
-        /// <summary>
-        /// Safely disposes multiple async disposable resources
-        /// </summary>
-        /// <param name="disposables">Resources to dispose</param>
         public static async Task SafeDisposeAsync(params IAsyncDisposable?[] disposables)
         {
             foreach (var disposable in disposables)
@@ -121,29 +84,15 @@ namespace Application.Utilities
                 }
                 catch
                 {
-                    // Swallow disposal exceptions to prevent masking original exceptions
                 }
             }
         }
 
-        /// <summary>
-        /// Creates a performance tracking scope that measures operation duration
-        /// </summary>
-        /// <param name="operationName">Name of the operation</param>
-        /// <param name="onComplete">Optional callback when operation completes</param>
-        /// <returns>Disposable scope that tracks timing</returns>
         public static IDisposable TrackPerformance(string operationName, Action<string, TimeSpan>? onComplete = null)
         {
             return new PerformanceTracker(operationName, onComplete);
         }
 
-        /// <summary>
-        /// Batches items for processing to manage memory usage
-        /// </summary>
-        /// <typeparam name="T">Item type</typeparam>
-        /// <param name="items">Items to batch</param>
-        /// <param name="batchSize">Size of each batch</param>
-        /// <returns>Batched items</returns>
         public static IEnumerable<IEnumerable<T>> BatchItems<T>(IEnumerable<T> items, int batchSize)
         {
             if (batchSize <= 0)
@@ -168,15 +117,6 @@ namespace Application.Utilities
             }
         }
 
-        /// <summary>
-        /// Processes items in batches with cancellation support
-        /// </summary>
-        /// <typeparam name="T">Item type</typeparam>
-        /// <param name="items">Items to process</param>
-        /// <param name="batchSize">Size of each batch</param>
-        /// <param name="processor">Batch processor function</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Total number of items processed</returns>
         public static async Task<int> ProcessInBatchesAsync<T>(
             IEnumerable<T> items,
             int batchSize,
@@ -196,9 +136,6 @@ namespace Application.Utilities
             return totalProcessed;
         }
 
-        /// <summary>
-        /// Performance tracking scope implementation
-        /// </summary>
         private class PerformanceTracker : IDisposable
         {
             private readonly string _operationName;
@@ -226,7 +163,6 @@ namespace Application.Utilities
                 }
                 catch
                 {
-                    // Swallow callback exceptions
                 }
                 
                 _disposed = true;

@@ -14,23 +14,18 @@ namespace Domain.Entities.StoreManagement
         public decimal StorageCapacity { get; private set; }
         public string City { get; private set; } = string.Empty;
         public StoreStatus Status { get; private set; } = StoreStatus.Operational;
-        public string AllowedExplosiveTypes { get; private set; } = string.Empty; // Comma-separated: "ANFO,Emulsion"
+        public string AllowedExplosiveTypes { get; private set; } = string.Empty;
 
-        // Computed property - calculated from Inventories
         public decimal CurrentOccupancy => Inventories?.Sum(i => i.Quantity) ?? 0;
 
-        // Foreign Keys
         public int RegionId { get; private set; }
         public int? ManagerUserId { get; private set; }
 
-        // Navigation Properties
         public virtual Region Region { get; private set; } = null!;
         public virtual User? ManagerUser { get; private set; }
-        
-        // Collections
+
         public virtual IReadOnlyCollection<StoreInventory> Inventories => _inventories.AsReadOnly();
 
-        // Private constructor for EF Core
         private Store() { }
 
         public Store(

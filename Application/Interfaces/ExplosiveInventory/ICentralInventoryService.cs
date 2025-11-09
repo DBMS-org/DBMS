@@ -4,9 +4,6 @@ using Domain.Entities.StoreManagement.Enums;
 
 namespace Application.Interfaces.ExplosiveInventory
 {
-    /// <summary>
-    /// Service interface for central warehouse inventory management
-    /// </summary>
     public interface ICentralInventoryService
     {
         // ===== ANFO Operations =====
@@ -36,7 +33,6 @@ namespace Application.Interfaces.ExplosiveInventory
         // ===== Dashboard =====
         Task<Result<InventoryDashboardDto>> GetDashboardDataAsync(CancellationToken cancellationToken = default);
 
-        // ===== Delete =====
         Task<Result> DeleteBatchAsync(int id, CancellationToken cancellationToken = default);
     }
 }

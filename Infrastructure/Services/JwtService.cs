@@ -35,7 +35,7 @@ namespace Infrastructure.Services
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.Replace(" ", "")), // Remove spaces to match authorization policy
+                new Claim(ClaimTypes.Role, user.Role.Replace(" ", "")),
                 new Claim("region", user.Region ?? string.Empty)
             };
             
@@ -54,7 +54,6 @@ namespace Infrastructure.Services
         {
             try
             {
-                // Check if token is blacklisted first
                 if (IsTokenBlacklisted(token))
                 {
                     return false;
@@ -97,20 +96,16 @@ namespace Infrastructure.Services
         {
             try
             {
-                // Get token expiration time
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwtToken = tokenHandler.ReadJwtToken(token);
                 var expiration = jwtToken.ValidTo;
 
-                // Add to blacklist with expiration time
                 _blacklistedTokens.TryAdd(token, expiration);
-                
-                // Clean up expired tokens periodically
+
                 await CleanupExpiredTokensAsync();
             }
             catch
             {
-                // If we can't parse the token, blacklist it indefinitely
                 _blacklistedTokens.TryAdd(token, DateTime.UtcNow.AddYears(1));
             }
         }

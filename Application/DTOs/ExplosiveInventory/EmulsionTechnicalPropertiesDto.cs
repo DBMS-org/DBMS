@@ -2,9 +2,6 @@ using Domain.Entities.ExplosiveInventory.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
-    /// <summary>
-    /// DTO for Emulsion technical specifications
-    /// </summary>
     public class EmulsionTechnicalPropertiesDto
     {
         public int Id { get; set; }
@@ -13,14 +10,12 @@ namespace Application.DTOs.ExplosiveInventory
         public decimal DensityUnsensitized { get; set; }
         public decimal DensitySensitized { get; set; }
 
-        // Rheological
         public int Viscosity { get; set; }
 
         // Composition
         public decimal WaterContent { get; set; }
         public decimal pH { get; set; }
 
-        // Performance
         public int? DetonationVelocity { get; set; }
         public int? BubbleSize { get; set; }
 
@@ -51,7 +46,6 @@ namespace Application.DTOs.ExplosiveInventory
         // Constants
         public string WaterResistance { get; set; } = "Excellent";
 
-        // Additional
         public string? Notes { get; set; }
 
         // Computed

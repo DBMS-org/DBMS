@@ -2,9 +2,6 @@ using Domain.Entities.ExplosiveInventory.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
-    /// <summary>
-    /// Filter DTO for querying transfer requests
-    /// </summary>
     public class TransferRequestFilterDto
     {
         public TransferRequestStatus? Status { get; set; }

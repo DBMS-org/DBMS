@@ -3,9 +3,6 @@ using FluentValidation;
 
 namespace Application.Validators.ExplosiveInventory
 {
-    /// <summary>
-    /// Validator for transfer request creation
-    /// </summary>
     public class CreateTransferRequestDtoValidator : AbstractValidator<CreateTransferRequestDto>
     {
         public CreateTransferRequestDtoValidator()
@@ -28,7 +25,6 @@ namespace Application.Validators.ExplosiveInventory
                 .Must(u => u == "kg" || u == "tons")
                 .WithMessage("Unit must be either 'kg' or 'tons'");
 
-            // Required By Date (optional, but if provided must be in future)
             When(x => x.RequiredByDate.HasValue, () =>
             {
                 RuleFor(x => x.RequiredByDate!.Value)
