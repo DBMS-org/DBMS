@@ -1,1 +1,1 @@
-docs: restructure functional requirements to match current implementation
+Explosive manager dashboard

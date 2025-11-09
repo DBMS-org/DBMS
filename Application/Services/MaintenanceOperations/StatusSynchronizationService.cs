@@ -7,10 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.Services.MaintenanceOperations
 {
-    /// <summary>
-    /// Service responsible for synchronizing statuses between MaintenanceReports, MaintenanceJobs, and Machines
-    /// to maintain data consistency across the maintenance workflow
-    /// </summary>
     public class StatusSynchronizationService : IStatusSynchronizationService
     {
         private readonly IMaintenanceReportRepository _reportRepository;
@@ -42,7 +38,6 @@ namespace Application.Services.MaintenanceOperations
                     return Result.Failure<bool>("Report not found");
                 }
 
-                // If report has a maintenance job, synchronize statuses
                 if (report.MaintenanceJob != null)
                 {
                     var job = report.MaintenanceJob;
@@ -71,7 +66,6 @@ namespace Application.Services.MaintenanceOperations
                             if (job.Status != MaintenanceJobStatus.Completed)
                             {
                                 // Note: Job completion should be done via CompleteJobAsync with observations
-                                // Here we just log the discrepancy
                                 _logger.LogWarning("Report {ReportId} marked as resolved but job {JobId} not completed", reportId, job.Id);
                             }
                             break;
@@ -108,7 +102,6 @@ namespace Application.Services.MaintenanceOperations
 
                 var originalStatus = machine.Status;
 
-                // Update machine status based on severity and report status
                 if (reportStatus == ReportStatus.Reported || reportStatus == ReportStatus.Acknowledged || reportStatus == ReportStatus.InProgress)
                 {
                     // Active maintenance scenario
@@ -125,7 +118,6 @@ namespace Application.Services.MaintenanceOperations
                 }
                 else if (reportStatus == ReportStatus.Resolved || reportStatus == ReportStatus.Closed)
                 {
-                    // Report resolved - check if machine can be restored
                     var canRestore = await CanRestoreMachineStatusAsync(machineId);
                     if (canRestore.IsSuccess && canRestore.Value)
                     {
@@ -133,7 +125,6 @@ namespace Application.Services.MaintenanceOperations
                     }
                 }
 
-                // Save changes if status changed
                 if (machine.Status != originalStatus)
                 {
                     await _machineRepository.UpdateAsync(machine);
@@ -161,7 +152,6 @@ namespace Application.Services.MaintenanceOperations
                     return Result.Failure<bool>("Job not found");
                 }
 
-                // Update associated report if exists
                 if (job.MaintenanceReport != null)
                 {
                     if (job.MaintenanceReport.Status != ReportStatus.Resolved && job.MaintenanceReport.Status != ReportStatus.Closed)
@@ -171,11 +161,9 @@ namespace Application.Services.MaintenanceOperations
                         _logger.LogInformation("Report {ReportId} marked as resolved after job {JobId} completion", job.MaintenanceReport.Id, jobId);
                     }
 
-                    // Update machine status
                     await UpdateMachineStatusAsync(job.MachineId, job.MaintenanceReport.Severity, ReportStatus.Resolved);
                 }
 
-                // Update machine maintenance date
                 await UpdateMachineMaintenanceDateAsync(job.MachineId, DateTime.UtcNow);
 
                 _logger.LogInformation("Successfully handled job {JobId} completion", jobId);
@@ -194,7 +182,6 @@ namespace Application.Services.MaintenanceOperations
             {
                 _logger.LogInformation("Checking if machine {MachineId} can be restored to normal status", machineId);
 
-                // Check for any active HIGH or CRITICAL reports for this machine
                 var reports = await _reportRepository.GetByMachineIdAsync(machineId);
 
                 var hasActiveHighSeverityReports = reports.Any(r =>

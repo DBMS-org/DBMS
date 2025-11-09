@@ -5,9 +5,6 @@ using Domain.Common;
 
 namespace Application.Mapping
 {
-    /// <summary>
-    /// AutoMapper profile for User Management mappings
-    /// </summary>
     public class UserManagementMappingProfile : Profile
     {
         public UserManagementMappingProfile()
@@ -19,7 +16,6 @@ namespace Application.Mapping
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)));
 
-            // DTO to Entity mappings (for updates)
             CreateMap<UpdateUserRequest, User>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<UserStatus>(src.Status)))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => new Email(src.Email)))
@@ -30,7 +26,6 @@ namespace Application.Mapping
                 .ForMember(dest => dest.PasswordResetCodeExpiry, opt => opt.Ignore())
                 .ForMember(dest => dest.UserRoles, opt => opt.Ignore());
 
-            // Create request to Entity
             CreateMap<CreateUserRequest, User>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => UserStatus.Active))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => new Email(src.Email)))

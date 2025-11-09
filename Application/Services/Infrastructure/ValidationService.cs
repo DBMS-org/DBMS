@@ -7,9 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.Services.Infrastructure
 {
-    /// <summary>
-    /// Service for validating DTOs using FluentValidation
-    /// </summary>
     public class ValidationService : IValidationService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -21,9 +18,6 @@ namespace Application.Services.Infrastructure
             _logger = logger;
         }
 
-        /// <summary>
-        /// Validates a DTO and returns validation result
-        /// </summary>
         public async Task<Result> ValidateAsync<T>(T dto) where T : class
         {
             if (dto == null)
@@ -59,9 +53,6 @@ namespace Application.Services.Infrastructure
             }
         }
 
-        /// <summary>
-        /// Validates a DTO and throws specific validation exception if validation fails
-        /// </summary>
         public async Task ValidateAndThrowAsync<T>(T dto) where T : class
         {
             var result = await ValidateAsync(dto);

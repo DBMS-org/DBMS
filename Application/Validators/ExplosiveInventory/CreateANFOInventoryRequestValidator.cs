@@ -3,9 +3,6 @@ using FluentValidation;
 
 namespace Application.Validators.ExplosiveInventory
 {
-    /// <summary>
-    /// Validator for ANFO inventory creation requests
-    /// </summary>
     public class CreateANFOInventoryRequestValidator : AbstractValidator<CreateANFOInventoryRequest>
     {
         public CreateANFOInventoryRequestValidator()
@@ -48,8 +45,6 @@ namespace Application.Validators.ExplosiveInventory
 
             RuleFor(x => x.CentralWarehouseStoreId)
                 .GreaterThan(0).WithMessage("Central warehouse store ID must be valid");
-
-            // ===== ANFO TECHNICAL SPECIFICATIONS =====
 
             // Density: 0.8-0.9 g/cm³
             RuleFor(x => x.Density)

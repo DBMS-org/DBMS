@@ -3,9 +3,6 @@ using FluentValidation;
 
 namespace Application.Validators.ExplosiveInventory
 {
-    /// <summary>
-    /// Validator for Emulsion inventory creation requests
-    /// </summary>
     public class CreateEmulsionInventoryRequestValidator : AbstractValidator<CreateEmulsionInventoryRequest>
     {
         public CreateEmulsionInventoryRequestValidator()
@@ -48,8 +45,6 @@ namespace Application.Validators.ExplosiveInventory
 
             RuleFor(x => x.CentralWarehouseStoreId)
                 .GreaterThan(0).WithMessage("Central warehouse store ID must be valid");
-
-            // ===== EMULSION TECHNICAL SPECIFICATIONS =====
 
             // Density Unsensitized: 1.30-1.45 g/cm³
             RuleFor(x => x.DensityUnsensitized)
