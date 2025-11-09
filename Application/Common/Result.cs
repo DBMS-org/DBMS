@@ -1,5 +1,8 @@
 namespace Application.Common
 {
+    /// <summary>
+    /// Represents the result of an operation with success/failure state
+    /// </summary>
     public class Result
     {
         public bool IsSuccess { get; protected set; }
@@ -25,6 +28,9 @@ namespace Application.Common
         public static Result<T> Failure<T>(string error) => new Result<T>(default!, false, error);
     }
 
+    /// <summary>
+    /// Represents the result of an operation with a return value
+    /// </summary>
     public class Result<T> : Result
     {
         public T Value { get; private set; }

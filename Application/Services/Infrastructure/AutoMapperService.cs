@@ -3,6 +3,9 @@ using AutoMapper;
 
 namespace Application.Services.Infrastructure
 {
+    /// <summary>
+    /// AutoMapper implementation of the mapping service
+    /// </summary>
     public class AutoMapperService : IMappingService
     {
         private readonly IMapper _mapper;

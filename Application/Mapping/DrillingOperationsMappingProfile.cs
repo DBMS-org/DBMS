@@ -4,6 +4,9 @@ using Domain.Entities.DrillingOperations;
 
 namespace Application.Mapping
 {
+    /// <summary>
+    /// AutoMapper profile for Drilling Operations mappings
+    /// </summary>
     public class DrillingOperationsMappingProfile : Profile
     {
         public DrillingOperationsMappingProfile()
@@ -34,6 +37,7 @@ namespace Application.Mapping
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)));
 
+            // PatternSettings mappings
             CreateMap<PatternSettings, PatternSettingsDto>()
                 .ForMember(dest => dest.Spacing, opt => opt.MapFrom(src => src.Spacing))
                 .ForMember(dest => dest.Burden, opt => opt.MapFrom(src => src.Burden))

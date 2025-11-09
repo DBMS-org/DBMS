@@ -3,6 +3,9 @@ using Domain.Entities.ExplosiveInventory.Enums;
 
 namespace Application.Interfaces.ExplosiveInventory
 {
+    /// <summary>
+    /// Repository interface for Inventory Transfer Requests
+    /// </summary>
     public interface IInventoryTransferRequestRepository
     {
         // Basic CRUD

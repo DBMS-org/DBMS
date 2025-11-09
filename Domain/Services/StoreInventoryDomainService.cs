@@ -7,11 +7,11 @@ namespace Domain.Services
     {
         private const decimal SAFETY_STOCK_MULTIPLIER = 1.2m;
         private const int DEFAULT_EXPIRY_WARNING_DAYS = 30;
-        private const decimal UTILIZATION_WARNING_THRESHOLD = 0.85m;
-        private const decimal UTILIZATION_CRITICAL_THRESHOLD = 0.95m;
+        private const decimal UTILIZATION_WARNING_THRESHOLD = 0.85m; // 85%
+        private const decimal UTILIZATION_CRITICAL_THRESHOLD = 0.95m; // 95%
 
         /// <summary>
-        /// Checks if store can accommodate additional inventory
+        /// Validates if a store can accommodate additional inventory
         /// </summary>
         public bool CanAccommodateInventory(Store store, decimal additionalQuantity)
         {
@@ -22,7 +22,7 @@ namespace Domain.Services
         }
 
         /// <summary>
-        /// Calculates optimal stock levels based on consumption and lead time
+        /// Calculates optimal stock levels based on historical consumption and safety requirements
         /// </summary>
         public (decimal minimumLevel, decimal maximumLevel) CalculateOptimalStockLevels(
             decimal averageMonthlyConsumption,
@@ -40,13 +40,13 @@ namespace Domain.Services
             var safetyStock = leadTimeConsumption * safetyStockMultiplier;
 
             var minimumLevel = leadTimeConsumption + safetyStock;
-            var maximumLevel = minimumLevel * 3m;
+            var maximumLevel = minimumLevel * 3m; // 3 months of minimum stock
 
             return (minimumLevel, maximumLevel);
         }
 
         /// <summary>
-        /// Validates transfer feasibility between stores
+        /// Validates if a transfer between stores is feasible
         /// </summary>
         public bool ValidateStoreTransfer(
             Store sourceStore,
@@ -60,21 +60,24 @@ namespace Domain.Services
             if (sourceStore.Id == destinationStore.Id)
                 return false;
 
-            if (sourceStore.Status != StoreStatus.Operational ||
+            if (sourceStore.Status != StoreStatus.Operational || 
                 destinationStore.Status != StoreStatus.Operational)
                 return false;
 
+            // Check if source store has the explosive type available in inventory
             if (!sourceStore.Inventories.Any(i => i.ExplosiveType == explosiveType))
                 return false;
 
+            // Check if destination store can handle this explosive type (has inventory for it)
             if (!destinationStore.Inventories.Any(i => i.ExplosiveType == explosiveType))
                 return false;
 
+            // Check if destination store can accommodate the quantity
             return destinationStore.CanAccommodate(quantity);
         }
 
         /// <summary>
-        /// Determines if inventory requires immediate attention
+        /// Determines if inventory requires immediate attention based on various factors
         /// </summary>
         public InventoryAlert GetInventoryAlert(StoreInventory inventory)
         {
@@ -83,17 +86,20 @@ namespace Domain.Services
 
             var alerts = new List<AlertType>();
 
+            // Check stock levels
             if (inventory.IsLowStock())
                 alerts.Add(AlertType.LowStock);
 
             if (inventory.IsOverStock())
                 alerts.Add(AlertType.OverStock);
 
+            // Check expiry
             if (inventory.IsExpired())
                 alerts.Add(AlertType.Expired);
             else if (inventory.IsExpiringSoon(DEFAULT_EXPIRY_WARNING_DAYS))
                 alerts.Add(AlertType.ExpiringSoon);
 
+            // Check if no available stock due to reservations
             if (inventory.GetAvailableQuantity() <= 0 && inventory.Quantity > 0)
                 alerts.Add(AlertType.FullyReserved);
 
@@ -139,12 +145,13 @@ namespace Domain.Services
         }
 
         /// <summary>
-        /// Validates explosive type compatibility
+        /// Validates explosive type compatibility for store operations
         /// </summary>
         public bool ValidateExplosiveTypeCompatibility(
             ExplosiveType primaryType,
             ExplosiveType secondaryType)
         {
+            // Define incompatible combinations based on safety regulations
             var incompatibleCombinations = new Dictionary<ExplosiveType, ExplosiveType[]>
             {
                 { ExplosiveType.ANFO, new[] { ExplosiveType.DetonatingCord } },
@@ -156,7 +163,7 @@ namespace Domain.Services
                 return !incompatibleTypes.Contains(secondaryType);
             }
 
-            return true;
+            return true; // Default to compatible if no specific rules defined
         }
     }
 

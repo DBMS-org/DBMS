@@ -1,5 +1,8 @@
 namespace Application.DTOs.ExplosiveInventory
 {
+    /// <summary>
+    /// Request DTO for creating transfer request
+    /// </summary>
     public class CreateTransferRequestDto
     {
         public int CentralWarehouseInventoryId { get; set; }

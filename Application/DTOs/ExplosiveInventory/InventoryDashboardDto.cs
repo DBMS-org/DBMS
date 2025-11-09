@@ -2,6 +2,9 @@ using Domain.Entities.StoreManagement.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
+    /// <summary>
+    /// Dashboard statistics for central inventory
+    /// </summary>
     public class InventoryDashboardDto
     {
         // Summary Statistics

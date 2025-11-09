@@ -3,10 +3,14 @@ using FluentValidation;
 
 namespace Application.Validators.ExplosiveInventory
 {
+    /// <summary>
+    /// Validator for transfer request approval
+    /// </summary>
     public class ApproveTransferRequestDtoValidator : AbstractValidator<ApproveTransferRequestDto>
     {
         public ApproveTransferRequestDtoValidator()
         {
+            // Approved Quantity (optional, but if provided must be positive)
             When(x => x.ApprovedQuantity.HasValue, () =>
             {
                 RuleFor(x => x.ApprovedQuantity!.Value)

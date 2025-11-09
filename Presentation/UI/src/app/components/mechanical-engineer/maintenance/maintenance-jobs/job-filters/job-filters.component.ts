@@ -1,17 +1,18 @@
 import { Component, OnInit, inject, signal, output, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { ChangeDetectionStrategy } from '@angular/core';
-
-// PrimeNG imports
-import { PanelModule } from 'primeng/panel';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { CalendarModule } from 'primeng/calendar';
-import { TagModule } from 'primeng/tag';
-import { TooltipModule } from 'primeng/tooltip';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { JobFilters, MaintenanceStatus, MaintenanceJob } from '../../models/maintenance.models';
 
@@ -20,21 +21,25 @@ import { JobFilters, MaintenanceStatus, MaintenanceJob } from '../../models/main
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    PanelModule,
-    ButtonModule,
-    InputTextModule,
-    DropdownModule,
-    MultiSelectModule,
-    CalendarModule,
-    TagModule,
-    TooltipModule
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatButtonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatAutocompleteModule,
+    MatExpansionModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './job-filters.component.html',
   styleUrls: ['./job-filters.component.scss']
 })
 export class JobFiltersComponent implements OnInit {
+  private fb = inject(FormBuilder);
+
   // Inputs
   jobs = input<MaintenanceJob[]>([]);
   initialFilters = input<JobFilters>({});
@@ -44,22 +49,14 @@ export class JobFiltersComponent implements OnInit {
   searchChanged = output<string>();
 
   // Signals
+  isExpanded = signal(false);
   activeFiltersCount = signal(0);
   availableMachineTypes = signal<string[]>([]);
   availableProjects = signal<string[]>([]);
   availableTechnicians = signal<string[]>([]);
 
-  // Panel state - needs to be a regular boolean for PrimeNG two-way binding
-  isFiltersPanelCollapsed: boolean = true;
-
-  // Filter values
-  searchTerm: string = '';
-  startDate: Date | null = null;
-  endDate: Date | null = null;
-  selectedStatuses: MaintenanceStatus[] = [];
-  selectedMachineTypes: string[] = [];
-  selectedProjects: string[] = [];
-  selectedTechnicians: string[] = [];
+  // Form
+  filterForm: FormGroup;
 
   // Configuration
   availableStatuses = [
@@ -70,23 +67,58 @@ export class JobFiltersComponent implements OnInit {
     { value: MaintenanceStatus.OVERDUE, label: 'Overdue' }
   ];
 
+  constructor() {
+    this.filterForm = this.fb.group({
+      searchTerm: [''],
+      startDate: [null],
+      endDate: [null],
+      status: [[]],
+      machineType: [[]],
+      project: [[]],
+      assignedTo: [[]]
+    });
+  }
+
   ngOnInit() {
     this.initializeFilters();
+    this.setupFormSubscriptions();
     this.updateAvailableOptions();
   }
 
   private initializeFilters() {
     const initial = this.initialFilters();
     if (initial) {
-      this.searchTerm = initial.searchTerm || '';
-      this.startDate = initial.dateRange?.start || null;
-      this.endDate = initial.dateRange?.end || null;
-      this.selectedStatuses = initial.status || [];
-      this.selectedMachineTypes = initial.machineType || [];
-      this.selectedProjects = initial.project || [];
-      this.selectedTechnicians = initial.assignedTo || [];
+      this.filterForm.patchValue({
+        searchTerm: initial.searchTerm || '',
+        startDate: initial.dateRange?.start || null,
+        endDate: initial.dateRange?.end || null,
+        status: initial.status || [],
+        machineType: initial.machineType || [],
+        project: initial.project || [],
+        assignedTo: initial.assignedTo || []
+      });
     }
     this.updateActiveFiltersCount();
+  }
+
+  private setupFormSubscriptions() {
+    // Real-time search
+    this.filterForm.get('searchTerm')?.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(searchTerm => {
+        this.searchChanged.emit(searchTerm);
+        this.updateActiveFiltersCount();
+      });
+
+    // Other form changes
+    this.filterForm.valueChanges
+      .pipe(debounceTime(100))
+      .subscribe(() => {
+        this.updateActiveFiltersCount();
+      });
   }
 
   private updateAvailableOptions() {
@@ -113,70 +145,102 @@ export class JobFiltersComponent implements OnInit {
 
   private updateActiveFiltersCount() {
     let count = 0;
+    const formValue = this.filterForm.value;
 
-    if (this.searchTerm) count++;
-    if (this.startDate || this.endDate) count++;
-    if (this.selectedStatuses?.length > 0) count++;
-    if (this.selectedMachineTypes?.length > 0) count++;
-    if (this.selectedProjects?.length > 0) count++;
-    if (this.selectedTechnicians?.length > 0) count++;
+    if (formValue.searchTerm) count++;
+    if (formValue.startDate || formValue.endDate) count++;
+    if (formValue.status?.length > 0) count++;
+    if (formValue.machineType?.length > 0) count++;
+    if (formValue.project?.length > 0) count++;
+    if (formValue.assignedTo?.length > 0) count++;
 
     this.activeFiltersCount.set(count);
   }
 
   // Event Handlers
-  toggleFiltersPanel() {
-    this.isFiltersPanelCollapsed = !this.isFiltersPanelCollapsed;
+  onExpandedChange(expanded: boolean) {
+    this.isExpanded.set(expanded);
   }
 
-  onSearch() {
-    this.searchChanged.emit(this.searchTerm);
-    this.updateActiveFiltersCount();
+  onSearchInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.searchChanged.emit(target.value);
   }
 
-  clearFilters() {
-    this.searchTerm = '';
-    this.startDate = null;
-    this.endDate = null;
-    this.selectedStatuses = [];
-    this.selectedMachineTypes = [];
-    this.selectedProjects = [];
-    this.selectedTechnicians = [];
+  clearSearch() {
+    this.filterForm.patchValue({ searchTerm: '' });
+    this.searchChanged.emit('');
+  }
+
+  removeFilter(filterType: string) {
+    switch (filterType) {
+      case 'searchTerm':
+        this.filterForm.patchValue({ searchTerm: '' });
+        break;
+      case 'dateRange':
+        this.filterForm.patchValue({ startDate: null, endDate: null });
+        break;
+      case 'status':
+        this.filterForm.patchValue({ status: [] });
+        break;
+      case 'machineType':
+        this.filterForm.patchValue({ machineType: [] });
+        break;
+      case 'project':
+        this.filterForm.patchValue({ project: [] });
+        break;
+      case 'assignedTo':
+        this.filterForm.patchValue({ assignedTo: [] });
+        break;
+    }
+    this.applyFilters();
+  }
+
+  resetFilters() {
+    this.filterForm.reset({
+      searchTerm: '',
+      startDate: null,
+      endDate: null,
+      status: [],
+      machineType: [],
+      project: [],
+      assignedTo: []
+    });
     this.applyFilters();
   }
 
   applyFilters() {
+    const formValue = this.filterForm.value;
     const filters: JobFilters = {};
 
-    if (this.searchTerm) {
-      filters.searchTerm = this.searchTerm;
+    if (formValue.searchTerm) {
+      filters.searchTerm = formValue.searchTerm;
     }
 
-    if (this.startDate || this.endDate) {
+    if (formValue.startDate || formValue.endDate) {
       filters.dateRange = {
-        start: this.startDate || new Date(0),
-        end: this.endDate || new Date()
+        start: formValue.startDate || new Date(0),
+        end: formValue.endDate || new Date()
       };
     }
 
-    if (this.selectedStatuses?.length > 0) {
-      filters.status = this.selectedStatuses;
+    if (formValue.status?.length > 0) {
+      filters.status = formValue.status;
     }
 
-    if (this.selectedMachineTypes?.length > 0) {
-      filters.machineType = this.selectedMachineTypes;
+    if (formValue.machineType?.length > 0) {
+      filters.machineType = formValue.machineType;
     }
 
-    if (this.selectedProjects?.length > 0) {
-      filters.project = this.selectedProjects;
+    if (formValue.project?.length > 0) {
+      filters.project = formValue.project;
     }
 
-    if (this.selectedTechnicians?.length > 0) {
-      filters.assignedTo = this.selectedTechnicians;
+    if (formValue.assignedTo?.length > 0) {
+      filters.assignedTo = formValue.assignedTo;
     }
 
     this.filtersChanged.emit(filters);
-    this.updateActiveFiltersCount();
   }
 
   // Utility Methods
@@ -204,44 +268,51 @@ export class JobFiltersComponent implements OnInit {
   }
 
   getDateRangeText(): string {
-    if (this.startDate && this.endDate) {
-      return `${this.formatDate(this.startDate)} - ${this.formatDate(this.endDate)}`;
-    } else if (this.startDate) {
-      return `From ${this.formatDate(this.startDate)}`;
-    } else if (this.endDate) {
-      return `Until ${this.formatDate(this.endDate)}`;
+    const startDate = this.filterForm.get('startDate')?.value;
+    const endDate = this.filterForm.get('endDate')?.value;
+    
+    if (startDate && endDate) {
+      return `${this.formatDate(startDate)} - ${this.formatDate(endDate)}`;
+    } else if (startDate) {
+      return `From ${this.formatDate(startDate)}`;
+    } else if (endDate) {
+      return `Until ${this.formatDate(endDate)}`;
     }
     return '';
   }
 
   getStatusText(): string {
-    if (this.selectedStatuses.length <= 2) {
-      return this.selectedStatuses.map((s: MaintenanceStatus) =>
+    const statuses = this.filterForm.get('status')?.value || [];
+    if (statuses.length <= 2) {
+      return statuses.map((s: MaintenanceStatus) => 
         this.availableStatuses.find(status => status.value === s)?.label
       ).join(', ');
     }
-    return `${this.selectedStatuses.length} statuses`;
+    return `${statuses.length} statuses`;
   }
 
   getMachineTypeText(): string {
-    if (this.selectedMachineTypes.length <= 2) {
-      return this.selectedMachineTypes.join(', ');
+    const types = this.filterForm.get('machineType')?.value || [];
+    if (types.length <= 2) {
+      return types.join(', ');
     }
-    return `${this.selectedMachineTypes.length} types`;
+    return `${types.length} types`;
   }
 
   getProjectText(): string {
-    if (this.selectedProjects.length <= 2) {
-      return this.selectedProjects.join(', ');
+    const projects = this.filterForm.get('project')?.value || [];
+    if (projects.length <= 2) {
+      return projects.join(', ');
     }
-    return `${this.selectedProjects.length} projects`;
+    return `${projects.length} projects`;
   }
 
   getAssignedToText(): string {
-    if (this.selectedTechnicians.length <= 2) {
-      return this.selectedTechnicians.join(', ');
+    const assigned = this.filterForm.get('assignedTo')?.value || [];
+    if (assigned.length <= 2) {
+      return assigned.join(', ');
     }
-    return `${this.selectedTechnicians.length} technicians`;
+    return `${assigned.length} technicians`;
   }
 
   private formatDate(date: Date): string {

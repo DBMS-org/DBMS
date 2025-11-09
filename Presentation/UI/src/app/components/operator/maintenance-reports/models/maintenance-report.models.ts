@@ -1,3 +1,4 @@
+// Enums for maintenance reporting
 export enum MachinePart {
   DRILL_BIT = 'DRILL_BIT',
   DRILL_ROD = 'DRILL_ROD',
@@ -20,10 +21,10 @@ export enum ProblemCategory {
 }
 
 export enum SeverityLevel {
-  CRITICAL = 'CRITICAL',
-  HIGH = 'HIGH',
-  MEDIUM = 'MEDIUM',
-  LOW = 'LOW'
+  CRITICAL = 'CRITICAL',    // Machine Down
+  HIGH = 'HIGH',           // Performance Issues
+  MEDIUM = 'MEDIUM',       // Minor Issues
+  LOW = 'LOW'              // Maintenance Needed
 }
 
 export enum ReportStatus {
@@ -41,6 +42,7 @@ export enum MachineStatus {
   OFFLINE = 'OFFLINE'
 }
 
+// Core interfaces
 export interface ProblemReport {
   id: string;
   operatorId: string;
@@ -103,6 +105,7 @@ export interface ReportFilters {
   searchTerm?: string;
 }
 
+// Request/Response DTOs for API communication
 export interface CreateProblemReportRequest {
   machineId: string;
   machineName: string;
@@ -124,6 +127,7 @@ export interface UpdateReportStatusRequest {
   estimatedResponseTime?: string;
 }
 
+// Display helper interfaces
 export interface MachinePartOption {
   value: MachinePart;
   label: string;
@@ -150,12 +154,14 @@ export interface ReportStatusOption {
   icon: string;
 }
 
+// Common symptoms for checkboxes
 export interface SymptomOption {
   value: string;
   label: string;
   category?: ProblemCategory;
 }
 
+// Constants for UI display
 export const MACHINE_PART_OPTIONS: MachinePartOption[] = [
   { value: MachinePart.DRILL_BIT, label: 'Drill Bit', icon: 'construction' },
   { value: MachinePart.DRILL_ROD, label: 'Drill Rod', icon: 'linear_scale' },

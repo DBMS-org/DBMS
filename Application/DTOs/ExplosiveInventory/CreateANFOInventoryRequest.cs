@@ -2,6 +2,9 @@ using Domain.Entities.ExplosiveInventory.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
+    /// <summary>
+    /// Request DTO for creating ANFO inventory batch
+    /// </summary>
     public class CreateANFOInventoryRequest
     {
         public string BatchId { get; set; } = string.Empty;

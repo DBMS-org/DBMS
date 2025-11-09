@@ -24,6 +24,7 @@ namespace Infrastructure.Data
             _dispatcher = dispatcher;
         }
 
+        // DbSets for all entities
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
@@ -49,11 +50,15 @@ namespace Infrastructure.Data
         public DbSet<Store> Stores { get; set; }
         public DbSet<StoreInventory> StoreInventories { get; set; }
         public DbSet<StoreTransaction> StoreTransactions { get; set; }
+
+        // Explosive Inventory DbSets
         public DbSet<CentralWarehouseInventory> CentralWarehouseInventories { get; set; }
         public DbSet<ANFOTechnicalProperties> ANFOTechnicalProperties { get; set; }
         public DbSet<EmulsionTechnicalProperties> EmulsionTechnicalProperties { get; set; }
         public DbSet<InventoryTransferRequest> InventoryTransferRequests { get; set; }
         public DbSet<QualityCheckRecord> QualityCheckRecords { get; set; }
+
+        // Maintenance Operations DbSets
         public DbSet<MaintenanceReport> MaintenanceReports { get; set; }
         public DbSet<MaintenanceJob> MaintenanceJobs { get; set; }
         public DbSet<MaintenanceJobAssignment> MaintenanceJobAssignments { get; set; }
@@ -62,13 +67,17 @@ namespace Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Automatically apply all IEntityTypeConfiguration<T> from this assembly
+            // This will pick up all configurations from the categorized folders
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
+            // Seed initial data
             SeedData(modelBuilder);
         }
 
         private void SeedData(ModelBuilder modelBuilder)
         {
+            // Seeding Roles
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin", NormalizedName = "ADMIN", Description = "Administrator with full access" },
                 new Role { Id = 2, Name = "Blasting Engineer", NormalizedName = "BLASTING_ENGINEER", Description = "Manages blasting operations" },
@@ -79,6 +88,7 @@ namespace Infrastructure.Data
                 new Role { Id = 7, Name = "Operator", NormalizedName = "OPERATOR", Description = "Operates machinery" }
             );
 
+            // Seeding Permissions
             modelBuilder.Entity<Permission>().HasData(
                 new Permission { Id = 1, Module = "UserManagement", Action = "Create", Name = "Create User", Description = "Allows creating a new user" },
                 new Permission { Id = 2, Module = "UserManagement", Action = "Read", Name = "Read User", Description = "Allows viewing user details" },
@@ -90,7 +100,9 @@ namespace Infrastructure.Data
                 new Permission { Id = 8, Module = "ProjectManagement", Action = "Delete", Name = "Delete Project", Description = "Allows deleting a project" }
             );
 
+            // Seeding RolePermissions
             modelBuilder.Entity<RolePermission>().HasData(
+                // Admin has all permissions
                 new RolePermission { Id = 1, RoleId = 1, PermissionId = 1 },
                 new RolePermission { Id = 2, RoleId = 1, PermissionId = 2 },
                 new RolePermission { Id = 3, RoleId = 1, PermissionId = 3 },
@@ -99,9 +111,11 @@ namespace Infrastructure.Data
                 new RolePermission { Id = 6, RoleId = 1, PermissionId = 6 },
                 new RolePermission { Id = 7, RoleId = 1, PermissionId = 7 },
                 new RolePermission { Id = 8, RoleId = 1, PermissionId = 8 },
+                // Blasting Engineer can read projects
                 new RolePermission { Id = 9, RoleId = 2, PermissionId = 6 }
             );
 
+            // Seeding Regions
             modelBuilder.Entity<Region>().HasData(
                 new Region { Id = 1, Name = "Muscat", Country = "Oman" },
                 new Region { Id = 2, Name = "Dhofar", Country = "Oman" },

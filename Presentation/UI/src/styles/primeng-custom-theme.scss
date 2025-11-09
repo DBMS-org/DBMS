@@ -7,66 +7,30 @@
 
 // Table - Base styling
 .p-datatable {
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-
   .p-datatable-wrapper {
     overflow: auto;
-    border-radius: 8px;
   }
 
   .p-datatable-thead > tr > th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white !important;
+    background: #f8f9fa;
+    color: #495057;
     padding: 1rem;
     font-weight: 600;
-    border: none !important;
+    border: 1px solid #dee2e6;
     text-align: left;
-
-    // Ensure all text and icons are white - very aggressive
-    *, i, span, div, .p-sortable-column-icon, .p-column-header-content, .p-sortable-column-badge, .pi {
-      color: white !important;
-    }
-
-    // Override any flex or inline styles
-    .flex, .items-center, .gap-1 {
-      * {
-        color: white !important;
-      }
-    }
   }
 
-  .p-datatable-tbody > tr {
-    transition: background-color 0.2s ease;
-
-    > td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #e9ecef;
-      border-left: none;
-      border-right: none;
-      border-top: none;
-    }
-
-    &:hover {
-      background: rgba(102, 126, 234, 0.05) !important;
-    }
-
-    &.p-highlight {
-      background: rgba(102, 126, 234, 0.1) !important;
-    }
+  .p-datatable-tbody > tr > td {
+    padding: 1rem;
+    border: 1px solid #dee2e6;
   }
 
-  .p-datatable-tbody > tr:last-child > td {
-    border-bottom: none;
+  .p-datatable-tbody > tr:hover {
+    background: #f8f9fc;
   }
 
   &.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
-    background: #f9fafb;
-
-    &:hover {
-      background: rgba(102, 126, 234, 0.05) !important;
-    }
+    background: #f8f9fa;
   }
 
   &.p-datatable-sm {
@@ -78,13 +42,11 @@
   }
 
   .p-paginator {
-    background: #f8f9fa;
+    background: #ffffff;
     color: #6c757d;
-    border-top: 1px solid #e9ecef;
-    border-bottom: none;
-    border-left: none;
-    border-right: none;
-    padding: 0.75rem 1rem;
+    border: 1px solid #dee2e6;
+    border-width: 0 0 1px 0;
+    padding: 0.5rem 1rem;
     border-radius: 0;
 
     .p-paginator-first,

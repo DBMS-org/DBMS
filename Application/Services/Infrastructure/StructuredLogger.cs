@@ -4,6 +4,9 @@ using System.Diagnostics;
 
 namespace Application.Services.Infrastructure
 {
+    /// <summary>
+    /// Structured logger implementation with correlation tracking and operation context
+    /// </summary>
     public class StructuredLogger<T> : IStructuredLogger<T>
     {
         private readonly ILogger<T> _logger;
@@ -95,6 +98,9 @@ namespace Application.Services.Infrastructure
                 _correlationId, operationName, durationMs, metrics);
         }
 
+        /// <summary>
+        /// Operation scope that tracks timing and logs start/end of operations
+        /// </summary>
         private class OperationScope : IDisposable
         {
             private readonly ILogger _logger;

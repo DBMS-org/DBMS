@@ -2,6 +2,9 @@ using Domain.Entities.ExplosiveInventory.Enums;
 
 namespace Application.DTOs.ExplosiveInventory
 {
+    /// <summary>
+    /// Response DTO for Inventory Transfer Request
+    /// </summary>
     public class TransferRequestDto
     {
         public int Id { get; set; }

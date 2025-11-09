@@ -1,5 +1,8 @@
 namespace Application.Common
 {
+    /// <summary>
+    /// Generic paged list for paginated results
+    /// </summary>
     public class PagedList<T>
     {
         public List<T> Items { get; set; } = new();

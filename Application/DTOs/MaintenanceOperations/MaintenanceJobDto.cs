@@ -22,6 +22,7 @@ namespace Application.DTOs.MaintenanceOperations
         public List<string>? PartsReplaced { get; set; }
         public List<MaintenanceJobAssignmentDto>? Assignments { get; set; }
 
+        // From linked report for context
         public List<string>? Symptoms { get; set; }
         public string? ErrorCodes { get; set; }
         public string? Severity { get; set; }

@@ -4,6 +4,9 @@ using Domain.Entities.StoreManagement.Enums;
 
 namespace Application.Interfaces.ExplosiveInventory
 {
+    /// <summary>
+    /// Repository interface for Central Warehouse Inventory
+    /// </summary>
     public interface ICentralWarehouseInventoryRepository
     {
         // Basic CRUD

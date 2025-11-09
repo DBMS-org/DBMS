@@ -1,161 +1,277 @@
-<p-panel [toggleable]="true" [(collapsed)]="isFiltersPanelCollapsed" styleClass="mb-3">
-  <ng-template pTemplate="header">
-    <div class="flex items-center justify-between w-full p-2">
-      <div class="flex items-center gap-2">
-        <i class="pi pi-filter text-blue-600 text-sm"></i>
-        <span class="font-semibold text-sm">Advanced Filters</span>
-        @if (isFiltersPanelCollapsed && activeFiltersCount() > 0) {
-          <p-tag [value]="activeFiltersCount() + ' Active'" severity="info" [rounded]="true" styleClass="text-xs"></p-tag>
+<div class="job-filters-container">
+  <mat-expansion-panel
+    [expanded]="isExpanded()"
+    (expandedChange)="onExpandedChange($event)"
+    class="modern-expansion-panel">
+
+    <mat-expansion-panel-header class="filter-header">
+      <mat-panel-title class="filter-title">
+        <div class="title-content">
+          <mat-icon class="filter-icon">filter_list</mat-icon>
+          <span class="title-text">Advanced Filters</span>
+          @if (activeFiltersCount() > 0) {
+            <mat-chip class="active-filters-badge">
+              {{ activeFiltersCount() }}
+            </mat-chip>
+          }
+        </div>
+      </mat-panel-title>
+      <mat-panel-description class="filter-description">
+        <span class="description-text">{{ getFilterDescription() }}</span>
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <div class="filter-content">
+      <form [formGroup]="filterForm" class="filters-form">
+        <!-- Search Bar -->
+        <section class="search-section">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>
+              <mat-icon class="label-icon">search</mat-icon>
+              Search Jobs
+            </mat-label>
+            <mat-icon matPrefix class="prefix-icon">search</mat-icon>
+            <input matInput
+                   formControlName="searchTerm"
+                   placeholder="Search by machine, serial number, or description..."
+                   (input)="onSearchInput($event)">
+            @if (filterForm.get('searchTerm')?.value) {
+              <button matSuffix
+                      mat-icon-button
+                      type="button"
+                      (click)="clearSearch()"
+                      class="clear-button"
+                      aria-label="Clear search">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+        </section>
+
+        <!-- Filter Controls Grid -->
+        <section class="filter-controls-grid">
+          <!-- Date Range Filter -->
+          <div class="filter-group">
+            <div class="group-header">
+              <mat-icon class="group-icon">date_range</mat-icon>
+              <h3 class="group-title">Date Range</h3>
+            </div>
+            <div class="date-range-fields">
+              <mat-form-field appearance="outline" class="date-field">
+                <mat-label>From Date</mat-label>
+                <input matInput
+                       [matDatepicker]="startPicker"
+                       formControlName="startDate"
+                       placeholder="Select start date"
+                       readonly>
+                <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                <mat-datepicker #startPicker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="date-field">
+                <mat-label>To Date</mat-label>
+                <input matInput
+                       [matDatepicker]="endPicker"
+                       formControlName="endDate"
+                       placeholder="Select end date"
+                       readonly>
+                <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                <mat-datepicker #endPicker></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="filter-group">
+            <div class="group-header">
+              <mat-icon class="group-icon">analytics</mat-icon>
+              <h3 class="group-title">Job Status</h3>
+            </div>
+            <mat-form-field appearance="outline" class="select-field">
+              <mat-label>Select Status(es)</mat-label>
+              <mat-select formControlName="status" multiple>
+                @for (status of availableStatuses; track status.value) {
+                  <mat-option [value]="status.value">
+                    <div class="status-option">
+                      <mat-icon [class]="getStatusIconClass(status.value)">
+                        {{ getStatusIcon(status.value) }}
+                      </mat-icon>
+                      <span>{{ status.label }}</span>
+                    </div>
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-hint>Select one or more statuses</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Machine Type Filter -->
+          <div class="filter-group">
+            <div class="group-header">
+              <mat-icon class="group-icon">precision_manufacturing</mat-icon>
+              <h3 class="group-title">Machine Type</h3>
+            </div>
+            <mat-form-field appearance="outline" class="select-field">
+              <mat-label>Select Machine Type(s)</mat-label>
+              <mat-select formControlName="machineType" multiple>
+                @for (type of availableMachineTypes(); track type) {
+                  <mat-option [value]="type">
+                    <div class="option-content">
+                      <mat-icon>precision_manufacturing</mat-icon>
+                      <span>{{ type }}</span>
+                    </div>
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-hint>Filter by machine type</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Project Filter -->
+          <div class="filter-group">
+            <div class="group-header">
+              <mat-icon class="group-icon">folder</mat-icon>
+              <h3 class="group-title">Project</h3>
+            </div>
+            <mat-form-field appearance="outline" class="select-field">
+              <mat-label>Select Project(s)</mat-label>
+              <mat-select formControlName="project" multiple>
+                @for (project of availableProjects(); track project) {
+                  <mat-option [value]="project">
+                    <div class="option-content">
+                      <mat-icon>folder</mat-icon>
+                      <span>{{ project }}</span>
+                    </div>
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-hint>Filter by project</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Assigned To Filter -->
+          <div class="filter-group">
+            <div class="group-header">
+              <mat-icon class="group-icon">people</mat-icon>
+              <h3 class="group-title">Assigned Technicians</h3>
+            </div>
+            <mat-form-field appearance="outline" class="select-field">
+              <mat-label>Select Technician(s)</mat-label>
+              <mat-select formControlName="assignedTo" multiple>
+                @for (technician of availableTechnicians(); track technician) {
+                  <mat-option [value]="technician">
+                    <div class="option-content">
+                      <mat-icon>person</mat-icon>
+                      <span>{{ technician }}</span>
+                    </div>
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-hint>Filter by assigned technician</mat-hint>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <!-- Active Filters Display -->
+        @if (activeFiltersCount() > 0) {
+          <section class="active-filters-section">
+            <div class="active-filters-header">
+              <mat-icon>filter_alt</mat-icon>
+              <h3>Active Filters</h3>
+              <span class="filter-count">({{ activeFiltersCount() }})</span>
+            </div>
+
+            <div class="filter-chips-container">
+              @if (filterForm.get('searchTerm')?.value) {
+                <mat-chip class="filter-chip search-chip" (removed)="removeFilter('searchTerm')">
+                  <mat-icon class="chip-icon">search</mat-icon>
+                  <span class="chip-label">Search:</span>
+                  <span class="chip-value">"{{ filterForm.get('searchTerm')?.value }}"</span>
+                  <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip>
+              }
+
+              @if (filterForm.get('startDate')?.value || filterForm.get('endDate')?.value) {
+                <mat-chip class="filter-chip date-chip" (removed)="removeFilter('dateRange')">
+                  <mat-icon class="chip-icon">date_range</mat-icon>
+                  <span class="chip-label">Date:</span>
+                  <span class="chip-value">{{ getDateRangeText() }}</span>
+                  <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip>
+              }
+
+              @if (filterForm.get('status')?.value?.length > 0) {
+                <mat-chip class="filter-chip status-chip" (removed)="removeFilter('status')">
+                  <mat-icon class="chip-icon">analytics</mat-icon>
+                  <span class="chip-label">Status:</span>
+                  <span class="chip-value">{{ getStatusText() }}</span>
+                  <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip>
+              }
+
+              @if (filterForm.get('machineType')?.value?.length > 0) {
+                <mat-chip class="filter-chip machine-chip" (removed)="removeFilter('machineType')">
+                  <mat-icon class="chip-icon">precision_manufacturing</mat-icon>
+                  <span class="chip-label">Machine:</span>
+                  <span class="chip-value">{{ getMachineTypeText() }}</span>
+                  <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip>
+              }
+
+              @if (filterForm.get('project')?.value?.length > 0) {
+                <mat-chip class="filter-chip project-chip" (removed)="removeFilter('project')">
+                  <mat-icon class="chip-icon">folder</mat-icon>
+                  <span class="chip-label">Project:</span>
+                  <span class="chip-value">{{ getProjectText() }}</span>
+                  <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip>
+              }
+
+              @if (filterForm.get('assignedTo')?.value?.length > 0) {
+                <mat-chip class="filter-chip assignee-chip" (removed)="removeFilter('assignedTo')">
+                  <mat-icon class="chip-icon">people</mat-icon>
+                  <span class="chip-label">Assigned:</span>
+                  <span class="chip-value">{{ getAssignedToText() }}</span>
+                  <button matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip>
+              }
+            </div>
+          </section>
         }
-      </div>
-      <p-button
-        [icon]="isFiltersPanelCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
-        (onClick)="toggleFiltersPanel()"
-        [text]="true"
-        [rounded]="true"
-        size="small"
-        severity="secondary"
-        [pTooltip]="isFiltersPanelCollapsed ? 'Show Filters' : 'Hide Filters'">
-      </p-button>
+
+        <!-- Action Buttons -->
+        <section class="filter-actions">
+          <button mat-stroked-button
+                  type="button"
+                  (click)="resetFilters()"
+                  [disabled]="activeFiltersCount() === 0"
+                  class="reset-button">
+            <mat-icon>clear_all</mat-icon>
+            Clear All Filters
+          </button>
+
+          <button mat-raised-button
+                  color="primary"
+                  type="button"
+                  (click)="applyFilters()"
+                  class="apply-button">
+            <mat-icon>filter_alt</mat-icon>
+            Apply Filters
+          </button>
+        </section>
+      </form>
     </div>
-  </ng-template>
-
-  <div class="flex flex-col gap-2">
-    <!-- Search input field -->
-    <span class="p-input-icon-left w-full">
-      <i class="pi pi-search text-sm"></i>
-      <input
-        type="text"
-        pInputText
-        placeholder="Search by machine, serial number, project, or technician..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearch()"
-        class="w-full text-sm pl-8">
-    </span>
-
-    <!-- Filter controls in a grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-      <!-- Date Range -->
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-gray-700 font-medium flex items-center gap-1">
-          <i class="pi pi-calendar text-blue-600 text-xs"></i>
-          From Date:
-        </label>
-        <p-calendar
-          [(ngModel)]="startDate"
-          dateFormat="yy-mm-dd"
-          [showIcon]="true"
-          placeholder="Select start date"
-          (onSelect)="applyFilters()"
-          (onClearClick)="applyFilters()"
-          [showClear]="true"
-          styleClass="w-full">
-        </p-calendar>
-      </div>
-
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-gray-700 font-medium flex items-center gap-1">
-          <i class="pi pi-calendar text-blue-600 text-xs"></i>
-          To Date:
-        </label>
-        <p-calendar
-          [(ngModel)]="endDate"
-          dateFormat="yy-mm-dd"
-          [showIcon]="true"
-          placeholder="Select end date"
-          (onSelect)="applyFilters()"
-          (onClearClick)="applyFilters()"
-          [showClear]="true"
-          styleClass="w-full">
-        </p-calendar>
-      </div>
-
-      <!-- Job Status -->
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-gray-700 font-medium flex items-center gap-1">
-          <i class="pi pi-info-circle text-blue-600 text-xs"></i>
-          Job Status:
-        </label>
-        <p-multiSelect
-          [options]="availableStatuses"
-          [(ngModel)]="selectedStatuses"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Select Status(es)"
-          (onChange)="applyFilters()"
-          [showClear]="true"
-          styleClass="w-full">
-        </p-multiSelect>
-      </div>
-
-      <!-- Machine Type -->
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-gray-700 font-medium flex items-center gap-1">
-          <i class="pi pi-cog text-blue-600 text-xs"></i>
-          Machine Type:
-        </label>
-        <p-multiSelect
-          [options]="availableMachineTypes()"
-          [(ngModel)]="selectedMachineTypes"
-          placeholder="Select Machine Type(s)"
-          (onChange)="applyFilters()"
-          [showClear]="true"
-          styleClass="w-full">
-        </p-multiSelect>
-      </div>
-
-      <!-- Project -->
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-gray-700 font-medium flex items-center gap-1">
-          <i class="pi pi-folder text-blue-600 text-xs"></i>
-          Project:
-        </label>
-        <p-multiSelect
-          [options]="availableProjects()"
-          [(ngModel)]="selectedProjects"
-          placeholder="Select Project(s)"
-          (onChange)="applyFilters()"
-          [showClear]="true"
-          styleClass="w-full">
-        </p-multiSelect>
-      </div>
-
-      <!-- Assigned Technicians -->
-      <div class="flex flex-col gap-1">
-        <label class="text-xs text-gray-700 font-medium flex items-center gap-1">
-          <i class="pi pi-users text-blue-600 text-xs"></i>
-          Assigned To:
-        </label>
-        <p-multiSelect
-          [options]="availableTechnicians()"
-          [(ngModel)]="selectedTechnicians"
-          placeholder="Select Technician(s)"
-          (onChange)="applyFilters()"
-          [showClear]="true"
-          styleClass="w-full">
-        </p-multiSelect>
-      </div>
-    </div>
-
-    <!-- Action buttons -->
-    <div class="flex items-center gap-2 justify-end mt-2">
-      <p-button
-        label="Clear Filters"
-        icon="pi pi-filter-slash"
-        (onClick)="clearFilters()"
-        severity="secondary"
-        [outlined]="true"
-        size="small"
-        [disabled]="activeFiltersCount() === 0">
-      </p-button>
-
-      <p-button
-        label="Apply Filters"
-        icon="pi pi-check"
-        (onClick)="applyFilters()"
-        severity="primary"
-        size="small">
-      </p-button>
-    </div>
-  </div>
-</p-panel>
+  </mat-expansion-panel>
+</div>

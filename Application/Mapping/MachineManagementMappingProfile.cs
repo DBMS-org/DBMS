@@ -5,6 +5,9 @@ using System.Text.Json;
 
 namespace Application.Mapping
 {
+    /// <summary>
+    /// AutoMapper profile for Machine Management mappings
+    /// </summary>
     public class MachineManagementMappingProfile : Profile
     {
         public MachineManagementMappingProfile()
@@ -24,6 +27,7 @@ namespace Application.Mapping
                 .ForMember(dest => dest.Operator, opt => opt.Ignore())
                 .ForMember(dest => dest.Region, opt => opt.Ignore());
 
+            // MachineSpecifications mappings
         }
 
         private static MachineSpecificationsDto DeserializeMachineSpecificationsDto(string src)

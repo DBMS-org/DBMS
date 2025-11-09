@@ -1,1 +1,1 @@
-Fix incorrect import statement for PrimeNG InputTextarea component to use the correct module name InputTextareaModule.
+docs: restructure functional requirements to match current implementation
