@@ -1,14 +1,28 @@
-<!-- Page header with user info and refresh button -->
+<!-- Page header with quick actions -->
 <header class="dashboard-header">
   <div class="header-content">
     <div class="header-left">
       <h1>Explosive Manager Dashboard</h1>
-      <p class="subtitle" *ngIf="currentUser">{{ getUserWelcomeMessage() }}</p>
+      <p class="subtitle">Inventory & Operations Management</p>
     </div>
-    <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
-      <i class="material-icons">refresh</i>
-      Refresh
-    </button>
+    <div class="header-actions">
+      <button type="button" class="action-btn primary" (click)="navigateToRequests()" title="Manage approval requests">
+        <i class="material-icons">approval</i>
+        <span>Approvals</span>
+        <span class="badge" *ngIf="pendingRequests && pendingRequests.length > 0">{{ pendingRequests.length }}</span>
+      </button>
+      <button type="button" class="action-btn secondary" (click)="navigateToInventory()" title="View inventory">
+        <i class="material-icons">inventory</i>
+        <span>Inventory</span>
+      </button>
+      <button type="button" class="action-btn secondary" (click)="navigateToStores()" title="Manage stores">
+        <i class="material-icons">store</i>
+        <span>Stores</span>
+      </button>
+      <button type="button" class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
+        <i class="material-icons">refresh</i>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -22,38 +36,50 @@
 <div class="error-container" *ngIf="loadError && !isLoading">
   <i class="material-icons">error_outline</i>
   <p>{{ loadError }}</p>
-  <button class="retry-btn" (click)="refreshDashboard()">Retry</button>
+  <button type="button" class="retry-btn" (click)="refreshDashboard()">Retry</button>
 </div>
 
 <!-- Main dashboard content -->
 <div class="dashboard-content" *ngIf="!isLoading && !loadError">
 
-  <!-- Critical alerts banner -->
-  <div class="alert-banner" *ngIf="expiringBatches && expiringBatches.length > 0">
-    <i class="material-icons">warning</i>
-    <span>
-      <strong>Action Required:</strong> {{ expiringBatches.length }} batch(es) expiring within 30 days
-    </span>
-    <button class="alert-action-btn" (click)="navigateToInventory()">View Details</button>
+  <!-- Critical Alerts Section -->
+  <div class="alerts-section" *ngIf="hasAlerts()">
+    <div class="alert-item critical" *ngIf="expiringBatches && expiringBatches.length > 0" (click)="navigateToInventory()">
+      <div class="alert-icon">
+        <i class="material-icons">schedule</i>
+      </div>
+      <div class="alert-content">
+        <h4>Expiring Inventory</h4>
+        <p>{{ expiringBatches.length }} batch(es) expiring within 30 days</p>
+      </div>
+      <i class="material-icons alert-arrow">arrow_forward</i>
+    </div>
+
+    <div class="alert-item warning" *ngIf="inventoryDashboard && inventoryDashboard.quarantinedBatches > 0" (click)="navigateToInventory()">
+      <div class="alert-icon">
+        <i class="material-icons">block</i>
+      </div>
+      <div class="alert-content">
+        <h4>Quarantined Batches</h4>
+        <p>{{ inventoryDashboard.quarantinedBatches }} batch(es) under quarantine</p>
+      </div>
+      <i class="material-icons alert-arrow">arrow_forward</i>
+    </div>
+
+    <div class="alert-item urgent" *ngIf="inventoryDashboard && inventoryDashboard.overdueTransferRequests > 0" (click)="navigateToRequests()">
+      <div class="alert-icon">
+        <i class="material-icons">warning</i>
+      </div>
+      <div class="alert-content">
+        <h4>Overdue Requests</h4>
+        <p>{{ inventoryDashboard.overdueTransferRequests }} transfer request(s) overdue</p>
+      </div>
+      <i class="material-icons alert-arrow">arrow_forward</i>
+    </div>
   </div>
 
   <!-- Key metrics overview -->
   <div class="metrics-grid">
-    <!-- Pending Approvals -->
-    <div class="metric-card urgent" (click)="navigateToRequests()">
-      <div class="metric-icon">
-        <i class="material-icons">pending_actions</i>
-      </div>
-      <div class="metric-content">
-        <h3>Pending Approvals</h3>
-        <p class="metric-value">{{ pendingRequests?.length || 0 }}</p>
-        <p class="metric-label">Requests awaiting approval</p>
-      </div>
-      <div class="metric-arrow">
-        <i class="material-icons">arrow_forward</i>
-      </div>
-    </div>
-
     <!-- Total Inventory -->
     <div class="metric-card" (click)="navigateToInventory()">
       <div class="metric-icon">
@@ -72,15 +98,15 @@
       </div>
     </div>
 
-    <!-- Expiring Batches -->
-    <div class="metric-card warning" (click)="navigateToInventory()">
+    <!-- Available Stock -->
+    <div class="metric-card success" (click)="navigateToInventory()">
       <div class="metric-icon">
-        <i class="material-icons">schedule</i>
+        <i class="material-icons">check_circle</i>
       </div>
       <div class="metric-content">
-        <h3>Expiring Soon</h3>
-        <p class="metric-value">{{ inventoryDashboard?.expiringBatches || 0 }}</p>
-        <p class="metric-label">Batches expiring within 30 days</p>
+        <h3>Available Stock</h3>
+        <p class="metric-value">{{ inventoryDashboard?.availableQuantity || 0 }}</p>
+        <p class="metric-label">{{ inventoryDashboard?.primaryUnit || 'units' }} ready for allocation</p>
       </div>
       <div class="metric-arrow">
         <i class="material-icons">arrow_forward</i>
@@ -106,115 +132,61 @@
     </div>
   </div>
 
-  <!-- Two-column layout for detailed panels -->
+  <!-- Single-column layout for detailed panels -->
   <div class="dashboard-panels">
 
-    <!-- Left column -->
-    <div class="panel-column">
-
-      <!-- Inventory breakdown -->
-      <div class="panel inventory-panel">
-        <div class="panel-header">
-          <h3>
-            <i class="material-icons">pie_chart</i>
-            Inventory Breakdown
-          </h3>
-          <button class="panel-action-btn" (click)="navigateToInventory()">
-            View All
-            <i class="material-icons">arrow_forward</i>
-          </button>
-        </div>
-        <div class="panel-content">
-          <div class="inventory-stats">
-            <div class="inventory-stat-item">
-              <div class="stat-row">
-                <span class="stat-type">
-                  <span class="type-indicator anfo"></span>
-                  ANFO
-                </span>
-                <span class="stat-value">{{ inventoryDashboard?.quantityByType?.ANFO || 0 }} {{ inventoryDashboard?.primaryUnit }}</span>
-              </div>
-              <div class="stat-detail">{{ inventoryDashboard?.batchesByType?.ANFO || 0 }} batches</div>
-            </div>
-
-            <div class="inventory-stat-item">
-              <div class="stat-row">
-                <span class="stat-type">
-                  <span class="type-indicator emulsion"></span>
-                  Emulsion
-                </span>
-                <span class="stat-value">{{ inventoryDashboard?.quantityByType?.Emulsion || 0 }} {{ inventoryDashboard?.primaryUnit }}</span>
-              </div>
-              <div class="stat-detail">{{ inventoryDashboard?.batchesByType?.Emulsion || 0 }} batches</div>
-            </div>
-          </div>
-
-          <div class="inventory-allocation">
-            <div class="allocation-row">
-              <span class="allocation-label">Available</span>
-              <span class="allocation-value available">{{ inventoryDashboard?.availableQuantity || 0 }} {{ inventoryDashboard?.primaryUnit }}</span>
-            </div>
-            <div class="allocation-row">
-              <span class="allocation-label">Allocated</span>
-              <span class="allocation-value allocated">{{ inventoryDashboard?.allocatedQuantity || 0 }} {{ inventoryDashboard?.primaryUnit }}</span>
-            </div>
-          </div>
-        </div>
+    <!-- Inventory breakdown -->
+    <div class="panel inventory-panel">
+      <div class="panel-header">
+        <h3>
+          <i class="material-icons">pie_chart</i>
+          Inventory Breakdown
+        </h3>
+        <button type="button" class="panel-action-btn" (click)="navigateToInventory()">
+          View All
+          <i class="material-icons">arrow_forward</i>
+        </button>
       </div>
+      <div class="panel-content">
+        <div class="inventory-stats">
+          <div class="inventory-stat-item">
+            <div class="stat-row">
+              <span class="stat-type">
+                <span class="type-indicator anfo"></span>
+                ANFO
+              </span>
+              <span class="stat-value">{{ inventoryDashboard?.quantityByType?.ANFO || 0 }} {{ inventoryDashboard?.primaryUnit }}</span>
+            </div>
+            <div class="stat-detail">{{ inventoryDashboard?.batchesByType?.ANFO || 0 }} batches</div>
+          </div>
 
-      <!-- Transfer requests summary -->
-      <div class="panel requests-summary-panel">
-        <div class="panel-header">
-          <h3>
-            <i class="material-icons">swap_horiz</i>
-            Transfer Requests
-          </h3>
+          <div class="inventory-stat-item">
+            <div class="stat-row">
+              <span class="stat-type">
+                <span class="type-indicator emulsion"></span>
+                Emulsion
+              </span>
+              <span class="stat-value">{{ inventoryDashboard?.quantityByType?.Emulsion || 0 }} {{ inventoryDashboard?.primaryUnit }}</span>
+            </div>
+            <div class="stat-detail">{{ inventoryDashboard?.batchesByType?.Emulsion || 0 }} batches</div>
+          </div>
         </div>
-        <div class="panel-content">
-          <div class="request-summary-grid">
-            <div class="summary-item">
-              <div class="summary-icon pending">
-                <i class="material-icons">hourglass_empty</i>
-              </div>
-              <div class="summary-info">
-                <p class="summary-value">{{ inventoryDashboard?.pendingTransferRequests || 0 }}</p>
-                <p class="summary-label">Pending</p>
-              </div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-icon approved">
-                <i class="material-icons">check_circle</i>
-              </div>
-              <div class="summary-info">
-                <p class="summary-value">{{ inventoryDashboard?.approvedTransferRequests || 0 }}</p>
-                <p class="summary-label">Approved</p>
-              </div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-icon urgent">
-                <i class="material-icons">priority_high</i>
-              </div>
-              <div class="summary-info">
-                <p class="summary-value">{{ inventoryDashboard?.urgentTransferRequests || 0 }}</p>
-                <p class="summary-label">Urgent</p>
-              </div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-icon overdue">
-                <i class="material-icons">warning</i>
-              </div>
-              <div class="summary-info">
-                <p class="summary-value">{{ inventoryDashboard?.overdueTransferRequests || 0 }}</p>
-                <p class="summary-label">Overdue</p>
-              </div>
-            </div>
+
+        <div class="inventory-allocation">
+          <div class="allocation-row">
+            <span class="allocation-label">Available</span>
+            <span class="allocation-value available">{{ inventoryDashboard?.availableQuantity || 0 }} {{ inventoryDashboard?.primaryUnit }}</span>
+          </div>
+          <div class="allocation-row">
+            <span class="allocation-label">Allocated</span>
+            <span class="allocation-value allocated">{{ inventoryDashboard?.allocatedQuantity || 0 }} {{ inventoryDashboard?.primaryUnit }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Right column -->
-    <div class="panel-column">
+    <!-- Pending approval requests and Store status side by side -->
+    <div class="panel-row">
 
       <!-- Pending approval requests -->
       <div class="panel pending-requests-panel">
@@ -223,7 +195,7 @@
             <i class="material-icons">pending_actions</i>
             Pending Approvals
           </h3>
-          <button class="panel-action-btn" (click)="navigateToRequests()">
+          <button type="button" class="panel-action-btn" (click)="navigateToRequests()">
             View All
             <i class="material-icons">arrow_forward</i>
           </button>
@@ -235,7 +207,7 @@
           </div>
 
           <div class="request-list" *ngIf="pendingRequests && pendingRequests.length > 0">
-            <div class="request-item" *ngFor="let request of pendingRequests.slice(0, 5); trackBy: trackById" (click)="navigateToRequest(request.id)">
+            <div class="request-item" *ngFor="let request of pendingRequests.slice(0, 3); trackBy: trackById" (click)="navigateToRequest(request.id)">
               <div class="request-header">
                 <div class="request-info">
                   <h4>{{ request.projectSite?.name || 'Unknown Project' }}</h4>
@@ -243,10 +215,6 @@
                     <span class="meta-item">
                       <i class="material-icons">person</i>
                       {{ request.requestedByUser?.name || 'Unknown' }}
-                    </span>
-                    <span class="meta-item">
-                      <i class="material-icons">location_on</i>
-                      {{ request.projectSite?.project?.region || 'Unknown Region' }}
                     </span>
                   </p>
                 </div>
@@ -257,11 +225,7 @@
               <div class="request-details">
                 <div class="detail-item">
                   <i class="material-icons">event</i>
-                  <span>Usage: {{ formatDate(request.expectedUsageDate) }}</span>
-                </div>
-                <div class="detail-item">
-                  <i class="material-icons">schedule</i>
-                  <span>Requested: {{ formatDate(request.createdAt) }}</span>
+                  <span>{{ formatDate(request.expectedUsageDate) }}</span>
                 </div>
               </div>
             </div>
@@ -276,14 +240,14 @@
             <i class="material-icons">store</i>
             Store Status
           </h3>
-          <button class="panel-action-btn" (click)="navigateToStores()">
+          <button type="button" class="panel-action-btn" (click)="navigateToStores()">
             View All
             <i class="material-icons">arrow_forward</i>
           </button>
         </div>
         <div class="panel-content">
           <div class="store-list" *ngIf="stores && stores.length > 0">
-            <div class="store-item" *ngFor="let store of stores.slice(0, 4); trackBy: trackById">
+            <div class="store-item" *ngFor="let store of stores.slice(0, 3); trackBy: trackById">
               <div class="store-header">
                 <div class="store-info">
                   <h4>{{ store.storeName }}</h4>
@@ -298,7 +262,7 @@
               </div>
               <div class="store-capacity">
                 <div class="capacity-info">
-                  <span>{{ store.currentOccupancy || 0 }} / {{ store.storageCapacity || 0 }} units</span>
+                  <span>{{ store.currentOccupancy || 0 }} / {{ store.storageCapacity || 0 }}</span>
                   <span class="capacity-percentage">{{ store.utilizationPercentage || 0 }}%</span>
                 </div>
                 <div class="capacity-bar">
@@ -315,28 +279,7 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Quick actions -->
-  <div class="quick-actions-panel">
-    <h3>
-      <i class="material-icons">bolt</i>
-      Quick Actions
-    </h3>
-    <div class="action-grid">
-      <button class="action-card" (click)="navigateToRequests()">
-        <i class="material-icons">approval</i>
-        <span>Approve Requests</span>
-      </button>
-      <button class="action-card" (click)="navigateToInventory()">
-        <i class="material-icons">inventory</i>
-        <span>Manage Inventory</span>
-      </button>
-      <button class="action-card" (click)="navigateToStores()">
-        <i class="material-icons">store</i>
-        <span>View Stores</span>
-      </button>
-    </div>
   </div>
 
 </div>

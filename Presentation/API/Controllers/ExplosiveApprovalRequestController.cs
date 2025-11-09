@@ -63,7 +63,7 @@ namespace Presentation.API.Controllers
         }
 
         [HttpGet("pending")]
-        [Authorize(Policy = "ManageProjectSites")]
+        [Authorize(Roles = "Admin,Administrator,ExplosiveManager")]
         public async Task<IActionResult> GetPendingExplosiveApprovalRequests()
         {
             try

@@ -84,20 +84,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Generate personalized greeting message
-  getUserWelcomeMessage(): string {
-    if (!this.currentUser) return 'Welcome, Explosive Manager';
-
-    const timeOfDay = this.getTimeOfDayGreeting();
-    return `${timeOfDay}, ${this.currentUser.name}`;
-  }
-
-  // Get time-based greeting
-  private getTimeOfDayGreeting(): string {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+  // Check if there are any alerts to display
+  hasAlerts(): boolean {
+    return !!(
+      (this.expiringBatches && this.expiringBatches.length > 0) ||
+      (this.inventoryDashboard && this.inventoryDashboard.quarantinedBatches > 0) ||
+      (this.inventoryDashboard && this.inventoryDashboard.overdueTransferRequests > 0)
+    );
   }
 
   // Calculate percentage for progress bars
