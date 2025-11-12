@@ -28,7 +28,7 @@ namespace Application.Mapping
                 .ForMember(dest => dest.Location, opt => opt.MapFrom(src =>
                     src.Location ?? (src.Machine != null ? src.Machine.CurrentLocation : null)))
                 .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Machine != null && src.Machine.Project != null ? src.Machine.Project.Name : null))
-                .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.Machine != null ? src.Machine.ProjectId : null))
+                .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.Machine!.ProjectId))
                 .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Machine != null && src.Machine.Region != null ? src.Machine.Region.Name : null))
                 .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.Machine != null ? src.Machine.RegionId : null))
                 .ForMember(dest => dest.MechanicalEngineerEmail, opt => opt.MapFrom(src => src.MechanicalEngineer != null ? src.MechanicalEngineer.Email : null))

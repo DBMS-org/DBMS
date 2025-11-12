@@ -387,11 +387,11 @@ namespace Application.Services
                 throw new ArgumentException("DrillHole Stemming cannot be negative");
 
             // More lenient validation for blast hole data
-            if (drillHole.Azimuth < 0 || drillHole.Azimuth > 360)
-                drillHole.Azimuth = Math.Max(0, Math.Min(360, drillHole.Azimuth)); // Clamp to valid range
+            if (drillHole.Azimuth.HasValue && (drillHole.Azimuth.Value < 0 || drillHole.Azimuth.Value > 360))
+                drillHole.Azimuth = Math.Max(0.0, Math.Min(360.0, drillHole.Azimuth.Value)); // Clamp to valid range
 
-            if (drillHole.Dip < -90 || drillHole.Dip > 90)
-                drillHole.Dip = Math.Max(-90, Math.Min(90, drillHole.Dip)); // Clamp to valid range
+            if (drillHole.Dip.HasValue && (drillHole.Dip.Value < -90 || drillHole.Dip.Value > 90))
+                drillHole.Dip = Math.Max(-90.0, Math.Min(90.0, drillHole.Dip.Value)); // Clamp to valid range
         }
 
         public async Task DeleteDrillHolesByProjectIdAsync(int projectId)
