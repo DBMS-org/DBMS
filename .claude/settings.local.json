@@ -39,7 +39,8 @@
       "Bash(Select-String -Pattern \"Error\\(s\\)|Build succeeded|Build FAILED\" -Context 1)",
       "Bash(Select-String -Pattern \"Error|error|✔|Build|compiled\")",
       "Bash(Select-Object -First 50)",
-      "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\maintenance-reports\")"
+      "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\maintenance-reports\")",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

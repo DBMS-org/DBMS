@@ -1,9 +1,0 @@
-<div class="operator-layout">
-  <app-operator-navbar (toggleSidebar)="toggleSidebar()"></app-operator-navbar>
-  <div class="operator-content" [class.sidebar-collapsed]="isSidebarCollapsed">
-    <app-operator-sidebar [isCollapsed]="isSidebarCollapsed"></app-operator-sidebar>
-    <main class="main-content">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
-</div>
