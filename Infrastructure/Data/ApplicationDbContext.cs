@@ -30,6 +30,8 @@ namespace Infrastructure.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<DrillHole> DrillHoles { get; set; }
+        public DbSet<DrillPattern> DrillPatterns { get; set; }
+        public DbSet<BlastSequence> BlastSequences { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectSite> ProjectSites { get; set; }
         public DbSet<SiteBlastingData> SiteBlastingData { get; set; }
