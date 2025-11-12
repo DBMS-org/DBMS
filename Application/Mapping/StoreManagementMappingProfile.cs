@@ -18,7 +18,7 @@ namespace Application.Mapping
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)))
                 .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Region != null ? src.Region.Name : null))
                 .ForMember(dest => dest.ManagerUserName, opt => opt.MapFrom(src => src.ManagerUser != null ? src.ManagerUser.Name : null))
-                .ForMember(dest => dest.ManagerUserEmail, opt => opt.MapFrom(src => src.ManagerUser != null ? src.ManagerUser.Email.Value : null))
+                .ForMember(dest => dest.ManagerUserEmail, opt => opt.MapFrom(src => src.ManagerUser != null ? src.ManagerUser.Email : null))
                 .ForMember(dest => dest.ManagerUserContact, opt => opt.MapFrom(src => src.ManagerUser != null ? src.ManagerUser.OmanPhone : null))
                 .ForMember(dest => dest.InventoryItemsCount, opt => opt.MapFrom(src => src.Inventories != null ? src.Inventories.Count : 0))
                 .ForMember(dest => dest.UtilizationPercentage, opt => opt.MapFrom(src => src.GetUtilizationRate()));

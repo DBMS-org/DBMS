@@ -16,7 +16,7 @@ namespace Application.Mapping
             // MaintenanceReport mappings
             CreateMap<MaintenanceReport, MaintenanceReportDto>()
                 .ForMember(dest => dest.OperatorName, opt => opt.MapFrom(src => src.Operator != null ? src.Operator.Name : string.Empty))
-                .ForMember(dest => dest.OperatorEmail, opt => opt.MapFrom(src => src.Operator != null ? src.Operator.Email.Value : null))
+                .ForMember(dest => dest.OperatorEmail, opt => opt.MapFrom(src => src.Operator != null ? src.Operator.Email : null))
                 .ForMember(dest => dest.OperatorPhone, opt => opt.MapFrom(src => src.Operator != null ? src.Operator.OmanPhone : null))
                 .ForMember(dest => dest.MachineName, opt => opt.MapFrom(src =>
                     !string.IsNullOrEmpty(src.MachineName) ? src.MachineName :
@@ -31,7 +31,7 @@ namespace Application.Mapping
                 .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.Machine != null ? src.Machine.ProjectId : null))
                 .ForMember(dest => dest.RegionName, opt => opt.MapFrom(src => src.Machine != null && src.Machine.Region != null ? src.Machine.Region.Name : null))
                 .ForMember(dest => dest.RegionId, opt => opt.MapFrom(src => src.Machine != null ? src.Machine.RegionId : null))
-                .ForMember(dest => dest.MechanicalEngineerEmail, opt => opt.MapFrom(src => src.MechanicalEngineer != null ? src.MechanicalEngineer.Email.Value : null))
+                .ForMember(dest => dest.MechanicalEngineerEmail, opt => opt.MapFrom(src => src.MechanicalEngineer != null ? src.MechanicalEngineer.Email : null))
                 .ForMember(dest => dest.MechanicalEngineerPhone, opt => opt.MapFrom(src => src.MechanicalEngineer != null ? src.MechanicalEngineer.OmanPhone : null))
                 .ForMember(dest => dest.AffectedPart, opt => opt.MapFrom(src => src.AffectedPart.ToString()))
                 .ForMember(dest => dest.ProblemCategory, opt => opt.MapFrom(src => src.ProblemCategory.ToString()))
