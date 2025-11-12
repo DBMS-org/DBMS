@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { User, LoginResponse } from '../models/user.model';
 import { SessionService } from './session.service';
 import { AppDialogService } from './dialog.service';
+import { Logger } from '../utils/logger.util';
 
 @Injectable({
   providedIn: 'root'
@@ -35,10 +36,10 @@ export class AuthService {
     if (token) {
       this.http.post(`${environment.apiUrl}/api/auth/logout`, {}).subscribe({
         next: (response) => {
-          console.log('Server logout successful:', response);
+          Logger.log('Server logout successful:', response);
         },
         error: (error) => {
-          console.warn('Server logout failed, but continuing with client logout:', error);
+          Logger.warn('Server logout failed, but continuing with client logout:', error);
         },
         complete: () => {
           this.performClientLogout();
@@ -62,18 +63,18 @@ export class AuthService {
   private performClientLogout(): void {
     // Backup session data for debugging (optional)
     const sessionBackup = this.sessionService.backupSessionData();
-    console.log('Session backup created:', sessionBackup);
+    Logger.log('Session backup created:', sessionBackup);
 
     // Clear all session data comprehensively
     this.sessionService.clearAllSessionData();
-    
+
     // Reset user subject
     this.currentUserSubject.next(null);
-    
+
     // Navigate to login
     this.router.navigate(['/login']);
-    
-    console.log('Logout completed successfully');
+
+    Logger.log('Logout completed successfully');
   }
 
   isAuthenticated(): boolean {

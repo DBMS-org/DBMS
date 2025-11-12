@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 // PrimeNG Components
 import { InputTextModule } from 'primeng/inputtext';
@@ -20,7 +21,7 @@ import { Button } from 'primeng/button';
   templateUrl: './verify-reset-code.component.html',
   styleUrls: ['./verify-reset-code.component.scss']
 })
-export class VerifyResetCodeComponent implements OnInit {
+export class VerifyResetCodeComponent implements OnInit, OnDestroy {
   verifyCodeForm: FormGroup;
   isLoading = false;
   message = '';
@@ -28,6 +29,7 @@ export class VerifyResetCodeComponent implements OnInit {
   email = '';
   timeLeft = 600; // 10 minutes in seconds
   timerInterval: any;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -42,12 +44,14 @@ export class VerifyResetCodeComponent implements OnInit {
 
   ngOnInit() {
     // Get email from query parameters
-    this.route.queryParams.subscribe(params => {
-      this.email = params['email'] || '';
-      if (!this.email) {
-        this.router.navigate(['/forgot-password']);
-      }
-    });
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        this.email = params['email'] || '';
+        if (!this.email) {
+          this.router.navigate(['/forgot-password']);
+        }
+      });
 
     // Start countdown timer
     this.startTimer();
@@ -57,6 +61,8 @@ export class VerifyResetCodeComponent implements OnInit {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   startTimer() {
@@ -81,27 +87,29 @@ export class VerifyResetCodeComponent implements OnInit {
 
       const code = this.verifyCodeForm.get('code')?.value;
 
-      this.authService.verifyResetCode(this.email, code).subscribe({
-        next: (response) => {
-          this.message = response.message;
-          this.messageType = 'success';
-          
-          // Navigate to reset password page after 1 second
-          setTimeout(() => {
-            this.router.navigate(['/reset-password'], { 
-              queryParams: { email: this.email, code: code } 
-            });
-          }, 1000);
-        },
-        error: (error) => {
-          this.message = error.error?.message || 'Invalid or expired code. Please try again.';
-          this.messageType = 'error';
-          this.isLoading = false;
-        },
-        complete: () => {
-          this.isLoading = false;
-        }
-      });
+      this.authService.verifyResetCode(this.email, code)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.message = response.message;
+            this.messageType = 'success';
+
+            // Navigate to reset password page after 1 second
+            setTimeout(() => {
+              this.router.navigate(['/reset-password'], {
+                queryParams: { email: this.email, code: code }
+              });
+            }, 1000);
+          },
+          error: (error) => {
+            this.message = error.error?.message || 'Invalid or expired code. Please try again.';
+            this.messageType = 'error';
+            this.isLoading = false;
+          },
+          complete: () => {
+            this.isLoading = false;
+          }
+        });
     }
   }
 
@@ -110,21 +118,23 @@ export class VerifyResetCodeComponent implements OnInit {
       this.isLoading = true;
       this.message = '';
 
-      this.authService.forgotPassword(this.email).subscribe({
-        next: (response) => {
-          this.message = 'New code sent to your email address.';
-          this.messageType = 'success';
-          this.timeLeft = 600; // Reset timer
-          this.startTimer();
-        },
-        error: (error) => {
-          this.message = error.error?.message || 'Failed to resend code. Please try again.';
-          this.messageType = 'error';
-        },
-        complete: () => {
-          this.isLoading = false;
-        }
-      });
+      this.authService.forgotPassword(this.email)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.message = 'New code sent to your email address.';
+            this.messageType = 'success';
+            this.timeLeft = 600; // Reset timer
+            this.startTimer();
+          },
+          error: (error) => {
+            this.message = error.error?.message || 'Failed to resend code. Please try again.';
+            this.messageType = 'error';
+          },
+          complete: () => {
+            this.isLoading = false;
+          }
+        });
     }
   }
 

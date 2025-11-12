@@ -271,7 +271,7 @@ export class NotificationService {
   }
 
   private generateId(): string {
-    return 'notif_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    return 'notif_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
   }
 
   private showToastForNotification(notification: Notification): void {

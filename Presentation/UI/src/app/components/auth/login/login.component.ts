@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoginRequest } from '../../../core/models/user.model';
+import { Logger } from '../../../core/utils/logger.util';
 
 // PrimeNG Components
 import { InputTextModule } from 'primeng/inputtext';
@@ -65,8 +66,8 @@ export class LoginComponent {
               return;
             }
 
-            console.log('Login successful:', auth);
-            
+            Logger.log('Login successful:', auth);
+
             // Set current user in auth service
             this.authService.setCurrentUser(auth.user, auth.token);
             
@@ -76,10 +77,11 @@ export class LoginComponent {
               this.navigateByRole(role);
             } else {
               this.errorMessage = 'Your account does not have an assigned role.';
+              this.isLoading = false;
             }
           },
           error: (error) => {
-            console.error('Login error:', error);
+            Logger.error('Login error:', error);
             this.errorMessage = error.error?.message || 'Login failed. Please try again.';
             this.isLoading = false;
           },
@@ -91,8 +93,8 @@ export class LoginComponent {
   }
 
   private navigateByRole(role: string): void {
-    console.log('User role from API:', role);
-    
+    Logger.log('User role from API:', role);
+
     switch (role.toLowerCase().replace(/\s+/g, '')) {
       case 'admin':
         this.router.navigate(['/admin/dashboard']);
