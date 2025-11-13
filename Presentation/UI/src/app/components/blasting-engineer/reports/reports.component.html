@@ -5,11 +5,15 @@
       <div class="header-title">
         <mat-icon class="header-icon">assessment</mat-icon>
         <div class="title-text">
-          <h1>Blasting Reports</h1>
-          <p class="subtitle">Generate comprehensive blast engineering and site progress reports</p>
+          <h1>Blasting Engineer Reports</h1>
+          <p class="subtitle">Comprehensive project-wise drilling and explosive data</p>
         </div>
       </div>
       <div class="header-actions">
+        <button mat-raised-button color="accent" (click)="exportToPDF()" [disabled]="isGenerating() || projectReports().length === 0">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Export All to PDF
+        </button>
         <button mat-raised-button color="primary" (click)="refreshReports()" class="action-btn">
           <mat-icon>refresh</mat-icon>
           Refresh
@@ -28,189 +32,270 @@
 
   <!-- Main Content -->
   <div class="main-content" *ngIf="!isLoading()">
-    <!-- Reports Grid -->
-    <div class="reports-section">
-      <div class="section-header">
-        <h2 class="section-title">
-          <mat-icon>library_books</mat-icon>
-          Available Reports
-        </h2>
-        <span class="report-count">{{ reports().length }} reports</span>
-      </div>
+    <!-- No Data Message -->
+    @if (projectReports().length === 0) {
+      <mat-card class="no-data-card">
+        <mat-card-content>
+          <div class="no-data-content">
+            <mat-icon class="no-data-icon">folder_off</mat-icon>
+            <h3>No Projects Found</h3>
+            <p>You don't have any assigned projects yet. Contact your administrator to get projects assigned.</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
 
-      <div class="reports-grid">
-        @for (report of reports(); track report.id) {
-          <mat-card
-            class="report-card"
-            [class.selected]="selectedReport()?.id === report.id"
-            (click)="selectReport(report)">
-            <mat-card-header>
-              <div class="card-icon" [class]="'icon-' + report.category">
-                <mat-icon>{{ report.icon }}</mat-icon>
+    <!-- Project Reports -->
+    @for (projectReport of projectReports(); track projectReport.project.id) {
+      <mat-expansion-panel class="project-panel" [expanded]="true">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon class="project-icon">work</mat-icon>
+            <div class="project-title-content">
+              <span class="project-name">{{ projectReport.project.name }}</span>
+              <div class="project-meta">
+                <mat-chip class="meta-chip">
+                  <mat-icon>location_on</mat-icon>
+                  {{ projectReport.project.region }}
+                </mat-chip>
+                <mat-chip class="meta-chip">
+                  <mat-icon>scatter_plot</mat-icon>
+                  {{ projectReport.totalDrillHoles }} Drill Holes
+                </mat-chip>
+                <mat-chip class="meta-chip success" *ngIf="projectReport.totalExplosiveUsage.totalAnfo > 0 || projectReport.totalExplosiveUsage.totalEmulsion > 0">
+                  <mat-icon>science</mat-icon>
+                  ANFO: {{projectReport.totalExplosiveUsage.totalAnfo.toFixed(2)}} kg | Emulsion: {{projectReport.totalExplosiveUsage.totalEmulsion.toFixed(2)}} kg
+                </mat-chip>
               </div>
-              <div class="card-header-text">
-                <mat-card-title>{{ report.name }}</mat-card-title>
-                <mat-card-subtitle>{{ report.category | titlecase }}</mat-card-subtitle>
-              </div>
-            </mat-card-header>
-
-            <mat-card-content>
-              <p class="report-description">{{ report.description }}</p>
-
-              <div class="report-meta">
-                <div class="meta-item">
-                  <mat-icon>person</mat-icon>
-                  <span>{{ currentUser()?.name || 'Engineer' }}</span>
-                </div>
-                <div class="meta-item">
-                  <mat-icon>schedule</mat-icon>
-                  <span>Real-time data</span>
-                </div>
-              </div>
-            </mat-card-content>
-
-            <mat-card-actions class="card-actions">
-              <button
-                mat-stroked-button
-                class="export-btn pdf"
-                (click)="exportReport('pdf', report); $event.stopPropagation()"
-                [disabled]="isGenerating()">
-                <mat-icon>picture_as_pdf</mat-icon>
-                PDF
-              </button>
-              <button
-                mat-stroked-button
-                class="export-btn csv"
-                (click)="exportReport('csv', report); $event.stopPropagation()"
-                [disabled]="isGenerating()">
-                <mat-icon>table_chart</mat-icon>
-                CSV
-              </button>
-            </mat-card-actions>
-          </mat-card>
-        }
-      </div>
-    </div>
-
-    <!-- Filters Panel -->
-    @if (showFilters() && selectedReport()) {
-      <div class="filters-container">
-        <mat-card class="filters-panel">
-          <mat-card-header>
-            <div class="panel-header-content">
-              <div class="panel-title">
-                <mat-icon>filter_list</mat-icon>
-                <h3>Filter Options</h3>
-              </div>
-              <button mat-icon-button (click)="closeFilters()" aria-label="Close filters">
-                <mat-icon>close</mat-icon>
-              </button>
             </div>
-          </mat-card-header>
+          </mat-panel-title>
+          <mat-panel-description>
+            <button mat-icon-button (click)="exportToPDF(projectReport); $event.stopPropagation()" matTooltip="Export Project to PDF">
+              <mat-icon>picture_as_pdf</mat-icon>
+            </button>
+            <button mat-icon-button (click)="exportToCSV(projectReport); $event.stopPropagation()" matTooltip="Export Project to CSV">
+              <mat-icon>table_chart</mat-icon>
+            </button>
+          </mat-panel-description>
+        </mat-expansion-panel-header>
 
-          <mat-card-content>
-            <div class="filter-subtitle">
-              <mat-icon>assessment</mat-icon>
-              <span>{{ selectedReport()?.name }}</span>
+        <!-- Project Details -->
+        <div class="project-details">
+          <div class="project-info-grid">
+            <div class="info-item">
+              <span class="info-label">Status:</span>
+              <mat-chip [class]="'status-' + projectReport.project.status.toLowerCase()">
+                {{ projectReport.project.status }}
+              </mat-chip>
             </div>
+            <div class="info-item">
+              <span class="info-label">Start Date:</span>
+              <span class="info-value">{{ projectReport.project.startDate ? (projectReport.project.startDate | date: 'mediumDate') : 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Total Sites:</span>
+              <span class="info-value">{{ projectReport.sites.length }}</span>
+            </div>
+          </div>
 
-            <form [formGroup]="filterForm" class="filter-form">
-              <!-- Project Filter -->
-              <div class="form-group">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Project</mat-label>
-                  <mat-icon matPrefix>work</mat-icon>
-                  <mat-select formControlName="project">
-                    <mat-option value="">All Projects</mat-option>
-                    @for (project of projects(); track project.id) {
-                      <mat-option [value]="project.id">{{ project.name }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-              </div>
+          <!-- Sites within Project -->
+          @for (siteReport of projectReport.sites; track siteReport.site.id) {
+            <mat-card class="site-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="site-avatar">place</mat-icon>
+                <mat-card-title>{{ siteReport.site.name }}</mat-card-title>
+                <mat-card-subtitle>
+                  {{ siteReport.site.location }}
+                  <mat-chip class="status-chip" [class]="'status-' + siteReport.site.status.toLowerCase()">
+                    {{ siteReport.site.status }}
+                  </mat-chip>
+                </mat-card-subtitle>
+              </mat-card-header>
 
-              <!-- Site Filter -->
-              <div class="form-group">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Site</mat-label>
-                  <mat-icon matPrefix>location_on</mat-icon>
-                  <mat-select formControlName="site">
-                    <mat-option value="">All Sites</mat-option>
-                    @for (site of sites(); track site.id) {
-                      <mat-option [value]="site.id">{{ site.name }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-              </div>
+              <mat-card-content>
+                <!-- Drill Holes Table -->
+                <div class="data-section">
+                  <h3 class="section-title">
+                    <mat-icon>scatter_plot</mat-icon>
+                    Drill Holes ({{ siteReport.drillHoles.length }})
+                  </h3>
+                  @if (siteReport.drillHoles.length > 0) {
+                    <div class="table-container">
+                      <table mat-table [dataSource]="siteReport.drillHoles" class="drill-holes-table">
+                        <!-- Name Column -->
+                        <ng-container matColumnDef="name">
+                          <th mat-header-cell *matHeaderCellDef>Hole Name</th>
+                          <td mat-cell *matCellDef="let hole">{{ hole.name || hole.id || 'N/A' }}</td>
+                        </ng-container>
 
-              <!-- Date Range -->
-              <div class="form-group date-range">
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>From Date</mat-label>
-                  <input matInput [matDatepicker]="pickerFrom" formControlName="dateFrom">
-                  <mat-datepicker-toggle matSuffix [for]="pickerFrom"></mat-datepicker-toggle>
-                  <mat-datepicker #pickerFrom></mat-datepicker>
-                  <mat-icon matPrefix>event</mat-icon>
-                </mat-form-field>
+                        <!-- Easting Column -->
+                        <ng-container matColumnDef="easting">
+                          <th mat-header-cell *matHeaderCellDef>Easting</th>
+                          <td mat-cell *matCellDef="let hole">{{ hole.easting.toFixed(2) }}</td>
+                        </ng-container>
 
-                <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>To Date</mat-label>
-                  <input matInput [matDatepicker]="pickerTo" formControlName="dateTo">
-                  <mat-datepicker-toggle matSuffix [for]="pickerTo"></mat-datepicker-toggle>
-                  <mat-datepicker #pickerTo></mat-datepicker>
-                  <mat-icon matPrefix>event</mat-icon>
-                </mat-form-field>
-              </div>
+                        <!-- Northing Column -->
+                        <ng-container matColumnDef="northing">
+                          <th mat-header-cell *matHeaderCellDef>Northing</th>
+                          <td mat-cell *matCellDef="let hole">{{ hole.northing.toFixed(2) }}</td>
+                        </ng-container>
 
-              <!-- Date Range Presets -->
-              <div class="form-group">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Quick Date Range</mat-label>
-                  <mat-icon matPrefix>date_range</mat-icon>
-                  <mat-select formControlName="dateRange">
-                    <mat-option value="">Custom Range</mat-option>
-                    @for (option of dateRangeOptions; track option) {
-                      <mat-option [value]="option">{{ option }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-              </div>
+                        <!-- Elevation Column -->
+                        <ng-container matColumnDef="elevation">
+                          <th mat-header-cell *matHeaderCellDef>Elevation (m)</th>
+                          <td mat-cell *matCellDef="let hole">{{ hole.elevation.toFixed(2) }}</td>
+                        </ng-container>
 
-              <!-- Filter Actions -->
-              <div class="filter-actions">
-                <button
-                  mat-button
-                  type="button"
-                  (click)="resetFilters()"
-                  class="reset-btn">
-                  <mat-icon>clear</mat-icon>
-                  Reset Filters
-                </button>
-                <button
-                  mat-raised-button
-                  color="primary"
-                  (click)="generateReport()"
-                  [disabled]="isGenerating()"
-                  class="generate-btn">
-                  @if (isGenerating()) {
-                    <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+                        <!-- Depth Column -->
+                        <ng-container matColumnDef="depth">
+                          <th mat-header-cell *matHeaderCellDef>Depth (m)</th>
+                          <td mat-cell *matCellDef="let hole">{{ hole.depth.toFixed(2) }}</td>
+                        </ng-container>
+
+                        <!-- Length Column -->
+                        <ng-container matColumnDef="length">
+                          <th mat-header-cell *matHeaderCellDef>Length (m)</th>
+                          <td mat-cell *matCellDef="let hole">{{ hole.length.toFixed(2) }}</td>
+                        </ng-container>
+
+                        <!-- Azimuth Column -->
+                        <ng-container matColumnDef="azimuth">
+                          <th mat-header-cell *matHeaderCellDef>Azimuth (°)</th>
+                          <td mat-cell *matCellDef="let hole">{{ hole.azimuth || 0 }}</td>
+                        </ng-container>
+
+                        <!-- Dip Column -->
+                        <ng-container matColumnDef="dip">
+                          <th mat-header-cell *matHeaderCellDef>Dip (°)</th>
+                          <td mat-cell *matCellDef="let hole">{{ hole.dip || 0 }}</td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="drillHoleColumns; sticky: true"></tr>
+                        <tr mat-row *matRowDef="let row; columns: drillHoleColumns;"></tr>
+                      </table>
+                    </div>
                   } @else {
-                    <mat-icon>file_download</mat-icon>
+                    <div class="no-data-message">
+                      <mat-icon>info</mat-icon>
+                      <p>No drill holes data available for this site.</p>
+                    </div>
                   }
-                  Generate Report
-                </button>
-              </div>
-            </form>
+                </div>
 
-            @if (hasNoData()) {
-              <div class="no-data-message">
-                <mat-icon>info</mat-icon>
-                <p>No data available for the selected filters.</p>
-              </div>
-            }
-          </mat-card-content>
-        </mat-card>
-      </div>
+                <!-- Explosive Calculations Table -->
+                <div class="data-section" *ngIf="siteReport.explosiveCalculations.length > 0">
+                  <h3 class="section-title">
+                    <mat-icon>science</mat-icon>
+                    Explosive Calculations ({{ siteReport.explosiveCalculations.length }})
+                  </h3>
+                  <div class="table-container">
+                    <table mat-table [dataSource]="siteReport.explosiveCalculations" class="explosives-table">
+                      <!-- Calculation ID Column -->
+                      <ng-container matColumnDef="calculationId">
+                        <th mat-header-cell *matHeaderCellDef>Calculation ID</th>
+                        <td mat-cell *matCellDef="let calc">{{ calc.calculationId }}</td>
+                      </ng-container>
+
+                      <!-- Total ANFO Column -->
+                      <ng-container matColumnDef="totalAnfo">
+                        <th mat-header-cell *matHeaderCellDef>Total ANFO (kg)</th>
+                        <td mat-cell *matCellDef="let calc">{{ calc.totalAnfo.toFixed(2) }}</td>
+                      </ng-container>
+
+                      <!-- Total Emulsion Column -->
+                      <ng-container matColumnDef="totalEmulsion">
+                        <th mat-header-cell *matHeaderCellDef>Total Emulsion (kg)</th>
+                        <td mat-cell *matCellDef="let calc">{{ calc.totalEmulsion.toFixed(2) }}</td>
+                      </ng-container>
+
+                      <!-- Average Depth Column -->
+                      <ng-container matColumnDef="averageDepth">
+                        <th mat-header-cell *matHeaderCellDef>Avg Depth (m)</th>
+                        <td mat-cell *matCellDef="let calc">{{ calc.averageDepth.toFixed(2) }}</td>
+                      </ng-container>
+
+                      <!-- Number of Filled Holes Column -->
+                      <ng-container matColumnDef="numberOfFilledHoles">
+                        <th mat-header-cell *matHeaderCellDef>Filled Holes</th>
+                        <td mat-cell *matCellDef="let calc">{{ calc.numberOfFilledHoles }}</td>
+                      </ng-container>
+
+                      <!-- Created At Column -->
+                      <ng-container matColumnDef="createdAt">
+                        <th mat-header-cell *matHeaderCellDef>Date</th>
+                        <td mat-cell *matCellDef="let calc">{{ formatDate(calc.createdAt) }}</td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="explosiveColumns; sticky: true"></tr>
+                      <tr mat-row *matRowDef="let row; columns: explosiveColumns;"></tr>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Explosive Approval Requests Table -->
+                <div class="data-section" *ngIf="siteReport.explosiveApprovals.length > 0">
+                  <h3 class="section-title">
+                    <mat-icon>approval</mat-icon>
+                    Explosive Approval Requests ({{ siteReport.explosiveApprovals.length }})
+                  </h3>
+                  <div class="table-container">
+                    <table mat-table [dataSource]="siteReport.explosiveApprovals" class="approvals-table">
+                      <!-- Status Column -->
+                      <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>Status</th>
+                        <td mat-cell *matCellDef="let approval">
+                          <mat-chip [color]="getStatusColor(approval.status)">
+                            {{ approval.status }}
+                          </mat-chip>
+                        </td>
+                      </ng-container>
+
+                      <!-- Blasting Date Column -->
+                      <ng-container matColumnDef="blastingDate">
+                        <th mat-header-cell *matHeaderCellDef>Blasting Date</th>
+                        <td mat-cell *matCellDef="let approval">
+                          {{ approval.blastingDate ? (approval.blastingDate | date: 'mediumDate') : 'Not Set' }}
+                        </td>
+                      </ng-container>
+
+                      <!-- Blasting Time Column -->
+                      <ng-container matColumnDef="blastTiming">
+                        <th mat-header-cell *matHeaderCellDef>Blasting Time</th>
+                        <td mat-cell *matCellDef="let approval">{{ approval.blastTiming || 'Not Set' }}</td>
+                      </ng-container>
+
+                      <!-- Expected Usage Date Column -->
+                      <ng-container matColumnDef="expectedUsageDate">
+                        <th mat-header-cell *matHeaderCellDef>Expected Usage</th>
+                        <td mat-cell *matCellDef="let approval">
+                          {{ approval.expectedUsageDate | date: 'mediumDate' }}
+                        </td>
+                      </ng-container>
+
+                      <!-- Priority Column -->
+                      <ng-container matColumnDef="priority">
+                        <th mat-header-cell *matHeaderCellDef>Priority</th>
+                        <td mat-cell *matCellDef="let approval">
+                          <mat-chip class="priority-chip">{{ approval.priority }}</mat-chip>
+                        </td>
+                      </ng-container>
+
+                      <!-- Approval Type Column -->
+                      <ng-container matColumnDef="approvalType">
+                        <th mat-header-cell *matHeaderCellDef>Type</th>
+                        <td mat-cell *matCellDef="let approval">{{ approval.approvalType }}</td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="approvalColumns; sticky: true"></tr>
+                      <tr mat-row *matRowDef="let row; columns: approvalColumns;"></tr>
+                    </table>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </mat-expansion-panel>
     }
   </div>
 
@@ -220,7 +305,7 @@
       <div class="overlay-content">
         <mat-spinner diameter="56"></mat-spinner>
         <h3>Generating Report...</h3>
-        <p>Please wait while we prepare your report</p>
+        <p>Please wait while we prepare your download</p>
       </div>
     </div>
   }
