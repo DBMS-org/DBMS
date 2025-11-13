@@ -344,42 +344,4 @@
     </div>
   </section>
 
-  <!-- Tasks & Notifications Widget -->
-  <section class="tasks-notifications-section">
-    <h2>
-      <i class="material-icons">assignment</i>
-      Tasks & Notifications
-    </h2>
-    <div class="tasks-grid">
-      <div class="task-card" *ngIf="stats.pendingReviews > 0" (click)="navigateToProjects()">
-        <div class="task-icon pending">
-          <i class="material-icons">rate_review</i>
-        </div>
-        <div class="task-content">
-          <h4>Sites Awaiting Review</h4>
-          <p>{{ stats.pendingReviews }} site{{ stats.pendingReviews !== 1 ? 's' : '' }} need{{ stats.pendingReviews === 1 ? 's' : '' }} drill data</p>
-        </div>
-        <i class="material-icons task-arrow">arrow_forward</i>
-      </div>
-      <div class="task-card" *ngIf="drillData.length === 0" (click)="navigateToUpload()">
-        <div class="task-icon action">
-          <i class="material-icons">cloud_upload</i>
-        </div>
-        <div class="task-content">
-          <h4>Upload Drill Data</h4>
-          <p>Get started by uploading your first dataset</p>
-        </div>
-        <i class="material-icons task-arrow">arrow_forward</i>
-      </div>
-      <div class="task-card empty-state" *ngIf="stats.pendingReviews === 0 && drillData.length > 0">
-        <div class="task-icon success">
-          <i class="material-icons">task_alt</i>
-        </div>
-        <div class="task-content">
-          <h4>All Caught Up!</h4>
-          <p>No pending tasks at the moment</p>
-        </div>
-      </div>
-    </div>
-  </section>
 </div>
