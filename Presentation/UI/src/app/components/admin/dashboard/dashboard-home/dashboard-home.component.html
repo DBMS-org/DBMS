@@ -14,7 +14,6 @@
         <i class="material-icons">refresh</i>
         Refresh
       </button>
-      <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>
 </header>
@@ -150,58 +149,6 @@
           <h3>Assignment Requests</h3>
           <p class="stat-number">{{ stats.machineRequests }}</p>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- System Overview Panel -->
-  <div class="system-metrics-panel">
-    <h3>
-      <i class="material-icons">analytics</i>
-      System Overview
-    </h3>
-    <div class="metrics-grid">
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">storage</i>
-          Database Status:
-        </span>
-        <span class="metric-value database-connected">{{ systemMetrics.databaseStatus }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">place</i>
-          Total Sites:
-        </span>
-        <span class="metric-value">{{ stats.totalSites }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">scatter_plot</i>
-          Total Drill Holes:
-        </span>
-        <span class="metric-value">{{ stats.totalDrillHoles }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">assignment_turned_in</i>
-          Data Quality:
-        </span>
-        <span class="metric-value" [class]="'quality-' + systemMetrics.dataQuality.toLowerCase()">{{ systemMetrics.dataQuality }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">straighten</i>
-          Avg. Drill Depth:
-        </span>
-        <span class="metric-value">{{ systemMetrics.averageDrillDepth }}m</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">linear_scale</i>
-          Total Drill Length:
-        </span>
-        <span class="metric-value">{{ quickStats.totalDrillLength }}m</span>
       </div>
     </div>
   </div>

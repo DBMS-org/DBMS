@@ -24,7 +24,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { BadgeModule } from 'primeng/badge';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { InputTextareaModule } from 'primeng/inputtextarea';
 import { CalendarModule } from 'primeng/calendar';
 import { TooltipModule } from 'primeng/tooltip';
 import { DividerModule } from 'primeng/divider';
@@ -57,7 +57,7 @@ interface WorkflowStep {
     BadgeModule,
     DialogModule,
     InputTextModule,
-    InputTextarea,
+    InputTextareaModule,
     CalendarModule,
     TooltipModule,
     DividerModule,
