@@ -791,11 +791,6 @@ export class MaintenanceManagementComponent implements OnInit {
     this.loadMaintenanceData();
   }
 
-  openIssueReports(): void {
-    // Navigate to issue reports modal/component
-    this.showIssueReportsModal = true;
-    this.loadOperatorIssues();
-  }
 
   exportMaintenanceData(): void {
     this.isExporting = true;
