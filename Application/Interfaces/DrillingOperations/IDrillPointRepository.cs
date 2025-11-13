@@ -4,7 +4,7 @@ namespace Application.Interfaces.DrillingOperations
 {
     public interface IDrillPointRepository
     {
-        // Basic CRUD operations
+        // Basic CRUD operation
         Task<DrillPoint> AddAsync(DrillPoint drillPoint);
         Task<DrillPoint?> GetByIdAsync(string id, int projectId, int siteId);
         Task<List<DrillPoint>> GetAllAsync(int projectId, int siteId);
