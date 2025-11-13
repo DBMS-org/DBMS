@@ -291,7 +291,17 @@ namespace Application.Services.MaintenanceOperations
 
                 if (newStatus == MaintenanceJobStatus.InProgress)
                 {
-                    job.Start();
+                    // Only use Start() if job is currently Scheduled
+                    if (job.Status == MaintenanceJobStatus.Scheduled)
+                    {
+                        job.Start();
+                    }
+                    else if (job.Status != MaintenanceJobStatus.InProgress)
+                    {
+                        // Allow transition to InProgress from other statuses (except if already InProgress)
+                        job.UpdateStatus(newStatus);
+                    }
+                    // If already InProgress, no action needed
                 }
                 else
                 {

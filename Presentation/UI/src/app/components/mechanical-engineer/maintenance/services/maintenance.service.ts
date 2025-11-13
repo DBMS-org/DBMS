@@ -111,7 +111,7 @@ export class MaintenanceService {
   }
 
   // Maintenance Jobs - Connected to real backend API
-  getMaintenanceJobs(filters?: JobFilters): Observable<MaintenanceJob[]> {
+  getMaintenanceJobs(filters?: JobFilters, forceRefresh: boolean = false): Observable<MaintenanceJob[]> {
     const operationId = 'maintenance-jobs';
     this.loadingService.startLoading(operationId, 'Loading maintenance jobs...');
 
@@ -142,10 +142,25 @@ export class MaintenanceService {
     }
 
     // Build query params
-    const params = this.buildFilterParams(filters);
+    let params = this.buildFilterParams(filters);
+
+    // Add cache busting parameter when force refresh is requested
+    if (forceRefresh) {
+      params = params.set('_t', Date.now().toString());
+    }
+
+    // Configure request options with cache control headers for force refresh
+    const options = {
+      params,
+      headers: forceRefresh ? {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      } : undefined
+    };
 
     // Call real backend API
-    return this.http.get<MaintenanceJob[]>(`${this.jobsApiUrl}/engineer/${userId}`, { params }).pipe(
+    return this.http.get<MaintenanceJob[]>(`${this.jobsApiUrl}/engineer/${userId}`, options).pipe(
       map(jobs => this.transformJobDates(jobs)),
       tap(jobs => {
         this.offlineStorage.storeOfflineData({ maintenanceJobs: jobs });

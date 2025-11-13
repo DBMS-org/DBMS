@@ -82,8 +82,8 @@ export class SiteDashboardComponent implements OnInit {
   showExplosiveApprovalModal: boolean = false;
   
   explosiveApprovalForm = {
-    expectedUsageDate: '',
-    blastingDate: '',
+    expectedUsageDate: '' as string,
+    blastingDate: '' as string,
     blastTiming: '',
     comments: ''
   };
@@ -552,13 +552,14 @@ export class SiteDashboardComponent implements OnInit {
 
   confirmExplosiveApprovalRequest(): void {
     if (this.site && this.explosiveApprovalForm.expectedUsageDate) {
-      // Prepare optional timing data
+      // Date inputs already provide string in YYYY-MM-DD format
+      const expectedUsageDate = this.explosiveApprovalForm.expectedUsageDate;
       const blastingDate = this.explosiveApprovalForm.blastingDate || undefined;
       const blastTiming = this.explosiveApprovalForm.blastTiming || undefined;
 
       this.siteService.requestExplosiveApproval(
         this.site.id,
-        this.explosiveApprovalForm.expectedUsageDate,
+        expectedUsageDate,
         this.explosiveApprovalForm.comments,
         blastingDate,
         blastTiming
@@ -594,6 +595,16 @@ export class SiteDashboardComponent implements OnInit {
       blastTiming: '',
       comments: ''
     };
+  }
+
+  /**
+   * Format Date object to YYYY-MM-DD string for backend
+   */
+  private formatDateForBackend(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   revokeExplosiveApprovalRequest(): void {

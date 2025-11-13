@@ -167,25 +167,47 @@ namespace Presentation.API.Controllers
         {
             try
             {
+                _logger.LogInformation("UpdateBlastingTiming called with ID: {Id}, DTO: {@Dto}", id, dto);
+
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("ModelState is invalid: {Errors}",
+                        string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                     return BadRequest(ModelState);
                 }
 
                 var existingRequest = await _explosiveApprovalRequestService.GetExplosiveApprovalRequestByIdAsync(id);
                 if (existingRequest == null)
                 {
+                    _logger.LogWarning("Explosive approval request with ID {Id} not found", id);
                     return NotFound($"Explosive approval request with ID {id} not found");
                 }
+
+                _logger.LogInformation("Existing request status: {Status}", existingRequest.Status);
 
                 // Only allow timing updates for pending requests
                 if (existingRequest.Status != ExplosiveApprovalStatus.Pending)
                 {
+                    _logger.LogWarning("Cannot update timing for request {Id} with status {Status}", id, existingRequest.Status);
                     return BadRequest("Blasting timing can only be updated for pending requests");
                 }
 
+                // Parse the date string if provided
+                DateTime? parsedDate = null;
+                if (!string.IsNullOrWhiteSpace(dto.BlastingDate))
+                {
+                    if (!DateTime.TryParse(dto.BlastingDate, out var dateValue))
+                    {
+                        _logger.LogWarning("Invalid date format: {Date}", dto.BlastingDate);
+                        return BadRequest($"Invalid date format: {dto.BlastingDate}");
+                    }
+                    parsedDate = dateValue;
+                }
+
+                _logger.LogInformation("Parsed date: {ParsedDate}, Timing: {Timing}", parsedDate, dto.BlastTiming);
+
                 var success = await _explosiveApprovalRequestService.UpdateBlastingTimingAsync(
-                    id, dto.BlastingDate, dto.BlastTiming);
+                    id, parsedDate, dto.BlastTiming);
 
                 if (!success)
                 {
@@ -384,7 +406,7 @@ namespace Presentation.API.Controllers
                 }
 
                 var requests = await _explosiveApprovalRequestService.GetExplosiveApprovalRequestsByRegionAsync(region);
-                var requestDtos = _mappingService.Map<IEnumerable<ExplosiveApprovalRequestDto>>(requests);
+                var requestDtos = _mappingService.Map<IEnumerable<ExplosiveApprovalRequest>, IEnumerable<ExplosiveApprovalRequestDto>>(requests);
                 return Ok(requestDtos);
             }
             catch (Exception ex)
@@ -425,9 +447,12 @@ namespace Presentation.API.Controllers
 
     public class UpdateBlastingTimingDto
     {
-        public DateTime? BlastingDate { get; set; }
+        public string? BlastingDate { get; set; }  // Changed to string to accept any format
         public string? BlastTiming { get; set; }
     }
+
+    // Note: Both fields are optional (nullable)
+    // BlastingDate is string to allow flexible date parsing
 
     public class ApprovalActionDto
     {

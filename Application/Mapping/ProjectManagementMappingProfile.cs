@@ -1,6 +1,8 @@
 using AutoMapper;
 using Application.DTOs.ProjectManagement;
 using Domain.Entities.ProjectManagement;
+using Domain.Entities.UserManagement;
+using UserDto = Application.DTOs.UserDto;
 
 namespace Application.Mapping
 {
@@ -8,6 +10,13 @@ namespace Application.Mapping
     {
         public ProjectManagementMappingProfile()
         {
+            // User mappings (needed for nested properties in ExplosiveApprovalRequestDto)
+            CreateMap<User, UserDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email.Value))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.CreatedAt, DateTimeKind.Utc)))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.UpdatedAt, DateTimeKind.Utc)));
+
             // Project mappings
             CreateMap<Project, ProjectDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))

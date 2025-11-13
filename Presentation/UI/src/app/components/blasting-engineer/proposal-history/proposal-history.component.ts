@@ -361,10 +361,24 @@ export class ProposalHistoryComponent implements OnInit {
     console.log('Saving timing to backend:', this.timingForm);
 
     // Use the real backend API to update timing
+    // Format date properly for C# DateTime parsing
+    // The HTML date input gives us "YYYY-MM-DD", we need to send it as "YYYY-MM-DDT00:00:00"
+    const formattedDate = this.timingForm.blastingDate ?
+      `${this.timingForm.blastingDate}T00:00:00` :
+      undefined;
+
+    console.log('Original blasting date:', this.timingForm.blastingDate);
+    console.log('Formatted blasting date:', formattedDate);
+    console.log('Blast timing:', this.timingForm.blastTiming);
+    console.log('Request payload:', {
+      blastingDate: formattedDate,
+      blastTiming: this.timingForm.blastTiming
+    });
+
     this.explosiveApprovalRequestService.updateBlastingTiming(
       this.timingForm.proposalId,
       {
-        blastingDate: this.timingForm.blastingDate,
+        blastingDate: formattedDate,
         blastTiming: this.timingForm.blastTiming
       }
     ).subscribe({

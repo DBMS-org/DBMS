@@ -1,33 +1,37 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200">
+<div class="min-h-screen bg-gray-50">
   <!-- Page Header -->
-  <div class="bg-gradient-to-r from-purple-600 to-purple-900 text-white shadow-xl">
-    <div class="max-w-7xl mx-auto px-6 py-8">
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 py-3">
       <!-- Breadcrumb Navigation -->
-      <div class="mb-4">
+      <div class="mb-3">
         <p-button
           label="Back to Sites"
           icon="pi pi-arrow-left"
           (onClick)="goBack()"
-          styleClass="p-button-text p-button-plain text-white hover:bg-white/20"
+          styleClass="p-button-text p-button-plain text-gray-600 hover:bg-gray-100"
           size="small"
         ></p-button>
       </div>
 
       <!-- Site Info Section -->
-      <div class="space-y-3">
-        <h2 class="text-4xl font-bold flex items-center gap-3">
-          <i class="pi pi-cog text-3xl"></i>
-          Site Workflow Dashboard
-        </h2>
-        <div *ngIf="site && project" class="space-y-2">
-          <h3 class="text-2xl font-semibold opacity-95">{{ site.name }}</h3>
-          <div class="flex items-center gap-6 text-white/90">
-            <span class="flex items-center gap-2">
-              <i class="pi pi-folder"></i>
+      <div class="space-y-2">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
+            <i class="pi pi-cog text-white text-lg"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900">
+            Site Workflow Dashboard
+          </h2>
+        </div>
+        <div *ngIf="site && project" class="space-y-1">
+          <h3 class="text-lg font-semibold text-gray-700">{{ site.name }}</h3>
+          <div class="flex items-center gap-4 text-sm text-gray-600">
+            <span class="flex items-center gap-1.5">
+              <i class="pi pi-folder text-blue-500"></i>
               {{ project.name }}
             </span>
-            <span class="flex items-center gap-2">
-              <i class="pi pi-map-marker"></i>
+            <span class="flex items-center gap-1.5">
+              <i class="pi pi-map-marker text-blue-500"></i>
               {{ site.location }}
             </span>
           </div>
@@ -37,7 +41,7 @@
   </div>
 
   <!-- Main Content -->
-  <div class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+  <div class="max-w-7xl mx-auto px-4 py-5 space-y-5">
     <!-- Error Message -->
     <p-message *ngIf="error" severity="error" [text]="error"></p-message>
 
@@ -48,75 +52,86 @@
     </div>
 
     <!-- Workflow Content -->
-    <div *ngIf="!loading && !error" class="space-y-8">
+    <div *ngIf="!loading && !error" class="space-y-5">
 
       <!-- Progress Overview -->
-      <p-card styleClass="shadow-lg">
-        <ng-template pTemplate="header">
-          <div class="px-6 pt-6 pb-2">
-            <div class="flex items-center justify-between mb-4">
-              <h4 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-                <i class="pi pi-chart-line text-primary"></i>
-                Overall Progress
-              </h4>
-              <span class="text-4xl font-bold text-primary">{{ getOverallProgress() }}%</span>
+      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <i class="pi pi-chart-line text-white text-sm"></i>
             </div>
-            <p-progressBar [value]="getOverallProgress()" styleClass="mb-2"></p-progressBar>
-            <p class="text-gray-600 italic text-sm">Complete all workflow steps to finalize your blast design</p>
+            <h4 class="text-lg font-bold text-gray-800">Overall Progress</h4>
           </div>
-        </ng-template>
-      </p-card>
+          <span class="text-2xl font-bold bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">{{ getOverallProgress() }}%</span>
+        </div>
+        <p-progressBar [value]="getOverallProgress()" styleClass="mb-2"></p-progressBar>
+        <p class="text-gray-600 text-xs">Complete all workflow steps to finalize your blast design</p>
+      </div>
 
       <!-- Workflow Steps -->
-      <div class="space-y-6">
-        <h3 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
-          <i class="pi pi-list text-primary"></i>
-          Workflow Steps
-        </h3>
+      <div class="space-y-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 bg-gray-800 rounded-lg flex items-center justify-center">
+            <i class="pi pi-list text-white text-sm"></i>
+          </div>
+          <h3 class="text-lg font-bold text-gray-800">Workflow Steps</h3>
+        </div>
 
-        <div class="space-y-4">
-          <p-card
+        <div class="space-y-3">
+          <div
             *ngFor="let step of workflowSteps; let i = index"
-            styleClass="shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer"
+            class="bg-white rounded-lg border-2 transition-all duration-300 cursor-pointer"
             [ngClass]="{
-              'border-l-4 border-primary': step.enabled && !step.completed,
-              'bg-gradient-to-r from-green-50 to-green-100': step.completed,
-              'opacity-60': !step.enabled
+              'border-blue-400 hover:shadow-md': step.enabled && !step.completed,
+              'border-green-400 bg-green-50/50': step.completed,
+              'border-gray-200 opacity-60': !step.enabled
             }"
             (click)="navigateToStep(step)"
           >
-            <div class="flex items-start gap-6">
+            <div class="flex items-start gap-3 p-3">
               <!-- Step Number/Checkmark -->
               <div
-                class="flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
+                class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-lg font-bold text-white"
                 [ngClass]="{
-                  'bg-gradient-to-br from-primary to-primary-dark': !step.completed,
-                  'bg-gradient-to-br from-green-500 to-green-600': step.completed
+                  'bg-gradient-to-br from-blue-500 to-blue-600': !step.completed && step.enabled,
+                  'bg-gradient-to-br from-green-500 to-green-600': step.completed,
+                  'bg-gray-400': !step.enabled
                 }"
               >
                 <span *ngIf="!step.completed">{{ i + 1 }}</span>
-                <i *ngIf="step.completed" class="pi pi-check"></i>
+                <i *ngIf="step.completed" class="pi pi-check text-xl"></i>
               </div>
 
               <!-- Step Content -->
-              <div class="flex-1 space-y-4">
-                <div class="flex items-start gap-4">
+              <div class="flex-1 space-y-2">
+                <div class="flex items-start gap-3">
                   <!-- Step Icon -->
-                  <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <i [class]="step.icon + ' text-primary text-2xl'"></i>
+                  <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                       [ngClass]="{
+                         'bg-blue-100': step.enabled && !step.completed,
+                         'bg-green-100': step.completed,
+                         'bg-gray-100': !step.enabled
+                       }">
+                    <i [class]="step.icon + ' text-lg'"
+                       [ngClass]="{
+                         'text-blue-600': step.enabled && !step.completed,
+                         'text-green-600': step.completed,
+                         'text-gray-500': !step.enabled
+                       }"></i>
                   </div>
 
                   <!-- Step Info -->
                   <div class="flex-1">
-                    <h5 class="text-xl font-semibold text-gray-800 mb-1">{{ step.name }}</h5>
-                    <p class="text-gray-600 leading-relaxed">{{ step.description }}</p>
+                    <h5 class="text-base font-semibold text-gray-900 mb-0.5">{{ step.name }}</h5>
+                    <p class="text-gray-600 text-xs leading-relaxed">{{ step.description }}</p>
                   </div>
                 </div>
 
                 <!-- Step Progress Bar -->
-                <div *ngIf="step.progress !== undefined && step.progress > 0" class="space-y-1">
-                  <p-progressBar [value]="step.progress" styleClass="h-2"></p-progressBar>
-                  <span class="text-sm text-gray-500">{{ step.progress }}% complete</span>
+                <div *ngIf="step.progress !== undefined && step.progress > 0" class="space-y-0.5">
+                  <p-progressBar [value]="step.progress" styleClass="h-1"></p-progressBar>
+                  <span class="text-xs text-gray-500">{{ step.progress }}% complete</span>
                 </div>
 
                 <!-- Step Status -->
@@ -127,25 +142,28 @@
                       severity="success"
                       value="Completed"
                       icon="pi pi-check-circle"
+                      styleClass="text-xs"
                     ></p-tag>
                     <p-tag
                       *ngIf="!step.completed && step.enabled"
                       severity="info"
-                      value="Ready to Start"
+                      value="Ready"
                       icon="pi pi-play-circle"
+                      styleClass="text-xs"
                     ></p-tag>
                     <p-tag
                       *ngIf="!step.enabled"
                       severity="secondary"
-                      value="Complete Previous Steps"
+                      value="Locked"
                       icon="pi pi-lock"
+                      styleClass="text-xs"
                     ></p-tag>
                   </div>
 
                   <!-- Individual Step Cleanup Button -->
                   <p-button
                     *ngIf="canCleanupStep(step.id)"
-                    label="Clear Data"
+                    label="Clear"
                     icon="pi pi-trash"
                     (onClick)="cleanupStepData(step.id); $event.stopPropagation()"
                     severity="danger"
@@ -156,27 +174,26 @@
                 </div>
               </div>
             </div>
-          </p-card>
+          </div>
         </div>
       </div>
 
       <!-- Quick Actions -->
-      <p-card *ngIf="site" styleClass="shadow-lg">
-        <ng-template pTemplate="header">
-          <div class="px-6 pt-6 pb-2">
-            <h4 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-              <i class="pi pi-bolt text-warning"></i>
-              Quick Actions
-            </h4>
+      <div *ngIf="site" class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center">
+            <i class="pi pi-bolt text-white text-sm"></i>
           </div>
-        </ng-template>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <h4 class="text-base font-bold text-gray-800">Quick Actions</h4>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
           <p-button
-            label="Start Pattern Design"
+            label="Start Pattern"
             icon="pi pi-crosshairs"
             (onClick)="navigateToStep(workflowSteps[0])"
             [disabled]="!workflowSteps[0].enabled"
             styleClass="w-full"
+            severity="secondary"
           ></p-button>
           <p-button
             *ngIf="workflowSteps[1].enabled"
@@ -184,269 +201,271 @@
             icon="pi pi-sitemap"
             (onClick)="navigateToStep(workflowSteps[1])"
             styleClass="w-full"
+            severity="secondary"
           ></p-button>
           <p-button
             *ngIf="workflowSteps[2].enabled"
-            label="Calculate Explosives"
+            label="Explosives"
             icon="pi pi-calculator"
             (onClick)="navigateToStep(workflowSteps[2])"
             styleClass="w-full"
+            severity="secondary"
           ></p-button>
           <p-button
             *ngIf="workflowSteps[3].enabled"
-            label="Run Simulation"
+            label="Simulate"
             icon="pi pi-play"
             (onClick)="navigateToStep(workflowSteps[3])"
             styleClass="w-full"
+            severity="secondary"
           ></p-button>
           <p-button
-            label="Cleanup Data"
+            label="Cleanup"
             icon="pi pi-trash"
             (onClick)="cleanupSiteData()"
             severity="danger"
+            [outlined]="true"
             pTooltip="Clean up inconsistent data"
             styleClass="w-full"
           ></p-button>
         </div>
-      </p-card>
+      </div>
 
       <!-- Site Information -->
-      <p-card *ngIf="site" styleClass="shadow-lg">
-        <ng-template pTemplate="header">
-          <div class="px-6 pt-6 pb-2">
-            <h4 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-              <i class="pi pi-info-circle text-info"></i>
-              Site Information
-            </h4>
+      <div *ngIf="site" class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 bg-cyan-500 rounded-lg flex items-center justify-center">
+            <i class="pi pi-info-circle text-white text-sm"></i>
           </div>
-        </ng-template>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h4 class="text-base font-bold text-gray-800">Site Information</h4>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Site Name</label>
-            <p class="text-gray-900 font-medium">{{ site.name }}</p>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Site Name</label>
+            <p class="text-gray-900 text-sm font-medium">{{ site.name }}</p>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Location</label>
-            <p class="text-gray-900 font-medium">{{ site.location }}</p>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Location</label>
+            <p class="text-gray-900 text-sm font-medium">{{ site.location }}</p>
           </div>
           <div *ngIf="site.description">
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Description</label>
-            <p class="text-gray-900 font-medium">{{ site.description }}</p>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Description</label>
+            <p class="text-gray-900 text-sm font-medium">{{ site.description }}</p>
           </div>
           <div *ngIf="site.coordinates">
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Coordinates</label>
-            <p class="text-gray-900 font-medium">{{ site.coordinates }}</p>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Coordinates</label>
+            <p class="text-gray-900 text-sm font-medium">{{ site.coordinates }}</p>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Created</label>
-            <p class="text-gray-900 font-medium">{{ formatDate(site.createdAt) }}</p>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Created</label>
+            <p class="text-gray-900 text-sm font-medium">{{ formatDate(site.createdAt) }}</p>
           </div>
         </div>
-      </p-card>
+      </div>
 
       <!-- Operator Completion Status Button - Show only if operator has completed work -->
-      <p-card *ngIf="showCompletedHolesSection" styleClass="shadow-lg border-t-4 border-blue-500">
-        <ng-template pTemplate="header">
-          <div class="px-6 pt-6 pb-2 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg">
-                <i class="pi pi-check-circle text-white text-2xl"></i>
-              </div>
-              <div>
-                <h4 class="text-xl font-bold text-gray-800">Operator Work Completion</h4>
-                <p class="text-gray-600 text-sm">View drill holes completed by the operator</p>
-              </div>
+      <div *ngIf="showCompletedHolesSection" class="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg border-2 border-teal-300 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
+              <i class="pi pi-check-circle text-white text-lg"></i>
             </div>
-            <div class="text-right">
-              <div class="text-3xl font-bold text-blue-600">{{ completedHolesCount }} / {{ totalHolesCount }}</div>
-              <div class="text-sm text-gray-600">Holes Completed</div>
+            <div>
+              <h4 class="text-base font-bold text-gray-800">Operator Work Completion</h4>
+              <p class="text-gray-600 text-xs">View drill holes completed by the operator</p>
             </div>
           </div>
-        </ng-template>
+          <div class="text-right">
+            <div class="text-xl font-bold text-teal-700">{{ completedHolesCount }} / {{ totalHolesCount }}</div>
+            <div class="text-xs text-gray-600 uppercase tracking-wide">Holes</div>
+          </div>
+        </div>
 
         <!-- Completion Progress -->
-        <div class="mb-6 space-y-2">
+        <div class="mb-3 space-y-1">
           <div class="flex justify-between items-center">
-            <span class="text-sm font-semibold text-gray-700">Overall Progress</span>
-            <span class="text-sm font-bold text-blue-600">{{ completionPercentage }}%</span>
+            <span class="text-xs font-semibold text-gray-700">Progress</span>
+            <span class="text-xs font-bold text-teal-700">{{ completionPercentage }}%</span>
           </div>
-          <p-progressBar [value]="completionPercentage" styleClass="h-3"></p-progressBar>
+          <p-progressBar [value]="completionPercentage" styleClass="h-2"></p-progressBar>
         </div>
 
         <!-- View Details Button -->
-        <div class="text-center">
+        <div>
           <p-button
-            label="View Completed Holes Details"
+            label="View Details"
             icon="pi pi-eye"
             (onClick)="openCompletedHolesDialog()"
             styleClass="w-full"
+            severity="info"
+            size="small"
             [badge]="completedHolesCount.toString()"
             badgeSeverity="success"
           ></p-button>
         </div>
-      </p-card>
+      </div>
 
       <!-- Approval Sections -->
-      <div *ngIf="isBlastingEngineer" class="space-y-6">
+      <div *ngIf="isBlastingEngineer" class="space-y-4">
 
         <!-- Admin Simulation Confirmation Section -->
-        <p-card *ngIf="workflowSteps[2].completed" styleClass="shadow-lg border-t-4 border-indigo-500">
-          <ng-template pTemplate="header">
-            <div class="px-6 pt-6 pb-2 flex items-center gap-4">
-              <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <i class="pi pi-verified text-white text-2xl"></i>
-              </div>
-              <div>
-                <h4 class="text-xl font-bold text-gray-800">Simulation Confirmation</h4>
-                <p class="text-gray-600 text-sm">Confirm the blast simulation results for administrator review</p>
-              </div>
+        <div *ngIf="workflowSteps[2].completed" class="bg-white rounded-lg border-2 border-indigo-300 p-4">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <i class="pi pi-verified text-white text-lg"></i>
             </div>
-          </ng-template>
+            <div>
+              <h4 class="text-base font-bold text-gray-800">Simulation Confirmation</h4>
+              <p class="text-gray-600 text-xs">Confirm blast simulation for admin review</p>
+            </div>
+          </div>
 
-          <div class="flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center gap-3 px-4 py-3 rounded-lg"
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg"
                  [ngClass]="isSimulationConfirmed ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center"
+              <div class="w-8 h-8 rounded-full flex items-center justify-center"
                    [ngClass]="isSimulationConfirmed ? 'bg-gradient-to-br from-green-500 to-green-600' : 'bg-gradient-to-br from-amber-500 to-amber-600'">
-                <i class="text-white" [ngClass]="isSimulationConfirmed ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
+                <i class="text-white text-sm" [ngClass]="isSimulationConfirmed ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
               </div>
               <div>
-                <div class="font-semibold text-gray-800">
-                  {{ isSimulationConfirmed ? 'Simulation Confirmed' : 'Awaiting Confirmation' }}
+                <div class="text-sm font-semibold text-gray-800">
+                  {{ isSimulationConfirmed ? 'Confirmed' : 'Awaiting' }}
                 </div>
-                <div class="text-sm text-gray-600">
-                  {{ isSimulationConfirmed ? 'Ready for administrator review' : 'Click to confirm simulation results' }}
+                <div class="text-xs text-gray-600">
+                  {{ isSimulationConfirmed ? 'Ready for review' : 'Click to confirm' }}
                 </div>
               </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
               <p-button
                 *ngIf="!isSimulationConfirmed"
-                label="Confirm Simulation"
+                label="Confirm"
                 icon="pi pi-check-circle"
                 (onClick)="confirmSimulationForAdmin()"
                 severity="success"
+                size="small"
               ></p-button>
               <ng-container *ngIf="isSimulationConfirmed">
-                <p-chip label="Simulation Confirmed" icon="pi pi-verified" styleClass="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold"></p-chip>
+                <p-chip label="Confirmed" icon="pi pi-verified" styleClass="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs"></p-chip>
                 <p-button
                   label="Revoke"
                   icon="pi pi-times"
                   (onClick)="revokeSimulationConfirmation()"
                   severity="danger"
                   [outlined]="true"
+                  size="small"
                 ></p-button>
               </ng-container>
             </div>
           </div>
-        </p-card>
+        </div>
 
         <!-- Pattern Approval Section -->
-        <p-card styleClass="shadow-lg border-t-4 border-green-500">
-          <ng-template pTemplate="header">
-            <div class="px-6 pt-6 pb-2 flex items-center gap-4">
-              <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center shadow-lg">
-                <i class="pi pi-check-square text-white text-2xl"></i>
-              </div>
-              <div>
-                <h4 class="text-xl font-bold text-gray-800">Pattern Approval</h4>
-                <p class="text-gray-600 text-sm">Approve the drilling pattern design for operator access</p>
-              </div>
+        <div class="bg-white rounded-lg border-2 border-green-300 p-4">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
+              <i class="pi pi-check-square text-white text-lg"></i>
             </div>
-          </ng-template>
+            <div>
+              <h4 class="text-base font-bold text-gray-800">Pattern Approval</h4>
+              <p class="text-gray-600 text-xs">Approve drilling pattern for operator</p>
+            </div>
+          </div>
 
-          <div class="flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center gap-3 px-4 py-3 rounded-lg"
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg"
                  [ngClass]="isPatternApproved ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center"
+              <div class="w-8 h-8 rounded-full flex items-center justify-center"
                    [ngClass]="isPatternApproved ? 'bg-gradient-to-br from-green-500 to-green-600' : 'bg-gradient-to-br from-amber-500 to-amber-600'">
-                <i class="text-white" [ngClass]="isPatternApproved ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
+                <i class="text-white text-sm" [ngClass]="isPatternApproved ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
               </div>
               <div>
-                <div class="font-semibold text-gray-800">
-                  {{ isPatternApproved ? 'Pattern Approved' : 'Awaiting Approval' }}
+                <div class="text-sm font-semibold text-gray-800">
+                  {{ isPatternApproved ? 'Approved' : 'Awaiting' }}
                 </div>
-                <div class="text-sm text-gray-600">
-                  {{ isPatternApproved ? 'Operator has access to approved pattern' : 'Click to approve pattern for operator' }}
+                <div class="text-xs text-gray-600">
+                  {{ isPatternApproved ? 'Operator has access' : 'Click to approve' }}
                 </div>
               </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
               <p-button
                 *ngIf="!isPatternApproved"
-                label="Approve Pattern"
+                label="Approve"
                 icon="pi pi-check-circle"
                 (onClick)="approvePatternForOperator()"
                 severity="success"
+                size="small"
               ></p-button>
               <ng-container *ngIf="isPatternApproved">
-                <p-chip label="Approved for Operator" icon="pi pi-verified" styleClass="bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold"></p-chip>
+                <p-chip label="Approved" icon="pi pi-verified" styleClass="bg-gradient-to-r from-green-500 to-teal-600 text-white text-xs"></p-chip>
                 <p-button
-                  label="Revoke Approval"
+                  label="Revoke"
                   icon="pi pi-times"
                   (onClick)="revokeApproval()"
                   severity="danger"
                   [outlined]="true"
+                  size="small"
                 ></p-button>
               </ng-container>
             </div>
           </div>
-        </p-card>
+        </div>
 
         <!-- Explosive Approval Section -->
-        <p-card styleClass="shadow-lg border-t-4 border-orange-500">
-          <ng-template pTemplate="header">
-            <div class="px-6 pt-6 pb-2 flex items-center gap-4">
-              <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
-                <i class="pi pi-exclamation-triangle text-white text-2xl"></i>
-              </div>
-              <div>
-                <h4 class="text-xl font-bold text-gray-800">Explosive Approval</h4>
-                <p class="text-gray-600 text-sm">Request approval for explosive usage with expected date</p>
-              </div>
+        <div class="bg-white rounded-lg border-2 border-orange-300 p-4">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+              <i class="pi pi-exclamation-triangle text-white text-lg"></i>
             </div>
-          </ng-template>
+            <div>
+              <h4 class="text-base font-bold text-gray-800">Explosive Approval</h4>
+              <p class="text-gray-600 text-xs">Request explosive usage approval</p>
+            </div>
+          </div>
 
-          <div class="flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center gap-3 px-4 py-3 rounded-lg"
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg"
                  [ngClass]="isExplosiveApprovalRequested ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center"
+              <div class="w-8 h-8 rounded-full flex items-center justify-center"
                    [ngClass]="isExplosiveApprovalRequested ? 'bg-gradient-to-br from-green-500 to-green-600' : 'bg-gradient-to-br from-amber-500 to-amber-600'">
-                <i class="text-white" [ngClass]="isExplosiveApprovalRequested ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
+                <i class="text-white text-sm" [ngClass]="isExplosiveApprovalRequested ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
               </div>
               <div>
-                <div class="font-semibold text-gray-800">
-                  {{ isExplosiveApprovalRequested ? 'Approval Requested' : 'Awaiting Request' }}
+                <div class="text-sm font-semibold text-gray-800">
+                  {{ isExplosiveApprovalRequested ? 'Requested' : 'Awaiting' }}
                 </div>
-                <div class="text-sm text-gray-600">
-                  {{ isExplosiveApprovalRequested ? 'Explosive approval request submitted' : 'Click to request explosive approval' }}
+                <div class="text-xs text-gray-600">
+                  {{ isExplosiveApprovalRequested ? 'Request submitted' : 'Click to request' }}
                 </div>
               </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
               <p-button
                 *ngIf="!isExplosiveApprovalRequested"
-                label="Request Explosive Approval"
+                label="Request Approval"
                 icon="pi pi-exclamation-triangle"
                 (onClick)="requestExplosiveApproval()"
                 severity="help"
+                size="small"
               ></p-button>
               <ng-container *ngIf="isExplosiveApprovalRequested">
-                <p-chip label="Request Submitted" icon="pi pi-verified" styleClass="bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold"></p-chip>
+                <p-chip label="Requested" icon="pi pi-verified" styleClass="bg-gradient-to-r from-orange-500 to-red-600 text-white text-xs"></p-chip>
                 <p-button
-                  label="Revoke Request"
+                  label="Revoke"
                   icon="pi pi-times"
                   (onClick)="revokeExplosiveApprovalRequest()"
                   severity="danger"
                   [outlined]="true"
+                  size="small"
                 ></p-button>
               </ng-container>
             </div>
           </div>
-        </p-card>
+        </div>
       </div>
     </div>
   </div>
@@ -459,72 +478,77 @@
   [closable]="true"
   [draggable]="false"
   [resizable]="false"
-  styleClass="w-11/12 max-w-2xl"
+  styleClass="w-11/12 max-w-xl"
 >
   <ng-template pTemplate="header">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-        <i class="pi pi-exclamation-triangle text-white text-xl"></i>
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+        <i class="pi pi-exclamation-triangle text-white text-lg"></i>
       </div>
-      <h3 class="text-2xl font-bold text-gray-800">Request Explosive Approval</h3>
+      <h3 class="text-lg font-bold text-gray-800">Request Explosive Approval</h3>
     </div>
   </ng-template>
 
-  <div class="space-y-6">
+  <div class="space-y-4">
     <!-- Explosive Totals Summary -->
-    <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
-      <h4 class="text-sm font-semibold text-gray-700 mb-3">Requirements</h4>
-      <div class="grid grid-cols-3 gap-3">
-        <div class="bg-white rounded-lg p-3 border border-slate-200 text-center">
-          <span class="block text-xs text-gray-600 mb-1">ANFO</span>
-          <span class="block text-sm font-semibold text-gray-900">{{ totalAnfo | number:'1.2-2' }} kg</span>
+    <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-lg p-3 border border-orange-200">
+      <h4 class="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Explosive Requirements</h4>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-white rounded-lg p-2 border border-gray-200 text-center">
+          <span class="block text-xs text-gray-600 mb-0.5">ANFO</span>
+          <span class="block text-sm font-bold text-gray-900">{{ totalAnfo | number:'1.2-2' }} kg</span>
         </div>
-        <div class="bg-white rounded-lg p-3 border border-slate-200 text-center">
-          <span class="block text-xs text-gray-600 mb-1">Emulsion</span>
-          <span class="block text-sm font-semibold text-gray-900">{{ totalEmulsion | number:'1.2-2' }} kg</span>
+        <div class="bg-white rounded-lg p-2 border border-gray-200 text-center">
+          <span class="block text-xs text-gray-600 mb-0.5">Emulsion</span>
+          <span class="block text-sm font-bold text-gray-900">{{ totalEmulsion | number:'1.2-2' }} kg</span>
         </div>
-        <div class="bg-gradient-to-br from-purple-600 to-purple-900 rounded-lg p-3 text-center text-white">
-          <span class="block text-xs opacity-90 mb-1">Total</span>
+        <div class="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-2 text-center text-white">
+          <span class="block text-xs opacity-90 mb-0.5">Total</span>
           <span class="block text-sm font-bold">{{ (totalAnfo + totalEmulsion) | number:'1.2-2' }} kg</span>
         </div>
       </div>
     </div>
 
     <!-- Form Fields -->
-    <div class="grid grid-cols-2 gap-4">
+    <div class="grid grid-cols-2 gap-3">
       <div class="col-span-2 md:col-span-1">
-        <label for="expectedUsageDate" class="block text-sm font-semibold text-gray-700 mb-2">
+        <label for="expectedUsageDate" class="block text-xs font-semibold text-gray-700 mb-1">
           Expected Usage Date *
         </label>
-        <p-datepicker
-          inputId="expectedUsageDate"
-          [(ngModel)]="explosiveApprovalForm.expectedUsageDate"
-          iconDisplay="input"
-          dateFormat="yy-mm-dd"
-          styleClass="w-full"
-        ></p-datepicker>
+        <div class="relative">
+          <input
+            type="date"
+            id="expectedUsageDate"
+            name="expectedUsageDate"
+            [(ngModel)]="explosiveApprovalForm.expectedUsageDate"
+            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          />
+        </div>
       </div>
 
       <div class="col-span-2 md:col-span-1">
-        <label for="blastingDate" class="block text-sm font-semibold text-gray-700 mb-2">
-          Blasting Date <span class="text-gray-500 text-xs italic">(Optional)</span>
+        <label for="blastingDate" class="block text-xs font-semibold text-gray-700 mb-1">
+          Blasting Date <span class="text-gray-500 text-xs">(Optional)</span>
         </label>
-        <p-datepicker
-          inputId="blastingDate"
-          [(ngModel)]="explosiveApprovalForm.blastingDate"
-          iconDisplay="input"
-          dateFormat="yy-mm-dd"
-          styleClass="w-full"
-        ></p-datepicker>
+        <div class="relative">
+          <input
+            type="date"
+            id="blastingDate"
+            name="blastingDate"
+            [(ngModel)]="explosiveApprovalForm.blastingDate"
+            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          />
+        </div>
       </div>
 
       <div class="col-span-2 md:col-span-1">
-        <label for="blastTiming" class="block text-sm font-semibold text-gray-700 mb-2">
-          Blast Timing <span class="text-gray-500 text-xs italic">(Optional)</span>
+        <label for="blastTiming" class="block text-xs font-semibold text-gray-700 mb-1">
+          Blast Timing <span class="text-gray-500 text-xs">(Optional)</span>
         </label>
         <input
           type="time"
           id="blastTiming"
+          name="blastTiming"
           pInputText
           class="w-full"
           [(ngModel)]="explosiveApprovalForm.blastTiming"
@@ -532,14 +556,15 @@
       </div>
 
       <div class="col-span-2">
-        <label for="comments" class="block text-sm font-semibold text-gray-700 mb-2">
-          Comments <span class="text-gray-500 text-xs italic">(Optional)</span>
+        <label for="comments" class="block text-xs font-semibold text-gray-700 mb-1">
+          Comments <span class="text-gray-500 text-xs">(Optional)</span>
         </label>
         <textarea
           id="comments"
+          name="comments"
           pInputTextarea
-          rows="3"
-          class="w-full"
+          rows="2"
+          class="w-full text-sm"
           placeholder="Additional comments or requirements..."
           [(ngModel)]="explosiveApprovalForm.comments"
         ></textarea>
@@ -547,27 +572,29 @@
     </div>
 
     <!-- Hint Box -->
-    <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-      <i class="pi pi-info-circle text-blue-600"></i>
-      <span class="text-sm text-blue-900">You can set blasting schedule now or update it later in Proposal History</span>
+    <div class="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
+      <i class="pi pi-info-circle text-blue-600 text-sm mt-0.5"></i>
+      <span class="text-xs text-blue-900">You can set blasting schedule now or update it later in Proposal History</span>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-center gap-3">
-      <p-button
-        label="Submit Request"
-        icon="pi pi-check"
-        (onClick)="confirmExplosiveApprovalRequest()"
-        [disabled]="!explosiveApprovalForm.expectedUsageDate"
-        severity="success"
-      ></p-button>
+    <div class="flex justify-end gap-2">
       <p-button
         label="Cancel"
         icon="pi pi-times"
         (onClick)="cancelExplosiveApprovalRequest()"
         severity="secondary"
         [outlined]="true"
+        size="small"
+      ></p-button>
+      <p-button
+        label="Submit Request"
+        icon="pi pi-check"
+        (onClick)="confirmExplosiveApprovalRequest()"
+        [disabled]="!explosiveApprovalForm.expectedUsageDate"
+        severity="success"
+        size="small"
       ></p-button>
     </div>
   </ng-template>
@@ -583,36 +610,38 @@
   styleClass="w-11/12 max-w-md"
 >
   <ng-template pTemplate="header">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
-        <i class="pi pi-check-square text-white text-xl"></i>
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
+        <i class="pi pi-check-square text-white text-lg"></i>
       </div>
-      <h3 class="text-2xl font-bold text-gray-800">Confirm Pattern Approval</h3>
+      <h3 class="text-lg font-bold text-gray-800">Confirm Pattern Approval</h3>
     </div>
   </ng-template>
 
-  <div class="space-y-4">
-    <p class="text-gray-700">Are you sure you want to approve this drilling pattern for operator access?</p>
-    <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-      <i class="pi pi-info-circle text-blue-600"></i>
-      <span class="text-sm text-blue-900">Once approved, the operator will be able to view and implement this pattern.</span>
+  <div class="space-y-3">
+    <p class="text-sm text-gray-700">Are you sure you want to approve this drilling pattern for operator access?</p>
+    <div class="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
+      <i class="pi pi-info-circle text-blue-600 text-sm mt-0.5"></i>
+      <span class="text-xs text-blue-900">Once approved, the operator will be able to view and implement this pattern.</span>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-center gap-3">
-      <p-button
-        label="Yes, Approve"
-        icon="pi pi-check"
-        (onClick)="confirmApprove()"
-        severity="success"
-      ></p-button>
+    <div class="flex justify-end gap-2">
       <p-button
         label="Cancel"
         icon="pi pi-times"
         (onClick)="cancelApprove()"
         severity="secondary"
         [outlined]="true"
+        size="small"
+      ></p-button>
+      <p-button
+        label="Yes, Approve"
+        icon="pi pi-check"
+        (onClick)="confirmApprove()"
+        severity="success"
+        size="small"
       ></p-button>
     </div>
   </ng-template>
@@ -625,29 +654,29 @@
   [closable]="true"
   [draggable]="false"
   [resizable]="false"
-  styleClass="w-11/12 max-w-6xl"
+  styleClass="w-11/12 max-w-5xl"
   [maximizable]="true"
 >
   <ng-template pTemplate="header">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-        <i class="pi pi-check-circle text-white text-xl"></i>
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
+        <i class="pi pi-check-circle text-white text-lg"></i>
       </div>
       <div>
-        <h3 class="text-2xl font-bold text-gray-800">Operator Work Completion</h3>
-        <p class="text-sm text-gray-600">{{ completedHolesCount }} of {{ totalHolesCount }} holes completed ({{ completionPercentage }}%)</p>
+        <h3 class="text-lg font-bold text-gray-800">Operator Work Completion</h3>
+        <p class="text-xs text-gray-600">{{ completedHolesCount }} of {{ totalHolesCount }} holes completed ({{ completionPercentage }}%)</p>
       </div>
     </div>
   </ng-template>
 
-  <div class="space-y-6">
+  <div class="space-y-4">
     <!-- Progress Summary -->
-    <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
-      <div class="flex justify-between items-center mb-2">
-        <span class="text-sm font-semibold text-gray-700">Overall Progress</span>
-        <span class="text-sm font-bold text-blue-600">{{ completionPercentage }}%</span>
+    <div class="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg p-3 border border-teal-200">
+      <div class="flex justify-between items-center mb-1.5">
+        <span class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Overall Progress</span>
+        <span class="text-sm font-bold text-teal-700">{{ completionPercentage }}%</span>
       </div>
-      <p-progressBar [value]="completionPercentage" styleClass="h-3"></p-progressBar>
+      <p-progressBar [value]="completionPercentage" styleClass="h-2"></p-progressBar>
     </div>
 
     <!-- Completed Holes Table -->
@@ -663,73 +692,74 @@
         [globalFilterFields]="['id', 'depth', 'spacing', 'burden']"
       >
         <ng-template pTemplate="caption">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between py-2">
             <div class="flex items-center gap-2">
-              <i class="pi pi-list text-gray-600"></i>
-              <span class="text-lg font-semibold text-gray-800">Completed Drill Holes</span>
+              <i class="pi pi-list text-gray-600 text-sm"></i>
+              <span class="text-base font-semibold text-gray-800">Completed Drill Holes</span>
             </div>
             <span class="p-input-icon-left">
-              <i class="pi pi-search"></i>
+              <i class="pi pi-search text-sm"></i>
               <input
                 pInputText
                 type="text"
+                name="globalFilter"
                 (input)="onGlobalFilter($event)"
                 placeholder="Search holes..."
-                class="w-full"
+                class="text-sm"
               />
             </span>
           </div>
         </ng-template>
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="id">
+            <th pSortableColumn="id" class="text-xs">
               Hole ID
               <p-sortIcon field="id"></p-sortIcon>
             </th>
-            <th pSortableColumn="depth">
+            <th pSortableColumn="depth" class="text-xs">
               Depth (m)
               <p-sortIcon field="depth"></p-sortIcon>
             </th>
-            <th pSortableColumn="spacing">
+            <th pSortableColumn="spacing" class="text-xs">
               Spacing (m)
               <p-sortIcon field="spacing"></p-sortIcon>
             </th>
-            <th pSortableColumn="burden">
+            <th pSortableColumn="burden" class="text-xs">
               Burden (m)
               <p-sortIcon field="burden"></p-sortIcon>
             </th>
-            <th pSortableColumn="completedAt">
+            <th pSortableColumn="completedAt" class="text-xs">
               Completed At
               <p-sortIcon field="completedAt"></p-sortIcon>
             </th>
-            <th>Status</th>
+            <th class="text-xs">Status</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-point>
           <tr>
             <td>
-              <span class="font-semibold text-gray-900">{{ point.id }}</span>
+              <span class="font-semibold text-gray-900 text-sm">{{ point.id }}</span>
             </td>
-            <td>{{ point.depth | number:'1.2-2' }}</td>
-            <td>{{ point.spacing | number:'1.2-2' }}</td>
-            <td>{{ point.burden | number:'1.2-2' }}</td>
+            <td class="text-sm">{{ point.depth | number:'1.2-2' }}</td>
+            <td class="text-sm">{{ point.spacing | number:'1.2-2' }}</td>
+            <td class="text-sm">{{ point.burden | number:'1.2-2' }}</td>
             <td>
-              <span *ngIf="point.completedAt" class="text-sm text-gray-600">
+              <span *ngIf="point.completedAt" class="text-xs text-gray-600">
                 {{ formatDate(point.completedAt) }}
               </span>
-              <span *ngIf="!point.completedAt" class="text-sm text-gray-400">-</span>
+              <span *ngIf="!point.completedAt" class="text-xs text-gray-400">-</span>
             </td>
             <td>
-              <p-tag severity="success" value="Completed" icon="pi pi-check"></p-tag>
+              <p-tag severity="success" value="Completed" icon="pi pi-check" styleClass="text-xs"></p-tag>
             </td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="text-center py-8">
-              <div class="flex flex-col items-center gap-3">
-                <i class="pi pi-inbox text-4xl text-gray-400"></i>
-                <p class="text-gray-600">No completed drill holes found</p>
+            <td colspan="6" class="text-center py-6">
+              <div class="flex flex-col items-center gap-2">
+                <i class="pi pi-inbox text-3xl text-gray-400"></i>
+                <p class="text-sm text-gray-600">No completed drill holes found</p>
               </div>
             </td>
           </tr>
@@ -738,22 +768,23 @@
     </div>
 
     <!-- No Completed Holes Message -->
-    <div *ngIf="completedHolesCount === 0" class="text-center py-12">
-      <div class="flex flex-col items-center gap-4">
-        <i class="pi pi-hourglass text-6xl text-gray-400"></i>
-        <p class="text-gray-700 font-medium text-lg">Operator has not completed any drill holes yet</p>
-        <p class="text-sm text-gray-500">Holes will appear here once the operator marks them as completed</p>
+    <div *ngIf="completedHolesCount === 0" class="text-center py-8">
+      <div class="flex flex-col items-center gap-3">
+        <i class="pi pi-hourglass text-5xl text-gray-400"></i>
+        <p class="text-gray-700 font-medium text-base">Operator has not completed any drill holes yet</p>
+        <p class="text-xs text-gray-500">Holes will appear here once the operator marks them as completed</p>
       </div>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-end gap-3">
+    <div class="flex justify-end">
       <p-button
         label="Close"
         icon="pi pi-times"
         (onClick)="closeCompletedHolesDialog()"
         severity="secondary"
+        size="small"
       ></p-button>
     </div>
   </ng-template>

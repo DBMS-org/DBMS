@@ -75,9 +75,9 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
     this.performanceService.clearDatasetCaches('maintenance-jobs');
   }
 
-  private loadJobs() {
+  private loadJobs(forceRefresh: boolean = false) {
     this.isLoading.set(true);
-    this.maintenanceService.getMaintenanceJobs().subscribe({
+    this.maintenanceService.getMaintenanceJobs(undefined, forceRefresh).subscribe({
       next: (jobs) => {
         this.allJobs.set(jobs);
         this.isLoading.set(false);
@@ -127,11 +127,17 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
       disableClose: true
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe(async result => {
       if (result) {
-        // Update the job in the list
-        this.updateJobInList(result);
-        this.selectedJob.set(result);
+        // Wait a moment to ensure backend has fully processed the update
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Reload all jobs to get fresh data from the server (force refresh to bypass cache)
+        this.loadJobs(true);
+        // Update selected job if detail panel is open
+        if (this.isDetailPanelOpen()) {
+          this.selectedJob.set(result);
+        }
       }
     });
   }
@@ -157,21 +163,27 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
       const originalStatus = job.status;
       const updatedJob = { ...job, status, updatedAt: new Date() };
       this.updateJobInList(updatedJob);
-      
+
       if (this.selectedJob()?.id === job.id) {
         this.selectedJob.set(updatedJob);
       }
 
       // Perform actual update
       await this.maintenanceService.updateJobStatus(job.id, status).toPromise();
-      
+
+      // Wait a moment to ensure backend has fully processed the update
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       loadingMessage.dismiss();
       this.showSuccessMessage('Job status updated successfully');
+
+      // Reload all jobs to get fresh data from the server (force refresh to bypass cache)
+      this.loadJobs(true);
     } catch (error) {
       // Revert optimistic update on error
       const revertedJob = { ...job, status: job.status };
       this.updateJobInList(revertedJob);
-      
+
       if (this.selectedJob()?.id === job.id) {
         this.selectedJob.set(revertedJob);
       }
@@ -188,8 +200,8 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
 
     // Show progress snackbar
     const progressMessage = this.snackBar.open(
-      `Updating ${totalJobs} jobs... (0/${totalJobs})`, 
-      '', 
+      `Updating ${totalJobs} jobs... (0/${totalJobs})`,
+      '',
       {
         duration: 0,
         panelClass: ['info-snackbar']
@@ -207,9 +219,15 @@ export class MaintenanceJobsComponent implements OnInit, OnDestroy {
       // Perform actual bulk update
       const jobIds = jobs.map(job => job.id);
       await this.maintenanceService.bulkUpdateJobStatus(jobIds, status).toPromise();
-      
+
+      // Wait a moment to ensure backend has fully processed the update
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       progressMessage.dismiss();
       this.showSuccessMessage(`${jobs.length} jobs updated successfully`);
+
+      // Reload all jobs to get fresh data from the server (force refresh to bypass cache)
+      this.loadJobs(true);
     } catch (error) {
       // Revert optimistic updates on error
       const originalJobs = jobs.map(job => ({ ...job }));

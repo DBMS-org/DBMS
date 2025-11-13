@@ -1,5 +1,3 @@
-using Application.DTOs.UserManagement;
-
 namespace Application.DTOs.ProjectManagement
 {
     public class ExplosiveApprovalRequestDto

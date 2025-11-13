@@ -266,10 +266,11 @@ namespace Infrastructure.Repositories.ProjectManagement
                 return await _context.ExplosiveApprovalRequests
                     .Include(r => r.ProjectSite)
                         .ThenInclude(ps => ps.Project)
-                            .ThenInclude(p => p.RegionNavigation)
                     .Include(r => r.RequestedByUser)
                     .Include(r => r.ProcessedByUser)
-                    .Where(r => r.ProjectSite.Project.Region == region)
+                    .Where(r => r.ProjectSite != null &&
+                                r.ProjectSite.Project != null &&
+                                r.ProjectSite.Project.Region == region)
                     .OrderByDescending(r => r.CreatedAt)
                     .ToListAsync();
             }
