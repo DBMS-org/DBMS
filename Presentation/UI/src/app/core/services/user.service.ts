@@ -16,11 +16,18 @@ export class UserService {
   // Get all users
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(this.apiUrl).pipe(
-      map(users => users.map(user => ({
-        ...user,
-        createdAt: new Date(user.createdAt),
-        updatedAt: new Date(user.updatedAt)
-      }))),
+      map(users => {
+        // Handle null or undefined response from backend
+        if (!users || !Array.isArray(users)) {
+          console.warn('Received null or invalid users data from API, returning empty array');
+          return [];
+        }
+        return users.map(user => ({
+          ...user,
+          createdAt: new Date(user.createdAt),
+          updatedAt: new Date(user.updatedAt)
+        }));
+      }),
       catchError(this.handleError)
     );
   }
