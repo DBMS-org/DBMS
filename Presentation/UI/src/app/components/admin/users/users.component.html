@@ -146,10 +146,11 @@
 </div>
 
 @if (showAddUserModal) {
-  <app-add-user 
-    (close)="onCloseAddUser()" 
+  <app-add-user
+    (close)="onCloseAddUser()"
     (save)="onSaveUser($event)"
     [error]="error"
+    [errorDetails]="errorDetails"
   ></app-add-user>
 }
 

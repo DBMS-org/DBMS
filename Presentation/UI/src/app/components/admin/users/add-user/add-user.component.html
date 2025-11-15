@@ -11,7 +11,16 @@
     @if (error) {
       <div class="error-alert">
         <i class="material-icons">error</i>
-        <span>{{error}}</span>
+        <div class="error-content">
+          <span class="error-title">{{error}}</span>
+          @if (errorDetails && errorDetails.length > 0) {
+            <ul class="error-list">
+              @for (detail of errorDetails; track detail) {
+                <li>{{detail}}</li>
+              }
+            </ul>
+          }
+        </div>
       </div>
     }
 
