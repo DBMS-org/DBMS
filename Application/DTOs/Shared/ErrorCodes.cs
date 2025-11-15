@@ -42,32 +42,41 @@ public static class ErrorCodes
 
     public static class Messages
     {
-        public const string ResourceNotFound = "The requested resource was not found.";
-        public const string ResourceAlreadyExists = "The resource already exists.";
-        public const string ValidationFailed = "Validation failed for the provided data.";
-        public const string Unauthorized = "You are not authorized to perform this action.";
-        public const string Forbidden = "Access to this resource is forbidden.";
-        public const string InternalError = "An internal error occurred while processing your request.";
-        public const string InvalidOperation = "The requested operation is not valid.";
-        public const string ArgumentNull = "A required argument was null or empty.";
-        public const string ArgumentInvalid = "One or more arguments are invalid.";
-        public const string InvalidCsvFormat = "The CSV file format is invalid or missing required columns.";
+        // General Messages
+        public const string ResourceNotFound = "The requested resource could not be found. Please verify the information and try again.";
+        public const string ResourceAlreadyExists = "This resource already exists in the system. Please use a different identifier.";
+        public const string ValidationFailed = "Please review the form and correct the highlighted errors before submitting.";
+        public const string Unauthorized = "You need to be logged in to perform this action. Please log in and try again.";
+        public const string Forbidden = "You don't have permission to perform this action. Please contact your administrator if you need access.";
+        public const string InternalError = "An unexpected error occurred. Our team has been notified and is working to resolve the issue.";
+        public const string InvalidOperation = "This operation cannot be performed at this time. Please check the current state and try again.";
+        public const string ArgumentNull = "Required information is missing. Please provide all required fields.";
+        public const string ArgumentInvalid = "Some of the provided information is invalid. Please check your input and try again.";
+        public const string InvalidCsvFormat = "The CSV file format is invalid or missing required columns. Please ensure your file follows the correct template.";
 
-        public static string UserNotFound(int id) => $"User with ID {id} was not found.";
-        public static string UserNotFound(string identifier) => $"User with identifier '{identifier}' was not found.";
-        public static string UserAlreadyExists(string email) => $"User with email '{email}' already exists.";
-        public static string ProjectNotFound(int id) => $"Project with ID {id} was not found.";
-        public static string ProjectSiteNotFound(int id) => $"Project site with ID {id} was not found.";
-        public static string MachineNotFound(int id) => $"Machine with ID {id} was not found.";
-        public static string DrillHoleNotFound(string id) => $"Drill hole with ID '{id}' was not found.";
-        public static string DrillHoleAlreadyExists(string id) => $"Drill hole with ID '{id}' already exists.";
+        // User Management Messages
+        public static string UserNotFound(int id) => $"User with ID {id} could not be found. The user may have been deleted or the ID is incorrect.";
+        public static string UserNotFound(string identifier) => $"User '{identifier}' could not be found. Please verify the username or email and try again.";
+        public static string UserAlreadyExists(string email) => $"A user with email '{email}' already exists. Please use a different email address.";
 
-        public static string DrillPatternNotFound(int id) => $"Drill pattern with ID {id} was not found.";
-        public static string InvalidCoordinates(double x, double y) => $"Invalid coordinates: ({x}, {y}).";
-        public static string DuplicateCoordinates(double x, double y) => $"A drill point already exists at coordinates ({x:F2}, {y:F2}).";
-        public static string MaxDrillPointsExceeded(int maxPoints) => $"Maximum number of drill points ({maxPoints}) exceeded.";
-        public static string DrillPointNotFound(string id) => $"Drill point with ID '{id}' was not found.";
-        public static string CsvParsingError(int line, string error) => $"CSV parsing error at line {line}: {error}";
-        public static string CsvValidationError(string field, string value) => $"CSV validation error for field '{field}' with value '{value}'.";
+        // Project Management Messages
+        public static string ProjectNotFound(int id) => $"Project with ID {id} could not be found. It may have been deleted or archived.";
+        public static string ProjectSiteNotFound(int id) => $"Project site with ID {id} could not be found. Please verify the site ID and try again.";
+
+        // Machine Management Messages
+        public static string MachineNotFound(int id) => $"Machine with ID {id} could not be found. The machine may have been removed from the system.";
+
+        // Drilling Operations Messages
+        public static string DrillHoleNotFound(string id) => $"Drill hole '{id}' could not be found. Please verify the drill hole ID.";
+        public static string DrillHoleAlreadyExists(string id) => $"A drill hole with ID '{id}' already exists at this location. Please use a different identifier.";
+        public static string DrillPatternNotFound(int id) => $"Drill pattern with ID {id} could not be found. It may have been deleted.";
+        public static string InvalidCoordinates(double x, double y) => $"The coordinates ({x}, {y}) are invalid. Please ensure coordinates are within the permitted range.";
+        public static string DuplicateCoordinates(double x, double y) => $"A drill point already exists at coordinates ({x:F2}, {y:F2}). Please choose a different location.";
+        public static string MaxDrillPointsExceeded(int maxPoints) => $"You have exceeded the maximum number of drill points ({maxPoints}). Please remove some points before adding more.";
+        public static string DrillPointNotFound(string id) => $"Drill point '{id}' could not be found in the pattern.";
+
+        // CSV Import Messages
+        public static string CsvParsingError(int line, string error) => $"Error reading CSV file at line {line}: {error}. Please check the file format and try again.";
+        public static string CsvValidationError(string field, string value) => $"Invalid value '{value}' for field '{field}'. Please correct this value and re-upload the file.";
     }
 } 

@@ -65,7 +65,13 @@ namespace API.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
                 var response = await _authService.ForgotPasswordAsync(request);
-                return Ok(response);
+
+                if (response.IsFailure)
+                {
+                    return BadRequest(new { message = response.Error });
+                }
+
+                return Ok(new { message = "Password reset code has been sent to your email." });
         }
 
         [HttpPost("verify-reset-code")]
