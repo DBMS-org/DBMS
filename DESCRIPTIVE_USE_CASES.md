@@ -1,8 +1,8 @@
 # DESCRIPTIVE USE CASES SPECIFICATION
 ## Drilling & Blasting Management System (DBMS)
 
-**Document Version:** 1.0
-**Date:** October 22, 2025
+**Document Version:** 2.0 (Corrected)
+**Date:** November 15, 2025
 **Project:** DBMS - Enterprise Drilling & Blasting Management System
 **Based on:** Functional Requirements v2.0 and Implementation Analysis
 
@@ -77,10 +77,10 @@ Each use case follows this standard format:
 
 **Postconditions**:
 - User is successfully authenticated
-- JWT token is generated and returned to user
-- User's last login timestamp is updated in the database
-- User is redirected to role-specific dashboard
 - User session is established
+- User login time is recorded
+- User is redirected to role-specific dashboard
+- User can access authorized system functions
 
 **Basic Flow**:
 1. User navigates to the login page
@@ -89,16 +89,12 @@ Each use case follows this standard format:
 4. User enters their password in the Password field
 5. User clicks the "Login" button
 6. System validates that both fields are not empty
-7. System retrieves user record from database by email address
-8. System verifies the entered password against stored BCrypt hash
-9. System validates that user account is active (not locked or deactivated)
-10. System generates JWT token containing claims: User ID, Full Name, Email, Primary Role, Assigned Region
-11. System signs JWT token using HS256 algorithm with secret key
-12. System updates LastLogin timestamp for the user
-13. System returns JWT token to the client
-14. Client stores JWT token in local storage
-15. System redirects user to role-specific dashboard based on primary role
-16. Use case ends successfully
+7. System verifies user credentials
+8. System confirms user account is active
+9. System authenticates user and creates session
+10. System records login time for audit purposes
+11. System redirects user to role-specific dashboard
+12. Use case ends successfully
 
 **Exceptional Flow**:
 
@@ -118,7 +114,7 @@ Each use case follows this standard format:
   4. Return to Step 3
 
 **E3: Invalid Password**
-- **Trigger**: Password does not match stored hash (Step 8)
+- **Trigger**: Password is incorrect (Step 7)
 - **Actions**:
   1. System increments failed login attempt counter for user
   2. System displays error message: "Invalid email or password"
@@ -152,22 +148,22 @@ Each use case follows this standard format:
 **Alternate Flow**:
 
 **A1: First-Time Login with Temporary Password**
-- **Trigger**: User has temporary password flag set (after Step 10)
+- **Trigger**: User has temporary password set (after Step 9)
 - **Actions**:
-  1. Continue Steps 11-13 from basic flow
+  1. System authenticates user
   2. System redirects user to Change Password page instead of dashboard
   3. System displays message: "You must change your temporary password before continuing"
   4. User must complete password change process (see UC-AUTH-003)
-  5. After successful password change, proceed to Step 15
+  5. After successful password change, user proceeds to dashboard
   6. Use case ends successfully
 
 **A2: Remember Me Option**
 - **Trigger**: User selects "Remember Me" checkbox (after Step 4)
 - **Actions**:
-  1. Continue Steps 5-13 from basic flow
-  2. System generates refresh token with extended expiration (30 days)
-  3. System stores refresh token in secure HTTP-only cookie
-  4. Continue from Step 14
+  1. Continue Steps 5-9 from basic flow
+  2. System extends session duration
+  3. User remains logged in for extended period
+  4. Continue from Step 10
   5. Use case ends successfully
 
 ---
@@ -188,10 +184,10 @@ Each use case follows this standard format:
 - Email service must be operational
 
 **Postconditions**:
-- Password reset code is generated and stored in database
+- Password reset code is generated
 - Reset code is sent to user's registered email
-- Reset code expires after 10 minutes
-- Reset process is logged for security audit
+- Reset code will expire after 10 minutes
+- Reset request is logged for security audit
 
 **Basic Flow**:
 1. User navigates to the login page
@@ -201,24 +197,13 @@ Each use case follows this standard format:
 5. User enters their registered email address
 6. User clicks "Send Reset Code" button
 7. System validates email format
-8. System queries database for user account with provided email
-9. System generates unique 6-digit numeric reset code
-10. System calculates expiration timestamp (current time + 10 minutes)
-11. System creates password reset code record in database with:
-    - User ID
-    - Reset Code
-    - Expiration Timestamp
-    - Created At timestamp
-    - Is Used flag (set to false)
-12. System composes email with:
-    - Subject: "Password Reset Code - DBMS"
-    - Body containing reset code
-    - Expiration time (10 minutes)
-    - Security warning not to share code
-13. System sends email to user's registered address
-14. System displays success message: "Reset code has been sent to your email. Please check your inbox"
-15. System redirects user to reset code verification page
-16. Use case ends successfully
+8. System verifies user account exists
+9. System generates unique 6-digit reset code
+10. System sets code expiration time (10 minutes from now)
+11. System sends email to user with reset code and instructions
+12. System displays success message: "Reset code has been sent to your email. Please check your inbox"
+13. System redirects user to reset code verification page
+14. Use case ends successfully
 
 **Exceptional Flow**:
 
@@ -238,18 +223,18 @@ Each use case follows this standard format:
   4. Use case ends (user sees success message but receives no email)
 
 **E3: Email Service Failure**
-- **Trigger**: Email service fails to send email (Step 13)
+- **Trigger**: Email service fails to send email (Step 11)
 - **Actions**:
   1. System logs email delivery failure
   2. System displays error: "Failed to send reset code. Please try again later"
-  3. System deletes unused reset code from database
+  3. System cancels reset request
   4. Return to Step 5
 
 **E4: Multiple Requests**
-- **Trigger**: User already has active (non-expired) reset code (after Step 8)
+- **Trigger**: User already has active reset code (after Step 8)
 - **Actions**:
   1. System invalidates previous reset code
-  2. Continue with Steps 9-16 (generate new code)
+  2. Continue with Steps 9-14 (generate new code)
   3. Use case ends successfully
 
 **E5: Database Error**
@@ -287,7 +272,7 @@ Each use case follows this standard format:
 - Reset code has not been used
 
 **Postconditions**:
-- User's password is updated with new BCrypt hash
+- User's password is securely updated
 - Reset code is marked as used and invalidated
 - User receives email confirmation of password change
 - User can login with new password
@@ -316,17 +301,15 @@ Each use case follows this standard format:
     - At least one lowercase letter
     - At least one digit
     - At least one special character
-14. System queries database for password reset code record matching:
-    - Email address
-    - Reset code
+14. System verifies reset code matches the one sent to user's email
 15. System verifies reset code exists
-16. System checks reset code expiration timestamp
-17. System verifies reset code has not been used (IsUsed = false)
-18. System retrieves user account by email
-19. System hashes new password using BCrypt with generated salt
-20. System updates user record with new password hash
-21. System marks reset code as used (IsUsed = true)
-22. System updates reset code UsedAt timestamp
+16. System checks reset code has not expired
+17. System verifies reset code has not been used
+18. System retrieves user account
+19. System securely processes new password
+20. System updates user record with new password
+21. System marks reset code as used
+22. System records when reset code was used
 23. System logs password reset event with user ID and timestamp
 24. System composes confirmation email:
     - Subject: "Password Changed Successfully - DBMS"
@@ -404,11 +387,11 @@ Each use case follows this standard format:
   3. If user clicks button, redirect to UC-AUTH-002
   4. Otherwise, use case ends
 
-**E9: Database Update Failure**
-- **Trigger**: Database update fails (Step 20 or 21)
+**E9: System Update Failure**
+- **Trigger**: Password update fails (Step 20 or 21)
 - **Actions**:
-  1. System rolls back transaction
-  2. System logs database error
+  1. System cancels the operation
+  2. System logs error
   3. System displays error: "Failed to reset password. Please try again"
   4. Return to Step 4
 
@@ -451,12 +434,12 @@ Each use case follows this standard format:
 - Secondary: System
 
 **Preconditions**:
-- User must be logged in with valid session
-- User must have valid JWT token
+- User must be logged in with active session
+- User must be authenticated
 
 **Postconditions**:
 - User session is terminated
-- JWT token is invalidated on client side
+- User authentication is invalidated
 - User is redirected to login page
 - Logout event is logged
 - User cannot access protected resources without re-authentication
@@ -466,17 +449,17 @@ Each use case follows this standard format:
 2. User clicks "Logout" button in navigation menu or user profile dropdown
 3. System displays confirmation dialog: "Are you sure you want to logout?"
 4. User clicks "Yes" to confirm logout
-5. System sends logout request to backend API with JWT token in header
-6. Backend validates JWT token
-7. Backend logs logout event with:
+5. System processes logout request
+6. System validates user session
+7. System logs logout event with:
    - User ID
    - Logout timestamp
    - Session duration
    - IP address
-8. Backend returns success response
-9. Client removes JWT token from local storage
-10. Client clears all cached user data
-11. Client resets application state to initial/logged-out state
+8. System confirms logout successful
+9. System clears user session information
+10. System clears all cached user data
+11. System resets application to logged-out state
 12. System displays notification: "You have been logged out successfully"
 13. System redirects user to login page
 14. Use case ends successfully
@@ -491,19 +474,19 @@ Each use case follows this standard format:
   3. Session remains active
   4. Use case ends
 
-**E2: Backend API Unavailable**
-- **Trigger**: Backend API call fails (Step 5-8)
+**E2: Service Unavailable**
+- **Trigger**: Logout service unavailable (Step 5-8)
 - **Actions**:
-  1. Client proceeds with local cleanup (Steps 9-11)
-  2. Client logs logout event locally
+  1. System proceeds with local cleanup (Steps 9-11)
+  2. System logs logout event locally
   3. Continue with Steps 12-14
   4. Use case ends successfully (graceful degradation)
 
-**E3: Invalid Token**
-- **Trigger**: JWT token validation fails (Step 6)
+**E3: Invalid Session**
+- **Trigger**: Session validation fails (Step 6)
 - **Actions**:
-  1. Backend returns unauthorized response
-  2. Client proceeds with local cleanup (Steps 9-11)
+  1. System returns unauthorized response
+  2. System proceeds with local cleanup (Steps 9-11)
   3. Continue with Steps 12-14
   4. Use case ends successfully
 
@@ -538,135 +521,135 @@ Each use case follows this standard format:
 - Secondary: Any Authenticated User
 
 **Preconditions**:
-- User has previously logged in and received JWT token
+- User has previously logged in and has active session
 - User attempts to access protected resource
-- JWT token is stored in client local storage
+- Session information is maintained by system
 
 **Postconditions**:
-- Token validity is determined
+- Session validity is determined
 - Access to protected resource is granted or denied
-- Invalid tokens trigger re-authentication
-- Token validation is logged for security audit
+- Invalid sessions trigger re-authentication
+- Session validation is logged for security audit
 
 **Basic Flow**:
 1. User navigates to protected page or initiates action requiring authentication
-2. Client retrieves JWT token from local storage
-3. Client includes JWT token in Authorization header: "Bearer {token}"
-4. Client sends HTTP request to backend API endpoint
-5. Backend receives request and extracts token from Authorization header
-6. Backend validates token is present
-7. Backend decodes JWT token header and payload
-8. Backend validates token signature using secret key and HS256 algorithm
-9. Backend validates token issuer matches configured issuer
-10. Backend validates token audience matches configured audience
-11. Backend extracts expiration claim (exp) from token
-12. Backend compares expiration timestamp with current server time
-13. Backend verifies token has not expired
-14. Backend extracts user claims from token:
+2. System retrieves user session information
+3. System includes session credentials with request
+4. System sends request to verify access
+5. System receives request and extracts session information
+6. System validates session is present
+7. System verifies session authenticity
+8. System validates session integrity
+9. System validates session source
+10. System validates session authorization level
+11. System checks session expiration time
+12. System compares expiration time with current time
+13. System verifies session has not expired
+14. System extracts user information from session:
     - User ID
     - Full Name
     - Email
     - Primary Role
     - Assigned Region
-15. Backend attaches user identity to request context
-16. Backend logs successful token validation (minimal logging for performance)
-17. Backend proceeds with processing the requested operation
-18. Backend returns successful response with requested data
-19. Client renders response data to user
+15. System attaches user identity to request
+16. System logs successful session validation
+17. System proceeds with processing the requested operation
+18. System returns successful response with requested data
+19. System renders response data to user
 20. Use case ends successfully
 
 **Exceptional Flow**:
 
-**E1: Token Not Found**
-- **Trigger**: No JWT token in local storage (Step 2)
+**E1: Session Not Found**
+- **Trigger**: No active session found (Step 2)
 - **Actions**:
-  1. Client displays notification: "Session expired. Please login"
-  2. Client redirects user to login page
+  1. System displays notification: "Session expired. Please login"
+  2. System redirects user to login page
   3. Use case ends
 
-**E2: Missing Authorization Header**
-- **Trigger**: Authorization header not present in request (Step 6)
+**E2: Missing Session Information**
+- **Trigger**: Session information not present in request (Step 6)
 - **Actions**:
-  1. Backend returns 401 Unauthorized response
-  2. Backend includes error message: "Authorization header is missing"
-  3. Client receives 401 response
-  4. Client redirects to login page
+  1. System returns unauthorized response
+  2. System includes error message: "Session information is missing"
+  3. System receives unauthorized response
+  4. System redirects to login page
   5. Use case ends
 
-**E3: Invalid Token Format**
-- **Trigger**: Token cannot be decoded (Step 7)
+**E3: Invalid Session Format**
+- **Trigger**: Session cannot be verified (Step 7)
 - **Actions**:
-  1. Backend logs security warning: "Malformed JWT token"
-  2. Backend returns 401 Unauthorized response
-  3. Backend includes error message: "Invalid token format"
-  4. Client removes invalid token from local storage
-  5. Client redirects to login page
+  1. System logs security warning: "Malformed session"
+  2. System returns unauthorized response
+  3. System includes error message: "Invalid session format"
+  4. System removes invalid session
+  5. System redirects to login page
   6. Use case ends
 
-**E4: Invalid Signature**
-- **Trigger**: Token signature verification fails (Step 8)
+**E4: Invalid Verification**
+- **Trigger**: Session verification fails (Step 8)
 - **Actions**:
-  1. Backend logs security alert: "JWT signature verification failed"
-  2. Backend returns 401 Unauthorized response
-  3. Backend includes error message: "Invalid token signature"
-  4. Client removes invalid token from local storage
-  5. Client redirects to login page
+  1. System logs security alert: "Session verification failed"
+  2. System returns unauthorized response
+  3. System includes error message: "Invalid session"
+  4. System removes invalid session
+  5. System redirects to login page
   6. Use case ends
 
-**E5: Invalid Issuer**
-- **Trigger**: Token issuer doesn't match configured issuer (Step 9)
+**E5: Invalid Source**
+- **Trigger**: Session source doesn't match expected source (Step 9)
 - **Actions**:
-  1. Backend logs security alert: "JWT issuer mismatch"
-  2. Backend returns 401 Unauthorized response
-  3. Backend includes error message: "Invalid token issuer"
-  4. Client removes invalid token
-  5. Client redirects to login page
+  1. System logs security alert: "Session source mismatch"
+  2. System returns unauthorized response
+  3. System includes error message: "Invalid session source"
+  4. System removes invalid session
+  5. System redirects to login page
   6. Use case ends
 
-**E6: Invalid Audience**
-- **Trigger**: Token audience doesn't match configured audience (Step 10)
+**E6: Invalid Authorization Level**
+- **Trigger**: Session authorization doesn't match required level (Step 10)
 - **Actions**:
-  1. Backend logs security alert: "JWT audience mismatch"
-  2. Backend returns 401 Unauthorized response
-  3. Backend includes error message: "Invalid token audience"
-  4. Client removes invalid token
-  5. Client redirects to login page
+  1. System logs security alert: "Authorization level mismatch"
+  2. System returns unauthorized response
+  3. System includes error message: "Invalid authorization"
+  4. System removes invalid session
+  5. System redirects to login page
   6. Use case ends
 
-**E7: Token Expired**
-- **Trigger**: Current time > token expiration time (Step 13)
+**E7: Session Expired**
+- **Trigger**: Current time exceeds session expiration time (Step 13)
 - **Actions**:
-  1. Backend returns 401 Unauthorized response
-  2. Backend includes error message: "Token has expired"
-  3. Client receives 401 response
-  4. Client removes expired token from local storage
-  5. Client displays notification: "Your session has expired. Please login again"
-  6. Client redirects to login page
+  1. System returns unauthorized response
+  2. System includes error message: "Session has expired"
+  3. System receives unauthorized response
+  4. System removes expired session
+  5. System displays notification: "Your session has expired. Please login again"
+  6. System redirects to login page
   7. Use case ends
 
 **E8: User Account Deactivated**
-- **Trigger**: User ID in token corresponds to deactivated account (after Step 14)
+- **Trigger**: User ID in session corresponds to deactivated account (after Step 14)
 - **Actions**:
-  1. Backend queries user status from database
-  2. Backend detects account is deactivated
-  3. Backend returns 403 Forbidden response
-  4. Backend includes error message: "Account has been deactivated"
-  5. Client removes token
-  6. Client displays error message
-  7. Client redirects to login page
+  1. System checks user status
+  2. System detects account is deactivated
+  3. System returns forbidden response
+  4. System includes error message: "Account has been deactivated"
+  5. System removes session
+  6. System displays error message
+  7. System redirects to login page
   8. Use case ends
 
 **Alternate Flow**:
 
-**A1: Token Refresh (Optional Enhancement)**
-- **Trigger**: Token is close to expiration (within 5 minutes) but still valid (after Step 13)
+**A1: Session Refresh (Optional Enhancement)**
+- **Trigger**: Session is close to expiration (within 5 minutes) but still valid (after Step 13)
 - **Actions**:
   1. Continue Steps 14-18 to complete current request
-  2. Backend generates new JWT token with extended expiration
-  3. Backend includes new token in response header: X-Refreshed-Token
-  4. Client receives response and extracts new token
-  5. Client replaces old token with new token in local storage
-  6. Client displays subtle notification: "Session extended"
+  2. System generates new session with extended expiration
+  3. System includes new session information in response
+  4. System receives response and extracts new session
+  5. System replaces old session with new session
+  6. System displays subtle notification: "Session extended"
   7. Use case ends successfully
 
 ---
@@ -692,8 +675,8 @@ Each use case follows this standard format:
 - Email service must be operational
 
 **Postconditions**:
-- New user account is created in database
-- User password is hashed using BCrypt
+- New user account is created
+- User password is securely stored
 - User is assigned specified role
 - New user receives welcome email with credentials
 - User creation event is logged
@@ -729,18 +712,18 @@ Each use case follows this standard format:
 17. System validates email format using regex
 18. System validates phone number formats
 19. System validates password meets complexity requirements
-20. System checks if email already exists in database
+20. System checks if email already exists
 21. System validates email is unique
-22. System hashes password using BCrypt with generated salt
-23. System creates user record in database with:
+22. System securely stores password
+23. System creates user record with:
     - All provided information
-    - Password hash (not plain password)
+    - Secure password storage
     - Account status: Active
-    - Created At timestamp
+    - Created timestamp
     - Created By: Current Admin's User ID
     - Is First Login: true
-24. System creates user-role association in UserRoles table
-25. System commits transaction to database
+24. System creates user-role association
+25. System saves changes
 26. System composes welcome email:
     - Subject: "Welcome to DBMS - Your Account Details"
     - Body with:
@@ -797,10 +780,10 @@ Each use case follows this standard format:
   3. System highlights email field
   4. Return to Step 5
 
-**E6: Database Error**
-- **Trigger**: Database insertion fails (Step 25)
+**E6: System Error**
+- **Trigger**: User creation fails (Step 25)
 - **Actions**:
-  1. System rolls back transaction
+  1. System cancels the operation
   2. System logs error details
   3. System displays error: "Failed to create user account. Please try again"
   4. Return to Step 15
@@ -868,7 +851,7 @@ Each use case follows this standard format:
 - User Management interface must be accessible
 
 **Postconditions**:
-- User account information is updated in database
+- User account information is updated
 - User receives email notification of changes
 - Update event is logged with change history
 - If role changed, user permissions are updated immediately
@@ -880,7 +863,7 @@ Each use case follows this standard format:
    - Email, First Name, Last Name, Role(s), Status, Region, Creation Date, Last Login
 3. Admin searches or filters to find target user
 4. Admin clicks on user row or "Edit" button for specific user
-5. System retrieves user details from database
+5. System retrieves user details
 6. System displays user edit form pre-populated with current data:
    - Email Address (read-only, display only)
    - First Name (editable)
@@ -898,13 +881,13 @@ Each use case follows this standard format:
 10. System validates required fields are not empty
 11. System validates phone number formats if changed
 12. System captures "before" state of user record for audit trail
-13. System updates user record in database with modified fields
-14. System updates timestamp: Modified At = current timestamp
-15. System records modifier: Modified By = Current Admin's User ID
+13. System updates user record with modified fields
+14. System updates timestamp to current time
+15. System records modifier as Current Admin's User ID
 16. If role was changed:
     - System updates user-role associations
-    - System invalidates any cached permissions for this user
-17. System commits transaction to database
+    - System refreshes user permissions
+17. System saves changes
 18. System captures "after" state of user record for audit trail
 19. System creates audit log entry with:
     - User ID
@@ -949,10 +932,10 @@ Each use case follows this standard format:
   3. System refreshes user list
   4. Use case ends
 
-**E4: Database Update Failure**
-- **Trigger**: Database update fails (Step 17)
+**E4: Update Failure**
+- **Trigger**: User update fails (Step 17)
 - **Actions**:
-  1. System rolls back transaction
+  1. System cancels the operation
   2. System logs error details
   3. System displays error: "Failed to update user account. Please try again"
   4. Return to Step 7
@@ -1004,9 +987,9 @@ Each use case follows this standard format:
   1. System displays password reset dialog
   2. Admin enters new temporary password
   3. System validates password complexity
-  4. System hashes password with BCrypt
-  5. System updates password hash in database
-  6. System sets IsFirstLogin flag to true
+  4. System securely stores new password
+  5. System updates password
+  6. System sets first login flag to true
   7. System sends email to user with new temporary password
   8. System displays success message
   9. Return to Step 7 (form remains open for other edits)
@@ -1043,7 +1026,7 @@ Each use case follows this standard format:
 - User Management interface must be accessible
 
 **Postconditions**:
-- User account is permanently removed from database (or deactivated based on policy)
+- User account is permanently removed (or deactivated based on policy)
 - All user-role associations are removed
 - User receives email notification of account deletion
 - Deletion event is logged
@@ -1071,15 +1054,15 @@ Each use case follows this standard format:
     - Machines as assigned operator
     - Pending approval requests
 11. System retrieves user details for logging
-12. System begins database transaction
-13. System removes user-role associations from UserRoles table
+12. System begins deletion process
+13. System removes user-role associations
 14. System removes user's password reset codes (if any)
 15. System updates historical records to retain user reference but mark as deleted:
     - Audit logs retain User ID
     - Created By / Modified By fields retain User ID
     - Project assignments are marked with "[Deleted User]" annotation
-16. System deletes user record from Users table
-17. System commits transaction
+16. System removes user record
+17. System confirms deletion complete
 18. System logs deletion event with:
     - Deleted User ID and Email
     - Admin who performed deletion
@@ -1127,10 +1110,10 @@ Each use case follows this standard format:
   2. System refreshes user list
   3. Use case ends
 
-**E4: Database Deletion Failure**
-- **Trigger**: Database transaction fails (Step 17)
+**E4: Deletion Failure**
+- **Trigger**: Deletion process fails (Step 17)
 - **Actions**:
-  1. System rolls back entire transaction
+  1. System cancels entire operation
   2. System logs error details
   3. System displays error: "Failed to delete user account. Please try again or contact support"
   4. User account remains unchanged
@@ -1212,7 +1195,7 @@ Each use case follows this standard format:
 - Admin must be authenticated and authorized
 - Admin must have "RequireAdminRole" authorization
 - User Management interface must be accessible
-- At least one user exists in database
+- At least one user exists in system
 
 **Postconditions**:
 - Filtered/searched user list is displayed
@@ -1231,8 +1214,8 @@ Each use case follows this standard format:
    - Last Login Date Range (date picker)
 4. System displays search bar at top with placeholder: "Search by name or email..."
 5. Admin enters search text in search bar (e.g., "john" or "john@example.com")
-6. System performs real-time search (debounced after 300ms of no typing)
-7. System queries database for users where:
+6. System performs real-time search
+7. System searches for users where:
    - Email contains search text (case-insensitive), OR
    - First Name contains search text (case-insensitive), OR
    - Last Name contains search text (case-insensitive), OR
@@ -1265,8 +1248,8 @@ Each use case follows this standard format:
   4. If Admin clicks "Clear All", return to Step 2 with all users
   5. Otherwise, use case ends
 
-**E2: Database Query Error**
-- **Trigger**: Database query fails (Step 8 or 14)
+**E2: Search Error**
+- **Trigger**: Search operation fails (Step 8 or 14)
 - **Actions**:
   1. System logs error details
   2. System displays error: "Unable to retrieve users. Please try again"
@@ -1314,7 +1297,7 @@ Each use case follows this standard format:
 **A4: Sort Results**
 - **Trigger**: Admin clicks column header to sort (any time after Step 9)
 - **Actions**:
-  1. System re-queries database with ORDER BY clause for selected column
+  1. System re-retrieves users sorted by selected column
   2. System toggles sort direction (ascending/descending) on repeated clicks
   3. System displays sort indicator (up/down arrow) in column header
   4. System updates displayed results
