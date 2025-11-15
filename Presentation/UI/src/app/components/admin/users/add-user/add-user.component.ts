@@ -17,6 +17,7 @@ export class AddUserComponent {
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<any>();
   @Input() error: string | null = null;
+  @Input() errorDetails: string[] = [];
 
   user = {
     name: '',

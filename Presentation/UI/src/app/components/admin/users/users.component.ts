@@ -39,6 +39,7 @@ export class UsersComponent implements OnInit {
   showAssignUserModal = false;
   loading = false;
   error: string | null = null;
+  errorDetails: string[] = [];
   showDeleteModal = false;
   userToDelete: User | null = null;
 
@@ -93,6 +94,7 @@ export class UsersComponent implements OnInit {
 
   addUser() {
     this.error = null; // Clear any previous errors
+    this.errorDetails = [];
     this.showAddUserModal = true;
   }
 
@@ -116,10 +118,13 @@ export class UsersComponent implements OnInit {
         this.filteredUsers = [...this.users];
         this.showAddUserModal = false;
         this.error = null;
+        this.errorDetails = [];
+        this.notification.showSuccess('User created successfully! Credentials have been sent to the user via email.');
         console.log('User created successfully:', newUser);
       },
       error: (error) => {
-        this.error = error.message;
+        this.error = error.message || 'An error occurred while creating the user';
+        this.errorDetails = error.details || [];
         console.error('Error creating user:', error);
       }
     });
