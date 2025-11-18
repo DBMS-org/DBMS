@@ -67,8 +67,7 @@ export class AddMachineComponent implements OnInit {
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
       region: [''],
-      projectId: [''],
-      status: [MachineStatus.AVAILABLE, Validators.required]
+      projectId: ['']
     });
   }
 
@@ -180,7 +179,12 @@ export class AddMachineComponent implements OnInit {
       this.error = null;
 
       const formValue = this.machineForm.value;
-      
+      const projectId = formValue.projectId ? parseInt(formValue.projectId) : undefined;
+
+      // Automatically determine status based on project assignment
+      // If project is selected → ASSIGNED, otherwise → AVAILABLE
+      const status = projectId ? MachineStatus.ASSIGNED : MachineStatus.AVAILABLE;
+
       // Transform form data to API request format
       const request: CreateMachineRequest = {
         name: formValue.name,
@@ -193,9 +197,9 @@ export class AddMachineComponent implements OnInit {
         manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
         chassisDetails: formValue.chassisDetails || undefined,
         currentLocation: this.getLocationValue(),
-        projectId: formValue.projectId ? parseInt(formValue.projectId) : undefined,
+        projectId: projectId,
         regionId: this.getRegionId(),
-        status: formValue.status
+        status: status
       };
       
       // Submit machine creation request

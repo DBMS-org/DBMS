@@ -3,23 +3,13 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
-import { CheckboxModule } from 'primeng/checkbox';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { DividerModule } from 'primeng/divider';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { CardModule } from 'primeng/card';
-import { MessageModule } from 'primeng/message';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { MaintenanceReportService } from '../../maintenance-reports/services/maintenance-report.service';
-import { 
-  OperatorMachine, 
-  MachinePart, 
-  ProblemCategory, 
+import {
+  OperatorMachine,
+  MachinePart,
+  ProblemCategory,
   SeverityLevel,
   MACHINE_PART_OPTIONS,
   PROBLEM_CATEGORY_OPTIONS,
@@ -40,17 +30,7 @@ interface DialogData {
     CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
-    MatIconModule,
-    ButtonModule,
-    DropdownModule,
-    InputTextModule,
-    InputTextareaModule,
-    CheckboxModule,
-    RadioButtonModule,
-    DividerModule,
-    ProgressSpinnerModule,
-    CardModule,
-    MessageModule
+    MatIconModule
   ],
   template: `
     <div class="report-dialog">
@@ -69,7 +49,7 @@ interface DialogData {
           </div>
         } @else if (isSubmitting()) {
           <div class="loading-container">
-            <p-progressSpinner styleClass="custom-spinner" [style]="{ width: '40px', height: '40px' }"></p-progressSpinner>
+            <div class="custom-spinner"></div>
             <p>Submitting your report...</p>
           </div>
         } @else if (error()) {
@@ -86,22 +66,19 @@ interface DialogData {
                     <label for="affectedPart" class="field-label">
                       Affected Part <span class="required-indicator">*</span>
                     </label>
-                    <p-dropdown
-                      id="affectedPart"
-                      formControlName="affectedPart"
-                      [options]="machinePartOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="Select part"
-                      styleClass="w-full"
-                      appendTo="body">
-                      <ng-template let-option pTemplate="item">
-                        <div class="option-with-icon">
-                          <mat-icon>{{ option.icon }}</mat-icon>
-                          <span>{{ option.label }}</span>
-                        </div>
-                      </ng-template>
-                    </p-dropdown>
+                    <div class="custom-select-wrapper">
+                      <mat-icon class="select-icon">{{ getSelectedPartIcon() }}</mat-icon>
+                      <select
+                        id="affectedPart"
+                        formControlName="affectedPart"
+                        class="custom-select">
+                        <option value="" disabled>Select part</option>
+                        <option *ngFor="let option of machinePartOptions" [value]="option.value">
+                          {{ option.label }}
+                        </option>
+                      </select>
+                      <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+                    </div>
                     <small class="field-error" *ngIf="reportForm.get('affectedPart')?.hasError('required') && reportForm.get('affectedPart')?.touched">
                       Required
                     </small>
@@ -111,22 +88,19 @@ interface DialogData {
                     <label for="problemCategory" class="field-label">
                       Problem Category <span class="required-indicator">*</span>
                     </label>
-                    <p-dropdown
-                      id="problemCategory"
-                      formControlName="problemCategory"
-                      [options]="problemCategoryOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="Select category"
-                      styleClass="w-full"
-                      appendTo="body">
-                      <ng-template let-option pTemplate="item">
-                        <div class="option-with-icon">
-                          <mat-icon>{{ option.icon }}</mat-icon>
-                          <span>{{ option.label }}</span>
-                        </div>
-                      </ng-template>
-                    </p-dropdown>
+                    <div class="custom-select-wrapper">
+                      <mat-icon class="select-icon">{{ getSelectedCategoryIcon() }}</mat-icon>
+                      <select
+                        id="problemCategory"
+                        formControlName="problemCategory"
+                        class="custom-select">
+                        <option value="" disabled>Select category</option>
+                        <option *ngFor="let option of problemCategoryOptions" [value]="option.value">
+                          {{ option.label }}
+                        </option>
+                      </select>
+                      <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+                    </div>
                     <small class="field-error" *ngIf="reportForm.get('problemCategory')?.hasError('required') && reportForm.get('problemCategory')?.touched">
                       Required
                     </small>
@@ -139,12 +113,11 @@ interface DialogData {
                     <small class="char-counter">{{ getDescriptionLength() }}/500</small>
                   </label>
                   <textarea
-                    pInputTextarea
                     id="customDescription"
                     formControlName="customDescription"
                     rows="3"
                     placeholder="Describe the issue..."
-                    class="w-full modern-textarea"
+                    class="modern-textarea"
                     maxlength="500"></textarea>
                   <small class="field-error" *ngIf="reportForm.get('customDescription')?.invalid && reportForm.get('customDescription')?.touched">
                     Min 10 characters required
@@ -155,28 +128,19 @@ interface DialogData {
                   <label for="severity" class="field-label">
                     Severity <span class="required-indicator">*</span>
                   </label>
-                  <p-dropdown
-                    id="severity"
-                    formControlName="severity"
-                    [options]="severityLevelOptions"
-                    optionLabel="label"
-                    optionValue="value"
-                    placeholder="Select severity"
-                    styleClass="w-full"
-                    appendTo="body">
-                    <ng-template let-option pTemplate="selectedItem">
-                      <div class="severity-option" [class]="'severity-' + option.value.toLowerCase()">
-                        <mat-icon>{{ getSeverityIcon(option.value) }}</mat-icon>
-                        <span>{{ option.label }}</span>
-                      </div>
-                    </ng-template>
-                    <ng-template let-option pTemplate="item">
-                      <div class="severity-option" [class]="'severity-' + option.value.toLowerCase()">
-                        <mat-icon>{{ getSeverityIcon(option.value) }}</mat-icon>
-                        <span class="severity-label">{{ option.label }}</span>
-                      </div>
-                    </ng-template>
-                  </p-dropdown>
+                  <div class="custom-select-wrapper" [ngClass]="'severity-' + reportForm.get('severity')?.value?.toLowerCase()">
+                    <mat-icon class="select-icon">{{ getSeverityIcon(reportForm.get('severity')?.value) }}</mat-icon>
+                    <select
+                      id="severity"
+                      formControlName="severity"
+                      class="custom-select">
+                      <option value="" disabled>Select severity</option>
+                      <option *ngFor="let option of severityLevelOptions" [value]="option.value">
+                        {{ option.label }}
+                      </option>
+                    </select>
+                    <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+                  </div>
                   <small class="field-error" *ngIf="reportForm.get('severity')?.hasError('required') && reportForm.get('severity')?.touched">
                     Required
                   </small>
@@ -188,25 +152,27 @@ interface DialogData {
       
       <mat-dialog-actions align="end">
         @if (isSuccess()) {
-          <p-button
-            label="Close"
-            severity="secondary"
+          <button
+            class="custom-button secondary-button"
             [mat-dialog-close]="true">
-          </p-button>
+            Close
+          </button>
         } @else {
-          <p-button
-            label="Cancel"
-            severity="secondary"
-            [outlined]="true"
+          <button
+            class="custom-button secondary-button outlined"
             [mat-dialog-close]="false"
             [disabled]="isSubmitting()">
-          </p-button>
-          <p-button
-            label="Submit"
-            [loading]="isSubmitting()"
-            (onClick)="submitReport()"
+            Cancel
+          </button>
+          <button
+            class="custom-button primary-button"
+            (click)="submitReport()"
             [disabled]="reportForm.invalid || isSubmitting()">
-          </p-button>
+            @if (isSubmitting()) {
+              <div class="button-spinner"></div>
+            }
+            {{ isSubmitting() ? 'Submitting...' : 'Submit' }}
+          </button>
         }
       </mat-dialog-actions>
     </div>
@@ -321,6 +287,20 @@ interface DialogData {
       color: #64748b;
       font-size: 0.95rem;
       animation: pulse 2s ease-in-out infinite;
+    }
+
+    .custom-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f4f6;
+      border-top: 4px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     @keyframes pulse {
@@ -490,72 +470,77 @@ interface DialogData {
       color: #1976d2;
     }
 
-    /* Enhanced Input Styling */
-    ::ng-deep .p-dropdown {
+    /* Custom Select Styling */
+    .custom-select-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
       width: 100%;
       border-radius: 8px;
       border: 1px solid #cbd5e1;
-      transition: all 0.2s ease;
       background: white;
       min-height: 42px;
+      transition: all 0.2s ease;
     }
 
-    ::ng-deep .p-dropdown:hover {
+    .custom-select-wrapper:hover {
       border-color: #94a3b8;
     }
 
-    ::ng-deep .p-dropdown:not(.p-disabled).p-focus {
+    .custom-select-wrapper:focus-within {
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-    ::ng-deep .p-dropdown .p-dropdown-label {
-      padding: 0.625rem 0.875rem;
+    .custom-select-wrapper .select-icon {
+      position: absolute;
+      left: 0.75rem;
+      color: #3b82f6;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .custom-select-wrapper .dropdown-arrow {
+      position: absolute;
+      right: 0.75rem;
+      color: #64748b;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+      transition: transform 0.2s ease;
+    }
+
+    .custom-select-wrapper:focus-within .dropdown-arrow {
+      transform: rotate(180deg);
+    }
+
+    .custom-select {
+      width: 100%;
+      padding: 0.625rem 2.5rem 0.625rem 3rem;
+      border: none;
+      background: transparent;
       font-size: 0.875rem;
       color: #1e293b;
+      cursor: pointer;
+      appearance: none;
+      outline: none;
     }
 
-    ::ng-deep .p-dropdown .p-dropdown-trigger {
-      color: #3b82f6;
-      width: 2.5rem;
+    .custom-select:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
     }
 
-    ::ng-deep .p-dropdown-panel {
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-      border: 1px solid #cbd5e1 !important;
-      margin-top: 0.25rem !important;
-      background: white !important;
-      z-index: 1100 !important;
-    }
-
-    ::ng-deep .p-dropdown-panel .p-dropdown-items-wrapper {
-      background: white !important;
-    }
-
-    ::ng-deep .p-dropdown-panel .p-dropdown-items {
+    .custom-select option {
       padding: 0.5rem;
-      background: white !important;
     }
 
-    ::ng-deep .p-dropdown-panel .p-dropdown-item {
-      border-radius: 4px;
-      margin: 0.125rem 0;
-      padding: 0.625rem 0.75rem;
-      transition: background 0.15s ease;
-      background: white !important;
-    }
-
-    ::ng-deep .p-dropdown-panel .p-dropdown-item:hover {
-      background: #f1f5f9 !important;
-    }
-
-    ::ng-deep .p-dropdown-panel .p-dropdown-item.p-highlight {
-      background: #3b82f6 !important;
-      color: white !important;
-    }
-
-    ::ng-deep .modern-textarea {
+    .modern-textarea {
+      width: 100%;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
       padding: 0.75rem;
@@ -568,96 +553,98 @@ interface DialogData {
       font-family: inherit;
     }
 
-    ::ng-deep .modern-textarea:hover {
+    .modern-textarea:hover {
       border-color: #94a3b8;
     }
 
-    ::ng-deep .modern-textarea:focus {
+    .modern-textarea:focus {
       border-color: #3b82f6;
       outline: none;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-    ::ng-deep .modern-textarea::placeholder {
+    .modern-textarea::placeholder {
       color: #94a3b8;
       font-style: italic;
     }
 
-    ::ng-deep .modern-input-group {
+    /* Custom Button Styles */
+    .custom-button {
+      padding: 0.75rem 2rem;
+      font-size: 0.95rem;
+      font-weight: 600;
       border-radius: 10px;
-      overflow: hidden;
-      border: 2px solid #e2e8f0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      background: white;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    ::ng-deep .modern-input-group:hover {
-      border-color: #1976d2;
-      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.12);
-      transform: translateY(-1px);
-    }
-
-    ::ng-deep .modern-input-group:focus-within {
-      border-color: #1976d2;
-      box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.15), 0 4px 12px rgba(25, 118, 210, 0.2);
-      transform: translateY(-1px);
-    }
-
-    ::ng-deep .modern-input-group .p-inputgroup-addon {
-      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
       border: none;
-      padding: 0 1rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 50px;
+      gap: 0.5rem;
     }
 
-    ::ng-deep .modern-input-group .modern-input {
-      border: none;
-      padding: 0.75rem 1rem;
-      font-size: 0.95rem;
-      color: #1e293b;
-      font-weight: 500;
-      background: transparent;
+    .custom-button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
     }
 
-    ::ng-deep .modern-input-group .modern-input:focus {
-      outline: none;
-      box-shadow: none;
+    .custom-button:hover::before {
+      transform: translateX(100%);
     }
 
-    ::ng-deep .modern-input-group .modern-input::placeholder {
-      color: #94a3b8;
-      font-style: italic;
-      font-weight: 400;
+    .custom-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     }
 
-    ::ng-deep .p-inputgroup-addon mat-icon {
-      font-size: 22px;
-      width: 22px;
-      height: 22px;
-      color: #1976d2;
+    .custom-button:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    /* Input focus glow effect */
-    @keyframes inputGlow {
-      0% {
-        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.4);
-      }
-      50% {
-        box-shadow: 0 0 0 6px rgba(25, 118, 210, 0);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0);
-      }
+    .custom-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
-    ::ng-deep .p-dropdown:not(.p-disabled).p-focus,
-    ::ng-deep .modern-textarea:focus,
-    ::ng-deep .modern-input-group:focus-within {
-      animation: inputGlow 0.6s ease-out;
+    .primary-button {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+    }
+
+    .primary-button:hover:not(:disabled) {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+
+    .secondary-button {
+      background: white;
+      color: #64748b;
+      border: 2px solid #cbd5e1;
+    }
+
+    .secondary-button.outlined {
+      background: white;
+    }
+
+    .secondary-button:hover:not(:disabled) {
+      border-color: #94a3b8;
+      background: #f8fafc;
+    }
+
+    .button-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
 
 
@@ -736,6 +723,7 @@ interface DialogData {
       background: linear-gradient(to top, #f8fafc, #ffffff);
       border-top: 1px solid #e2e8f0;
       position: relative;
+      gap: 1rem;
     }
 
     mat-dialog-actions::before {
@@ -746,63 +734,6 @@ interface DialogData {
       right: 0;
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
-    }
-
-    ::ng-deep mat-dialog-actions p-button {
-      transition: all 0.3s ease;
-    }
-
-    ::ng-deep mat-dialog-actions .p-button {
-      padding: 0.75rem 2rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      border-radius: 10px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    ::ng-deep mat-dialog-actions .p-button::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transform: translateX(-100%);
-      transition: transform 0.6s ease;
-    }
-
-    ::ng-deep mat-dialog-actions .p-button:hover::before {
-      transform: translateX(100%);
-    }
-
-    ::ng-deep mat-dialog-actions .p-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    ::ng-deep mat-dialog-actions .p-button:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    ::ng-deep mat-dialog-actions .p-button:not(.p-button-outlined) {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      border: none;
-    }
-
-    ::ng-deep mat-dialog-actions .p-button:not(.p-button-outlined):hover {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    }
-
-    ::ng-deep mat-dialog-actions .p-button-outlined {
-      border: 2px solid #cbd5e1;
-      background: white;
-    }
-
-    ::ng-deep mat-dialog-actions .p-button-outlined:hover {
-      border-color: #94a3b8;
-      background: #f8fafc;
     }
   `]
 })
@@ -896,7 +827,19 @@ export class MachineReportDialogComponent {
   getDescriptionLength(): number {
     return this.reportForm.get('customDescription')?.value?.length || 0;
   }
-  
+
+  getSelectedPartIcon(): string {
+    const selectedPart = this.reportForm.get('affectedPart')?.value;
+    const option = this.machinePartOptions.find(opt => opt.value === selectedPart);
+    return option?.icon || 'settings';
+  }
+
+  getSelectedCategoryIcon(): string {
+    const selectedCategory = this.reportForm.get('problemCategory')?.value;
+    const option = this.problemCategoryOptions.find(opt => opt.value === selectedCategory);
+    return option?.icon || 'report_problem';
+  }
+
   async submitReport(): Promise<void> {
     if (this.reportForm.invalid) {
       this.reportForm.markAllAsTouched();
@@ -915,6 +858,7 @@ export class MachineReportDialogComponent {
     
     const formValue = this.reportForm.value;
     const reportData: CreateProblemReportRequest = {
+      operatorId: currentUser.id,
       machineId: this.data.machine.id,
       machineName: this.data.machine.name,
       machineModel: this.data.machine.model,

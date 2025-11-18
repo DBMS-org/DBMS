@@ -1,0 +1,16 @@
+  private isExplosiveManagerRelevantNotification(type: any): boolean {
+    const typeStr = typeof type === 'string' ? type : NotificationType[type];
+    const isTransferRequest = typeStr && (
+      typeStr === 'TransferRequestCreated' ||
+      typeStr === 'TransferRequestUrgent' ||
+      typeStr === 'TransferRequestApproved' ||
+      typeStr === 'TransferRequestRejected' ||
+      typeStr === 'TransferDispatched' ||
+      typeStr === 'TransferCompleted' ||
+      typeStr === 'TransferCancelled'
+    );
+    const isSystemNotification = typeStr && (
+      typeStr === 'System' || typeStr === 'Info' || typeStr === 'Warning' || typeStr === 'Error'
+    );
+    return isTransferRequest || isSystemNotification;
+  }

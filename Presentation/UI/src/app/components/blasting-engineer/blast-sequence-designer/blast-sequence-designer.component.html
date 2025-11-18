@@ -558,4 +558,66 @@
     </div>
   </div>
 
+  <!-- Disconnected Points Warning Dialog -->
+  <div class="warning-dialog-overlay" *ngIf="showDisconnectedWarning" (click)="cancelNavigationToSimulator()">
+    <div class="warning-dialog" (click)="$event.stopPropagation()">
+      <!-- Dialog Header -->
+      <div class="dialog-header">
+        <div class="warning-icon-container">
+          <i class="material-icons warning-icon">warning</i>
+        </div>
+        <h3 class="dialog-title">Disconnected Drill Points Detected</h3>
+        <button class="dialog-close-btn" (click)="cancelNavigationToSimulator()" title="Close">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <!-- Dialog Body -->
+      <div class="dialog-body">
+        <div class="warning-message">
+          <p class="main-message">
+            <strong>{{ disconnectedPoints.length }}</strong> drill point{{ disconnectedPoints.length > 1 ? 's are' : ' is' }} not connected to any blast sequence
+          </p>
+          <p class="sub-message">These points will not participate in the blast simulation and will remain inactive during the blasting operation.</p>
+        </div>
+
+        <!-- Disconnected Points List -->
+        <div class="disconnected-points-list">
+          <div class="list-header">
+            <i class="material-icons">location_off</i>
+            <span>Disconnected Points:</span>
+          </div>
+          <div class="points-container">
+            <div class="point-chip" *ngFor="let point of disconnectedPoints.slice(0, 10)">
+              <i class="material-icons">push_pin</i>
+              <span>{{ point.id }}</span>
+            </div>
+            <div class="more-points" *ngIf="disconnectedPoints.length > 10">
+              <i class="material-icons">more_horiz</i>
+              <span>{{ disconnectedPoints.length - 10 }} more point{{ disconnectedPoints.length - 10 > 1 ? 's' : '' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warning Note -->
+        <div class="warning-note">
+          <i class="material-icons">info</i>
+          <p>You can return to the sequence designer to add connections for these points, or proceed to the simulator with the current configuration.</p>
+        </div>
+      </div>
+
+      <!-- Dialog Footer -->
+      <div class="dialog-footer">
+        <button class="dialog-btn cancel-btn" (click)="cancelNavigationToSimulator()">
+          <i class="material-icons">edit</i>
+          <span>Edit Sequence</span>
+        </button>
+        <button class="dialog-btn proceed-btn" (click)="proceedToSimulator()">
+          <i class="material-icons">play_circle</i>
+          <span>Proceed to Simulator</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

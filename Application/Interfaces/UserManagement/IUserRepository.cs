@@ -15,5 +15,6 @@ namespace Application.Interfaces.UserManagement
         Task<bool> ExistsAsync(int id);
         Task<bool> CanConnectAsync();
         Task<int> GetCountAsync();
+        Task<IEnumerable<User>> GetByRoleAndRegionAsync(string role, string? region = null);
     }
 } 

@@ -71,8 +71,7 @@ export class EditMachineComponent implements OnInit {
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
       region: [''],
-      projectId: [''],
-      status: [MachineStatus.AVAILABLE, Validators.required]
+      projectId: ['']
     });
   }
 
@@ -321,6 +320,12 @@ export class EditMachineComponent implements OnInit {
    * Used when project assignment hasn't changed
    */
   private updateMachine(formValue: any): void {
+    const projectId = formValue.projectId ? parseInt(formValue.projectId) : undefined;
+
+    // Automatically determine status based on project assignment
+    // If project is selected → ASSIGNED, otherwise → AVAILABLE
+    const status = projectId ? MachineStatus.ASSIGNED : MachineStatus.AVAILABLE;
+
     const request: UpdateMachineRequest = {
       name: formValue.name,
       type: formValue.type,
@@ -332,9 +337,9 @@ export class EditMachineComponent implements OnInit {
       manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
       chassisDetails: formValue.chassisDetails || undefined,
       currentLocation: this.getLocationValue(),
-      projectId: formValue.projectId ? parseInt(formValue.projectId) : undefined,
+      projectId: projectId,
       regionId: this.getRegionId(),
-      status: formValue.status,
+      status: status,
       lastMaintenanceDate: this.machine.lastMaintenanceDate,
       nextMaintenanceDate: this.machine.nextMaintenanceDate
     };
@@ -360,6 +365,12 @@ export class EditMachineComponent implements OnInit {
     // First delete the existing machine
     this.machineService.deleteMachine(this.machine.id).subscribe({
       next: () => {
+        const projectId = formValue.projectId ? parseInt(formValue.projectId) : undefined;
+
+        // Automatically determine status based on project assignment
+        // If project is selected → ASSIGNED, otherwise → AVAILABLE
+        const status = projectId ? MachineStatus.ASSIGNED : MachineStatus.AVAILABLE;
+
         // Then create a new machine with updated information
         const createRequest: CreateMachineRequest = {
           name: formValue.name,
@@ -372,9 +383,9 @@ export class EditMachineComponent implements OnInit {
           manufacturingYear: formValue.manufacturingYear ? parseInt(formValue.manufacturingYear) : undefined,
           chassisDetails: formValue.chassisDetails || undefined,
           currentLocation: this.getLocationValue(),
-          projectId: formValue.projectId ? parseInt(formValue.projectId) : undefined,
+          projectId: projectId,
           regionId: this.getRegionId(),
-          status: formValue.status
+          status: status
         };
 
         this.machineService.addMachine(createRequest).subscribe({

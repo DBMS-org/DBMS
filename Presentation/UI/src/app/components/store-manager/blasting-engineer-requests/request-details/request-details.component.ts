@@ -1,30 +1,18 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ExplosiveApprovalRequest } from '../../../../core/services/explosive-approval-request.service';
 import { ExplosiveCalculationsService, ExplosiveCalculationResultDto } from '../../../../core/services/explosive-calculations.service';
-import { DialogModule } from 'primeng/dialog';
-import { ButtonModule } from 'primeng/button';
-import { PanelModule } from 'primeng/panel';
-import { TagModule } from 'primeng/tag';
-import { TableModule } from 'primeng/table';
-import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-request-details',
   standalone: true,
   imports: [
-    CommonModule,
-    DialogModule,
-    ButtonModule,
-    PanelModule,
-    TagModule,
-    TableModule,
-    TooltipModule
+    CommonModule
   ],
   templateUrl: './request-details.component.html',
   styleUrl: './request-details.component.scss'
 })
-export class RequestDetailsComponent implements OnInit, OnChanges {
+export class RequestDetailsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() request: ExplosiveApprovalRequest | null = null;
   @Input() isVisible: boolean = false;
   @Output() close = new EventEmitter<void>();
@@ -36,6 +24,18 @@ export class RequestDetailsComponent implements OnInit, OnChanges {
   totalAnfo: number = 0;
   totalEmulsion: number = 0;
   isLoadingCalculations: boolean = false;
+
+  // Section expansion state
+  expandedSections: { [key: string]: boolean } = {
+    status: true,
+    requestInfo: true,
+    requester: true,
+    project: true,
+    calculations: true,
+    schedule: true,
+    processing: true,
+    additional: false
+  };
 
   constructor(private explosiveCalculationsService: ExplosiveCalculationsService) {}
 
@@ -49,10 +49,24 @@ export class RequestDetailsComponent implements OnInit, OnChanges {
     if (changes['request'] && this.request) {
       this.loadExplosiveCalculations();
     }
+
+    // Handle body scroll lock when modal visibility changes
+    if (changes['isVisible']) {
+      if (this.isVisible) {
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
+      } else {
+        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
+      }
+    }
   }
 
   ngOnDestroy(): void {
     document.removeEventListener('keydown', this.handleEscapeKey.bind(this));
+    // Ensure body scroll is restored when component is destroyed
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open');
   }
 
   private handleEscapeKey(event: KeyboardEvent): void {
@@ -62,6 +76,9 @@ export class RequestDetailsComponent implements OnInit, OnChanges {
   }
 
   onClose(): void {
+    // Restore body scroll
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open');
     this.close.emit();
   }
 
@@ -252,5 +269,64 @@ export class RequestDetailsComponent implements OnInit, OnChanges {
     }
 
     return 'Approval requirements met';
+  }
+
+  /**
+   * Toggle section expansion state
+   */
+  toggleSection(section: string): void {
+    this.expandedSections[section] = !this.expandedSections[section];
+  }
+
+  /**
+   * Get Tailwind classes for status badges
+   */
+  getStatusClasses(status: string): string {
+    switch (status) {
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+      case 'Approved':
+        return 'bg-green-100 text-green-800 border border-green-300';
+      case 'Rejected':
+        return 'bg-red-100 text-red-800 border border-red-300';
+      case 'Cancelled':
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
+      case 'Expired':
+        return 'bg-gray-100 text-gray-800 border border-gray-400';
+      default:
+        return 'bg-blue-100 text-blue-800 border border-blue-300';
+    }
+  }
+
+  /**
+   * Get Tailwind classes for priority badges
+   */
+  getPriorityClasses(priority: string): string {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border border-red-300';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+      case 'low':
+        return 'bg-blue-100 text-blue-800 border border-blue-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
+    }
+  }
+
+  /**
+   * Get Tailwind classes for approval type badges
+   */
+  getApprovalTypeClasses(approvalType: string): string {
+    switch (approvalType.toLowerCase()) {
+      case 'normal':
+        return 'bg-blue-100 text-blue-800 border border-blue-300';
+      case 'urgent':
+        return 'bg-red-100 text-red-800 border border-red-300';
+      case 'emergency':
+        return 'bg-purple-100 text-purple-800 border border-purple-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
+    }
   }
 }

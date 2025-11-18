@@ -100,19 +100,30 @@
 
           <!-- Sites within Project -->
           @for (siteReport of projectReport.sites; track siteReport.site.id) {
-            <mat-card class="site-card">
-              <mat-card-header>
-                <mat-icon mat-card-avatar class="site-avatar">place</mat-icon>
-                <mat-card-title>{{ siteReport.site.name }}</mat-card-title>
-                <mat-card-subtitle>
-                  {{ siteReport.site.location }}
-                  <mat-chip class="status-chip" [class]="'status-' + siteReport.site.status.toLowerCase()">
-                    {{ siteReport.site.status }}
-                  </mat-chip>
-                </mat-card-subtitle>
-              </mat-card-header>
+            <mat-expansion-panel class="site-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon class="site-icon">place</mat-icon>
+                  <div class="site-title-content">
+                    <span class="site-name">{{ siteReport.site.name }}</span>
+                    <div class="site-meta">
+                      <mat-chip class="meta-chip">
+                        <mat-icon>location_on</mat-icon>
+                        {{ siteReport.site.location }}
+                      </mat-chip>
+                      <mat-chip class="meta-chip" [class]="'status-' + siteReport.site.status.toLowerCase()">
+                        {{ siteReport.site.status }}
+                      </mat-chip>
+                      <mat-chip class="meta-chip info" *ngIf="siteReport.drillHoles.length > 0">
+                        <mat-icon>scatter_plot</mat-icon>
+                        {{ siteReport.drillHoles.length }} Holes
+                      </mat-chip>
+                    </div>
+                  </div>
+                </mat-panel-title>
+              </mat-expansion-panel-header>
 
-              <mat-card-content>
+              <div class="site-content">
                 <!-- Drill Holes Table -->
                 <div class="data-section">
                   <h3 class="section-title">
@@ -291,8 +302,8 @@
                     </table>
                   </div>
                 </div>
-              </mat-card-content>
-            </mat-card>
+              </div>
+            </mat-expansion-panel>
           }
         </div>
       </mat-expansion-panel>

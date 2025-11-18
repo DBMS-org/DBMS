@@ -79,6 +79,10 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   currentSequence = 1;
   showHelp = false;
 
+  // Warning dialog properties
+  showDisconnectedWarning = false;
+  disconnectedPoints: DrillLocation[] = [];
+
   // Delay options in milliseconds
   detonatingCordDelays = [17, 25, 42];
   connectorsDelays = [17, 25, 42, 67];
@@ -1726,18 +1730,24 @@ export class BlastSequenceDesignerComponent implements AfterViewInit, OnDestroy 
   }
 
   private showDisconnectedPointsDialog(disconnectedPoints: DrillLocation[]): void {
-    const message = `⚠️ Warning: ${disconnectedPoints.length} drill point(s) are not connected to any blast sequence:\n\n` +
-      `${disconnectedPoints.slice(0, 5).map((p: DrillLocation) => `• ${p.id}`).join('\n')}` +
-      `${disconnectedPoints.length > 5 ? `\n• ... and ${disconnectedPoints.length - 5} more` : ''}\n\n` +
-      `These points will not participate in the blast simulation.\n\n` +
-      `Do you really want to proceed to the simulator?`;
-    
-    if (confirm(message)) {
-      console.log('🚀 User confirmed navigation with disconnected points. Navigating to simulator with', this.connections.length, 'connections');
-      this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'simulator']);
-    } else {
-              this.notification.showError('Simulation cancelled. You can add connections to include all drill points.');
-    }
+    // Show custom warning dialog instead of browser confirm
+    this.disconnectedPoints = disconnectedPoints;
+    this.showDisconnectedWarning = true;
+    this.cdr.markForCheck();
+  }
+
+  cancelNavigationToSimulator(): void {
+    this.showDisconnectedWarning = false;
+    this.disconnectedPoints = [];
+    this.notification.showInfo('You can add connections to include all drill points in the simulation.');
+    this.cdr.markForCheck();
+  }
+
+  proceedToSimulator(): void {
+    console.log('🚀 User confirmed navigation with disconnected points. Navigating to simulator with', this.connections.length, 'connections');
+    this.showDisconnectedWarning = false;
+    this.disconnectedPoints = [];
+    this.router.navigate(['/blasting-engineer/project-management', this.currentProjectId, 'sites', this.currentSiteId, 'simulator']);
   }
 
   @HostListener('window:resize')

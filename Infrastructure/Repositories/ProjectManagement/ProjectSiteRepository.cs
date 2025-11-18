@@ -1,4 +1,7 @@
+using Application.Interfaces;
 using Application.Interfaces.ProjectManagement;
+using Application.Interfaces.UserManagement;
+using Domain.Entities.Notifications;
 using Domain.Entities.ProjectManagement;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +13,19 @@ namespace Infrastructure.Repositories.ProjectManagement
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ProjectSiteRepository> _logger;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IUserRepository _userRepository;
 
-        public ProjectSiteRepository(ApplicationDbContext context, ILogger<ProjectSiteRepository> logger)
+        public ProjectSiteRepository(
+            ApplicationDbContext context,
+            ILogger<ProjectSiteRepository> logger,
+            INotificationRepository notificationRepository,
+            IUserRepository userRepository)
         {
             _context = context;
             _logger = logger;
+            _notificationRepository = notificationRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<IEnumerable<ProjectSite>> GetAllAsync()
@@ -139,7 +150,11 @@ namespace Infrastructure.Repositories.ProjectManagement
         {
             try
             {
-                var site = await _context.ProjectSites.FindAsync(id);
+                // Load site with related entities for notification
+                var site = await _context.ProjectSites
+                    .Include(s => s.Project)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+
                 if (site == null)
                 {
                     return false;
@@ -148,6 +163,27 @@ namespace Infrastructure.Repositories.ProjectManagement
                 site.IsPatternApproved = true;
                 site.UpdatedAt = DateTime.UtcNow;
                 var result = await _context.SaveChangesAsync();
+
+                if (result > 0)
+                {
+                    // Notify all operators about the pattern approval
+                    var operators = await _userRepository.GetByRoleAndRegionAsync("Operator");
+                    foreach (var operatorUser in operators)
+                    {
+                        var notification = Notification.Create(
+                            userId: operatorUser.Id,
+                            type: NotificationType.PatternApproved,
+                            title: "Pattern Approved",
+                            message: $"Drilling pattern approved for {site.Project?.Name ?? "project"} - {site.Name}",
+                            priority: NotificationPriority.High,
+                            relatedEntityType: "ProjectSite",
+                            relatedEntityId: site.Id,
+                            actionUrl: $"/operator/pattern-view?projectId={site.ProjectId}&siteId={site.Id}"
+                        );
+                        await _notificationRepository.CreateAsync(notification);
+                    }
+                }
+
                 return result > 0;
             }
             catch (Exception ex)
@@ -161,7 +197,11 @@ namespace Infrastructure.Repositories.ProjectManagement
         {
             try
             {
-                var site = await _context.ProjectSites.FindAsync(id);
+                // Load site with related entities for notification
+                var site = await _context.ProjectSites
+                    .Include(s => s.Project)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+
                 if (site == null)
                 {
                     return false;
@@ -170,6 +210,27 @@ namespace Infrastructure.Repositories.ProjectManagement
                 site.IsPatternApproved = false;
                 site.UpdatedAt = DateTime.UtcNow;
                 var result = await _context.SaveChangesAsync();
+
+                if (result > 0)
+                {
+                    // Notify all operators about the pattern approval revocation
+                    var operators = await _userRepository.GetByRoleAndRegionAsync("Operator");
+                    foreach (var operatorUser in operators)
+                    {
+                        var notification = Notification.Create(
+                            userId: operatorUser.Id,
+                            type: NotificationType.PatternApprovalRevoked,
+                            title: "Pattern Approval Revoked",
+                            message: $"Drilling pattern approval revoked for {site.Project?.Name ?? "project"} - {site.Name}",
+                            priority: NotificationPriority.High,
+                            relatedEntityType: "ProjectSite",
+                            relatedEntityId: site.Id,
+                            actionUrl: $"/operator/pattern-view?projectId={site.ProjectId}&siteId={site.Id}"
+                        );
+                        await _notificationRepository.CreateAsync(notification);
+                    }
+                }
+
                 return result > 0;
             }
             catch (Exception ex)
@@ -183,7 +244,11 @@ namespace Infrastructure.Repositories.ProjectManagement
         {
             try
             {
-                var site = await _context.ProjectSites.FindAsync(id);
+                // Load site with related entities for notification
+                var site = await _context.ProjectSites
+                    .Include(s => s.Project)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+
                 if (site == null)
                 {
                     return false;
@@ -192,6 +257,44 @@ namespace Infrastructure.Repositories.ProjectManagement
                 site.IsSimulationConfirmed = true;
                 site.UpdatedAt = DateTime.UtcNow;
                 var result = await _context.SaveChangesAsync();
+
+                // Create notifications for Admins
+                if (result > 0)
+                {
+                    try
+                    {
+                        var admins = await _userRepository.GetByRoleAndRegionAsync("Admin", null);
+
+                        if (admins.Any())
+                        {
+                            var siteName = site.Name ?? "Unknown Site";
+                            var projectName = site.Project?.Name ?? "Unknown Project";
+
+                            var notifications = admins.Select(admin =>
+                                Notification.Create(
+                                    userId: admin.Id,
+                                    type: NotificationType.BlastSimulationConfirmed,
+                                    title: "Blast Simulation Confirmed",
+                                    message: $"A blasting engineer has confirmed the simulation for {siteName} ({projectName}) and is requesting final approval.",
+                                    priority: NotificationPriority.High,
+                                    relatedEntityType: "ProjectSite",
+                                    relatedEntityId: site.Id,
+                                    actionUrl: null
+                                )
+                            ).ToList();
+
+                            await _notificationRepository.CreateBulkAsync(notifications);
+                            _logger.LogInformation("Created {Count} notifications for Admins for simulation confirmation of site {SiteId}",
+                                notifications.Count, site.Id);
+                        }
+                    }
+                    catch (Exception notifEx)
+                    {
+                        // Log error but don't fail the confirmation if notification fails
+                        _logger.LogError(notifEx, "Error creating notifications for simulation confirmation of site {SiteId}", id);
+                    }
+                }
+
                 return result > 0;
             }
             catch (Exception ex)

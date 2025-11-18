@@ -1,0 +1,12 @@
+  private isExplosiveManagerRelevantNotification(type: NotificationType): boolean {
+    // Convert enum to string for comparison
+    const typeStr = NotificationType[type] || type.toString();
+
+    // Transfer request notifications start with "Transfer"
+    // System notifications are System, Info, Warning, Error
+    return typeStr.startsWith('Transfer') ||
+           typeStr === 'System' ||
+           typeStr === 'Info' ||
+           typeStr === 'Warning' ||
+           typeStr === 'Error';
+  }

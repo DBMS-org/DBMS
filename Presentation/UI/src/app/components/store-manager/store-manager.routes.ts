@@ -6,6 +6,7 @@ import { RequestHistoryComponent } from './request-history/request-history.compo
 import { BlastingEngineerRequestsComponent } from './blasting-engineer-requests/blasting-engineer-requests.component';
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 import { DispatchInfoComponent } from './request-history/dispatch-info/dispatch-info.component';
+import { StoreManagerNotificationsComponent } from './notifications/notifications.component';
 
 export const STORE_MANAGER_ROUTES: Routes = [
     {
@@ -19,6 +20,7 @@ export const STORE_MANAGER_ROUTES: Routes = [
             { path: 'request-history', component: RequestHistoryComponent },
             { path: 'dispatch-info/:id', component: DispatchInfoComponent },
             { path: 'blasting-engineer-requests', component: BlastingEngineerRequestsComponent },
+            { path: 'notifications', component: StoreManagerNotificationsComponent },
             { path: 'dispatch', component: StoreManagerDashboardComponent } // Placeholder for Dispatch Preparation
         ]
     }

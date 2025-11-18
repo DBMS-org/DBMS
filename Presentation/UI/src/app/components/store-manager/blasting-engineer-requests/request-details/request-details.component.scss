@@ -1,16 +1,76 @@
-// Most styling moved to Tailwind classes + PrimeNG components
-// Keeping minimal custom styles
+// All styling using Tailwind CSS and custom SCSS
+// No PrimeNG dependencies
 
-:host ::ng-deep {
-  .request-details-dialog {
-    .p-dialog-content {
-      overflow-y: auto;
-      max-height: calc(90vh - 180px);
-    }
-  }
+// Ensure modal is above everything
+:host {
+  z-index: 9999 !important;
 }
 
 // Custom spacing for content blocks
 .space-y-4 > * + * {
   margin-top: 1rem;
+}
+
+// Smooth transitions for accordions
+button {
+  transition: all 0.3s ease-in-out;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Custom scrollbar for modal body
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+// Prevent body scroll when modal is open
+:host-context(body.modal-open) {
+  overflow: hidden;
+}
+
+// Animation for modal backdrop
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Animation for modal dialog
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Add animations
+.fixed.inset-0 {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.bg-white.rounded-lg {
+  animation: slideIn 0.3s ease-out;
 }

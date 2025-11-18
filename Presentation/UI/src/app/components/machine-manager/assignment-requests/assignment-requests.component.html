@@ -208,22 +208,14 @@
               <td class="col-date">
                 <div class="date-cell">
                   <i class="material-icons">event</i>
-                  <span>{{ formatDate(request.requestedAt) }}</span>
+                  <span>{{ formatDate(request.requestedDate) }}</span>
                 </div>
               </td>
               <td class="col-id">
                 <span class="request-id">{{ request.id }}</span>
               </td>
               <td class="col-requester">
-                <div class="user-cell">
-                  <div class="user-avatar">
-                    <i class="material-icons">person</i>
-                  </div>
-                  <div class="user-info">
-                    <span class="user-name">{{ request.requesterName }}</span>
-                    <span class="user-email">{{ request.requesterEmail }}</span>
-                  </div>
-                </div>
+                <span class="user-name">{{ request.requestedBy }}</span>
               </td>
               <td class="col-project">
                 <div class="project-cell">
@@ -245,8 +237,8 @@
               <td class="col-status">
                 <span class="status-badge status-{{ request.status.toLowerCase() }}">
                   <i class="material-icons">
-                    {{ request.status === 'APPROVED' ? 'check_circle' :
-                       request.status === 'REJECTED' ? 'cancel' : 'schedule' }}
+                    {{ request.status === 'Approved' || request.status === 'APPROVED' ? 'check_circle' :
+                       request.status === 'Rejected' || request.status === 'REJECTED' ? 'cancel' : 'schedule' }}
                   </i>
                   {{ request.status }}
                 </span>
@@ -255,26 +247,24 @@
                 <span class="age-badge">{{ getRequestAgeLabel(request) }}</span>
               </td>
               <td class="col-actions">
-                @if (request.status === 'PENDING') {
+                @if (request.status === 'Pending' || request.status === 'PENDING') {
                   <div class="action-buttons">
-                    <p-button
-                      icon="pi pi-check"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="success"
-                      (onClick)="approveRequest(request)"
-                      pTooltip="Approve Request"
-                      tooltipPosition="top">
-                    </p-button>
-                    <p-button
-                      icon="pi pi-times"
-                      [rounded]="true"
-                      [text]="true"
-                      severity="danger"
-                      (onClick)="rejectRequest(request)"
-                      pTooltip="Reject Request"
-                      tooltipPosition="top">
-                    </p-button>
+                    <button
+                      class="action-btn approve-btn"
+                      (click)="approveRequest(request)"
+                      [disabled]="isProcessing"
+                      type="button"
+                      title="Approve Request">
+                      <i class="material-icons">check</i>
+                    </button>
+                    <button
+                      class="action-btn reject-btn"
+                      (click)="rejectRequest(request)"
+                      [disabled]="isProcessing"
+                      type="button"
+                      title="Reject Request">
+                      <i class="material-icons">close</i>
+                    </button>
                   </div>
                 } @else {
                   <span class="no-actions">—</span>

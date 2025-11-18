@@ -171,9 +171,12 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   // Filter methods
   applyFilters(): void {
     this.filteredRequests = this.assignmentRequests.filter(request => {
-      const statusMatch = this.selectedStatus === 'ALL' || request.status === this.selectedStatus;
-      const urgencyMatch = this.selectedUrgency === 'ALL' || request.urgency === this.selectedUrgency;
-      const typeMatch = this.selectedMachineType === 'ALL' || request.machineType === this.selectedMachineType;
+      const statusMatch = this.selectedStatus === 'ALL' ||
+        request.status.toUpperCase() === this.selectedStatus.toUpperCase();
+      const urgencyMatch = this.selectedUrgency === 'ALL' ||
+        request.urgency.toUpperCase() === this.selectedUrgency.toUpperCase();
+      const typeMatch = this.selectedMachineType === 'ALL' ||
+        (typeof request.machineType === 'string' ? request.machineType.toUpperCase() : '') === this.selectedMachineType.toUpperCase();
       const search = this.searchQuery.trim().toLowerCase();
       const searchMatch = !search || (
         request.id.toString().includes(search) ||
@@ -343,8 +346,11 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   approveRequest(request: MachineAssignmentRequest): void {
+    console.log('🔘 Approve button clicked for request:', request);
     const machineType = typeof request.machineType === 'string' ? request.machineType : '';
     const available = this.getAvailableMachinesForType(machineType);
+
+    console.log('Available machines:', available, 'Required quantity:', request.quantity);
 
     if (available.length < request.quantity) {
       this.notificationService.showWarning('Not enough available machines to fulfill this request.');
@@ -355,11 +361,14 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
 
     const assignedIds = available.slice(0, request.quantity).map(m => m.id);
 
+    console.log('Assigning machines with IDs:', assignedIds);
+
     // Call backend to approve request
     this.machineService.approveAssignmentRequest(request.id, assignedIds, this.approvalNotes || '')
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (resp) => {
+          console.log('✅ Approval successful:', resp);
           // Reload data from backend
           this.loadAssignmentRequests();
           this.loadAvailableMachines();
@@ -368,7 +377,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
           this.isProcessing = false;
         },
         error: (err) => {
-          console.error('Failed to approve assignment request', err);
+          console.error('❌ Failed to approve assignment request', err);
           this.notificationService.showError('Failed to approve assignment request');
           this.isProcessing = false;
         }
@@ -376,6 +385,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
   }
 
   rejectRequest(request: MachineAssignmentRequest): void {
+    console.log('❌ Reject button clicked for request:', request);
     this.isProcessing = true;
     const comments = 'Rejected by manager';
 
@@ -384,6 +394,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (resp) => {
+          console.log('✅ Rejection successful:', resp);
           // Reload data from backend
           this.loadAssignmentRequests();
 
@@ -391,7 +402,7 @@ export class AssignmentRequestsComponent implements OnInit, OnDestroy {
           this.isProcessing = false;
         },
         error: (err) => {
-          console.error('Failed to reject assignment request', err);
+          console.error('❌ Failed to reject assignment request', err);
           this.notificationService.showError('Failed to reject assignment request');
           this.isProcessing = false;
         }

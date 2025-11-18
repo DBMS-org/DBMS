@@ -1,4 +1,86 @@
-// Dialog Header Styles
+// Page Container
+.approval-page-container {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+// Page Header Styles
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .header-content {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .back-button {
+      color: white;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .header-text {
+      flex: 1;
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 4px 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Loading Container
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+
+  .spinning-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #667eea;
+    animation: spin 1.5s linear infinite;
+  }
+
+  p {
+    margin-top: 16px;
+    color: #64748b;
+    font-size: 16px;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Dialog Header Styles (legacy)
 .approval-dialog-header {
   display: flex;
   align-items: center;
@@ -351,7 +433,66 @@
   }
 }
 
-// Dialog Actions Styling
+// Page Actions (for standalone page layout)
+.page-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-top: 24px;
+
+  .cancel-button {
+    min-width: 120px;
+    padding: 12px 24px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    mat-icon {
+      margin-right: 8px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background-color: #f1f5f9;
+    }
+  }
+
+  .submit-button {
+    min-width: 140px;
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    transition: all 0.3s ease;
+
+    mat-icon {
+      margin-right: 8px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    &:disabled {
+      background: #94a3b8;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+// Dialog Actions Styling (legacy, for modal dialogs)
 mat-dialog-actions {
   padding: 24px;
   gap: 16px;
@@ -393,7 +534,7 @@ mat-dialog-actions {
       width: 18px;
       height: 18px;
     }
-    
+
     &:hover:not(:disabled) {
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       transform: translateY(-1px);

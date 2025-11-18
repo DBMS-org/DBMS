@@ -40,7 +40,10 @@
       "Bash(Select-String -Pattern \"Error|error|✔|Build|compiled\")",
       "Bash(Select-Object -First 50)",
       "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\operator\\maintenance-reports\")",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(build-output.txt)",
+      "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\store-manager\\blasting-engineer-requests\\request-details\")",
+      "Bash(Select-Object -First 100)"
     ],
     "deny": [],
     "ask": []

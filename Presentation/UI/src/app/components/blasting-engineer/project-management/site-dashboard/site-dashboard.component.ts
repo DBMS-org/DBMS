@@ -12,8 +12,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { StateService } from '../../../../core/services/state.service';
 import { ExplosiveCalculationsService, ExplosiveCalculationResultDto } from '../../../../core/services/explosive-calculations.service';
 import { Observable } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../shared/shared/components/confirm-dialog/confirm-dialog.component';
+import { AppDialogService } from '../../../../core/services/dialog.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { DrillLocation } from '../../../../core/models/drilling.model';
 
@@ -24,7 +23,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { BadgeModule } from 'primeng/badge';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { CalendarModule } from 'primeng/calendar';
 import { TooltipModule } from 'primeng/tooltip';
 import { DividerModule } from 'primeng/divider';
@@ -57,7 +56,7 @@ interface WorkflowStep {
     BadgeModule,
     DialogModule,
     InputTextModule,
-    InputTextareaModule,
+    InputTextarea,
     CalendarModule,
     TooltipModule,
     DividerModule,
@@ -158,7 +157,7 @@ export class SiteDashboardComponent implements OnInit {
     private unifiedDrillDataService: UnifiedDrillDataService,
     public authService: AuthService, // Made public for template access
     private stateService: StateService,
-    private dialog: MatDialog,
+    private dialogService: AppDialogService,
     private notification: NotificationService,
     private explosiveCalculationsService: ExplosiveCalculationsService
   ) {
@@ -462,6 +461,13 @@ export class SiteDashboardComponent implements OnInit {
       next: () => {
         if (this.site) this.site.isPatternApproved = true;
         this.showApproveModal = false;
+        this.notification.showSuccess('Pattern approved successfully.');
+        this.loadSite(); // Reload site data to ensure state is synchronized
+      },
+      error: (error) => {
+        console.error('Error approving pattern:', error);
+        this.notification.showError('Failed to approve pattern. Please try again.');
+        this.showApproveModal = false;
       }
     });
   }
@@ -471,22 +477,24 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   revokeApproval(): void {
-    const dialogRef = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
-      width: '320px',
-      data: {
-        title: 'Revoke Approval',
-        message: 'Revoke pattern approval for the operator? They will lose access until you approve again.',
-        confirmText: 'Revoke',
-        cancelText: 'Cancel'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
+    this.dialogService.openConfirmDialog({
+      title: 'Revoke Approval',
+      message: 'Revoke pattern approval for the operator? They will lose access until you approve again.',
+      confirmText: 'Revoke',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
       if (!confirmed) return;
 
-      this.siteService.revokePattern(this.stateService.currentState.activeSiteId!).subscribe(() => {
-        if (this.site) this.site.isPatternApproved = false;
-        this.notification.showSuccess('Pattern approval revoked.');
+      this.siteService.revokePattern(this.stateService.currentState.activeSiteId!).subscribe({
+        next: () => {
+          if (this.site) this.site.isPatternApproved = false;
+          this.notification.showSuccess('Pattern approval revoked.');
+          this.loadSite(); // Reload site data to ensure state is synchronized
+        },
+        error: (error) => {
+          console.error('Error revoking pattern approval:', error);
+          this.notification.showError('Failed to revoke pattern approval. Please try again.');
+        }
       });
     });
   }
@@ -506,14 +514,30 @@ export class SiteDashboardComponent implements OnInit {
   }
 
   confirmSimulationForAdmin() {
-    this.siteService.confirmSimulation(this.stateService.currentState.activeSiteId!).subscribe(() => {
-      if(this.site) this.site.isSimulationConfirmed = true;
+    this.siteService.confirmSimulation(this.stateService.currentState.activeSiteId!).subscribe({
+      next: () => {
+        if(this.site) this.site.isSimulationConfirmed = true;
+        this.notification.showSuccess('Simulation confirmed successfully.');
+        this.loadSite(); // Reload site data to ensure state is synchronized
+      },
+      error: (error) => {
+        console.error('Error confirming simulation:', error);
+        this.notification.showError('Failed to confirm simulation. Please try again.');
+      }
     });
   }
 
   revokeSimulationConfirmation() {
-    this.siteService.revokeSimulation(this.stateService.currentState.activeSiteId!).subscribe(() => {
-      if(this.site) this.site.isSimulationConfirmed = false;
+    this.siteService.revokeSimulation(this.stateService.currentState.activeSiteId!).subscribe({
+      next: () => {
+        if(this.site) this.site.isSimulationConfirmed = false;
+        this.notification.showSuccess('Simulation confirmation revoked.');
+        this.loadSite(); // Reload site data to ensure state is synchronized
+      },
+      error: (error) => {
+        console.error('Error revoking simulation confirmation:', error);
+        this.notification.showError('Failed to revoke simulation confirmation. Please try again.');
+      }
     });
   }
 

@@ -87,7 +87,9 @@
                 class="timing-btn"
                 type="button"
                 (click)="openTimingModal(item)"
-                [class.has-timing]="hasTimingSet(item)">
+                [class.has-timing]="hasTimingSet(item)"
+                [disabled]="!canUpdateTiming(item)"
+                [title]="!canUpdateTiming(item) ? 'Only pending proposals can have their timing updated' : ''">
                 <i class="material-icons">schedule</i>
                 {{ hasTimingSet(item) ? 'Update' : 'Set' }} Timing
               </button>

@@ -124,11 +124,16 @@ export class ReportsComponent implements OnInit {
           allDrillHoles: allDrillHoles.length,
           myApprovals: myApprovals.length
         });
+        console.log('📊 Reports - Drill holes data:', allDrillHoles);
+        console.log('📊 Reports - Projects:', projects);
+        console.log('📊 Reports - Sites:', allSites);
 
         const projectReports: ProjectReport[] = [];
 
         projects.forEach(project => {
           const projectSites = allSites.filter(site => site.projectId === project.id);
+          console.log(`📊 Project ${project.name} (ID: ${project.id}) has ${projectSites.length} sites`);
+
           const siteReports: SiteReport[] = [];
           let projectTotalDrillHoles = 0;
           let projectTotalAnfo = 0;
@@ -141,6 +146,11 @@ export class ReportsComponent implements OnInit {
             const siteApprovals = myApprovals.filter(approval =>
               approval.projectSiteId === site.id
             );
+
+            console.log(`📊 Site ${site.name} (ID: ${site.id}) - Found ${siteDrillHoles.length} drill holes`);
+            if (siteDrillHoles.length > 0) {
+              console.log(`📊 Sample drill hole:`, siteDrillHoles[0]);
+            }
 
             projectTotalDrillHoles += siteDrillHoles.length;
 

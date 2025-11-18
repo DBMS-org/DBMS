@@ -69,7 +69,7 @@ export interface ApproveTransferRequest {
 }
 
 export interface RejectTransferRequest {
-  reason: string;
+  rejectionReason: string;
 }
 
 export interface DispatchTransferRequest {

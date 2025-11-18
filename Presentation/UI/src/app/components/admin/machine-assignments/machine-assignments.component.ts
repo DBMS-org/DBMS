@@ -35,14 +35,9 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
   searchTerm = '';
   
   // Modal states
-  showApprovalModal = false;
-  showRejectionModal = false;
   showAssignmentRequestModal = false;
-  selectedRequest: MachineAssignmentRequest | null = null;
-  
+
   // Forms
-  approvalForm!: FormGroup;
-  rejectionForm!: FormGroup;
   assignmentRequestForm!: FormGroup;
   
   // Enums for template
@@ -82,15 +77,6 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
   }
 
   private initializeForms(): void {
-    this.approvalForm = this.formBuilder.group({
-      assignedMachines: ['', Validators.required],
-      comments: ['']
-    });
-
-    this.rejectionForm = this.formBuilder.group({
-      comments: ['', Validators.required]
-    });
-
     this.assignmentRequestForm = this.formBuilder.group({
       projectId: ['', Validators.required],
       machineType: ['', Validators.required],
@@ -169,28 +155,6 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  openApprovalModal(request: MachineAssignmentRequest): void {
-    this.selectedRequest = request;
-    this.approvalForm.reset();
-    this.showApprovalModal = true;
-  }
-
-  openRejectionModal(request: MachineAssignmentRequest): void {
-    this.selectedRequest = request;
-    this.rejectionForm.reset();
-    this.showRejectionModal = true;
-  }
-
-  closeApprovalModal(): void {
-    this.showApprovalModal = false;
-    this.selectedRequest = null;
-  }
-
-  closeRejectionModal(): void {
-    this.showRejectionModal = false;
-    this.selectedRequest = null;
-  }
-
   openAssignmentRequestModal(): void {
     this.assignmentRequestForm.reset({
       urgency: RequestUrgency.MEDIUM,
@@ -232,51 +196,6 @@ export class MachineAssignmentsComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.error = 'Failed to submit assignment request';
         console.error('Error submitting assignment request:', error);
-      }
-    });
-    this.subscriptions.push(sub);
-  }
-
-  approveRequest(): void {
-    if (!this.selectedRequest || this.approvalForm.invalid) return;
-
-    const formValue = this.approvalForm.value;
-    
-    const sub = this.machineService.approveAssignmentRequest(
-      this.selectedRequest.id,
-      formValue.assignedMachines.split(',').map((id: string) => id.trim()),
-      formValue.comments
-    ).subscribe({
-      next: () => {
-        this.loadAssignmentRequests();
-        this.closeApprovalModal();
-        this.showNotification('Assignment request approved successfully!');
-      },
-      error: (error) => {
-        this.error = 'Failed to approve assignment request';
-        console.error('Error approving request:', error);
-      }
-    });
-    this.subscriptions.push(sub);
-  }
-
-  rejectRequest(): void {
-    if (!this.selectedRequest || this.rejectionForm.invalid) return;
-
-    const formValue = this.rejectionForm.value;
-    
-    const sub = this.machineService.rejectAssignmentRequest(
-      this.selectedRequest.id,
-      formValue.comments
-    ).subscribe({
-      next: () => {
-        this.loadAssignmentRequests();
-        this.closeRejectionModal();
-        this.showNotification('Assignment request rejected.');
-      },
-      error: (error) => {
-        this.error = 'Failed to reject assignment request';
-        console.error('Error rejecting request:', error);
       }
     });
     this.subscriptions.push(sub);

@@ -1,29 +1,29 @@
 export enum MachinePart {
-  DRILL_BIT = 'DRILL_BIT',
-  DRILL_ROD = 'DRILL_ROD',
-  SHANK = 'SHANK',
-  ENGINE = 'ENGINE',
-  HYDRAULIC_SYSTEM = 'HYDRAULIC_SYSTEM',
-  ELECTRICAL_SYSTEM = 'ELECTRICAL_SYSTEM',
-  MECHANICAL_COMPONENTS = 'MECHANICAL_COMPONENTS',
-  OTHER = 'OTHER'
+  DRILL_BIT = 'DrillBit',
+  DRILL_ROD = 'DrillRod',
+  SHANK = 'Shank',
+  ENGINE = 'Engine',
+  HYDRAULIC_SYSTEM = 'HydraulicSystem',
+  ELECTRICAL_SYSTEM = 'ElectricalSystem',
+  MECHANICAL_COMPONENTS = 'MechanicalComponents',
+  OTHER = 'Other'
 }
 
 export enum ProblemCategory {
-  ENGINE_ISSUES = 'ENGINE_ISSUES',
-  HYDRAULIC_PROBLEMS = 'HYDRAULIC_PROBLEMS',
-  ELECTRICAL_FAULTS = 'ELECTRICAL_FAULTS',
-  MECHANICAL_BREAKDOWN = 'MECHANICAL_BREAKDOWN',
-  DRILL_BIT_ISSUES = 'DRILL_BIT_ISSUES',
-  DRILL_ROD_PROBLEMS = 'DRILL_ROD_PROBLEMS',
-  OTHER = 'OTHER'
+  ENGINE_ISSUES = 'EngineIssues',
+  HYDRAULIC_PROBLEMS = 'HydraulicProblems',
+  ELECTRICAL_FAULTS = 'ElectricalFaults',
+  MECHANICAL_BREAKDOWN = 'MechanicalBreakdown',
+  DRILL_BIT_ISSUES = 'DrillBitIssues',
+  DRILL_ROD_PROBLEMS = 'DrillRodProblems',
+  OTHER = 'Other'
 }
 
 export enum SeverityLevel {
-  CRITICAL = 'CRITICAL',
-  HIGH = 'HIGH',
-  MEDIUM = 'MEDIUM',
-  LOW = 'LOW'
+  CRITICAL = 'Critical',
+  HIGH = 'High',
+  MEDIUM = 'Medium',
+  LOW = 'Low'
 }
 
 export enum ReportStatus {
@@ -104,6 +104,7 @@ export interface ReportFilters {
 }
 
 export interface CreateProblemReportRequest {
+  operatorId?: number;
   machineId: string;
   machineName: string;
   machineModel: string;

@@ -415,7 +415,7 @@
     background-color: #f59e0b;
     color: white;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: #d97706;
       transform: translateY(-1px);
     }
@@ -427,8 +427,21 @@
     &.has-timing {
       background-color: #10b981;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background-color: #059669;
+      }
+    }
+
+    &:disabled {
+      background-color: #d1d5db;
+      color: #9ca3af;
+      cursor: not-allowed;
+      opacity: 0.6;
+      transform: none !important;
+
+      &:hover {
+        background-color: #d1d5db;
+        transform: none;
       }
     }
   }

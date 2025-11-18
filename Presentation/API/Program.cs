@@ -1,3 +1,4 @@
+using Application.Interfaces;
 using Application.Interfaces.Infrastructure;
 using Application.Interfaces.Infrastructure.Repositories;
 using Application.Interfaces.UserManagement;
@@ -16,6 +17,7 @@ using Infrastructure.Repositories.ProjectManagement;
 using Infrastructure.Repositories.DrillingOperations;
 using Infrastructure.Repositories.BlastingOperations;
 using Infrastructure.Repositories.StoreManagement;
+using Infrastructure.Repositories.Notifications;
 using Infrastructure.Data;
 using Infrastructure.Services;
 using Infrastructure.Extensions;
@@ -167,15 +169,18 @@ builder.Services.AddScoped<Application.Interfaces.ExplosiveInventory.ICentralInv
 builder.Services.AddScoped<Application.Interfaces.ExplosiveInventory.IInventoryTransferService, Application.Services.ExplosiveInventory.InventoryTransferApplicationService>();
 builder.Services.AddScoped<Domain.Services.ExplosiveInventory.InventoryValidationDomainService>();
 
-
-// Register Maintenance Operations services
-builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceReportRepository, Infrastructure.Repositories.MaintenanceOperations.MaintenanceReportRepository>();
-builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceJobRepository, Infrastructure.Repositories.MaintenanceOperations.MaintenanceJobRepository>();
-builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceReportService, Application.Services.MaintenanceOperations.MaintenanceReportApplicationService>();
+
+// Register Maintenance Operations services
+builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceReportRepository, Infrastructure.Repositories.MaintenanceOperations.MaintenanceReportRepository>();
+builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceJobRepository, Infrastructure.Repositories.MaintenanceOperations.MaintenanceJobRepository>();
+builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceReportService, Application.Services.MaintenanceOperations.MaintenanceReportApplicationService>();
 builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IMaintenanceJobService, Application.Services.MaintenanceOperations.MaintenanceJobApplicationService>();
 builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IStatusSynchronizationService, Application.Services.MaintenanceOperations.StatusSynchronizationService>();
 
 builder.Services.AddScoped<Application.Interfaces.MachineManagement.IMachineRepository, Infrastructure.Repositories.MachineManagement.MachineRepository>();
+
+// Register Notification services
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, Infrastructure.Services.UserContext>();

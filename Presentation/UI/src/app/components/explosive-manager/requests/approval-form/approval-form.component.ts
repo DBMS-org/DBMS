@@ -175,7 +175,7 @@ export class ApprovalFormComponent implements OnInit, OnDestroy {
         });
     } else if (formValue.decision === 'reject') {
       const rejectData: RejectTransferRequest = {
-        reason: formValue.rejectionReason
+        rejectionReason: formValue.rejectionReason
       };
 
       this.transferService.rejectTransferRequest(this.request.id, rejectData)

@@ -332,6 +332,12 @@ export class ProposalHistoryComponent implements OnInit {
 
   // Timing modal methods
   openTimingModal(proposal: DisplayProposalItem): void {
+    // Only allow timing updates for pending proposals
+    if (proposal.status !== 'pending') {
+      alert(`Cannot update timing: This proposal is ${proposal.status}. Only pending proposals can have their timing updated.`);
+      return;
+    }
+
     this.timingForm = {
       proposalId: proposal.id,
       blastingDate: proposal.blastingDate || '',
@@ -407,12 +413,25 @@ export class ProposalHistoryComponent implements OnInit {
         this.isSavingTiming = false;
 
         let errorMessage = 'Failed to update blasting timing. Please try again.';
-        if (error.message) {
-          errorMessage = error.message;
+
+        // Check for specific error messages from the backend
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.error && typeof error.error === 'string') {
+          errorMessage = error.error;
         } else if (error.status === 400) {
-          errorMessage = 'Invalid timing format. Please use HH:mm format (e.g., 14:30).';
+          // Provide context-specific error messages for 400 errors
+          const errorText = error.error?.message || error.statusText || '';
+          if (errorText.toLowerCase().includes('approved') || errorText.toLowerCase().includes('rejected') ||
+              errorText.toLowerCase().includes('cancelled')) {
+            errorMessage = 'Cannot update timing: This proposal has already been processed. Only pending proposals can have their timing updated.';
+          } else {
+            errorMessage = 'Invalid request. Please check your input and try again.';
+          }
         } else if (error.status === 404) {
           errorMessage = 'Explosive approval request not found.';
+        } else if (error.status === 403) {
+          errorMessage = 'You do not have permission to update this proposal.';
         }
 
         alert(errorMessage);
@@ -443,6 +462,14 @@ export class ProposalHistoryComponent implements OnInit {
     } catch {
       return 'Invalid Date/Time';
     }
+  }
+
+  /**
+   * Check if a proposal can have its timing updated
+   * Only pending proposals can have their timing updated
+   */
+  canUpdateTiming(proposal: DisplayProposalItem): boolean {
+    return proposal.status === 'pending';
   }
 
 }

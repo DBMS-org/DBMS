@@ -22,6 +22,7 @@ export class SidebarComponent {
     { icon: 'pi-home', label: 'Dashboard', route: '/store-manager/dashboard' },
     { icon: 'pi-plus-circle', label: 'Add Stock Request', route: '/store-manager/add-stock' },
     { icon: 'pi-history', label: 'Request History', route: '/store-manager/request-history' },
-    { icon: 'pi-user', label: 'Blasting Engineer Requests', route: '/store-manager/blasting-engineer-requests' }
+    { icon: 'pi-user', label: 'Blasting Engineer Requests', route: '/store-manager/blasting-engineer-requests' },
+    { icon: 'pi-bell', label: 'Notifications', route: '/store-manager/notifications' }
   ];
 }

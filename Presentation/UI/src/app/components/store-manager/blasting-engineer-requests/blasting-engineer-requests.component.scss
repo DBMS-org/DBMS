@@ -23,7 +23,7 @@
       background: white;
       color: #2c3e50;
       border-bottom: 1px solid #e9ecef;
-      padding: 0.5rem 1rem;
+      padding: 1rem 1.5rem;
 
       .p-panel-title {
         color: #2c3e50;
@@ -31,11 +31,17 @@
       }
 
       .p-panel-header-icon {
-        color: #667eea;
+        color: #667eea !important;
+        width: 2.5rem;
+        height: 2.5rem;
 
         &:hover {
-          color: #764ba2;
-          background: rgba(102, 126, 234, 0.1);
+          color: #764ba2 !important;
+          background: rgba(102, 126, 234, 0.15) !important;
+        }
+
+        &:focus {
+          box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
         }
       }
     }
@@ -43,7 +49,7 @@
     .p-panel-content {
       background: white;
       color: #2c3e50;
-      padding: 0.75rem;
+      padding: 1.5rem;
     }
   }
 
@@ -415,23 +421,73 @@
         background: rgba(102, 126, 234, 0.1);
         color: #764ba2;
       }
+
+      // Better visibility for text buttons with colored severity
+      &.p-button-info {
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+
+        &:enabled:hover {
+          background: rgba(59, 130, 246, 0.2);
+          color: #2563eb;
+        }
+      }
+
+      &.p-button-success {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+
+        &:enabled:hover {
+          background: rgba(16, 185, 129, 0.2);
+          color: #059669;
+        }
+      }
+
+      &.p-button-danger {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+
+        &:enabled:hover {
+          background: rgba(239, 68, 68, 0.2);
+          color: #dc2626;
+        }
+      }
     }
 
     &.p-button-outlined {
-      background: transparent;
+      background: white;
       color: #667eea;
-      border-color: #667eea;
+      border: 2px solid #667eea;
 
       &:enabled:hover {
         background: rgba(102, 126, 234, 0.1);
+        border-color: #764ba2;
+        color: #764ba2;
       }
 
       &.p-button-secondary {
-        color: #6c757d;
-        border-color: #6c757d;
+        background: white;
+        color: #4b5563;
+        border: 2px solid #9ca3af;
 
         &:enabled:hover {
-          background: rgba(108, 117, 125, 0.1);
+          background: rgba(75, 85, 99, 0.1);
+          border-color: #6b7280;
+          color: #374151;
+        }
+      }
+    }
+
+    // Regular buttons - ensure good visibility
+    &:not(.p-button-text):not(.p-button-outlined) {
+      &.p-button-secondary {
+        background: #6c757d;
+        border-color: #6c757d;
+        color: white;
+
+        &:enabled:hover {
+          background: #5a6268;
+          border-color: #5a6268;
         }
       }
     }

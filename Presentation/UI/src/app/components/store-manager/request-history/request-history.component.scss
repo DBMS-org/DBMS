@@ -409,11 +409,57 @@
     }
 
     &.p-button-text {
-      color: #667eea;
+      background: transparent;
+      border: 1px solid transparent;
 
-      &:enabled:hover {
-        background: rgba(102, 126, 234, 0.1);
-        color: #764ba2;
+      &.p-button-info {
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+
+        &:enabled:hover {
+          background: rgba(59, 130, 246, 0.2);
+          color: #2563eb;
+        }
+      }
+
+      &.p-button-help {
+        color: #a855f7;
+        background: rgba(168, 85, 247, 0.1);
+
+        &:enabled:hover {
+          background: rgba(168, 85, 247, 0.2);
+          color: #9333ea;
+        }
+      }
+
+      &.p-button-secondary {
+        color: #6c757d;
+        background: rgba(108, 117, 125, 0.1);
+
+        &:enabled:hover {
+          background: rgba(108, 117, 125, 0.2);
+          color: #5a6268;
+        }
+      }
+
+      &.p-button-danger {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+
+        &:enabled:hover {
+          background: rgba(239, 68, 68, 0.2);
+          color: #dc2626;
+        }
+      }
+
+      &.p-button-success {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+
+        &:enabled:hover {
+          background: rgba(16, 185, 129, 0.2);
+          color: #059669;
+        }
       }
     }
 

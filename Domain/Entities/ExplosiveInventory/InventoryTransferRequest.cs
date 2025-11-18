@@ -197,6 +197,7 @@ namespace Domain.Entities.ExplosiveInventory
                 throw new InvalidOperationException("Request must be dispatched before delivery can be confirmed");
 
             DeliveryConfirmedDate = DateTime.UtcNow;
+            Status = TransferRequestStatus.Completed;
 
             MarkUpdated();
         }

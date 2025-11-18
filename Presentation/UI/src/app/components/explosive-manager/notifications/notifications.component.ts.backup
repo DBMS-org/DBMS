@@ -1,0 +1,240 @@
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
+import { Subscription } from 'rxjs';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Notification } from '../../../core/models/notification.model';
+import { NotificationType } from '../../../core/models/notification-type.enum';
+import { NotificationPriority, getPriorityColor, getPriorityDisplayName } from '../../../core/models/notification-priority.enum';
+import { getTimeAgo } from '../../../core/models/notification.model';
+import { getNotificationTypeIcon } from '../../../core/models/notification-type.enum';
+
+@Component({
+  selector: 'app-explosive-manager-notifications',
+  standalone: true,
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatChipsModule],
+  templateUrl: './notifications.component.html',
+  styleUrls: ['./notifications.component.scss']
+})
+export class ExplosiveManagerNotificationsComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private notificationService = inject(NotificationService);
+  private subscriptions: Subscription[] = [];
+
+  notifications = signal<Notification[]>([]);
+  filteredNotifications = signal<Notification[]>([]);
+  selectedFilter = signal<'all' | 'unread' | 'transfer-requests' | 'inventory-alerts' | 'system'>('all');
+  isLoading = signal(false);
+  error = signal<string | null>(null);
+
+  // Notification settings
+  settings = signal({
+    userManagementPush: true,
+    userManagementEmail: false,
+    projectUpdatePush: true,
+    projectUpdateEmail: false,
+    machineAssignmentPush: true,
+    machineAssignmentEmail: false,
+    maintenancePush: true,
+    maintenanceEmail: false,
+    systemPush: true,
+    systemEmail: false,
+    systemAlertPush: true,
+    systemAlertEmail: false,
+    storeUpdatePush: true,
+    storeUpdateEmail: false,
+    siteUpdatePush: true,
+    siteUpdateEmail: false,
+    drillDataPush: true,
+    drillDataEmail: false,
+    explosiveRequestPush: true,
+    explosiveRequestEmail: false,
+    inventoryUpdatePush: true,
+    inventoryUpdateEmail: false,
+    blastCalculationPush: true,
+    blastCalculationEmail: false,
+    proposalStatusPush: true,
+    proposalStatusEmail: false,
+    urgencyLevel: 'all'
+  });
+
+  // Expose utility functions to template
+  getTimeAgo = getTimeAgo;
+  getNotificationTypeIcon = getNotificationTypeIcon;
+  getPriorityColor = getPriorityColor;
+  getPriorityDisplayName = getPriorityDisplayName;
+  NotificationType = NotificationType;
+
+  ngOnInit() {
+    this.loadNotifications();
+    this.subscribeToNotificationUpdates();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private loadNotifications() {
+    this.isLoading.set(true);
+    const sub = this.notificationService.fetchNotifications(0, 50).subscribe({
+      next: (notifications) => {
+        console.log('🔔 RAW notifications from API:', notifications);
+        console.log('🔔 Notification types:', notifications.map(n => ({ id: n.id, type: n.type, title: n.title })));
+
+        const explosiveManagerNotifications = notifications.filter(n => {
+          const isRelevant = this.isExplosiveManagerRelevantNotification(n.type);
+          console.log(`🔔 Notification ${n.id} (type ${n.type}): ${isRelevant ? 'RELEVANT ✅' : 'FILTERED OUT ❌'}`);
+          return isRelevant;
+        });
+
+        console.log('🔔 Filtered notifications for Explosive Manager:', explosiveManagerNotifications);
+        this.notifications.set(explosiveManagerNotifications);
+        this.applyFilter();
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Failed to load notifications:', error);
+        this.error.set('Failed to load notifications. Please try again.');
+        this.isLoading.set(false);
+      }
+    });
+    this.subscriptions.push(sub);
+  }
+
+  private subscribeToNotificationUpdates() {
+    const sub = this.notificationService.notifications$.subscribe({
+      next: (notifications) => {
+        const explosiveManagerNotifications = notifications.filter(n =>
+          this.isExplosiveManagerRelevantNotification(n.type)
+        );
+        this.notifications.set(explosiveManagerNotifications);
+        this.applyFilter();
+      }
+    });
+    this.subscriptions.push(sub);
+  }
+
+  private isExplosiveManagerRelevantNotification(type: NotificationType): boolean {
+    return (
+      (type >= 200 && type < 300) || // Transfer requests
+      (type >= 1000)                 // System notifications
+    );
+  }
+
+  applyFilter() {
+    const filter = this.selectedFilter();
+    const allNotifications = this.notifications();
+    let filtered: Notification[] = [];
+
+    switch (filter) {
+      case 'all':
+        filtered = allNotifications;
+        break;
+      case 'unread':
+        filtered = allNotifications.filter(n => !n.isRead);
+        break;
+      case 'transfer-requests':
+        filtered = allNotifications.filter(n => n.type >= 200 && n.type < 300);
+        break;
+      case 'inventory-alerts':
+        filtered = allNotifications.filter(n =>
+          n.type === NotificationType.TransferRequestUrgent ||
+          n.type === NotificationType.TransferDispatched ||
+          n.type === NotificationType.TransferCompleted
+        );
+        break;
+      case 'system':
+        filtered = allNotifications.filter(n => n.type >= 1000);
+        break;
+      default:
+        filtered = allNotifications;
+    }
+
+    this.filteredNotifications.set(filtered);
+  }
+
+  setFilter(filter: 'all' | 'unread' | 'transfer-requests' | 'inventory-alerts' | 'system') {
+    this.selectedFilter.set(filter);
+    this.applyFilter();
+  }
+
+  markAsRead(notification: Notification) {
+    if (notification.isRead) return;
+
+    const sub = this.notificationService.markAsRead(notification.id).subscribe({
+      error: (error) => {
+        console.error('Failed to mark notification as read:', error);
+      }
+    });
+    this.subscriptions.push(sub);
+  }
+
+  markAsUnread(notification: Notification) {
+    if (!notification.isRead) return;
+
+    const sub = this.notificationService.markAsUnread(notification.id).subscribe({
+      error: (error) => {
+        console.error('Failed to mark notification as unread:', error);
+      }
+    });
+    this.subscriptions.push(sub);
+  }
+
+  deleteNotification(notification: Notification, event: Event) {
+    event.stopPropagation();
+
+    if (!confirm('Are you sure you want to delete this notification?')) {
+      return;
+    }
+
+    const sub = this.notificationService.deleteNotification(notification.id).subscribe({
+      error: (error) => {
+        console.error('Failed to delete notification:', error);
+        this.error.set('Failed to delete notification. Please try again.');
+      }
+    });
+    this.subscriptions.push(sub);
+  }
+
+  handleNotificationClick(notification: Notification) {
+    this.markAsRead(notification);
+
+    if (notification.actionUrl) {
+      this.router.navigateByUrl(notification.actionUrl);
+    } else if (notification.relatedEntityType && notification.relatedEntityId) {
+      this.navigateToRelatedEntity(notification.relatedEntityType, notification.relatedEntityId);
+    }
+  }
+
+  private navigateToRelatedEntity(entityType: string, entityId: number) {
+    switch (entityType.toLowerCase()) {
+      case 'inventorytransferrequest':
+        this.router.navigate(['/explosive-manager/requests']);
+        break;
+      case 'anfoinventory':
+      case 'emulsioninventory':
+        this.router.navigate(['/explosive-manager/inventory']);
+        break;
+      default:
+        this.router.navigate(['/explosive-manager/dashboard']);
+    }
+  }
+
+  refresh() {
+    this.loadNotifications();
+  }
+
+  getUnreadCount(): number {
+    return this.notifications().filter(n => !n.isRead).length;
+  }
+
+  updateSetting(settingKey: string, value: boolean) {
+    this.settings.update(current => ({
+      ...current,
+      [settingKey]: value
+    }));
+  }
+}

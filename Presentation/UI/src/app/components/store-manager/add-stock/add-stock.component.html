@@ -53,7 +53,7 @@
                     type="text"
                     pInputText
                     id="requestDate"
-                    [value]="getCurrentDateTime()"
+                    [value]="currentDateTime"
                     readonly
                     class="w-full">
                   <small class="text-gray-600 text-xs">Automatically generated</small>
@@ -216,23 +216,24 @@
             </div>
 
             <!-- Request Details Section -->
-            <div class="form-section-group">
-              <h3 class="section-title">Request Details</h3>
+            <div class="mb-2 p-3 bg-gradient-to-br from-white to-gray-50 rounded-xl border border-primary border-opacity-10">
+              <h3 class="text-lg font-bold text-gray-800 mb-1 pb-1 border-b-2 border-primary inline-block">Request Details</h3>
 
-              <div class="form-group">
-                <label for="requiredDate">Required By Date</label>
-                <p-calendar
-                  inputId="requiredDate"
-                  formControlName="requiredDate"
-                  [showIcon]="true"
-                  dateFormat="yy-mm-dd"
-                  placeholder="Select required date"
-                  [style]="{'width': '100%'}"
-                  [minDate]="getTodayDate()"
-                  [ngClass]="{'ng-invalid ng-dirty': isFieldInvalid(stockRequestForm, 'requiredDate')}">
-                </p-calendar>
-                <small class="text-muted">When do you need this material?</small>
-                <small class="text-danger" *ngIf="isFieldInvalid(stockRequestForm, 'requiredDate')">
+              <div class="flex flex-col gap-2 mb-1">
+                <label for="requiredDate" class="block font-semibold text-gray-700 text-sm">Required By Date *</label>
+                <div class="relative">
+                  <input
+                    type="date"
+                    id="requiredDate"
+                    formControlName="requiredDate"
+                    [min]="getMinDate()"
+                    class="custom-date-input w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                    [class.border-red-500]="isFieldInvalid(stockRequestForm, 'requiredDate')"
+                    placeholder="Select required date">
+                  <i class="pi pi-calendar absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
+                <small class="text-gray-600 text-xs">When do you need this material?</small>
+                <small class="text-red-600 text-xs" *ngIf="isFieldInvalid(stockRequestForm, 'requiredDate')">
                   {{ getFieldError(stockRequestForm, 'requiredDate') }}
                 </small>
               </div>

@@ -7,6 +7,7 @@ using Domain.Entities.MachineManagement;
 using Domain.Entities.StoreManagement;
 using Domain.Entities.ExplosiveInventory;
 using Domain.Entities.MaintenanceOperations;
+using Domain.Entities.Notifications;
 using Domain.Common;
 using Application.Interfaces.Infrastructure;
 using System.Threading;
@@ -59,6 +60,7 @@ namespace Infrastructure.Data
         public DbSet<MaintenanceReport> MaintenanceReports { get; set; }
         public DbSet<MaintenanceJob> MaintenanceJobs { get; set; }
         public DbSet<MaintenanceJobAssignment> MaintenanceJobAssignments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

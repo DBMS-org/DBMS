@@ -10,8 +10,15 @@
         <p>Please review the request details and make your decision</p>
       </div>
     </div>
+  </div>
 
-  <div class="approval-form-container">
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-icon class="spinning-icon">hourglass_empty</mat-icon>
+    <p>Loading request details...</p>
+  </div>
+
+  <div class="approval-form-container" *ngIf="!loading && request">
     <!-- Request Summary Card -->
     <div class="request-summary-card">
       <div class="card-header">

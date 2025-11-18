@@ -1,0 +1,780 @@
+
+> clean-architecture.ui@0.0.0 build
+> ng build
+
+[33m❯[39m Building...
+[32m✔[39m Building...
+Application bundle generation failed. [46.362 seconds]
+
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: Button is not used within the template of UsersComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/admin/users/users.component.ts:26:4:
+[37m      26 │     [32mButton[37m,
+         ╵     [32m~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/blasting-engineer/proposal-details/proposal-details.component.html:26:81:
+[37m      26 │ ...badge" [ngClass]="'status-' + proposalData.status?.[32mtoLowerCase[37m()">
+         ╵                                                       [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ProposalDetailsComponent.
+
+    src/app/components/blasting-engineer/proposal-details/proposal-details.component.ts:38:15:
+[37m      38 │   templateUrl: [32m'./proposal-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/dashboard/dashboard.component.html:123:77:
+[37m      123 │ ...">{{ getOperationalStoresCount() }}/{{ stores?.[32mlength[37m || 0 }}</p>
+          ╵                                                   [32m~~~~~~[0m
+
+  Error occurs in the template of component DashboardComponent.
+
+    src/app/components/explosive-manager/dashboard/dashboard.component.ts:18:15:
+[37m      18 │   templateUrl: [32m'./dashboard.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/approval-form/approval-form.component.html:47:44:
+[37m      47 │ ...ip [ngClass]="request?.[32mexplosiveTypeName[37m ? (request.explosiveTy...
+         ╵                           [32m~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ApprovalFormComponent.
+
+    src/app/components/explosive-manager/requests/approval-form/approval-form.component.ts:36:15:
+[37m      36 │   templateUrl: [32m'./approval-form.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/approval-form/approval-form.component.html:47:122:
+[37m      47 │ ...owercase) : ''">{{ request?.[32mexplosiveTypeName[37m || '-' }}</mat-chip>
+         ╵                                [32m~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ApprovalFormComponent.
+
+    src/app/components/explosive-manager/requests/approval-form/approval-form.component.ts:36:15:
+[37m      36 │   templateUrl: [32m'./approval-form.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:47:68:
+[37m      47 │ ...ss]="'status-' + (request?.[32mstatusName[37m | lowercase)" *ngIf="requ...
+         ╵                               [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:49:50:
+[37m      49 │ ...        <span class="status-text">{{ request?.[32mstatusName[37m }}</span>
+         ╵                                                  [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:80:58:
+[37m      80 │ ...ress-line" [ngClass]="{'completed': [32mrequest?.dispatchDate[37m}"></div>
+         ╵                                        [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:81:65:
+[37m      81 │ ...ss]="{'active': !request?.[32mdispatchDate[37m, 'completed': request?.d...
+         ╵                              [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:81:92:
+[37m      81 │ ...ve': !request?.dispatchDate, 'completed': [32mrequest?.dispatchDate[37m}">
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:83:31:
+[37m      83 │ ...     <mat-icon>{{request?.[32mdispatchDate[37m ? 'check_circle' : 'loca...
+         ╵                              [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:86:46:
+[37m      86 │ ...s="step-title">{{request?.[32mdispatchDate[37m ? 'Dispatched' : 'Ready ...
+         ╵                              [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:87:49:
+[37m      87 │ ...step-subtitle">{{request?.[32mdispatchDate[37m ? (request.dispatchDate ...
+         ╵                              [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:136:46:
+[37m      136 │ ...ass="value">{{ request?.[32mrequiredByDate[37m | date: 'MMM dd, yyyy' ...
+          ╵                            [32m~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.html:144:46:
+[37m      144 │ ...    <span class="value">{{ request?.[32mrequestedByUserName[37m }}</span>
+          ╵                                        [32m~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component DispatchRequestComponent.
+
+    src/app/components/explosive-manager/requests/dispatch-request/dispatch-request.component.ts:37:15:
+[37m      37 │   templateUrl: [32m'./dispatch-request.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/my-project/my-project.component.html:54:51:
+[37m      54 │ ...      <span class="stat-value">{{ project?.[32mregion[37m || '-' }}</span>
+         ╵                                               [32m~~~~~~[0m
+
+  Error occurs in the template of component MyProjectComponent.
+
+    src/app/components/operator/my-project/my-project.component.ts:13:15:
+[37m      13 │   templateUrl: [32m'./my-project.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/my-project/my-project.component.html:58:51:
+[37m      58 │ ...      <span class="stat-value">{{ project?.[32mstatus[37m || '-' }}</span>
+         ╵                                               [32m~~~~~~[0m
+
+  Error occurs in the template of component MyProjectComponent.
+
+    src/app/components/operator/my-project/my-project.component.ts:13:15:
+[37m      13 │   templateUrl: [32m'./my-project.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/my-project/my-project.component.html:62:62:
+[37m      62 │ ...pan class="stat-value">{{ formatDate(project?.[32mstartDate[37m) }}</span>
+         ╵                                                  [32m~~~~~~~~~[0m
+
+  Error occurs in the template of component MyProjectComponent.
+
+    src/app/components/operator/my-project/my-project.component.ts:13:15:
+[37m      13 │   templateUrl: [32m'./my-project.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/my-project/my-project.component.html:75:86:
+[37m      75 │ ...SitesCount() }} of {{ sites?.[32mlength[37m || 0 }} sites completed</span>
+         ╵                                 [32m~~~~~~[0m
+
+  Error occurs in the template of component MyProjectComponent.
+
+    src/app/components/operator/my-project/my-project.component.ts:13:15:
+[37m      13 │   templateUrl: [32m'./my-project.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/site-details/site-details.component.html:13:63:
+[37m      13 │ ...n class="status" [class]="'status-' + site.status?.[32mtoLowerCase[37m()">
+         ╵                                                       [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component SiteDetailsComponent.
+
+    src/app/components/operator/site-details/site-details.component.ts:17:15:
+[37m      17 │   templateUrl: [32m'./site-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: InputTextarea is not used within the template of BlastingEngineerRequestsComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/blasting-engineer-requests/blasting-engineer-requests.component.ts:36:4:
+[37m      36 │     [32mInputTextarea[37m,
+         ╵     [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:31:74:
+[37m      31 │ ...m text-gray-800 font-semibold">{{ request?.[32mrequestNumber[37m }}</span>
+         ╵                                               [32m~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:35:71:
+[37m      35 │ ...xt-sm text-gray-800">{{ formatDate(request?.[32mrequestDate[37m) }}</span>
+         ╵                                                [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:39:71:
+[37m      39 │ ...sm text-gray-800">{{ formatDate(request?.[32mrequiredByDate[37m) }}</span>
+         ╵                                             [32m~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:43:37:
+[37m      43 │ ...  <p-tag [value]="request?.[32mstatusName[37m" [severity]="getTagSeveri...
+         ╵                               [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:43:85:
+[37m      43 │ ...]="getTagSeverity(request?.[32mstatusName[37m || '')" styleClass="text-...
+         ╵                               [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:59:60:
+[37m      59 │ ...="text-sm text-gray-800">{{ request?.[32mrequestedByUserName[37m }}</span>
+         ╵                                         [32m~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:63:60:
+[37m      63 │ ..."text-sm text-gray-800">{{ request?.[32mdestinationStoreName[37m }}</span>
+         ╵                                        [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:79:74:
+[37m      79 │ ...xt-gray-800 font-semibold">{{ request?.[32mexplosiveTypeName[37m }}</span>
+         ╵                                           [32m~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:83:74:
+[37m      83 │ ...-semibold">{{ request?.[32mrequestedQuantity[37m }} {{ request?.unit }}...
+         ╵                           [32m~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:83:107:
+[37m      83 │ ...ibold">{{ request?.requestedQuantity }} {{ request?.[32munit[37m }}</span>
+         ╵                                                        [32m~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:87:74:
+[37m      87 │ ...t-semibold">{{ request?.[32mapprovedQuantity[37m || '-' }} {{ request?....
+         ╵                            [32m~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:87:113:
+[37m      87 │ ...y || '-' }} {{ request?.[32mapprovedQuantity[37m ? request?.unit : '' }...
+         ╵                            [32m~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:87:141:
+[37m      87 │ ...'-' }} {{ request?.approvedQuantity ? request?.[32munit[37m : '' }}</span>
+         ╵                                                   [32m~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:91:71:
+[37m      91 │ ...0 font-bold">{{ request?.[32mfinalQuantity[37m }} {{ request?.unit }}</...
+         ╵                             [32m~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:91:100:
+[37m      91 │ ...font-bold">{{ request?.finalQuantity }} {{ request?.[32munit[37m }}</span>
+         ╵                                                        [32m~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:107:60:
+[37m      107 │ ...xt-gray-800">{{ request?.[32mapprovedDate[37m ? formatDate(request.app...
+          ╵                             [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:111:60:
+[37m      111 │ ...sm text-gray-800">{{ request?.[32mapprovedByUserName[37m || '-' }}</span>
+          ╵                                  [32m~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:115:75:
+[37m      115 │ ...emibold">{{ request?.[32mdeliveryConfirmedDate[37m ? formatDate(reques...
+          ╵                         [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:120:67:
+[37m      120 │ ...m-0 mt-1 text-xs text-red-600">{{ request?.[32mrejectionReason[37m }}</p>
+          ╵                                               [32m~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:137:71:
+[37m      137 │ ...-sm text-gray-800">{{ formatDate(request?.[32mdispatchDate[37m) }}</span>
+          ╵                                              [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:141:60:
+[37m      141 │ ...="text-sm text-gray-800">{{ request?.[32mtruckNumber[37m || '-' }}</span>
+          ╵                                         [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:145:60:
+[37m      145 │ ...s="text-sm text-gray-800">{{ request?.[32mdriverName[37m || '-' }}</span>
+          ╵                                          [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:149:60:
+[37m      149 │ ...m text-gray-800">{{ request?.[32mdriverContactNumber[37m || '-' }}</span>
+          ╵                                 [32m~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:165:66:
+[37m      165 │ ...="m-0 mt-1 text-xs text-gray-700">{{ request?.[32mrequestNotes[37m }}</p>
+          ╵                                                  [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:169:66:
+[37m      169 │ ..."m-0 mt-1 text-xs text-gray-700">{{ request?.[32mapprovalNotes[37m }}</p>
+          ╵                                                 [32m~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.html:173:66:
+[37m      173 │ ..."m-0 mt-1 text-xs text-gray-700">{{ request?.[32mdispatchNotes[37m }}</p>
+          ╵                                                 [32m~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component ViewDetailsComponent.
+
+    src/app/components/store-manager/request-history/view-details/view-details.component.ts:19:15:
+[37m      19 │   templateUrl: [32m'./view-details.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: InputTextarea is not used within the template of AccessoriesInventoryComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/accessories-inventory/accessories-inventory.component.ts:71:4:
+[37m      71 │     [32mInputTextarea[37m,
+         ╵     [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m [1m[35m[plugin angular-sass][0m
+
+    src/styles.scss:16:8:
+[37m      16 │ @import [32m[37m'styles/primeng-custom-theme.scss';
+         ╵         [32m^[0m
+
+
+  Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+  
+  More info and automated migrator: [4mhttps://sass-lang.com/d/import[0m
+
+  The plugin "angular-sass" was triggered by this import
+
+    angular:styles/global:styles:5:8:
+[37m      5 │ @import [32m'src/styles.scss'[37m;
+        ╵         [32m~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m [1m[35m[plugin angular-sass][0m
+
+    src/styles.scss:21:8:
+[37m      21 │ @import [32m[37m'styles/tailwind-helpers.scss';
+         ╵         [32m^[0m
+
+
+  Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+  
+  More info and automated migrator: [4mhttps://sass-lang.com/d/import[0m
+
+  The plugin "angular-sass" was triggered by this import
+
+    angular:styles/global:styles:5:8:
+[37m      5 │ @import [32m'src/styles.scss'[37m;
+        ╵         [32m~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG7: This comparison appears to be unintentional because the types '"all" | "unread" | "machine-assignments" | "machine-requests" | "maintenance"' and '"assignments"' have no overlap.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/machine-manager/notifications/notifications.component.html:51:22:
+[37m      51 │       [class.active]="[32mselectedFilter() === 'assignments'[37m"
+         ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component MachineManagerNotificationsComponent.
+
+    src/app/components/machine-manager/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5: Argument of type '"assignments"' is not assignable to parameter of type '"all" | "unread" | "machine-assignments" | "machine-requests" | "maintenance"'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/machine-manager/notifications/notifications.component.html:52:25:
+[37m      52 │       (click)="setFilter([32m'assignments'[37m)">
+         ╵                          [32m~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component MachineManagerNotificationsComponent.
+
+    src/app/components/machine-manager/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG7: This comparison appears to be unintentional because the types '"all" | "unread" | "machine-assignments" | "machine-requests" | "maintenance"' and '"inventory"' have no overlap.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/machine-manager/notifications/notifications.component.html:65:22:
+[37m      65 │       [class.active]="[32mselectedFilter() === 'inventory'[37m"
+         ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component MachineManagerNotificationsComponent.
+
+    src/app/components/machine-manager/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5: Argument of type '"inventory"' is not assignable to parameter of type '"all" | "unread" | "machine-assignments" | "machine-requests" | "maintenance"'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/machine-manager/notifications/notifications.component.html:66:25:
+[37m      66 │       (click)="setFilter([32m'inventory'[37m)">
+         ╵                          [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component MachineManagerNotificationsComponent.
+
+    src/app/components/machine-manager/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG7: This comparison appears to be unintentional because the types '"all" | "unread" | "maintenance-reports" | "maintenance-jobs" | "machine-assignments"' and '"pattern"' have no overlap.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/notifications/notifications.component.html:51:22:
+[37m      51 │       [class.active]="[32mselectedFilter() === 'pattern'[37m"
+         ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component OperatorNotificationsComponent.
+
+    src/app/components/operator/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5: Argument of type '"pattern"' is not assignable to parameter of type '"all" | "unread" | "maintenance-reports" | "maintenance-jobs" | "machine-assignments"'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/notifications/notifications.component.html:52:25:
+[37m      52 │       (click)="setFilter([32m'pattern'[37m)">
+         ╵                          [32m~~~~~~~~~[0m
+
+  Error occurs in the template of component OperatorNotificationsComponent.
+
+    src/app/components/operator/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG7: This comparison appears to be unintentional because the types '"all" | "unread" | "maintenance-reports" | "maintenance-jobs" | "machine-assignments"' and '"maintenance"' have no overlap.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/notifications/notifications.component.html:58:22:
+[37m      58 │       [class.active]="[32mselectedFilter() === 'maintenance'[37m"
+         ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component OperatorNotificationsComponent.
+
+    src/app/components/operator/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5: Argument of type '"maintenance"' is not assignable to parameter of type '"all" | "unread" | "maintenance-reports" | "maintenance-jobs" | "machine-assignments"'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/notifications/notifications.component.html:59:25:
+[37m      59 │       (click)="setFilter([32m'maintenance'[37m)">
+         ╵                          [32m~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component OperatorNotificationsComponent.
+
+    src/app/components/operator/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG7: This comparison appears to be unintentional because the types '"all" | "unread" | "maintenance-reports" | "maintenance-jobs" | "machine-assignments"' and '"project"' have no overlap.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/notifications/notifications.component.html:65:22:
+[37m      65 │       [class.active]="[32mselectedFilter() === 'project'[37m"
+         ╵                       [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component OperatorNotificationsComponent.
+
+    src/app/components/operator/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5: Argument of type '"project"' is not assignable to parameter of type '"all" | "unread" | "maintenance-reports" | "maintenance-jobs" | "machine-assignments"'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/operator/notifications/notifications.component.html:66:25:
+[37m      66 │       (click)="setFilter([32m'project'[37m)">
+         ╵                          [32m~~~~~~~~~[0m
+
+  Error occurs in the template of component OperatorNotificationsComponent.
+
+    src/app/components/operator/notifications/notifications.component.ts:24:15:
+[37m      24 │   templateUrl: [32m'./notifications.component.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

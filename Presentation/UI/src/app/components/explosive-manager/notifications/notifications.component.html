@@ -1,0 +1,139 @@
+<div class="notifications-container">
+  <!-- Header -->
+  <div class="notifications-header">
+    <div class="header-content">
+      <div class="title-section">
+        <mat-icon class="header-icon">notifications</mat-icon>
+        <h1>Notifications</h1>
+        <span class="unread-badge" *ngIf="getUnreadCount() > 0">{{ getUnreadCount() }}</span>
+      </div>
+      <button mat-icon-button class="refresh-btn" (click)="refresh()" [disabled]="isLoading()">
+        <mat-icon [class.spinning]="isLoading()">refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'all'"
+      (click)="setFilter('all')">
+      <mat-icon>all_inbox</mat-icon>
+      <span>All</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'unread'"
+      (click)="setFilter('unread')">
+      <mat-icon>mark_email_unread</mat-icon>
+      <span>Unread</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'transfer-requests'"
+      (click)="setFilter('transfer-requests')">
+      <mat-icon>local_shipping</mat-icon>
+      <span>Transfer Requests</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'inventory-alerts'"
+      (click)="setFilter('inventory-alerts')">
+      <mat-icon>inventory</mat-icon>
+      <span>Inventory Alerts</span>
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'system'"
+      (click)="setFilter('system')">
+      <mat-icon>info</mat-icon>
+      <span>System</span>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading()">
+    <div class="spinner"></div>
+    <p>Loading notifications...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error()">
+    <mat-icon class="error-icon">error_outline</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="refresh()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-list" *ngIf="!isLoading() && !error()">
+    <div
+      *ngFor="let notification of filteredNotifications()"
+      class="notification-card"
+      [class.unread]="!notification.isRead"
+      [style.border-left-color]="getPriorityColor(notification.priority)"
+      (click)="handleNotificationClick(notification)">
+
+      <!-- Notification Icon and Content -->
+      <div class="notification-main">
+        <div class="notification-icon">
+          <mat-icon [style.color]="getPriorityColor(notification.priority)">
+            {{ getNotificationTypeIcon(notification.type) }}
+          </mat-icon>
+        </div>
+
+        <div class="notification-content">
+          <div class="notification-header-row">
+            <h3 class="notification-title">{{ notification.title }}</h3>
+            <span class="notification-time">{{ getTimeAgo(notification.createdAt) }}</span>
+          </div>
+
+          <p class="notification-message">{{ notification.message }}</p>
+
+          <div class="notification-footer">
+            <div class="notification-actions">
+              <button
+                mat-icon-button
+                class="action-btn"
+                *ngIf="!notification.isRead"
+                (click)="markAsRead(notification); $event.stopPropagation()"
+                title="Mark as read">
+                <mat-icon>done</mat-icon>
+              </button>
+
+              <button
+                mat-icon-button
+                class="action-btn"
+                *ngIf="notification.isRead"
+                (click)="markAsUnread(notification); $event.stopPropagation()"
+                title="Mark as unread">
+                <mat-icon>mark_email_unread</mat-icon>
+              </button>
+
+              <button
+                mat-icon-button
+                class="action-btn delete-btn"
+                (click)="deleteNotification(notification, $event)"
+                title="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredNotifications().length === 0">
+      <mat-icon class="empty-icon">notifications_none</mat-icon>
+      <h3>No notifications</h3>
+      <p *ngIf="selectedFilter() === 'all'">You're all caught up!</p>
+      <p *ngIf="selectedFilter() === 'unread'">No unread notifications</p>
+      <p *ngIf="selectedFilter() === 'transfer-requests'">No transfer request notifications</p>
+      <p *ngIf="selectedFilter() === 'inventory-alerts'">No inventory alerts</p>
+      <p *ngIf="selectedFilter() === 'system'">No system notifications</p>
+    </div>
+  </div>
+</div>

@@ -119,7 +119,6 @@
           <th>Urgency</th>
           <th>Status</th>
           <th>Date</th>
-          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -171,26 +170,6 @@
           <td class="request-date">
             {{ formatDate(request.requestedDate) }}
           </td>
-          
-          <td class="request-actions">
-            <div class="action-buttons" *ngIf="request.status === AssignmentRequestStatus.PENDING">
-              <button
-                class="action-btn approve-btn"
-                (click)="openApprovalModal(request)"
-                title="Approve Request">
-                <i class="fas fa-check"></i>
-              </button>
-              <button
-                class="action-btn reject-btn"
-                (click)="openRejectionModal(request)"
-                title="Reject Request">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div *ngIf="request.status !== AssignmentRequestStatus.PENDING" class="text-muted">
-              <small>{{ request.status }}</small>
-            </div>
-          </td>
         </tr>
       </tbody>
     </table>
@@ -202,81 +181,6 @@
         <h4>No Assignment Requests Found</h4>
         <p>No requests match your current filters. Try adjusting your search criteria.</p>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- Approval Modal -->
-<div class="modal-overlay" *ngIf="showApprovalModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h5>Approve Assignment Request</h5>
-      <button type="button" class="btn-close" (click)="closeApprovalModal()"></button>
-    </div>
-    <div class="modal-body">
-      <form [formGroup]="approvalForm">
-        <div class="mb-3">
-          <label for="assignedMachines" class="form-label">Assigned Machine IDs (comma-separated):</label>
-          <input 
-            type="text" 
-            id="assignedMachines"
-            class="form-control" 
-            formControlName="assignedMachines"
-            placeholder="Enter machine IDs separated by commas"
-          />
-        </div>
-        <div class="mb-3">
-          <label for="comments" class="form-label">Comments (optional):</label>
-          <textarea 
-            id="comments"
-            class="form-control" 
-            formControlName="comments"
-            rows="3"
-            placeholder="Any additional comments..."
-          ></textarea>
-        </div>
-      </form>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-success" (click)="approveRequest()" [disabled]="approvalForm.invalid">
-        <i class="fas fa-check"></i> Approve
-      </button>
-      <button class="btn btn-secondary" (click)="closeApprovalModal()">
-        <i class="fas fa-times"></i> Cancel
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Rejection Modal -->
-<div class="modal-overlay" *ngIf="showRejectionModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h5>Reject Assignment Request</h5>
-      <button type="button" class="btn-close" (click)="closeRejectionModal()"></button>
-    </div>
-    <div class="modal-body">
-      <form [formGroup]="rejectionForm">
-        <div class="mb-3">
-          <label for="rejectionComments" class="form-label">Reason for rejection:</label>
-          <textarea 
-            id="rejectionComments"
-            class="form-control" 
-            formControlName="comments"
-            rows="4"
-            placeholder="Please provide a reason for rejecting this request..."
-            required
-          ></textarea>
-        </div>
-      </form>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-danger" (click)="rejectRequest()" [disabled]="rejectionForm.invalid">
-        <i class="fas fa-times"></i> Reject
-      </button>
-      <button class="btn btn-secondary" (click)="closeRejectionModal()">
-        <i class="fas fa-arrow-left"></i> Cancel
-      </button>
     </div>
   </div>
 </div>

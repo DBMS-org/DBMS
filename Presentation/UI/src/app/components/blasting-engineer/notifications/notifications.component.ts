@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,36 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
-
-interface Notification {
-  id: string;
-  type: 'PROJECT_UPDATE' | 'SITE_UPDATE' | 'DRILL_DATA' | 'BLAST_CALCULATION' | 'PROPOSAL_STATUS';
-  title: string;
-  message: string;
-  date: Date;
-  read: boolean;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
-  relatedProjectId?: string;
-  relatedSiteId?: string;
-  relatedProposalId?: string;
-  actionUrl?: string;
-  icon: string;
-  color: string;
-}
-
-interface NotificationSettings {
-  projectUpdatePush: boolean;
-  projectUpdateEmail: boolean;
-  siteUpdatePush: boolean;
-  siteUpdateEmail: boolean;
-  drillDataPush: boolean;
-  drillDataEmail: boolean;
-  blastCalculationPush: boolean;
-  blastCalculationEmail: boolean;
-  proposalStatusPush: boolean;
-  proposalStatusEmail: boolean;
-  urgencyLevel: 'ALL' | 'HIGH' | 'CRITICAL';
-}
+import { Subscription } from 'rxjs';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Notification } from '../../../core/models/notification.model';
+import { NotificationType } from '../../../core/models/notification-type.enum';
+import { NotificationPriority, getPriorityColor, getPriorityDisplayName } from '../../../core/models/notification-priority.enum';
+import { getTimeAgo } from '../../../core/models/notification.model';
+import { getNotificationTypeIcon } from '../../../core/models/notification-type.enum';
 
 @Component({
   selector: 'app-notifications',
@@ -51,143 +28,149 @@ interface NotificationSettings {
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss']
 })
-export class NotificationsComponent implements OnInit {
+export class NotificationsComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private notificationService = inject(NotificationService);
+  private subscriptions: Subscription[] = [];
 
-  // Notifications data
   notifications = signal<Notification[]>([]);
   filteredNotifications = signal<Notification[]>([]);
-
-  // Filter state
-  selectedFilter = signal<'all' | 'unread' | 'projects' | 'sites' | 'drill-data' | 'proposals'>('all');
-
-  // Settings
-  settings = signal<NotificationSettings>({
-    projectUpdatePush: true,
-    projectUpdateEmail: true,
-    siteUpdatePush: true,
-    siteUpdateEmail: true,
-    drillDataPush: true,
-    drillDataEmail: false,
-    blastCalculationPush: true,
-    blastCalculationEmail: true,
-    proposalStatusPush: true,
-    proposalStatusEmail: false,
-    urgencyLevel: 'ALL'
-  });
-
-  showSettings = signal(false);
-
-  // Real-time indicator
+  selectedFilter = signal<'all' | 'unread' | 'explosive-requests' | 'projects' | 'sites' | 'drill-data' | 'proposals' | 'system'>('all');
+  isLoading = signal(false);
+  error = signal<string | null>(null);
   lastUpdate = signal<Date>(new Date());
   isOnline = signal(true);
 
   ngOnInit() {
     this.loadNotifications();
-    this.applyFilter();
+    this.subscribeToNotificationUpdates();
+  }
 
-    // Simulate real-time updates every 30 seconds
-    setInterval(() => {
-      this.lastUpdate.set(new Date());
-    }, 30000);
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private loadNotifications() {
-    const mockNotifications: Notification[] = [
-      {
-        id: 'notif-001',
-        type: 'PROJECT_UPDATE',
-        title: 'Project Assignment',
-        message: 'You have been assigned to project "Mining Site Expansion Phase 3".',
-        date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        read: false,
-        priority: 'HIGH',
-        relatedProjectId: 'PRJ-305',
-        actionUrl: '/blasting-engineer/project-management',
-        icon: 'work',
-        color: 'primary'
-      },
-      {
-        id: 'notif-002',
-        type: 'SITE_UPDATE',
-        title: 'New Site Added',
-        message: 'New site "Quarry Block C" added to project Alpha Mining.',
-        date: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-        read: false,
-        priority: 'MEDIUM',
-        relatedProjectId: 'PRJ-201',
-        relatedSiteId: 'SITE-456',
-        actionUrl: '/blasting-engineer/project-management',
-        icon: 'place',
-        color: 'info'
-      },
-      {
-        id: 'notif-003',
-        type: 'DRILL_DATA',
-        title: 'Drill Data Uploaded',
-        message: 'New drill pattern data (150 holes) uploaded for Site A.',
-        date: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-        read: false,
-        priority: 'HIGH',
-        relatedSiteId: 'SITE-101',
-        actionUrl: '/blasting-engineer/drill-visualization',
-        icon: 'scatter_plot',
-        color: 'success'
-      },
-      {
-        id: 'notif-004',
-        type: 'BLAST_CALCULATION',
-        title: 'Calculation Completed',
-        message: 'Explosive calculations completed for drilling pattern DP-2024-001.',
-        date: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-        read: true,
-        priority: 'MEDIUM',
-        actionUrl: '/blasting-engineer/explosive-calculations',
-        icon: 'calculate',
-        color: 'accent'
-      },
-      {
-        id: 'notif-005',
-        type: 'PROPOSAL_STATUS',
-        title: 'Proposal Approved',
-        message: 'Your blast proposal for Site B has been approved by management.',
-        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-        read: true,
-        priority: 'HIGH',
-        relatedProposalId: 'PROP-789',
-        actionUrl: '/blasting-engineer/proposal-history',
-        icon: 'check_circle',
-        color: 'success'
-      },
-      {
-        id: 'notif-006',
-        type: 'DRILL_DATA',
-        title: 'Data Quality Alert',
-        message: 'Drill data quality check failed for some entries in Site C.',
-        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-        read: true,
-        priority: 'HIGH',
-        relatedSiteId: 'SITE-203',
-        actionUrl: '/blasting-engineer/csv-upload',
-        icon: 'warning',
-        color: 'warning'
-      },
-      {
-        id: 'notif-007',
-        type: 'PROJECT_UPDATE',
-        title: 'Project Status Changed',
-        message: 'Project "Limestone Quarry Development" status changed to Active.',
-        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        read: true,
-        priority: 'LOW',
-        relatedProjectId: 'PRJ-150',
-        actionUrl: '/blasting-engineer/project-management',
-        icon: 'update',
-        color: 'info'
-      }
-    ];
+    this.isLoading.set(true);
+    this.error.set(null);
 
-    this.notifications.set(mockNotifications);
+    const sub = this.notificationService.fetchNotifications(0, 50).subscribe({
+      next: (notifications) => {
+        console.log('🔔 RAW notifications from API:', notifications);
+        console.log('🔔 Notification types:', notifications.map(n => ({ id: n.id, type: n.type, title: n.title })));
+
+        // Filter notifications relevant to Blasting Engineer role
+        const blastingEngineerNotifications = notifications.filter(n => {
+          const isRelevant = this.isBlastingEngineerRelevantNotification(n.type);
+          console.log(`🔔 Notification ${n.id} (type ${n.type}): ${isRelevant ? 'RELEVANT ✅' : 'FILTERED OUT ❌'}`);
+          return isRelevant;
+        });
+
+        console.log('🔔 Filtered notifications for Blasting Engineer:', blastingEngineerNotifications);
+        this.notifications.set(blastingEngineerNotifications);
+        this.applyFilter();
+        this.isLoading.set(false);
+        this.lastUpdate.set(new Date());
+      },
+      error: (error) => {
+        this.error.set('Failed to load notifications. Please try again.');
+        this.isLoading.set(false);
+        console.error('Error loading notifications:', error);
+      }
+    });
+
+    this.subscriptions.push(sub);
+  }
+
+  private subscribeToNotificationUpdates() {
+    const sub = this.notificationService.notifications$.subscribe({
+      next: (notifications) => {
+        const blastingEngineerNotifications = notifications.filter(n =>
+          this.isBlastingEngineerRelevantNotification(n.type)
+        );
+        this.notifications.set(blastingEngineerNotifications);
+        this.applyFilter();
+        this.lastUpdate.set(new Date());
+      }
+    });
+
+    this.subscriptions.push(sub);
+  }
+
+  /**
+   * Check if notification type is relevant for Blasting Engineer role
+   */
+  private isBlastingEngineerRelevantNotification(type: any): boolean {
+    // Handle both string and numeric types from backend
+    let typeStr: string;
+    let typeNum: number;
+
+    if (typeof type === 'string') {
+      typeStr = type;
+      // Try to get the numeric value from the enum
+      typeNum = (NotificationType as any)[type] ?? -1;
+    } else {
+      typeNum = type;
+      typeStr = NotificationType[type] ?? '';
+    }
+
+    // Explosive approval requests (100-199)
+    const isExplosiveRequest = !!(
+      (typeNum >= 100 && typeNum < 200) ||
+      (typeStr && (
+        typeStr === 'ExplosiveRequestCreated' ||
+        typeStr === 'ExplosiveRequestApproved' ||
+        typeStr === 'ExplosiveRequestRejected' ||
+        typeStr === 'ExplosiveRequestCancelled' ||
+        typeStr === 'ExplosiveRequestExpired' ||
+        typeStr === 'ExplosiveRequestUpdated'
+      ))
+    );
+
+    // Project/site updates (700-799)
+    const isProjectSite = !!(
+      (typeNum >= 700 && typeNum < 800) ||
+      (typeStr && (
+        typeStr === 'ProjectCreated' ||
+        typeStr === 'ProjectSiteCreated' ||
+        typeStr === 'ProjectSiteUpdated' ||
+        typeStr === 'BlastSimulationConfirmed' ||
+        typeStr === 'PatternApproved' ||
+        typeStr === 'PatternApprovalRevoked'
+      ))
+    );
+
+    // Blast proposals (800-899)
+    const isBlastProposal = !!(
+      (typeNum >= 800 && typeNum < 900) ||
+      (typeStr && (
+        typeStr === 'BlastProposalSubmitted' ||
+        typeStr === 'BlastProposalApproved' ||
+        typeStr === 'BlastProposalRejected'
+      ))
+    );
+
+    // Drill data (900-999)
+    const isDrillData = !!(
+      (typeNum >= 900 && typeNum < 1000) ||
+      (typeStr && (
+        typeStr === 'DrillDataUploaded' ||
+        typeStr === 'DrillDataProcessed'
+      ))
+    );
+
+    // System notifications (1000+)
+    const isSystemNotification = !!(
+      (typeNum >= 1000) ||
+      (typeStr && (
+        typeStr === 'System' ||
+        typeStr === 'Info' ||
+        typeStr === 'Warning' ||
+        typeStr === 'Error'
+      ))
+    );
+
+    return isExplosiveRequest || isProjectSite || isBlastProposal || isDrillData || isSystemNotification;
   }
 
   applyFilter() {
@@ -200,21 +183,68 @@ export class NotificationsComponent implements OnInit {
       case 'all':
         filtered = allNotifications;
         break;
+
       case 'unread':
-        filtered = allNotifications.filter(n => !n.read);
+        filtered = allNotifications.filter(n => !n.isRead);
         break;
+
+      case 'explosive-requests':
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && typeStr.startsWith('ExplosiveApproval');
+        });
+        break;
+
       case 'projects':
-        filtered = allNotifications.filter(n => n.type === 'PROJECT_UPDATE');
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && typeStr.startsWith('ProjectSite');
+        });
         break;
+
       case 'sites':
-        filtered = allNotifications.filter(n => n.type === 'SITE_UPDATE');
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && (
+            typeStr === 'ProjectSiteCreated' ||
+            typeStr === 'ProjectSiteUpdated'
+          );
+        });
         break;
+
       case 'drill-data':
-        filtered = allNotifications.filter(n => n.type === 'DRILL_DATA');
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && (
+            typeStr === 'DrillDataUploaded' ||
+            typeStr === 'DrillDataProcessed'
+          );
+        });
         break;
+
       case 'proposals':
-        filtered = allNotifications.filter(n => n.type === 'PROPOSAL_STATUS' || n.type === 'BLAST_CALCULATION');
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && (
+            typeStr === 'BlastProposalSubmitted' ||
+            typeStr === 'BlastProposalApproved' ||
+            typeStr === 'BlastProposalRejected'
+          );
+        });
         break;
+
+      case 'system':
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && (
+            typeStr === 'System' ||
+            typeStr === 'Info' ||
+            typeStr === 'Warning' ||
+            typeStr === 'Error'
+          );
+        });
+        break;
+
       default:
         filtered = allNotifications;
     }
@@ -222,72 +252,100 @@ export class NotificationsComponent implements OnInit {
     this.filteredNotifications.set(filtered);
   }
 
-  setFilter(filter: 'all' | 'unread' | 'projects' | 'sites' | 'drill-data' | 'proposals') {
+  setFilter(filter: 'all' | 'unread' | 'explosive-requests' | 'projects' | 'sites' | 'drill-data' | 'proposals' | 'system') {
     this.selectedFilter.set(filter);
     this.applyFilter();
   }
 
   markAsRead(notification: Notification) {
-    this.notifications.update(notifications =>
-      notifications.map(n =>
-        n.id === notification.id ? { ...n, read: true } : n
-      )
-    );
-    this.applyFilter();
+    if (!notification.isRead) {
+      const sub = this.notificationService.markAsRead(notification.id).subscribe({
+        next: () => {
+          // Local state updated automatically via service observable
+        },
+        error: (error) => {
+          console.error('Error marking notification as read:', error);
+        }
+      });
+
+      this.subscriptions.push(sub);
+    }
   }
 
   markAllAsRead() {
-    this.notifications.update(notifications =>
-      notifications.map(n => ({ ...n, read: true }))
-    );
-    this.applyFilter();
+    const sub = this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        // Local state updated automatically via service observable
+      },
+      error: (error) => {
+        console.error('Error marking all as read:', error);
+      }
+    });
+
+    this.subscriptions.push(sub);
   }
 
   deleteNotification(notification: Notification) {
-    this.notifications.update(notifications =>
-      notifications.filter(n => n.id !== notification.id)
-    );
-    this.applyFilter();
+    const sub = this.notificationService.deleteNotification(notification.id).subscribe({
+      next: () => {
+        // Local state updated automatically via service observable
+      },
+      error: (error) => {
+        console.error('Error deleting notification:', error);
+      }
+    });
+
+    this.subscriptions.push(sub);
   }
 
   navigateToContext(notification: Notification) {
     this.markAsRead(notification);
 
     if (notification.actionUrl) {
-      this.router.navigate([notification.actionUrl]);
+      // actionUrl is already a full path string
+      // Use navigateByUrl instead of navigate for string paths
+      this.router.navigateByUrl(notification.actionUrl);
     }
   }
 
-  toggleSettings() {
-    this.showSettings.update(value => !value);
-  }
-
-  updateSetting(settingKey: keyof NotificationSettings, value: any) {
-    this.settings.update(settings => ({
-      ...settings,
-      [settingKey]: value
-    }));
-
-    // In a real app, this would save to backend
-    console.log('Settings updated:', this.settings());
+  refreshNotifications() {
+    this.loadNotifications();
   }
 
   getUnreadCount(): number {
-    return this.notifications().filter(n => !n.read).length;
+    return this.notifications().filter(n => !n.isRead).length;
   }
 
   getTimeAgo(date: Date): string {
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    return getTimeAgo(date);
+  }
 
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+  getNotificationIcon(notification: Notification): string {
+    return getNotificationTypeIcon(notification.type);
+  }
 
-    return date.toLocaleDateString();
+  getNotificationColor(notification: Notification): string {
+    return getPriorityColor(notification.priority);
+  }
+
+  getPriorityLabel(priority: NotificationPriority): string {
+    return getPriorityDisplayName(priority);
   }
 
   getNotificationClass(notification: Notification): string {
-    return `notification-${notification.color}`;
+    switch (notification.priority) {
+      case NotificationPriority.Critical:
+        return 'notification-critical';
+      case NotificationPriority.Urgent:
+        return 'notification-urgent';
+      case NotificationPriority.High:
+        return 'notification-high';
+      case NotificationPriority.Normal:
+        return 'notification-normal';
+      case NotificationPriority.Low:
+        return 'notification-low';
+      default:
+        return 'notification-normal';
+    }
   }
 }

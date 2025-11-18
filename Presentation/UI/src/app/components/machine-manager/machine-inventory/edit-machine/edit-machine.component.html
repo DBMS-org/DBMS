@@ -190,20 +190,15 @@
             </div>
           </div>
 
+          <!-- Status Info (Auto-determined) -->
           <div class="form-row">
-            <div class="form-group">
-              <label for="status">Status *</label>
-              <select 
-                id="status" 
-                formControlName="status"
-                [class.error]="machineForm.get('status')?.invalid && machineForm.get('status')?.touched"
-              >
-                <option *ngFor="let status of machineStatusOptions" [value]="status">
-                  {{ status.replace('_', ' ') }}
-                </option>
-              </select>
-              <div class="error-message" *ngIf="machineForm.get('status')?.invalid && machineForm.get('status')?.touched">
-                Status is required
+            <div class="form-group full-width">
+              <div class="status-info">
+                <span class="info-icon">ℹ️</span>
+                <span class="info-text">
+                  Status will be automatically set to <strong>{{ machineForm.get('projectId')?.value ? 'ASSIGNED' : 'AVAILABLE' }}</strong>
+                  based on project selection
+                </span>
               </div>
             </div>
           </div>

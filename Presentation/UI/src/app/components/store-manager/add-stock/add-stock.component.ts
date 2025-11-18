@@ -11,9 +11,8 @@ import {
 import { CentralInventory, ExplosiveType } from '../../../core/models/central-inventory.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -28,9 +27,8 @@ import { TagModule } from 'primeng/tag';
     FormsModule,
     ReactiveFormsModule,
     DropdownModule,
-    CalendarModule,
     InputNumberModule,
-    InputTextareaModule,
+    InputTextarea,
     InputTextModule,
     ButtonModule,
     CardModule,
@@ -62,6 +60,9 @@ export class AddStockComponent implements OnInit, OnDestroy {
   explosiveTypeOptions: { label: string; value: ExplosiveType }[] = [];
   batchOptions: { label: string; value: number }[] = [];
 
+  // Store the current date/time once to avoid change detection errors
+  currentDateTime = '';
+
   // User and store information (would typically come from auth service)
   currentUser = {
     name: 'Store Manager',
@@ -84,6 +85,7 @@ export class AddStockComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.currentDateTime = this.getCurrentDateTime();
     this.loadAvailableInventory();
   }
 
@@ -306,5 +308,10 @@ export class AddStockComponent implements OnInit, OnDestroy {
 
   getTodayDate(): Date {
     return new Date();
+  }
+
+  getMinDate(): string {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
   }
 }

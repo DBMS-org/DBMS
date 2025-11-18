@@ -1,10 +1,14 @@
 using Application.Common;
 using Application.DTOs.ExplosiveInventory;
+using Application.Interfaces;
 using Application.Interfaces.ExplosiveInventory;
+using Application.Interfaces.UserManagement;
 using AutoMapper;
 using Domain.Entities.ExplosiveInventory;
 using Domain.Entities.ExplosiveInventory.Enums;
+using Domain.Entities.Notifications;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Services.ExplosiveInventory
 {
@@ -15,28 +19,37 @@ namespace Application.Services.ExplosiveInventory
     {
         private readonly IInventoryTransferRequestRepository _transferRepository;
         private readonly ICentralWarehouseInventoryRepository _inventoryRepository;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly IValidator<CreateTransferRequestDto> _createValidator;
         private readonly IValidator<ApproveTransferRequestDto> _approveValidator;
         private readonly IValidator<RejectTransferRequestDto> _rejectValidator;
         private readonly IValidator<DispatchTransferRequestDto> _dispatchValidator;
+        private readonly ILogger<InventoryTransferApplicationService> _logger;
 
         public InventoryTransferApplicationService(
             IInventoryTransferRequestRepository transferRepository,
             ICentralWarehouseInventoryRepository inventoryRepository,
+            INotificationRepository notificationRepository,
+            IUserRepository userRepository,
             IMapper mapper,
             IValidator<CreateTransferRequestDto> createValidator,
             IValidator<ApproveTransferRequestDto> approveValidator,
             IValidator<RejectTransferRequestDto> rejectValidator,
-            IValidator<DispatchTransferRequestDto> dispatchValidator)
+            IValidator<DispatchTransferRequestDto> dispatchValidator,
+            ILogger<InventoryTransferApplicationService> logger)
         {
             _transferRepository = transferRepository;
             _inventoryRepository = inventoryRepository;
+            _notificationRepository = notificationRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
             _createValidator = createValidator;
             _approveValidator = approveValidator;
             _rejectValidator = rejectValidator;
             _dispatchValidator = dispatchValidator;
+            _logger = logger;
         }
 
         // ===== Create & Manage Requests =====
@@ -81,6 +94,9 @@ namespace Application.Services.ExplosiveInventory
                 inventory.AllocateQuantity(request.RequestedQuantity);
                 await _inventoryRepository.UpdateAsync(inventory, cancellationToken);
                 await _transferRepository.AddAsync(transferRequest, cancellationToken);
+
+                // Create notification for Explosive Managers in the region
+                await CreateTransferRequestNotificationAsync(transferRequest, requestedByUserId);
 
                 var dto = _mapper.Map<TransferRequestDto>(transferRequest);
                 return Result.Success(dto);
@@ -127,6 +143,9 @@ namespace Application.Services.ExplosiveInventory
                 transferRequest.Approve(approvedByUserId, approval.ApprovedQuantity, approval.ApprovalNotes);
                 await _transferRepository.UpdateAsync(transferRequest, cancellationToken);
 
+                // Notify the requester that their request was approved
+                await NotifyTransferRequestApprovedAsync(transferRequest);
+
                 var dto = _mapper.Map<TransferRequestDto>(transferRequest);
                 return Result.Success(dto);
             }
@@ -162,6 +181,9 @@ namespace Application.Services.ExplosiveInventory
 
                 transferRequest.Reject(rejectedByUserId, rejection.RejectionReason);
                 await _transferRepository.UpdateAsync(transferRequest, cancellationToken);
+
+                // Notify the requester that their request was rejected
+                await NotifyTransferRequestRejectedAsync(transferRequest);
 
                 var dto = _mapper.Map<TransferRequestDto>(transferRequest);
                 return Result.Success(dto);
@@ -199,6 +221,9 @@ namespace Application.Services.ExplosiveInventory
 
                 await _transferRepository.UpdateAsync(transferRequest, cancellationToken);
 
+                // Notify destination Store Manager that transfer has been dispatched
+                await NotifyTransferDispatchedAsync(transferRequest);
+
                 var dto = _mapper.Map<TransferRequestDto>(transferRequest);
                 return Result.Success(dto);
             }
@@ -218,6 +243,9 @@ namespace Application.Services.ExplosiveInventory
             {
                 transferRequest.ConfirmDelivery();
                 await _transferRepository.UpdateAsync(transferRequest, cancellationToken);
+
+                // Notify Explosive Manager that delivery has been confirmed
+                await NotifyDeliveryConfirmedAsync(transferRequest);
 
                 var dto = _mapper.Map<TransferRequestDto>(transferRequest);
                 return Result.Success(dto);
@@ -252,6 +280,9 @@ namespace Application.Services.ExplosiveInventory
                 // For now, passing 0 as transaction ID
                 transferRequest.Complete(processedByUserId, 0);
                 await _transferRepository.UpdateAsync(transferRequest, cancellationToken);
+
+                // Notify relevant parties that transfer has been completed
+                await NotifyTransferCompletedAsync(transferRequest);
 
                 var dto = _mapper.Map<TransferRequestDto>(transferRequest);
                 return Result.Success(dto);
@@ -361,6 +392,250 @@ namespace Application.Services.ExplosiveInventory
             var items = await _transferRepository.GetByUserAsync(userId, cancellationToken);
             var dtos = _mapper.Map<List<TransferRequestDto>>(items);
             return Result.Success(dtos);
+        }
+
+        // ===== Private Notification Helper Methods =====
+
+        /// <summary>
+        /// Notify Explosive Managers when a new transfer request is created
+        /// </summary>
+        private async Task CreateTransferRequestNotificationAsync(InventoryTransferRequest request, int requestedByUserId)
+        {
+            try
+            {
+                // Get the requester info
+                var requester = await _userRepository.GetByIdAsync(requestedByUserId);
+                if (requester == null) return;
+
+                // Get all Explosive Managers in the system (they manage central warehouse)
+                var explosiveManagers = await _userRepository.GetByRoleAndRegionAsync("ExplosiveManager");
+
+                if (!explosiveManagers.Any()) return;
+
+                // Determine priority based on urgency
+                var priority = request.IsUrgent() ? NotificationPriority.Urgent : NotificationPriority.Normal;
+
+                // Create notifications for all Explosive Managers
+                var notifications = explosiveManagers.Select(manager =>
+                    Notification.Create(
+                        userId: manager.Id,
+                        type: NotificationType.TransferRequestCreated,
+                        title: "New Inventory Transfer Request",
+                        message: $"{requester.Name} has requested {request.RequestedQuantity} {request.Unit} of explosives for transfer to Store #{request.DestinationStoreId}. Request #{request.RequestNumber}.",
+                        priority: priority,
+                        relatedEntityType: "InventoryTransferRequest",
+                        relatedEntityId: request.Id,
+                        actionUrl: $"/explosive-manager/requests"
+                    )
+                ).ToList();
+
+                await _notificationRepository.CreateBulkAsync(notifications);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create notification for transfer request {RequestId}", request.Id);
+                // Don't fail the main operation
+            }
+        }
+
+        /// <summary>
+        /// Notify the requester when their transfer request is approved
+        /// </summary>
+        private async Task NotifyTransferRequestApprovedAsync(InventoryTransferRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔔 Starting notification creation for transfer request {RequestId}", request.Id);
+
+                var requester = await _userRepository.GetByIdAsync(request.RequestedByUserId);
+                if (requester == null)
+                {
+                    _logger.LogWarning("🔔 Requester with ID {RequestedByUserId} not found for transfer request {RequestId}",
+                        request.RequestedByUserId, request.Id);
+                    return;
+                }
+
+                _logger.LogInformation("🔔 Found requester: {RequesterName} (ID: {RequesterId})", requester.Name, requester.Id);
+
+                var approver = request.ApprovedByUserId.HasValue
+                    ? await _userRepository.GetByIdAsync(request.ApprovedByUserId.Value)
+                    : null;
+
+                var approverName = approver?.Name ?? "Explosive Manager";
+                var approvedQty = request.ApprovedQuantity ?? request.RequestedQuantity;
+
+                _logger.LogInformation("🔔 Creating notification for user {UserId}", requester.Id);
+
+                var notification = Notification.Create(
+                    userId: requester.Id,
+                    type: NotificationType.TransferRequestApproved,
+                    title: "Transfer Request Approved",
+                    message: $"Your transfer request #{request.RequestNumber} has been approved by {approverName}. Approved quantity: {approvedQty} {request.Unit}. {(!string.IsNullOrEmpty(request.ApprovalNotes) ? $"Notes: {request.ApprovalNotes}" : "")}",
+                    priority: NotificationPriority.High,
+                    relatedEntityType: "InventoryTransferRequest",
+                    relatedEntityId: request.Id,
+                    actionUrl: $"/store-manager/request-history/{request.Id}"
+                );
+
+                await _notificationRepository.CreateAsync(notification);
+                _logger.LogInformation("🔔 Notification created successfully for transfer request {RequestId}", request.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Failed to create approval notification for transfer request {RequestId}. Error: {ErrorMessage}",
+                    request.Id, ex.Message);
+                _logger.LogError("❌ Stack trace: {StackTrace}", ex.StackTrace);
+            }
+        }
+
+        /// <summary>
+        /// Notify the requester when their transfer request is rejected
+        /// </summary>
+        private async Task NotifyTransferRequestRejectedAsync(InventoryTransferRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔔 Starting rejection notification creation for transfer request {RequestId}", request.Id);
+
+                var requester = await _userRepository.GetByIdAsync(request.RequestedByUserId);
+                if (requester == null)
+                {
+                    _logger.LogWarning("🔔 Requester with ID {RequestedByUserId} not found for transfer request {RequestId}",
+                        request.RequestedByUserId, request.Id);
+                    return;
+                }
+
+                _logger.LogInformation("🔔 Found requester: {RequesterName} (ID: {RequesterId})", requester.Name, requester.Id);
+
+                var notification = Notification.Create(
+                    userId: requester.Id,
+                    type: NotificationType.TransferRequestRejected,
+                    title: "Transfer Request Rejected",
+                    message: $"Your transfer request #{request.RequestNumber} has been rejected. Reason: {request.RejectionReason ?? "No reason provided"}",
+                    priority: NotificationPriority.High,
+                    relatedEntityType: "InventoryTransferRequest",
+                    relatedEntityId: request.Id,
+                    actionUrl: $"/store-manager/request-history/{request.Id}"
+                );
+
+                await _notificationRepository.CreateAsync(notification);
+                _logger.LogInformation("🔔 Rejection notification created successfully for transfer request {RequestId}", request.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Failed to create rejection notification for transfer request {RequestId}. Error: {ErrorMessage}",
+                    request.Id, ex.Message);
+                _logger.LogError("❌ Stack trace: {StackTrace}", ex.StackTrace);
+            }
+        }
+
+        /// <summary>
+        /// Notify the destination Store Manager when transfer is dispatched
+        /// </summary>
+        private async Task NotifyTransferDispatchedAsync(InventoryTransferRequest request)
+        {
+            try
+            {
+                // Get the requester (destination Store Manager)
+                var storeManager = await _userRepository.GetByIdAsync(request.RequestedByUserId);
+                if (storeManager == null) return;
+
+                var notification = Notification.Create(
+                    userId: storeManager.Id,
+                    type: NotificationType.TransferDispatched,
+                    title: "Transfer Dispatched",
+                    message: $"Your transfer request #{request.RequestNumber} has been dispatched. Truck: {request.TruckNumber}, Driver: {request.DriverName}. {(!string.IsNullOrEmpty(request.DispatchNotes) ? $"Notes: {request.DispatchNotes}" : "")}",
+                    priority: NotificationPriority.High,
+                    relatedEntityType: "InventoryTransferRequest",
+                    relatedEntityId: request.Id,
+                    actionUrl: $"/store-manager/request-history/{request.Id}"
+                );
+
+                await _notificationRepository.CreateAsync(notification);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create dispatch notification for transfer request {RequestId}", request.Id);
+            }
+        }
+
+        /// <summary>
+        /// Notify relevant parties when transfer is completed
+        /// </summary>
+        private async Task NotifyTransferCompletedAsync(InventoryTransferRequest request)
+        {
+            try
+            {
+                // Notify the requester (Store Manager)
+                var requester = await _userRepository.GetByIdAsync(request.RequestedByUserId);
+                if (requester == null) return;
+
+                var finalQty = request.GetFinalQuantity();
+
+                var notification = Notification.Create(
+                    userId: requester.Id,
+                    type: NotificationType.TransferCompleted,
+                    title: "Transfer Request Completed",
+                    message: $"Transfer request #{request.RequestNumber} has been completed. {finalQty} {request.Unit} of explosives have been added to your store inventory.",
+                    priority: NotificationPriority.Normal,
+                    relatedEntityType: "InventoryTransferRequest",
+                    relatedEntityId: request.Id,
+                    actionUrl: $"/store-manager/inventory"
+                );
+
+                await _notificationRepository.CreateAsync(notification);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create completion notification for transfer request {RequestId}", request.Id);
+            }
+        }
+
+        /// <summary>
+        /// Notify Explosive Manager when Store Manager confirms delivery receipt
+        /// </summary>
+        private async Task NotifyDeliveryConfirmedAsync(InventoryTransferRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔔 Starting delivery confirmation notification for transfer request {RequestId}", request.Id);
+
+                // Get all Explosive Managers in the system (they manage central warehouse)
+                var explosiveManagers = await _userRepository.GetByRoleAndRegionAsync("ExplosiveManager");
+
+                if (!explosiveManagers.Any())
+                {
+                    _logger.LogWarning("🔔 No Explosive Managers found to notify for delivery confirmation");
+                    return;
+                }
+
+                _logger.LogInformation("🔔 Found {Count} Explosive Managers to notify", explosiveManagers.Count());
+
+                var requester = await _userRepository.GetByIdAsync(request.RequestedByUserId);
+                var requesterName = requester?.Name ?? "Store Manager";
+
+                // Create notifications for all Explosive Managers
+                var notifications = explosiveManagers.Select(manager =>
+                    Notification.Create(
+                        userId: manager.Id,
+                        type: NotificationType.TransferDeliveryConfirmed,
+                        title: "Transfer Delivery Confirmed",
+                        message: $"{requesterName} has confirmed receipt of transfer request #{request.RequestNumber}. {request.GetFinalQuantity()} {request.Unit} of explosives delivered to Store #{request.DestinationStoreId}.",
+                        priority: NotificationPriority.Normal,
+                        relatedEntityType: "InventoryTransferRequest",
+                        relatedEntityId: request.Id,
+                        actionUrl: $"/explosive-manager/requests"
+                    )
+                ).ToList();
+
+                await _notificationRepository.CreateBulkAsync(notifications);
+                _logger.LogInformation("🔔 Delivery confirmation notification created successfully for transfer request {RequestId}", request.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Failed to create delivery confirmation notification for transfer request {RequestId}. Error: {ErrorMessage}",
+                    request.Id, ex.Message);
+            }
         }
     }
 }

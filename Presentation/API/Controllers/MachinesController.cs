@@ -4,7 +4,10 @@ using Infrastructure.Data;
 using Domain.Entities.MachineManagement;
 using Domain.Entities.ProjectManagement;
 using Domain.Entities.UserManagement;
+using Domain.Entities.Notifications;
 using Application.DTOs.MachineManagement;
+using Application.Interfaces;
+using Application.Interfaces.UserManagement;
 using System.Text.Json;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
@@ -19,11 +22,19 @@ namespace API.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<MachinesController> _logger;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IUserRepository _userRepository;
 
-        public MachinesController(ApplicationDbContext context, ILogger<MachinesController> logger)
+        public MachinesController(
+            ApplicationDbContext context,
+            ILogger<MachinesController> logger,
+            INotificationRepository notificationRepository,
+            IUserRepository userRepository)
         {
             _context = context;
             _logger = logger;
+            _notificationRepository = notificationRepository;
+            _userRepository = userRepository;
         }
 
         // GET: api/machines
@@ -424,28 +435,54 @@ namespace API.Controllers
                 .OrderByDescending(r => r.RequestedDate)
                 .ToListAsync();
 
-            var requestDtos = requests.Select(r => new Application.DTOs.MachineManagement.MachineAssignmentRequestDto
+            var requestDtos = requests.Select(r =>
             {
-                Id = r.Id,
-                ProjectId = r.ProjectId,
-                ProjectName = r.Project?.Name ?? "Unknown Project",
-                MachineType = r.MachineType,
-                Quantity = r.Quantity,
-                RequestedBy = r.RequestedBy,
-                RequestedDate = r.RequestedDate,
-                Status = r.Status.ToString(),
-                Urgency = r.Urgency.ToString(),
-                DetailsOrExplanation = r.DetailsOrExplanation,
-                ApprovedBy = r.ApprovedBy,
-                ApprovedDate = r.ApprovedDate,
-                AssignedMachines = string.IsNullOrEmpty(r.AssignedMachinesJson)
-                    ? null
-                    : JsonSerializer.Deserialize<List<int>>(r.AssignedMachinesJson),
-                Comments = r.Comments,
-                ExpectedUsageDuration = r.ExpectedUsageDuration,
-                ExpectedReturnDate = r.ExpectedReturnDate,
-                CreatedAt = r.CreatedAt,
-                UpdatedAt = r.UpdatedAt
+                List<int>? assignedMachines = null;
+                if (!string.IsNullOrEmpty(r.AssignedMachinesJson))
+                {
+                    try
+                    {
+                        // Try int array first
+                        assignedMachines = JsonSerializer.Deserialize<List<int>>(r.AssignedMachinesJson);
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            // Fallback to string array, then convert to int
+                            var stringIds = JsonSerializer.Deserialize<List<string>>(r.AssignedMachinesJson);
+                            assignedMachines = stringIds?.Select(id => int.TryParse(id, out var machineId) ? machineId : 0)
+                                                         .Where(id => id > 0)
+                                                         .ToList();
+                        }
+                        catch
+                        {
+                            assignedMachines = null;
+                        }
+                    }
+                }
+
+                return new Application.DTOs.MachineManagement.MachineAssignmentRequestDto
+                {
+                    Id = r.Id,
+                    ProjectId = r.ProjectId,
+                    ProjectName = r.Project?.Name ?? "Unknown Project",
+                    MachineType = r.MachineType,
+                    Quantity = r.Quantity,
+                    RequestedBy = r.RequestedBy,
+                    RequestedDate = r.RequestedDate,
+                    Status = r.Status.ToString(),
+                    Urgency = r.Urgency.ToString(),
+                    DetailsOrExplanation = r.DetailsOrExplanation,
+                    ApprovedBy = r.ApprovedBy,
+                    ApprovedDate = r.ApprovedDate,
+                    AssignedMachines = assignedMachines,
+                    Comments = r.Comments,
+                    ExpectedUsageDuration = r.ExpectedUsageDuration,
+                    ExpectedReturnDate = r.ExpectedReturnDate,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt
+                };
             }).ToList();
 
             return Ok(requestDtos);
@@ -490,7 +527,9 @@ namespace API.Controllers
         [Authorize(Policy = "ManageMachines")]
         public async Task<IActionResult> ApproveAssignmentRequest(int id, [FromBody] Application.DTOs.MachineManagement.ApproveAssignmentRequestDto request)
         {
-            var assignmentRequest = await _context.MachineAssignmentRequests.FindAsync(id);
+            var assignmentRequest = await _context.MachineAssignmentRequests
+                .Include(r => r.Project)
+                .FirstOrDefaultAsync(r => r.Id == id);
             if (assignmentRequest == null)
             {
                 return NotFound($"Assignment request with ID {id} not found");
@@ -536,6 +575,55 @@ namespace API.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Create notification for the requester
+            try
+            {
+                var requester = await _userRepository.GetByNameAsync(assignmentRequest.RequestedBy);
+                if (requester != null)
+                {
+                    var isPartiallyFulfilled = request.AssignedMachines.Count < assignmentRequest.Quantity;
+                    var notificationType = isPartiallyFulfilled
+                        ? NotificationType.MachineRequestPartial
+                        : NotificationType.MachineRequestApproved;
+
+                    var title = isPartiallyFulfilled
+                        ? "Machine Request Partially Approved"
+                        : "Machine Request Approved";
+
+                    var message = isPartiallyFulfilled
+                        ? $"Your request for {assignmentRequest.Quantity} {assignmentRequest.MachineType} machines has been partially approved. {request.AssignedMachines.Count} machine(s) have been assigned for project '{assignmentRequest.Project?.Name ?? "Unknown"}'."
+                        : $"Your request for {assignmentRequest.Quantity} {assignmentRequest.MachineType} machine(s) has been approved for project '{assignmentRequest.Project?.Name ?? "Unknown"}'.";
+
+                    if (!string.IsNullOrWhiteSpace(request.Comments))
+                    {
+                        message += $" Comments: {request.Comments}";
+                    }
+
+                    var notification = Notification.Create(
+                        userId: requester.Id,
+                        type: notificationType,
+                        title: title,
+                        message: message,
+                        priority: NotificationPriority.High,
+                        relatedEntityType: "MachineAssignmentRequest",
+                        relatedEntityId: assignmentRequest.Id,
+                        actionUrl: $"/machine-requests/{assignmentRequest.Id}"
+                    );
+
+                    await _notificationRepository.CreateAsync(notification);
+                    _logger.LogInformation($"Notification created for user {requester.Id} - Machine request {id} approved");
+                }
+                else
+                {
+                    _logger.LogWarning($"Could not find user with name '{assignmentRequest.RequestedBy}' to send approval notification");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error creating notification for machine request approval: {ex.Message}");
+                // Don't fail the request if notification fails
+            }
+
             return Ok(assignmentRequest);
         }
 
@@ -543,7 +631,9 @@ namespace API.Controllers
         [Authorize(Policy = "ManageMachines")]
         public async Task<IActionResult> RejectAssignmentRequest(int id, [FromBody] Application.DTOs.MachineManagement.RejectAssignmentRequestDto request)
         {
-            var assignmentRequest = await _context.MachineAssignmentRequests.FindAsync(id);
+            var assignmentRequest = await _context.MachineAssignmentRequests
+                .Include(r => r.Project)
+                .FirstOrDefaultAsync(r => r.Id == id);
             if (assignmentRequest == null)
             {
                 return NotFound($"Assignment request with ID {id} not found");
@@ -561,6 +651,44 @@ namespace API.Controllers
             assignmentRequest.Reject(rejectorName, request.Comments);
 
             await _context.SaveChangesAsync();
+
+            // Create notification for the requester
+            try
+            {
+                var requester = await _userRepository.GetByNameAsync(assignmentRequest.RequestedBy);
+                if (requester != null)
+                {
+                    var message = $"Your request for {assignmentRequest.Quantity} {assignmentRequest.MachineType} machine(s) for project '{assignmentRequest.Project?.Name ?? "Unknown"}' has been rejected.";
+
+                    if (!string.IsNullOrWhiteSpace(request.Comments))
+                    {
+                        message += $" Reason: {request.Comments}";
+                    }
+
+                    var notification = Notification.Create(
+                        userId: requester.Id,
+                        type: NotificationType.MachineRequestRejected,
+                        title: "Machine Request Rejected",
+                        message: message,
+                        priority: NotificationPriority.High,
+                        relatedEntityType: "MachineAssignmentRequest",
+                        relatedEntityId: assignmentRequest.Id,
+                        actionUrl: $"/machine-requests/{assignmentRequest.Id}"
+                    );
+
+                    await _notificationRepository.CreateAsync(notification);
+                    _logger.LogInformation($"Notification created for user {requester.Id} - Machine request {id} rejected");
+                }
+                else
+                {
+                    _logger.LogWarning($"Could not find user with name '{assignmentRequest.RequestedBy}' to send rejection notification");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error creating notification for machine request rejection: {ex.Message}");
+                // Don't fail the request if notification fails
+            }
 
             return Ok(assignmentRequest);
         }

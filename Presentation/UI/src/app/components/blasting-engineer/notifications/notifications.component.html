@@ -16,9 +16,6 @@
         <mat-icon>done_all</mat-icon>
         Mark All as Read
       </button>
-      <button mat-icon-button (click)="toggleSettings()" [class.active]="showSettings()">
-        <mat-icon>settings</mat-icon>
-      </button>
     </div>
   </div>
 
@@ -32,137 +29,6 @@
       Last updated: {{ lastUpdate() | date:'short' }}
     </div>
   </div>
-
-  <!-- Settings Panel -->
-  @if (showSettings()) {
-    <div class="settings-panel">
-      <h3>Notification Settings</h3>
-      <div class="settings-grid">
-        <div class="setting-group">
-          <h4>Project Updates</h4>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().projectUpdatePush"
-                (change)="updateSetting('projectUpdatePush', $any($event.target).checked)">
-              Push Notification
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().projectUpdateEmail"
-                (change)="updateSetting('projectUpdateEmail', $any($event.target).checked)">
-              Email Notification
-            </label>
-          </div>
-        </div>
-
-        <div class="setting-group">
-          <h4>Site Updates</h4>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().siteUpdatePush"
-                (change)="updateSetting('siteUpdatePush', $any($event.target).checked)">
-              Push Notification
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().siteUpdateEmail"
-                (change)="updateSetting('siteUpdateEmail', $any($event.target).checked)">
-              Email Notification
-            </label>
-          </div>
-        </div>
-
-        <div class="setting-group">
-          <h4>Drill Data Uploads</h4>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().drillDataPush"
-                (change)="updateSetting('drillDataPush', $any($event.target).checked)">
-              Push Notification
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().drillDataEmail"
-                (change)="updateSetting('drillDataEmail', $any($event.target).checked)">
-              Email Notification
-            </label>
-          </div>
-        </div>
-
-        <div class="setting-group">
-          <h4>Blast Calculations</h4>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().blastCalculationPush"
-                (change)="updateSetting('blastCalculationPush', $any($event.target).checked)">
-              Push Notification
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().blastCalculationEmail"
-                (change)="updateSetting('blastCalculationEmail', $any($event.target).checked)">
-              Email Notification
-            </label>
-          </div>
-        </div>
-
-        <div class="setting-group">
-          <h4>Proposal Status</h4>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().proposalStatusPush"
-                (change)="updateSetting('proposalStatusPush', $any($event.target).checked)">
-              Push Notification
-            </label>
-          </div>
-          <div class="setting-item">
-            <label>
-              <input
-                type="checkbox"
-                [checked]="settings().proposalStatusEmail"
-                (change)="updateSetting('proposalStatusEmail', $any($event.target).checked)">
-              Email Notification
-            </label>
-          </div>
-        </div>
-
-        <div class="setting-group">
-          <h4>Urgency Level Filter</h4>
-          <div class="setting-item">
-            <select
-              [value]="settings().urgencyLevel"
-              (change)="updateSetting('urgencyLevel', $any($event.target).value)">
-              <option value="ALL">All notifications</option>
-              <option value="HIGH">High priority only</option>
-              <option value="CRITICAL">Critical only</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-  }
 
   <!-- Filter Tabs -->
   <div class="filter-tabs">
@@ -223,43 +89,28 @@
         <div
           class="notification-item"
           [class]="getNotificationClass(notification)"
-          [class.unread]="!notification.read"
+          [class.unread]="!notification.isRead"
           (click)="navigateToContext(notification)">
           <div class="notification-icon">
-            <mat-icon>{{ notification.icon }}</mat-icon>
+            <mat-icon>{{ getNotificationIcon(notification) }}</mat-icon>
           </div>
           <div class="notification-content">
             <div class="notification-header">
               <h4>{{ notification.title }}</h4>
-              <span class="notification-time">{{ getTimeAgo(notification.date) }}</span>
+              <span class="notification-time">{{ getTimeAgo(notification.createdAt) }}</span>
             </div>
             <p>{{ notification.message }}</p>
-            <div class="notification-meta">
-              <mat-chip class="priority-chip" [class]="'priority-' + notification.priority.toLowerCase()">
-                {{ notification.priority }}
-              </mat-chip>
-              @if (notification.relatedProjectId) {
+            @if (notification.relatedEntityType && notification.relatedEntityId) {
+              <div class="notification-meta">
                 <span class="meta-info">
-                  <mat-icon>work</mat-icon>
-                  {{ notification.relatedProjectId }}
+                  <mat-icon>{{ notification.relatedEntityType === 'Project' ? 'work' : notification.relatedEntityType === 'Site' ? 'place' : notification.relatedEntityType === 'BlastProposal' ? 'description' : 'info' }}</mat-icon>
+                  {{ notification.relatedEntityType }}: {{ notification.relatedEntityId }}
                 </span>
-              }
-              @if (notification.relatedSiteId) {
-                <span class="meta-info">
-                  <mat-icon>place</mat-icon>
-                  {{ notification.relatedSiteId }}
-                </span>
-              }
-              @if (notification.relatedProposalId) {
-                <span class="meta-info">
-                  <mat-icon>description</mat-icon>
-                  {{ notification.relatedProposalId }}
-                </span>
-              }
-            </div>
+              </div>
+            }
           </div>
           <div class="notification-actions">
-            @if (!notification.read) {
+            @if (!notification.isRead) {
               <button
                 mat-icon-button
                 (click)="markAsRead(notification); $event.stopPropagation()"

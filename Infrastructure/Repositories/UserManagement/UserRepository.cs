@@ -174,5 +174,25 @@ namespace Infrastructure.Repositories.UserManagement
                 throw;
             }
         }
+
+        public async Task<IEnumerable<User>> GetByRoleAndRegionAsync(string role, string? region = null)
+        {
+            try
+            {
+                var query = _context.Users.Where(u => u.Role == role);
+
+                if (!string.IsNullOrWhiteSpace(region))
+                {
+                    query = query.Where(u => u.Region == region);
+                }
+
+                return await query.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting users by role {Role} and region {Region}", role, region);
+                throw;
+            }
+        }
     }
 } 

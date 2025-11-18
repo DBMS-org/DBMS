@@ -1,4 +1,7 @@
+using Application.Interfaces;
 using Application.Interfaces.Infrastructure.Repositories;
+using Application.Interfaces.UserManagement;
+using Domain.Entities.Notifications;
 using Domain.Entities.ProjectManagement;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -10,13 +13,19 @@ namespace Infrastructure.Repositories.ProjectManagement
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ExplosiveApprovalRequestRepository> _logger;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IUserRepository _userRepository;
 
         public ExplosiveApprovalRequestRepository(
             ApplicationDbContext context,
-            ILogger<ExplosiveApprovalRequestRepository> logger)
+            ILogger<ExplosiveApprovalRequestRepository> logger,
+            INotificationRepository notificationRepository,
+            IUserRepository userRepository)
         {
             _context = context;
             _logger = logger;
+            _notificationRepository = notificationRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<ExplosiveApprovalRequest?> GetByIdAsync(int id)
@@ -96,10 +105,69 @@ namespace Infrastructure.Repositories.ProjectManagement
             {
                 request.CreatedAt = DateTime.UtcNow;
                 request.UpdatedAt = DateTime.UtcNow;
-                
+
                 _context.ExplosiveApprovalRequests.Add(request);
                 await _context.SaveChangesAsync();
-                
+
+                // Create notifications for Store Managers in the same region
+                try
+                {
+                    // Load related entities for notification
+                    await _context.Entry(request)
+                        .Reference(r => r.ProjectSite)
+                        .Query()
+                        .Include(ps => ps.Project)
+                        .LoadAsync();
+
+                    await _context.Entry(request)
+                        .Reference(r => r.RequestedByUser)
+                        .LoadAsync();
+
+                    var region = request.ProjectSite?.Project?.Region;
+                    if (!string.IsNullOrEmpty(region))
+                    {
+                        var storeManagers = await _userRepository.GetByRoleAndRegionAsync("StoreManager", region);
+
+                        if (storeManagers.Any())
+                        {
+                            var engineerName = request.RequestedByUser?.Name ?? "A blasting engineer";
+                            var siteName = request.ProjectSite?.Name ?? "a site";
+                            var projectName = request.ProjectSite?.Project?.Name ?? "a project";
+                            var expectedDate = request.ExpectedUsageDate.ToString("MMM dd, yyyy");
+
+                            // Determine priority based on request priority
+                            var notificationPriority = request.Priority switch
+                            {
+                                Domain.Entities.ProjectManagement.RequestPriority.Critical => NotificationPriority.Critical,
+                                Domain.Entities.ProjectManagement.RequestPriority.High => NotificationPriority.High,
+                                _ => NotificationPriority.Normal
+                            };
+
+                            var notifications = storeManagers.Select(manager =>
+                                Notification.Create(
+                                    userId: manager.Id,
+                                    type: NotificationType.ExplosiveRequestCreated,
+                                    title: "New Explosive Approval Request",
+                                    message: $"{engineerName} has submitted a new explosive approval request for {siteName} ({projectName}). Expected usage date: {expectedDate}.",
+                                    priority: notificationPriority,
+                                    relatedEntityType: "ExplosiveApprovalRequest",
+                                    relatedEntityId: request.Id,
+                                    actionUrl: $"/store-manager/requests/{request.Id}"
+                                )
+                            ).ToList();
+
+                            await _notificationRepository.CreateBulkAsync(notifications);
+                            _logger.LogInformation("Created {Count} notifications for Store Managers in {Region} for request {RequestId}",
+                                notifications.Count, region, request.Id);
+                        }
+                    }
+                }
+                catch (Exception notifEx)
+                {
+                    // Log error but don't fail the creation if notification fails
+                    _logger.LogError(notifEx, "Error creating notifications for new request {RequestId}", request.Id);
+                }
+
                 return request;
             }
             catch (Exception ex)
@@ -131,7 +199,13 @@ namespace Infrastructure.Repositories.ProjectManagement
         {
             try
             {
-                var request = await _context.ExplosiveApprovalRequests.FindAsync(requestId);
+                // Load request with related entities for notification
+                var request = await _context.ExplosiveApprovalRequests
+                    .Include(r => r.ProjectSite)
+                        .ThenInclude(ps => ps.Project)
+                    .Include(r => r.RequestedByUser)
+                    .FirstOrDefaultAsync(r => r.Id == requestId);
+
                 if (request == null || request.Status != ExplosiveApprovalStatus.Pending)
                 {
                     return false;
@@ -155,6 +229,39 @@ namespace Infrastructure.Repositories.ProjectManagement
                 }
 
                 var result = await _context.SaveChangesAsync();
+
+                if (result > 0)
+                {
+                    // Create notification for the blasting engineer
+                    try
+                    {
+                        var approver = await _userRepository.GetByIdAsync(approvedByUserId);
+                        var siteName = request.ProjectSite?.Name ?? "Unknown Site";
+                        var blastingDate = request.BlastingDate?.ToString("MMM dd, yyyy") ?? "TBD";
+                        var blastTiming = request.BlastTiming ?? "TBD";
+
+                        var notification = Notification.Create(
+                            userId: request.RequestedByUserId,
+                            type: NotificationType.ExplosiveRequestApproved,
+                            title: "Explosive Request Approved",
+                            message: $"Your explosive approval request for {siteName} has been approved by {approver?.Name ?? "Store Manager"}. Blasting scheduled for {blastingDate} at {blastTiming}.",
+                            priority: NotificationPriority.High,
+                            relatedEntityType: "ExplosiveApprovalRequest",
+                            relatedEntityId: requestId,
+                            actionUrl: $"/blasting-engineer/site-dashboard/{request.ProjectSiteId}"
+                        );
+
+                        await _notificationRepository.CreateAsync(notification);
+                        _logger.LogInformation("Created approval notification for user {UserId} for request {RequestId}",
+                            request.RequestedByUserId, requestId);
+                    }
+                    catch (Exception notifEx)
+                    {
+                        // Log error but don't fail the approval if notification fails
+                        _logger.LogError(notifEx, "Error creating notification for approved request {RequestId}", requestId);
+                    }
+                }
+
                 return result > 0;
             }
             catch (Exception ex)
@@ -168,7 +275,13 @@ namespace Infrastructure.Repositories.ProjectManagement
         {
             try
             {
-                var request = await _context.ExplosiveApprovalRequests.FindAsync(requestId);
+                // Load request with related entities for notification
+                var request = await _context.ExplosiveApprovalRequests
+                    .Include(r => r.ProjectSite)
+                        .ThenInclude(ps => ps.Project)
+                    .Include(r => r.RequestedByUser)
+                    .FirstOrDefaultAsync(r => r.Id == requestId);
+
                 if (request == null || request.Status != ExplosiveApprovalStatus.Pending)
                 {
                     return false;
@@ -181,6 +294,37 @@ namespace Infrastructure.Repositories.ProjectManagement
                 request.UpdatedAt = DateTime.UtcNow;
 
                 var result = await _context.SaveChangesAsync();
+
+                if (result > 0)
+                {
+                    // Create notification for the blasting engineer
+                    try
+                    {
+                        var rejector = await _userRepository.GetByIdAsync(rejectedByUserId);
+                        var siteName = request.ProjectSite?.Name ?? "Unknown Site";
+
+                        var notification = Notification.Create(
+                            userId: request.RequestedByUserId,
+                            type: NotificationType.ExplosiveRequestRejected,
+                            title: "Explosive Request Rejected",
+                            message: $"Your explosive approval request for {siteName} was rejected by {rejector?.Name ?? "Store Manager"}. Reason: {rejectionReason}",
+                            priority: NotificationPriority.High,
+                            relatedEntityType: "ExplosiveApprovalRequest",
+                            relatedEntityId: requestId,
+                            actionUrl: $"/blasting-engineer/site-dashboard/{request.ProjectSiteId}"
+                        );
+
+                        await _notificationRepository.CreateAsync(notification);
+                        _logger.LogInformation("Created rejection notification for user {UserId} for request {RequestId}",
+                            request.RequestedByUserId, requestId);
+                    }
+                    catch (Exception notifEx)
+                    {
+                        // Log error but don't fail the rejection if notification fails
+                        _logger.LogError(notifEx, "Error creating notification for rejected request {RequestId}", requestId);
+                    }
+                }
+
                 return result > 0;
             }
             catch (Exception ex)
@@ -239,17 +383,85 @@ namespace Infrastructure.Repositories.ProjectManagement
         {
             try
             {
-                var request = await _context.ExplosiveApprovalRequests.FindAsync(requestId);
+                // Load request with related entities for notification
+                var request = await _context.ExplosiveApprovalRequests
+                    .Include(r => r.ProjectSite)
+                        .ThenInclude(ps => ps.Project)
+                    .Include(r => r.RequestedByUser)
+                    .FirstOrDefaultAsync(r => r.Id == requestId);
+
                 if (request == null)
                 {
                     return false;
                 }
+
+                // Store previous values to check if timing was just added
+                var hadBlastingDate = request.BlastingDate.HasValue;
+                var hadBlastTiming = !string.IsNullOrWhiteSpace(request.BlastTiming);
+                var wasReadyForApproval = hadBlastingDate && hadBlastTiming;
 
                 request.BlastingDate = blastingDate;
                 request.BlastTiming = blastTiming;
                 request.UpdatedAt = DateTime.UtcNow;
 
                 var result = await _context.SaveChangesAsync();
+
+                // Check if timing info was just completed (ready for approval)
+                var isNowReadyForApproval = blastingDate.HasValue && !string.IsNullOrWhiteSpace(blastTiming);
+                var timingJustCompleted = !wasReadyForApproval && isNowReadyForApproval;
+
+                // Send notification to Store Managers if timing was just completed
+                if (result > 0 && timingJustCompleted && request.Status == ExplosiveApprovalStatus.Pending)
+                {
+                    try
+                    {
+                        var region = request.ProjectSite?.Project?.Region;
+                        if (!string.IsNullOrEmpty(region))
+                        {
+                            var storeManagers = await _userRepository.GetByRoleAndRegionAsync("StoreManager", region);
+
+                            if (storeManagers.Any())
+                            {
+                                var engineerName = request.RequestedByUser?.Name ?? "A blasting engineer";
+                                var siteName = request.ProjectSite?.Name ?? "a site";
+                                var projectName = request.ProjectSite?.Project?.Name ?? "a project";
+                                var blastingDateStr = blastingDate?.ToString("MMM dd, yyyy") ?? "TBD";
+                                var blastTimingStr = blastTiming ?? "TBD";
+
+                                // Determine priority based on request priority
+                                var notificationPriority = request.Priority switch
+                                {
+                                    Domain.Entities.ProjectManagement.RequestPriority.Critical => NotificationPriority.Critical,
+                                    Domain.Entities.ProjectManagement.RequestPriority.High => NotificationPriority.High,
+                                    _ => NotificationPriority.Normal
+                                };
+
+                                var notifications = storeManagers.Select(manager =>
+                                    Notification.Create(
+                                        userId: manager.Id,
+                                        type: NotificationType.ExplosiveRequestUpdated,
+                                        title: "Explosive Request Ready for Approval",
+                                        message: $"{engineerName} has updated the blasting schedule for {siteName} ({projectName}). Scheduled for {blastingDateStr} at {blastTimingStr}. Request is now ready for approval.",
+                                        priority: notificationPriority,
+                                        relatedEntityType: "ExplosiveApprovalRequest",
+                                        relatedEntityId: requestId,
+                                        actionUrl: $"/store-manager/blasting-engineer-requests"
+                                    )
+                                ).ToList();
+
+                                await _notificationRepository.CreateBulkAsync(notifications);
+                                _logger.LogInformation("Created {Count} timing update notifications for Store Managers in {Region} for request {RequestId}",
+                                    notifications.Count, region, requestId);
+                            }
+                        }
+                    }
+                    catch (Exception notifEx)
+                    {
+                        // Log error but don't fail the update if notification fails
+                        _logger.LogError(notifEx, "Error creating notifications for updated timing for request {RequestId}", requestId);
+                    }
+                }
+
                 return result > 0;
             }
             catch (Exception ex)

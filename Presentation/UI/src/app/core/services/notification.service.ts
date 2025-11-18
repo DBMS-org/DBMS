@@ -1,63 +1,63 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
-
-export interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info' | 'assignment' | 'maintenance' | 'request';
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-  userId?: string;
-  relatedId?: string; // Machine ID, Assignment ID, etc.
-  relatedType?: 'machine' | 'assignment' | 'request' | 'maintenance';
-  actionUrl?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  autoClose?: boolean;
-  duration?: number; // in milliseconds
-  data?: any; // Additional data for the notification
-}
-
-export interface ToastNotification {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  message: string;
-  duration?: number;
-}
+import { BehaviorSubject, Observable, interval, throwError } from 'rxjs';
+import { map, tap, catchError, switchMap, startWith } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
+import { Notification, UnreadCountResponse } from '../models/notification.model';
+import { NotificationType } from '../models/notification-type.enum';
+import { NotificationPriority } from '../models/notification-priority.enum';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
+  private readonly http: HttpClient;
+  private readonly messageService: MessageService;
   private readonly defaultDuration = 3000;
+  private readonly apiUrl = `${environment.apiUrl}/api/notifications`;
 
-  private notifications$ = new BehaviorSubject<Notification[]>([]);
-  private toastNotifications$ = new Subject<ToastNotification>();
-  private unreadCount$ = new BehaviorSubject<number>(0);
+  // BehaviorSubjects for reactive state management
+  private notificationsSubject = new BehaviorSubject<Notification[]>([]);
+  private unreadCountSubject = new BehaviorSubject<number>(0);
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  private errorSubject = new BehaviorSubject<string | null>(null);
 
-  constructor(private messageService: MessageService) {
-    // Load notifications from localStorage on service initialization
-    this.loadNotificationsFromStorage();
+  // Public observables
+  public notifications$ = this.notificationsSubject.asObservable();
+  public unreadCount$ = this.unreadCountSubject.asObservable();
+  public loading$ = this.loadingSubject.asObservable();
+  public error$ = this.errorSubject.asObservable();
 
-    // Generate some mock notifications for demonstration
-    this.generateMockNotifications();
+  constructor(http: HttpClient, messageService: MessageService) {
+    this.http = http;
+    this.messageService = messageService;
+    // Start polling for notifications after a brief delay to avoid circular dependency issues
+    setTimeout(() => this.startPolling(), 100);
   }
 
-  // Observable getters
-  getNotifications(): Observable<Notification[]> {
-    return this.notifications$.asObservable();
+  /**
+   * Start automatic polling for new notifications
+   */
+  private startPolling(): void {
+    interval(30000) // 30 seconds
+      .pipe(
+        startWith(0), // Fetch immediately on init
+        switchMap(() => this.fetchNotifications())
+      )
+      .subscribe({
+        error: (error) => {
+          console.error('Polling error:', error);
+          // Don't stop polling on error, it will retry after 30 seconds
+        }
+      });
   }
 
-  getToastNotifications(): Observable<ToastNotification> {
-    return this.toastNotifications$.asObservable();
-  }
+  // ========== TOAST NOTIFICATION METHODS (PrimeNG) ==========
 
-  getUnreadCount(): Observable<number> {
-    return this.unreadCount$.asObservable();
-  }
-
-  // Enhanced toast methods
+  /**
+   * Show success toast message
+   */
   showSuccess(message: string, title: string = 'Success', duration?: number): void {
     this.messageService.add({
       severity: 'success',
@@ -67,6 +67,9 @@ export class NotificationService {
     });
   }
 
+  /**
+   * Show error toast message
+   */
   showError(message: string, title: string = 'Error', duration?: number): void {
     this.messageService.add({
       severity: 'error',
@@ -76,6 +79,9 @@ export class NotificationService {
     });
   }
 
+  /**
+   * Show warning toast message
+   */
   showWarning(message: string, title: string = 'Warning', duration?: number): void {
     this.messageService.add({
       severity: 'warn',
@@ -85,6 +91,9 @@ export class NotificationService {
     });
   }
 
+  /**
+   * Show info toast message
+   */
   showInfo(message: string, title: string = 'Info', duration?: number): void {
     this.messageService.add({
       severity: 'info',
@@ -94,309 +103,392 @@ export class NotificationService {
     });
   }
 
-  // Add notification methods
-  addNotification(notification: Omit<Notification, 'id' | 'timestamp' | 'read'>): void {
-    const newNotification: Notification = {
-      ...notification,
-      id: this.generateId(),
-      timestamp: new Date(),
-      read: false
+  // ========== BACKEND API METHODS ==========
+
+  /**
+   * Fetch all notifications from backend (paginated)
+   */
+  fetchNotifications(skip: number = 0, take: number = 50): Observable<Notification[]> {
+    console.log('🔔 [NotificationService] Fetching notifications...', { skip, take, url: `${this.apiUrl}?skip=${skip}&take=${take}` });
+    this.loadingSubject.next(true);
+    this.errorSubject.next(null);
+
+    return this.http.get<Notification[]>(`${this.apiUrl}?skip=${skip}&take=${take}`)
+      .pipe(
+        tap(rawNotifications => {
+          console.log('🔔 [NotificationService] Raw notifications received from backend:', rawNotifications);
+          console.log('🔔 [NotificationService] Number of notifications:', rawNotifications?.length || 0);
+          if (rawNotifications && rawNotifications.length > 0) {
+            console.log('🔔 [NotificationService] First notification sample:', rawNotifications[0]);
+          }
+        }),
+        map(notifications => this.processNotifications(notifications)),
+        tap(notifications => {
+          console.log('🔔 [NotificationService] Processed notifications:', notifications);
+          console.log('🔔 [NotificationService] Number of processed notifications:', notifications.length);
+          if (notifications.length > 0) {
+            console.log('🔔 [NotificationService] First processed notification sample:', notifications[0]);
+          }
+          this.notificationsSubject.next(notifications);
+          this.updateLocalUnreadCount();
+          this.loadingSubject.next(false);
+        }),
+        catchError(error => {
+          console.error('❌ [NotificationService] Error fetching notifications:', error);
+          console.error('❌ [NotificationService] Error status:', error.status);
+          console.error('❌ [NotificationService] Error message:', error.message);
+          this.handleError(error, 'Failed to load notifications');
+          this.loadingSubject.next(false);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Fetch only unread notifications
+   */
+  fetchUnreadNotifications(): Observable<Notification[]> {
+    return this.http.get<Notification[]>(`${this.apiUrl}/unread`)
+      .pipe(
+        map(notifications => this.processNotifications(notifications)),
+        catchError(error => {
+          this.handleError(error, 'Failed to load unread notifications');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Fetch unread notification count for badge display
+   */
+  fetchUnreadCount(): Observable<number> {
+    return this.http.get<UnreadCountResponse>(`${this.apiUrl}/unread-count`)
+      .pipe(
+        map(response => response.count),
+        tap(count => this.unreadCountSubject.next(count)),
+        catchError(error => {
+          this.handleError(error, 'Failed to load unread count');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Get a specific notification by ID
+   */
+  getNotificationById(id: number): Observable<Notification> {
+    return this.http.get<Notification>(`${this.apiUrl}/${id}`)
+      .pipe(
+        map(notification => this.processNotification(notification)),
+        catchError(error => {
+          this.handleError(error, 'Failed to load notification');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Get notifications by type
+   */
+  getNotificationsByType(type: NotificationType): Observable<Notification[]> {
+    return this.http.get<Notification[]>(`${this.apiUrl}/type/${type}`)
+      .pipe(
+        map(notifications => this.processNotifications(notifications)),
+        catchError(error => {
+          this.handleError(error, 'Failed to load notifications by type');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Mark a notification as read
+   */
+  markAsRead(id: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}/read`, {})
+      .pipe(
+        tap(() => {
+          this.updateNotificationInLocalState(id, { isRead: true });
+          this.updateLocalUnreadCount();
+        }),
+        catchError(error => {
+          this.handleError(error, 'Failed to mark notification as read');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Mark a notification as unread
+   */
+  markAsUnread(id: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}/unread`, {})
+      .pipe(
+        tap(() => {
+          this.updateNotificationInLocalState(id, { isRead: false });
+          this.updateLocalUnreadCount();
+        }),
+        catchError(error => {
+          this.handleError(error, 'Failed to mark notification as unread');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  markAllAsRead(): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/mark-all-read`, {})
+      .pipe(
+        tap(() => {
+          const notifications = this.notificationsSubject.value;
+          const updated = notifications.map(n => ({ ...n, isRead: true }));
+          this.notificationsSubject.next(updated);
+          this.unreadCountSubject.next(0);
+          this.showSuccess('All notifications marked as read');
+        }),
+        catchError(error => {
+          this.handleError(error, 'Failed to mark all as read');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Delete a specific notification
+   */
+  deleteNotification(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`)
+      .pipe(
+        tap(() => {
+          const notifications = this.notificationsSubject.value.filter(n => n.id !== id);
+          this.notificationsSubject.next(notifications);
+          this.updateLocalUnreadCount();
+          this.showInfo('Notification deleted');
+        }),
+        catchError(error => {
+          this.handleError(error, 'Failed to delete notification');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Delete all notifications
+   */
+  deleteAllNotifications(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/delete-all`)
+      .pipe(
+        tap(() => {
+          this.notificationsSubject.next([]);
+          this.unreadCountSubject.next(0);
+          this.showInfo('All notifications deleted');
+        }),
+        catchError(error => {
+          this.handleError(error, 'Failed to delete all notifications');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Delete old notifications (older than specified days)
+   */
+  deleteOldNotifications(daysOld: number = 30): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/delete-old?daysOld=${daysOld}`)
+      .pipe(
+        tap(() => {
+          // Refresh notifications after deletion
+          this.fetchNotifications().subscribe();
+          this.showInfo(`Notifications older than ${daysOld} days deleted`);
+        }),
+        catchError(error => {
+          this.handleError(error, 'Failed to delete old notifications');
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // ========== HELPER METHODS ==========
+
+  /**
+   * Process notifications array (convert dates, ensure type safety)
+   */
+  private processNotifications(notifications: Notification[]): Notification[] {
+    return notifications.map(n => this.processNotification(n));
+  }
+
+  /**
+   * Process a single notification (convert date strings to Date objects and ensure numeric types)
+   */
+  private processNotification(notification: any): Notification {
+    console.log('🔄 [NotificationService] Processing notification:', notification);
+
+    // Helper function to safely parse numbers
+    const safeParseInt = (value: any, defaultValue: number = 0): number => {
+      if (value === null || value === undefined) return defaultValue;
+      if (typeof value === 'number') return isNaN(value) ? defaultValue : value;
+      if (typeof value === 'string') {
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? defaultValue : parsed;
+      }
+      return defaultValue;
     };
 
-    const currentNotifications = this.notifications$.value;
-    const updatedNotifications = [newNotification, ...currentNotifications];
-    
-    this.notifications$.next(updatedNotifications);
-    this.updateUnreadCount();
-    this.saveNotificationsToStorage();
+    // Helper function to safely parse numbers that can be null
+    const safeParseIntOrNull = (value: any): number | null => {
+      if (value === null || value === undefined) return null;
+      if (typeof value === 'number') return isNaN(value) ? null : value;
+      if (typeof value === 'string') {
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? null : parsed;
+      }
+      return null;
+    };
 
-    // Show toast for high priority notifications
-    if (notification.priority === 'high' || notification.priority === 'urgent') {
-      this.showToastForNotification(newNotification);
+    // Parse the type with fallback logic
+    let parsedType = safeParseInt(notification.type, 0);
+
+    // If type is 0 or invalid, try to infer from title or relatedEntityType
+    if (parsedType === 0) {
+      console.warn('⚠️ [NotificationService] Invalid notification type, attempting to infer from context');
+      const title = (notification.title || '').toLowerCase();
+      const relatedEntityType = (notification.relatedEntityType || '').toLowerCase();
+
+      // Infer type based on title or related entity type
+      // When operator submits a maintenance report, it becomes a job for mechanical engineer
+      if (title.includes('maintenance report') || relatedEntityType.includes('maintenancereport')) {
+        parsedType = 600; // MaintenanceJobCreated - treat reports as jobs for mechanical engineers
+      } else if (title.includes('maintenance job') || relatedEntityType.includes('maintenancejob')) {
+        parsedType = 600; // MaintenanceJobCreated
+      } else if (title.includes('machine') && title.includes('assigned')) {
+        parsedType = 400; // MachineAssigned
+      }
+      console.log(`✅ [NotificationService] Inferred type: ${parsedType}`);
+    }
+
+    const processed = {
+      ...notification,
+      id: safeParseInt(notification.id),
+      userId: safeParseInt(notification.userId),
+      type: parsedType,
+      priority: safeParseInt(notification.priority, 0),
+      relatedEntityId: safeParseIntOrNull(notification.relatedEntityId),
+      createdAt: new Date(notification.createdAt),
+      readAt: notification.readAt ? new Date(notification.readAt) : null,
+      updatedAt: notification.updatedAt ? new Date(notification.updatedAt) : undefined
+    };
+
+    console.log('✅ [NotificationService] Processed notification result:', processed);
+    return processed;
+  }
+
+  /**
+   * Update a notification in local state (optimistic update)
+   */
+  private updateNotificationInLocalState(id: number, updates: Partial<Notification>): void {
+    const notifications = this.notificationsSubject.value;
+    const updated = notifications.map(n =>
+      n.id === id ? { ...n, ...updates } : n
+    );
+    this.notificationsSubject.next(updated);
+  }
+
+  /**
+   * Update unread count from local state
+   */
+  private updateLocalUnreadCount(): void {
+    const count = this.notificationsSubject.value.filter(n => !n.isRead).length;
+    this.unreadCountSubject.next(count);
+  }
+
+  /**
+   * Handle HTTP errors
+   */
+  private handleError(error: HttpErrorResponse, defaultMessage: string): void {
+    let errorMessage = defaultMessage;
+
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Server-side error
+      if (error.status === 0) {
+        errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+      } else if (error.status === 401) {
+        errorMessage = 'Unauthorized. Please log in again.';
+      } else if (error.status === 403) {
+        errorMessage = 'You do not have permission to access this notification.';
+      } else if (error.status === 404) {
+        errorMessage = 'Notification not found.';
+      } else if (error.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else {
+        errorMessage = error.error?.message || defaultMessage;
+      }
+    }
+
+    this.errorSubject.next(errorMessage);
+    this.showError(errorMessage);
+    console.error('Notification service error:', error);
+  }
+
+  /**
+   * Show toast for high-priority notifications (can be called when new notification arrives)
+   */
+  showToastForNotification(notification: Notification): void {
+    if (notification.priority >= NotificationPriority.High) {
+      const duration = notification.priority === NotificationPriority.Critical ? 10000 :
+                      notification.priority === NotificationPriority.Urgent ? 8000 : 5000;
+
+      this.messageService.add({
+        severity: this.mapPriorityToSeverity(notification.priority),
+        summary: notification.title,
+        detail: notification.message,
+        life: duration
+      });
     }
   }
 
-  // Assignment-specific notification methods
-  notifyMachineAssigned(machineId: string, machineName: string, operatorName: string, projectName: string): void {
-    this.addNotification({
-      type: 'assignment',
-      title: 'Machine Assigned',
-      message: `${machineName} has been assigned to ${operatorName} for ${projectName}`,
-      relatedId: machineId,
-      relatedType: 'machine',
-      priority: 'high',
-      actionUrl: `/machine-manager/assignments/${machineId}`,
-      data: { machineId, machineName, operatorName, projectName }
-    });
-  }
-
-  notifyAssignmentRequest(requestId: string, projectName: string, machineType: string, quantity: number): void {
-    this.addNotification({
-      type: 'request',
-      title: 'New Assignment Request',
-      message: `Request for ${quantity} ${machineType}(s) for ${projectName}`,
-      relatedId: requestId,
-      relatedType: 'request',
-      priority: 'high',
-      actionUrl: `/machine-manager/assignment-requests`,
-      data: { requestId, projectName, machineType, quantity }
-    });
-  }
-
-  notifyRequestApproved(requestId: string, projectName: string): void {
-    this.addNotification({
-      type: 'success',
-      title: 'Request Approved',
-      message: `Your machine request for ${projectName} has been approved`,
-      relatedId: requestId,
-      relatedType: 'request',
-      priority: 'medium',
-      actionUrl: `/general-manager/requests/${requestId}`,
-      data: { requestId, projectName }
-    });
-  }
-
-  notifyRequestRejected(requestId: string, projectName: string, reason?: string): void {
-    this.addNotification({
-      type: 'error',
-      title: 'Request Rejected',
-      message: `Your machine request for ${projectName} has been rejected${reason ? ': ' + reason : ''}`,
-      relatedId: requestId,
-      relatedType: 'request',
-      priority: 'medium',
-      actionUrl: `/general-manager/requests/${requestId}`,
-      data: { requestId, projectName, reason }
-    });
-  }
-
-  notifyMachineReturned(machineId: string, machineName: string, operatorName: string): void {
-    this.addNotification({
-      type: 'info',
-      title: 'Machine Returned',
-      message: `${machineName} has been returned by ${operatorName}`,
-      relatedId: machineId,
-      relatedType: 'machine',
-      priority: 'medium',
-      actionUrl: `/machine-manager/inventory/${machineId}`,
-      data: { machineId, machineName, operatorName }
-    });
-  }
-
-  notifyMaintenanceScheduled(machineId: string, machineName: string, scheduledDate: Date): void {
-    this.addNotification({
-      type: 'maintenance',
-      title: 'Maintenance Scheduled',
-      message: `Maintenance scheduled for ${machineName} on ${this.formatDate(scheduledDate)}`,
-      relatedId: machineId,
-      relatedType: 'maintenance',
-      priority: 'medium',
-      actionUrl: `/machine-manager/maintenance/${machineId}`,
-      data: { machineId, machineName, scheduledDate }
-    });
-  }
-
-  notifyMaintenanceOverdue(machineId: string, machineName: string, daysPastDue: number): void {
-    this.addNotification({
-      type: 'warning',
-      title: 'Maintenance Overdue',
-      message: `${machineName} maintenance is ${daysPastDue} days overdue`,
-      relatedId: machineId,
-      relatedType: 'maintenance',
-      priority: 'urgent',
-      actionUrl: `/machine-manager/maintenance/${machineId}`,
-      data: { machineId, machineName, daysPastDue }
-    });
-  }
-
-  // Notification management methods
-  markAsRead(notificationId: string): void {
-    const notifications = this.notifications$.value;
-    const updatedNotifications = notifications.map(notification =>
-      notification.id === notificationId
-        ? { ...notification, read: true }
-        : notification
-    );
-    
-    this.notifications$.next(updatedNotifications);
-    this.updateUnreadCount();
-    this.saveNotificationsToStorage();
-  }
-
-  markAllAsRead(): void {
-    const notifications = this.notifications$.value;
-    const updatedNotifications = notifications.map(notification => ({
-      ...notification,
-      read: true
-    }));
-    
-    this.notifications$.next(updatedNotifications);
-    this.updateUnreadCount();
-    this.saveNotificationsToStorage();
-  }
-
-  deleteNotification(notificationId: string): void {
-    const notifications = this.notifications$.value;
-    const updatedNotifications = notifications.filter(
-      notification => notification.id !== notificationId
-    );
-    
-    this.notifications$.next(updatedNotifications);
-    this.updateUnreadCount();
-    this.saveNotificationsToStorage();
-  }
-
-  clearAllNotifications(): void {
-    this.notifications$.next([]);
-    this.updateUnreadCount();
-    this.saveNotificationsToStorage();
-  }
-
-  // Filter methods
-  getNotificationsByType(type: Notification['type']): Observable<Notification[]> {
-    return new BehaviorSubject(
-      this.notifications$.value.filter(notification => notification.type === type)
-    ).asObservable();
-  }
-
-  getUnreadNotifications(): Observable<Notification[]> {
-    return new BehaviorSubject(
-      this.notifications$.value.filter(notification => !notification.read)
-    ).asObservable();
-  }
-
-  // Private helper methods
-  private updateUnreadCount(): void {
-    const unreadCount = this.notifications$.value.filter(n => !n.read).length;
-    this.unreadCount$.next(unreadCount);
-  }
-
-  private generateId(): string {
-    return 'notif_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
-  }
-
-  private showToastForNotification(notification: Notification): void {
-    const duration = notification.priority === 'urgent' ? 8000 : 5000;
-    const severity = this.mapNotificationTypeToSeverity(notification.type);
-
-    this.messageService.add({
-      severity: severity,
-      summary: notification.title,
-      detail: notification.message,
-      life: duration
-    });
-  }
-
-  private mapNotificationTypeToSeverity(type: Notification['type']): 'success' | 'info' | 'warn' | 'error' {
-    switch (type) {
-      case 'success':
-      case 'assignment':
-        return 'success';
-      case 'error':
+  /**
+   * Map notification priority to PrimeNG severity
+   */
+  private mapPriorityToSeverity(priority: NotificationPriority): 'success' | 'info' | 'warn' | 'error' {
+    switch (priority) {
+      case NotificationPriority.Critical:
         return 'error';
-      case 'warning':
-      case 'maintenance':
+      case NotificationPriority.Urgent:
+      case NotificationPriority.High:
         return 'warn';
-      case 'info':
-      case 'request':
+      case NotificationPriority.Normal:
+        return 'info';
+      case NotificationPriority.Low:
+        return 'success';
       default:
         return 'info';
     }
   }
 
-  private formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit'
-    }).format(date);
+  /**
+   * Refresh notifications manually (useful for pull-to-refresh)
+   */
+  refreshNotifications(): void {
+    this.fetchNotifications().subscribe();
+    this.fetchUnreadCount().subscribe();
   }
 
-  // Storage methods
-  private saveNotificationsToStorage(): void {
-    try {
-      const notifications = this.notifications$.value;
-      localStorage.setItem('app_notifications', JSON.stringify(notifications));
-    } catch (error) {
-      console.error('Failed to save notifications to localStorage:', error);
-    }
+  /**
+   * Get current notifications value (synchronous)
+   */
+  getCurrentNotifications(): Notification[] {
+    return this.notificationsSubject.value;
   }
 
-  private loadNotificationsFromStorage(): void {
-    try {
-      const stored = localStorage.getItem('app_notifications');
-      if (stored) {
-        const notifications: Notification[] = JSON.parse(stored);
-        // Convert timestamp strings back to Date objects
-        const processedNotifications = notifications.map(n => ({
-          ...n,
-          timestamp: new Date(n.timestamp)
-        }));
-        this.notifications$.next(processedNotifications);
-        this.updateUnreadCount();
-      }
-    } catch (error) {
-      console.error('Failed to load notifications from localStorage:', error);
-    }
-  }
-
-  // Mock data generation for demonstration
-  private generateMockNotifications(): void {
-    // Only generate if no notifications exist
-    if (this.notifications$.value.length === 0) {
-      const mockNotifications: Omit<Notification, 'id' | 'timestamp' | 'read'>[] = [
-        {
-          type: 'assignment',
-          title: 'Machine Assigned',
-          message: 'CAT 320D Excavator assigned to Ahmed Al-Rashid for Al Hajar Mountain Quarry',
-          priority: 'high',
-          relatedId: 'M001',
-          relatedType: 'machine',
-          actionUrl: '/machine-manager/assignments/M001'
-        },
-        {
-          type: 'request',
-          title: 'New Assignment Request',
-          message: 'Request for 2 Excavator(s) for Muscat Infrastructure Project',
-          priority: 'high',
-          relatedId: 'REQ-001',
-          relatedType: 'request',
-          actionUrl: '/machine-manager/assignment-requests'
-        },
-        {
-          type: 'maintenance',
-          title: 'Maintenance Due',
-          message: 'Komatsu PC200 Excavator maintenance due in 3 days',
-          priority: 'medium',
-          relatedId: 'M002',
-          relatedType: 'maintenance',
-          actionUrl: '/machine-manager/maintenance/M002'
-        },
-        {
-          type: 'success',
-          title: 'Request Approved',
-          message: 'Your machine request for Dhofar Mining Operation has been approved',
-          priority: 'medium',
-          relatedId: 'REQ-002',
-          relatedType: 'request',
-          actionUrl: '/general-manager/requests/REQ-002'
-        },
-        {
-          type: 'warning',
-          title: 'Maintenance Overdue',
-          message: 'Atlas Copco ROC D7 Drill Rig maintenance is 5 days overdue',
-          priority: 'urgent',
-          relatedId: 'M003',
-          relatedType: 'maintenance',
-          actionUrl: '/machine-manager/maintenance/M003'
-        }
-      ];
-
-      // Add mock notifications with staggered timestamps
-      mockNotifications.forEach((notification, index) => {
-        setTimeout(() => {
-          this.addNotification(notification);
-        }, index * 100);
-      });
-    }
+  /**
+   * Get current unread count (synchronous)
+   */
+  getCurrentUnreadCount(): number {
+    return this.unreadCountSubject.value;
   }
 }

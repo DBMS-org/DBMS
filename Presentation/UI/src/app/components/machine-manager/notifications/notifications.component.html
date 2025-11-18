@@ -48,10 +48,17 @@
     </button>
     <button
       class="filter-tab"
-      [class.active]="selectedFilter() === 'assignments'"
-      (click)="setFilter('assignments')">
+      [class.active]="selectedFilter() === 'machine-requests'"
+      (click)="setFilter('machine-requests')">
       <mat-icon>assignment</mat-icon>
-      Assignments
+      Machine Requests
+    </button>
+    <button
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'machine-assignments'"
+      (click)="setFilter('machine-assignments')">
+      <mat-icon>assignment_turned_in</mat-icon>
+      Machine Assignments
     </button>
     <button
       class="filter-tab"
@@ -59,13 +66,6 @@
       (click)="setFilter('maintenance')">
       <mat-icon>build</mat-icon>
       Maintenance
-    </button>
-    <button
-      class="filter-tab"
-      [class.active]="selectedFilter() === 'inventory'"
-      (click)="setFilter('inventory')">
-      <mat-icon>inventory_2</mat-icon>
-      Inventory
     </button>
   </div>
 
@@ -82,25 +82,20 @@
         <div
           class="notification-item"
           [class]="getNotificationClass(notification)"
-          [class.unread]="!notification.read"
+          [class.unread]="!notification.isRead"
           (click)="navigateToContext(notification)">
           <div class="notification-icon">
-            <mat-icon>{{ notification.icon }}</mat-icon>
+            <mat-icon>{{ getNotificationIcon(notification) }}</mat-icon>
           </div>
           <div class="notification-content">
             <div class="notification-header">
               <h4>{{ notification.title }}</h4>
-              <span class="notification-time">{{ getTimeAgo(notification.date) }}</span>
+              <span class="notification-time">{{ getTimeAgo(notification.createdAt) }}</span>
             </div>
             <p>{{ notification.message }}</p>
-            <div class="notification-meta">
-              <mat-chip class="priority-chip" [class]="'priority-' + notification.priority.toLowerCase()">
-                {{ notification.priority }}
-              </mat-chip>
-            </div>
           </div>
           <div class="notification-actions">
-            @if (!notification.read) {
+            @if (!notification.isRead) {
               <button
                 mat-icon-button
                 (click)="markAsRead(notification); $event.stopPropagation()"

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,36 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
-
-interface Notification {
-  id: string;
-  type: 'USER_MANAGEMENT' | 'PROJECT_UPDATE' | 'MACHINE_ASSIGNMENT' | 'SYSTEM_ALERT' | 'STORE_UPDATE';
-  title: string;
-  message: string;
-  date: Date;
-  read: boolean;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
-  relatedUserId?: string;
-  relatedProjectId?: string;
-  relatedMachineId?: string;
-  actionUrl?: string;
-  icon: string;
-  color: string;
-}
-
-interface NotificationSettings {
-  userManagementPush: boolean;
-  userManagementEmail: boolean;
-  projectUpdatePush: boolean;
-  projectUpdateEmail: boolean;
-  machineAssignmentPush: boolean;
-  machineAssignmentEmail: boolean;
-  systemAlertPush: boolean;
-  systemAlertEmail: boolean;
-  storeUpdatePush: boolean;
-  storeUpdateEmail: boolean;
-  urgencyLevel: 'ALL' | 'HIGH' | 'CRITICAL';
-}
+import { Subscription } from 'rxjs';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Notification } from '../../../core/models/notification.model';
+import { NotificationType } from '../../../core/models/notification-type.enum';
+import { NotificationPriority, getPriorityColor, getPriorityDisplayName } from '../../../core/models/notification-priority.enum';
+import { getTimeAgo } from '../../../core/models/notification.model';
+import { getNotificationTypeIcon } from '../../../core/models/notification-type.enum';
 
 @Component({
   selector: 'app-notifications',
@@ -51,141 +28,66 @@ interface NotificationSettings {
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss']
 })
-export class NotificationsComponent implements OnInit {
+export class NotificationsComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private notificationService = inject(NotificationService);
+  private subscriptions: Subscription[] = [];
 
-  // Notifications data
   notifications = signal<Notification[]>([]);
   filteredNotifications = signal<Notification[]>([]);
-
-  // Filter state
-  selectedFilter = signal<'all' | 'unread' | 'users' | 'projects' | 'machines' | 'system'>('all');
-
-  // Settings
-  settings = signal<NotificationSettings>({
-    userManagementPush: true,
-    userManagementEmail: true,
-    projectUpdatePush: true,
-    projectUpdateEmail: true,
-    machineAssignmentPush: true,
-    machineAssignmentEmail: false,
-    systemAlertPush: true,
-    systemAlertEmail: true,
-    storeUpdatePush: true,
-    storeUpdateEmail: false,
-    urgencyLevel: 'ALL'
-  });
-
-  showSettings = signal(false);
-
-  // Real-time indicator
+  selectedFilter = signal<'all' | 'unread' | 'user-management' | 'users' | 'projects' | 'machines' | 'system'>('all');
+  isLoading = signal(false);
+  error = signal<string | null>(null);
   lastUpdate = signal<Date>(new Date());
   isOnline = signal(true);
 
   ngOnInit() {
     this.loadNotifications();
-    this.applyFilter();
+    this.subscribeToNotificationUpdates();
+  }
 
-    // Simulate real-time updates every 30 seconds
-    setInterval(() => {
-      this.lastUpdate.set(new Date());
-    }, 30000);
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private loadNotifications() {
-    const mockNotifications: Notification[] = [
-      {
-        id: 'notif-001',
-        type: 'USER_MANAGEMENT',
-        title: 'New User Registration',
-        message: 'New operator "John Smith" has registered and requires approval.',
-        date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        read: false,
-        priority: 'HIGH',
-        relatedUserId: 'USR-101',
-        actionUrl: '/admin/users',
-        icon: 'person_add',
-        color: 'primary'
-      },
-      {
-        id: 'notif-002',
-        type: 'PROJECT_UPDATE',
-        title: 'Project Status Update',
-        message: 'Project "Mining Site Alpha" status changed to In Progress.',
-        date: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-        read: false,
-        priority: 'MEDIUM',
-        relatedProjectId: 'PRJ-205',
-        actionUrl: '/admin/project-management',
-        icon: 'work_update',
-        color: 'info'
-      },
-      {
-        id: 'notif-003',
-        type: 'MACHINE_ASSIGNMENT',
-        title: 'Machine Assignment Request',
-        message: 'New assignment request for Drill Rig DR-102 from Site Manager.',
-        date: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-        read: false,
-        priority: 'HIGH',
-        relatedMachineId: 'MCH-102',
-        actionUrl: '/admin/machine-assignments',
-        icon: 'engineering',
-        color: 'warning'
-      },
-      {
-        id: 'notif-004',
-        type: 'SYSTEM_ALERT',
-        title: 'System Maintenance Scheduled',
-        message: 'System maintenance scheduled for tonight at 02:00 AM.',
-        date: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-        read: true,
-        priority: 'MEDIUM',
-        actionUrl: '/admin/dashboard',
-        icon: 'settings',
-        color: 'accent'
-      },
-      {
-        id: 'notif-005',
-        type: 'STORE_UPDATE',
-        title: 'Low Inventory Alert',
-        message: 'Store "Central Warehouse" has low stock on hydraulic filters.',
-        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-        read: true,
-        priority: 'HIGH',
-        actionUrl: '/admin/stores',
-        icon: 'inventory',
-        color: 'critical'
-      },
-      {
-        id: 'notif-006',
-        type: 'USER_MANAGEMENT',
-        title: 'User Role Updated',
-        message: 'User "Sarah Johnson" role changed to Machine Manager.',
-        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-        read: true,
-        priority: 'LOW',
-        relatedUserId: 'USR-305',
-        actionUrl: '/admin/users',
-        icon: 'admin_panel_settings',
-        color: 'success'
-      },
-      {
-        id: 'notif-007',
-        type: 'PROJECT_UPDATE',
-        title: 'New Project Created',
-        message: 'New project "Quarry Expansion Phase 2" has been created.',
-        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        read: true,
-        priority: 'MEDIUM',
-        relatedProjectId: 'PRJ-310',
-        actionUrl: '/admin/project-management',
-        icon: 'add_business',
-        color: 'primary'
-      }
-    ];
+    this.isLoading.set(true);
+    this.error.set(null);
 
-    this.notifications.set(mockNotifications);
+    const sub = this.notificationService.fetchNotifications(0, 50).subscribe({
+      next: (notifications) => {
+        console.log('🔔 RAW notifications from API:', notifications);
+        console.log('🔔 Notification types:', notifications.map(n => ({ id: n.id, type: n.type, title: n.title })));
+
+        // Admin receives all notifications
+        this.notifications.set(notifications);
+        this.applyFilter();
+        this.isLoading.set(false);
+        this.lastUpdate.set(new Date());
+
+        console.log('🔔 Admin loaded all notifications:', notifications.length);
+      },
+      error: (error) => {
+        this.error.set('Failed to load notifications. Please try again.');
+        this.isLoading.set(false);
+        console.error('Error loading notifications:', error);
+      }
+    });
+
+    this.subscriptions.push(sub);
+  }
+
+  private subscribeToNotificationUpdates() {
+    const sub = this.notificationService.notifications$.subscribe({
+      next: (notifications) => {
+        // Admin receives all notifications
+        this.notifications.set(notifications);
+        this.applyFilter();
+        this.lastUpdate.set(new Date());
+      }
+    });
+
+    this.subscriptions.push(sub);
   }
 
   applyFilter() {
@@ -198,21 +100,58 @@ export class NotificationsComponent implements OnInit {
       case 'all':
         filtered = allNotifications;
         break;
+
       case 'unread':
-        filtered = allNotifications.filter(n => !n.read);
+        filtered = allNotifications.filter(n => !n.isRead);
         break;
+
+      case 'user-management':
       case 'users':
-        filtered = allNotifications.filter(n => n.type === 'USER_MANAGEMENT');
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && (
+            typeStr === 'UserCreated' ||
+            typeStr === 'UserUpdated' ||
+            typeStr === 'UserDeleted' ||
+            typeStr === 'ProjectSiteCreated' ||
+            typeStr === 'ProjectSiteUpdated'
+          );
+        });
         break;
+
       case 'projects':
-        filtered = allNotifications.filter(n => n.type === 'PROJECT_UPDATE');
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && (
+            typeStr.startsWith('ExplosiveApproval') ||
+            typeStr.startsWith('Transfer') ||
+            typeStr.startsWith('ProjectSite')
+          );
+        });
         break;
+
       case 'machines':
-        filtered = allNotifications.filter(n => n.type === 'MACHINE_ASSIGNMENT');
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && (
+            typeStr.startsWith('MachineRequest') ||
+            typeStr.startsWith('MachineAssignment')
+          );
+        });
         break;
+
       case 'system':
-        filtered = allNotifications.filter(n => n.type === 'SYSTEM_ALERT' || n.type === 'STORE_UPDATE');
+        filtered = allNotifications.filter(n => {
+          const typeStr = typeof n.type === 'string' ? n.type : NotificationType[n.type];
+          return typeStr && (
+            typeStr === 'System' ||
+            typeStr === 'Info' ||
+            typeStr === 'Warning' ||
+            typeStr === 'Error'
+          );
+        });
         break;
+
       default:
         filtered = allNotifications;
     }
@@ -220,78 +159,114 @@ export class NotificationsComponent implements OnInit {
     this.filteredNotifications.set(filtered);
   }
 
-  setFilter(filter: 'all' | 'unread' | 'users' | 'projects' | 'machines' | 'system') {
+  setFilter(filter: 'all' | 'unread' | 'user-management' | 'users' | 'projects' | 'machines' | 'system') {
     this.selectedFilter.set(filter);
     this.applyFilter();
   }
 
   markAsRead(notification: Notification) {
-    this.notifications.update(notifications =>
-      notifications.map(n =>
-        n.id === notification.id ? { ...n, read: true } : n
-      )
-    );
-    this.applyFilter();
+    if (!notification.isRead) {
+      const sub = this.notificationService.markAsRead(notification.id).subscribe({
+        next: () => {
+          // Local state updated automatically via service observable
+        },
+        error: (error) => {
+          console.error('Error marking notification as read:', error);
+        }
+      });
+
+      this.subscriptions.push(sub);
+    }
   }
 
   markAllAsRead() {
-    this.notifications.update(notifications =>
-      notifications.map(n => ({ ...n, read: true }))
-    );
-    this.applyFilter();
+    const sub = this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        // Local state updated automatically via service observable
+      },
+      error: (error) => {
+        console.error('Error marking all as read:', error);
+      }
+    });
+
+    this.subscriptions.push(sub);
   }
 
   deleteNotification(notification: Notification) {
-    this.notifications.update(notifications =>
-      notifications.filter(n => n.id !== notification.id)
-    );
-    this.applyFilter();
+    const sub = this.notificationService.deleteNotification(notification.id).subscribe({
+      next: () => {
+        // Local state updated automatically via service observable
+      },
+      error: (error) => {
+        console.error('Error deleting notification:', error);
+      }
+    });
+
+    this.subscriptions.push(sub);
   }
 
   navigateToContext(notification: Notification) {
     this.markAsRead(notification);
 
-    if (notification.actionUrl) {
-      if (notification.relatedUserId) {
-        this.router.navigate([notification.actionUrl]);
-      } else if (notification.relatedProjectId) {
-        this.router.navigate([notification.actionUrl]);
-      } else {
-        this.router.navigate([notification.actionUrl]);
-      }
+    // Check notification type for specific routing
+    const typeStr = typeof notification.type === 'string' ? notification.type : NotificationType[notification.type];
+
+    // Blast simulation confirmed notifications
+    if (typeStr === 'BlastSimulationConfirmed') {
+      this.router.navigate(['/admin/project-management']);
+      return;
     }
+
+    // Fallback to actionUrl if provided
+    if (notification.actionUrl) {
+      // actionUrl is already a full path string
+      // Use navigateByUrl instead of navigate for string paths
+      this.router.navigateByUrl(notification.actionUrl);
+      return;
+    }
+
+    // Default to admin dashboard
+    this.router.navigate(['/admin/dashboard']);
   }
 
-  toggleSettings() {
-    this.showSettings.update(value => !value);
-  }
-
-  updateSetting(settingKey: keyof NotificationSettings, value: any) {
-    this.settings.update(settings => ({
-      ...settings,
-      [settingKey]: value
-    }));
-
-    // In a real app, this would save to backend
-    console.log('Settings updated:', this.settings());
+  refreshNotifications() {
+    this.loadNotifications();
   }
 
   getUnreadCount(): number {
-    return this.notifications().filter(n => !n.read).length;
+    return this.notifications().filter(n => !n.isRead).length;
   }
 
   getTimeAgo(date: Date): string {
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    return getTimeAgo(date);
+  }
 
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+  getNotificationIcon(notification: Notification): string {
+    return getNotificationTypeIcon(notification.type);
+  }
 
-    return date.toLocaleDateString();
+  getNotificationColor(notification: Notification): string {
+    return getPriorityColor(notification.priority);
+  }
+
+  getPriorityLabel(priority: NotificationPriority): string {
+    return getPriorityDisplayName(priority);
   }
 
   getNotificationClass(notification: Notification): string {
-    return `notification-${notification.color}`;
+    switch (notification.priority) {
+      case NotificationPriority.Critical:
+        return 'notification-critical';
+      case NotificationPriority.Urgent:
+        return 'notification-urgent';
+      case NotificationPriority.High:
+        return 'notification-high';
+      case NotificationPriority.Normal:
+        return 'notification-normal';
+      case NotificationPriority.Low:
+        return 'notification-low';
+      default:
+        return 'notification-normal';
+    }
   }
 }

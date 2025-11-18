@@ -12,7 +12,7 @@
       <p>Stay updated with drill patterns, site assignments, and project updates</p>
     </div>
     <div class="header-actions">
-      <button mat-button (click)="markAllAsRead()" [disabled]="getUnreadCount() === 0">
+      <button type="button" mat-button (click)="markAllAsRead()" [disabled]="getUnreadCount() === 0">
         <mat-icon>done_all</mat-icon>
         Mark All as Read
       </button>
@@ -33,6 +33,7 @@
   <!-- Filter Tabs -->
   <div class="filter-tabs">
     <button
+      type="button"
       class="filter-tab"
       [class.active]="selectedFilter() === 'all'"
       (click)="setFilter('all')">
@@ -40,6 +41,7 @@
       <span class="count">{{ notifications().length }}</span>
     </button>
     <button
+      type="button"
       class="filter-tab"
       [class.active]="selectedFilter() === 'unread'"
       (click)="setFilter('unread')">
@@ -47,25 +49,28 @@
       <span class="count">{{ getUnreadCount() }}</span>
     </button>
     <button
+      type="button"
       class="filter-tab"
-      [class.active]="selectedFilter() === 'pattern'"
-      (click)="setFilter('pattern')">
-      <mat-icon>grid_on</mat-icon>
-      Drill Patterns
+      [class.active]="selectedFilter() === 'machine-assignments'"
+      (click)="setFilter('machine-assignments')">
+      <mat-icon>precision_manufacturing</mat-icon>
+      Machine Assignments
     </button>
     <button
+      type="button"
       class="filter-tab"
-      [class.active]="selectedFilter() === 'maintenance'"
-      (click)="setFilter('maintenance')">
+      [class.active]="selectedFilter() === 'maintenance-reports'"
+      (click)="setFilter('maintenance-reports')">
+      <mat-icon>description</mat-icon>
+      Maintenance Reports
+    </button>
+    <button
+      type="button"
+      class="filter-tab"
+      [class.active]="selectedFilter() === 'maintenance-jobs'"
+      (click)="setFilter('maintenance-jobs')">
       <mat-icon>build</mat-icon>
-      Maintenance
-    </button>
-    <button
-      class="filter-tab"
-      [class.active]="selectedFilter() === 'project'"
-      (click)="setFilter('project')">
-      <mat-icon>assignment</mat-icon>
-      Project Updates
+      Maintenance Jobs
     </button>
   </div>
 
@@ -82,26 +87,22 @@
         <div
           class="notification-item"
           [class]="getNotificationClass(notification)"
-          [class.unread]="!notification.read"
+          [class.unread]="!notification.isRead"
           (click)="navigateToContext(notification)">
           <div class="notification-icon">
-            <mat-icon>{{ notification.icon }}</mat-icon>
+            <mat-icon>{{ getNotificationIcon(notification) }}</mat-icon>
           </div>
           <div class="notification-content">
             <div class="notification-header">
               <h4>{{ notification.title }}</h4>
-              <span class="notification-time">{{ getTimeAgo(notification.date) }}</span>
+              <span class="notification-time">{{ getTimeAgo(notification.createdAt) }}</span>
             </div>
             <p>{{ notification.message }}</p>
-            <div class="notification-meta">
-              <mat-chip class="priority-chip" [class]="'priority-' + notification.priority.toLowerCase()">
-                {{ notification.priority }}
-              </mat-chip>
-            </div>
           </div>
           <div class="notification-actions">
-            @if (!notification.read) {
+            @if (!notification.isRead) {
               <button
+                type="button"
                 mat-icon-button
                 (click)="markAsRead(notification); $event.stopPropagation()"
                 title="Mark as read">
@@ -109,6 +110,7 @@
               </button>
             }
             <button
+              type="button"
               mat-icon-button
               (click)="deleteNotification(notification); $event.stopPropagation()"
               title="Delete">
