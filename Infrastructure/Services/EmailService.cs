@@ -41,7 +41,8 @@ namespace Infrastructure.Services
                         Credentials = new NetworkCredential(username, password),
                         EnableSsl = true,
                         DeliveryMethod = SmtpDeliveryMethod.Network,
-                        UseDefaultCredentials = false
+                        UseDefaultCredentials = false,
+                        Timeout = 3000 // 3 second timeout to prevent long delays
                     };
 
                     var mailMessage = new MailMessage
@@ -88,7 +89,8 @@ namespace Infrastructure.Services
                     Credentials = new NetworkCredential(username, password),
                     EnableSsl = true,
                     DeliveryMethod = SmtpDeliveryMethod.Network,
-                    UseDefaultCredentials = false
+                    UseDefaultCredentials = false,
+                    Timeout = 3000 // 3 second timeout to prevent long delays
                 };
 
                 var mailMessage = new MailMessage
@@ -135,7 +137,8 @@ namespace Infrastructure.Services
                         Credentials = new NetworkCredential(smtpUsername, smtpPassword),
                         EnableSsl = true,
                         DeliveryMethod = SmtpDeliveryMethod.Network,
-                        UseDefaultCredentials = false
+                        UseDefaultCredentials = false,
+                        Timeout = 3000 // 3 second timeout to prevent long delays
                     };
 
                     var mailMessage = new MailMessage
@@ -301,7 +304,8 @@ namespace Infrastructure.Services
                         Credentials = new NetworkCredential(username, password),
                         EnableSsl = true,
                         DeliveryMethod = SmtpDeliveryMethod.Network,
-                        UseDefaultCredentials = false
+                        UseDefaultCredentials = false,
+                        Timeout = 3000 // 3 second timeout to prevent long delays
                     };
 
                     var mailMessage = new MailMessage
@@ -355,7 +359,8 @@ namespace Infrastructure.Services
                         Credentials = new NetworkCredential(username, password),
                         EnableSsl = true,
                         DeliveryMethod = SmtpDeliveryMethod.Network,
-                        UseDefaultCredentials = false
+                        UseDefaultCredentials = false,
+                        Timeout = 3000 // 3 second timeout to prevent long delays
                     };
 
                     var mailMessage = new MailMessage

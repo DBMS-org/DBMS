@@ -142,16 +142,16 @@
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button 
-          type="button" 
-          class="btn btn-outline-secondary cancel-btn" 
+        <button
+          type="button"
+          class="btn btn-outline-secondary cancel-btn"
           (click)="cancel()">
           <i class="fas fa-times"></i> Cancel
         </button>
-        
-        <button 
-          type="submit" 
-          class="btn btn-primary submit-btn" 
+
+        <button
+          type="submit"
+          class="btn btn-primary submit-btn"
           [disabled]="loading || !editProjectForm.valid">
           <span *ngIf="loading" class="spinner-border spinner-border-sm" role="status"></span>
           <i *ngIf="!loading" class="fas fa-save"></i>

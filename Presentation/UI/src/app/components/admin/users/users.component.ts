@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -31,6 +31,8 @@ import { TooltipModule } from 'primeng/tooltip';
   styleUrls: ['./users.component.scss']
 })
 export class UsersComponent implements OnInit {
+  @ViewChild(AddUserComponent) addUserComponent?: AddUserComponent;
+
   users: User[] = [];
   filteredUsers: User[] = [];
   searchQuery: string = '';
@@ -42,6 +44,7 @@ export class UsersComponent implements OnInit {
   errorDetails: string[] = [];
   showDeleteModal = false;
   userToDelete: User | null = null;
+  isDeleting = false; // Track deletion state
 
   constructor(
     private router: Router,
@@ -112,6 +115,9 @@ export class UsersComponent implements OnInit {
   }
 
   onSaveUser(userData: CreateUserRequest) {
+    this.error = null; // Clear any previous errors
+    this.errorDetails = [];
+
     this.userService.createUser(userData).subscribe({
       next: (newUser) => {
         this.users.push(newUser);
@@ -119,12 +125,34 @@ export class UsersComponent implements OnInit {
         this.showAddUserModal = false;
         this.error = null;
         this.errorDetails = [];
-        this.notification.showSuccess('User created successfully! Credentials have been sent to the user via email.');
+
+        // Reset submission state in child component
+        if (this.addUserComponent) {
+          this.addUserComponent.resetSubmissionState();
+        }
+
+        // Show success toast
+        this.notification.showSuccess(
+          `User "${newUser.name}" created successfully! Credentials have been sent via email.`,
+          'User Created'
+        );
         console.log('User created successfully:', newUser);
       },
       error: (error) => {
+        // Reset submission state in child component to allow retry
+        if (this.addUserComponent) {
+          this.addUserComponent.resetSubmissionState();
+        }
+
+        // Store error for display in modal
         this.error = error.message || 'An error occurred while creating the user';
         this.errorDetails = error.details || [];
+
+        // Also show error toast for immediate feedback
+        this.notification.showError(
+          error.message || 'Failed to create user. Please check the form and try again.',
+          'Creation Failed'
+        );
         console.error('Error creating user:', error);
       }
     });
@@ -149,17 +177,36 @@ export class UsersComponent implements OnInit {
   }
 
   confirmDelete() {
-    if (this.userToDelete) {
-      this.userService.deleteUser(this.userToDelete.id).subscribe({
-        next: () => {
-          this.users = this.users.filter(user => user.id !== this.userToDelete!.id);
-          this.filteredUsers = this.filteredUsers.filter(user => user.id !== this.userToDelete!.id);
+    if (this.userToDelete && !this.isDeleting) {
+      const userName = this.userToDelete.name;
+      const userId = this.userToDelete.id;
+
+      this.isDeleting = true; // Disable delete button
+
+      this.userService.deleteUser(userId).subscribe({
+        next: (response: any) => {
+          // Remove user from lists
+          this.users = this.users.filter(user => user.id !== userId);
+          this.filteredUsers = this.filteredUsers.filter(user => user.id !== userId);
+          this.isDeleting = false;
           this.closeDeleteModal();
+
+          // Show success toast
+          this.notification.showSuccess(
+            response?.message || `User "${userName}" has been successfully deleted.`,
+            'User Deleted'
+          );
           console.log('User deleted successfully');
         },
         error: (error) => {
-          this.error = error.message;
+          this.isDeleting = false;
           this.closeDeleteModal();
+
+          // Show error toast
+          this.notification.showError(
+            error.message || 'Failed to delete user. Please try again.',
+            'Deletion Failed'
+          );
           console.error('Error deleting user:', error);
         }
       });

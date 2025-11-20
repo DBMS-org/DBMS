@@ -164,9 +164,18 @@
   <div class="modal-overlay">
     <div class="modal-content">
       <p>Are you sure you want to delete this user?</p>
+      @if (userToDelete) {
+        <p class="user-info"><strong>{{ userToDelete.name }}</strong> ({{ userToDelete.email }})</p>
+      }
       <div class="modal-actions">
-        <button class="btn btn-danger" (click)="confirmDelete()">Yes</button>
-        <button class="btn btn-secondary" (click)="closeDeleteModal()">No</button>
+        <button class="btn btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+          @if (isDeleting) {
+            <span>Deleting...</span>
+          } @else {
+            <span>Yes, Delete</span>
+          }
+        </button>
+        <button class="btn btn-secondary" (click)="closeDeleteModal()" [disabled]="isDeleting">Cancel</button>
       </div>
     </div>
   </div>

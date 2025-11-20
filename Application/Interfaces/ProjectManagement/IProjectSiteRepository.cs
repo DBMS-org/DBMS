@@ -17,6 +17,15 @@ namespace Application.Interfaces.ProjectManagement
         Task<bool> ConfirmSimulationAsync(int id);
         Task<bool> RevokeSimulationAsync(int id);
         Task<bool> CompleteSiteAsync(int id, int completedByUserId);
+
+        /// <summary>
+        /// UC-9: Checks if a site name already exists under a specific project.
+        /// </summary>
+        /// <param name="projectId">The ID of the project</param>
+        /// <param name="siteName">The name of the site to check</param>
+        /// <returns>True if the site name exists, otherwise false</returns>
+        Task<bool> SiteNameExistsInProjectAsync(int projectId, string siteName);
+
         // Note: Explosive approval methods moved to IExplosiveApprovalRequestRepository
     }
 }

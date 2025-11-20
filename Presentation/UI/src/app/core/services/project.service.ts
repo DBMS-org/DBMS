@@ -185,4 +185,6 @@ export class ProjectService {
     console.error('ProjectService Error:', errorMessage);
     return throwError(() => error);
   }
+
+  // ============================================
 } 

@@ -87,8 +87,14 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" class="cancel-btn" (click)="onClose()">Cancel</button>
-        <button type="submit" class="save-btn">Save User</button>
+        <button type="button" class="cancel-btn" (click)="onClose()" [disabled]="isSubmitting">Cancel</button>
+        <button type="submit" class="save-btn" [disabled]="isSubmitting">
+          @if (isSubmitting) {
+            <span>Creating User...</span>
+          } @else {
+            <span>Save User</span>
+          }
+        </button>
       </div>
     </form>
   </div>

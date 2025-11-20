@@ -156,9 +156,31 @@ namespace API.Controllers
             var result = await _userService.DeleteUserAsync(id);
             if (result.IsFailure)
             {
-                return NotFound();
+                // Check if user not found
+                if (result.Error.Contains("not found") || result.Error.Contains("could not be found"))
+                {
+                    return NotFound(new
+                    {
+                        message = "User not found",
+                        detail = result.Error,
+                        errors = new[] { result.Error }
+                    });
                 }
-            return Ok();
+
+                // For other errors
+                return BadRequest(new
+                {
+                    message = "Deletion failed",
+                    detail = result.Error,
+                    errors = new[] { result.Error }
+                });
+            }
+
+            return Ok(new
+            {
+                message = "User deleted successfully",
+                detail = "The user account has been permanently deleted from the system."
+            });
         }
 
         // GET: api/users/test-connection

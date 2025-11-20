@@ -22,6 +22,7 @@ public static class ErrorCodes
     public const string ProjectNotFound = "PROJECT_NOT_FOUND";
     public const string ProjectSiteNotFound = "PROJECT_SITE_NOT_FOUND";
     public const string InvalidProjectOwnership = "INVALID_PROJECT_OWNERSHIP";
+    public const string OperatorAssignedToActiveProject = "OPERATOR_ASSIGNED_TO_ACTIVE_PROJECT";
 
     public const string MachineNotFound = "MACHINE_NOT_FOUND";
     public const string MachineAlreadyAssigned = "MACHINE_ALREADY_ASSIGNED";
@@ -62,6 +63,8 @@ public static class ErrorCodes
         // Project Management Messages
         public static string ProjectNotFound(int id) => $"Project with ID {id} could not be found. It may have been deleted or archived.";
         public static string ProjectSiteNotFound(int id) => $"Project site with ID {id} could not be found. Please verify the site ID and try again.";
+        public static string OperatorAssignedToActiveProject(string operatorName, string projectName, string status) =>
+            $"Cannot assign operator '{operatorName}' to a new project. They are currently assigned to project '{projectName}' which has status '{status}'. The current project must be completed or cancelled before reassignment.";
 
         // Machine Management Messages
         public static string MachineNotFound(int id) => $"Machine with ID {id} could not be found. The machine may have been removed from the system.";

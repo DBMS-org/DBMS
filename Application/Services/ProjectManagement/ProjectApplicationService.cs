@@ -92,14 +92,25 @@ namespace Application.Services.ProjectManagement
                     }
                 }
 
-                // Business rule: If operator is assigned to different project, unassign first
+                // Business rule: Prevent operator reassignment from active/incomplete projects
                 if (request.AssignedUserId.HasValue)
                 {
                     var existingProject = await _projectRepository.GetByOperatorIdAsync(request.AssignedUserId.Value);
                     if (existingProject != null)
                     {
-                        existingProject.AssignedUserId = null;
-                        await _projectRepository.UpdateAsync(existingProject);
+                        // Check if the existing project is completed or cancelled
+                        if (existingProject.Status != ProjectStatus.Completed && existingProject.Status != ProjectStatus.Cancelled)
+                        {
+                            var assignedOperator = existingProject.AssignedUser;
+                            var operatorName = assignedOperator != null ? assignedOperator.Name : $"ID {request.AssignedUserId.Value}";
+                            return Result.Failure<Project>(
+                                ErrorCodes.Messages.OperatorAssignedToActiveProject(
+                                    operatorName,
+                                    existingProject.Name,
+                                    existingProject.Status.ToString()
+                                )
+                            );
+                        }
                     }
                 }
 
@@ -163,14 +174,25 @@ namespace Application.Services.ProjectManagement
                     }
                 }
 
-                // Business rule: If operator is being reassigned, unassign from other projects
+                // Business rule: Prevent operator reassignment from active/incomplete projects
                 if (request.AssignedUserId.HasValue && request.AssignedUserId != project.AssignedUserId)
                 {
                     var existingProject = await _projectRepository.GetByOperatorIdAsync(request.AssignedUserId.Value);
                     if (existingProject != null && existingProject.Id != id)
                     {
-                        existingProject.AssignedUserId = null;
-                        await _projectRepository.UpdateAsync(existingProject);
+                        // Check if the existing project is completed or cancelled
+                        if (existingProject.Status != ProjectStatus.Completed && existingProject.Status != ProjectStatus.Cancelled)
+                        {
+                            var assignedOperator = existingProject.AssignedUser;
+                            var operatorName = assignedOperator != null ? assignedOperator.Name : $"ID {request.AssignedUserId.Value}";
+                            return Result.Failure(
+                                ErrorCodes.Messages.OperatorAssignedToActiveProject(
+                                    operatorName,
+                                    existingProject.Name,
+                                    existingProject.Status.ToString()
+                                )
+                            );
+                        }
                     }
                 }
 
