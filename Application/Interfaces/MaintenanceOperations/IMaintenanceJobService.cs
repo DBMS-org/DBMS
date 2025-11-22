@@ -15,5 +15,7 @@ namespace Application.Interfaces.MaintenanceOperations
         Task<Result<IEnumerable<MaintenanceJobDto>>> GetOverdueJobsAsync(int? regionId = null);
         Task<Result<bool>> BulkUpdateStatusAsync(IEnumerable<int> jobIds, string status);
         Task<Result<bool>> BulkAssignEngineerAsync(IEnumerable<int> jobIds, int engineerId);
+        Task<Result<IEnumerable<MaintenanceJobDto>>> GetJobsByMachineAsync(int machineId);
+        Task<Result<IEnumerable<MaintenanceJobDto>>> GetAllJobsAsync(string? status = null, string? type = null, int? machineId = null, DateTime? startDate = null, DateTime? endDate = null);
     }
 }

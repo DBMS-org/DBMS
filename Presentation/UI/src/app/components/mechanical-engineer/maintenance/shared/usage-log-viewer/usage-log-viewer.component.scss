@@ -1,0 +1,149 @@
+.usage-log-card {
+  margin: 1rem 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  mat-card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px 8px 0 0;
+    margin: -16px -16px 16px -16px;
+
+    mat-icon {
+      color: white;
+    }
+
+    mat-card-title {
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    mat-card-subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.loading-container {
+  text-align: center;
+  padding: 2rem;
+  color: #757575;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: #9e9e9e;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    color: #bdbdbd;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.usage-table {
+  width: 100%;
+  background: white;
+
+  th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #424242;
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 12px 16px;
+    color: #616161;
+    font-size: 0.9rem;
+  }
+
+  tr {
+    &:hover {
+      background: #fafafa;
+    }
+  }
+
+  .mat-mdc-row {
+    border-bottom: 1px solid #eeeeee;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.downtime-icon {
+  color: #ff9800;
+  cursor: help;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.no-downtime {
+  color: #bdbdbd;
+}
+
+// Status chip colors
+mat-chip {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  height: auto;
+  min-height: 24px;
+
+  &.status-submitted {
+    background-color: #2196f3 !important;
+    color: white !important;
+  }
+
+  &.status-approved {
+    background-color: #4caf50 !important;
+    color: white !important;
+  }
+
+  &.status-rejected {
+    background-color: #f44336 !important;
+    color: white !important;
+  }
+
+  &.status-draft {
+    background-color: #ff9800 !important;
+    color: white !important;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: scroll;
+  }
+
+  .usage-table {
+    min-width: 600px;
+
+    th, td {
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
+  }
+}

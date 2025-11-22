@@ -196,7 +196,7 @@ export class MaintenanceMockService {
 
     const fileAttachments: FileAttachment[] = [
       {
-        id: '1',
+        id: 1,
         fileName: 'maintenance_report_2024.pdf',
         fileType: 'pdf',
         fileSize: 2048576,
@@ -204,7 +204,7 @@ export class MaintenanceMockService {
         url: '/assets/documents/maintenance_report_2024.pdf'
       },
       {
-        id: '2',
+        id: 2,
         fileName: 'before_repair_photo.jpg',
         fileType: 'jpg',
         fileSize: 1048576,
@@ -212,7 +212,7 @@ export class MaintenanceMockService {
         url: '/assets/images/before_repair_photo.jpg'
       },
       {
-        id: '3',
+        id: 3,
         fileName: 'after_repair_photo.jpg',
         fileType: 'jpg',
         fileSize: 1536000,
@@ -220,7 +220,7 @@ export class MaintenanceMockService {
         url: '/assets/images/after_repair_photo.jpg'
       },
       {
-        id: '4',
+        id: 4,
         fileName: 'parts_invoice.xlsx',
         fileType: 'xlsx',
         fileSize: 512000,
@@ -228,7 +228,7 @@ export class MaintenanceMockService {
         url: '/assets/documents/parts_invoice.xlsx'
       },
       {
-        id: '5',
+        id: 5,
         fileName: 'safety_checklist.pdf',
         fileType: 'pdf',
         fileSize: 307200,
@@ -236,7 +236,7 @@ export class MaintenanceMockService {
         url: '/assets/documents/safety_checklist.pdf'
       },
       {
-        id: '6',
+        id: 6,
         fileName: 'diagnostic_report.pdf',
         fileType: 'pdf',
         fileSize: 819200,
@@ -244,7 +244,7 @@ export class MaintenanceMockService {
         url: '/assets/documents/diagnostic_report.pdf'
       },
       {
-        id: '7',
+        id: 7,
         fileName: 'work_order.pdf',
         fileType: 'pdf',
         fileSize: 409600,
@@ -252,7 +252,7 @@ export class MaintenanceMockService {
         url: '/assets/documents/work_order.pdf'
       },
       {
-        id: '8',
+        id: 8,
         fileName: 'quality_inspection.pdf',
         fileType: 'pdf',
         fileSize: 614400,
@@ -332,7 +332,7 @@ export class MaintenanceMockService {
             // Create a copy with unique ID and random upload date
             attachments.push({
               ...attachment,
-              id: `${attachment.id}-${jobs.length + 1}-${i}`,
+              id: parseInt(`${attachment.id}${jobs.length + 1}${i}`),
               uploadedAt: new Date(jobDate.getTime() + Math.random() * 24 * 60 * 60 * 1000)
             });
           }
@@ -458,10 +458,10 @@ export class MaintenanceMockService {
         const daysDiff = Math.ceil((job.scheduledDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
         return daysDiff <= 3 && daysDiff >= 0 && job.status === MaintenanceStatus.SCHEDULED;
       })
-      .map(job => {
+      .map((job, index) => {
         const daysDiff = Math.ceil((job.scheduledDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
         return {
-          id: `alert-${job.id}`,
+          id: 1000 + index,
           machineId: job.machineId,
           machineName: job.machineName,
           alertType: AlertType.SERVICE_DUE,
@@ -478,10 +478,10 @@ export class MaintenanceMockService {
   getOverdueAlerts(): Observable<MaintenanceAlert[]> {
     const alerts = this.mockJobs
       .filter(job => job.status === MaintenanceStatus.OVERDUE)
-      .map(job => {
+      .map((job, index) => {
         const daysPastDue = Math.ceil((new Date().getTime() - job.scheduledDate.getTime()) / (1000 * 60 * 60 * 24));
         return {
-          id: `overdue-${job.id}`,
+          id: 2000 + index,
           machineId: job.machineId,
           machineName: job.machineName,
           alertType: AlertType.OVERDUE,
@@ -491,7 +491,7 @@ export class MaintenanceMockService {
           daysPastDue: daysPastDue
         };
       });
-    
+
     return of(alerts);
   }
 
@@ -837,8 +837,13 @@ export class MaintenanceMockService {
       const baseIdleHours = Math.floor(baseEngineHours * (0.15 + Math.random() * 0.25)); // 15-40% idle
       const baseServiceHours = Math.floor(baseEngineHours * (0.02 + Math.random() * 0.03)); // 2-5% service
 
+      // Convert string ID (e.g., "M014") to number (e.g., 14)
+      const numericId = typeof machine.id === 'string'
+        ? parseInt(machine.id.replace(/[^0-9]/g, ''), 10) || 1
+        : machine.id;
+
       return {
-        machineId: machine.id,
+        machineId: numericId,
         engineHours: baseEngineHours,
         idleHours: baseIdleHours,
         serviceHours: baseServiceHours,

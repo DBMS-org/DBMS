@@ -28,7 +28,6 @@ interface MachineSummary {
   totalUtilizationHours: number;
   lastMaintenanceDate?: Date;
   nextMaintenanceDate?: Date;
-  totalMaintenanceCost: number;
   problemReportsCount: number;
   assignmentHistory: MachineAssignment[];
   maintenanceHistory: MaintenanceRecord[];
@@ -54,8 +53,6 @@ interface MaintenanceRecord {
   completedDate?: Date;
   status: string;
   assignedTo: string;
-  estimatedCost: number;
-  actualCost?: number;
   partsReplaced: string[];
   downtime: number; // hours
 }
@@ -68,7 +65,6 @@ interface UsageLog {
   engineHours: number;
   idleHours: number;
   workingHours: number;
-  fuelConsumed: number;
   hasDowntime: boolean;
   downtimeReason?: string;
 }
@@ -83,7 +79,6 @@ interface MachineStatistics {
   totalMaintenanceJobs: number;
   completedMaintenanceJobs: number;
   pendingMaintenanceJobs: number;
-  totalMaintenanceCost: number;
   totalUtilizationHours: number;
   averageUtilizationRate: number;
   totalProblemReports: number;
@@ -192,7 +187,6 @@ export class ReportsComponent implements OnInit {
         totalUtilizationHours: 500 + (i * 100),
         lastMaintenanceDate: new Date(2024, 2, i),
         nextMaintenanceDate: new Date(2024, 5, i),
-        totalMaintenanceCost: 5000 + (i * 500),
         problemReportsCount: Math.floor(Math.random() * 5),
         assignmentHistory: this.generateMockAssignments(i),
         maintenanceHistory: this.generateMockMaintenance(i),
@@ -238,8 +232,6 @@ export class ReportsComponent implements OnInit {
         completedDate: i < 3 ? new Date(2024, i * 2, 12) : undefined,
         status: i < 3 ? 'Completed' : 'Scheduled',
         assignedTo: engineers[i % engineers.length],
-        estimatedCost: 1000 + (i * 500),
-        actualCost: i < 3 ? 1200 + (i * 550) : undefined,
         partsReplaced: i < 3 ? ['Oil Filter', 'Air Filter', 'Hydraulic Fluid'] : [],
         downtime: i < 3 ? 8 + (i * 4) : 0
       });
@@ -265,7 +257,6 @@ export class ReportsComponent implements OnInit {
         engineHours: 8 + Math.random() * 4,
         idleHours: 1 + Math.random() * 2,
         workingHours: 6 + Math.random() * 3,
-        fuelConsumed: 50 + Math.random() * 30,
         hasDowntime: Math.random() > 0.8,
         downtimeReason: Math.random() > 0.8 ? 'Refueling' : undefined
       });
@@ -284,7 +275,6 @@ export class ReportsComponent implements OnInit {
     let activeAssignments = 0;
     let totalMaintenanceJobs = 0;
     let completedMaintenanceJobs = 0;
-    let totalMaintenanceCost = 0;
     let totalUtilizationHours = 0;
     let totalProblemReports = 0;
 
@@ -293,7 +283,6 @@ export class ReportsComponent implements OnInit {
       activeAssignments += machine.assignmentHistory.filter(a => a.status === 'Active').length;
       totalMaintenanceJobs += machine.maintenanceHistory.length;
       completedMaintenanceJobs += machine.maintenanceHistory.filter(m => m.status === 'Completed').length;
-      totalMaintenanceCost += machine.totalMaintenanceCost;
       totalUtilizationHours += machine.totalUtilizationHours;
       totalProblemReports += machine.problemReportsCount;
     });
@@ -308,7 +297,6 @@ export class ReportsComponent implements OnInit {
       totalMaintenanceJobs,
       completedMaintenanceJobs,
       pendingMaintenanceJobs: totalMaintenanceJobs - completedMaintenanceJobs,
-      totalMaintenanceCost,
       totalUtilizationHours,
       averageUtilizationRate: totalMachines > 0 ? (activeMachines / totalMachines) * 100 : 0,
       totalProblemReports,
@@ -407,13 +395,6 @@ export class ReportsComponent implements OnInit {
       month: 'short',
       day: 'numeric'
     }).format(date);
-  }
-
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'OMR'
-    }).format(amount);
   }
 
   formatNumber(num: number): string {

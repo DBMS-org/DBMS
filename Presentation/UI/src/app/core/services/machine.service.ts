@@ -97,6 +97,16 @@ export class MachineService {
   }
 
   /**
+   * Reset service hours for a machine (Mechanical Engineer after completing service)
+   */
+  resetServiceHours(id: number, resetEngine: boolean, resetDrifter: boolean): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/reset-service-hours`, {
+      resetEngine,
+      resetDrifter
+    });
+  }
+
+  /**
    * Updates the operational status of a machine
    * Triggers workflow notifications for status changes
    */

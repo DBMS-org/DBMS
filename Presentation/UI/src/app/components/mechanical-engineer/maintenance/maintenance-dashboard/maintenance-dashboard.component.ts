@@ -76,7 +76,7 @@ export class MaintenanceDashboardComponent implements OnInit {
 
       const mockServiceDueAlerts: MaintenanceAlert[] = [
         {
-          id: '1',
+          id: 1,
           machineId: 1,
           machineName: 'Excavator EX-001',
           alertType: AlertType.SERVICE_DUE,
@@ -86,7 +86,7 @@ export class MaintenanceDashboardComponent implements OnInit {
           daysUntilDue: 5
         },
         {
-          id: '2',
+          id: 2,
           machineId: 2,
           machineName: 'Drill Rig DR-205',
           alertType: AlertType.SERVICE_DUE,
@@ -96,7 +96,7 @@ export class MaintenanceDashboardComponent implements OnInit {
           daysUntilDue: 2
         },
         {
-          id: '4',
+          id: 4,
           machineId: 3,
           machineName: 'Bulldozer BH-301',
           alertType: AlertType.SERVICE_DUE,
@@ -109,7 +109,7 @@ export class MaintenanceDashboardComponent implements OnInit {
 
       const mockOverdueAlerts: MaintenanceAlert[] = [
         {
-          id: '3',
+          id: 3,
           machineId: 4,
           machineName: 'Loader LD-103',
           alertType: AlertType.OVERDUE,
@@ -119,7 +119,7 @@ export class MaintenanceDashboardComponent implements OnInit {
           daysPastDue: 2
         },
         {
-          id: '5',
+          id: 5,
           machineId: 5,
           machineName: 'Crane CR-150',
           alertType: AlertType.OVERDUE,

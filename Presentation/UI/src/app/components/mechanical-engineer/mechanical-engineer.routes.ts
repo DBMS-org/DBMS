@@ -10,6 +10,7 @@ import { MaintenanceSettingsComponent } from './maintenance/maintenance-settings
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 import { MaintenanceNotificationsComponent } from './maintenance/maintenance-notifications/maintenance-notifications.component';
 import { ReportsComponent } from './reports/reports.component';
+import { MachineUsageComponent } from './maintenance/machine-usage/machine-usage.component';
 
 export const MECHANICAL_ENGINEER_ROUTES: Routes = [
     {
@@ -25,7 +26,8 @@ export const MECHANICAL_ENGINEER_ROUTES: Routes = [
                 children: [
                     { path: '', redirectTo: 'jobs', pathMatch: 'full' },
                     { path: 'jobs', component: MaintenanceJobsComponent },
-                    { path: 'history', component: MaintenanceHistoryComponent }
+                    { path: 'history', component: MaintenanceHistoryComponent },
+                    { path: 'machine-usage/:machineId', component: MachineUsageComponent }
                 ]
             },
             { path: 'notifications', component: MaintenanceNotificationsComponent },

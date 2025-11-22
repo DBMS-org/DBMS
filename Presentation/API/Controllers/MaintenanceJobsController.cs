@@ -22,9 +22,29 @@ namespace API.Controllers
             _logger = logger;
         }
 
+        // GET: api/maintenance-jobs/all
+        [HttpGet("all")]
+        [Authorize(Roles = "Admin,MachineManager")]
+        public async Task<IActionResult> GetAllJobs(
+            [FromQuery] string? status = null,
+            [FromQuery] string? type = null,
+            [FromQuery] int? machineId = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            var result = await _jobService.GetAllJobsAsync(status, type, machineId, startDate, endDate);
+            if (!result.IsSuccess)
+            {
+                _logger.LogError("Failed to get all jobs: {Error}", result.Error);
+                return BadRequest(result.Error);
+            }
+
+            return Ok(result.Value);
+        }
+
         // GET: api/maintenance-jobs/{id}
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,MechanicalEngineer")]
+        [Authorize(Roles = "Admin,MechanicalEngineer,MachineManager")]
         public async Task<IActionResult> GetJobById(int id)
         {
             var result = await _jobService.GetJobByIdAsync(id);
@@ -67,6 +87,21 @@ namespace API.Controllers
             if (!result.IsSuccess)
             {
                 _logger.LogError("Failed to get overdue jobs: {Error}", result.Error);
+                return BadRequest(result.Error);
+            }
+
+            return Ok(result.Value);
+        }
+
+        // GET: api/maintenance-jobs/machine/{machineId}
+        [HttpGet("machine/{machineId}")]
+        [Authorize(Roles = "Admin,MechanicalEngineer,Operator")]
+        public async Task<IActionResult> GetJobsByMachine(int machineId)
+        {
+            var result = await _jobService.GetJobsByMachineAsync(machineId);
+            if (!result.IsSuccess)
+            {
+                _logger.LogError("Failed to get jobs for machine {MachineId}: {Error}", machineId, result.Error);
                 return BadRequest(result.Error);
             }
 

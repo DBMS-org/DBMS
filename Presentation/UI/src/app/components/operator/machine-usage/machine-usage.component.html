@@ -1,0 +1,290 @@
+<div class="machine-usage-page">
+  <!-- Header -->
+  <div class="page-header">
+    <button mat-icon-button (click)="goBack()" class="back-btn">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="header-content">
+      <h1>Machine Usage</h1>
+      @if (machineName()) {
+        <p class="subtitle">{{ machineName() }}</p>
+      }
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading usage data...</p>
+    </div>
+  } @else {
+    <!-- Machine Info Card -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>precision_manufacturing</mat-icon>
+          Machine Information
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Machine Name:</label>
+            <span>{{ machineName() || 'N/A' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Model:</label>
+            <span>{{ machineModel() || 'N/A' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Serial Number:</label>
+            <span>{{ serialNumber() || 'N/A' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Service Status Card -->
+    @if (machine()?.engineServiceInterval) {
+      <mat-card class="service-status-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>build_circle</mat-icon>
+            Service Status
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="service-grid">
+            <!-- Engine Service -->
+            <div class="service-item" [class]="getServiceUrgencyClass(engineServiceProgress())">
+              <div class="service-header">
+                <mat-icon>settings</mat-icon>
+                <span class="service-title">Engine Service</span>
+              </div>
+              <div class="service-details">
+                <div class="progress-info">
+                  <span>{{ machine()?.currentEngineServiceHours || 0 }} / {{ machine()?.engineServiceInterval }} hrs</span>
+                  <span class="remaining">{{ engineServiceRemaining() | number:'1.0-0' }} hrs remaining</span>
+                </div>
+                <mat-progress-bar
+                  [value]="engineServiceProgress()"
+                  [color]="engineServiceProgress() >= 90 ? 'warn' : 'primary'">
+                </mat-progress-bar>
+              </div>
+            </div>
+
+            <!-- Drifter Service (only for drill rigs) -->
+            @if (hasDrifterService()) {
+              <div class="service-item" [class]="getServiceUrgencyClass(drifterServiceProgress())">
+                <div class="service-header">
+                  <mat-icon>engineering</mat-icon>
+                  <span class="service-title">Drifter Service</span>
+                </div>
+                <div class="service-details">
+                  <div class="progress-info">
+                    <span>{{ machine()?.currentDrifterServiceHours || 0 }} / {{ machine()?.drifterServiceInterval }} hrs</span>
+                    <span class="remaining">{{ drifterServiceRemaining() | number:'1.0-0' }} hrs remaining</span>
+                  </div>
+                  <mat-progress-bar
+                    [value]="drifterServiceProgress()"
+                    [color]="drifterServiceProgress() >= 90 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                </div>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Usage Statistics Card -->
+    <mat-card class="metrics-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>analytics</mat-icon>
+          Usage Statistics (Last 30 Days)
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Primary Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-item highlight">
+            <mat-icon class="metric-icon">schedule</mat-icon>
+            <div class="metric-value">{{ (usageStatistics()?.totalEngineHours || 0) | number:'1.1-1' }}</div>
+            <div class="metric-label">Total Engine Hours</div>
+          </div>
+          <div class="metric-item">
+            <mat-icon class="metric-icon working">engineering</mat-icon>
+            <div class="metric-value">{{ (usageStatistics()?.totalWorkingHours || 0) | number:'1.1-1' }}</div>
+            <div class="metric-label">Working Hours</div>
+          </div>
+          <div class="metric-item">
+            <mat-icon class="metric-icon idle">pause_circle</mat-icon>
+            <div class="metric-value">{{ (usageStatistics()?.totalIdleHours || 0) | number:'1.1-1' }}</div>
+            <div class="metric-label">Idle Hours</div>
+          </div>
+          <div class="metric-item">
+            <mat-icon class="metric-icon fuel">local_gas_station</mat-icon>
+            <div class="metric-value">{{ (usageStatistics()?.totalFuelConsumed || 0) | number:'1.0-0' }} L</div>
+            <div class="metric-label">Fuel Consumed</div>
+          </div>
+        </div>
+
+        <!-- Efficiency Metrics -->
+        <div class="efficiency-section">
+          <h3 class="section-title">Efficiency Analysis</h3>
+          <div class="efficiency-grid">
+            <div class="efficiency-item">
+              <div class="efficiency-header">
+                <span class="efficiency-label">Utilization Rate</span>
+                <span class="efficiency-value" [class.good]="getUtilizationRate() >= 70" [class.warning]="getUtilizationRate() >= 50 && getUtilizationRate() < 70" [class.poor]="getUtilizationRate() < 50">
+                  {{ getUtilizationRate() | number:'1.0-0' }}%
+                </span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill utilization" [style.width.%]="getUtilizationRate()"></div>
+              </div>
+              <div class="efficiency-hint">Working hours / Engine hours</div>
+            </div>
+
+            <div class="efficiency-item">
+              <div class="efficiency-header">
+                <span class="efficiency-label">Availability</span>
+                <span class="efficiency-value" [class.good]="getAvailability() >= 90" [class.warning]="getAvailability() >= 75 && getAvailability() < 90" [class.poor]="getAvailability() < 75">
+                  {{ getAvailability() | number:'1.0-0' }}%
+                </span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill availability" [style.width.%]="getAvailability()"></div>
+              </div>
+              <div class="efficiency-hint">Uptime vs Total time (excl. downtime)</div>
+            </div>
+
+            <div class="efficiency-item">
+              <div class="efficiency-header">
+                <span class="efficiency-label">Fuel Efficiency</span>
+                <span class="efficiency-value">{{ getFuelEfficiency() | number:'1.1-1' }} L/h</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill fuel-eff" [style.width.%]="getFuelEfficiencyPercent()"></div>
+              </div>
+              <div class="efficiency-hint">Fuel consumed per working hour</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Stats -->
+        <div class="secondary-stats">
+          <div class="stat-row">
+            <div class="stat-item">
+              <mat-icon class="stat-icon warning-icon">warning</mat-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ usageStatistics()?.totalDowntimeHours || 0 | number:'1.1-1' }} h</span>
+                <span class="stat-label">Total Downtime</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <mat-icon class="stat-icon calendar-icon">event</mat-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ usageStatistics()?.daysWithDowntime || 0 }}</span>
+                <span class="stat-label">Days with Downtime</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <mat-icon class="stat-icon avg-icon">trending_up</mat-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ (usageStatistics()?.averageDailyHours || 0) | number:'1.1-1' }} h</span>
+                <span class="stat-label">Avg Daily Usage</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-divider></mat-divider>
+
+    <!-- Usage Logs Table -->
+    <mat-card class="logs-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>history</mat-icon>
+          Usage Log History
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (usageLogs().length === 0) {
+          <div class="no-data">
+            <mat-icon>info</mat-icon>
+            <p>No usage logs found for this machine.</p>
+          </div>
+        } @else {
+          <div class="table-container">
+            <table mat-table [dataSource]="usageLogs()" class="usage-table">
+              <!-- Date Column -->
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Date</th>
+                <td mat-cell *matCellDef="let log">{{ formatDate(log.logDate) }}</td>
+              </ng-container>
+
+              <!-- Engine Hours Column -->
+              <ng-container matColumnDef="engineHours">
+                <th mat-header-cell *matHeaderCellDef>Engine Hours</th>
+                <td mat-cell *matCellDef="let log">{{ (log.engineHoursDelta || 0) | number:'1.1-1' }} h</td>
+              </ng-container>
+
+              <!-- Drifter Hours Column -->
+              <ng-container matColumnDef="drifterHours">
+                <th mat-header-cell *matHeaderCellDef>Drifter Hours</th>
+                <td mat-cell *matCellDef="let log">{{ log.drifterHoursDelta != null ? ((log.drifterHoursDelta | number:'1.1-1') + ' h') : '—' }}</td>
+              </ng-container>
+
+              <!-- Working Hours Column -->
+              <ng-container matColumnDef="workingHours">
+                <th mat-header-cell *matHeaderCellDef>Working</th>
+                <td mat-cell *matCellDef="let log">{{ log.workingHours }} h</td>
+              </ng-container>
+
+              <!-- Idle Hours Column -->
+              <ng-container matColumnDef="idleHours">
+                <th mat-header-cell *matHeaderCellDef>Idle</th>
+                <td mat-cell *matCellDef="let log">{{ log.idleHours }} h</td>
+              </ng-container>
+
+              <!-- Fuel Column -->
+              <ng-container matColumnDef="fuel">
+                <th mat-header-cell *matHeaderCellDef>Fuel (L)</th>
+                <td mat-cell *matCellDef="let log">{{ log.fuelConsumed ? (log.fuelConsumed + ' L') : '—' }}</td>
+              </ng-container>
+
+              <!-- Downtime Column -->
+              <ng-container matColumnDef="downtime">
+                <th mat-header-cell *matHeaderCellDef>Downtime</th>
+                <td mat-cell *matCellDef="let log">
+                  @if (log.hasDowntime && log.downtimeHours) {
+                    <mat-icon class="downtime-icon" [matTooltip]="log.breakdownDescription || 'Downtime reported'">warning</mat-icon>
+                  } @else {
+                    <span>—</span>
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let log">
+                  <mat-chip [ngClass]="getStatusClass(log.status)">
+                    {{ getStatusLabel(log.status) }}
+                  </mat-chip>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

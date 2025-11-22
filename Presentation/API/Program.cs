@@ -179,6 +179,16 @@ builder.Services.AddScoped<Application.Interfaces.MaintenanceOperations.IStatusS
 
 builder.Services.AddScoped<Application.Interfaces.MachineManagement.IMachineRepository, Infrastructure.Repositories.MachineManagement.MachineRepository>();
 
+// Register Machine Usage Tracking services
+builder.Services.AddScoped<Application.Interfaces.MachineManagement.IUsageLogRepository, Infrastructure.Repositories.MachineManagement.UsageLogRepository>();
+builder.Services.AddScoped<Application.Interfaces.MachineManagement.IUsageLogService, Application.Services.MachineManagement.UsageLogApplicationService>();
+builder.Services.AddScoped<Application.Interfaces.MachineManagement.IMachineServiceConfigService, Application.Services.MachineManagement.MachineServiceConfigApplicationService>();
+
+// Register Domain Event Handlers
+builder.Services.AddScoped<Infrastructure.Services.IDomainEventHandler<Domain.Events.MachineManagement.UsageLogCreatedEvent>, Infrastructure.Handlers.MachineManagement.UsageLogCreatedEventHandler>();
+builder.Services.AddScoped<Infrastructure.Services.IDomainEventHandler<Domain.Events.MaintenanceOperations.ServiceCompletedEvent>, Infrastructure.Handlers.MaintenanceOperations.ServiceCompletedEventHandler>();
+builder.Services.AddScoped<Infrastructure.Services.IDomainEventHandler<Domain.Events.MaintenanceOperations.MaterialsConsumedEvent>, Infrastructure.Handlers.MaintenanceOperations.MaterialsConsumedEventHandler>();
+
 // Register Notification services
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 

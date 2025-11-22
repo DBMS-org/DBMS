@@ -58,15 +58,6 @@
         </div>
       </div>
 
-      <div class="stat-card">
-        <div class="stat-icon cost">
-          <mat-icon>payments</mat-icon>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ formatCurrency(statistics()!.totalMaintenanceCost) }}</span>
-          <span class="stat-label">Maintenance Costs</span>
-        </div>
-      </div>
     </div>
   }
 
@@ -173,14 +164,6 @@
             <div class="quick-stat-details">
               <span class="quick-stat-value">{{ formatNumber(machine.totalUtilizationHours) }}h</span>
               <span class="quick-stat-label">Utilization</span>
-            </div>
-          </div>
-
-          <div class="quick-stat-item">
-            <mat-icon>payments</mat-icon>
-            <div class="quick-stat-details">
-              <span class="quick-stat-value">{{ formatCurrency(machine.totalMaintenanceCost) }}</span>
-              <span class="quick-stat-label">Maintenance Cost</span>
             </div>
           </div>
 
@@ -302,7 +285,6 @@
                       <th>Scheduled Date</th>
                       <th>Completed Date</th>
                       <th>Assigned To</th>
-                      <th>Cost</th>
                       <th>Downtime</th>
                       <th>Status</th>
                     </tr>
@@ -314,7 +296,6 @@
                         <td>{{ formatDate(maintenance.scheduledDate) }}</td>
                         <td>{{ formatDate(maintenance.completedDate) || 'Pending' }}</td>
                         <td>{{ maintenance.assignedTo }}</td>
-                        <td class="numeric">{{ formatCurrency(maintenance.actualCost || maintenance.estimatedCost) }}</td>
                         <td class="numeric">{{ maintenance.downtime }}h</td>
                         <td>
                           <span class="status-badge" [ngClass]="getStatusClass(maintenance.status)">
@@ -344,7 +325,6 @@
                       <th>Engine Hours</th>
                       <th>Working Hours</th>
                       <th>Idle Hours</th>
-                      <th>Fuel (L)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -356,7 +336,6 @@
                         <td class="numeric">{{ formatNumber(log.engineHours) }}</td>
                         <td class="numeric">{{ formatNumber(log.workingHours) }}</td>
                         <td class="numeric">{{ formatNumber(log.idleHours) }}</td>
-                        <td class="numeric">{{ formatNumber(log.fuelConsumed) }}</td>
                       </tr>
                     }
                   </tbody>
@@ -446,10 +425,6 @@
             <div class="summary-item">
               <span class="label">Total Utilization:</span>
               <span class="value">{{ formatNumber(selectedMachine()!.totalUtilizationHours) }} hours</span>
-            </div>
-            <div class="summary-item">
-              <span class="label">Maintenance Cost:</span>
-              <span class="value">{{ formatCurrency(selectedMachine()!.totalMaintenanceCost) }}</span>
             </div>
           </div>
         </div>

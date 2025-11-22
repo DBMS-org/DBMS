@@ -19,15 +19,18 @@
   flex: 1;
   padding: 2rem;
   margin-left: 250px;
-  max-width: 1280px;
-  margin-right: auto;
-  transition: margin-left 0.3s ease;
+  width: calc(100% - 250px);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 // Adjust when sidebar is collapsed
 .sidebar-collapsed {
   .main-content {
     margin-left: 70px;
+    width: calc(100% - 70px);
   }
 }
 
@@ -43,7 +46,7 @@
   .main-content {
     padding: 1.25rem;
     margin-left: 70px;
-    max-width: 900px;
+    width: calc(100% - 70px);
   }
 }
 
@@ -51,6 +54,6 @@
   .main-content {
     padding: 1rem;
     margin-left: 0;
-    max-width: 100%;
+    width: 100%;
   }
 }

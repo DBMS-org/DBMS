@@ -71,7 +71,14 @@ export class EditMachineComponent implements OnInit {
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
       region: [''],
-      projectId: ['']
+      projectId: [''],
+      // Service Configuration
+      engineServiceInterval: [500, [Validators.required, Validators.min(1)]],
+      currentEngineServiceHours: [0, [Validators.required, Validators.min(0)]],
+      lastEngineServiceDate: [''],
+      drifterServiceInterval: [300, [Validators.min(1)]],
+      currentDrifterServiceHours: [0, [Validators.min(0)]],
+      lastDrifterServiceDate: ['']
     });
   }
 
@@ -110,7 +117,14 @@ export class EditMachineComponent implements OnInit {
       manufacturingYear: this.machine.manufacturingYear?.toString() || '',
       chassisDetails: this.machine.chassisDetails || '',
       region: locationParts.region || '',
-      status: this.machine.status
+      status: this.machine.status,
+      // Service Configuration
+      engineServiceInterval: this.machine.engineServiceInterval || 500,
+      currentEngineServiceHours: this.machine.currentEngineServiceHours || 0,
+      lastEngineServiceDate: this.machine.lastEngineServiceDate ? this.formatDateForInput(this.machine.lastEngineServiceDate) : '',
+      drifterServiceInterval: this.machine.drifterServiceInterval || 300,
+      currentDrifterServiceHours: this.machine.currentDrifterServiceHours || 0,
+      lastDrifterServiceDate: this.machine.lastDrifterServiceDate ? this.formatDateForInput(this.machine.lastDrifterServiceDate) : ''
     });
 
     // Handle project assignment - prefer projectId over location parsing
@@ -341,7 +355,14 @@ export class EditMachineComponent implements OnInit {
       regionId: this.getRegionId(),
       status: status,
       lastMaintenanceDate: this.machine.lastMaintenanceDate,
-      nextMaintenanceDate: this.machine.nextMaintenanceDate
+      nextMaintenanceDate: this.machine.nextMaintenanceDate,
+      // Service Configuration
+      engineServiceInterval: formValue.engineServiceInterval,
+      currentEngineServiceHours: formValue.currentEngineServiceHours,
+      lastEngineServiceDate: formValue.lastEngineServiceDate || undefined,
+      drifterServiceInterval: formValue.drifterServiceInterval || undefined,
+      currentDrifterServiceHours: formValue.currentDrifterServiceHours || undefined,
+      lastDrifterServiceDate: formValue.lastDrifterServiceDate || undefined
     };
     
     this.machineService.updateMachine(this.machine.id, request).subscribe({
@@ -385,7 +406,14 @@ export class EditMachineComponent implements OnInit {
           currentLocation: this.getLocationValue(),
           projectId: projectId,
           regionId: this.getRegionId(),
-          status: status
+          status: status,
+          // Service Configuration
+          engineServiceInterval: formValue.engineServiceInterval,
+          currentEngineServiceHours: formValue.currentEngineServiceHours,
+          lastEngineServiceDate: formValue.lastEngineServiceDate || undefined,
+          drifterServiceInterval: formValue.drifterServiceInterval || undefined,
+          currentDrifterServiceHours: formValue.currentDrifterServiceHours || undefined,
+          lastDrifterServiceDate: formValue.lastDrifterServiceDate || undefined
         };
 
         this.machineService.addMachine(createRequest).subscribe({
@@ -426,11 +454,76 @@ export class EditMachineComponent implements OnInit {
   }
 
   // Getter methods for template dropdown options
+  /**
+   * Provides machine type options for template dropdown
+   * Restricted to Drill Rig only for machine manager inventory
+   */
   get machineTypeOptions() {
-    return Object.values(MachineType);
+    return [MachineType.DRILL_RIG];
   }
 
   get machineStatusOptions() {
     return Object.values(MachineStatus);
+  }
+
+  /**
+   * Returns true if the selected machine type is a Drill Rig
+   */
+  get isDrillRig(): boolean {
+    return this.machineForm.get('type')?.value === MachineType.DRILL_RIG;
+  }
+
+  /**
+   * Calculates hours remaining until next engine service
+   */
+  get engineHoursToNextService(): number {
+    const interval = this.machineForm.get('engineServiceInterval')?.value || 500;
+    const current = this.machineForm.get('currentEngineServiceHours')?.value || 0;
+    return Math.max(0, interval - current);
+  }
+
+  /**
+   * Calculates hours remaining until next drifter service
+   */
+  get drifterHoursToNextService(): number {
+    const interval = this.machineForm.get('drifterServiceInterval')?.value || 300;
+    const current = this.machineForm.get('currentDrifterServiceHours')?.value || 0;
+    return Math.max(0, interval - current);
+  }
+
+  /**
+   * Returns CSS class for engine service urgency color coding
+   */
+  get engineServiceUrgencyClass(): string {
+    const remaining = this.engineHoursToNextService;
+    if (remaining < 0) return 'overdue';
+    if (remaining < 20) return 'critical';
+    if (remaining < 50) return 'warning';
+    if (remaining < 100) return 'caution';
+    return 'good';
+  }
+
+  /**
+   * Returns CSS class for drifter service urgency color coding
+   */
+  get drifterServiceUrgencyClass(): string {
+    const remaining = this.drifterHoursToNextService;
+    if (remaining < 0) return 'overdue';
+    if (remaining < 20) return 'critical';
+    if (remaining < 50) return 'warning';
+    if (remaining < 100) return 'caution';
+    return 'good';
+  }
+
+  /**
+   * Formats Date object to YYYY-MM-DD format for date input
+   */
+  private formatDateForInput(date: Date): string {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

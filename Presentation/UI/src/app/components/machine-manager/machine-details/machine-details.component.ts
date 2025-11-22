@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Machine, MachineStatus } from '../../../core/models/machine.model';
 
 @Component({
@@ -13,8 +14,15 @@ export class MachineDetailsComponent {
   @Input() machine!: Machine;
   @Output() close = new EventEmitter<void>();
 
+  constructor(private router: Router) {}
+
   onClose(): void {
     this.close.emit();
+  }
+
+  viewServiceUsage(): void {
+    this.close.emit();
+    this.router.navigate(['/machine-manager/machine-service-usage', this.machine.id]);
   }
 
   getStatusClass(status: string): string {

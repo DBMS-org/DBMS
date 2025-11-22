@@ -79,13 +79,14 @@ export interface ProblemReport {
 }
 
 export interface OperatorMachine {
-  id: string;
+  id: number;  // ✅ Changed from string to number
   name: string;
   model: string;
   serialNumber: string;
   currentLocation: string;
   status: MachineStatus;
   assignedOperatorId: string;
+  type?: string; // Machine type (e.g., "Drill Rig", "Excavator")
 }
 
 export interface ProblemReportSummary {
@@ -105,7 +106,7 @@ export interface ReportFilters {
 
 export interface CreateProblemReportRequest {
   operatorId?: number;
-  machineId: string;
+  machineId: number;  // ✅ Changed from string to number
   machineName: string;
   machineModel: string;
   serialNumber: string;

@@ -61,6 +61,7 @@ namespace Infrastructure.Data
         public DbSet<MaintenanceJob> MaintenanceJobs { get; set; }
         public DbSet<MaintenanceJobAssignment> MaintenanceJobAssignments { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<MachineUsageLog> MachineUsageLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -318,9 +318,25 @@ namespace Application.Services.MaintenanceOperations
                     {
                         if (newStatus == MaintenanceJobStatus.InProgress)
                         {
-                            report.MarkInProgress();
+                            // Only update report status if it's in a valid state
+                            // Don't fail job update if report can't be updated
+                            try
+                            {
+                                report.MarkInProgress();
+                                await _reportRepository.UpdateAsync(report);
+                            }
+                            catch (InvalidOperationException ex)
+                            {
+                                _logger.LogWarning("Could not update linked report {ReportId} status: {Message}",
+                                    job.MaintenanceReportId.Value, ex.Message);
+                                // Continue - job update should succeed even if report update fails
+                            }
                         }
-                        await _reportRepository.UpdateAsync(report);
+                        else
+                        {
+                            // For other statuses, update without validation
+                            await _reportRepository.UpdateAsync(report);
+                        }
                     }
                 }
 
@@ -347,7 +363,20 @@ namespace Application.Services.MaintenanceOperations
 
                 var partsJson = request.PartsReplaced != null ? JsonSerializer.Serialize(request.PartsReplaced) : null;
 
-                job.Complete(request.Observations, request.ActualHours, partsJson);
+                job.Complete(
+                    observations: request.Observations,
+                    actualHours: request.ActualHours,
+                    partsReplaced: partsJson,
+                    isServiceCompleted: request.IsServiceCompleted,
+                    isEngineServiceCompleted: request.IsEngineServiceCompleted,
+                    isDrifterServiceCompleted: request.IsDrifterServiceCompleted,
+                    drillBitsUsed: request.DrillBitsUsed,
+                    drillBitType: request.DrillBitType,
+                    drillRodsUsed: request.DrillRodsUsed,
+                    drillRodType: request.DrillRodType,
+                    shanksUsed: request.ShanksUsed,
+                    shankType: request.ShankType
+                );
                 await _jobRepository.UpdateAsync(job);
 
                 // Update linked report to resolved
@@ -356,8 +385,18 @@ namespace Application.Services.MaintenanceOperations
                     var report = await _reportRepository.GetByIdAsync(job.MaintenanceReportId.Value);
                     if (report != null)
                     {
-                        report.Resolve(request.Observations);
-                        await _reportRepository.UpdateAsync(report);
+                        // Try to resolve the report, but don't fail job completion if report can't be resolved
+                        try
+                        {
+                            report.Resolve(request.Observations);
+                            await _reportRepository.UpdateAsync(report);
+                        }
+                        catch (InvalidOperationException ex)
+                        {
+                            _logger.LogWarning("Could not resolve linked report {ReportId}: {Message}. Job completion will continue.",
+                                job.MaintenanceReportId.Value, ex.Message);
+                            // Continue - job completion should succeed even if report resolution fails
+                        }
                     }
                 }
 
@@ -441,6 +480,38 @@ namespace Application.Services.MaintenanceOperations
             {
                 _logger.LogError(ex, "Error bulk assigning engineer");
                 return Result.Failure<bool>($"Failed to assign engineer: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<IEnumerable<MaintenanceJobDto>>> GetJobsByMachineAsync(int machineId)
+        {
+            try
+            {
+                _logger.LogInformation("Getting maintenance jobs for machine {MachineId}", machineId);
+                var jobs = await _jobRepository.GetMaintenanceHistoryByMachineIdAsync(machineId, 50);
+                var dtos = _mappingService.Map<IEnumerable<MaintenanceJobDto>>(jobs);
+                return Result<IEnumerable<MaintenanceJobDto>>.Success(dtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting jobs for machine {MachineId}", machineId);
+                return Result.Failure<IEnumerable<MaintenanceJobDto>>($"Failed to get jobs: {ex.Message}");
+            }
+        }
+
+        public async Task<Result<IEnumerable<MaintenanceJobDto>>> GetAllJobsAsync(string? status = null, string? type = null, int? machineId = null, DateTime? startDate = null, DateTime? endDate = null)
+        {
+            try
+            {
+                _logger.LogInformation("Getting all maintenance jobs with filters - Status: {Status}, Type: {Type}, MachineId: {MachineId}", status, type, machineId);
+                var jobs = await _jobRepository.GetAllJobsAsync(status, type, machineId, startDate, endDate);
+                var dtos = _mappingService.Map<IEnumerable<MaintenanceJobDto>>(jobs);
+                return Result<IEnumerable<MaintenanceJobDto>>.Success(dtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all maintenance jobs");
+                return Result.Failure<IEnumerable<MaintenanceJobDto>>($"Failed to get jobs: {ex.Message}");
             }
         }
     }

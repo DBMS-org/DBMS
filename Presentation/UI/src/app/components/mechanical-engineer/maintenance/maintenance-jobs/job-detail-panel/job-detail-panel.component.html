@@ -69,35 +69,17 @@
                   </mat-card-content>
                 </mat-card>
 
-                <!-- Usage Metrics Card -->
-                <mat-card class="info-card">
-                  <mat-card-header>
-                    <mat-card-title>
-                      <mat-icon>analytics</mat-icon>
-                      Usage Metrics
-                    </mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div class="metrics-grid">
-                      <div class="metric-item">
-                        <div class="metric-value">{{ machineHistory()?.engineHours || 0 }}</div>
-                        <div class="metric-label">Engine Hours</div>
-                      </div>
-                      <div class="metric-item">
-                        <div class="metric-value">{{ machineHistory()?.serviceHours || 0 }}</div>
-                        <div class="metric-label">Service Hours</div>
-                      </div>
-                      <div class="metric-item">
-                        <div class="metric-value">{{ machineHistory()?.idleHours || 0 }}</div>
-                        <div class="metric-label">Idle Hours</div>
-                      </div>
-                      <div class="metric-item">
-                        <div class="metric-value">{{ getHoursSinceLastService() }}</div>
-                        <div class="metric-label">Hours Since Last Service</div>
-                      </div>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
+                <!-- View Usage Button -->
+                <div class="view-usage-action">
+                  <button mat-raised-button
+                          color="primary"
+                          class="view-usage-btn"
+                          (click)="navigateToMachineUsage()">
+                    <mat-icon>analytics</mat-icon>
+                    View Usage Metrics & History
+                  </button>
+                  <p class="usage-hint">View detailed usage metrics and log history for this machine</p>
+                </div>
               </div>
             }
           </div>
@@ -206,6 +188,57 @@
                         </div>
                       </div>
                     }
+                  </mat-card-content>
+                </mat-card>
+              }
+
+              <!-- Consumed Drilling Components Card -->
+              @if (selectedJob()?.isServiceCompleted && hasConsumedComponents()) {
+                <mat-card class="info-card">
+                  <mat-card-header>
+                    <mat-card-title>
+                      <mat-icon>build_circle</mat-icon>
+                      Consumed Drilling Components
+                    </mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="consumed-components-list">
+                      @if (selectedJob(); as job) {
+                        @if (job.drillBitsUsed && job.drillBitsUsed > 0) {
+                          <div class="component-item">
+                            <mat-icon class="component-icon">lens</mat-icon>
+                            <span class="component-text">
+                              <strong>{{ job.drillBitsUsed }}x</strong> Drill Bits
+                              @if (job.drillBitType) {
+                                <span class="component-type">({{ job.drillBitType }})</span>
+                              }
+                            </span>
+                          </div>
+                        }
+                        @if (job.drillRodsUsed && job.drillRodsUsed > 0) {
+                          <div class="component-item">
+                            <mat-icon class="component-icon">height</mat-icon>
+                            <span class="component-text">
+                              <strong>{{ job.drillRodsUsed }}x</strong> Drill Rods
+                              @if (job.drillRodType) {
+                                <span class="component-type">({{ job.drillRodType }})</span>
+                              }
+                            </span>
+                          </div>
+                        }
+                        @if (job.shanksUsed && job.shanksUsed > 0) {
+                          <div class="component-item">
+                            <mat-icon class="component-icon">construction</mat-icon>
+                            <span class="component-text">
+                              <strong>{{ job.shanksUsed }}x</strong> Shanks
+                              @if (job.shankType) {
+                                <span class="component-type">({{ job.shankType }})</span>
+                              }
+                            </span>
+                          </div>
+                        }
+                      }
+                    </div>
                   </mat-card-content>
                 </mat-card>
               }

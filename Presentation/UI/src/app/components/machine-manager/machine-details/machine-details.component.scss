@@ -321,8 +321,33 @@
 .details-actions {
   display: flex;
   justify-content: center;
+  gap: var(--space-md);
   padding-top: var(--space-md);
   border-top: 1px solid var(--border-color);
+
+  /* Service & Usage button */
+  .service-usage-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: var(--transition-base);
+    background: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    color: white;
+
+    &:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .material-icons {
+      font-size: 18px;
+    }
+  }
 
   /* Close button with ripple effect */
   .close-btn-action {
@@ -371,6 +396,233 @@
     .material-icons {
       font-size: 18px;
     }
+  }
+}
+
+/**
+ * Service Tracking Card Styles
+ * Progress bars and service status indicators
+ */
+.service-tracking-card {
+  .service-section {
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--border-color);
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    &:first-child {
+      padding-top: 0;
+    }
+  }
+
+  .service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+
+    .service-title {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+
+      .material-icons {
+        color: var(--primary-color);
+        font-size: 24px;
+      }
+
+      h4 {
+        margin: 0;
+        font-size: var(--font-size-lg);
+        color: var(--text-primary);
+        font-weight: var(--font-weight-semibold);
+      }
+    }
+
+    .service-status-badge {
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: var(--font-weight-bold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      &.urgency-overdue {
+        background: #7f1d1d;
+        color: white;
+      }
+
+      &.urgency-critical {
+        background: #dc2626;
+        color: white;
+      }
+
+      &.urgency-warning {
+        background: #f59e0b;
+        color: white;
+      }
+
+      &.urgency-caution {
+        background: #eab308;
+        color: white;
+      }
+
+      &.urgency-good {
+        background: #10b981;
+        color: white;
+      }
+    }
+  }
+
+  .service-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .service-info-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: var(--space-sm);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+
+      .info-label {
+        font-size: var(--font-size-xs);
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: var(--font-weight-medium);
+      }
+
+      .info-value {
+        font-size: var(--font-size-lg);
+        color: var(--text-primary);
+        font-weight: var(--font-weight-bold);
+
+        &.urgency-overdue {
+          color: #7f1d1d;
+        }
+
+        &.urgency-critical {
+          color: #dc2626;
+        }
+
+        &.urgency-warning {
+          color: #f59e0b;
+        }
+
+        &.urgency-caution {
+          color: #eab308;
+        }
+
+        &.urgency-good {
+          color: #10b981;
+        }
+      }
+    }
+  }
+
+  .progress-bar-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+
+    .progress-bar {
+      flex: 1;
+      height: 24px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border-color);
+
+      .progress-fill {
+        height: 100%;
+        transition: width 0.3s ease, background-color 0.3s ease;
+        position: relative;
+        overflow: hidden;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          animation: shimmer 2s infinite;
+        }
+
+        &.urgency-overdue {
+          background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+        }
+
+        &.urgency-critical {
+          background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+
+        &.urgency-warning {
+          background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        }
+
+        &.urgency-caution {
+          background: linear-gradient(135deg, #eab308 0%, #facc15 100%);
+        }
+
+        &.urgency-good {
+          background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        }
+      }
+    }
+
+    .progress-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      font-weight: var(--font-weight-semibold);
+      min-width: 40px;
+      text-align: right;
+    }
+  }
+
+  .last-service-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    border-left: 3px solid var(--primary-color);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+
+    .material-icons {
+      font-size: 18px;
+      color: var(--primary-color);
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 
@@ -437,6 +689,24 @@
     .close-btn-action {
       width: 100%;
       justify-content: center;
+    }
+  }
+
+  /* Service tracking mobile adjustments */
+  .service-tracking-card {
+    .service-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-sm);
+
+      .service-status-badge {
+        align-self: flex-start;
+      }
+    }
+
+    .service-info-row {
+      grid-template-columns: 1fr;
+      gap: var(--space-sm);
     }
   }
 }

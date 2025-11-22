@@ -85,5 +85,41 @@ namespace Infrastructure.Repositories.MachineManagement
                 throw;
             }
         }
+
+        public async Task<IEnumerable<Machine>> GetAllAsync()
+        {
+            try
+            {
+                return await _context.Machines
+                    .Where(m => m.IsActive)
+                    .Include(m => m.Operator)
+                    .Include(m => m.Project)
+                    .Include(m => m.Region)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all machines from database");
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<Machine>> GetByRegionAsync(int regionId)
+        {
+            try
+            {
+                return await _context.Machines
+                    .Where(m => m.RegionId == regionId && m.IsActive)
+                    .Include(m => m.Operator)
+                    .Include(m => m.Project)
+                    .Include(m => m.Region)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting machines for region {RegionId} from database", regionId);
+                throw;
+            }
+        }
     }
 }

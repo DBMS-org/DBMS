@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -26,12 +26,14 @@ import { ReportDetailsDialogComponent } from '../maintenance-reports/report-deta
 import { MaintenanceService } from '../../mechanical-engineer/maintenance/services/maintenance.service';
 import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maintenance.models';
 import {
-  MachineUsageLog,
   CreateUsageLogRequest,
+  UsageLogDto,
   UsageLogFormData,
   UsageLogUtils,
-  UsageLogValidation
+  UsageLogValidation,
+  UsageStatisticsDto
 } from './models/usage-log.models';
+import { UsageLogService } from '../../../services/usage-log.service';
 
 @Component({
   selector: 'app-my-machines',
@@ -68,12 +70,23 @@ export class MyMachinesComponent implements OnInit {
   error = signal<string | null>(null);
   usageMetrics = signal<UsageMetrics | null>(null);
   serviceIntervalHours = signal<number>(500);
-  
+
   // Enhanced usage logging properties
   usageLogForm!: FormGroup;
   selectedFiles: File[] = [];
   isSubmittingUsage = false;
-  
+
+  // New: Usage statistics and history
+  usageStatistics = signal<UsageStatisticsDto | null>(null);
+  usageLogs = signal<UsageLogDto[]>([]);
+  showUsageHistory = signal(false);
+
+  // New: Computed properties for validation
+  engineHoursDelta = signal<number>(0);
+  drifterHoursDelta = signal<number>(0);
+  hoursValidationWarning = signal<string | null>(null);
+  isDrillRig = signal<boolean>(false);
+
   // Legacy properties for backward compatibility
   engineDelta = 0;
   idleDelta = 0;
@@ -85,6 +98,8 @@ export class MyMachinesComponent implements OnInit {
   private maintenanceService = inject(MaintenanceService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+  private usageLogService = inject(UsageLogService);
+  private router = inject(Router);
   
   // Enhanced usage logging methods
   onFileSelected(event: any) {
@@ -121,59 +136,130 @@ export class MyMachinesComponent implements OnInit {
   
   submitEnhancedLogUsage() {
     if (!this.usageLogForm.valid || this.isSubmittingUsage) return;
-    
+
     this.isSubmittingUsage = true;
     const formData = this.usageLogForm.value;
-    
-    // Convert time strings to decimal hours
-    const engineHours = this.timeStringToDecimal(formData.engineHours);
-    const idleHours = this.timeStringToDecimal(formData.idleHours);
-    const workingHours = this.timeStringToDecimal(formData.workingHours);
-    const downtimeHours = formData.hasDowntime ? this.timeStringToDecimal(formData.downtimeHours) : 0;
-    
-    const usageLogData: CreateUsageLogRequest = {
-        machineId: formData.selectedMachineId,
-        logDate: formData.logDate,
-        engineHours: engineHours.toString(),
-        idleHours: idleHours.toString(),
-        workingHours: workingHours.toString(),
-        fuelConsumed: formData.fuelConsumed || 0,
-        hasDowntime: formData.hasDowntime,
-        downtimeHours: downtimeHours.toString(),
-        breakdownDescription: formData.breakdownDescription || '',
-        remarks: formData.remarks || '',
-        attachments: this.selectedFiles
-      };
-    
-    // Simulate API call - in real app, this would be a service call
-    setTimeout(() => {
-      // Update local usage metrics
-      const currentMetrics = this.usageMetrics();
-      if (currentMetrics) {
-        const updatedMetrics: UsageMetrics = {
-          ...currentMetrics,
-          engineHours: currentMetrics.engineHours + engineHours,
-          idleHours: currentMetrics.idleHours + idleHours,
-          serviceHours: currentMetrics.serviceHours + engineHours, // Engine hours contribute to service hours
-          lastUpdated: new Date()
-        };
-        this.usageMetrics.set(updatedMetrics);
-      }
-      
+    const machine = this.assignedMachine();
+
+    if (!machine) {
+      this.snackBar.open('No machine assigned', 'OK', { duration: 3000 });
       this.isSubmittingUsage = false;
-      this.selectedFiles = [];
-      this.dialog.closeAll();
-      this.snackBar.open('Usage log submitted successfully!', 'OK', { duration: 3000 });
-      
-      // Reset form
-      this.initializeUsageLogForm();
-    }, 2000);
+      return;
+    }
+
+    // Prepare request matching backend DTO
+    const usageLogRequest: CreateUsageLogRequest = {
+      machineId: machine.id,
+      logDate: formData.logDate,
+      engineHourStart: formData.engineHourStart,
+      engineHourEnd: formData.engineHourEnd,
+      drifterHourStart: this.isDrillRig() ? formData.drifterHourStart : undefined,
+      drifterHourEnd: this.isDrillRig() ? formData.drifterHourEnd : undefined,
+      idleHours: formData.idleHours || 0,
+      workingHours: formData.workingHours || 0,
+      fuelConsumed: formData.fuelConsumed || undefined,
+      hasDowntime: formData.hasDowntime || false,
+      downtimeHours: formData.hasDowntime ? (formData.downtimeHours || 0) : undefined,
+      breakdownDescription: formData.hasDowntime ? formData.breakdownDescription : undefined,
+      remarks: formData.remarks || undefined
+    };
+
+    // Call real API service
+    this.usageLogService.createUsageLog(usageLogRequest).subscribe({
+      next: (createdLog: UsageLogDto) => {
+        // Add to local logs list
+        const currentLogs = this.usageLogs();
+        this.usageLogs.set([createdLog, ...currentLogs]);
+
+        // Update local usage metrics
+        const currentMetrics = this.usageMetrics();
+        if (currentMetrics) {
+          const updatedMetrics: UsageMetrics = {
+            ...currentMetrics,
+            engineHours: currentMetrics.engineHours + createdLog.engineHoursDelta,
+            idleHours: currentMetrics.idleHours + createdLog.idleHours,
+            serviceHours: currentMetrics.serviceHours + createdLog.engineHoursDelta,
+            lastUpdated: new Date()
+          };
+          this.usageMetrics.set(updatedMetrics);
+        }
+
+        // Reload statistics
+        this.loadUsageStatistics(machine.id);
+
+        this.isSubmittingUsage = false;
+        this.selectedFiles = [];
+        this.dialog.closeAll();
+        this.snackBar.open('Usage log submitted successfully!', 'OK', { duration: 3000 });
+
+        // Reset form
+        this.initializeUsageLogForm();
+      },
+      error: (error) => {
+        console.error('Error submitting usage log:', error);
+        this.isSubmittingUsage = false;
+
+        const errorMessage = error?.error?.message || error?.message || 'Failed to submit usage log. Please try again.';
+        this.snackBar.open(errorMessage, 'OK', { duration: 5000 });
+      }
+    });
   }
-  
-  private timeStringToDecimal(timeStr: string): number {
-    if (!timeStr) return 0;
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours + (minutes / 60);
+
+  /**
+   * Load usage statistics from backend
+   */
+  private loadUsageStatistics(machineId: number, days: number = 30) {
+    this.usageLogService.getUsageStatistics(machineId, days).subscribe({
+      next: (stats) => {
+        this.usageStatistics.set(stats);
+      },
+      error: (error) => {
+        console.error('Error loading usage statistics:', error);
+      }
+    });
+  }
+
+  /**
+   * Load usage history from backend
+   */
+  loadUsageHistory() {
+    const machine = this.assignedMachine();
+    if (!machine) return;
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+
+    this.usageLogService.getUsageLogsByMachine(machine.id, startDate, endDate).subscribe({
+      next: (logs) => {
+        this.usageLogs.set(logs);
+      },
+      error: (error) => {
+        console.error('Error loading usage logs:', error);
+      }
+    });
+  }
+
+  /**
+   * Pre-fill form with last usage log data
+   */
+  private prefillFormWithLastLog(machineId: number) {
+    this.usageLogService.getLatestUsageLog(machineId).subscribe({
+      next: (lastLog) => {
+        console.log('Last usage log found:', lastLog);
+        // Pre-fill engine hour start with last engine hour end
+        this.usageLogForm.patchValue({
+          engineHourStart: lastLog.engineHourEnd ?? 0,
+          drifterHourStart: lastLog.drifterHourEnd ?? 0
+        });
+        // Trigger delta calculation
+        this.calculateHourDeltas();
+      },
+      error: (err) => {
+        console.log('No previous usage log found:', err?.message || 'Not found');
+        // No previous log exists, that's fine - use defaults
+      }
+    });
   }
 
   activeReportsCount = computed(() => 
@@ -200,38 +286,110 @@ export class MyMachinesComponent implements OnInit {
   private initializeUsageLogForm() {
     const currentDate = new Date();
     const machine = this.assignedMachine();
-    
+    const currentUser = this.authService.getCurrentUser();
+    const siteEngineer = currentUser?.name || currentUser?.email || 'Unknown';
+
+    // Check if machine is a drill rig
+    const machineType = machine?.type?.toLowerCase() || '';
+    this.isDrillRig.set(machineType.includes('drill') || machineType.includes('rig'));
+
     this.usageLogForm = this.fb.group({
       selectedMachineId: [machine?.id || '', [Validators.required]],
       logDate: [currentDate, [Validators.required]],
-      engineHours: ['', [Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]],
-      idleHours: ['', [Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]],
-      workingHours: ['', [Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]],
-      fuelConsumed: ['', [Validators.min(0)]],
+      siteEngineer: [{value: siteEngineer, disabled: true}],
+
+      // New: Start/End tracking
+      engineHourStart: [0, [Validators.required, Validators.min(0)]],
+      engineHourEnd: [0, [Validators.required, Validators.min(0)]],
+      drifterHourStart: [0, [Validators.min(0)]],
+      drifterHourEnd: [0, [Validators.min(0)]],
+
+      // Legacy fields (still needed for backward compatibility)
+      engineHours: [null, [Validators.required, Validators.min(0)]],
+      idleHours: [null, [Validators.required, Validators.min(0)]],
+      workingHours: [null, [Validators.required, Validators.min(0)]],
+      fuelConsumed: [null, [Validators.min(0)]],
       hasDowntime: [false],
-      downtimeHours: [''],
+      downtimeHours: [null],
       breakdownDescription: [''],
       remarks: ['']
     });
-    
+
+    // Setup hours calculations
+    this.setupHoursCalculations();
+
     // Add conditional validators for downtime fields
     this.usageLogForm.get('hasDowntime')?.valueChanges.subscribe(hasDowntime => {
       const downtimeHoursControl = this.usageLogForm.get('downtimeHours');
       const breakdownDescControl = this.usageLogForm.get('breakdownDescription');
-      
+
       if (hasDowntime) {
-        downtimeHoursControl?.setValidators([Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]);
+        downtimeHoursControl?.setValidators([Validators.required, Validators.min(0)]);
         breakdownDescControl?.setValidators([Validators.required, Validators.minLength(10)]);
       } else {
         downtimeHoursControl?.clearValidators();
         breakdownDescControl?.clearValidators();
       }
-      
+
       downtimeHoursControl?.updateValueAndValidity();
       breakdownDescControl?.updateValueAndValidity();
     });
   }
   
+  private setupHoursCalculations() {
+    // Watch engine hour changes
+    this.usageLogForm.get('engineHourStart')?.valueChanges.subscribe(() => this.calculateHourDeltas());
+    this.usageLogForm.get('engineHourEnd')?.valueChanges.subscribe(() => this.calculateHourDeltas());
+
+    // Watch drifter hour changes
+    this.usageLogForm.get('drifterHourStart')?.valueChanges.subscribe(() => this.calculateHourDeltas());
+    this.usageLogForm.get('drifterHourEnd')?.valueChanges.subscribe(() => this.calculateHourDeltas());
+
+    // Watch idle and working hours for validation
+    this.usageLogForm.get('idleHours')?.valueChanges.subscribe(() => this.checkHoursValidation());
+    this.usageLogForm.get('workingHours')?.valueChanges.subscribe(() => this.checkHoursValidation());
+  }
+
+  private calculateHourDeltas() {
+    const startEngine = this.usageLogForm.get('engineHourStart')?.value || 0;
+    const endEngine = this.usageLogForm.get('engineHourEnd')?.value || 0;
+    const engineDelta = Math.max(0, endEngine - startEngine);
+    this.engineHoursDelta.set(engineDelta);
+
+    if (this.isDrillRig()) {
+      const startDrifter = this.usageLogForm.get('drifterHourStart')?.value || 0;
+      const endDrifter = this.usageLogForm.get('drifterHourEnd')?.value || 0;
+      const drifterDelta = Math.max(0, endDrifter - startDrifter);
+      this.drifterHoursDelta.set(drifterDelta);
+    }
+
+    // Auto-update legacy engineHours field
+    this.usageLogForm.patchValue({ engineHours: engineDelta }, { emitEvent: false });
+
+    this.checkHoursValidation();
+  }
+
+  private checkHoursValidation() {
+    const engineDelta = this.engineHoursDelta();
+    const idleHours = this.usageLogForm.get('idleHours')?.value || 0;
+    const workingHours = this.usageLogForm.get('workingHours')?.value || 0;
+    const totalOperational = idleHours + workingHours;
+
+    const difference = Math.abs(engineDelta - totalOperational);
+
+    if (difference > 0.5 && engineDelta > 0) {
+      this.hoursValidationWarning.set(
+        `Note: Idle + Working hours (${totalOperational.toFixed(1)}) doesn't match Engine hours (${engineDelta.toFixed(1)})`
+      );
+    } else {
+      this.hoursValidationWarning.set(null);
+    }
+  }
+
+  toggleUsageHistory() {
+    this.showUsageHistory.set(!this.showUsageHistory());
+  }
+
   refreshData() {
     this.loadData();
   }
@@ -253,6 +411,15 @@ export class MyMachinesComponent implements OnInit {
         this.assignedMachine.set(machine);
         if (machine?.id) {
           this.loadUsageMetrics(machine.id);
+          // Load usage data from backend
+          this.loadUsageStatistics(machine.id);
+          this.loadUsageHistory();
+          // Update form with machine info first
+          this.initializeUsageLogForm();
+          // Ensure machine is pre-selected
+          this.usageLogForm.patchValue({ selectedMachineId: machine.id });
+          // Prefill engine hours from last log (must be after form init)
+          this.prefillFormWithLastLog(machine.id);
         }
         this.loadReports(currentUser.id);
       },
@@ -268,7 +435,7 @@ export class MyMachinesComponent implements OnInit {
     });
   }
 
-  private loadUsageMetrics(machineId: string) {
+  private loadUsageMetrics(machineId: number) {
     this.maintenanceService.getUsageMetrics(machineId).subscribe({
       next: (metricsArr) => {
         const m = metricsArr && metricsArr.length ? metricsArr[0] : null;
@@ -426,5 +593,41 @@ export class MyMachinesComponent implements OnInit {
   formatDate(date: Date | string): string {
     const d = new Date(date);
     return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  getUsageLogStatusClass(status: string): string {
+    switch (status) {
+      case 'SUBMITTED': return 'status-submitted';
+      case 'APPROVED': return 'status-approved';
+      case 'REJECTED': return 'status-rejected';
+      case 'DRAFT': return 'status-draft';
+      default: return '';
+    }
+  }
+
+  getUsageLogStatusLabel(status: string): string {
+    switch (status) {
+      case 'SUBMITTED': return 'Submitted';
+      case 'APPROVED': return 'Approved';
+      case 'REJECTED': return 'Rejected';
+      case 'DRAFT': return 'Draft';
+      default: return status;
+    }
+  }
+
+  navigateToUsageDetails(): void {
+    const machine = this.assignedMachine();
+    if (!machine?.id) return;
+
+    this.router.navigate(
+      ['/operator/machine-usage', machine.id],
+      {
+        queryParams: {
+          name: machine.name,
+          model: machine.model,
+          serial: machine.serialNumber
+        }
+      }
+    );
   }
 }

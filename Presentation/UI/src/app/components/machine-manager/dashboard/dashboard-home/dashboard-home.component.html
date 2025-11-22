@@ -89,7 +89,7 @@
         <p>Manage machine details, add new machines, edit or delete existing ones</p>
         <div class="action-status">{{ stats.totalMachines }} machines</div>
       </div>
-      
+
       <div class="action-card assignment-action" (click)="navigateToAssignmentRequests()">
         <div class="action-icon">
           <i class="material-icons">assignment</i>
@@ -103,8 +103,8 @@
         <div class="action-icon">
           <i class="material-icons">build</i>
         </div>
-        <h4>Accessories Inventory</h4>
-        <p>Track accessory items, manage stock levels, and handle low-stock alerts</p>
+        <h4>Drilling Components</h4>
+        <p>Track drilling component items, manage stock levels, and handle low-stock alerts</p>
         <div class="action-status" [class]="stats.lowStockAccessories > 0 ? 'alert' : ''">
           {{ stats.accessoriesTotal }} items
           <span *ngIf="stats.lowStockAccessories > 0"> • {{ stats.lowStockAccessories }} low</span>
@@ -122,6 +122,52 @@
     </div>
   </div>
 
-
+  <!-- Service Due Alerts Panel -->
+  @if (serviceDueAlerts.length > 0) {
+    <div class="service-alerts-panel">
+      <h3>
+        <i class="material-icons">warning</i>
+        Service Due Alerts
+      </h3>
+      <div class="alerts-container">
+        @for (alert of serviceDueAlerts; track alert.machineId + alert.serviceType) {
+          <div class="alert-item" [ngClass]="getUrgencyClass(alert.urgency)" (click)="navigateToMachineDetails(alert.machineId)">
+            <div class="alert-header">
+              <div class="alert-machine-info">
+                <i class="material-icons alert-icon">build_circle</i>
+                <div class="machine-details">
+                  <span class="machine-name">{{ alert.machineName }}</span>
+                  <span class="service-type">{{ alert.serviceType }} Service</span>
+                </div>
+              </div>
+              <div class="alert-urgency-badge" [ngClass]="getUrgencyClass(alert.urgency)">
+                @if (alert.urgency === 'overdue') {
+                  <span>OVERDUE</span>
+                } @else if (alert.urgency === 'critical') {
+                  <span>CRITICAL</span>
+                } @else if (alert.urgency === 'warning') {
+                  <span>WARNING</span>
+                } @else {
+                  <span>DUE SOON</span>
+                }
+              </div>
+            </div>
+            <div class="alert-details">
+              <div class="hours-remaining" [ngClass]="getUrgencyClass(alert.urgency)">
+                @if (alert.hoursRemaining < 0) {
+                  <span class="hours-value">{{ -alert.hoursRemaining }}</span>
+                  <span class="hours-label">hours overdue</span>
+                } @else {
+                  <span class="hours-value">{{ alert.hoursRemaining }}</span>
+                  <span class="hours-label">hours remaining</span>
+                }
+              </div>
+              <i class="material-icons chevron">chevron_right</i>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
 
 </div>

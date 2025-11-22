@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
 using Domain.Entities.MachineManagement;
+using Domain.Entities.MaintenanceOperations;
 using Domain.Entities.ProjectManagement;
 using Domain.Entities.UserManagement;
 using Domain.Entities.Notifications;
 using Application.DTOs.MachineManagement;
 using Application.Interfaces;
 using Application.Interfaces.UserManagement;
+using Application.Interfaces.MachineManagement;
 using System.Text.Json;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
@@ -24,17 +26,20 @@ namespace API.Controllers
         private readonly ILogger<MachinesController> _logger;
         private readonly INotificationRepository _notificationRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IMachineServiceConfigService _serviceConfigService;
 
         public MachinesController(
             ApplicationDbContext context,
             ILogger<MachinesController> logger,
             INotificationRepository notificationRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IMachineServiceConfigService serviceConfigService)
         {
             _context = context;
             _logger = logger;
             _notificationRepository = notificationRepository;
             _userRepository = userRepository;
+            _serviceConfigService = serviceConfigService;
         }
 
         // GET: api/machines
@@ -181,6 +186,37 @@ namespace API.Controllers
                 machine.RegionId = request.RegionId;
                 machine.SpecificationsJson = request.Specifications != null ? JsonSerializer.Serialize(request.Specifications) : null;
 
+                // Configure service intervals if provided
+                if (request.EngineServiceInterval.HasValue)
+                {
+                    machine.ConfigureServiceIntervals(
+                        request.EngineServiceInterval.Value,
+                        request.DrifterServiceInterval
+                    );
+                }
+
+                // Set current service hours if provided (use Update methods for initial values, not Increment)
+                if (request.CurrentEngineServiceHours.HasValue && request.CurrentEngineServiceHours.Value > 0)
+                {
+                    machine.UpdateCurrentEngineServiceHours(request.CurrentEngineServiceHours.Value);
+                }
+
+                if (request.CurrentDrifterServiceHours.HasValue && request.CurrentDrifterServiceHours.Value > 0)
+                {
+                    machine.UpdateCurrentDrifterServiceHours(request.CurrentDrifterServiceHours.Value);
+                }
+
+                // Set last service dates if provided
+                if (request.LastEngineServiceDate.HasValue)
+                {
+                    machine.UpdateLastEngineServiceDate(request.LastEngineServiceDate.Value);
+                }
+
+                if (request.LastDrifterServiceDate.HasValue)
+                {
+                    machine.UpdateLastDrifterServiceDate(request.LastDrifterServiceDate.Value);
+                }
+
                 if (request.ProjectId.HasValue)
                 {
                     var project = await _context.Projects.FindAsync(request.ProjectId.Value);
@@ -323,6 +359,8 @@ namespace API.Controllers
         [HttpDelete("{id}")]
         [Authorize(Policy = "ManageMachines")]
         public async Task<IActionResult> DeleteMachine(int id)
+        {
+            try
             {
                 var machine = await _context.Machines.FindAsync(id);
                 if (machine == null)
@@ -330,11 +368,54 @@ namespace API.Controllers
                     return NotFound($"Machine with ID {id} not found");
                 }
 
+                // Delete all related records first (due to Restrict foreign key constraints)
+
+                // 1. Delete usage logs
+                var usageLogs = await _context.Set<MachineUsageLog>()
+                    .Where(l => l.MachineId == id)
+                    .ToListAsync();
+
+                if (usageLogs.Any())
+                {
+                    _context.Set<MachineUsageLog>().RemoveRange(usageLogs);
+                    _logger.LogInformation($"Deleting {usageLogs.Count} usage logs for machine {id}");
+                }
+
+                // 2. Delete maintenance jobs
+                var maintenanceJobs = await _context.Set<MaintenanceJob>()
+                    .Where(j => j.MachineId == id)
+                    .ToListAsync();
+
+                if (maintenanceJobs.Any())
+                {
+                    _context.Set<MaintenanceJob>().RemoveRange(maintenanceJobs);
+                    _logger.LogInformation($"Deleting {maintenanceJobs.Count} maintenance jobs for machine {id}");
+                }
+
+                // 3. Delete maintenance reports
+                var maintenanceReports = await _context.Set<MaintenanceReport>()
+                    .Where(r => r.MachineId == id)
+                    .ToListAsync();
+
+                if (maintenanceReports.Any())
+                {
+                    _context.Set<MaintenanceReport>().RemoveRange(maintenanceReports);
+                    _logger.LogInformation($"Deleting {maintenanceReports.Count} maintenance reports for machine {id}");
+                }
+
+                // 4. Now delete the machine
                 _context.Machines.Remove(machine);
                 await _context.SaveChangesAsync();
 
-            return Ok();
+                _logger.LogInformation($"Successfully deleted machine {id} and all related records");
+                return Ok(new { message = $"Machine {machine.Name} and all related records deleted successfully" });
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error deleting machine {id}: {ex.Message}");
+                return StatusCode(500, new { error = "Failed to delete machine", details = ex.Message });
+            }
+        }
 
         [HttpPatch("{id}/status")]
         [Authorize(Policy = "ManageMachines")]
@@ -897,11 +978,154 @@ namespace API.Controllers
         {
             return _context.Machines.Any(e => e.Id == id);
         }
+
+        // ========== NEW SERVICE TRACKING ENDPOINTS ==========
+
+        /// <summary>
+        /// Get service status for a machine
+        /// </summary>
+        [HttpGet("{id}/service-status")]
+        public async Task<IActionResult> GetServiceStatus(int id)
+        {
+            try
+            {
+                var result = await _serviceConfigService.GetMachineServiceStatusAsync(id);
+
+                if (!result.IsSuccess)
+                {
+                    return NotFound(result.Error);
+                }
+
+                return base.Ok(result.Value);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving service status for machine {MachineId}", id);
+                return InternalServerError("An error occurred while retrieving service status");
+            }
+        }
+
+        /// <summary>
+        /// Get all service due alerts (Machine Manager)
+        /// </summary>
+        [HttpGet("service-alerts")]
+        // [Authorize(Roles = "MachineManager,MechanicalEngineer")]
+        public async Task<IActionResult> GetServiceAlerts()
+        {
+            try
+            {
+                var result = await _serviceConfigService.GetServiceDueAlertsAsync();
+
+                if (!result.IsSuccess)
+                {
+                    return BadRequest(result.Error);
+                }
+
+                return base.Ok(result.Value);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving service alerts");
+                return InternalServerError("An error occurred while retrieving service alerts");
+            }
+        }
+
+        /// <summary>
+        /// Get service alerts by region
+        /// </summary>
+        [HttpGet("regions/{regionId}/service-alerts")]
+        public async Task<IActionResult> GetServiceAlertsByRegion(int regionId)
+        {
+            try
+            {
+                var result = await _serviceConfigService.GetServiceDueAlertsByRegionAsync(regionId);
+
+                if (!result.IsSuccess)
+                {
+                    return BadRequest(result.Error);
+                }
+
+                return base.Ok(result.Value);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving service alerts for region {RegionId}", regionId);
+                return InternalServerError("An error occurred while retrieving service alerts");
+            }
+        }
+
+        /// <summary>
+        /// Reset service hours (Mechanical Engineer after completing service)
+        /// </summary>
+        [HttpPost("{id}/reset-service-hours")]
+        // [Authorize(Roles = "MechanicalEngineer")]
+        public async Task<IActionResult> ResetServiceHours(int id, [FromBody] ResetServiceHoursRequest request)
+        {
+            try
+            {
+                var machine = await _context.Machines.FindAsync(id);
+                if (machine == null)
+                {
+                    return NotFound($"Machine with ID {id} not found");
+                }
+
+                machine.ResetServiceHours(request.ResetEngine, request.ResetDrifter);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Service hours reset for machine {MachineId}. Engine: {ResetEngine}, Drifter: {ResetDrifter}",
+                    id, request.ResetEngine, request.ResetDrifter);
+
+                return base.Ok(new
+                {
+                    message = "Service hours reset successfully",
+                    currentEngineServiceHours = machine.CurrentEngineServiceHours,
+                    currentDrifterServiceHours = machine.CurrentDrifterServiceHours,
+                    lastEngineServiceDate = machine.LastEngineServiceDate,
+                    lastDrifterServiceDate = machine.LastDrifterServiceDate
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting service hours for machine {MachineId}", id);
+                return InternalServerError("An error occurred while resetting service hours");
+            }
+        }
+
+        /// <summary>
+        /// Update machine service configuration (Machine Manager)
+        /// </summary>
+        [HttpPatch("{id}/service-config")]
+        // [Authorize(Roles = "MachineManager")]
+        public async Task<IActionResult> UpdateServiceConfig(int id, [FromBody] UpdateMachineServiceConfigRequest request)
+        {
+            try
+            {
+                var result = await _serviceConfigService.UpdateServiceConfigAsync(id, request);
+
+                if (!result.IsSuccess)
+                {
+                    return BadRequest(result.Error);
+                }
+
+                return base.Ok(new { message = "Service configuration updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating service configuration for machine {MachineId}", id);
+                return InternalServerError("An error occurred while updating service configuration");
+            }
+        }
     }
 
     public class UpdateMachineStatusRequest
     {
         [Required]
         public string Status { get; set; } = string.Empty;
+    }
+
+    public class ResetServiceHoursRequest
+    {
+        public bool ResetEngine { get; set; }
+        public bool ResetDrifter { get; set; }
     }
 }

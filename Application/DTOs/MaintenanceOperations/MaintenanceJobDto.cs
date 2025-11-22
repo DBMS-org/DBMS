@@ -25,5 +25,14 @@ namespace Application.DTOs.MaintenanceOperations
         public List<string>? Symptoms { get; set; }
         public string? ErrorCodes { get; set; }
         public string? Severity { get; set; }
+
+        // NEW: Service & Materials
+        public bool IsServiceCompleted { get; set; }
+        public int? DrillBitsUsed { get; set; }
+        public string? DrillBitType { get; set; }
+        public int? DrillRodsUsed { get; set; }
+        public string? DrillRodType { get; set; }
+        public int? ShanksUsed { get; set; }
+        public string? ShankType { get; set; }
     }
 }

@@ -5,7 +5,8 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { MachineService } from '../../../../core/services/machine.service';
 import { User } from '../../../../core/models/user.model';
-import { Machine, MachineStatus } from '../../../../core/models/machine.model';
+import { Machine, MachineStatus, MachineType } from '../../../../core/models/machine.model';
+import { MachineServiceConfigService, ServiceDueAlertDto } from '../../../../services/machine-service-config.service';
 
 interface MachineStats {
   totalMachines: number;
@@ -30,6 +31,14 @@ interface Activity {
   description: string;
   timestamp: string;
   type: 'inventory' | 'assignment' | 'accessories' | 'maintenance' | 'alert';
+}
+
+interface ServiceAlert {
+  machineId: number;
+  machineName: string;
+  serviceType: 'Engine' | 'Drifter';
+  hoursRemaining: number;
+  urgency: 'good' | 'caution' | 'warning' | 'critical' | 'overdue';
 }
 
 @Component({
@@ -61,6 +70,8 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   };
 
   recentActivities: Activity[] = [];
+  serviceDueAlerts: ServiceAlert[] = [];
+  backendServiceAlerts: ServiceDueAlertDto[] = [];  // New: Backend alerts
 
   private userSubscription: Subscription = new Subscription();
   private machineSubscription: Subscription = new Subscription();
@@ -68,6 +79,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private machineService: MachineService,
+    private machineServiceConfigService: MachineServiceConfigService,
     private router: Router
   ) {}
 
@@ -75,8 +87,9 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
     });
-    
+
     this.loadMachineData();
+    this.loadServiceDueAlerts();  // New: Load from backend
   }
 
   ngOnDestroy() {
@@ -121,6 +134,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       this.machineService.getAllMachines().subscribe({
         next: (machines) => {
           this.calculateStatsFromMachines(machines);
+          this.calculateServiceAlerts(machines);
           this.isLoading = false;
         },
         error: (error) => {
@@ -154,19 +168,129 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     this.generateRecentActivities(machines);
   }
 
+  private calculateServiceAlerts(machines: Machine[]) {
+    const alerts: ServiceAlert[] = [];
+
+    machines.forEach(machine => {
+      // Check engine service
+      if (machine.engineServiceInterval && machine.engineServiceInterval > 0) {
+        const currentHours = machine.currentEngineServiceHours || 0;
+        const interval = machine.engineServiceInterval;
+        const hoursRemaining = interval - currentHours;
+
+        // Only show alerts if service is due within 100 hours or overdue
+        if (hoursRemaining <= 100) {
+          alerts.push({
+            machineId: machine.id,
+            machineName: `${machine.type} ${machine.name}`,
+            serviceType: 'Engine',
+            hoursRemaining: hoursRemaining,
+            urgency: this.getServiceUrgency(hoursRemaining)
+          });
+        }
+      }
+
+      // Check drifter service (only for drill rigs)
+      if (machine.type === MachineType.DRILL_RIG && machine.drifterServiceInterval && machine.drifterServiceInterval > 0) {
+        const currentHours = machine.currentDrifterServiceHours || 0;
+        const interval = machine.drifterServiceInterval;
+        const hoursRemaining = interval - currentHours;
+
+        // Only show alerts if service is due within 100 hours or overdue
+        if (hoursRemaining <= 100) {
+          alerts.push({
+            machineId: machine.id,
+            machineName: `${machine.type} ${machine.name}`,
+            serviceType: 'Drifter',
+            hoursRemaining: hoursRemaining,
+            urgency: this.getServiceUrgency(hoursRemaining)
+          });
+        }
+      }
+    });
+
+    // Sort by urgency (overdue first, then by hours remaining)
+    this.serviceDueAlerts = alerts.sort((a, b) => {
+      // Overdue items first
+      if (a.hoursRemaining < 0 && b.hoursRemaining >= 0) return -1;
+      if (a.hoursRemaining >= 0 && b.hoursRemaining < 0) return 1;
+      // Then sort by hours remaining (ascending)
+      return a.hoursRemaining - b.hoursRemaining;
+    });
+  }
+
+  /**
+   * Load service due alerts from backend API
+   * NEW: Uses real backend API instead of calculating from machines
+   */
+  private loadServiceDueAlerts() {
+    this.machineSubscription.add(
+      this.machineServiceConfigService.getServiceDueAlerts().subscribe({
+        next: (alerts: ServiceDueAlertDto[]) => {
+          this.backendServiceAlerts = alerts;
+
+          // Convert backend alerts to frontend format
+          this.serviceDueAlerts = alerts.map(alert => ({
+            machineId: alert.machineId,
+            machineName: alert.machineName,
+            serviceType: alert.serviceType as 'Engine' | 'Drifter',
+            hoursRemaining: alert.hoursRemaining,
+            urgency: this.mapUrgencyLevelToFrontend(alert.urgencyLevel)
+          }));
+
+          // Update critical alerts count
+          this.systemMetrics.criticalAlerts = alerts.filter(a =>
+            a.urgencyLevel === 'RED' || a.urgencyLevel === 'ORANGE'
+          ).length;
+        },
+        error: (error) => {
+          console.error('Error loading service due alerts:', error);
+          // Fallback to calculating from machines if API fails
+          this.loadMachinesDirectly();
+        }
+      })
+    );
+  }
+
+  /**
+   * Map backend urgency level to frontend urgency
+   */
+  private mapUrgencyLevelToFrontend(urgencyLevel: string): 'good' | 'caution' | 'warning' | 'critical' | 'overdue' {
+    switch (urgencyLevel) {
+      case 'RED':
+        return 'overdue';  // < 0 hours (overdue) or critically low
+      case 'ORANGE':
+        return 'critical'; // < 20 hours
+      case 'YELLOW':
+        return 'warning';  // < 50 hours
+      case 'GREEN':
+        return 'caution';  // < 100 hours
+      default:
+        return 'good';
+    }
+  }
+
+  private getServiceUrgency(hoursRemaining: number): 'good' | 'caution' | 'warning' | 'critical' | 'overdue' {
+    if (hoursRemaining < 0) return 'overdue';
+    if (hoursRemaining < 20) return 'critical';
+    if (hoursRemaining < 50) return 'warning';
+    if (hoursRemaining < 100) return 'caution';
+    return 'good';
+  }
+
   private generateRecentActivities(machines: Machine[]) {
     const activities: Activity[] = [];
-    
+
     // Add activities based on recent machines (sorted by creation date)
     const recentMachines = machines
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 2);
-    
+
     recentMachines.forEach((machine, index) => {
       const timeDiff = Date.now() - new Date(machine.createdAt).getTime();
       const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
       const daysAgo = Math.floor(hoursAgo / 24);
-      
+
       let timeText = '';
       if (daysAgo > 0) {
         timeText = `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
@@ -175,7 +299,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       } else {
         timeText = 'Recently';
       }
-      
+
       activities.push({
         icon: 'inventory_2',
         title: 'Machine Added',
@@ -263,14 +387,24 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   }
 
   navigateToAccessoriesInventory() {
-    this.router.navigate(['/machine-manager/accessories-inventory']);
+    this.router.navigate(['/machine-manager/drilling-components']);
   }
 
   navigateToMaintenanceManagement() {
     this.router.navigate(['/machine-manager/maintenance-management']);
   }
 
+  navigateToMachineDetails(machineId: number) {
+    this.router.navigate(['/machine-manager/machine-inventory'], {
+      queryParams: { selectedMachineId: machineId }
+    });
+  }
+
   getActivityTypeClass(type: string): string {
     return `activity-${type}`;
+  }
+
+  getUrgencyClass(urgency: string): string {
+    return `urgency-${urgency}`;
   }
 }

@@ -1,0 +1,291 @@
+<div class="machine-usage-page">
+  <!-- Header -->
+  <div class="page-header">
+    <button mat-icon-button (click)="goBack()" class="back-btn">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="header-content">
+      <h1>Machine Usage</h1>
+      @if (machineName()) {
+        <p class="subtitle">{{ machineName() }}</p>
+      }
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading machine data...</p>
+    </div>
+  } @else {
+    <!-- Machine Info Card -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>precision_manufacturing</mat-icon>
+          Machine Information
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Machine Name:</label>
+            <span>{{ machineName() || 'N/A' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Model:</label>
+            <span>{{ machineModel() || 'N/A' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Serial Number:</label>
+            <span>{{ serialNumber() || 'N/A' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Service Status Card -->
+    @if (machine()?.engineServiceInterval) {
+      <mat-card class="service-status-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>build_circle</mat-icon>
+            Service Status
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="service-grid">
+            <!-- Engine Service -->
+            <div class="service-item" [class]="getServiceUrgencyClass(engineServiceProgress())">
+              <div class="service-header">
+                <mat-icon>settings</mat-icon>
+                <span class="service-title">Engine Service</span>
+              </div>
+              <div class="service-details">
+                <div class="progress-info">
+                  <span>{{ machine()?.currentEngineServiceHours || 0 }} / {{ machine()?.engineServiceInterval }} hrs</span>
+                  <span class="remaining">{{ engineServiceRemaining() | number:'1.0-0' }} hrs remaining</span>
+                </div>
+                <mat-progress-bar
+                  [value]="engineServiceProgress()"
+                  [color]="engineServiceProgress() >= 90 ? 'warn' : 'primary'">
+                </mat-progress-bar>
+              </div>
+            </div>
+
+            <!-- Drifter Service (only for drill rigs) -->
+            @if (hasDrifterService()) {
+              <div class="service-item" [class]="getServiceUrgencyClass(drifterServiceProgress())">
+                <div class="service-header">
+                  <mat-icon>engineering</mat-icon>
+                  <span class="service-title">Drifter Service</span>
+                </div>
+                <div class="service-details">
+                  <div class="progress-info">
+                    <span>{{ machine()?.currentDrifterServiceHours || 0 }} / {{ machine()?.drifterServiceInterval }} hrs</span>
+                    <span class="remaining">{{ drifterServiceRemaining() | number:'1.0-0' }} hrs remaining</span>
+                  </div>
+                  <mat-progress-bar
+                    [value]="drifterServiceProgress()"
+                    [color]="drifterServiceProgress() >= 90 ? 'warn' : 'primary'">
+                  </mat-progress-bar>
+                </div>
+              </div>
+            }
+          </div>
+          <p class="service-note">
+            <mat-icon>info</mat-icon>
+            Service hours are automatically reset when completing a service maintenance job
+          </p>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Usage Statistics Card (Last 30 Days) -->
+    <mat-card class="metrics-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>analytics</mat-icon>
+          Usage Statistics (Last 30 Days)
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-value">{{ totalEngineHours() | number:'1.1-1' }}</div>
+            <div class="metric-label">Total Engine Hours</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">{{ totalWorkingHours() | number:'1.1-1' }}</div>
+            <div class="metric-label">Working Hours</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">{{ totalIdleHours() | number:'1.1-1' }}</div>
+            <div class="metric-label">Idle Hours</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">{{ totalFuelConsumed() | number:'1.0-0' }} L</div>
+            <div class="metric-label">Fuel Consumed</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">{{ totalDowntimeHours() | number:'1.1-1' }}</div>
+            <div class="metric-label">Downtime Hours</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">{{ averageDailyHours() | number:'1.1-1' }}</div>
+            <div class="metric-label">Avg Daily Hours</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-divider></mat-divider>
+
+    <!-- History Filter Buttons -->
+    <div class="history-filter">
+      <button mat-stroked-button
+              [class.active]="activeView() === 'all'"
+              (click)="setActiveView('all')">
+        <mat-icon>view_list</mat-icon>
+        Show All
+      </button>
+      <button mat-stroked-button
+              [class.active]="activeView() === 'jobs'"
+              (click)="setActiveView('jobs')">
+        <mat-icon>build</mat-icon>
+        Job History
+      </button>
+      <button mat-stroked-button
+              [class.active]="activeView() === 'usage'"
+              (click)="setActiveView('usage')">
+        <mat-icon>timeline</mat-icon>
+        Usage Logs
+      </button>
+    </div>
+
+    <!-- Maintenance Job History Section -->
+    @if (activeView() === 'all' || activeView() === 'jobs') {
+    <div class="maintenance-history-section">
+      <div class="section-header">
+        <mat-icon>build</mat-icon>
+        <h2>Maintenance Job History</h2>
+      </div>
+
+      @if (isLoadingJobs()) {
+        <div class="loading-container small">
+          <mat-spinner diameter="30"></mat-spinner>
+          <p>Loading maintenance history...</p>
+        </div>
+      } @else if (maintenanceJobs().length === 0) {
+        <div class="empty-state">
+          <mat-icon>history</mat-icon>
+          <p>No maintenance jobs recorded for this machine</p>
+        </div>
+      } @else {
+        <mat-accordion>
+          @for (job of maintenanceJobs(); track job.id) {
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <span class="job-status-chip" [class]="getStatusClass(job.status)">
+                    {{ job.status }}
+                  </span>
+                  <span class="job-type">{{ getTypeLabel(job.type) }}</span>
+                </mat-panel-title>
+                <mat-panel-description>
+                  {{ formatDate(job.completedDate || job.scheduledDate) }}
+                  @if (job.actualHours) {
+                    <span class="hours-badge">{{ job.actualHours }}h</span>
+                  }
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="job-details">
+                <div class="detail-row">
+                  <label>Reason:</label>
+                  <span>{{ job.reason || 'N/A' }}</span>
+                </div>
+
+                @if (job.observations) {
+                  <div class="detail-row">
+                    <label>Observations:</label>
+                    <span>{{ job.observations }}</span>
+                  </div>
+                }
+
+                @if (job.estimatedHours || job.actualHours) {
+                  <div class="detail-row hours-row">
+                    <div>
+                      <label>Estimated:</label>
+                      <span>{{ job.estimatedHours || 0 }} hours</span>
+                    </div>
+                    <div>
+                      <label>Actual:</label>
+                      <span>{{ job.actualHours || 0 }} hours</span>
+                    </div>
+                  </div>
+                }
+
+                @if (parsePartsReplaced(job.partsReplaced).length > 0) {
+                  <div class="detail-row parts-section">
+                    <label>Parts Replaced:</label>
+                    <div class="parts-chips">
+                      @for (part of parsePartsReplaced(job.partsReplaced); track part) {
+                        <mat-chip>{{ part }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (job.drillBitsUsed || job.drillRodsUsed || job.shanksUsed) {
+                  <div class="detail-row materials-section">
+                    <label>Materials Used:</label>
+                    <div class="materials-grid">
+                      @if (job.drillBitsUsed) {
+                        <span>Drill Bits: {{ job.drillBitsUsed }} ({{ job.drillBitType || 'N/A' }})</span>
+                      }
+                      @if (job.drillRodsUsed) {
+                        <span>Drill Rods: {{ job.drillRodsUsed }} ({{ job.drillRodType || 'N/A' }})</span>
+                      }
+                      @if (job.shanksUsed) {
+                        <span>Shanks: {{ job.shanksUsed }} ({{ job.shankType || 'N/A' }})</span>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (job.isServiceCompleted) {
+                  <div class="service-completed-badge">
+                    <mat-icon>check_circle</mat-icon>
+                    Service Completed - Hours Reset
+                  </div>
+                }
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      }
+    </div>
+    }
+
+    @if (activeView() === 'all') {
+      <mat-divider></mat-divider>
+    }
+
+    <!-- Usage Logs Section -->
+    @if (activeView() === 'all' || activeView() === 'usage') {
+    <div class="usage-logs-section">
+      <div class="section-header">
+        <mat-icon>timeline</mat-icon>
+        <h2>Usage Log History</h2>
+      </div>
+      @if (machineId()) {
+        <app-usage-log-viewer
+          [machineId]="machineId()!"
+          [displayDays]="30">
+        </app-usage-log-viewer>
+      }
+    </div>
+    }
+  }
+</div>

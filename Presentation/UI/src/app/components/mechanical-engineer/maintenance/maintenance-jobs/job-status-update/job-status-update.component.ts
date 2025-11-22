@@ -120,8 +120,8 @@ export interface JobStatusUpdateData {
               <!-- Actual Hours (required for Completed status) -->
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Actual Hours</mat-label>
-                <input matInput 
-                       type="number" 
+                <input matInput
+                       type="number"
                        formControlName="actualHours"
                        step="0.5"
                        min="0"
@@ -138,6 +138,107 @@ export interface JobStatusUpdateData {
                   <mat-error>Hours cannot exceed 24</mat-error>
                 }
               </mat-form-field>
+
+              <!-- Service Completion Checkboxes -->
+              <div class="service-completion-section">
+                <h5>
+                  <mat-icon>build_circle</mat-icon>
+                  Service Completion
+                </h5>
+                <p class="section-hint">Check if this job completes a scheduled service - hours will be reset automatically</p>
+
+                <mat-checkbox formControlName="isEngineServiceCompleted" class="service-completion-checkbox">
+                  <strong>Engine Service Completed</strong>
+                  <span class="checkbox-hint">Resets engine service hours to 0</span>
+                </mat-checkbox>
+
+                <mat-checkbox formControlName="isDrifterServiceCompleted" class="service-completion-checkbox">
+                  <strong>Drifter Service Completed</strong>
+                  <span class="checkbox-hint">Resets drifter service hours to 0 (for drill rigs only)</span>
+                </mat-checkbox>
+
+                <mat-checkbox formControlName="isServiceCompleted" class="service-completion-checkbox materials-checkbox">
+                  <strong>Log Consumed Drilling Components</strong>
+                  <span class="checkbox-hint">Check to log drill bits, rods, and shanks used</span>
+                </mat-checkbox>
+              </div>
+
+              <!-- Consumed Drilling Components (shown only if service completed) -->
+              @if (statusForm.get('isServiceCompleted')?.value) {
+                <div class="drilling-components-section">
+                  <h5>
+                    <mat-icon>build_circle</mat-icon>
+                    Consumed Drilling Components
+                  </h5>
+                  <p class="section-hint">Enter the drilling components used during this service</p>
+
+                  <!-- Drill Bits -->
+                  <div class="component-row">
+                    <mat-form-field appearance="outline" class="component-quantity">
+                      <mat-label>Drill Bits Used</mat-label>
+                      <input matInput
+                             type="number"
+                             formControlName="drillBitsUsed"
+                             min="0"
+                             placeholder="0">
+                      @if (statusForm.get('drillBitsUsed')?.hasError('min')) {
+                        <mat-error>Cannot be negative</mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="component-type">
+                      <mat-label>Drill Bit Type</mat-label>
+                      <input matInput
+                             formControlName="drillBitType"
+                             placeholder="e.g., Tungsten Carbide 45mm">
+                      <mat-hint>Optional: Specify drill bit type/size</mat-hint>
+                    </mat-form-field>
+                  </div>
+
+                  <!-- Drill Rods -->
+                  <div class="component-row">
+                    <mat-form-field appearance="outline" class="component-quantity">
+                      <mat-label>Drill Rods Used</mat-label>
+                      <input matInput
+                             type="number"
+                             formControlName="drillRodsUsed"
+                             min="0"
+                             placeholder="0">
+                      @if (statusForm.get('drillRodsUsed')?.hasError('min')) {
+                        <mat-error>Cannot be negative</mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="component-type">
+                      <mat-label>Drill Rod Type</mat-label>
+                      <input matInput
+                             formControlName="drillRodType"
+                             placeholder="e.g., Steel 3.6m">
+                      <mat-hint>Optional: Specify drill rod type/length</mat-hint>
+                    </mat-form-field>
+                  </div>
+
+                  <!-- Shanks -->
+                  <div class="component-row">
+                    <mat-form-field appearance="outline" class="component-quantity">
+                      <mat-label>Shanks Used</mat-label>
+                      <input matInput
+                             type="number"
+                             formControlName="shanksUsed"
+                             min="0"
+                             placeholder="0">
+                      @if (statusForm.get('shanksUsed')?.hasError('min')) {
+                        <mat-error>Cannot be negative</mat-error>
+                      }
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="component-type">
+                      <mat-label>Shank Type</mat-label>
+                      <input matInput
+                             formControlName="shankType"
+                             placeholder="e.g., R32 Thread">
+                      <mat-hint>Optional: Specify shank type/threading</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+              }
             </div>
           }
         </form>
@@ -227,6 +328,80 @@ export interface JobStatusUpdateData {
       font-weight: 500;
     }
 
+    .service-completion-checkbox {
+      display: block;
+      margin: 16px 0;
+      padding: 12px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+    }
+
+    .checkbox-hint {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+      font-weight: normal;
+    }
+
+    .service-completion-section {
+      margin-top: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+      border-left: 4px solid #4caf50;
+      border-radius: 4px;
+    }
+
+    .service-completion-section h5 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #2e7d32;
+    }
+
+    .drilling-components-section {
+      margin-top: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, #f8f5ff 0%, #fef9ff 100%);
+      border-left: 4px solid #667eea;
+      border-radius: 4px;
+    }
+
+    .drilling-components-section h5 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .section-hint {
+      margin: 0 0 16px 0;
+      font-size: 13px;
+      color: #666;
+      font-style: italic;
+    }
+
+    .component-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .component-quantity {
+      width: 100%;
+    }
+
+    .component-type {
+      width: 100%;
+    }
+
     /* Status Chips */
     .status-scheduled {
       background-color: #e3f2fd;
@@ -302,7 +477,16 @@ export class JobStatusUpdateComponent implements OnInit {
     this.statusForm = this.fb.group({
       status: [this.job().status, [Validators.required]],
       observations: [this.job().observations || '', [Validators.maxLength(1000)]],
-      actualHours: [this.job().actualHours || null]
+      actualHours: [this.job().actualHours || null],
+      isServiceCompleted: [this.job().isServiceCompleted || false],
+      isEngineServiceCompleted: [this.job().isEngineServiceCompleted || false],
+      isDrifterServiceCompleted: [this.job().isDrifterServiceCompleted || false],
+      drillBitsUsed: [this.job().drillBitsUsed || 0, [Validators.min(0)]],
+      drillBitType: [this.job().drillBitType || ''],
+      drillRodsUsed: [this.job().drillRodsUsed || 0, [Validators.min(0)]],
+      drillRodType: [this.job().drillRodType || ''],
+      shanksUsed: [this.job().shanksUsed || 0, [Validators.min(0)]],
+      shankType: [this.job().shankType || '']
     });
   }
 
@@ -342,12 +526,40 @@ export class JobStatusUpdateComponent implements OnInit {
 
       // Use different endpoint based on status
       if (newStatus === MaintenanceStatus.COMPLETED) {
-        // Complete endpoint requires observations, actualHours, and partsReplaced
+        // Complete endpoint requires observations, actualHours, partsReplaced, and consumed components
+        const completionData: any = {
+          observations: formValue.observations,
+          actualHours: formValue.actualHours,
+          partsReplaced: this.partsReplaced(),
+          isServiceCompleted: formValue.isServiceCompleted,
+          isEngineServiceCompleted: formValue.isEngineServiceCompleted,
+          isDrifterServiceCompleted: formValue.isDrifterServiceCompleted
+        };
+
+        // Add consumed drilling components if service was completed
+        if (formValue.isServiceCompleted) {
+          completionData.drillBitsUsed = formValue.drillBitsUsed || 0;
+          completionData.drillBitType = formValue.drillBitType || '';
+          completionData.drillRodsUsed = formValue.drillRodsUsed || 0;
+          completionData.drillRodType = formValue.drillRodType || '';
+          completionData.shanksUsed = formValue.shanksUsed || 0;
+          completionData.shankType = formValue.shankType || '';
+        }
+
         result = await this.maintenanceService.completeMaintenanceJob(
           this.job().id,
-          formValue.observations,
-          formValue.actualHours,
-          this.partsReplaced()
+          completionData.observations,
+          completionData.actualHours,
+          completionData.partsReplaced,
+          completionData.isServiceCompleted,
+          completionData.isEngineServiceCompleted,
+          completionData.isDrifterServiceCompleted,
+          completionData.drillBitsUsed,
+          completionData.drillBitType,
+          completionData.drillRodsUsed,
+          completionData.drillRodType,
+          completionData.shanksUsed,
+          completionData.shankType
         ).toPromise();
       } else {
         // Status update endpoint only accepts status

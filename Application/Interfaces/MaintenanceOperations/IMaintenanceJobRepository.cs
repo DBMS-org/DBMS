@@ -56,5 +56,12 @@ namespace Application.Interfaces.MaintenanceOperations
 
         // Maintenance history
         Task<IEnumerable<MaintenanceJob>> GetMaintenanceHistoryByMachineIdAsync(int machineId, int limit = 10);
+
+        // Service alert jobs
+        Task<MaintenanceJob?> GetPendingServiceJobByMachineAsync(int machineId, string serviceType);
+        Task<bool> CancelPendingServiceJobAsync(int machineId, string serviceType, string reason);
+
+        // Get all jobs with optional filters
+        Task<IEnumerable<MaintenanceJob>> GetAllJobsAsync(string? status = null, string? type = null, int? machineId = null, DateTime? startDate = null, DateTime? endDate = null);
     }
 }

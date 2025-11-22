@@ -136,8 +136,18 @@ namespace Domain.Entities.MaintenanceOperations
         /// </summary>
         public void MarkInProgress()
         {
-            if (Status != ReportStatus.Acknowledged && Status != ReportStatus.Reported)
-                throw new InvalidOperationException("Only acknowledged or reported issues can be marked in progress.");
+            // Allow transition to InProgress from any status except InProgress, Resolved, or Closed
+            // This provides flexibility for engineers to start work on reports in various states
+            if (Status == ReportStatus.InProgress)
+            {
+                // Already in progress, no action needed
+                return;
+            }
+
+            if (Status == ReportStatus.Resolved || Status == ReportStatus.Closed)
+            {
+                throw new InvalidOperationException("Cannot mark resolved or closed issues as in progress. Please reopen the issue first.");
+            }
 
             Status = ReportStatus.InProgress;
             InProgressAt = DateTime.UtcNow;

@@ -1,33 +1,23 @@
-<!-- Maintenance Management Component -->
 <div class="maintenance-management">
   <!-- Page Header -->
   <div class="maintenance-header">
     <h1>Maintenance Management</h1>
     <div class="header-actions">
-      <button
-        class="schedule-btn"
-        (click)="openScheduleModal()">
-        <i class="material-icons">add</i>
-        Schedule Maintenance
-      </button>
-      <button
-        class="refresh-btn"
-        (click)="refreshData()"
-        [disabled]="isLoading">
+      <button class="refresh-btn" (click)="refreshData()" [disabled]="isLoading">
         <i class="material-icons">refresh</i>
         Refresh
       </button>
     </div>
   </div>
 
-  <!-- Error notification display -->
+  <!-- Error notification -->
   @if (errorMessage) {
     <div class="error-alert">
       <div class="error-content">
         <i class="material-icons">error_outline</i>
         <span>{{ errorMessage }}</span>
       </div>
-      <button class="error-close" (click)="clearError()" type="button" aria-label="Close error">
+      <button class="error-close" (click)="clearError()" type="button">
         <i class="material-icons">close</i>
       </button>
     </div>
@@ -36,944 +26,188 @@
   <!-- Statistics Grid -->
   <div class="stats-grid">
     <div class="stat-card scheduled">
-      <div class="stat-icon">
-        <i class="material-icons">event</i>
-      </div>
+      <div class="stat-icon"><i class="material-icons">event</i></div>
       <div class="stat-content">
-        <h3>{{ statistics.scheduled }}</h3>
+        <h3>{{ statistics.scheduledJobs }}</h3>
         <p>Scheduled</p>
       </div>
     </div>
-
     <div class="stat-card in-progress">
-      <div class="stat-icon">
-        <i class="material-icons">build_circle</i>
-      </div>
+      <div class="stat-icon"><i class="material-icons">build_circle</i></div>
       <div class="stat-content">
-        <h3>{{ statistics.inProgress }}</h3>
+        <h3>{{ statistics.inProgressJobs }}</h3>
         <p>In Progress</p>
       </div>
     </div>
-
     <div class="stat-card overdue">
-      <div class="stat-icon">
-        <i class="material-icons">error</i>
-      </div>
+      <div class="stat-icon"><i class="material-icons">error</i></div>
       <div class="stat-content">
-        <h3>{{ statistics.overdue }}</h3>
+        <h3>{{ statistics.overdueJobs }}</h3>
         <p>Overdue</p>
       </div>
     </div>
-
     <div class="stat-card completed">
-      <div class="stat-icon">
-        <i class="material-icons">check_circle</i>
-      </div>
+      <div class="stat-icon"><i class="material-icons">check_circle</i></div>
       <div class="stat-content">
-        <h3>{{ statistics.completed }}</h3>
+        <h3>{{ statistics.completedJobs }}</h3>
         <p>Completed</p>
       </div>
     </div>
   </div>
 
+  <!-- Service Alerts Section -->
+  @if (serviceAlerts.length > 0) {
+    <div class="service-alerts-section">
+      <h2><i class="material-icons">warning</i> Service Due Alerts</h2>
+      <div class="alerts-grid">
+        @for (alert of serviceAlerts.slice(0, 4); track alert.machineId) {
+          <div class="alert-card" [ngClass]="getAlertLevelClass(alert.alertLevel)">
+            <div class="alert-header">
+              <span class="machine-name">{{ alert.machineName }}</span>
+              <span class="alert-badge">{{ alert.alertLevel }}</span>
+            </div>
+            <div class="alert-body">
+              <p><strong>{{ alert.serviceType }}</strong></p>
+              <p>{{ alert.currentHours | number:'1.0-0' }} / {{ alert.intervalHours | number:'1.0-0' }} hrs</p>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="alert.percentageUsed"></div>
+              </div>
+              <p class="remaining">{{ alert.hoursRemaining | number:'1.0-0' }} hrs remaining</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
   <!-- Search and Filter Section -->
   <div class="search-filter-section">
     <div class="search-box">
-      <input
-        type="text"
-        class="form-control"
-        [(ngModel)]="searchTerm"
-        (input)="applyFilters()"
-        placeholder="Search maintenance records..." />
+      <input type="text" class="form-control" [(ngModel)]="searchTerm"
+             (input)="onSearchChange()" placeholder="Search by machine, serial, project..." />
     </div>
-
     <div class="filter-section">
-      <div class="filter-group">
-        <label class="filter-label">Status</label>
-        <select
-          class="form-select"
-          [(ngModel)]="selectedStatus"
-          (ngModelChange)="onStatusFilterChange()">
-          <option value="">All Status</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="overdue">Overdue</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label class="filter-label">Type</label>
-        <select
-          class="form-select"
-          [(ngModel)]="selectedType"
-          (ngModelChange)="onTypeFilterChange()">
-          <option value="">All Types</option>
-          <option value="preventive">Preventive</option>
-          <option value="corrective">Corrective</option>
-          <option value="emergency">Emergency</option>
-          <option value="inspection">Inspection</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <label class="filter-label">Priority</label>
-        <select
-          class="form-select"
-          [(ngModel)]="selectedPriority"
-          (ngModelChange)="onPriorityFilterChange()">
-          <option value="">All Priorities</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="critical">Critical</option>
-        </select>
-      </div>
+      <select class="form-select" [(ngModel)]="selectedStatus" (ngModelChange)="onStatusFilterChange()" title="Filter by status">
+        <option value="">All Status</option>
+        <option value="Scheduled">Scheduled</option>
+        <option value="InProgress">In Progress</option>
+        <option value="Completed">Completed</option>
+        <option value="Overdue">Overdue</option>
+      </select>
+      <select class="form-select" [(ngModel)]="selectedType" (ngModelChange)="onTypeFilterChange()" title="Filter by type">
+        <option value="">All Types</option>
+        <option value="Preventive">Preventive</option>
+        <option value="Corrective">Corrective</option>
+        <option value="Emergency">Emergency</option>
+      </select>
+      <button class="clear-btn" (click)="clearAllFilters()">Clear Filters</button>
     </div>
   </div>
 
-  <!-- Modern Table Section -->
-  <div class="table-section">
-    <div class="table-header">
-      <div class="table-title">
-        <i class="material-icons">view_list</i>
-        <span>Maintenance Records</span>
-        <span class="request-count">{{ filteredMaintenanceRecords.length }}</span>
-      </div>
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading maintenance data...</p>
     </div>
+  }
 
-    <!-- Loading State -->
-    @if (isLoading) {
-      <div class="loading-state">
-        <div class="loader-spinner"></div>
-        <p>Loading maintenance records...</p>
-      </div>
-    }
+  <!-- Empty State -->
+  @if (!isLoading && filteredJobs.length === 0) {
+    <div class="empty-state">
+      <i class="material-icons">inbox</i>
+      <h3>No Maintenance Jobs Found</h3>
+      <p>No maintenance jobs match your current filters.</p>
+    </div>
+  }
 
-    <!-- Empty State -->
-    @if (!isLoading && filteredMaintenanceRecords.length === 0) {
-      <div class="empty-state">
-        <div class="empty-icon">
-          <i class="material-icons">inbox</i>
-        </div>
-        <h3>No Maintenance Records Found</h3>
-        <p>
-          @if (hasActiveFilters() || searchTerm) {
-            No maintenance records match your current filters.
-          } @else {
-            No maintenance activities have been scheduled yet.
-          }
-        </p>
-        @if (!hasActiveFilters() && !searchTerm) {
-          <button class="empty-action-btn" (click)="openScheduleModal()" type="button">
-            Schedule First Maintenance
-          </button>
-        } @else {
-          <button class="empty-action-btn" (click)="clearAllFilters()" type="button">
-            Clear Filters
-          </button>
-        }
-      </div>
-    }
-
-    <!-- Modern Table -->
-    @if (!isLoading && filteredMaintenanceRecords.length > 0) {
-      <div class="maintenance-table-wrapper">
-        <p-table
-          [value]="filteredMaintenanceRecords"
-          styleClass="modern-table"
-          responsiveLayout="scroll"
-          [paginator]="true"
-          [rows]="10"
-          [rowsPerPageOptions]="[10, 25, 50]"
-          [showCurrentPageReport]="true"
-          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-          [rowHover]="true"
-          dataKey="id">
-
-          <ng-template pTemplate="header">
+  <!-- Jobs Table -->
+  @if (!isLoading && filteredJobs.length > 0) {
+    <div class="table-container">
+      <table class="jobs-table">
+        <thead>
+          <tr>
+            <th (click)="sortBy('machineName')" class="sortable">
+              Machine
+              @if (sortField === 'machineName') {
+                <i class="material-icons">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</i>
+              }
+            </th>
+            <th>Serial No.</th>
+            <th>Project</th>
+            <th (click)="sortBy('type')" class="sortable">Type</th>
+            <th (click)="sortBy('status')" class="sortable">Status</th>
+            <th>Priority</th>
+            <th (click)="sortBy('scheduledDate')" class="sortable">Scheduled</th>
+            <th>Assigned To</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (job of paginatedJobs; track job.id) {
             <tr>
-              <th pSortableColumn="machineName" class="col-machine">
-                Machine
-                <p-sortIcon field="machineName"></p-sortIcon>
-              </th>
-              <th pSortableColumn="type" class="col-type">
-                Type
-                <p-sortIcon field="type"></p-sortIcon>
-              </th>
-              <th pSortableColumn="priority" class="col-priority">
-                Priority
-                <p-sortIcon field="priority"></p-sortIcon>
-              </th>
-              <th pSortableColumn="scheduledDate" class="col-date">
-                Scheduled Date
-                <p-sortIcon field="scheduledDate"></p-sortIcon>
-              </th>
-              <th pSortableColumn="status" class="col-status">
-                Status
-                <p-sortIcon field="status"></p-sortIcon>
-              </th>
-              <th class="col-technician">Technician</th>
-              <th class="col-duration">Duration</th>
-              <th class="col-actions">Actions</th>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="body" let-record>
-            <tr [ngClass]="{'overdue-row': record.status === 'overdue', 'critical-row': record.priority === 'critical'}">
-              <td class="col-machine">
-                <div class="machine-cell">
-                  <i class="material-icons">precision_manufacturing</i>
-                  <div class="machine-info">
-                    <span class="machine-name">{{ record.machineName }}</span>
-                    <span class="machine-detail">{{ record.machineModel }} - {{ record.rigNo }}</span>
-                  </div>
-                </div>
+              <td>
+                <strong>{{ job.machineName }}</strong>
+                <small class="model-text">{{ job.machineModel }}</small>
               </td>
-              <td class="col-type">
-                <span class="type-badge type-{{ record.type }}">
-                  {{ record.type | titlecase }}
+              <td>{{ job.serialNumber }}</td>
+              <td>{{ job.projectName || 'N/A' }}</td>
+              <td>
+                <span class="type-badge" [ngClass]="'type-' + job.type.toLowerCase()">
+                  {{ job.type }}
                 </span>
               </td>
-              <td class="col-priority">
-                <span class="priority-badge priority-{{ record.priority }}">
-                  {{ record.priority | titlecase }}
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(job.status)">
+                  {{ job.status }}
                 </span>
               </td>
-              <td class="col-date">
-                <div class="date-cell">
-                  <i class="material-icons">event</i>
-                  <div class="date-info">
-                    <span>{{ record.scheduledDate | date:'MMM dd, yyyy' }}</span>
-                    <small>{{ record.scheduledTime }}</small>
-                  </div>
-                </div>
-              </td>
-              <td class="col-status">
-                <span class="status-badge status-{{ record.status }}">
-                  <i class="material-icons">
-                    {{ record.status === 'completed' ? 'check_circle' :
-                       record.status === 'in-progress' ? 'build_circle' :
-                       record.status === 'overdue' ? 'error' : 'schedule' }}
-                  </i>
-                  {{ record.status | titlecase }}
+              <td>
+                <span class="priority-badge" [ngClass]="getPriorityClass(job.serviceAlertLevel)">
+                  {{ job.serviceAlertLevel || 'Normal' }}
                 </span>
               </td>
-              <td class="col-technician">
-                <div class="technician-cell">
-                  <i class="material-icons">person</i>
-                  <span>{{ record.assignedTechnician }}</span>
-                </div>
-              </td>
-              <td class="col-duration">
-                <span class="duration-badge">{{ record.estimatedDuration }}h</span>
-              </td>
-              <td class="col-actions">
-                <div class="action-buttons">
-                  <button
-                    class="action-btn view-btn"
-                    (click)="viewMaintenanceDetails(record)"
-                    title="View Details">
-                    <i class="material-icons">visibility</i>
-                  </button>
-                  @if (record.status !== 'completed') {
-                    <button
-                      class="action-btn edit-btn"
-                      (click)="editMaintenance(record)"
-                      title="Edit">
-                      <i class="material-icons">edit</i>
-                    </button>
-                  }
-                  @if (record.status === 'scheduled') {
-                    <button
-                      class="action-btn start-btn"
-                      (click)="startMaintenance(record)"
-                      title="Start Maintenance">
-                      <i class="material-icons">play_arrow</i>
-                    </button>
-                  }
-                  @if (record.status === 'in-progress') {
-                    <button
-                      class="action-btn complete-btn"
-                      (click)="completeMaintenance(record)"
-                      title="Complete">
-                      <i class="material-icons">check</i>
-                    </button>
-                  }
-                  @if (record.status === 'scheduled') {
-                    <button
-                      class="action-btn cancel-btn"
-                      (click)="cancelMaintenance(record)"
-                      title="Cancel">
-                      <i class="material-icons">close</i>
-                    </button>
-                  }
-                </div>
+              <td>{{ job.scheduledDate | date:'short' }}</td>
+              <td>{{ getAssignedEngineer(job) }}</td>
+              <td>
+                <button class="action-btn view-btn" (click)="viewJobDetails(job)" title="View Details">
+                  <i class="material-icons">visibility</i>
+                </button>
               </td>
             </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    }
-  </div>
-</div>
+          }
+        </tbody>
+      </table>
+    </div>
 
-<!-- Schedule Maintenance Modal -->
-<div class="modal-overlay" *ngIf="showScheduleModal" (click)="closeScheduleModal()">
-  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ editingMaintenance ? 'Edit Maintenance' : 'Schedule Maintenance' }}</h3>
-      <button class="modal-close" (click)="closeScheduleModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <form class="maintenance-form" (ngSubmit)="saveMaintenance()" #maintenanceForm="ngForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="machineId">Machine *</label>
-            <select id="machineId" 
-                    class="form-control" 
-                    [(ngModel)]="maintenanceFormData.machineId" 
-                    name="machineId" 
-                    required>
-              <option value="">Select Machine</option>
-              <option *ngFor="let machine of availableMachines" [value]="machine.id">
-                {{ machine.name }} - {{ machine.model }} ({{ machine.rigNo }})
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="type">Maintenance Type *</label>
-            <select id="type" 
-                    class="form-control" 
-                    [(ngModel)]="maintenanceFormData.type" 
-                    name="type" 
-                    required>
-              <option value="">Select Type</option>
-              <option value="preventive">Preventive</option>
-              <option value="corrective">Corrective</option>
-              <option value="emergency">Emergency</option>
-              <option value="inspection">Inspection</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="priority">Priority *</label>
-            <select id="priority" 
-                    class="form-control" 
-                    [(ngModel)]="maintenanceFormData.priority" 
-                    name="priority" 
-                    required>
-              <option value="">Select Priority</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="assignedTechnician">Assigned Technician *</label>
-            <select id="assignedTechnician" 
-                    class="form-control" 
-                    [(ngModel)]="maintenanceFormData.assignedTechnician" 
-                    name="assignedTechnician" 
-                    required>
-              <option value="">Select Technician</option>
-              <option *ngFor="let technician of availableTechnicians" [value]="technician">
-                {{ technician }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="scheduledDate">Scheduled Date *</label>
-            <input type="date" 
-                   id="scheduledDate" 
-                   class="form-control" 
-                   [(ngModel)]="maintenanceFormData.scheduledDate" 
-                   name="scheduledDate" 
-                   required>
-          </div>
-          <div class="form-group">
-            <label for="scheduledTime">Scheduled Time *</label>
-            <input type="time" 
-                   id="scheduledTime" 
-                   class="form-control" 
-                   [(ngModel)]="maintenanceFormData.scheduledTime" 
-                   name="scheduledTime" 
-                   required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="estimatedDuration">Estimated Duration (hours) *</label>
-            <input type="number" 
-                   id="estimatedDuration" 
-                   class="form-control" 
-                   [(ngModel)]="maintenanceFormData.estimatedDuration" 
-                   name="estimatedDuration" 
-                   min="0.5" 
-                   step="0.5" 
-                   required>
-          </div>
-          <div class="form-group">
-            <label for="cost">Estimated Cost</label>
-            <input type="number" 
-                   id="cost" 
-                   class="form-control" 
-                   [(ngModel)]="maintenanceFormData.cost" 
-                   name="cost" 
-                   min="0" 
-                   step="0.01" 
-                   placeholder="0.00">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="description">Description *</label>
-          <textarea id="description" 
-                    class="form-control" 
-                    [(ngModel)]="maintenanceFormData.description" 
-                    name="description" 
-                    rows="3" 
-                    placeholder="Describe the maintenance work to be performed..."
-                    required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="notes">Additional Notes</label>
-          <textarea id="notes" 
-                    class="form-control" 
-                    [(ngModel)]="maintenanceFormData.notes" 
-                    name="notes" 
-                    rows="2" 
-                    placeholder="Any additional notes or special instructions..."></textarea>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="closeScheduleModal()">
-        Cancel
-      </button>
-      <button type="submit" 
-              class="btn btn-primary" 
-              (click)="saveMaintenance()" 
-              [disabled]="!isMaintenanceFormValid() || isSaving">
-        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
-        <i class="fas fa-save" *ngIf="!isSaving"></i>
-        {{ editingMaintenance ? 'Update' : 'Schedule' }} Maintenance
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Maintenance Details Modal -->
-<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
-  <div class="modal-content large-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Maintenance Details</h3>
-      <button class="modal-close" (click)="closeDetailsModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body" *ngIf="selectedMaintenance as record">
-      <!-- Identification details -->
-      <div class="detail-row">
-        <span class="label">Record ID</span>
-        <span class="value">{{ record.id }}</span>
+    <!-- Pagination -->
+    <div class="pagination">
+      <div class="pagination-info">
+        Showing {{ getStartIndex() + 1 }} to {{ getEndIndex() }} of {{ filteredJobs.length }} jobs
       </div>
-      <div class="detail-row">
-        <span class="label">Machine Name</span>
-        <span class="value">{{ record.machineName }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Model</span>
-        <span class="value">{{ record.machineModel }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Rig No</span>
-        <span class="value">{{ record.rigNo }}</span>
-      </div>
-  
-      <!-- Badges -->
-      <div class="detail-row">
-        <span class="label">Type</span>
-        <span class="type-badge" [class]="'type-' + record.type">{{ record.type | titlecase }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Priority</span>
-        <span class="priority-badge" [class]="'priority-' + record.priority">{{ record.priority | titlecase }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Status</span>
-        <span class="status-badge" [class]="'status-' + record.status">{{ record.status | titlecase }}</span>
-      </div>
-  
-      <!-- Scheduling details -->
-      <div class="detail-row">
-        <span class="label">Scheduled Date</span>
-        <span class="value">{{ record.scheduledDate | date:'fullDate' }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Scheduled Time</span>
-        <span class="value">{{ record.scheduledTime }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Technician</span>
-        <span class="value">{{ record.assignedTechnician }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Estimated Duration</span>
-        <span class="value">{{ record.estimatedDuration }} hours</span>
-      </div>
-      <div class="detail-row" *ngIf="record.actualDuration">
-        <span class="label">Actual Duration</span>
-        <span class="value">{{ record.actualDuration }} hours</span>
-      </div>
-      <div class="detail-row" *ngIf="record.cost">
-        <span class="label">Estimated Cost</span>
-        <span class="value">${{ record.cost | number:'1.2-2' }}</span>
-      </div>
-      <div class="detail-row" *ngIf="record.actualCost">
-        <span class="label">Actual Cost</span>
-        <span class="value">${{ record.actualCost | number:'1.2-2' }}</span>
-      </div>
-  
-      <!-- Description and notes -->
-      <div class="detail-section full-width">
-        <span class="label">Description</span>
-        <p class="description-text">{{ record.description }}</p>
-      </div>
-      <div class="detail-section full-width" *ngIf="record.notes">
-        <span class="label">Notes</span>
-        <p class="notes-text">{{ record.notes }}</p>
-      </div>
-      <div class="detail-section full-width" *ngIf="record.completionNotes">
-        <span class="label">Completion Notes</span>
-        <p class="completion-notes">{{ record.completionNotes }}</p>
-      </div>
-  
-      <!-- Actions -->
-      <div class="modal-actions">
-        <button class="btn btn-primary" (click)="editMaintenance(record)" *ngIf="record.status !== 'completed'">Edit</button>
-        <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
-          Close
+      <div class="pagination-controls">
+        <button (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="material-icons">chevron_left</i>
         </button>
-        <button type="button" 
-                class="btn btn-primary" 
-                (click)="editMaintenance(selectedMaintenance)"
-                *ngIf="selectedMaintenance?.status !== 'completed'">
-          <i class="fas fa-edit"></i>
-          Edit Maintenance
+        @for (page of getPageNumbers(); track page) {
+          <button [class.active]="currentPage === page" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        }
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="material-icons">chevron_right</i>
         </button>
+        <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" title="Items per page">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
       </div>
     </div>
-  </div>
-</div>
+  }
 
-<!-- Complete Maintenance Modal -->
-<div class="modal-overlay" *ngIf="showCompleteModal" (click)="closeCompleteModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Complete Maintenance</h3>
-      <button class="modal-close" (click)="closeCompleteModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <form class="completion-form">
-        <div class="form-group">
-          <label for="actualDuration">Actual Duration (hours) *</label>
-          <input type="number" 
-                 id="actualDuration" 
-                 class="form-control" 
-                 [(ngModel)]="completionData.actualDuration" 
-                 name="actualDuration" 
-                 min="0.1" 
-                 step="0.1" 
-                 required>
-        </div>
-        <div class="form-group">
-          <label for="actualCost">Actual Cost</label>
-          <input type="number" 
-                 id="actualCost" 
-                 class="form-control" 
-                 [(ngModel)]="completionData.actualCost" 
-                 name="actualCost" 
-                 min="0" 
-                 step="0.01" 
-                 placeholder="0.00">
-        </div>
-        <div class="form-group">
-          <label for="completionNotes">Completion Notes *</label>
-          <textarea id="completionNotes" 
-                    class="form-control" 
-                    [(ngModel)]="completionData.completionNotes" 
-                    name="completionNotes" 
-                    rows="4" 
-                    placeholder="Describe the work performed, parts used, issues found, etc..."
-                    required></textarea>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="closeCompleteModal()">
-        Cancel
-      </button>
-      <button type="button" 
-              class="btn btn-success" 
-              (click)="confirmCompleteMaintenance()" 
-              [disabled]="!isCompletionFormValid() || isSaving">
-        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
-        <i class="fas fa-check" *ngIf="!isSaving"></i>
-        Complete Maintenance
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Confirmation Modal -->
-<div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ confirmModalData.title }}</h3>
-      <button class="modal-close" (click)="closeConfirmModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <p>{{ confirmModalData.message }}</p>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="closeConfirmModal()">
-        Cancel
-      </button>
-      <button type="button"
-              class="btn"
-              [class]="confirmModalData.confirmButtonClass"
-              (click)="confirmModalData.onConfirm()"
-              [disabled]="isSaving">
-        <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
-        {{ confirmModalData.confirmButtonText }}
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Issue Reports Modal -->
-<div class="modal-overlay" *ngIf="showIssueReportsModal" (click)="closeIssueReportsModal()">
-  <div class="modal-content issue-reports-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Operator Issue Reports</h3>
-      <button class="modal-close" (click)="closeIssueReportsModal()">
-        <i class="material-icons">close</i>
-      </button>
-    </div>
-
-    <div class="modal-body">
-      <!-- Issue Statistics -->
-      <div class="issue-stats-grid">
-        <div class="issue-stat-card total">
-          <div class="stat-icon">
-            <i class="material-icons">list_alt</i>
-          </div>
-          <div class="stat-content">
-            <h4>{{ issueStats.total }}</h4>
-            <p>Total Issues</p>
-          </div>
-        </div>
-
-        <div class="issue-stat-card reported">
-          <div class="stat-icon">
-            <i class="material-icons">report_problem</i>
-          </div>
-          <div class="stat-content">
-            <h4>{{ issueStats.reported }}</h4>
-            <p>Pending Review</p>
-          </div>
-        </div>
-
-        <div class="issue-stat-card critical">
-          <div class="stat-icon">
-            <i class="material-icons">error</i>
-          </div>
-          <div class="stat-content">
-            <h4>{{ issueStats.critical }}</h4>
-            <p>Critical</p>
-          </div>
-        </div>
-
-        <div class="issue-stat-card resolved">
-          <div class="stat-icon">
-            <i class="material-icons">check_circle</i>
-          </div>
-          <div class="stat-content">
-            <h4>{{ issueStats.resolved }}</h4>
-            <p>Resolved</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Search and Filters -->
-      <div class="issue-filters-section">
-        <div class="search-box">
-          <i class="material-icons">search</i>
-          <input
-            type="text"
-            class="form-control"
-            [(ngModel)]="issueSearchTerm"
-            (input)="onIssueSearchChange()"
-            placeholder="Search by ticket ID, machine, operator, or description..." />
-        </div>
-
-        <div class="filter-row">
-          <div class="filter-group">
-            <label>Status</label>
-            <select
-              class="form-select"
-              [(ngModel)]="issueStatusFilter"
-              (ngModelChange)="onIssueStatusFilterChange()">
-              <option value="">All Status</option>
-              <option value="Reported">Reported</option>
-              <option value="Acknowledged">Acknowledged</option>
-              <option value="InProgress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-            </select>
-          </div>
-
-          <div class="filter-group">
-            <label>Severity</label>
-            <select
-              class="form-select"
-              [(ngModel)]="issueSeverityFilter"
-              (ngModelChange)="onIssueSeverityFilterChange()">
-              <option value="">All Severities</option>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Issues Table -->
-      <div class="issues-table-wrapper">
-        @if (isLoading) {
-          <div class="loading-state">
-            <div class="loader-spinner"></div>
-            <p>Loading issues...</p>
-          </div>
-        }
-
-        @if (!isLoading && filteredIssues.length === 0) {
-          <div class="empty-state">
-            <div class="empty-icon">
-              <i class="material-icons">inbox</i>
-            </div>
-            <h4>No Issues Found</h4>
-            <p>No operator issues match your current filters.</p>
-          </div>
-        }
-
-        @if (!isLoading && filteredIssues.length > 0) {
-          <p-table
-            [value]="filteredIssues"
-            styleClass="issues-table"
-            responsiveLayout="scroll"
-            [paginator]="true"
-            [rows]="10"
-            [rowsPerPageOptions]="[10, 25, 50]"
-            [showCurrentPageReport]="true"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} issues"
-            [rowHover]="true"
-            dataKey="id">
-
-            <ng-template pTemplate="header">
-              <tr>
-                <th>Ticket ID</th>
-                <th>Machine</th>
-                <th>Operator</th>
-                <th>Issue</th>
-                <th>Severity</th>
-                <th>Status</th>
-                <th>Reported</th>
-                <th>Actions</th>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="body" let-issue>
-              <tr [ngClass]="{'critical-issue-row': issue.severityLevel === 'Critical'}">
-                <td>
-                  <span class="ticket-id">{{ issue.ticketId }}</span>
-                </td>
-                <td>
-                  <div class="machine-cell">
-                    <i class="material-icons">precision_manufacturing</i>
-                    <div>
-                      <div class="machine-name">{{ issue.machineName }}</div>
-                      <div class="machine-model">{{ issue.machineModel }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div class="operator-cell">
-                    <i class="material-icons">person</i>
-                    <span>{{ issue.operatorName }}</span>
-                  </div>
-                </td>
-                <td>
-                  <div class="issue-cell">
-                    <div class="issue-category">{{ issue.problemCategory }}</div>
-                    <div class="issue-desc">{{ issue.description | slice:0:60 }}{{ issue.description.length > 60 ? '...' : '' }}</div>
-                  </div>
-                </td>
-                <td>
-                  <span class="severity-badge severity-{{ issue.severityLevel.toLowerCase() }}">
-                    <i class="material-icons">
-                      {{ issue.severityLevel === 'Critical' ? 'error' :
-                         issue.severityLevel === 'High' ? 'warning' :
-                         issue.severityLevel === 'Medium' ? 'info' : 'check_circle' }}
-                    </i>
-                    {{ issue.severityLevel }}
-                  </span>
-                </td>
-                <td>
-                  <span class="issue-status-badge status-{{ issue.status.toLowerCase() }}">
-                    {{ issue.status }}
-                  </span>
-                </td>
-                <td>
-                  <div class="date-cell">
-                    <i class="material-icons">schedule</i>
-                    <span>{{ issue.reportedAt | date:'MMM dd, HH:mm' }}</span>
-                  </div>
-                </td>
-                <td>
-                  <div class="action-buttons">
-                    <button
-                      class="action-btn view-btn"
-                      (click)="viewIssueDetails(issue)"
-                      title="View Details">
-                      <i class="material-icons">visibility</i>
-                    </button>
-                    @if (issue.status === 'Reported') {
-                      <button
-                        class="action-btn acknowledge-btn"
-                        (click)="acknowledgeIssue(issue)"
-                        title="Acknowledge Issue">
-                        <i class="material-icons">done</i>
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        }
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="closeIssueReportsModal()">
-        Close
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Issue Details Modal -->
-<div class="modal-overlay" *ngIf="showIssueDetailsModal" (click)="closeIssueDetailsModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Issue Details</h3>
-      <button class="modal-close" (click)="closeIssueDetailsModal()">
-        <i class="material-icons">close</i>
-      </button>
-    </div>
-
-    <div class="modal-body" *ngIf="selectedIssue as issue">
-      <div class="issue-details-grid">
-        <div class="detail-row">
-          <span class="label">Ticket ID</span>
-          <span class="value ticket-id">{{ issue.ticketId }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="label">Machine</span>
-          <span class="value">{{ issue.machineName }} ({{ issue.machineModel }})</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="label">Reported By</span>
-          <span class="value">{{ issue.operatorName }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="label">Reported At</span>
-          <span class="value">{{ issue.reportedAt | date:'fullDate' }} at {{ issue.reportedAt | date:'shortTime' }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="label">Affected Part</span>
-          <span class="value">{{ issue.affectedPart }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="label">Problem Category</span>
-          <span class="value">{{ issue.problemCategory }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="label">Severity</span>
-          <span class="severity-badge severity-{{ issue.severityLevel.toLowerCase() }}">
-            {{ issue.severityLevel }}
-          </span>
-        </div>
-
-        <div class="detail-row">
-          <span class="label">Status</span>
-          <span class="issue-status-badge status-{{ issue.status.toLowerCase() }}">
-            {{ issue.status }}
-          </span>
-        </div>
-
-        <div class="detail-section full-width" *ngIf="issue.symptoms && issue.symptoms.length > 0">
-          <span class="label">Symptoms</span>
-          <div class="symptoms-list">
-            <span class="symptom-tag" *ngFor="let symptom of issue.symptoms">
-              <i class="material-icons">check_circle</i>
-              {{ symptom }}
-            </span>
-          </div>
-        </div>
-
-        <div class="detail-section full-width" *ngIf="issue.errorCodes">
-          <span class="label">Error Codes</span>
-          <span class="value error-codes">{{ issue.errorCodes }}</span>
-        </div>
-
-        <div class="detail-section full-width">
-          <span class="label">Description</span>
-          <p class="description-text">{{ issue.description }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="closeIssueDetailsModal()">
-        Close
-      </button>
-      <button
-        type="button"
-        class="btn btn-primary"
-        (click)="scheduleMaintenanceFromIssue(selectedIssue!)"
-        *ngIf="selectedIssue">
-        <i class="material-icons">build</i>
-        Schedule Maintenance
-      </button>
-    </div>
+  <!-- Last Updated -->
+  <div class="last-updated">
+    Last updated: {{ lastUpdated | date:'medium' }}
   </div>
 </div>

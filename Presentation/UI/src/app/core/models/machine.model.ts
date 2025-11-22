@@ -16,6 +16,15 @@ export interface Machine {
   lastMaintenanceDate?: Date;
   nextMaintenanceDate?: Date;
   specifications?: MachineSpecifications;
+
+  // New: Service Configuration
+  engineServiceInterval?: number; // Hours between engine services
+  currentEngineServiceHours?: number; // Hours since last engine service
+  lastEngineServiceDate?: Date;
+  drifterServiceInterval?: number; // Hours between drifter services (drill rigs only)
+  currentDrifterServiceHours?: number; // Hours since last drifter service (drill rigs only)
+  lastDrifterServiceDate?: Date;
+
   createdAt: Date;
   updatedAt: Date;
   projectId?: number;
@@ -54,6 +63,14 @@ export interface CreateMachineRequest {
   operatorId?: number;
   regionId?: number;
   specifications?: MachineSpecifications;
+
+  // New: Service Configuration
+  engineServiceInterval?: number;
+  currentEngineServiceHours?: number;
+  lastEngineServiceDate?: Date;
+  drifterServiceInterval?: number;
+  currentDrifterServiceHours?: number;
+  lastDrifterServiceDate?: Date;
 }
 
 export interface UpdateMachineRequest {
@@ -76,6 +93,14 @@ export interface UpdateMachineRequest {
   lastMaintenanceDate?: Date;
   nextMaintenanceDate?: Date;
   specifications?: MachineSpecifications;
+
+  // New: Service Configuration
+  engineServiceInterval?: number;
+  currentEngineServiceHours?: number;
+  lastEngineServiceDate?: Date;
+  drifterServiceInterval?: number;
+  currentDrifterServiceHours?: number;
+  lastDrifterServiceDate?: Date;
 }
 
 export interface MachineAssignmentRequest {

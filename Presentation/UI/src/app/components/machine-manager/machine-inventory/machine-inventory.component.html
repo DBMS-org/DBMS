@@ -153,6 +153,8 @@
           <th>Type</th>
           <th>Model</th>
           <th>Status</th>
+          <th>Project</th>
+          <th>Operator</th>
           <th>Location</th>
           <th>Actions</th>
         </tr>
@@ -176,6 +178,20 @@
             <span class="status-badge" [ngClass]="getStatusClass(machine.status)">
               {{ machine.status }}
             </span>
+          </td>
+          <td class="machine-project">
+            @if (machine.projectName || machine.assignedToProject) {
+              <span class="project-name">{{ machine.projectName || machine.assignedToProject }}</span>
+            } @else {
+              <span class="text-muted">Unassigned</span>
+            }
+          </td>
+          <td class="machine-operator">
+            @if (machine.operatorName || machine.assignedToOperator) {
+              <span class="operator-name">{{ machine.operatorName || machine.assignedToOperator }}</span>
+            } @else {
+              <span class="text-muted">Unassigned</span>
+            }
           </td>
           <td class="machine-location">{{ machine.currentLocation || 'N/A' }}</td>
           <td class="machine-actions">
@@ -243,12 +259,39 @@
 <!-- Delete Confirmation Modal -->
 @if (showDeleteConfirmModal && machineToDelete) {
   <div class="modal-overlay">
-    <div class="modal-content">
-      <h5>Confirm Delete</h5>
-      <p>Are you sure you want to delete machine "{{ machineToDelete.name }}"?</p>
+    <div class="modal-content delete-confirmation">
+      <div class="modal-icon warning-icon">
+        <i class="material-icons">warning</i>
+      </div>
+      <h5>Confirm Machine Deletion</h5>
+      <div class="confirmation-message">
+        <p>You are about to permanently delete the following machine:</p>
+        <div class="machine-details-summary">
+          <div class="detail-row">
+            <span class="label">Machine Name:</span>
+            <span class="value">{{ machineToDelete.name }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Serial Number:</span>
+            <span class="value">{{ machineToDelete.serialNumber }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Type:</span>
+            <span class="value">{{ machineToDelete.type }}</span>
+          </div>
+        </div>
+        <p class="warning-text">
+          <i class="material-icons">info</i>
+          This action cannot be undone. All associated data and history for this machine will be permanently removed from the system.
+        </p>
+        <p class="confirmation-question">Are you certain you wish to proceed with this deletion?</p>
+      </div>
       <div class="modal-actions">
-        <button class="btn btn-danger" (click)="confirmDelete()">Yes, Delete</button>
-        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button type="button" class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+          <i class="material-icons">delete_forever</i>
+          Confirm Deletion
+        </button>
       </div>
     </div>
   </div>

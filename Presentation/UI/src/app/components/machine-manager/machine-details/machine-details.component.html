@@ -157,9 +157,16 @@
 
       <!-- Actions -->
       <div class="details-actions">
-        <button 
-          type="button" 
-          class="close-btn-action" 
+        <button
+          type="button"
+          class="service-usage-btn"
+          (click)="viewServiceUsage()">
+          <i class="material-icons">build_circle</i>
+          View Service & Usage
+        </button>
+        <button
+          type="button"
+          class="close-btn-action"
           (click)="onClose()">
           <i class="material-icons">close</i>
           Close

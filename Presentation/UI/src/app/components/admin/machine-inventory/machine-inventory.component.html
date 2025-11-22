@@ -105,10 +105,10 @@
                 <i class="fas fa-eye"></i>
               </button>
               <button
-                class="action-btn delete-btn"
-                (click)="deleteMachine(machine)"
-                title="Delete Machine">
-                <i class="fas fa-trash"></i>
+                class="action-btn assign-btn"
+                (click)="openAssignOperatorModal(machine)"
+                title="Assign Operator">
+                <i class="fas fa-user-cog"></i>
               </button>
             </div>
           </td>
@@ -127,24 +127,104 @@
   </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-@if (showDeleteConfirmModal && machineToDelete) {
+<!-- Assign Operator Modal -->
+@if (showAssignOperatorModal && machineToAssignOperator) {
   <div class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h5>Confirm Delete</h5>
+        <h5>Assign Operator to Machine</h5>
         <button class="close-btn" (click)="closeModals()">
           <i class="material-icons">close</i>
         </button>
       </div>
       <div class="modal-body">
-        <p>Are you sure you want to delete machine "{{ machineToDelete.name }}"?</p>
-        <p class="text-warning">This action cannot be undone.</p>
+        <p><strong>Machine:</strong> {{ machineToAssignOperator.name }}</p>
+        <p><strong>Model:</strong> {{ machineToAssignOperator.model }}</p>
+        <p><strong>Current Operator:</strong> {{ machineToAssignOperator.assignedToOperator || 'None' }}</p>
+
+        <div class="form-group mt-3">
+          <label for="operatorSelect">Select Operator</label>
+          <select
+            id="operatorSelect"
+            class="form-select"
+            [(ngModel)]="selectedOperatorId">
+            <option [ngValue]="null">-- Unassign Operator --</option>
+            <option *ngFor="let operator of operators" [ngValue]="operator.id">
+              {{ operator.name }} ({{ operator.email }})
+            </option>
+          </select>
+        </div>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-danger" (click)="confirmDelete()">
-          <i class="fas fa-trash"></i>
-          Yes, Delete
+        <button
+          class="btn btn-primary"
+          (click)="confirmAssignOperator()"
+          [disabled]="selectedOperatorId === machineToAssignOperator.operatorId">
+          <i class="fas fa-check"></i>
+          Assign Operator
+        </button>
+        <button class="btn btn-secondary" (click)="closeModals()">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Reassignment Confirmation Modal -->
+@if (showReassignConfirmModal && machineToAssignOperator && operatorCurrentMachine) {
+  <div class="modal-overlay">
+    <div class="modal-content reassign-modal">
+      <div class="modal-header">
+        <h5>Operator Already Assigned</h5>
+        <button class="close-btn" (click)="closeModals()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p class="warning-text">
+            The selected operator is already assigned to another machine.
+          </p>
+        </div>
+
+        <div class="assignment-details">
+          <div class="detail-section">
+            <h6>Current Assignment:</h6>
+            <div class="machine-card current">
+              <p><strong>Machine:</strong> {{ operatorCurrentMachine.name }}</p>
+              <p><strong>Model:</strong> {{ operatorCurrentMachine.model }}</p>
+              <p><strong>Operator:</strong> {{ operatorCurrentMachine.assignedToOperator }}</p>
+            </div>
+          </div>
+
+          <div class="arrow-icon">
+            <i class="fas fa-arrow-right"></i>
+          </div>
+
+          <div class="detail-section">
+            <h6>New Assignment:</h6>
+            <div class="machine-card new">
+              <p><strong>Machine:</strong> {{ machineToAssignOperator.name }}</p>
+              <p><strong>Model:</strong> {{ machineToAssignOperator.model }}</p>
+              <p><strong>Operator:</strong> {{ operatorCurrentMachine.assignedToOperator }}</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="confirmation-text">
+          If you proceed, the operator will be reassigned to <strong>{{ machineToAssignOperator.name }}</strong>
+          and removed from <strong>{{ operatorCurrentMachine.name }}</strong>.
+        </p>
+
+        <p class="question-text">Do you want to continue?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" (click)="confirmReassignment()">
+          <i class="fas fa-check"></i>
+          Yes, Reassign Operator
         </button>
         <button class="btn btn-secondary" (click)="closeModals()">
           <i class="fas fa-times"></i>

@@ -1219,51 +1219,61 @@ namespace Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AssignedToOperator")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("AssignedToProject")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ChassisDetails")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal?>("CurrentDrifterServiceHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CurrentEngineServiceHours")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("CurrentLocation")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("DrifterServiceInterval")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EngineServiceInterval")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastDrifterServiceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastEngineServiceDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("LastMaintenanceDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Location")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Manufacturer")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ManufacturingYear")
                         .HasColumnType("int");
 
                     b.Property<string>("Model")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("NextMaintenanceDate")
                         .HasColumnType("datetime2");
@@ -1272,8 +1282,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("PlateNo")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ProjectId")
                         .HasColumnType("int");
@@ -1282,26 +1291,21 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("RigNo")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SerialNumber")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SpecificationsJson")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1316,7 +1320,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("Machines");
+                    b.ToTable("Machines", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.MachineManagement.MachineAssignment", b =>
@@ -1471,6 +1475,101 @@ namespace Infrastructure.Migrations
                     b.ToTable("MachineAssignmentRequests");
                 });
 
+            modelBuilder.Entity("Domain.Entities.MachineManagement.MachineUsageLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BreakdownDescription")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("DowntimeHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("DrifterHourEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("DrifterHourStart")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("DrifterHoursDelta")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EngineHourEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EngineHourStart")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EngineHoursDelta")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("FuelConsumed")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("HasDowntime")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("IdleHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LogDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MachineId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OperatorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("SiteEngineer")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("WorkingHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LogDate");
+
+                    b.HasIndex("MachineId");
+
+                    b.HasIndex("OperatorId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("MachineId", "LogDate");
+
+                    b.ToTable("MachineUsageLogs", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.MaintenanceOperations.MaintenanceJob", b =>
                 {
                     b.Property<int>("Id")
@@ -1491,6 +1590,18 @@ namespace Infrastructure.Migrations
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int");
 
+                    b.Property<string>("DrillBitType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DrillBitsUsed")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DrillRodType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DrillRodsUsed")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("EstimatedHours")
                         .HasColumnType("decimal(5,2)");
 
@@ -1498,6 +1609,18 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAutoGenerated")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDrifterServiceCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEngineServiceCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsServiceCompleted")
                         .HasColumnType("bit");
 
                     b.Property<int>("MachineId")
@@ -1522,6 +1645,15 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("ScheduledDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("ServiceAlertLevel")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShankType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ShanksUsed")
+                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -2066,100 +2198,100 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3194),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6383),
                             IsActive = true,
                             Name = "Muscat",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3196)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6383)
                         },
                         new
                         {
                             Id = 2,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3219),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6392),
                             IsActive = true,
                             Name = "Dhofar",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3220)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6393)
                         },
                         new
                         {
                             Id = 3,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3223),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6396),
                             IsActive = true,
                             Name = "Musandam",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3223)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6396)
                         },
                         new
                         {
                             Id = 4,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3226),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6398),
                             IsActive = true,
                             Name = "Al Buraimi",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3227)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6399)
                         },
                         new
                         {
                             Id = 5,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3230),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6401),
                             IsActive = true,
                             Name = "Ad Dakhiliyah",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3231)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6401)
                         },
                         new
                         {
                             Id = 6,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3234),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6403),
                             IsActive = true,
                             Name = "Al Batinah North",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3234)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6404)
                         },
                         new
                         {
                             Id = 7,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3237),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6406),
                             IsActive = true,
                             Name = "Al Batinah South",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3238)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6407)
                         },
                         new
                         {
                             Id = 8,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3241),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6409),
                             IsActive = true,
                             Name = "Ash Sharqiyah South",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3241)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6409)
                         },
                         new
                         {
                             Id = 9,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3244),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6411),
                             IsActive = true,
                             Name = "Ash Sharqiyah North",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3245)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6411)
                         },
                         new
                         {
                             Id = 10,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3247),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6413),
                             IsActive = true,
                             Name = "Ad Dhahirah",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3248)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6414)
                         },
                         new
                         {
                             Id = 11,
                             Country = "Oman",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3251),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6416),
                             IsActive = true,
                             Name = "Al Wusta",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3251)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6416)
                         });
                 });
 
@@ -2497,89 +2629,89 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             Action = "Create",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2848),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6175),
                             Description = "Allows creating a new user",
                             IsActive = true,
                             Module = "UserManagement",
                             Name = "Create User",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2849)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6176)
                         },
                         new
                         {
                             Id = 2,
                             Action = "Read",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2856),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6181),
                             Description = "Allows viewing user details",
                             IsActive = true,
                             Module = "UserManagement",
                             Name = "Read User",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2856)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6182)
                         },
                         new
                         {
                             Id = 3,
                             Action = "Update",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2860),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6185),
                             Description = "Allows editing user details",
                             IsActive = true,
                             Module = "UserManagement",
                             Name = "Update User",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2861)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6185)
                         },
                         new
                         {
                             Id = 4,
                             Action = "Delete",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2863),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6187),
                             Description = "Allows deleting a user",
                             IsActive = true,
                             Module = "UserManagement",
                             Name = "Delete User",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2864)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6187)
                         },
                         new
                         {
                             Id = 5,
                             Action = "Create",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2866),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6189),
                             Description = "Allows creating a new project",
                             IsActive = true,
                             Module = "ProjectManagement",
                             Name = "Create Project",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2867)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6190)
                         },
                         new
                         {
                             Id = 6,
                             Action = "Read",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2869),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6191),
                             Description = "Allows viewing project details",
                             IsActive = true,
                             Module = "ProjectManagement",
                             Name = "Read Project",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2870)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6192)
                         },
                         new
                         {
                             Id = 7,
                             Action = "Update",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2872),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6194),
                             Description = "Allows editing project details",
                             IsActive = true,
                             Module = "ProjectManagement",
                             Name = "Update Project",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2873)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6194)
                         },
                         new
                         {
                             Id = 8,
                             Action = "Delete",
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2875),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6196),
                             Description = "Allows deleting a project",
                             IsActive = true,
                             Module = "ProjectManagement",
                             Name = "Delete Project",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2876)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6205)
                         });
                 });
 
@@ -2626,72 +2758,72 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2306),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5942),
                             Description = "Administrator with full access",
                             IsActive = true,
                             Name = "Admin",
                             NormalizedName = "ADMIN",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2311)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5945)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2385),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5957),
                             Description = "Manages blasting operations",
                             IsActive = true,
                             Name = "Blasting Engineer",
                             NormalizedName = "BLASTING_ENGINEER",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2386)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5957)
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2389),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5960),
                             Description = "Manages mechanical tasks",
                             IsActive = true,
                             Name = "Mechanical Engineer",
                             NormalizedName = "MECHANICAL_ENGINEER",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2390)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5960)
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2393),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5962),
                             Description = "Manages machine inventory and assignments",
                             IsActive = true,
                             Name = "Machine Manager",
                             NormalizedName = "MACHINE_MANAGER",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2393)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5962)
                         },
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2396),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5965),
                             Description = "Manages explosive materials",
                             IsActive = true,
                             Name = "Explosive Manager",
                             NormalizedName = "EXPLOSIVE_MANAGER",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2396)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5965)
                         },
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2399),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5967),
                             Description = "Manages store inventory",
                             IsActive = true,
                             Name = "Store Manager",
                             NormalizedName = "STORE_MANAGER",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2399)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5967)
                         },
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2402),
+                            CreatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5969),
                             Description = "Operates machinery",
                             IsActive = true,
                             Name = "Operator",
                             NormalizedName = "OPERATOR",
-                            UpdatedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(2402)
+                            UpdatedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(5969)
                         });
                 });
 
@@ -2733,7 +2865,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3001),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6259),
                             IsActive = true,
                             PermissionId = 1,
                             RoleId = 1
@@ -2741,7 +2873,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3003),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6263),
                             IsActive = true,
                             PermissionId = 2,
                             RoleId = 1
@@ -2749,7 +2881,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 3,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3005),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6264),
                             IsActive = true,
                             PermissionId = 3,
                             RoleId = 1
@@ -2757,7 +2889,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 4,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3007),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6266),
                             IsActive = true,
                             PermissionId = 4,
                             RoleId = 1
@@ -2765,7 +2897,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 5,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3008),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6267),
                             IsActive = true,
                             PermissionId = 5,
                             RoleId = 1
@@ -2773,7 +2905,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 6,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3010),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6269),
                             IsActive = true,
                             PermissionId = 6,
                             RoleId = 1
@@ -2781,7 +2913,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 7,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3012),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6270),
                             IsActive = true,
                             PermissionId = 7,
                             RoleId = 1
@@ -2789,7 +2921,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 8,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3013),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6271),
                             IsActive = true,
                             PermissionId = 8,
                             RoleId = 1
@@ -2797,7 +2929,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 9,
-                            GrantedAt = new DateTime(2025, 11, 13, 15, 32, 6, 72, DateTimeKind.Utc).AddTicks(3015),
+                            GrantedAt = new DateTime(2025, 11, 21, 7, 55, 27, 764, DateTimeKind.Utc).AddTicks(6273),
                             IsActive = true,
                             PermissionId = 6,
                             RoleId = 2
@@ -3261,11 +3393,13 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Domain.Entities.UserManagement.User", "Operator")
                         .WithMany()
-                        .HasForeignKey("OperatorId");
+                        .HasForeignKey("OperatorId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Domain.Entities.ProjectManagement.Project", "Project")
                         .WithMany("Machines")
-                        .HasForeignKey("ProjectId");
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Domain.Entities.ProjectManagement.Region", "Region")
                         .WithMany("Machines")
@@ -3315,6 +3449,24 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Domain.Entities.MachineManagement.MachineUsageLog", b =>
+                {
+                    b.HasOne("Domain.Entities.MachineManagement.Machine", "Machine")
+                        .WithMany()
+                        .HasForeignKey("MachineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.UserManagement.User", "Operator")
+                        .WithMany()
+                        .HasForeignKey("OperatorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Machine");
+
+                    b.Navigation("Operator");
                 });
 
             modelBuilder.Entity("Domain.Entities.MaintenanceOperations.MaintenanceJob", b =>

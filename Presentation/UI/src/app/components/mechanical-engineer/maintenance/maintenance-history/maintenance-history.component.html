@@ -124,13 +124,25 @@
             </td>
           </ng-container>
 
-          <!-- Parts Column -->
-          <ng-container matColumnDef="parts">
-            <th mat-header-cell *matHeaderCellDef>Parts Replaced</th>
+          <!-- Materials Column -->
+          <ng-container matColumnDef="materials">
+            <th mat-header-cell *matHeaderCellDef>Materials Used</th>
             <td mat-cell *matCellDef="let record">
-              <span [matTooltip]="getPartsTooltip(record.partsReplaced)">
-                {{ getPartsReplaced(record.partsReplaced) }}
+              <span [matTooltip]="getMaterialsTooltip(record)">
+                {{ getMaterialsSummary(record) }}
               </span>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Service</th>
+            <td mat-cell *matCellDef="let record">
+              @if (record.isServiceCompleted) {
+                <mat-icon class="service-icon" matTooltip="Service Completed - Hours Reset">check_circle</mat-icon>
+              } @else {
+                <span class="no-service">-</span>
+              }
             </td>
           </ng-container>
 
@@ -154,7 +166,7 @@
         <mat-icon>inbox</mat-icon>
         <h3>No Maintenance Records Found</h3>
         <p>There are no completed maintenance records matching your filters.</p>
-        <button mat-raised-button color="primary" (click)="clearFilters()">
+        <button type="button" mat-raised-button color="primary" (click)="clearFilters()">
           Clear Filters
         </button>
       </div>

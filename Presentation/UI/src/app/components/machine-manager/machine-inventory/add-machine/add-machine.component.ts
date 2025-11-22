@@ -67,7 +67,14 @@ export class AddMachineComponent implements OnInit {
       manufacturingYear: ['', [Validators.pattern(/^\d{4}$/)]],
       chassisDetails: [''],
       region: [''],
-      projectId: ['']
+      projectId: [''],
+      // Service Configuration
+      engineServiceInterval: [500, [Validators.required, Validators.min(1)]],
+      currentEngineServiceHours: [0, [Validators.required, Validators.min(0)]],
+      lastEngineServiceDate: [''],
+      drifterServiceInterval: [300, [Validators.min(1)]],
+      currentDrifterServiceHours: [0, [Validators.min(0)]],
+      lastDrifterServiceDate: ['']
     });
   }
 
@@ -199,7 +206,14 @@ export class AddMachineComponent implements OnInit {
         currentLocation: this.getLocationValue(),
         projectId: projectId,
         regionId: this.getRegionId(),
-        status: status
+        status: status,
+        // Service Configuration
+        engineServiceInterval: formValue.engineServiceInterval,
+        currentEngineServiceHours: formValue.currentEngineServiceHours,
+        lastEngineServiceDate: formValue.lastEngineServiceDate || undefined,
+        drifterServiceInterval: formValue.drifterServiceInterval || undefined,
+        currentDrifterServiceHours: formValue.currentDrifterServiceHours || undefined,
+        lastDrifterServiceDate: formValue.lastDrifterServiceDate || undefined
       };
       
       // Submit machine creation request
@@ -209,9 +223,37 @@ export class AddMachineComponent implements OnInit {
           this.isLoading = false;
         },
         error: (error: any) => {
-          this.error = 'Failed to create machine. Please try again.';
-          this.isLoading = false;
+          // Handle different error types
           console.error('Error creating machine:', error);
+
+          // Extract message from ApiResponse format
+          // Backend returns { success: false, message: "...", statusCode: 409 }
+          let message = 'An error occurred';
+
+          if (error.error) {
+            if (typeof error.error === 'string') {
+              message = error.error;
+            } else if (error.error.message) {
+              // ApiResponse format has a 'message' property (capital M)
+              message = error.error.message;
+            } else if (error.error.Message) {
+              // Try capital M in case of different casing
+              message = error.error.Message;
+            }
+          } else if (error.message) {
+            message = error.message;
+          }
+
+          // Set specific messages based on status code
+          if (error.status === 409) {
+            this.error = message;
+          } else if (error.status === 400) {
+            this.error = message;
+          } else {
+            this.error = message;
+          }
+
+          this.isLoading = false;
         }
       });
     } else {
@@ -240,9 +282,59 @@ export class AddMachineComponent implements OnInit {
 
   /**
    * Provides machine type options for template dropdown
+   * Restricted to Drill Rig only for machine manager inventory
    */
   get machineTypeOptions() {
-    return Object.values(MachineType);
+    return [MachineType.DRILL_RIG];
+  }
+
+  /**
+   * Returns true if the selected machine type is a Drill Rig
+   */
+  get isDrillRig(): boolean {
+    return this.machineForm.get('type')?.value === MachineType.DRILL_RIG;
+  }
+
+  /**
+   * Calculates hours remaining until next engine service
+   */
+  get engineHoursToNextService(): number {
+    const interval = this.machineForm.get('engineServiceInterval')?.value || 500;
+    const current = this.machineForm.get('currentEngineServiceHours')?.value || 0;
+    return Math.max(0, interval - current);
+  }
+
+  /**
+   * Calculates hours remaining until next drifter service
+   */
+  get drifterHoursToNextService(): number {
+    const interval = this.machineForm.get('drifterServiceInterval')?.value || 300;
+    const current = this.machineForm.get('currentDrifterServiceHours')?.value || 0;
+    return Math.max(0, interval - current);
+  }
+
+  /**
+   * Returns CSS class for engine service urgency color coding
+   */
+  get engineServiceUrgencyClass(): string {
+    const remaining = this.engineHoursToNextService;
+    if (remaining < 0) return 'overdue';
+    if (remaining < 20) return 'critical';
+    if (remaining < 50) return 'warning';
+    if (remaining < 100) return 'caution';
+    return 'good';
+  }
+
+  /**
+   * Returns CSS class for drifter service urgency color coding
+   */
+  get drifterServiceUrgencyClass(): string {
+    const remaining = this.drifterHoursToNextService;
+    if (remaining < 0) return 'overdue';
+    if (remaining < 20) return 'critical';
+    if (remaining < 50) return 'warning';
+    if (remaining < 100) return 'caution';
+    return 'good';
   }
 
   /**

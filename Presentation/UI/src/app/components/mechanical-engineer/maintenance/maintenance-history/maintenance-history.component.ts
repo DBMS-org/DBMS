@@ -126,7 +126,7 @@ export class MaintenanceHistoryComponent implements OnInit {
   totalRecords = computed(() => this.filteredRecords().length);
 
   // Table columns
-  displayedColumns = ['machineName', 'serialNumber', 'project', 'date', 'type', 'technicians', 'hours', 'parts'];
+  displayedColumns = ['machineName', 'serialNumber', 'project', 'date', 'type', 'technicians', 'hours', 'materials', 'actions'];
 
   ngOnInit() {
     this.loadMaintenanceHistory();
@@ -243,5 +243,21 @@ export class MaintenanceHistoryComponent implements OnInit {
   getPartsTooltip(parts?: string[]): string {
     if (!parts || parts.length === 0) return 'No parts replaced';
     return parts.join(', ');
+  }
+
+  getMaterialsSummary(record: MaintenanceJob): string {
+    const materials: string[] = [];
+    if (record.drillBitsUsed) materials.push(`${record.drillBitsUsed} bits`);
+    if (record.drillRodsUsed) materials.push(`${record.drillRodsUsed} rods`);
+    if (record.shanksUsed) materials.push(`${record.shanksUsed} shanks`);
+    return materials.length > 0 ? materials.join(', ') : 'None';
+  }
+
+  getMaterialsTooltip(record: MaintenanceJob): string {
+    const materials: string[] = [];
+    if (record.drillBitsUsed) materials.push(`Drill Bits: ${record.drillBitsUsed} (${record.drillBitType || 'N/A'})`);
+    if (record.drillRodsUsed) materials.push(`Drill Rods: ${record.drillRodsUsed} (${record.drillRodType || 'N/A'})`);
+    if (record.shanksUsed) materials.push(`Shanks: ${record.shanksUsed} (${record.shankType || 'N/A'})`);
+    return materials.length > 0 ? materials.join('\n') : 'No materials used';
   }
 }

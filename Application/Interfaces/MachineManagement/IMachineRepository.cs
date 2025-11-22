@@ -8,5 +8,7 @@ namespace Application.Interfaces.MachineManagement
         Task<Machine?> GetByOperatorIdAsync(int operatorId);
         Task<bool> UpdateAsync(Machine machine);
         Task<IEnumerable<Machine>> GetByOperatorIdsAsync(IEnumerable<int> operatorIds);
+        Task<IEnumerable<Machine>> GetAllAsync();
+        Task<IEnumerable<Machine>> GetByRegionAsync(int regionId);
     }
 }

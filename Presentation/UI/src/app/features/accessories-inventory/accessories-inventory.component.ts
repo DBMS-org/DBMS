@@ -243,8 +243,9 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
   // Mock data methods removed - now using real API
 
   private extractFilterOptions(): void {
-    const categories = [...new Set(this.accessories.map(a => a.category))].sort();
-    this.categoryOptions = categories.map(cat => ({ label: cat, value: cat }));
+    // Only allow these 3 drilling component types
+    const allowedCategories = ['Drill Bit', 'Drill Rod', 'Shank'];
+    this.categoryOptions = allowedCategories.map(cat => ({ label: cat, value: cat }));
 
     const suppliers = [...new Set(this.accessories.map(a => a.supplier))].sort();
     this.supplierOptions = suppliers.map(sup => ({ label: sup, value: sup }));
@@ -277,6 +278,10 @@ export class AccessoriesInventoryComponent implements OnInit, OnDestroy {
 
   private applyFilters(): void {
     let filtered = [...this.accessories];
+
+    // Filter to only show allowed drilling component types
+    const allowedCategories = ['Drill Bit', 'Drill Rod', 'Shank'];
+    filtered = filtered.filter(accessory => allowedCategories.includes(accessory.category));
 
     // Apply search filter
     if (this.searchTerm) {

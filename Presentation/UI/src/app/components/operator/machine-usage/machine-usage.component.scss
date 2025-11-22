@@ -1,0 +1,457 @@
+.machine-usage-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .back-btn {
+    background: rgba(103, 126, 234, 0.1);
+    color: #667eea;
+
+    &:hover {
+      background: rgba(103, 126, 234, 0.2);
+    }
+  }
+
+  .header-content {
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .subtitle {
+      margin: 4px 0 0 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+
+  p {
+    color: #666;
+    margin: 0;
+  }
+}
+
+.info-card,
+.metrics-card,
+.logs-card,
+.service-status-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  mat-card-header {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px 12px 0 0;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 20px;
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+    }
+  }
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .metric-item {
+    text-align: center;
+    padding: 20px 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    &.highlight {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .metric-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      margin-bottom: 8px;
+      color: #667eea;
+
+      &.working { color: #4caf50; }
+      &.idle { color: #ff9800; }
+      &.fuel { color: #f44336; }
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+// Efficiency Section
+.efficiency-section {
+  background: #fafbfc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 16px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.efficiency-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.efficiency-item {
+  .efficiency-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .efficiency-label {
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
+  }
+
+  .efficiency-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+
+    &.good { color: #4caf50; }
+    &.warning { color: #ff9800; }
+    &.poor { color: #f44336; }
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+
+    &.utilization {
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    &.availability {
+      background: linear-gradient(90deg, #4caf50 0%, #8bc34a 100%);
+    }
+    &.fuel-eff {
+      background: linear-gradient(90deg, #ff9800 0%, #ffc107 100%);
+    }
+  }
+
+  .efficiency-hint {
+    font-size: 11px;
+    color: #888;
+    margin-top: 6px;
+  }
+}
+
+// Secondary Stats
+.secondary-stats {
+  .stat-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    min-width: 160px;
+
+    .stat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+
+      &.warning-icon { color: #f44336; }
+      &.calendar-icon { color: #9c27b0; }
+      &.avg-icon { color: #2196f3; }
+    }
+
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #666;
+    }
+  }
+}
+
+mat-divider {
+  margin: 24px 0;
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  color: #666;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    color: #999;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.usage-table {
+  width: 100%;
+
+  th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+  }
+
+  td, th {
+    padding: 12px 16px;
+  }
+}
+
+.downtime-icon {
+  color: #ff9800;
+}
+
+// Status chips
+.status-submitted {
+  background-color: #e3f2fd !important;
+  color: #1976d2 !important;
+}
+
+.status-approved {
+  background-color: #e8f5e9 !important;
+  color: #388e3c !important;
+}
+
+.status-rejected {
+  background-color: #ffebee !important;
+  color: #d32f2f !important;
+}
+
+.status-draft {
+  background-color: #fff3e0 !important;
+  color: #f57c00 !important;
+}
+
+// Responsive
+@media (max-width: 992px) {
+  .efficiency-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .secondary-stats .stat-row {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .machine-usage-page {
+    padding: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .secondary-stats .stat-item {
+    flex: 1 1 100%;
+    min-width: unset;
+  }
+}
+
+// Service Status Card
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.service-item {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+
+  &.warning {
+    border-left-color: #ffc107;
+    background: #fffbf0;
+  }
+
+  &.urgent {
+    border-left-color: #dc3545;
+    background: #fff5f5;
+  }
+
+  .service-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    mat-icon {
+      color: #667eea;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .service-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+  }
+
+  .service-details {
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+
+      span {
+        color: #666;
+      }
+
+      .remaining {
+        font-weight: 500;
+        color: #667eea;
+      }
+    }
+
+    mat-progress-bar {
+      height: 8px;
+      border-radius: 4px;
+    }
+  }
+
+  &.warning .service-details .remaining {
+    color: #ffc107;
+  }
+
+  &.urgent .service-details .remaining {
+    color: #dc3545;
+  }
+}

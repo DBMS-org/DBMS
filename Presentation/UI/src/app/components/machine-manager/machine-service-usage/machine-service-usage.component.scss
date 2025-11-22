@@ -1,0 +1,401 @@
+.machine-service-usage {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f1f5f9;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 1.5rem;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #e2e8f0;
+  }
+
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem;
+
+  &.small {
+    padding: 2rem;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    margin-top: 1rem;
+    color: #64748b;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+// Filter Tabs
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #64748b;
+  transition: all 0.2s;
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  &:hover {
+    background: #f1f5f9;
+    color: #334155;
+  }
+
+  &.active {
+    background: #3b82f6;
+    color: white;
+  }
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1e293b;
+  }
+
+  .subtitle {
+    margin: 0.25rem 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+}
+
+.details-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.card-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    color: white;
+    font-size: 1.25rem;
+  }
+}
+
+.card-title-section {
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1e293b;
+  }
+
+  .card-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+// Service Tracking Styles
+.service-section {
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.service-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    color: #64748b;
+  }
+
+  h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #334155;
+  }
+}
+
+.service-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.urgency-overdue {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  &.urgency-critical {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  &.urgency-warning {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  &.urgency-caution {
+    background: #fef9c3;
+    color: #ca8a04;
+  }
+
+  &.urgency-good {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+}
+
+.service-info-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .info-label {
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  .info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+
+    &.urgency-overdue { color: #991b1b; }
+    &.urgency-critical { color: #dc2626; }
+    &.urgency-warning { color: #d97706; }
+    &.urgency-caution { color: #ca8a04; }
+    &.urgency-good { color: #16a34a; }
+  }
+}
+
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+
+  &.urgency-overdue { background: #991b1b; }
+  &.urgency-critical { background: #dc2626; }
+  &.urgency-warning { background: #f59e0b; }
+  &.urgency-caution { background: #eab308; }
+  &.urgency-good { background: #10b981; }
+}
+
+.progress-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  min-width: 40px;
+}
+
+.last-service-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+// Jobs Table Styles
+.table-container {
+  overflow-x: auto;
+}
+
+.jobs-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.85rem;
+  }
+
+  td {
+    color: #334155;
+    font-size: 0.9rem;
+  }
+
+  tbody tr:hover {
+    background: #f8fafc;
+  }
+}
+
+.type-badge, .status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.type-preventive { background: #e0e7ff; color: #4338ca; }
+.type-corrective { background: #fce7f3; color: #db2777; }
+.type-emergency { background: #fee2e2; color: #dc2626; }
+
+.status-scheduled { background: #dbeafe; color: #1d4ed8; }
+.status-in-progress { background: #fef3c7; color: #d97706; }
+.status-completed { background: #dcfce7; color: #16a34a; }
+.status-overdue { background: #fee2e2; color: #dc2626; }
+.status-cancelled { background: #f1f5f9; color: #64748b; }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: #94a3b8;
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .service-info-row {
+    grid-template-columns: 1fr;
+  }
+
+  .jobs-table {
+    font-size: 0.85rem;
+
+    th, td {
+      padding: 0.5rem;
+    }
+  }
+}

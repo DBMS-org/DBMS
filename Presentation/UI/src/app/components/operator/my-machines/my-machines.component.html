@@ -81,31 +81,15 @@
 
             <mat-divider class="section-divider"></mat-divider>
 
-            <div class="usage-metrics">
-              <h3>Usage Metrics</h3>
-              @if (usageMetrics()) {
-                <div class="usage-grid">
-                  <div class="usage-item">
-                    <div class="usage-label"><mat-icon>speed</mat-icon> Engine Hours</div>
-                    <div class="usage-value">{{ usageMetrics()?.engineHours | number }}</div>
-                  </div>
-                  <div class="usage-item">
-                    <div class="usage-label"><mat-icon>hourglass_empty</mat-icon> Idle Hours</div>
-                    <div class="usage-value">{{ usageMetrics()?.idleHours | number }}</div>
-                  </div>
-                  <div class="usage-item">
-                    <div class="usage-label"><mat-icon>build</mat-icon> Service Hours</div>
-                    <div class="usage-value">{{ usageMetrics()?.serviceHours | number }}</div>
-                  </div>
-                  <div class="usage-item">
-                    <div class="usage-label"><mat-icon>schedule</mat-icon> Remaining to Next Service</div>
-                    <div class="usage-value">{{ remainingServiceHours() === null ? '—' : (remainingServiceHours()! | number) }} h</div>
-                  </div>
-                </div>
-                <div class="last-updated">Last updated: {{ formatDate(usageMetrics()!.lastUpdated) }}</div>
-              } @else {
-                <p class="no-usage">No usage data available.</p>
-              }
+            <!-- View Usage Details Button -->
+            <div class="view-usage-action">
+              <button mat-raised-button
+                      color="primary"
+                      class="view-usage-btn"
+                      (click)="navigateToUsageDetails()">
+                <mat-icon>analytics</mat-icon>
+                View Usage Statistics & History
+              </button>
             </div>
 
             <mat-divider class="section-divider"></mat-divider>
@@ -138,85 +122,135 @@
               <mat-dialog-content class="log-usage-content">
                 <form [formGroup]="usageLogForm" class="usage-log-form">
 
-                  <!-- Machine Selection -->
+                  <!-- Machine & Date -->
                   <div class="form-section">
-                    <h4>Machine Information</h4>
-                    <mat-form-field class="full-width">
-                      <mat-label>Select Machine</mat-label>
-                      <mat-select formControlName="selectedMachineId" required>
-                        <mat-option [value]="assignedMachine()?.id">
-                          {{ assignedMachine()?.name }} ({{ assignedMachine()?.serialNumber }})
-                        </mat-option>
-                      </mat-select>
-                      <mat-error *ngIf="usageLogForm.get('selectedMachineId')?.hasError('required')">
-                        Machine selection is required
-                      </mat-error>
-                    </mat-form-field>
-                  </div>
+                    <h4>Machine & Date</h4>
+                    <div class="compact-grid">
+                      <mat-form-field class="full-width">
+                        <mat-label>Select Machine</mat-label>
+                        <mat-select formControlName="selectedMachineId" required>
+                          <mat-option [value]="assignedMachine()?.id">
+                            {{ assignedMachine()?.name }} ({{ assignedMachine()?.serialNumber }})
+                          </mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="usageLogForm.get('selectedMachineId')?.hasError('required')">
+                          Machine selection is required
+                        </mat-error>
+                      </mat-form-field>
 
-                  <!-- Date of Log -->
-                  <div class="form-section">
-                    <h4>Log Date</h4>
-                    <mat-form-field class="full-width">
-                      <mat-label>Date of Log</mat-label>
-                      <input matInput [matDatepicker]="picker" formControlName="logDate" required>
-                      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                      <mat-datepicker #picker></mat-datepicker>
-                      <mat-error *ngIf="usageLogForm.get('logDate')?.hasError('required')">
-                        Log date is required
-                      </mat-error>
-                    </mat-form-field>
+                      <mat-form-field class="full-width">
+                        <mat-label>Date of Log</mat-label>
+                        <input matInput [matDatepicker]="picker" formControlName="logDate" required>
+                        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                        <mat-error *ngIf="usageLogForm.get('logDate')?.hasError('required')">
+                          Log date is required
+                        </mat-error>
+                      </mat-form-field>
+
+                      <mat-form-field class="full-width">
+                        <mat-label>Site Engineer</mat-label>
+                        <input matInput formControlName="siteEngineer" readonly>
+                        <mat-hint>Auto-populated from your profile</mat-hint>
+                      </mat-form-field>
+                    </div>
                   </div>
 
                   <!-- Hours Section -->
                   <div class="form-section">
                     <h4>Operating Hours</h4>
-                    <div class="hours-grid">
-                      <mat-form-field>
-                        <mat-label>Engine Hours (HH:MM)</mat-label>
-                        <input matInput formControlName="engineHours" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required>
-                        <mat-hint>Total hours machine was running</mat-hint>
-                        <mat-error *ngIf="usageLogForm.get('engineHours')?.hasError('required')">
-                          Engine hours are required
-                        </mat-error>
-                        <mat-error *ngIf="usageLogForm.get('engineHours')?.hasError('pattern')">
-                          Please use HH:MM format (e.g., 08:30)
-                        </mat-error>
-                      </mat-form-field>
 
-                      <mat-form-field>
-                        <mat-label>Idle Hours (HH:MM)</mat-label>
-                        <input matInput formControlName="idleHours" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required>
-                        <mat-hint>Hours machine was ON but not working</mat-hint>
-                        <mat-error *ngIf="usageLogForm.get('idleHours')?.hasError('required')">
-                          Idle hours are required
-                        </mat-error>
-                        <mat-error *ngIf="usageLogForm.get('idleHours')?.hasError('pattern')">
-                          Please use HH:MM format (e.g., 02:15)
-                        </mat-error>
-                      </mat-form-field>
+                    <!-- Engine Hours -->
+                    <div class="hours-subsection">
+                      <h5>Engine Hours</h5>
+                      <div class="hours-row">
+                        <mat-form-field>
+                          <mat-label>Engine Hour Start</mat-label>
+                          <input matInput type="number" formControlName="engineHourStart" min="0" step="0.1" placeholder="0.0" required>
+                          <mat-error *ngIf="usageLogForm.get('engineHourStart')?.hasError('required')">Required</mat-error>
+                          <mat-error *ngIf="usageLogForm.get('engineHourStart')?.hasError('min')">Must be 0 or greater</mat-error>
+                        </mat-form-field>
 
-                      <mat-form-field>
-                        <mat-label>Working Hours (HH:MM)</mat-label>
-                        <input matInput formControlName="workingHours" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required>
-                        <mat-hint>Actual productive hours</mat-hint>
-                        <mat-error *ngIf="usageLogForm.get('workingHours')?.hasError('required')">
-                          Working hours are required
-                        </mat-error>
-                        <mat-error *ngIf="usageLogForm.get('workingHours')?.hasError('pattern')">
-                          Please use HH:MM format (e.g., 06:45)
-                        </mat-error>
-                      </mat-form-field>
+                        <mat-form-field>
+                          <mat-label>Engine Hour End</mat-label>
+                          <input matInput type="number" formControlName="engineHourEnd" min="0" step="0.1" placeholder="0.0" required>
+                          <mat-error *ngIf="usageLogForm.get('engineHourEnd')?.hasError('required')">Required</mat-error>
+                          <mat-error *ngIf="usageLogForm.get('engineHourEnd')?.hasError('min')">Must be 0 or greater</mat-error>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="calculated-delta" *ngIf="engineHoursDelta() > 0 || usageLogForm.get('engineHourEnd')?.value">
+                        <mat-icon>calculate</mat-icon>
+                        <span>Total Engine Hours: <strong>{{ engineHoursDelta().toFixed(1) }}</strong> hours</span>
+                      </div>
+
+                      <div class="validation-error" *ngIf="usageLogForm.get('engineHourEnd')?.value && usageLogForm.get('engineHourEnd')?.value < usageLogForm.get('engineHourStart')?.value">
+                        <mat-icon>error</mat-icon>
+                        <span>End must be greater than or equal to start</span>
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- Fuel Consumption -->
-                  <div class="form-section">
-                    <h4>Fuel Consumption (Optional)</h4>
+                    <!-- Drifter Hours (Only for Drill Rigs) -->
+                    <div class="hours-subsection" *ngIf="isDrillRig()">
+                      <h5>Drifter Hours</h5>
+                      <div class="hours-row">
+                        <mat-form-field>
+                          <mat-label>Drifter Hour Start</mat-label>
+                          <input matInput type="number" formControlName="drifterHourStart" min="0" step="0.1" placeholder="0.0">
+                          <mat-error *ngIf="usageLogForm.get('drifterHourStart')?.hasError('min')">Must be 0 or greater</mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field>
+                          <mat-label>Drifter Hour End</mat-label>
+                          <input matInput type="number" formControlName="drifterHourEnd" min="0" step="0.1" placeholder="0.0">
+                          <mat-error *ngIf="usageLogForm.get('drifterHourEnd')?.hasError('min')">Must be 0 or greater</mat-error>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="calculated-delta" *ngIf="drifterHoursDelta() > 0 || usageLogForm.get('drifterHourEnd')?.value">
+                        <mat-icon>calculate</mat-icon>
+                        <span>Total Drifter Hours: <strong>{{ drifterHoursDelta().toFixed(1) }}</strong> hours</span>
+                      </div>
+
+                      <div class="validation-error" *ngIf="usageLogForm.get('drifterHourEnd')?.value && usageLogForm.get('drifterHourEnd')?.value < usageLogForm.get('drifterHourStart')?.value">
+                        <mat-icon>error</mat-icon>
+                        <span>End must be greater than or equal to start</span>
+                      </div>
+                    </div>
+
+                    <!-- Idle & Working Hours -->
+                    <div class="hours-subsection">
+                      <h5>Idle & Working Hours</h5>
+                      <div class="hours-row">
+                        <mat-form-field>
+                          <mat-label>Idle Hours</mat-label>
+                          <input matInput type="number" formControlName="idleHours" min="0" step="0.5" placeholder="0.0" required>
+                          <mat-hint>Manual entry</mat-hint>
+                          <mat-error *ngIf="usageLogForm.get('idleHours')?.hasError('required')">Required</mat-error>
+                          <mat-error *ngIf="usageLogForm.get('idleHours')?.hasError('min')">Must be 0 or greater</mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field>
+                          <mat-label>Working Hours</mat-label>
+                          <input matInput type="number" formControlName="workingHours" min="0" step="0.5" placeholder="0.0" required>
+                          <mat-hint>Manual entry</mat-hint>
+                          <mat-error *ngIf="usageLogForm.get('workingHours')?.hasError('required')">Required</mat-error>
+                          <mat-error *ngIf="usageLogForm.get('workingHours')?.hasError('min')">Must be 0 or greater</mat-error>
+                        </mat-form-field>
+                      </div>
+                    </div>
+
+                    <!-- Validation Warning (Non-blocking) -->
+                    <div class="validation-warning" *ngIf="hoursValidationWarning()">
+                      <mat-icon>warning</mat-icon>
+                      <span>{{ hoursValidationWarning() }}</span>
+                    </div>
+
+                    <!-- Fuel Consumption -->
                     <mat-form-field class="full-width">
                       <mat-label>Fuel Consumed (Liters)</mat-label>
-                      <input matInput type="number" formControlName="fuelConsumed" min="0" step="0.1">
-                      <mat-hint>Enter fuel consumption if tracked</mat-hint>
+                      <input matInput type="number" formControlName="fuelConsumed" min="0" step="0.1" placeholder="Optional">
+                      <mat-hint>Optional</mat-hint>
                     </mat-form-field>
                   </div>
 
@@ -229,18 +263,15 @@
 
                     <div *ngIf="usageLogForm.get('hasDowntime')?.value" class="downtime-details">
                       <mat-form-field class="full-width">
-                        <mat-label>Downtime Hours (HH:MM)</mat-label>
-                        <input matInput formControlName="downtimeHours" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$">
-                        <mat-hint>Total hours machine was down</mat-hint>
-                        <mat-error *ngIf="usageLogForm.get('downtimeHours')?.hasError('pattern')">
-                          Please use HH:MM format (e.g., 01:30)
-                        </mat-error>
+                        <mat-label>Downtime Hours</mat-label>
+                        <input matInput type="number" formControlName="downtimeHours" min="0" step="0.5" placeholder="0.0">
+                        <mat-hint>Total hours</mat-hint>
+                        <mat-error *ngIf="usageLogForm.get('downtimeHours')?.hasError('min')">Must be 0 or greater</mat-error>
                       </mat-form-field>
 
                       <mat-form-field class="full-width">
                         <mat-label>Breakdown Description</mat-label>
-                        <textarea matInput formControlName="breakdownDescription" rows="3" placeholder="Describe the breakdown or issue..."></textarea>
-                        <mat-hint>Provide details about the breakdown</mat-hint>
+                        <textarea matInput formControlName="breakdownDescription" rows="2" placeholder="Describe the breakdown..."></textarea>
                       </mat-form-field>
                     </div>
                   </div>
@@ -249,35 +280,9 @@
                   <div class="form-section">
                     <h4>Remarks & Observations</h4>
                     <mat-form-field class="full-width">
-                      <mat-label>Remarks/Notes</mat-label>
-                      <textarea matInput formControlName="remarks" rows="4" placeholder="Any observations, unusual noise, overheating, etc..."></textarea>
-                      <mat-hint>Optional: Add any observations or notes</mat-hint>
+                      <mat-label>Remarks/Notes (Optional)</mat-label>
+                      <textarea matInput formControlName="remarks" rows="2" placeholder="Any observations..."></textarea>
                     </mat-form-field>
-                  </div>
-
-                  <!-- File Upload Section -->
-                  <div class="form-section">
-                    <h4>Attachments (Optional)</h4>
-                    <div class="file-upload-area">
-                      <input type="file" #fileInput multiple accept="image/*,.pdf,.doc,.docx" (change)="onFileSelected($event)" style="display: none;">
-                      <button type="button" mat-stroked-button (click)="fileInput.click()">
-                        <mat-icon>attach_file</mat-icon>
-                        Upload Photos/Documents
-                      </button>
-                      <p class="upload-hint">Upload photos of broken parts, meter readings, or relevant documents</p>
-
-                      <div *ngIf="selectedFiles.length > 0" class="selected-files">
-                        <h5>Selected Files:</h5>
-                        <div *ngFor="let file of selectedFiles; let i = index" class="file-item">
-                          <mat-icon>{{ getFileIcon(file.type) }}</mat-icon>
-                          <span class="file-name">{{ file.name }}</span>
-                          <span class="file-size">({{ formatFileSize(file.size) }})</span>
-                          <button type="button" mat-icon-button (click)="removeFile(i)" color="warn">
-                            <mat-icon>close</mat-icon>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                   </div>
 
                 </form>

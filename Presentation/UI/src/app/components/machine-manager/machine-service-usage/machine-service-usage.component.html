@@ -1,0 +1,276 @@
+<div class="machine-service-usage">
+  <!-- Back Button -->
+  <button class="back-btn" (click)="goBack()">
+    <i class="material-icons">arrow_back</i>
+    Back to Machine Inventory
+  </button>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading machine details...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (errorMessage) {
+    <div class="error-alert">
+      <i class="material-icons">error_outline</i>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (machine && !isLoading) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-info">
+        <h1>{{ machine.name }}</h1>
+        <p class="subtitle">{{ machine.model }} - {{ machine.serialNumber }}</p>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'service'"
+        (click)="activeTab = 'service'">
+        <i class="material-icons">build_circle</i>
+        Service Tracking
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'jobs'"
+        (click)="activeTab = 'jobs'">
+        <i class="material-icons">build</i>
+        Maintenance Jobs
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'usage'"
+        (click)="activeTab = 'usage'">
+        <i class="material-icons">history</i>
+        Usage History
+      </button>
+    </div>
+
+    <!-- Service Tracking Card -->
+    @if (activeTab === 'service' && (hasEngineService() || hasDrifterService())) {
+      <div class="details-card service-tracking-card">
+        <div class="card-header">
+          <div class="card-header-content">
+            <div class="card-icon">
+              <i class="material-icons">build_circle</i>
+            </div>
+            <div class="card-title-section">
+              <h3>Service Tracking</h3>
+              <p class="card-subtitle">Monitor service intervals and schedules</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Engine Service -->
+          @if (hasEngineService()) {
+            <div class="service-section">
+              <div class="service-header">
+                <div class="service-title">
+                  <i class="material-icons">settings</i>
+                  <h4>Engine Service</h4>
+                </div>
+                <div class="service-status-badge" [ngClass]="getServiceUrgencyClass(getEngineHoursRemaining())">
+                  @if (getEngineHoursRemaining() < 0) {
+                    <span>OVERDUE</span>
+                  } @else if (getEngineHoursRemaining() < 20) {
+                    <span>CRITICAL</span>
+                  } @else if (getEngineHoursRemaining() < 50) {
+                    <span>DUE SOON</span>
+                  } @else {
+                    <span>ON TRACK</span>
+                  }
+                </div>
+              </div>
+
+              <div class="service-details">
+                <div class="service-info-row">
+                  <div class="info-item">
+                    <span class="info-label">Current Hours</span>
+                    <span class="info-value">{{ machine.currentEngineServiceHours || 0 }}h</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Service Interval</span>
+                    <span class="info-value">{{ machine.engineServiceInterval }}h</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Hours Remaining</span>
+                    <span class="info-value" [ngClass]="getServiceUrgencyClass(getEngineHoursRemaining())">
+                      {{ getEngineHoursRemaining() }}h
+                    </span>
+                  </div>
+                </div>
+
+                <div class="progress-bar-container">
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill"
+                      [ngClass]="getServiceUrgencyClass(getEngineHoursRemaining())"
+                      [style.width.%]="getEngineServiceProgress()">
+                    </div>
+                  </div>
+                  <span class="progress-label">{{ getEngineServiceProgress().toFixed(0) }}%</span>
+                </div>
+
+                @if (machine.lastEngineServiceDate) {
+                  <div class="last-service-info">
+                    <i class="material-icons">event</i>
+                    <span>Last serviced: {{ formatDate(machine.lastEngineServiceDate) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Drifter Service -->
+          @if (hasDrifterService()) {
+            <div class="service-section">
+              <div class="service-header">
+                <div class="service-title">
+                  <i class="material-icons">precision_manufacturing</i>
+                  <h4>Drifter Service</h4>
+                </div>
+                <div class="service-status-badge" [ngClass]="getServiceUrgencyClass(getDrifterHoursRemaining())">
+                  @if (getDrifterHoursRemaining() < 0) {
+                    <span>OVERDUE</span>
+                  } @else if (getDrifterHoursRemaining() < 20) {
+                    <span>CRITICAL</span>
+                  } @else if (getDrifterHoursRemaining() < 50) {
+                    <span>DUE SOON</span>
+                  } @else {
+                    <span>ON TRACK</span>
+                  }
+                </div>
+              </div>
+
+              <div class="service-details">
+                <div class="service-info-row">
+                  <div class="info-item">
+                    <span class="info-label">Current Hours</span>
+                    <span class="info-value">{{ machine.currentDrifterServiceHours || 0 }}h</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Service Interval</span>
+                    <span class="info-value">{{ machine.drifterServiceInterval }}h</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Hours Remaining</span>
+                    <span class="info-value" [ngClass]="getServiceUrgencyClass(getDrifterHoursRemaining())">
+                      {{ getDrifterHoursRemaining() }}h
+                    </span>
+                  </div>
+                </div>
+
+                <div class="progress-bar-container">
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill"
+                      [ngClass]="getServiceUrgencyClass(getDrifterHoursRemaining())"
+                      [style.width.%]="getDrifterServiceProgress()">
+                    </div>
+                  </div>
+                  <span class="progress-label">{{ getDrifterServiceProgress().toFixed(0) }}%</span>
+                </div>
+
+                @if (machine.lastDrifterServiceDate) {
+                  <div class="last-service-info">
+                    <i class="material-icons">event</i>
+                    <span>Last serviced: {{ formatDate(machine.lastDrifterServiceDate) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Maintenance Jobs Table -->
+    @if (activeTab === 'jobs') {
+    <div class="details-card jobs-card">
+      <div class="card-header">
+        <div class="card-header-content">
+          <div class="card-icon">
+            <i class="material-icons">build</i>
+          </div>
+          <div class="card-title-section">
+            <h3>Maintenance Jobs</h3>
+            <p class="card-subtitle">Jobs created for this machine</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (isLoadingJobs) {
+          <div class="loading-container small">
+            <div class="spinner"></div>
+            <p>Loading jobs...</p>
+          </div>
+        } @else if (maintenanceJobs.length === 0) {
+          <div class="empty-state">
+            <i class="material-icons">inbox</i>
+            <p>No maintenance jobs found for this machine</p>
+          </div>
+        } @else {
+          <div class="table-container">
+            <table class="jobs-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Scheduled Date</th>
+                  <th>Assigned To</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (job of maintenanceJobs; track job.id) {
+                  <tr>
+                    <td>
+                      <span class="type-badge" [ngClass]="getTypeClass(job.type)">{{ job.type }}</span>
+                    </td>
+                    <td>
+                      <span class="status-badge" [ngClass]="getStatusClass(job.status)">{{ job.status }}</span>
+                    </td>
+                    <td>{{ formatDate(job.scheduledDate) }}</td>
+                    <td>{{ job.assignments && job.assignments.length > 0 ? job.assignments[0].mechanicalEngineerName : 'Unassigned' }}</td>
+                    <td>{{ job.reason || 'N/A' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Usage History Card -->
+    @if (activeTab === 'usage') {
+    <div class="details-card usage-history-card">
+      <div class="card-header">
+        <div class="card-header-content">
+          <div class="card-icon">
+            <i class="material-icons">history</i>
+          </div>
+          <div class="card-title-section">
+            <h3>Usage History</h3>
+            <p class="card-subtitle">View machine usage logs and statistics</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <app-usage-log-viewer [machineId]="machine.id" [displayDays]="30"></app-usage-log-viewer>
+      </div>
+    </div>
+    }
+  }
+</div>

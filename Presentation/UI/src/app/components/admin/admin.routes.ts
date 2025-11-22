@@ -16,6 +16,8 @@ import { ViewSequenceSimulatorComponent } from '../../shared/shared/components/v
 import { UserProfileComponent } from './shared/user-profile/user-profile.component';
 import { ReportsComponent } from './reports/reports.component';
 import { NotificationsComponent } from './notifications/notifications.component';
+import { MaintenanceManagementComponent } from '../../features/maintenance-management/maintenance-management.component';
+import { JobDetailsComponent } from '../../features/maintenance-management/job-details/job-details.component';
 
 // Admin module route configuration
 export const ADMIN_ROUTES: Routes = [
@@ -50,6 +52,10 @@ export const ADMIN_ROUTES: Routes = [
 
             // Reports route
             { path: 'reports', component: ReportsComponent },
+
+            // Maintenance management routes
+            { path: 'maintenance-management', component: MaintenanceManagementComponent },
+            { path: 'maintenance-management/job/:id', component: JobDetailsComponent },
 
             // Notifications route
             { path: 'notifications', component: NotificationsComponent }

@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed, input, output, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -49,6 +50,7 @@ import { MaintenanceService } from '../../services/maintenance.service';
 })
 export class JobDetailPanelComponent implements OnInit {
   private maintenanceService = inject(MaintenanceService);
+  private router = inject(Router);
 
   // === INPUTS ===
   selectedJob = input<MaintenanceJob | null>(null);
@@ -255,5 +257,34 @@ export class JobDetailPanelComponent implements OnInit {
 
     // Calculate hours since last service based on engine hours and service hours
     return Math.max(0, history.engineHours - history.serviceHours);
+  }
+
+  // === CONSUMED COMPONENTS UTILITIES ===
+  hasConsumedComponents(): boolean {
+    const job = this.selectedJob();
+    if (!job) return false;
+
+    return !!(
+      (job.drillBitsUsed && job.drillBitsUsed > 0) ||
+      (job.drillRodsUsed && job.drillRodsUsed > 0) ||
+      (job.shanksUsed && job.shanksUsed > 0)
+    );
+  }
+
+  // === NAVIGATION ===
+  navigateToMachineUsage(): void {
+    const job = this.selectedJob();
+    if (!job?.machineId) return;
+
+    this.router.navigate(
+      ['/mechanical-engineer/maintenance/machine-usage', job.machineId],
+      {
+        queryParams: {
+          name: job.machineName,
+          model: job.machineModel,
+          serial: job.serialNumber
+        }
+      }
+    );
   }
 }

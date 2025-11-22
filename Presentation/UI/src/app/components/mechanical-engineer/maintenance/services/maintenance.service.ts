@@ -238,29 +238,57 @@ export class MaintenanceService {
     );
   }
 
-  completeMaintenanceJob(jobId: number, observations: string, actualHours: number, partsReplaced?: string[]): Observable<MaintenanceJob> {
+  /**
+   * Complete maintenance job (UPDATED for backend integration)
+   * POST /api/maintenance-jobs/{id}/complete
+   */
+  completeMaintenanceJob(
+    jobId: number,
+    observations: string,
+    actualHours: number,
+    partsReplaced?: string[],
+    isServiceCompleted: boolean = false,
+    isEngineServiceCompleted: boolean = false,
+    isDrifterServiceCompleted: boolean = false,
+    drillBitsUsed?: number,
+    drillBitType?: string,
+    drillRodsUsed?: number,
+    drillRodType?: string,
+    shanksUsed?: number,
+    shankType?: string
+  ): Observable<MaintenanceJob> {
     const operationId = `complete-job-${jobId}`;
     this.loadingService.startLoading(operationId, 'Completing job...');
+
+    // Prepare request matching backend CompleteMaintenanceJobRequest DTO
+    const completionData = {
+      observations,
+      actualHours,
+      partsReplaced: partsReplaced || [],
+      isServiceCompleted,
+      isEngineServiceCompleted,
+      isDrifterServiceCompleted,
+      drillBitsUsed: drillBitsUsed || 0,
+      drillBitType: drillBitType || undefined,
+      drillRodsUsed: drillRodsUsed || 0,
+      drillRodType: drillRodType || undefined,
+      shanksUsed: shanksUsed || 0,
+      shankType: shankType || undefined
+    };
 
     // If offline, queue the operation for sync
     if (this.offlineStorage.isOffline()) {
       this.syncService.queueJobUpdate(jobId.toString(), {
         status: MaintenanceStatus.COMPLETED,
-        observations,
-        actualHours,
-        partsReplaced,
+        ...completionData,
         completedDate: new Date()
       });
       this.loadingService.stopLoading(operationId);
-      return of({ id: jobId, observations, actualHours, partsReplaced } as MaintenanceJob);
+      return of({ id: jobId, ...completionData } as MaintenanceJob);
     }
 
     // Call real backend API
-    return this.http.post<MaintenanceJob>(`${this.jobsApiUrl}/${jobId}/complete`, {
-      observations,
-      actualHours,
-      partsReplaced
-    }).pipe(
+    return this.http.post<MaintenanceJob>(`${this.jobsApiUrl}/${jobId}/complete`, completionData).pipe(
       map(job => this.transformJobDates([job])[0]),
       catchError(error => {
         console.error('Complete job API failed:', error);
@@ -310,6 +338,45 @@ export class MaintenanceService {
     //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
+  // Usage Logs API - Connected to backend
+  getUsageLogsByMachine(machineId: number, startDate?: Date, endDate?: Date): Observable<any[]> {
+    let params = new HttpParams();
+    if (startDate) params = params.set('startDate', startDate.toISOString());
+    if (endDate) params = params.set('endDate', endDate.toISOString());
+
+    return this.http.get<any[]>(`${environment.apiUrl}/api/usage-logs/machine/${machineId}`, { params }).pipe(
+      catchError(error => {
+        console.error('Get usage logs API failed:', error);
+        return of([]);
+      })
+    );
+  }
+
+  getUsageStatistics(machineId: number, days: number = 30): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/api/usage-logs/machine/${machineId}/statistics`, {
+      params: new HttpParams().set('days', days.toString())
+    }).pipe(
+      catchError(error => {
+        console.error('Get usage statistics API failed:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Get maintenance jobs history for a specific machine
+   * GET /api/maintenance-jobs/machine/{machineId}
+   */
+  getMaintenanceJobsByMachine(machineId: number): Observable<MaintenanceJob[]> {
+    return this.http.get<MaintenanceJob[]>(`${this.jobsApiUrl}/machine/${machineId}`).pipe(
+      map(jobs => this.transformJobDates(jobs)),
+      catchError(error => {
+        console.error('Get jobs by machine API failed:', error);
+        return of([]);
+      })
+    );
+  }
+
   // Calendar and Timeline - Using mock data for development
   getMaintenanceJobsByDateRange(startDate: Date, endDate: Date): Observable<MaintenanceJob[]> {
     // TODO: Replace with actual API call when backend is ready
@@ -344,10 +411,10 @@ export class MaintenanceService {
     //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }
 
-  getUsageMetrics(machineId?: string): Observable<UsageMetrics[]> {
+  getUsageMetrics(machineId?: number): Observable<UsageMetrics[]> {
     // TODO: Replace with actual API call when backend is ready
-    return this.mockService.getUsageMetrics(machineId);
-    // const params = machineId ? new HttpParams().set('machineId', machineId) : new HttpParams();
+    return this.mockService.getUsageMetrics(machineId?.toString());
+    // const params = machineId ? new HttpParams().set('machineId', machineId.toString()) : new HttpParams();
     // return this.http.get<UsageMetrics[]>(`${this.apiUrl}/analytics/usage-metrics`, { params })
     //   .pipe(catchError(this.errorHandler.handleError.bind(this.errorHandler)));
   }

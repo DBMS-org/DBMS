@@ -8,6 +8,8 @@ import { MachineManagerNotificationsComponent } from './notifications/notificati
 import { ReportsComponent } from './reports/reports.component';
 import { AccessoriesInventoryComponent } from '../../features/accessories-inventory/accessories-inventory.component';
 import { MaintenanceManagementComponent } from '../../features/maintenance-management/maintenance-management.component';
+import { JobDetailsComponent } from '../../features/maintenance-management/job-details/job-details.component';
+import { MachineServiceUsageComponent } from './machine-service-usage/machine-service-usage.component';
 
 export const MACHINE_MANAGER_ROUTES: Routes = [
     {
@@ -18,9 +20,12 @@ export const MACHINE_MANAGER_ROUTES: Routes = [
             { path: 'dashboard', component: DashboardComponent },
             { path: 'profile', component: UserProfileComponent },
             { path: 'machine-inventory', component: MachineInventoryComponent },
+            { path: 'machine-service-usage/:id', component: MachineServiceUsageComponent },
             { path: 'assignment-requests', component: AssignmentRequestsComponent },
-            { path: 'accessories-inventory', component: AccessoriesInventoryComponent },
+            { path: 'drilling-components', component: AccessoriesInventoryComponent },
+            { path: 'accessories-inventory', redirectTo: 'drilling-components', pathMatch: 'full' }, // Legacy redirect
             { path: 'maintenance-management', component: MaintenanceManagementComponent },
+            { path: 'maintenance-management/job/:id', component: JobDetailsComponent },
             { path: 'reports', component: ReportsComponent },
             { path: 'notifications', component: MachineManagerNotificationsComponent }
         ]
