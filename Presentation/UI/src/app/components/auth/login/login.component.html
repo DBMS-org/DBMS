@@ -67,16 +67,24 @@
             <i class="pi pi-lock text-purple-600"></i>
             Password
           </label>
-          <div class="password-wrapper">
-            <p-password
+          <div class="relative">
+            <input
+              pInputText
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
               formControlName="password"
               placeholder="Enter your password"
-              [toggleMask]="true"
-              [feedback]="false"
-              styleClass="w-full"
-              inputStyleClass="w-full"
+              class="w-full pr-12"
               [ngClass]="{'ng-invalid ng-dirty': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
-            ></p-password>
+            />
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-purple-600 transition-colors p-2 rounded"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            >
+              <i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+            </button>
           </div>
           <small
             class="text-red-500 text-xs font-medium flex items-center gap-1"
