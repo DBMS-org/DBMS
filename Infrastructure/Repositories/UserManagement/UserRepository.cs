@@ -127,7 +127,12 @@ namespace Infrastructure.Repositories.UserManagement
         {
             try
             {
-                return await _context.Users.ToListAsync();
+                return await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                            .ThenInclude(r => r.RolePermissions)
+                                .ThenInclude(rp => rp.Permission)
+                    .ToListAsync();
             }
             catch (Exception ex)
             {

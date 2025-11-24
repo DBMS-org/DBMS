@@ -1,0 +1,147 @@
+<div class="executive-dashboard">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">
+        <i class="pi pi-chart-line"></i>
+        Executive Reports Dashboard
+      </h1>
+      <p class="dashboard-subtitle">Comprehensive business intelligence and performance analytics</p>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-row">
+      <!-- Search -->
+      <div class="filter-item search-filter">
+        <i class="pi pi-search search-icon"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          placeholder="Search reports..."
+          class="search-input"
+        />
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-item">
+        <select [(ngModel)]="selectedCategory" (change)="onCategoryFilter()" class="filter-select">
+          <option value="">All Categories</option>
+          <option *ngFor="let category of categories" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Date Range Toggle -->
+      <button class="filter-button" (click)="toggleDateFilter()">
+        <i class="pi pi-calendar"></i>
+        Date Range
+        <i [class]="showDateFilter ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+      </button>
+
+      <!-- Reset Filters -->
+      <button class="filter-button reset-button" (click)="resetFilters()">
+        <i class="pi pi-refresh"></i>
+        Reset
+      </button>
+    </div>
+
+    <!-- Date Range Filters (Collapsible) -->
+    <div class="date-range-panel" *ngIf="showDateFilter">
+      <div class="date-inputs">
+        <div class="date-input-group">
+          <label>Start Date</label>
+          <input type="date" [(ngModel)]="startDate" class="date-input" />
+        </div>
+        <div class="date-input-group">
+          <label>End Date</label>
+          <input type="date" [(ngModel)]="endDate" class="date-input" />
+        </div>
+        <div class="date-input-group">
+          <label>Region (Optional)</label>
+          <select [(ngModel)]="selectedRegion" class="filter-select">
+            <option value="">All Regions</option>
+            <option value="1">Muscat</option>
+            <option value="2">Dhofar</option>
+            <option value="3">Al Batinah</option>
+            <option value="4">Al Dakhiliyah</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading reports...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <i class="pi pi-exclamation-circle error-icon"></i>
+    <p>{{ error }}</p>
+    <button (click)="loadAvailableReports()" class="retry-button">
+      <i class="pi pi-refresh"></i>
+      Retry
+    </button>
+  </div>
+
+  <!-- Reports Grid -->
+  <div *ngIf="!loading && !error" class="reports-grid">
+    <div
+      *ngFor="let report of filteredReports"
+      class="report-card"
+      [style.border-left-color]="getCategoryColor(report.category)"
+    >
+      <div class="card-header">
+        <div class="icon-container" [style.background-color]="getCategoryColor(report.category) + '20'">
+          <i [class]="'pi ' + report.icon" [style.color]="getCategoryColor(report.category)"></i>
+        </div>
+        <span class="category-badge" [style.background-color]="getCategoryColor(report.category)">
+          {{ report.category }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <h3 class="report-title">{{ report.name }}</h3>
+        <p class="report-description">{{ report.description }}</p>
+
+        <div class="report-meta" *ngIf="report.lastGenerated">
+          <i class="pi pi-clock"></i>
+          <span>Last generated: {{ report.lastGenerated | date: 'short' }}</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button
+          class="generate-button"
+          (click)="generateReport(report)"
+          [disabled]="!report.isAvailable"
+        >
+          <i class="pi pi-play"></i>
+          Generate Report
+        </button>
+
+        <div class="availability-badge" *ngIf="!report.isAvailable">
+          <i class="pi pi-info-circle"></i>
+          Coming Soon
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && filteredReports.length === 0" class="empty-state">
+    <i class="pi pi-search empty-icon"></i>
+    <h3>No reports found</h3>
+    <p>Try adjusting your search or filters</p>
+    <button (click)="resetFilters()" class="reset-filters-button">
+      <i class="pi pi-refresh"></i>
+      Reset Filters
+    </button>
+  </div>
+</div>

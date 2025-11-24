@@ -3,13 +3,13 @@
   <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
 
   <!-- Content Area -->
-  <div class="flex flex-1 relative mt-16">
+  <div class="flex flex-1 relative mt-16 overflow-hidden">
     <!-- Sidebar -->
     <app-sidebar [isCollapsed]="isSidebarCollapsed"></app-sidebar>
 
     <!-- Main Content -->
     <main
-      class="flex-1 p-8 transition-all duration-300 ease-in-out"
+      class="main-content-wrapper flex-1 p-8 transition-all duration-300 ease-in-out overflow-x-auto min-w-0"
       [ngClass]="isSidebarCollapsed ? 'ml-[70px]' : 'ml-64'">
       <router-outlet></router-outlet>
     </main>

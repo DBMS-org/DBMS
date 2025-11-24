@@ -280,6 +280,13 @@ namespace Infrastructure.Repositories.MaintenanceOperations
             try
             {
                 return await _context.MaintenanceJobs
+                    .Include(j => j.Machine)
+                        .ThenInclude(m => m.Region)
+                    .Include(j => j.Assignments)
+                        .ThenInclude(a => a.MechanicalEngineer)
+                    .Include(j => j.Project)
+                    .Include(j => j.MaintenanceReport)
+                    .Include(j => j.Creator)
                     .Where(j => j.ScheduledDate >= startDate && j.ScheduledDate <= endDate && j.IsActive)
                     .OrderBy(j => j.ScheduledDate)
                     .ToListAsync();

@@ -25,7 +25,7 @@ export class SidebarComponent {
     { icon: 'assignment', label: 'Machine Assignments', route: '/admin/machine-assignments' },
     { icon: 'store', label: 'Store Management', route: '/admin/stores' },
     { icon: 'build', label: 'Maintenance Management', route: '/admin/maintenance-management' },
-    { icon: 'assessment', label: 'Reports', route: '/admin/reports' },
+    { icon: 'bar_chart', label: 'Executive Dashboard', route: '/admin/executive-dashboard' },
     { icon: 'notifications', label: 'Notifications', route: '/admin/notifications' }
   ];
 }

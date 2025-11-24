@@ -1,0 +1,31 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace API.Models;
+
+public partial class DetonatorInfo
+{
+    public string Id { get; set; } = null!;
+
+    public int ProjectId { get; set; }
+
+    public int SiteId { get; set; }
+
+    public int Type { get; set; }
+
+    public int Delay { get; set; }
+
+    public int Sequence { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public DateTime UpdatedAt { get; set; }
+
+    public string DrillPointId { get; set; } = null!;
+
+    public virtual DrillPoint DrillPoint { get; set; } = null!;
+
+    public virtual Project Project { get; set; } = null!;
+
+    public virtual ProjectSite Site { get; set; } = null!;
+}

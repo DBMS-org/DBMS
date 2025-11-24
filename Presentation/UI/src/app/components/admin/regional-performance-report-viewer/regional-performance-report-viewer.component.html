@@ -1,0 +1,547 @@
+<div class="regional-report-container">
+  <!-- Header Section -->
+  <div class="report-header no-print">
+    <div class="header-content">
+      <div class="title-section">
+        <button type="button" class="back-btn" (click)="goBack()">
+          <i class="pi pi-arrow-left"></i>
+          Back
+        </button>
+        <h1 class="report-title">
+          <i class="pi pi-map-marker"></i>
+          Regional Performance Report
+        </h1>
+      </div>
+      <div class="action-buttons">
+        <button type="button" class="action-btn print-btn" (click)="printReport()">
+          <i class="pi pi-print"></i>
+          Print
+        </button>
+        <button type="button" class="action-btn export-btn" (click)="exportToPdf()">
+          <i class="pi pi-file-pdf"></i>
+          PDF
+        </button>
+        <button type="button" class="action-btn export-btn" (click)="exportToExcel()">
+          <i class="pi pi-file-excel"></i>
+          Excel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Generating Regional Performance Report...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <i class="pi pi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button class="retry-button" (click)="loadReport()">Retry</button>
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="!loading && !error && reportData" class="report-content">
+    <!-- Report Title -->
+    <div class="report-title-section">
+      <h1>Regional Performance Report</h1>
+      <p class="report-subtitle">Generated: {{ reportData.generatedAt | date:'medium' }}</p>
+      <p class="report-period" *ngIf="reportData.startDate && reportData.endDate">
+        Period: {{ reportData.startDate | date:'shortDate' }} - {{ reportData.endDate | date:'shortDate' }}
+      </p>
+    </div>
+
+    <!-- Overall Performance Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)">
+          <i class="pi pi-globe"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalRegions || 0 }}</div>
+          <div class="stat-label">Total Regions</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)">
+          <i class="pi pi-building"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalProjects || 0 }}</div>
+          <div class="stat-label">Total Projects</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
+          <i class="pi pi-box"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalMachines || 0 }}</div>
+          <div class="stat-label">Total Machines</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%)">
+          <i class="pi pi-users"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalOperators || 0 }}</div>
+          <div class="stat-label">Total Operators</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%)">
+          <i class="pi pi-chart-line"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.averagePerformanceScore?.toFixed(1) || 0 }}%</div>
+          <div class="stat-label">Avg Performance</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%)">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalIssues || 0 }}</div>
+          <div class="stat-label">Active Issues</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regional Performance Overview -->
+    <div class="section" *ngIf="reportData.regionalPerformance?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-map-marker"></i>
+        Regional Performance Overview
+      </h2>
+      <div class="regional-cards">
+        <div *ngFor="let region of reportData.regionalPerformance" class="regional-card">
+          <div class="regional-header">
+            <h3 class="regional-name">{{ region.regionName }}</h3>
+            <div class="performance-score" [style.background]="getPerformanceColor(region.performanceScore)">
+              {{ region.performanceScore?.toFixed(0) || 0 }}
+            </div>
+          </div>
+
+          <div class="regional-metrics">
+            <div class="metric-row">
+              <span class="metric-label">Projects:</span>
+              <span class="metric-value">{{ region.projectCount || 0 }}</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Machines:</span>
+              <span class="metric-value">{{ region.machineCount || 0 }}</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Operators:</span>
+              <span class="metric-value">{{ region.operatorCount || 0 }}</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Efficiency:</span>
+              <span class="metric-value">{{ region.efficiency?.toFixed(1) || 0 }}%</span>
+            </div>
+          </div>
+
+          <div class="regional-progress">
+            <div class="progress-bar">
+              <div class="progress-fill"
+                   [style.width.%]="region.performanceScore || 0"
+                   [style.background]="getPerformanceColor(region.performanceScore)">
+              </div>
+            </div>
+          </div>
+
+          <div class="regional-status">
+            <span class="status-badge" [style.background]="getStatusColor(region.status)">
+              {{ region.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Distribution by Region -->
+    <div class="section" *ngIf="reportData.projectDistribution?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-chart-pie"></i>
+        Project Distribution by Region
+      </h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Region</th>
+              <th>Total Projects</th>
+              <th>Active Projects</th>
+              <th>Completed Projects</th>
+              <th>Completion Rate</th>
+              <th>On-Time Delivery</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let dist of reportData.projectDistribution">
+              <td><strong>{{ dist.regionName }}</strong></td>
+              <td>{{ dist.totalProjects }}</td>
+              <td>{{ dist.activeProjects }}</td>
+              <td>{{ dist.completedProjects }}</td>
+              <td>
+                <div class="completion-cell">
+                  <span>{{ dist.completionRate?.toFixed(1) || 0 }}%</span>
+                  <div class="mini-progress-bar">
+                    <div class="mini-progress-fill"
+                         [style.width.%]="dist.completionRate || 0"
+                         [style.background]="getPerformanceColor(dist.completionRate)">
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ dist.onTimeDelivery?.toFixed(1) || 0 }}%</td>
+              <td>
+                <span class="status-badge" [style.background]="getStatusColor(dist.status)">
+                  {{ dist.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Machine Utilization by Region -->
+    <div class="section" *ngIf="reportData.machineUtilization?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-cog"></i>
+        Machine Utilization by Region
+      </h2>
+      <div class="utilization-grid">
+        <div *ngFor="let util of reportData.machineUtilization" class="utilization-card">
+          <h3 class="utilization-region">{{ util.regionName }}</h3>
+          <div class="utilization-stats">
+            <div class="utilization-percentage" [style.color]="getUtilizationColor(util.utilizationRate)">
+              {{ util.utilizationRate?.toFixed(1) || 0 }}%
+            </div>
+            <div class="utilization-label">Utilization Rate</div>
+          </div>
+          <div class="utilization-bar">
+            <div class="utilization-fill"
+                 [style.width.%]="util.utilizationRate || 0"
+                 [style.background]="getUtilizationColor(util.utilizationRate)">
+            </div>
+          </div>
+          <div class="utilization-details">
+            <div class="detail-item">
+              <span>Total:</span>
+              <strong>{{ util.totalMachines }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Active:</span>
+              <strong>{{ util.activeMachines }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Idle:</span>
+              <strong>{{ util.idleMachines }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operator Performance by Region -->
+    <div class="section" *ngIf="reportData.operatorPerformance?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-users"></i>
+        Operator Performance by Region
+      </h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Region</th>
+              <th>Total Operators</th>
+              <th>Active Operators</th>
+              <th>Avg Efficiency</th>
+              <th>Avg Experience (years)</th>
+              <th>Certification Rate</th>
+              <th>Performance Rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let perf of reportData.operatorPerformance">
+              <td><strong>{{ perf.regionName }}</strong></td>
+              <td>{{ perf.totalOperators }}</td>
+              <td>{{ perf.activeOperators }}</td>
+              <td>
+                <span [style.color]="getEfficiencyColor(perf.averageEfficiency)">
+                  {{ perf.averageEfficiency?.toFixed(1) || 0 }}%
+                </span>
+              </td>
+              <td>{{ perf.averageExperience?.toFixed(1) || 0 }}</td>
+              <td>{{ perf.certificationRate?.toFixed(1) || 0 }}%</td>
+              <td>
+                <span class="status-badge" [style.background]="getStatusColor(perf.rating)">
+                  {{ perf.rating }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Regional Issues and Challenges -->
+    <div class="section" *ngIf="reportData.regionalIssues?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-exclamation-circle"></i>
+        Regional Issues and Challenges
+      </h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Region</th>
+              <th>Issue Type</th>
+              <th>Description</th>
+              <th>Severity</th>
+              <th>Impact</th>
+              <th>Reported Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let issue of reportData.regionalIssues">
+              <td><strong>{{ issue.regionName }}</strong></td>
+              <td>{{ issue.issueType }}</td>
+              <td>{{ issue.description }}</td>
+              <td>
+                <span class="status-badge" [style.background]="getStatusColor(issue.severity)">
+                  {{ issue.severity }}
+                </span>
+              </td>
+              <td>{{ issue.impact }}</td>
+              <td>{{ issue.reportedDate | date:'shortDate' }}</td>
+              <td>
+                <span class="status-badge" [style.background]="getStatusColor(issue.status)">
+                  {{ issue.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Inventory Distribution -->
+    <div class="section" *ngIf="reportData.inventoryDistribution?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-box"></i>
+        Inventory Distribution by Region
+      </h2>
+      <div class="inventory-grid">
+        <div *ngFor="let inv of reportData.inventoryDistribution" class="inventory-card">
+          <h3 class="inventory-region">{{ inv.regionName }}</h3>
+          <div class="inventory-stats">
+            <div class="inventory-item">
+              <i class="pi pi-warehouse"></i>
+              <div>
+                <div class="inventory-value">{{ inv.storeCount || 0 }}</div>
+                <div class="inventory-label">Stores</div>
+              </div>
+            </div>
+            <div class="inventory-item">
+              <i class="pi pi-box"></i>
+              <div>
+                <div class="inventory-value">{{ inv.itemCount || 0 }}</div>
+                <div class="inventory-label">Items</div>
+              </div>
+            </div>
+          </div>
+          <div class="inventory-status">
+            <div class="status-item">
+              <span>Low Stock:</span>
+              <strong class="warning">{{ inv.lowStockCount || 0 }}</strong>
+            </div>
+            <div class="status-item">
+              <span>Expiring Soon:</span>
+              <strong class="danger">{{ inv.expiringSoonCount || 0 }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cost Analysis by Region -->
+    <div class="section" *ngIf="reportData.costAnalysis?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-dollar"></i>
+        Cost Analysis by Region
+      </h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Region</th>
+              <th>Operational Cost</th>
+              <th>Maintenance Cost</th>
+              <th>Inventory Cost</th>
+              <th>Total Cost</th>
+              <th>Budget Utilization</th>
+              <th>Variance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cost of reportData.costAnalysis">
+              <td><strong>{{ cost.regionName }}</strong></td>
+              <td>{{ cost.operationalCost?.toFixed(2) || 0 }}</td>
+              <td>{{ cost.maintenanceCost?.toFixed(2) || 0 }}</td>
+              <td>{{ cost.inventoryCost?.toFixed(2) || 0 }}</td>
+              <td><strong>{{ cost.totalCost?.toFixed(2) || 0 }}</strong></td>
+              <td>{{ cost.budgetUtilization?.toFixed(1) || 0 }}%</td>
+              <td [class.positive]="cost.variance >= 0" [class.negative]="cost.variance < 0">
+                {{ cost.variance >= 0 ? '+' : '' }}{{ cost.variance?.toFixed(2) || 0 }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DETAILED DATA SECTION -->
+    <section class="detailed-data-section" *ngIf="reportData?.allRegions || reportData?.regionalResources">
+      <h2 class="section-title">
+        <i class="pi pi-database"></i>
+        Detailed Regional Data
+      </h2>
+
+      <p-tabView styleClass="detailed-tabs">
+
+        <!-- All Regions Tab -->
+        <p-tabPanel header="All Regions" *ngIf="reportData.allRegions?.length > 0">
+          <p-table [value]="reportData.allRegions" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+            <ng-template pTemplate="caption">
+              <div class="table-header">
+                <span class="table-title">Region Overview ({{reportData.allRegions.length}} Total)</span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="regionName">Region Name <p-sortIcon field="regionName"></p-sortIcon></th>
+                <th>Total Projects</th>
+                <th>Active Projects</th>
+                <th>Completed Projects</th>
+                <th>Total Machines</th>
+                <th>Total Users</th>
+                <th>Total Stores</th>
+                <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-region>
+              <tr>
+                <td><strong>{{region.regionName}}</strong></td>
+                <td class="text-center">{{region.totalProjects}}</td>
+                <td class="text-center">{{region.activeProjects}}</td>
+                <td class="text-center">{{region.completedProjects}}</td>
+                <td class="text-center">{{region.totalMachines}}</td>
+                <td class="text-center">{{region.totalUsers}}</td>
+                <td class="text-center">{{region.totalStores}}</td>
+                <td><p-tag [value]="region.status" severity="success"></p-tag></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Regional Resource Breakdown Tab -->
+        <p-tabPanel header="Resource Breakdown" *ngIf="reportData.regionalResources?.length > 0">
+          <p-table [value]="reportData.regionalResources" [paginator]="true" [rows]="5" styleClass="p-datatable-sm">
+            <ng-template pTemplate="caption">
+              <div class="table-header">
+                <span class="table-title">Detailed Resource Breakdown by Region ({{reportData.regionalResources.length}} Regions)</span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="regionName">Region <p-sortIcon field="regionName"></p-sortIcon></th>
+                <th>Machines</th>
+                <th>Users</th>
+                <th>Projects</th>
+                <th>Stores</th>
+                <th>Maintenance Jobs</th>
+                <th>Machine Uptime</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-region>
+              <tr>
+                <td><strong>{{region.regionName}}</strong></td>
+                <td class="text-center">{{region.machines?.length || 0}}</td>
+                <td class="text-center">{{region.users?.length || 0}}</td>
+                <td class="text-center">{{region.projects?.length || 0}}</td>
+                <td class="text-center">{{region.stores?.length || 0}}</td>
+                <td class="text-center">{{region.maintenanceJobs?.length || 0}}</td>
+                <td>
+                  <span [style.color]="region.performanceMetrics?.machineUptime > 80 ? '#22c55e' : region.performanceMetrics?.machineUptime > 60 ? '#f59e0b' : '#ef4444'">
+                    {{region.performanceMetrics?.machineUptime | number:'1.1-1'}}%
+                  </span>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Cross-Regional Transfers Tab -->
+        <p-tabPanel header="Cross-Regional Transfers" *ngIf="reportData.crossRegionalTransfers?.length > 0">
+          <p-table [value]="reportData.crossRegionalTransfers" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+            <ng-template pTemplate="caption">
+              <div class="table-header">
+                <span class="table-title">Cross-Regional Transfer History ({{reportData.crossRegionalTransfers.length}} Total)</span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Transfer ID</th>
+                <th>Material Type</th>
+                <th>From Region</th>
+                <th>To Region</th>
+                <th>Quantity</th>
+                <th>Request Date</th>
+                <th>Completed Date</th>
+                <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-transfer>
+              <tr>
+                <td>{{transfer.transferId}}</td>
+                <td>{{transfer.materialType}}</td>
+                <td>{{transfer.fromRegionName}}</td>
+                <td>{{transfer.toRegionName}}</td>
+                <td>{{transfer.quantity | number:'1.0-0'}} {{transfer.unit}}</td>
+                <td>{{transfer.requestDate | date:'short'}}</td>
+                <td>{{transfer.completedDate ? (transfer.completedDate | date:'short') : '-'}}</td>
+                <td>
+                  <p-tag
+                    [value]="transfer.status"
+                    [severity]="transfer.status === 'Completed' ? 'success' : transfer.status === 'Pending' ? 'warning' : 'info'">
+                  </p-tag>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+      </p-tabView>
+    </section>
+
+    <!-- Footer -->
+    <div class="report-footer">
+      <p>Generated by DBMS - Detonation and Blasting Management System</p>
+      <p>© 2024 All Rights Reserved</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,434 @@
+<div class="drilling-operations-report">
+  <!-- Header -->
+  <div class="report-header no-print">
+    <div class="header-left">
+      <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text" (click)="goBack()" label="Back"></button>
+      <h1 class="report-title">
+        <i class="pi pi-chart-line"></i>
+        Drilling Operations Report
+      </h1>
+    </div>
+    <div class="header-actions">
+      <button pButton type="button" icon="pi pi-refresh" class="p-button-text" (click)="refreshReport()" label="Refresh"></button>
+      <button pButton type="button" icon="pi pi-print" class="p-button-text" (click)="printReport()" label="Print"></button>
+      <button pButton type="button" icon="pi pi-file-pdf" class="p-button-text" (click)="exportToPdf()" label="PDF"></button>
+      <button pButton type="button" icon="pi pi-file-excel" class="p-button-text p-button-success" (click)="exportToExcel()" label="Excel"></button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+    <p>Loading drilling operations report...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <i class="pi pi-exclamation-triangle" style="font-size: 3rem; color: #ef4444"></i>
+    <p>{{ error }}</p>
+    <button pButton type="button" label="Retry" icon="pi pi-refresh" (click)="loadReport()"></button>
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="reportData && !loading && !error" class="report-content">
+
+    <!-- Report Title Section -->
+    <div class="report-title-section">
+      <h1>Drilling Operations Report</h1>
+      <p class="report-subtitle">Generated: {{ reportData.generatedAt | date:'medium' }}</p>
+      <p class="report-period" *ngIf="reportData.startDate && reportData.endDate">
+        Period: {{ reportData.startDate | date:'shortDate' }} - {{ reportData.endDate | date:'shortDate' }}
+      </p>
+      <p class="report-region" *ngIf="reportData.regionFilter">
+        <i class="pi pi-map-marker"></i> Region: {{ reportData.regionFilter }}
+      </p>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%)">
+          <i class="pi pi-circle-fill"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalDrillHoles || 0 }}</div>
+          <div class="stat-label">Total Drill Holes</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)">
+          <i class="pi pi-map-marker"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalDrillPoints || 0 }}</div>
+          <div class="stat-label">Total Drill Points</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%)">
+          <i class="pi pi-link"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalBlastConnections || 0 }}</div>
+          <div class="stat-label">Blast Connections</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)">
+          <i class="pi pi-building"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalProjectSites || 0 }}</div>
+          <div class="stat-label">Project Sites</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
+          <i class="pi pi-chart-line"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalDrillingMeters || 0 | number:'1.2-2' }}</div>
+          <div class="stat-label">Total Drilling (m)</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)">
+          <i class="pi pi-minus"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.averageDrillDepth || 0 | number:'1.2-2' }}</div>
+          <div class="stat-label">Average Depth (m)</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%)">
+          <i class="pi pi-circle"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.averageDiameter || 0 | number:'1.2-2' }}</div>
+          <div class="stat-label">Average Diameter (mm)</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%)">
+          <i class="pi pi-th-large"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.activePatterns || 0 }}</div>
+          <div class="stat-label">Active Patterns</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs for Detailed Views -->
+    <div class="report-tabs">
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'projectSites'"
+          (click)="activeTab = 'projectSites'">
+          <i class="pi pi-building"></i>
+          <span>Project Sites</span>
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'regionalDistribution'"
+          (click)="activeTab = 'regionalDistribution'">
+          <i class="pi pi-map-marker"></i>
+          <span>Regional Distribution</span>
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'blastConnections'"
+          (click)="activeTab = 'blastConnections'">
+          <i class="pi pi-link"></i>
+          <span>Blast Connections</span>
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'explosiveCalculations'"
+          (click)="activeTab = 'explosiveCalculations'">
+          <i class="pi pi-bolt"></i>
+          <span>Explosive Calculations</span>
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'allDrillHoles'"
+          (click)="activeTab = 'allDrillHoles'">
+          <i class="pi pi-circle-fill"></i>
+          <span>All Drill Holes</span>
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 'allDrillPoints'"
+          (click)="activeTab = 'allDrillPoints'">
+          <i class="pi pi-map-marker"></i>
+          <span>All Drill Points</span>
+        </button>
+      </div>
+
+      <!-- Project Sites Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'projectSites'">
+          <h3><i class="pi pi-building"></i> Drilling by Project Site</h3>
+
+          <!-- Chart -->
+          <div *ngIf="projectSiteChartData" class="chart-container">
+            <p-chart type="bar" [data]="projectSiteChartData" [options]="{responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'top'}}}"></p-chart>
+          </div>
+
+          <!-- Table -->
+          <p-table [value]="reportData.drillingByProjectSite || []" [paginator]="true" [rows]="10"
+                   [showCurrentPageReport]="true" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} sites"
+                   [rowsPerPageOptions]="[10,25,50]" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="projectSiteName">Site Name <p-sortIcon field="projectSiteName"></p-sortIcon></th>
+                <th pSortableColumn="projectName">Project <p-sortIcon field="projectName"></p-sortIcon></th>
+                <th pSortableColumn="regionName">Region <p-sortIcon field="regionName"></p-sortIcon></th>
+                <th pSortableColumn="drillHoleCount" class="text-right">Drill Holes <p-sortIcon field="drillHoleCount"></p-sortIcon></th>
+                <th pSortableColumn="drillPointCount" class="text-right">Drill Points <p-sortIcon field="drillPointCount"></p-sortIcon></th>
+                <th pSortableColumn="totalDepth" class="text-right">Total Depth (m) <p-sortIcon field="totalDepth"></p-sortIcon></th>
+                <th pSortableColumn="averageDepth" class="text-right">Avg Depth (m) <p-sortIcon field="averageDepth"></p-sortIcon></th>
+                <th pSortableColumn="blastConnectionCount" class="text-right">Connections <p-sortIcon field="blastConnectionCount"></p-sortIcon></th>
+                <th>Status</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-site>
+              <tr>
+                <td>{{ site.projectSiteName }}</td>
+                <td>{{ site.projectName }}</td>
+                <td>{{ site.regionName }}</td>
+                <td class="text-right">{{ site.drillHoleCount }}</td>
+                <td class="text-right">{{ site.drillPointCount }}</td>
+                <td class="text-right">{{ site.totalDepth | number:'1.2-2' }}</td>
+                <td class="text-right">{{ site.averageDepth | number:'1.2-2' }}</td>
+                <td class="text-right">{{ site.blastConnectionCount }}</td>
+                <td><p-tag [value]="site.status" [severity]="getStatusSeverity(site.status)"></p-tag></td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="9" class="text-center">No project site data available</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      <!-- Regional Distribution Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'regionalDistribution'">
+          <h3><i class="pi pi-map-marker"></i> Drilling by Region</h3>
+
+          <!-- Chart -->
+          <div *ngIf="regionalChartData" class="chart-container">
+            <p-chart type="bar" [data]="regionalChartData" [options]="{responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: {legend: {display: false}}}"></p-chart>
+          </div>
+
+          <!-- Table -->
+          <p-table [value]="reportData.drillingByRegion || []" [paginator]="true" [rows]="10"
+                   styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="regionName">Region <p-sortIcon field="regionName"></p-sortIcon></th>
+                <th pSortableColumn="totalDrillHoles" class="text-right">Drill Holes <p-sortIcon field="totalDrillHoles"></p-sortIcon></th>
+                <th pSortableColumn="totalDrillPoints" class="text-right">Drill Points <p-sortIcon field="totalDrillPoints"></p-sortIcon></th>
+                <th pSortableColumn="projectSiteCount" class="text-right">Sites <p-sortIcon field="projectSiteCount"></p-sortIcon></th>
+                <th pSortableColumn="totalDepth" class="text-right">Total Depth (m) <p-sortIcon field="totalDepth"></p-sortIcon></th>
+                <th pSortableColumn="averageDepth" class="text-right">Avg Depth (m) <p-sortIcon field="averageDepth"></p-sortIcon></th>
+                <th pSortableColumn="blastConnectionCount" class="text-right">Connections <p-sortIcon field="blastConnectionCount"></p-sortIcon></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-region>
+              <tr>
+                <td><strong>{{ region.regionName }}</strong></td>
+                <td class="text-right">{{ region.totalDrillHoles }}</td>
+                <td class="text-right">{{ region.totalDrillPoints }}</td>
+                <td class="text-right">{{ region.projectSiteCount }}</td>
+                <td class="text-right">{{ region.totalDepth | number:'1.2-2' }}</td>
+                <td class="text-right">{{ region.averageDepth | number:'1.2-2' }}</td>
+                <td class="text-right">{{ region.blastConnectionCount }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="text-center">No regional data available</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      <!-- Blast Connections Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'blastConnections'">
+          <h3><i class="pi pi-link"></i> Blast Connection Details</h3>
+          <p-table [value]="reportData.blastConnections || []" [paginator]="true" [rows]="10"
+                   [showCurrentPageReport]="true" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} connections"
+                   [rowsPerPageOptions]="[10,25,50]" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="connectionId">Connection ID <p-sortIcon field="connectionId"></p-sortIcon></th>
+                <th pSortableColumn="connectorType">Type <p-sortIcon field="connectorType"></p-sortIcon></th>
+                <th>Point 1 ID</th>
+                <th>Point 2 ID</th>
+                <th pSortableColumn="delay" class="text-right">Delay (ms) <p-sortIcon field="delay"></p-sortIcon></th>
+                <th pSortableColumn="sequence" class="text-right">Sequence <p-sortIcon field="sequence"></p-sortIcon></th>
+                <th pSortableColumn="projectSiteName">Project Site <p-sortIcon field="projectSiteName"></p-sortIcon></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-conn>
+              <tr>
+                <td>{{ conn.connectionId }}</td>
+                <td><p-tag [value]="conn.connectorType" severity="info"></p-tag></td>
+                <td>{{ conn.point1DrillPointId }}</td>
+                <td>{{ conn.point2DrillPointId }}</td>
+                <td class="text-right">{{ conn.delay }}</td>
+                <td class="text-right">{{ conn.sequence }}</td>
+                <td>{{ conn.projectSiteName }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="text-center">No blast connections available</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      <!-- Explosive Calculations Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'explosiveCalculations'">
+          <h3><i class="pi pi-bolt"></i> Explosive Calculation Results</h3>
+          <p-table [value]="reportData.explosiveCalculations || []" [paginator]="true" [rows]="10"
+                   styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="calculationId">Calculation ID <p-sortIcon field="calculationId"></p-sortIcon></th>
+                <th pSortableColumn="projectSiteName">Project Site <p-sortIcon field="projectSiteName"></p-sortIcon></th>
+                <th pSortableColumn="totalAnfo" class="text-right">ANFO (kg) <p-sortIcon field="totalAnfo"></p-sortIcon></th>
+                <th pSortableColumn="totalEmulsion" class="text-right">Emulsion (kg) <p-sortIcon field="totalEmulsion"></p-sortIcon></th>
+                <th pSortableColumn="totalExplosive" class="text-right">Total (kg) <p-sortIcon field="totalExplosive"></p-sortIcon></th>
+                <th pSortableColumn="numberOfFilledHoles" class="text-right">Filled Holes <p-sortIcon field="numberOfFilledHoles"></p-sortIcon></th>
+                <th pSortableColumn="calculationDate">Date <p-sortIcon field="calculationDate"></p-sortIcon></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-calc>
+              <tr>
+                <td>{{ calc.calculationId }}</td>
+                <td>{{ calc.projectSiteName }}</td>
+                <td class="text-right">{{ calc.totalAnfo | number:'1.2-2' }}</td>
+                <td class="text-right">{{ calc.totalEmulsion | number:'1.2-2' }}</td>
+                <td class="text-right"><strong>{{ calc.totalExplosive | number:'1.2-2' }}</strong></td>
+                <td class="text-right">{{ calc.numberOfFilledHoles }}</td>
+                <td>{{ calc.calculationDate | date:'short' }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="text-center">No explosive calculations available</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      <!-- All Drill Holes Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'allDrillHoles'">
+          <h3><i class="pi pi-circle-fill"></i> Detailed Drill Hole Data</h3>
+          <p-table [value]="reportData.allDrillHoles || []" [paginator]="true" [rows]="10"
+                   [showCurrentPageReport]="true" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} drill holes"
+                   [rowsPerPageOptions]="[10,25,50,100]" [globalFilterFields]="['holeName','projectSiteName']"
+                   styleClass="p-datatable-striped">
+            <ng-template pTemplate="caption">
+              <div class="flex">
+                <span class="p-input-icon-left ml-auto">
+                  <i class="pi pi-search"></i>
+                  <input pInputText type="text" placeholder="Search by hole name or site" #globalFilter />
+                </span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="holeId">Hole ID <p-sortIcon field="holeId"></p-sortIcon></th>
+                <th pSortableColumn="holeName">Hole Name <p-sortIcon field="holeName"></p-sortIcon></th>
+                <th pSortableColumn="depth" class="text-right">Depth (m) <p-sortIcon field="depth"></p-sortIcon></th>
+                <th pSortableColumn="easting" class="text-right">Easting <p-sortIcon field="easting"></p-sortIcon></th>
+                <th pSortableColumn="northing" class="text-right">Northing <p-sortIcon field="northing"></p-sortIcon></th>
+                <th pSortableColumn="elevation" class="text-right">Elevation <p-sortIcon field="elevation"></p-sortIcon></th>
+                <th pSortableColumn="projectSiteName">Site <p-sortIcon field="projectSiteName"></p-sortIcon></th>
+                <th pSortableColumn="createdDate">Created <p-sortIcon field="createdDate"></p-sortIcon></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-hole>
+              <tr>
+                <td>{{ hole.holeId }}</td>
+                <td><strong>{{ hole.holeName }}</strong></td>
+                <td class="text-right">{{ hole.depth | number:'1.2-2' }}</td>
+                <td class="text-right">{{ hole.easting | number:'1.2-2' }}</td>
+                <td class="text-right">{{ hole.northing | number:'1.2-2' }}</td>
+                <td class="text-right">{{ hole.elevation | number:'1.2-2' }}</td>
+                <td>{{ hole.projectSiteName }}</td>
+                <td>{{ hole.createdDate | date:'short' }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="text-center">No drill holes available</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      <!-- All Drill Points Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'allDrillPoints'">
+          <h3><i class="pi pi-map-marker"></i> Detailed Drill Point Data</h3>
+          <p-table [value]="reportData.allDrillPoints || []" [paginator]="true" [rows]="10"
+                   [showCurrentPageReport]="true" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} drill points"
+                   [rowsPerPageOptions]="[10,25,50,100]" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="pointId">Point ID <p-sortIcon field="pointId"></p-sortIcon></th>
+                <th pSortableColumn="x" class="text-right">X <p-sortIcon field="x"></p-sortIcon></th>
+                <th pSortableColumn="y" class="text-right">Y <p-sortIcon field="y"></p-sortIcon></th>
+                <th pSortableColumn="depth" class="text-right">Depth (m) <p-sortIcon field="depth"></p-sortIcon></th>
+                <th pSortableColumn="diameter" class="text-right">Diameter (mm) <p-sortIcon field="diameter"></p-sortIcon></th>
+                <th pSortableColumn="projectSiteName">Site <p-sortIcon field="projectSiteName"></p-sortIcon></th>
+                <th pSortableColumn="createdDate">Created <p-sortIcon field="createdDate"></p-sortIcon></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-point>
+              <tr>
+                <td>{{ point.pointId }}</td>
+                <td class="text-right">{{ point.x | number:'1.2-2' }}</td>
+                <td class="text-right">{{ point.y | number:'1.2-2' }}</td>
+                <td class="text-right">{{ point.depth | number:'1.2-2' }}</td>
+                <td class="text-right">{{ point.diameter | number:'1.2-2' }}</td>
+                <td>{{ point.projectSiteName }}</td>
+                <td>{{ point.createdDate | date:'short' }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="text-center">No drill points available</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="report-footer">
+      <p>Generated by DBMS - Detonation and Blasting Management System</p>
+      <p>© 2024 All Rights Reserved</p>
+    </div>
+  </div>
+</div>

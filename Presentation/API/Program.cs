@@ -184,6 +184,9 @@ builder.Services.AddScoped<Application.Interfaces.MachineManagement.IUsageLogRep
 builder.Services.AddScoped<Application.Interfaces.MachineManagement.IUsageLogService, Application.Services.MachineManagement.UsageLogApplicationService>();
 builder.Services.AddScoped<Application.Interfaces.MachineManagement.IMachineServiceConfigService, Application.Services.MachineManagement.MachineServiceConfigApplicationService>();
 
+// Register Reports services
+builder.Services.AddScoped<Application.Interfaces.Reports.IReportService, Application.Services.Reports.ReportService>();
+
 // Register Domain Event Handlers
 builder.Services.AddScoped<Infrastructure.Services.IDomainEventHandler<Domain.Events.MachineManagement.UsageLogCreatedEvent>, Infrastructure.Handlers.MachineManagement.UsageLogCreatedEventHandler>();
 builder.Services.AddScoped<Infrastructure.Services.IDomainEventHandler<Domain.Events.MaintenanceOperations.ServiceCompletedEvent>, Infrastructure.Handlers.MaintenanceOperations.ServiceCompletedEventHandler>();

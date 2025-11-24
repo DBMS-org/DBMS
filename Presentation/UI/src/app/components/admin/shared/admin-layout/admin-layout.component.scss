@@ -19,6 +19,12 @@
   transition: margin-left 0.3s ease;
 }
 
+.main-content-wrapper {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .sidebar-collapsed {
   .main-content {
     margin-left: 70px;

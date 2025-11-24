@@ -43,7 +43,12 @@
       "Bash(rm:*)",
       "Bash(build-output.txt)",
       "Bash(dir /s /b \"C:\\Users\\Zuhran Yousaf\\Desktop\\Main project\\DBMS\\Presentation\\UI\\src\\app\\components\\store-manager\\blasting-engineer-requests\\request-details\")",
-      "Bash(Select-Object -First 100)"
+      "Bash(Select-Object -First 100)",
+      "Bash(cmd /c \"dir /s /b Application\\DTOs\")",
+      "Bash(\"Application\\DTOs\\Reports\\MaintenancePerformanceReportDto.cs\")",
+      "Bash(dir:*)",
+      "Bash(Select-String -Pattern \"Error|error|Build succeeded|Build FAILED\" -Context 2)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []

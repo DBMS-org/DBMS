@@ -16,7 +16,6 @@ export class SidebarComponent {
     { path: '/blasting-engineer/dashboard', icon: 'dashboard', label: 'Dashboard' },
     { path: '/blasting-engineer/project-management', icon: 'work', label: 'Project Management' },
     { path: '/blasting-engineer/proposal-history', icon: 'history', label: 'Proposal History' },
-    { path: '/blasting-engineer/reports', icon: 'assessment', label: 'Reports' },
     { path: '/blasting-engineer/notifications', icon: 'notifications', label: 'Notifications' }
   ];
 }

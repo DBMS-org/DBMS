@@ -1,0 +1,416 @@
+<div class="explosive-workflow-report-container">
+  <!-- Header -->
+  <div class="report-header no-print">
+    <div class="header-content">
+      <div class="title-section">
+        <button type="button" class="back-btn" (click)="goBack()">
+          <i class="pi pi-arrow-left"></i>
+          Back
+        </button>
+        <h1 class="report-title">
+          <i class="pi pi-chart-bar"></i>
+          Explosive Workflow Report
+        </h1>
+      </div>
+      <div class="action-buttons">
+        <button type="button" class="action-btn print-btn" (click)="printReport()">
+          <i class="pi pi-print"></i>
+          Print
+        </button>
+        <button type="button" class="action-btn export-btn" (click)="exportToPdf()">
+          <i class="pi pi-file-pdf"></i>
+          PDF
+        </button>
+        <button type="button" class="action-btn export-btn" (click)="exportToExcel()">
+          <i class="pi pi-file-excel"></i>
+          Excel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Generating Explosive Workflow Report...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <i class="pi pi-exclamation-circle error-icon"></i>
+    <p>{{ error }}</p>
+    <button class="retry-button" (click)="loadReport()">Retry</button>
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="!loading && !error && report" class="report-content">
+    <!-- Report Title -->
+    <div class="report-title-section">
+      <h1>Explosive Workflow Report</h1>
+      <p class="report-subtitle">Generated: {{ report.generatedAt | date:'medium' }}</p>
+      <p class="report-period" *ngIf="report.startDate && report.endDate">
+        Period: {{ report.startDate | date:'shortDate' }} - {{ report.endDate | date:'shortDate' }}
+      </p>
+
+      <!-- Workflow Explanation -->
+      <div class="workflow-explanation">
+        <h3><i class="pi pi-info-circle"></i> Workflow Overview</h3>
+        <div class="workflow-steps">
+          <div class="workflow-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <strong>Blasting Engineer Request</strong>
+              <p>Blasting Engineer creates an Explosive Approval Request for a project site</p>
+            </div>
+          </div>
+          <div class="workflow-arrow"><i class="pi pi-arrow-right"></i></div>
+          <div class="workflow-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <strong>Store Manager Approval</strong>
+              <p>Store Manager reviews and approves/rejects the approval request</p>
+            </div>
+          </div>
+          <div class="workflow-arrow"><i class="pi pi-arrow-right"></i></div>
+          <div class="workflow-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <strong>Store Manager Transfer Request</strong>
+              <p>Store Manager creates a Transfer Request to get explosives from central warehouse</p>
+            </div>
+          </div>
+          <div class="workflow-arrow"><i class="pi pi-arrow-right"></i></div>
+          <div class="workflow-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <strong>Explosive Manager Approval</strong>
+              <p>Explosive Manager approves the transfer and marks dispatch/completion status</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.statistics.totalApprovalRequests }}</div>
+          <div class="stat-label">Total Approval Requests</div>
+          <small class="stat-meta">{{ report.statistics.approvalRate | number:'1.0-0' }}% Approval Rate</small>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%)">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.statistics.pendingApprovals }}</div>
+          <div class="stat-label">Pending Approvals</div>
+          <small class="stat-meta">{{ report.statistics.approvedRequests }} Approved, {{ report.statistics.rejectedRequests }} Rejected</small>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)">
+          <i class="pi pi-arrow-right-arrow-left"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.statistics.totalTransferRequests }}</div>
+          <div class="stat-label">Total Transfer Requests</div>
+          <small class="stat-meta">{{ report.statistics.transferCompletionRate | number:'1.0-0' }}% Completion Rate</small>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)">
+          <i class="pi pi-hourglass"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.statistics.inProgressTransfers }}</div>
+          <div class="stat-label">In Progress Transfers</div>
+          <small class="stat-meta">{{ report.statistics.completedTransfers }} Completed</small>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)">
+          <i class="pi pi-list"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.statistics.totalWorkflowItems }}</div>
+          <div class="stat-label">Total Workflow Items</div>
+          <small class="stat-meta">{{ report.statistics.overallCompletionRate | number:'1.0-0' }}% Overall Completion</small>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%)">
+          <i class="pi pi-calendar"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.turnaroundAnalysis.overallAverageTurnaroundDays | number:'1.1-1' }}</div>
+          <div class="stat-label">Avg Turnaround (Days)</div>
+          <small class="stat-meta">Across all workflow items</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval Requests Section -->
+    <div class="section">
+      <h2 class="section-title">
+        <i class="pi pi-check-circle"></i>
+        Stage 1: Blasting Engineer Approval Requests (Approved by Store Manager)
+      </h2>
+
+      <!-- Approval Status Chart -->
+      <div class="chart-card">
+        <h3>Approval Requests by Status</h3>
+        <div class="chart-container">
+          <p-chart type="pie" [data]="approvalStatusChart" [options]="{
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }"></p-chart>
+        </div>
+      </div>
+
+      <!-- Approval Requests Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Project Site</th>
+              <th>Requested By (Blasting Engineer)</th>
+              <th>Approved/Rejected By (Store Manager)</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Type</th>
+              <th>Created</th>
+              <th>Processed</th>
+              <th>Turnaround</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let request of report.approvalRequests">
+              <td>{{ request.id }}</td>
+              <td>{{ request.projectSiteName }}</td>
+              <td>{{ request.requestedByUserName }}</td>
+              <td>{{ request.processedByUserName || 'Pending' }}</td>
+              <td><p-tag [value]="request.status" [severity]="getStatusSeverity(request.status)"></p-tag></td>
+              <td><p-tag [value]="request.priority" [severity]="getPrioritySeverity(request.priority)"></p-tag></td>
+              <td>{{ request.approvalType }}</td>
+              <td>{{ request.createdDate | date:'short' }}</td>
+              <td>{{ request.processedAt ? (request.processedAt | date:'short') : 'Pending' }}</td>
+              <td>{{ request.turnaroundDays ? (request.turnaroundDays + ' days') : 'N/A' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Transfer Requests Section -->
+    <div class="section">
+      <h2 class="section-title">
+        <i class="pi pi-arrow-right-arrow-left"></i>
+        Stage 2: Store Manager Transfer Requests (Approved by Explosive Manager)
+      </h2>
+
+      <!-- Transfer Status Chart -->
+      <div class="chart-card">
+        <h3>Transfer Requests by Status</h3>
+        <div class="chart-container">
+          <p-chart type="doughnut" [data]="transferStatusChart" [options]="{
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }"></p-chart>
+        </div>
+      </div>
+
+      <!-- Quantity Analysis -->
+      <div class="quantity-analysis">
+        <h3>Quantity Analysis</h3>
+        <div class="quantity-grid">
+          <div class="quantity-card">
+            <i class="pi pi-arrow-up"></i>
+            <div class="quantity-details">
+              <span class="quantity-label">Total Requested</span>
+              <span class="quantity-value">{{ report.transferAnalysis.totalRequestedQuantity | number:'1.2-2' }} kg</span>
+            </div>
+          </div>
+          <div class="quantity-card">
+            <i class="pi pi-check"></i>
+            <div class="quantity-details">
+              <span class="quantity-label">Total Approved</span>
+              <span class="quantity-value">{{ report.transferAnalysis.totalApprovedQuantity | number:'1.2-2' }} kg</span>
+            </div>
+          </div>
+          <div class="quantity-card">
+            <i class="pi pi-send"></i>
+            <div class="quantity-details">
+              <span class="quantity-label">Total Transferred</span>
+              <span class="quantity-value">{{ report.transferAnalysis.totalTransferredQuantity | number:'1.2-2' }} kg</span>
+            </div>
+          </div>
+          <div class="quantity-card highlight">
+            <i class="pi pi-percentage"></i>
+            <div class="quantity-details">
+              <span class="quantity-label">Fulfillment Rate</span>
+              <span class="quantity-value">{{ report.transferAnalysis.quantityFulfillmentRate | number:'1.1-1' }}%</span>
+            </div>
+          </div>
+          <div class="quantity-card danger">
+            <i class="pi pi-exclamation-triangle"></i>
+            <div class="quantity-details">
+              <span class="quantity-label">Overdue Requests</span>
+              <span class="quantity-value">{{ report.transferAnalysis.overdueCount }}</span>
+            </div>
+          </div>
+          <div class="quantity-card warning">
+            <i class="pi pi-bolt"></i>
+            <div class="quantity-details">
+              <span class="quantity-label">Urgent Requests</span>
+              <span class="quantity-value">{{ report.transferAnalysis.urgentCount }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transfer Requests Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Request #</th>
+              <th>Explosive Type</th>
+              <th>Destination Store</th>
+              <th>Quantity</th>
+              <th>Status</th>
+              <th>Requested By (Store Manager)</th>
+              <th>Approved By (Explosive Manager)</th>
+              <th>Request Date</th>
+              <th>Approved Date</th>
+              <th>Transfer Status</th>
+              <th>Flags</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let request of report.transferRequests">
+              <td><strong>{{ request.requestNumber }}</strong></td>
+              <td>{{ request.explosiveTypeName }}</td>
+              <td>{{ request.destinationStoreName }}</td>
+              <td>
+                <div><strong>Requested:</strong> {{ request.requestedQuantity | number:'1.2-2' }} {{ request.unit }}</div>
+                <div *ngIf="request.approvedQuantity" class="text-green"><strong>Approved:</strong> {{ request.approvedQuantity | number:'1.2-2' }} {{ request.unit }}</div>
+              </td>
+              <td><p-tag [value]="request.status" [severity]="getStatusSeverity(request.status)"></p-tag></td>
+              <td>{{ request.requestedByUserName }}</td>
+              <td>{{ request.approvedByUserName || 'Pending' }}</td>
+              <td>{{ request.requestDate | date:'short' }}</td>
+              <td>{{ request.approvedDate ? (request.approvedDate | date:'short') : 'Pending' }}</td>
+              <td>
+                <div *ngIf="request.status === 'InProgress' || request.status === 'Completed'">
+                  <div *ngIf="request.truckNumber"><i class="pi pi-truck"></i> {{ request.truckNumber }}</div>
+                  <div *ngIf="request.driverName"><i class="pi pi-user"></i> {{ request.driverName }}</div>
+                  <div *ngIf="request.dispatchDate"><i class="pi pi-calendar"></i> {{ request.dispatchDate | date:'short' }}</div>
+                  <div *ngIf="request.status === 'Completed'" class="text-green"><i class="pi pi-check-circle"></i> Delivered</div>
+                </div>
+                <div *ngIf="request.status === 'Pending' || request.status === 'Approved'">
+                  <span class="text-gray">{{ request.status === 'Pending' ? 'Awaiting approval' : 'Ready for dispatch' }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="flag-container">
+                  <p-tag *ngIf="request.isOverdue" value="Overdue" severity="danger" icon="pi pi-exclamation-triangle"></p-tag>
+                  <p-tag *ngIf="request.isUrgent" value="Urgent" severity="warning" icon="pi pi-clock"></p-tag>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Requester Statistics Section -->
+    <div class="section">
+      <h2 class="section-title">
+        <i class="pi pi-users"></i>
+        Requester Performance Analysis
+      </h2>
+
+      <div class="chart-card">
+        <h3>Top 5 Requesters by Total Requests</h3>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="requesterChart" [options]="{
+            indexAxis: 'y',
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Number of Requests'
+                }
+              }
+            }
+          }"></p-chart>
+        </div>
+      </div>
+
+      <!-- Requester Statistics Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User Name</th>
+              <th>Role</th>
+              <th>Approval Requests</th>
+              <th>Transfer Requests</th>
+              <th>Total Requests</th>
+              <th>Approved</th>
+              <th>Rejected</th>
+              <th>Pending</th>
+              <th>Approval Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let requester of report.requesterStatistics">
+              <td><strong>{{ requester.userName }}</strong></td>
+              <td>{{ requester.userRole }}</td>
+              <td>{{ requester.totalApprovalRequests }}</td>
+              <td>{{ requester.totalTransferRequests }}</td>
+              <td><strong>{{ requester.totalRequests }}</strong></td>
+              <td><span class="text-green">{{ requester.approvedCount }}</span></td>
+              <td><span class="text-red">{{ requester.rejectedCount }}</span></td>
+              <td><span class="text-yellow">{{ requester.pendingCount }}</span></td>
+              <td>
+                <p-tag [value]="(requester.approvalRate | number:'1.1-1') + '%'"
+                       [severity]="requester.approvalRate >= 75 ? 'success' : (requester.approvalRate >= 50 ? 'warning' : 'danger')"></p-tag>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="report-footer">
+      <p>Generated by DBMS - Detonation and Blasting Management System</p>
+      <p>© 2024 All Rights Reserved</p>
+    </div>
+  </div>
+</div>

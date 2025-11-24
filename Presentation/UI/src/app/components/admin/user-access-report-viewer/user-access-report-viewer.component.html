@@ -1,0 +1,218 @@
+<div class="user-access-report-container">
+  <!-- Header -->
+  <div class="report-header no-print">
+    <div class="header-content">
+      <div class="title-section">
+        <button type="button" class="back-btn" (click)="goBack()">
+          <i class="pi pi-arrow-left"></i>
+          Back
+        </button>
+        <h1 class="report-title">
+          <i class="pi pi-users"></i>
+          User & Access Management Report
+        </h1>
+      </div>
+      <div class="action-buttons">
+        <button type="button" class="action-btn print-btn" (click)="printReport()">
+          <i class="pi pi-print"></i>
+          Print
+        </button>
+        <button type="button" class="action-btn export-btn" (click)="exportToPdf()">
+          <i class="pi pi-file-pdf"></i>
+          PDF
+        </button>
+        <button type="button" class="action-btn export-btn" (click)="exportToExcel()">
+          <i class="pi pi-file-excel"></i>
+          Excel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Generating User & Access Management Report...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <i class="pi pi-exclamation-circle error-icon"></i>
+    <p>{{ error }}</p>
+    <button class="retry-button" (click)="loadReport()">Retry</button>
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="!loading && !error && report" class="report-content">
+    <!-- Report Title -->
+    <div class="report-title-section">
+      <h1>User & Access Management Report</h1>
+      <p class="report-subtitle">Generated: {{ report.generatedAt | date:'medium' }}</p>
+      <p class="report-period" *ngIf="report.startDate && report.endDate">
+        Period: {{ report.startDate | date:'shortDate' }} - {{ report.endDate | date:'shortDate' }}
+      </p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)">
+          <i class="pi pi-users"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.statistics.totalUsers }}</div>
+          <div class="stat-label">Total Users</div>
+          <small class="stat-meta">{{ report.statistics.activeUsers }} Active, {{ report.statistics.inactiveUsers }} Inactive</small>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
+          <i class="pi pi-shield"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.statistics.totalRoles }}</div>
+          <div class="stat-label">Total Roles</div>
+          <small class="stat-meta">{{ report.statistics.usersWithMultipleRoles }} users with multiple roles</small>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)">
+          <i class="pi pi-user-plus"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ report.statistics.adminUsers }}</div>
+          <div class="stat-label">Admin Users</div>
+          <small class="stat-meta">{{ report.statistics.regularUsers }} Regular Users</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Section -->
+    <div class="section">
+      <h2 class="section-title">
+        <i class="pi pi-users"></i>
+        User Overview
+      </h2>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>User Status Distribution</h3>
+          <div class="chart-container">
+            <p-chart type="doughnut" [data]="userStatusChart" [options]="{
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              }
+            }"></p-chart>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Activity Status</h3>
+          <div class="chart-container">
+            <p-chart type="pie" [data]="activityStatusChart" [options]="{
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              }
+            }"></p-chart>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Region</th>
+              <th>Roles</th>
+              <th>Status</th>
+              <th>Last Login</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of report.users">
+              <td>{{ user.userId }}</td>
+              <td>
+                <div class="user-info">
+                  <p-avatar icon="pi pi-user" shape="circle" [style]="{'background-color': '#dee2e6'}"></p-avatar>
+                  <strong>{{ user.username }}</strong>
+                </div>
+              </td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phoneNumber }}</td>
+              <td>{{ user.region }}</td>
+              <td>
+                <div class="roles-container">
+                  <p-chip *ngFor="let role of user.roles; let i = index"
+                          [label]="role"
+                          [styleClass]="'role-chip-' + getRoleChipColor(i)">
+                  </p-chip>
+                </div>
+              </td>
+              <td><p-tag [value]="user.isActive ? 'Active' : 'Inactive'" [severity]="getUserStatusSeverity(user.isActive)"></p-tag></td>
+              <td>{{ user.lastLoginDate ? (user.lastLoginDate | date:'short') : 'Never' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- User Activity Section -->
+    <div class="section">
+      <h2 class="section-title">
+        <i class="pi pi-chart-line"></i>
+        User Activity Summary
+      </h2>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Primary Role</th>
+              <th>Last Login</th>
+              <th>Activity Status</th>
+              <th>Account Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let activity of report.userActivity">
+              <td>{{ activity.userId }}</td>
+              <td>
+                <div class="user-info">
+                  <p-avatar icon="pi pi-user" shape="circle" [style]="{'background-color': '#dee2e6'}"></p-avatar>
+                  <strong>{{ activity.username }}</strong>
+                </div>
+              </td>
+              <td>{{ activity.primaryRole }}</td>
+              <td>{{ activity.lastLoginDate ? (activity.lastLoginDate | date:'short') : 'Never' }}</td>
+              <td>
+                <p-tag [value]="activity.activityStatus" [severity]="getActivityStatusSeverity(activity.activityStatus)"></p-tag>
+              </td>
+              <td>
+                <p-tag [value]="activity.isActive ? 'Active' : 'Inactive'" [severity]="getUserStatusSeverity(activity.isActive)"></p-tag>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="report-footer">
+      <p>Generated by DBMS - Detonation and Blasting Management System</p>
+      <p>© 2024 All Rights Reserved</p>
+    </div>
+  </div>
+</div>

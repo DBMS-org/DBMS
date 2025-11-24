@@ -81,6 +81,24 @@ namespace Infrastructure.Repositories.ProjectManagement
             }
         }
 
+        public async Task<IEnumerable<ExplosiveApprovalRequest>> GetAllAsync()
+        {
+            try
+            {
+                return await _context.ExplosiveApprovalRequests
+                    .Include(e => e.ProjectSite)
+                    .Include(e => e.RequestedByUser)
+                    .Include(e => e.ProcessedByUser)
+                    .OrderByDescending(e => e.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all explosive approval requests");
+                throw;
+            }
+        }
+
         public async Task<IEnumerable<ExplosiveApprovalRequest>> GetPendingRequestsAsync()
         {
             try

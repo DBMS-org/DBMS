@@ -1,0 +1,583 @@
+<div class="maintenance-report-container">
+  <!-- Header -->
+  <div class="report-header no-print">
+    <div class="header-content">
+      <div class="title-section">
+        <button type="button" class="back-btn" (click)="goBack()">
+          <i class="pi pi-arrow-left"></i>
+          Back
+        </button>
+        <h1 class="report-title">
+          <i class="pi pi-wrench"></i>
+          Maintenance Performance Report
+        </h1>
+      </div>
+      <div class="action-buttons">
+        <button type="button" class="action-btn print-btn" (click)="printReport()">
+          <i class="pi pi-print"></i>
+          Print
+        </button>
+        <button type="button" class="action-btn export-btn" (click)="exportToPdf()">
+          <i class="pi pi-file-pdf"></i>
+          PDF
+        </button>
+        <button type="button" class="action-btn export-btn" (click)="exportToExcel()">
+          <i class="pi pi-file-excel"></i>
+          Excel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Generating Maintenance Performance Report...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <i class="pi pi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button class="retry-button" (click)="loadReport()">Retry</button>
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="!loading && !error && reportData" class="report-content">
+    <!-- Report Title -->
+    <div class="report-title-section">
+      <h1>Maintenance Performance Report</h1>
+      <p class="report-subtitle">Generated: {{ reportData.generatedAt | date:'medium' }}</p>
+      <p class="report-period" *ngIf="reportData.startDate && reportData.endDate">
+        Period: {{ reportData.startDate | date:'shortDate' }} - {{ reportData.endDate | date:'shortDate' }}
+      </p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+          <i class="pi pi-wrench"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.totalMaintenanceRecords || 0 }}</div>
+          <div class="stat-label">Total Maintenance Records</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.completedMaintenance || 0 }}</div>
+          <div class="stat-label">Completed Maintenance</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.inProgressMaintenance || 0 }}</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%)">
+          <i class="pi pi-calendar"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.pendingMaintenance || 0 }}</div>
+          <div class="stat-label">Pending Maintenance</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)">
+          <i class="pi pi-hourglass"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.averageCompletionTimeHours?.toFixed(1) || 0 }}h</div>
+          <div class="stat-label">Avg Completion Time</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)">
+          <i class="pi pi-percentage"></i>
+        </div>
+        <div class="stat-details">
+          <div class="stat-value">{{ reportData.statistics?.maintenanceCompletionRate?.toFixed(1) || 0 }}%</div>
+          <div class="stat-label">Completion Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Maintenance Type Breakdown -->
+    <div class="section">
+      <h2 class="section-title">
+        <i class="pi pi-chart-pie"></i>
+        Maintenance Type Breakdown
+      </h2>
+      <div class="type-breakdown-grid">
+        <div *ngFor="let type of reportData.maintenanceTypeBreakdown" class="type-card">
+          <div class="type-header">
+            <span class="type-name">{{ type.maintenanceType }}</span>
+            <span class="type-count">{{ type.count }}</span>
+          </div>
+          <div class="type-percentage-bar">
+            <div class="type-percentage-fill"
+                 [style.width]="getPercentageWidth(type.percentage)"
+                 [style.background]="getTypeColor(type.maintenanceType)">
+            </div>
+          </div>
+          <div class="type-stats">
+            <div class="type-stat">
+              <span class="type-stat-label">Percentage:</span>
+              <span class="type-stat-value">{{ type.percentage?.toFixed(1) }}%</span>
+            </div>
+            <div class="type-stat">
+              <span class="type-stat-label">Avg Time:</span>
+              <span class="type-stat-value">{{ type.averageCompletionTimeHours?.toFixed(1) }}h</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Performing Mechanics -->
+    <div class="section" *ngIf="reportData.topPerformingMechanics?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-users"></i>
+        Top Performing Mechanics
+      </h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Mechanic Name</th>
+              <th>Tasks Completed</th>
+              <th>Avg Time (hrs)</th>
+              <th>Completion Rate</th>
+              <th>Machines Serviced</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let mechanic of reportData.topPerformingMechanics; let i = index">
+              <td>
+                <span class="rank-badge" [class.top-3]="i < 3">#{{ i + 1 }}</span>
+              </td>
+              <td>{{ mechanic.mechanicName }}</td>
+              <td>{{ mechanic.tasksCompleted }}</td>
+              <td>{{ mechanic.averageCompletionTimeHours?.toFixed(1) }}</td>
+              <td>
+                <div class="completion-rate-cell">
+                  <span>{{ mechanic.completionRate?.toFixed(1) }}%</span>
+                  <div class="mini-progress-bar">
+                    <div class="mini-progress-fill"
+                         [style.width]="getPercentageWidth(mechanic.completionRate)"
+                         [style.background]="mechanic.completionRate >= 80 ? '#22c55e' : mechanic.completionRate >= 60 ? '#f59e0b' : '#ef4444'">
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ mechanic.machinesServiced }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Critical Issues -->
+    <div class="section" *ngIf="reportData.criticalIssues?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-exclamation-triangle"></i>
+        Critical Issues & Overdue Maintenance
+      </h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Machine</th>
+              <th>Issue Description</th>
+              <th>Priority</th>
+              <th>Reported Date</th>
+              <th>Status</th>
+              <th>Days Open</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let issue of reportData.criticalIssues">
+              <td>{{ issue.machineIdentifier }}</td>
+              <td class="issue-description">{{ issue.issueDescription }}</td>
+              <td>
+                <span class="priority-badge" [style.background]="getPriorityColor(issue.priority)">
+                  {{ issue.priority }}
+                </span>
+              </td>
+              <td>{{ issue.reportedDate | date:'short' }}</td>
+              <td>
+                <span class="status-badge" [style.background]="getStatusColor(issue.status)">
+                  {{ issue.status }}
+                </span>
+              </td>
+              <td>
+                <span class="days-open" [class.critical]="issue.daysOpen > 7">
+                  {{ issue.daysOpen }} days
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Maintenance Trends -->
+    <div class="section" *ngIf="reportData.maintenanceTrends?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-chart-line"></i>
+        Maintenance Trends
+      </h2>
+      <div class="trends-container">
+        <div *ngFor="let trend of reportData.maintenanceTrends" class="trend-card">
+          <div class="trend-period">{{ trend.period }}</div>
+          <div class="trend-stats-row">
+            <div class="trend-stat">
+              <span class="trend-stat-label">Total:</span>
+              <span class="trend-stat-value">{{ trend.totalMaintenance }}</span>
+            </div>
+            <div class="trend-stat">
+              <span class="trend-stat-label">Completed:</span>
+              <span class="trend-stat-value completed">{{ trend.completed }}</span>
+            </div>
+            <div class="trend-stat">
+              <span class="trend-stat-label">In Progress:</span>
+              <span class="trend-stat-value in-progress">{{ trend.inProgress }}</span>
+            </div>
+          </div>
+          <div class="trend-progress-bar">
+            <div class="trend-progress-segment completed"
+                 [style.width]="trend.totalMaintenance > 0 ? (trend.completed / trend.totalMaintenance * 100) + '%' : '0%'">
+            </div>
+            <div class="trend-progress-segment in-progress"
+                 [style.width]="trend.totalMaintenance > 0 ? (trend.inProgress / trend.totalMaintenance * 100) + '%' : '0%'">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regional Breakdown -->
+    <div class="section" *ngIf="reportData.regionalBreakdown?.length > 0">
+      <h2 class="section-title">
+        <i class="pi pi-map-marker"></i>
+        Regional Maintenance Performance
+      </h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Region</th>
+              <th>Total Maintenance</th>
+              <th>Completed</th>
+              <th>Completion Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let region of reportData.regionalBreakdown">
+              <td><strong>{{ region.region }}</strong></td>
+              <td>{{ region.totalMaintenance }}</td>
+              <td>{{ region.completedMaintenance }}</td>
+              <td>
+                <div class="completion-rate-cell">
+                  <span>{{ region.completionRate?.toFixed(1) }}%</span>
+                  <div class="mini-progress-bar">
+                    <div class="mini-progress-fill"
+                         [style.width]="getPercentageWidth(region.completionRate)"
+                         [style.background]="region.completionRate >= 80 ? '#22c55e' : region.completionRate >= 60 ? '#f59e0b' : '#ef4444'">
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DETAILED DATA SECTION -->
+    <section class="detailed-data-section" *ngIf="reportData?.allMaintenanceJobs || reportData?.allEngineers">
+      <h2 class="section-title">
+        <i class="pi pi-database"></i>
+        Detailed Maintenance Data
+      </h2>
+
+      <div class="detailed-tabs">
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+          <button
+            type="button"
+            class="tab-button"
+            [class.active]="activeTab === 'allMaintenanceJobs'"
+            (click)="activeTab = 'allMaintenanceJobs'"
+            *ngIf="reportData.allMaintenanceJobs?.length > 0">
+            <i class="pi pi-wrench"></i>
+            <span>All Maintenance Jobs</span>
+          </button>
+          <button
+            type="button"
+            class="tab-button"
+            [class.active]="activeTab === 'engineerPerformance'"
+            (click)="activeTab = 'engineerPerformance'"
+            *ngIf="reportData.allEngineers?.length > 0">
+            <i class="pi pi-users"></i>
+            <span>Engineer Performance</span>
+          </button>
+          <button
+            type="button"
+            class="tab-button"
+            [class.active]="activeTab === 'operatorReports'"
+            (click)="activeTab = 'operatorReports'"
+            *ngIf="reportData.operatorReports?.length > 0">
+            <i class="pi pi-file"></i>
+            <span>Operator Reports</span>
+          </button>
+          <button
+            type="button"
+            class="tab-button"
+            [class.active]="activeTab === 'serviceHistory'"
+            (click)="activeTab = 'serviceHistory'"
+            *ngIf="reportData.machineServiceHistory?.length > 0">
+            <i class="pi pi-history"></i>
+            <span>Service History by Machine</span>
+          </button>
+        </div>
+
+        <!-- All Maintenance Jobs Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'allMaintenanceJobs' && reportData.allMaintenanceJobs?.length > 0">
+          <p-table
+            [value]="reportData.allMaintenanceJobs"
+            [paginator]="true"
+            [rows]="10"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} jobs"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [globalFilterFields]="['jobTitle', 'maintenanceType', 'status', 'machineName']"
+            styleClass="p-datatable-sm">
+
+            <ng-template pTemplate="caption">
+              <div class="table-header">
+                <span class="table-title">Complete Maintenance Job History ({{reportData.allMaintenanceJobs.length}} Total)</span>
+              </div>
+            </ng-template>
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="maintenanceJobId">Job ID <p-sortIcon field="maintenanceJobId"></p-sortIcon></th>
+                <th pSortableColumn="jobTitle">Job Title <p-sortIcon field="jobTitle"></p-sortIcon></th>
+                <th pSortableColumn="machineName">Machine <p-sortIcon field="machineName"></p-sortIcon></th>
+                <th pSortableColumn="maintenanceType">Type <p-sortIcon field="maintenanceType"></p-sortIcon></th>
+                <th pSortableColumn="status">Status <p-sortIcon field="status"></p-sortIcon></th>
+                <th>Scheduled Date</th>
+                <th>Completed Date</th>
+                <th>Est. Hours</th>
+                <th>Actual Hours</th>
+                <th>Engineers</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-job>
+              <tr>
+                <td>{{job.maintenanceJobId}}</td>
+                <td><strong>{{job.jobTitle}}</strong></td>
+                <td>{{job.machineName}}</td>
+                <td>
+                  <p-tag [value]="job.maintenanceType" severity="info"></p-tag>
+                </td>
+                <td>
+                  <p-tag
+                    [value]="job.status"
+                    [severity]="job.status === 'Completed' ? 'success' : job.status === 'InProgress' ? 'info' : job.status === 'Overdue' ? 'danger' : 'warning'">
+                  </p-tag>
+                </td>
+                <td>{{job.scheduledDate | date:'short'}}</td>
+                <td>{{job.completedDate ? (job.completedDate | date:'short') : '-'}}</td>
+                <td>{{job.estimatedHours | number:'1.1-1'}} hrs</td>
+                <td>{{job.actualHours ? (job.actualHours | number:'1.1-1') + ' hrs' : '-'}}</td>
+                <td>
+                  <span *ngIf="job.assignedEngineers?.length > 0">
+                    {{job.assignedEngineers.length}} engineer(s)
+                  </span>
+                  <span *ngIf="!job.assignedEngineers || job.assignedEngineers.length === 0">-</span>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="10" class="text-center">No maintenance jobs found</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- All Engineers Performance Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'engineerPerformance' && reportData.allEngineers?.length > 0">
+          <p-table
+            [value]="reportData.allEngineers"
+            [paginator]="true"
+            [rows]="10"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} engineers"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            styleClass="p-datatable-sm">
+
+            <ng-template pTemplate="caption">
+              <div class="table-header">
+                <span class="table-title">Engineer Performance Metrics ({{reportData.allEngineers.length}} Total)</span>
+              </div>
+            </ng-template>
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="engineerName">Engineer Name <p-sortIcon field="engineerName"></p-sortIcon></th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th pSortableColumn="totalJobsAssigned">Total Jobs <p-sortIcon field="totalJobsAssigned"></p-sortIcon></th>
+                <th pSortableColumn="jobsCompleted">Completed <p-sortIcon field="jobsCompleted"></p-sortIcon></th>
+                <th pSortableColumn="jobsInProgress">In Progress <p-sortIcon field="jobsInProgress"></p-sortIcon></th>
+                <th pSortableColumn="completionRate">Completion Rate <p-sortIcon field="completionRate"></p-sortIcon></th>
+                <th>Avg. Response Time</th>
+                <th>Avg. Completion Time</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-engineer>
+              <tr>
+                <td><strong>{{engineer.engineerName}}</strong></td>
+                <td>{{engineer.email}}</td>
+                <td>{{engineer.phoneNumber || '-'}}</td>
+                <td class="text-center">{{engineer.totalJobsAssigned}}</td>
+                <td class="text-center">{{engineer.jobsCompleted}}</td>
+                <td class="text-center">{{engineer.jobsInProgress}}</td>
+                <td>
+                  <div class="progress-cell">
+                    <span [style.color]="engineer.completionRate > 80 ? '#22c55e' : engineer.completionRate > 50 ? '#f59e0b' : '#ef4444'">
+                      {{engineer.completionRate | number:'1.1-1'}}%
+                    </span>
+                  </div>
+                </td>
+                <td>{{engineer.averageResponseTimeHours | number:'1.1-1'}} hrs</td>
+                <td>{{engineer.averageCompletionTimeHours | number:'1.1-1'}} hrs</td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="9" class="text-center">No engineers found</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- Operator Reports Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'operatorReports' && reportData.operatorReports?.length > 0">
+          <p-table
+            [value]="reportData.operatorReports"
+            [paginator]="true"
+            [rows]="10"
+            styleClass="p-datatable-sm">
+
+            <ng-template pTemplate="caption">
+              <div class="table-header">
+                <span class="table-title">Operator Maintenance Reports ({{reportData.operatorReports.length}} Total)</span>
+              </div>
+            </ng-template>
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Report ID</th>
+                <th>Machine</th>
+                <th>Operator</th>
+                <th>Reported Issue</th>
+                <th>Report Date</th>
+                <th>Severity</th>
+                <th>Status</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-report>
+              <tr>
+                <td>{{report.reportId}}</td>
+                <td>{{report.machineName}}</td>
+                <td>{{report.operatorName}}</td>
+                <td>{{report.issueDescription}}</td>
+                <td>{{report.reportDate | date:'short'}}</td>
+                <td>
+                  <p-tag
+                    [value]="report.severity"
+                    [severity]="report.severity === 'Critical' ? 'danger' : report.severity === 'High' ? 'warning' : 'info'">
+                  </p-tag>
+                </td>
+                <td>
+                  <p-tag
+                    [value]="report.status"
+                    [severity]="report.status === 'Resolved' ? 'success' : 'warning'">
+                  </p-tag>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- Machine Service History Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'serviceHistory' && reportData.machineServiceHistory?.length > 0">
+          <p-table
+            [value]="reportData.machineServiceHistory"
+            [paginator]="true"
+            [rows]="10"
+            styleClass="p-datatable-sm">
+
+            <ng-template pTemplate="caption">
+              <div class="table-header">
+                <span class="table-title">Service History Grouped by Machine ({{reportData.machineServiceHistory.length}} Machines)</span>
+              </div>
+            </ng-template>
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="machineName">Machine Name <p-sortIcon field="machineName"></p-sortIcon></th>
+                <th pSortableColumn="totalServices">Total Services <p-sortIcon field="totalServices"></p-sortIcon></th>
+                <th>Last Service Date</th>
+                <th>Next Service Due</th>
+                <th>Total Service Hours</th>
+                <th>Avg. Service Time</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-machine>
+              <tr>
+                <td><strong>{{machine.machineName}}</strong></td>
+                <td class="text-center">{{machine.totalServices}}</td>
+                <td>{{machine.lastServiceDate | date:'short'}}</td>
+                <td>{{machine.nextServiceDue ? (machine.nextServiceDue | date:'short') : '-'}}</td>
+                <td>{{machine.totalServiceHours | number:'1.1-1'}} hrs</td>
+                <td>{{machine.averageServiceTime | number:'1.1-1'}} hrs</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="report-footer">
+      <p>Generated by DBMS - Detonation and Blasting Management System</p>
+      <p>© 2024 All Rights Reserved</p>
+    </div>
+  </div>
+</div>

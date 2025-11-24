@@ -1,0 +1,690 @@
+.drilling-operations-report {
+  padding: 2rem;
+  background: linear-gradient(to bottom, #f0f4f8 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+
+  .report-header {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
+    color: white;
+    box-shadow: 0 10px 25px rgba(8, 145, 178, 0.3), 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+
+      ::ng-deep .p-button-text {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.25rem;
+        background-color: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        color: white !important;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: fit-content;
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.25) !important;
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateX(-3px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+
+        &:hover i {
+          transform: translateX(-2px);
+        }
+      }
+
+      .report-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+
+      ::ng-deep .p-button {
+        padding: 0.85rem 1.75rem;
+        border: 2px solid rgba(255, 255, 255, 0.4) !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        color: white !important;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s, height 0.6s;
+        }
+
+        &:hover::before {
+          width: 300px;
+          height: 300px;
+        }
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.25) !important;
+          border-color: rgba(255, 255, 255, 0.6) !important;
+          transform: translateY(-3px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        &.p-button-success {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.3) 100%) !important;
+          border-color: rgba(255, 255, 255, 0.5) !important;
+        }
+      }
+    }
+  }
+
+  .loading-container,
+  .error-container {
+    text-align: center;
+    padding: 5rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin: 2rem auto;
+    max-width: 600px;
+
+    i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .pi-spinner {
+      color: #0891b2;
+      box-shadow: 0 0 20px rgba(8, 145, 178, 0.3);
+    }
+
+    p {
+      color: #6b7280;
+      font-size: 1.15rem;
+      margin: 1.25rem 0;
+      font-weight: 500;
+    }
+
+    ::ng-deep .p-button {
+      margin-top: 1.5rem;
+      background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+      border: none !important;
+      border-radius: 10px;
+      padding: 0.9rem 2.5rem;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(8, 145, 178, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(8, 145, 178, 0.4);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+
+  .report-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+
+    .report-title-section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0 0 0.5rem 0;
+      }
+
+      .report-subtitle {
+        color: #6b7280;
+        font-size: 1rem;
+        margin: 0.25rem 0;
+      }
+
+      .report-period {
+        color: #0891b2;
+        font-weight: 600;
+        margin: 0.25rem 0;
+      }
+
+      .report-region {
+        color: #4b5563;
+        font-weight: 600;
+        margin: 0.5rem 0 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+
+        i {
+          color: #0891b2;
+        }
+      }
+    }
+  }
+}
+
+// Statistics Cards
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, rgba(8, 145, 178, 0.5), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  &:hover::before {
+    transform: translateX(100%);
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(8, 145, 178, 0.1);
+    border-color: rgba(8, 145, 178, 0.3);
+  }
+}
+
+.stat-icon {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  color: white;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+
+  .stat-card:hover & {
+    transform: scale(1.05) rotate(5deg);
+  }
+}
+
+.stat-details {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.stat-meta {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.drilling-operations-report {
+  .report-content {
+
+    .report-tabs {
+      margin-top: 1rem;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+
+      .tab-navigation {
+        background: linear-gradient(135deg, rgba(8, 145, 178, 0.05) 0%, rgba(14, 116, 144, 0.05) 100%);
+        border-bottom: 2px solid #e5e7eb;
+        padding: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+
+        .tab-button {
+          color: #1f2937;
+          font-weight: 600;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          border-radius: 10px;
+          padding: 0.85rem 1.5rem;
+          background: rgba(255, 255, 255, 0.9);
+          border: 2px solid #e5e7eb;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-height: 44px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          outline: none;
+
+          i {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+          }
+
+          span {
+            font-weight: 600;
+            white-space: nowrap;
+          }
+
+          &:hover {
+            background: rgba(8, 145, 178, 0.1);
+            color: #0891b2;
+            border-color: rgba(8, 145, 178, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(8, 145, 178, 0.15);
+
+            i {
+              transform: scale(1.1);
+            }
+          }
+
+          &:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(8, 145, 178, 0.1);
+          }
+
+          &.active {
+            color: white;
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+            border-color: #0891b2;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+
+            &:hover {
+              background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%);
+              transform: translateY(-3px);
+              box-shadow: 0 6px 16px rgba(8, 145, 178, 0.4);
+            }
+          }
+        }
+      }
+
+      .tab-content {
+        padding: 2rem;
+
+        h3 {
+          font-size: 1.65rem;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 1.5rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 3px solid transparent;
+          background: linear-gradient(to right, #e5e7eb, transparent) bottom;
+          background-size: 100% 3px;
+          background-repeat: no-repeat;
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, #0891b2 0%, #0e7490 100%);
+            border-radius: 2px;
+          }
+
+          i {
+            color: #0891b2;
+            font-size: 1.4rem;
+          }
+        }
+
+        .chart-container {
+          background: white;
+          padding: 2rem;
+          border-radius: 16px;
+          margin-bottom: 2rem;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          border: 2px solid #e5e7eb;
+          transition: all 0.3s ease;
+          height: 400px;
+          position: relative;
+          overflow: hidden;
+          box-sizing: border-box;
+
+          &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-color: rgba(8, 145, 178, 0.3);
+          }
+
+          ::ng-deep {
+            .p-chart {
+              width: 100% !important;
+              height: 100% !important;
+              max-width: 100%;
+              max-height: 100%;
+            }
+
+            canvas {
+              max-height: 100% !important;
+              max-width: 100% !important;
+              width: 100% !important;
+              height: 100% !important;
+            }
+          }
+        }
+
+        ::ng-deep .p-datatable {
+          border-radius: 12px;
+          border: 2px solid #e5e7eb;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+          overflow: hidden;
+
+          .text-right {
+            text-align: right;
+          }
+
+          .p-datatable-thead > tr > th {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 1rem;
+            font-size: 0.95rem;
+          }
+
+          .p-datatable-tbody > tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s ease;
+
+            &:hover {
+              background: #f9fafb;
+            }
+
+            &:last-child {
+              border-bottom: none;
+            }
+
+            > td {
+              padding: 1rem;
+              color: #374151;
+              font-size: 0.95rem;
+            }
+          }
+
+          .text-center {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+            font-style: italic;
+          }
+
+          .p-paginator {
+            background: #f9fafb;
+            border-top: 2px solid #e5e7eb;
+            padding: 1rem;
+          }
+        }
+      }
+    }
+
+    .report-footer {
+      margin-top: 2.5rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.05) 0%, rgba(14, 116, 144, 0.05) 100%);
+      border-top: 3px solid transparent;
+      border-image: linear-gradient(90deg, #0891b2 0%, #0e7490 100%);
+      border-image-slice: 1;
+      border-radius: 12px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.95rem;
+
+      p {
+        margin: 0.35rem 0;
+        font-weight: 500;
+
+        &:first-child {
+          font-weight: 600;
+          color: #1f2937;
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+}
+
+// Section Styling
+.section {
+  margin-bottom: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px solid transparent;
+  background: linear-gradient(to right, #e5e7eb, transparent) bottom;
+  background-size: 100% 3px;
+  background-repeat: no-repeat;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, #0891b2 0%, #0e7490 100%);
+    border-radius: 2px;
+  }
+
+  i {
+    color: #0891b2;
+    font-size: 1.5rem;
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+// Print styles
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .drilling-operations-report {
+    padding: 0;
+    background: white;
+
+    .report-content {
+      box-shadow: none;
+      padding: 1rem;
+    }
+
+    ::ng-deep .report-tabs {
+      .p-tabview-nav {
+        display: none;
+      }
+
+      .p-tabview-panels {
+        border: none;
+        padding: 0;
+      }
+    }
+
+    .chart-container {
+      page-break-inside: avoid;
+    }
+
+    .section {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+
+  .stat-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+// Responsive styles
+@media (max-width: 1200px) {
+  .drilling-operations-report {
+    padding: 1.5rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .drilling-operations-report {
+    padding: 1rem;
+
+    .report-header {
+      padding: 1.5rem;
+
+      .header-left {
+        width: 100%;
+      }
+
+      .header-actions {
+        width: 100%;
+        flex-direction: column;
+
+        ::ng-deep .p-button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+
+    .section-title {
+      font-size: 1.35rem;
+    }
+
+    .report-content {
+      ::ng-deep .report-tabs .tab-content {
+        padding: 1rem;
+
+        h3 {
+          font-size: 1.35rem;
+        }
+      }
+
+      .report-title-section {
+        padding: 1.5rem;
+
+        h1 {
+          font-size: 1.5rem;
+        }
+      }
+    }
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

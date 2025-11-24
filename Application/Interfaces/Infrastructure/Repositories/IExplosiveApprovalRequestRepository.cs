@@ -20,6 +20,11 @@ namespace Application.Interfaces.Infrastructure.Repositories
         Task<IEnumerable<ExplosiveApprovalRequest>> GetByUserIdAsync(int userId);
         
         /// <summary>
+        /// Retrieves all explosive approval requests (for reporting purposes)
+        /// </summary>
+        Task<IEnumerable<ExplosiveApprovalRequest>> GetAllAsync();
+
+        /// <summary>
         /// Retrieves all pending explosive approval requests
         /// </summary>
         Task<IEnumerable<ExplosiveApprovalRequest>> GetPendingRequestsAsync();
