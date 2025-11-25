@@ -159,6 +159,13 @@ export class OperatorNotificationsComponent implements OnInit, OnDestroy {
       return false;
     }
 
+    // Handle unknown/undefined types (type 0 or undefined)
+    // Include them by default so they're not hidden
+    if (typeValue === 0 || typeValue === -1 || typeValue === undefined || typeValue === null) {
+      console.log(`⚠️ Unknown notification type detected: ${type}, including by default`);
+      return true;
+    }
+
     console.log(`Checking if type ${type} (value: ${typeValue}) is relevant for Operator`);
 
     // Machine Assignments (400-499)

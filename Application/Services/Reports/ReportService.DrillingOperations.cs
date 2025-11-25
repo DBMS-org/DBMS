@@ -84,6 +84,7 @@ namespace Application.Services.Reports
                         ProjectSiteId = site.Id,
                         ProjectSiteName = site.Name,
                         ProjectName = site.Project?.Name ?? "Unknown",
+                        RegionName = site.Project?.Region ?? "Unknown",
                         DrillHoleCount = siteHoles.Count,
                         DrillPointCount = sitePoints.Count,
                         TotalDepth = (decimal)siteHoles.Sum(h => h.Depth),
@@ -165,6 +166,8 @@ namespace Application.Services.Reports
                         Azimuth = hole.Azimuth.HasValue ? (decimal)hole.Azimuth.Value : null,
                         Dip = hole.Dip.HasValue ? (decimal)hole.Dip.Value : null,
                         ProjectSiteName = projectSite?.Name ?? "Unknown",
+                        ProjectName = projectSite?.Project?.Name ?? "Unknown",
+                        RegionName = projectSite?.Project?.Region ?? "Unknown",
                         CreatedDate = hole.CreatedAt
                     };
                 }).OrderByDescending(h => h.CreatedDate).ToList();
@@ -182,6 +185,8 @@ namespace Application.Services.Reports
                         Depth = (decimal)point.Depth,
                         Diameter = (decimal)point.Diameter,
                         ProjectSiteName = projectSite?.Name ?? "Unknown",
+                        ProjectName = projectSite?.Project?.Name ?? "Unknown",
+                        RegionName = projectSite?.Project?.Region ?? "Unknown",
                         CreatedDate = point.CreatedAt
                     };
                 }).OrderByDescending(p => p.CreatedDate).ToList();

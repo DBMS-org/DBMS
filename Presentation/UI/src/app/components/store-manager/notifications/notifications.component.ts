@@ -128,8 +128,25 @@ export class StoreManagerNotificationsComponent implements OnInit, OnDestroy {
    * Check if notification type is relevant for Store Manager role
    */
   private isStoreManagerRelevantNotification(type: any): boolean {
-    // When enum comes as string from backend, check the string value
-    const typeStr = typeof type === 'string' ? type : NotificationType[type];
+    // Handle both string and numeric types from backend
+    let typeStr: string;
+    let typeNum: number;
+
+    if (typeof type === 'string') {
+      typeStr = type;
+      // Try to get the numeric value from the enum
+      typeNum = (NotificationType as any)[type] ?? -1;
+    } else {
+      typeNum = type;
+      typeStr = NotificationType[type] ?? '';
+    }
+
+    // Handle unknown/undefined types (type 0 or undefined)
+    // Include them by default so they're not hidden
+    if (typeNum === 0 || typeNum === -1 || typeNum === undefined || typeNum === null) {
+      console.log(`⚠️ Unknown notification type detected: ${type}, including by default`);
+      return true;
+    }
 
     // Explosive approval requests (from Blasting Engineers)
     const isExplosiveRequest = !!(typeStr && (

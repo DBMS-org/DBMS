@@ -134,11 +134,27 @@ namespace Application.Services.Reports
                     ? (int)(request.ProcessedAt.Value - request.CreatedAt).TotalDays
                     : (int?)null;
 
+                // Try to get region from RegionNavigation first, then fall back to Region string
+                var regionName = "N/A";
+                if (projectSite?.Project != null)
+                {
+                    // First try the navigation property
+                    if (projectSite.Project.RegionNavigation != null)
+                    {
+                        regionName = projectSite.Project.RegionNavigation.Name;
+                    }
+                    // Fall back to the string Region property
+                    else if (!string.IsNullOrEmpty(projectSite.Project.Region))
+                    {
+                        regionName = projectSite.Project.Region;
+                    }
+                }
+
                 summaries.Add(new ApprovalRequestSummaryDto
                 {
                     Id = request.Id,
                     ProjectSiteName = projectSite?.Name ?? "N/A",
-                    RegionName = "N/A", // ProjectSite doesn't have Region navigation
+                    RegionName = regionName,
                     RequestedByUserName = requestedByUser?.Name ?? "Unknown",
                     ExpectedUsageDate = request.ExpectedUsageDate,
                     CreatedDate = request.CreatedAt,
@@ -190,8 +206,11 @@ namespace Application.Services.Reports
                 .GroupBy(a => a.ProjectSite.Name)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            // Group by region - ProjectSite doesn't have Region navigation
-            analysis.ByRegion = new Dictionary<string, int>();
+            // Group by region
+            analysis.ByRegion = summaries
+                .Where(s => !string.IsNullOrEmpty(s.RegionName) && s.RegionName != "N/A")
+                .GroupBy(s => s.RegionName)
+                .ToDictionary(g => g.Key, g => g.Count());
 
             // Compliance stats
             analysis.SafetyChecklistCompletedCount = approvalRequests.Count(a => a.SafetyChecklistCompleted);

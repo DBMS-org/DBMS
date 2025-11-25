@@ -13,17 +13,9 @@
         </h1>
       </div>
       <div class="action-buttons">
-        <button type="button" class="action-btn print-btn" (click)="printReport()">
-          <i class="pi pi-print"></i>
-          Print
-        </button>
         <button type="button" class="action-btn export-btn" (click)="exportToPdf()">
           <i class="pi pi-file-pdf"></i>
           PDF
-        </button>
-        <button type="button" class="action-btn export-btn" (click)="exportToExcel()">
-          <i class="pi pi-file-excel"></i>
-          Excel
         </button>
       </div>
     </div>
@@ -44,6 +36,185 @@
 
   <!-- Report Content -->
   <div *ngIf="!loading && !error && reportData" class="report-content">
+    <!-- Filter Section -->
+    <div class="filter-section no-print mb-6">
+      <div class="bg-white rounded-2xl shadow-lg border-2 border-gray-200 overflow-hidden">
+        <!-- Filter Header -->
+        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-gray-200 px-6 py-4 cursor-pointer"
+             (click)="isFilterExpanded = !isFilterExpanded">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+                <i class="pi pi-filter text-white text-lg"></i>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800">Report Filters</h3>
+              <button
+                type="button"
+                class="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all duration-300"
+                (click)="isFilterExpanded = !isFilterExpanded; $event.stopPropagation()">
+                <i [class]="isFilterExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+                <span>{{ isFilterExpanded ? 'Collapse' : 'Expand' }}</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 border-2 border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all duration-300 hover:scale-105"
+              (click)="clearFilters(); $event.stopPropagation()">
+              <i class="pi pi-times"></i>
+              <span>Clear All</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Grid -->
+        <div class="p-6 transition-all duration-300"
+             [class.hidden]="!isFilterExpanded"
+             [class.max-h-0]="!isFilterExpanded"
+             [class.overflow-hidden]="!isFilterExpanded">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Date Range Filter - Start Date -->
+            <div class="filter-field">
+              <label for="startDate" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="pi pi-calendar text-indigo-500 mr-2"></i>
+                Start Date
+              </label>
+              <input
+                type="date"
+                id="startDate"
+                [(ngModel)]="filterStartDate"
+                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-indigo-400 cursor-pointer"
+                (change)="applyFilters()">
+            </div>
+
+            <!-- Date Range Filter - End Date -->
+            <div class="filter-field">
+              <label for="endDate" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="pi pi-calendar text-indigo-500 mr-2"></i>
+                End Date
+              </label>
+              <input
+                type="date"
+                id="endDate"
+                [(ngModel)]="filterEndDate"
+                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-indigo-400 cursor-pointer"
+                (change)="applyFilters()">
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-field">
+              <label for="status" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="pi pi-info-circle text-blue-500 mr-2"></i>
+                Status
+              </label>
+              <select
+                id="status"
+                multiple
+                [(ngModel)]="filterStatuses"
+                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-blue-400 cursor-pointer"
+                (change)="applyFilters()"
+                size="3">
+                <option *ngFor="let option of statusOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+            </div>
+
+            <!-- Maintenance Type Filter -->
+            <div class="filter-field">
+              <label for="maintenanceType" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="pi pi-wrench text-orange-500 mr-2"></i>
+                Maintenance Type
+              </label>
+              <select
+                id="maintenanceType"
+                multiple
+                [(ngModel)]="filterMaintenanceTypes"
+                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-orange-400 cursor-pointer"
+                (change)="applyFilters()"
+                size="3">
+                <option *ngFor="let option of maintenanceTypeOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="filter-field">
+              <label for="priority" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="pi pi-flag text-red-500 mr-2"></i>
+                Priority
+              </label>
+              <select
+                id="priority"
+                multiple
+                [(ngModel)]="filterPriorities"
+                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-red-400 cursor-pointer"
+                (change)="applyFilters()"
+                size="3">
+                <option *ngFor="let option of priorityOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+            </div>
+
+            <!-- Machine Filter -->
+            <div class="filter-field">
+              <label for="machine" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="pi pi-cog text-green-500 mr-2"></i>
+                Machine
+              </label>
+              <select
+                id="machine"
+                multiple
+                [(ngModel)]="filterMachines"
+                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-green-400 cursor-pointer"
+                (change)="applyFilters()"
+                size="3">
+                <option *ngFor="let option of machineOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+            </div>
+
+            <!-- Engineer Filter -->
+            <div class="filter-field">
+              <label for="engineer" class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="pi pi-users text-purple-500 mr-2"></i>
+                Engineer
+              </label>
+              <select
+                id="engineer"
+                multiple
+                [(ngModel)]="filterEngineers"
+                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-purple-400 cursor-pointer"
+                (change)="applyFilters()"
+                size="3">
+                <option *ngFor="let option of engineerOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+            </div>
+          </div>
+
+          <!-- Filter Footer -->
+          <div class="mt-6 pt-6 border-t-2 border-gray-200 flex justify-end gap-3">
+            <button
+              type="button"
+              class="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+              (click)="applyFilters()">
+              <i class="pi pi-check"></i>
+              <span>Apply Filters</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Report Title -->
     <div class="report-title-section">
       <h1>Maintenance Performance Report</h1>

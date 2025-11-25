@@ -80,9 +80,9 @@ export class DrillingPatternCreatorComponent implements AfterViewInit, OnDestroy
   private panOffsetY = 0;
 
   // Timeouts - properly typed
-  private resizeTimeout: number | null = null;
-  private duplicateMessageTimeout: number | null = null;
-  private saveTimeout: number | null = null;
+  private resizeTimeout: any = null;
+  private duplicateMessageTimeout: any = null;
+  private saveTimeout: any = null;
 
   // Site context
   public currentProjectId!: number;

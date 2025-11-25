@@ -87,6 +87,8 @@ namespace Infrastructure.Repositories.ProjectManagement
             {
                 return await _context.ExplosiveApprovalRequests
                     .Include(e => e.ProjectSite)
+                        .ThenInclude(ps => ps.Project)
+                            .ThenInclude(p => p.RegionNavigation)
                     .Include(e => e.RequestedByUser)
                     .Include(e => e.ProcessedByUser)
                     .OrderByDescending(e => e.CreatedAt)

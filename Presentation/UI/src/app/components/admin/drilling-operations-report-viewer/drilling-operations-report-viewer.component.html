@@ -10,9 +10,7 @@
     </div>
     <div class="header-actions">
       <button pButton type="button" icon="pi pi-refresh" class="p-button-text" (click)="refreshReport()" label="Refresh"></button>
-      <button pButton type="button" icon="pi pi-print" class="p-button-text" (click)="printReport()" label="Print"></button>
       <button pButton type="button" icon="pi pi-file-pdf" class="p-button-text" (click)="exportToPdf()" label="PDF"></button>
-      <button pButton type="button" icon="pi pi-file-excel" class="p-button-text p-button-success" (click)="exportToExcel()" label="Excel"></button>
     </div>
   </div>
 
@@ -42,6 +40,64 @@
       <p class="report-region" *ngIf="reportData.regionFilter">
         <i class="pi pi-map-marker"></i> Region: {{ reportData.regionFilter }}
       </p>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section no-print">
+      <div class="filter-header" (click)="isFilterExpanded = !isFilterExpanded">
+        <div class="filter-title">
+          <i class="pi pi-filter"></i>
+          <span>Filters</span>
+          <span class="filter-badge" *ngIf="(filterProjectSites.length + filterRegions.length) > 0">
+            {{ filterProjectSites.length + filterRegions.length }}
+          </span>
+        </div>
+        <i class="pi" [ngClass]="isFilterExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+      </div>
+
+      <div class="filter-content" *ngIf="isFilterExpanded">
+        <div class="filter-grid">
+          <!-- Date Range Filters -->
+          <div class="filter-group">
+            <label>Start Date</label>
+            <input type="date" [(ngModel)]="filterStartDate" class="filter-input" />
+          </div>
+
+          <div class="filter-group">
+            <label>End Date</label>
+            <input type="date" [(ngModel)]="filterEndDate" class="filter-input" />
+          </div>
+
+          <!-- Project Sites Filter -->
+          <div class="filter-group">
+            <label>Project Sites</label>
+            <select multiple [(ngModel)]="filterProjectSites" class="filter-select">
+              <option *ngFor="let site of projectSiteOptions" [value]="site.value">
+                {{ site.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Regions Filter -->
+          <div class="filter-group">
+            <label>Regions</label>
+            <select multiple [(ngModel)]="filterRegions" class="filter-select">
+              <option *ngFor="let region of regionOptions" [value]="region.value">
+                {{ region.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="button" class="btn-apply" (click)="applyFilters()">
+            <i class="pi pi-check"></i> Apply Filters
+          </button>
+          <button type="button" class="btn-clear" (click)="clearFilters()">
+            <i class="pi pi-times"></i> Clear All
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Summary Statistics -->

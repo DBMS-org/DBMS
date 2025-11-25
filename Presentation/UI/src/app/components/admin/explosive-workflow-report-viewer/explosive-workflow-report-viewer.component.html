@@ -21,10 +21,6 @@
           <i class="pi pi-file-pdf"></i>
           PDF
         </button>
-        <button type="button" class="action-btn export-btn" (click)="exportToExcel()">
-          <i class="pi pi-file-excel"></i>
-          Excel
-        </button>
       </div>
     </div>
   </div>
@@ -44,6 +40,103 @@
 
   <!-- Report Content -->
   <div *ngIf="!loading && !error && report" class="report-content">
+    <!-- Filter Section -->
+    <div class="filter-section no-print">
+      <div class="filter-header" (click)="isFilterExpanded = !isFilterExpanded">
+        <h3><i class="pi pi-filter"></i> Filters</h3>
+        <i class="pi" [ngClass]="isFilterExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+      </div>
+      <div class="filter-content" [class.expanded]="isFilterExpanded">
+        <div class="filter-grid">
+          <!-- Date Range Filters -->
+          <div class="filter-item">
+            <label for="filterStartDate">Start Date</label>
+            <input type="date" id="filterStartDate" [(ngModel)]="filterStartDate" class="filter-input" title="Filter by start date">
+          </div>
+          <div class="filter-item">
+            <label for="filterEndDate">End Date</label>
+            <input type="date" id="filterEndDate" [(ngModel)]="filterEndDate" class="filter-input" title="Filter by end date">
+          </div>
+
+          <!-- Status Filter -->
+          <div class="filter-item">
+            <label for="filterStatuses">Status</label>
+            <select multiple id="filterStatuses" [(ngModel)]="filterStatuses" class="filter-select" title="Filter by status (hold Ctrl to select multiple)">
+              <option *ngFor="let status of statusOptions" [value]="status.value">
+                {{ status.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Priority Filter -->
+          <div class="filter-item">
+            <label for="filterPriorities">Priority</label>
+            <select multiple id="filterPriorities" [(ngModel)]="filterPriorities" class="filter-select" title="Filter by priority (hold Ctrl to select multiple)">
+              <option *ngFor="let priority of priorityOptions" [value]="priority.value">
+                {{ priority.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Region Filter -->
+          <div class="filter-item">
+            <label for="filterRegions">Region</label>
+            <select multiple id="filterRegions" [(ngModel)]="filterRegions" class="filter-select" title="Filter by region (hold Ctrl to select multiple)">
+              <option *ngFor="let region of regionOptions" [value]="region.value">
+                {{ region.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Project Site Filter -->
+          <div class="filter-item">
+            <label for="filterProjectSites">Project Site</label>
+            <select multiple id="filterProjectSites" [(ngModel)]="filterProjectSites" class="filter-select" title="Filter by project site (hold Ctrl to select multiple)">
+              <option *ngFor="let site of projectSiteOptions" [value]="site.value">
+                {{ site.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="button" class="filter-btn apply-btn" (click)="applyFilters()">
+            <i class="pi pi-check"></i> Apply Filters
+          </button>
+          <button type="button" class="filter-btn clear-btn" (click)="clearFilters()">
+            <i class="pi pi-times"></i> Clear All
+          </button>
+        </div>
+
+        <div class="active-filters" *ngIf="filterStartDate || filterEndDate || filterStatuses.length > 0 || filterPriorities.length > 0 || filterRegions.length > 0 || filterProjectSites.length > 0">
+          <span class="filter-badge" *ngIf="filterStartDate">
+            Start: {{ filterStartDate | date:'shortDate' }}
+            <i class="pi pi-times" (click)="filterStartDate = ''; applyFilters()"></i>
+          </span>
+          <span class="filter-badge" *ngIf="filterEndDate">
+            End: {{ filterEndDate | date:'shortDate' }}
+            <i class="pi pi-times" (click)="filterEndDate = ''; applyFilters()"></i>
+          </span>
+          <span class="filter-badge" *ngFor="let status of filterStatuses">
+            Status: {{ status }}
+            <i class="pi pi-times" (click)="removeFilter('status', status)"></i>
+          </span>
+          <span class="filter-badge" *ngFor="let priority of filterPriorities">
+            Priority: {{ priority }}
+            <i class="pi pi-times" (click)="removeFilter('priority', priority)"></i>
+          </span>
+          <span class="filter-badge" *ngFor="let region of filterRegions">
+            Region: {{ region }}
+            <i class="pi pi-times" (click)="removeFilter('region', region)"></i>
+          </span>
+          <span class="filter-badge" *ngFor="let site of filterProjectSites">
+            Site: {{ site }}
+            <i class="pi pi-times" (click)="removeFilter('site', site)"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+
     <!-- Report Title -->
     <div class="report-title-section">
       <h1>Explosive Workflow Report</h1>
@@ -187,6 +280,7 @@
           <thead>
             <tr>
               <th>ID</th>
+              <th>Region</th>
               <th>Project Site</th>
               <th>Requested By (Blasting Engineer)</th>
               <th>Approved/Rejected By (Store Manager)</th>
@@ -201,6 +295,7 @@
           <tbody>
             <tr *ngFor="let request of report.approvalRequests">
               <td>{{ request.id }}</td>
+              <td>{{ request.regionName || 'N/A' }}</td>
               <td>{{ request.projectSiteName }}</td>
               <td>{{ request.requestedByUserName }}</td>
               <td>{{ request.processedByUserName || 'Pending' }}</td>

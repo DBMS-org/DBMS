@@ -114,6 +114,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       typeStr = NotificationType[type] ?? '';
     }
 
+    // Handle unknown/undefined types (type 0 or undefined)
+    // Include them by default so they're not hidden
+    if (typeNum === 0 || typeNum === -1 || typeNum === undefined || typeNum === null) {
+      console.log(`⚠️ Unknown notification type detected: ${type}, including by default`);
+      return true;
+    }
+
     // Explosive approval requests (100-199)
     const isExplosiveRequest = !!(
       (typeNum >= 100 && typeNum < 200) ||
