@@ -78,36 +78,10 @@
           </button>
         </div>
       </div>
-      <button class="action-btn" (click)="recordUsage()">
-        <i class="material-icons">remove_circle</i>
-        Record Usage
-      </button>
-      <button class="action-btn" (click)="generateReport()">
-        <i class="material-icons">assessment</i>
-        Generate Report
-      </button>
       <button class="action-btn" (click)="syncInventory()">
         <i class="material-icons">sync</i>
         Sync Inventory
       </button>
-    </div>
-  </div>
-
-  <!-- Additional Info Section (if needed in future) -->
-  <div *ngIf="!isLoading && !errorMessage && dashboard" class="additional-info">
-    <div class="info-cards">
-      <div class="info-card">
-        <h4>Expiring Soon</h4>
-        <p>{{ expiringBatchesCount }} batches expiring in 30 days</p>
-      </div>
-      <div class="info-card">
-        <h4>Pending Transfers</h4>
-        <p>{{ pendingTransfersCount }} transfer requests awaiting approval</p>
-      </div>
-      <div class="info-card">
-        <h4>Quarantined Items</h4>
-        <p>{{ dashboard.quarantinedBatches }} batches currently quarantined</p>
-      </div>
     </div>
   </div>
 </div>

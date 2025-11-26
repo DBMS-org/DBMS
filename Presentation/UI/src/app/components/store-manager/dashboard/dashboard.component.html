@@ -36,18 +36,18 @@
 <div class="space-y-6" *ngIf="!isLoading">
   <!-- Key Statistics Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <!-- Pending Inventory Requests -->
+    <!-- Pending Deliveries -->
     <div
       class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer"
       (click)="navigateToRequestHistory()">
       <div class="flex items-center gap-4">
         <div class="stat-card-icon bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-          <i class="pi pi-inbox text-3xl text-white"></i>
+          <i class="pi pi-truck text-3xl text-white"></i>
         </div>
         <div class="flex-1">
-          <p class="text-sm text-gray-600 font-semibold uppercase tracking-wide">Pending Transfers</p>
-          <p class="text-2xl font-bold text-gray-800 mt-1">{{ dashboardStats.pendingInventoryRequests }}</p>
-          <p class="text-xs text-gray-500 mt-1">Click to view details</p>
+          <p class="text-sm text-gray-600 font-semibold uppercase tracking-wide">Pending Delivery</p>
+          <p class="text-2xl font-bold text-gray-800 mt-1">{{ dashboardStats.pendingDelivery }}</p>
+          <p class="text-xs text-gray-500 mt-1">Dispatched, awaiting receipt</p>
         </div>
       </div>
     </div>
@@ -72,7 +72,7 @@
       (click)="navigateToRequestHistory()">
       <div class="flex items-center gap-4">
         <div class="stat-card-icon bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-          <i class="pi pi-truck text-3xl text-white"></i>
+          <i class="pi pi-box text-3xl text-white"></i>
         </div>
         <div class="flex-1">
           <p class="text-sm text-gray-600 font-semibold uppercase tracking-wide">Ready to Dispatch</p>
@@ -134,12 +134,12 @@
     </div>
   </div>
 
-  <!-- Pending Inventory Transfer Requests -->
+  <!-- Pending Deliveries -->
   <div class="bg-white rounded-lg shadow-md p-6">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-        <i class="pi pi-inbox text-blue-600"></i>
-        Pending Inventory Transfers
+        <i class="pi pi-truck text-blue-600"></i>
+        Pending Deliveries
       </h3>
       <button
         type="button"
@@ -151,7 +151,7 @@
 
     <div *ngIf="pendingTransfers.length === 0" class="text-center py-8 text-gray-500">
       <i class="pi pi-check-circle text-5xl text-gray-300 mb-3"></i>
-      <p>No pending transfers</p>
+      <p>No pending deliveries</p>
     </div>
 
     <div *ngIf="pendingTransfers.length > 0" class="space-y-3">

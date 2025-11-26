@@ -13,7 +13,6 @@
         <th>Manager</th>
         <th>Location</th>
         <th>Status</th>
-        <th>Capacity</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -43,26 +42,13 @@
         </td>
         
 
-        
+
         <td class="machine-status">
           <span class="badge" [ngClass]="getStatusClass(store.status)">
             {{ store.status }}
           </span>
         </td>
-        
-        <td class="machine-capacity">
-          <div class="capacity-info">
-            <strong>{{ store.storageCapacity | number:'1.0-0' }} tons</strong>
-            <p class="text-muted">{{ store.currentOccupancy || 0 | number:'1.0-0' }} tons occupied</p>
-            <div class="progress-bar">
-              <div class="progress-fill" 
-                   [style.width.%]="getUtilizationPercentage(store)"
-                   [ngClass]="getUtilizationClass(getUtilizationPercentage(store))">
-              </div>
-            </div>
-          </div>
-        </td>
-        
+
         <td class="machine-actions">
           <div class="action-buttons">
             <button 

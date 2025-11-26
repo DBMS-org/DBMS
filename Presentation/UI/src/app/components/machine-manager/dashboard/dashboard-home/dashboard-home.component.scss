@@ -679,6 +679,30 @@
   }
 }
 
+// Recent Activities Panel
+.recent-activities-panel {
+  background: white;
+  border-radius: 16px;
+  padding: 2.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+
+  h3 {
+    margin: 0 0 1.75rem 0;
+    font-size: 1.35rem;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    font-weight: 700;
+
+    i {
+      color: #667eea;
+      font-size: 1.5rem;
+    }
+  }
+}
+
 .alerts-container {
   display: flex;
   flex-direction: column;

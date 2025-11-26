@@ -9,7 +9,7 @@ import { User } from '../../../core/models/user.model';
 import { StockRequestService } from '../../../core/services/stock-request.service';
 import { InventoryTransferService } from '../../../core/services/inventory-transfer.service';
 import { StockRequestStatistics } from '../../../core/models/stock-request.model';
-import { InventoryTransferRequest } from '../../../core/models/inventory-transfer.model';
+import { InventoryTransferRequest, TransferRequestStatus } from '../../../core/models/inventory-transfer.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -29,7 +29,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Computed dashboard stats
   dashboardStats = {
-    pendingInventoryRequests: 0,
+    pendingDelivery: 0,
     readyToDispatch: 0,
     completedThisMonth: 0,
     totalTransfers: 0
@@ -66,45 +66,70 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Load all data in parallel
     forkJoin({
       stockStats: this.stockRequestService.getStockRequestStatistics(),
-      transfers: this.inventoryTransferService.getTransferRequests({ pageSize: 100 }).pipe(
-        map(pagedList => pagedList.items)
-      )
+      transfers: this.inventoryTransferService.getMyRequests()
     }).subscribe({
       next: (data) => {
+        console.log('📦 DASHBOARD: Raw transfers received:', data.transfers);
+        console.log('📦 DASHBOARD: Number of transfers:', data.transfers?.length || 0);
+
         this.stockRequestStats = data.stockStats;
 
-        // Filter pending transfers
+        // Log status values to debug
+        if (data.transfers && data.transfers.length > 0) {
+          console.log('📦 DASHBOARD: Sample transfer statuses:', data.transfers.slice(0, 3).map((t: InventoryTransferRequest) => ({
+            requestNumber: t.requestNumber,
+            status: t.status,
+            statusType: typeof t.status,
+            statusName: t.statusName
+          })));
+        }
+
+        // Filter pending deliveries - InProgress means dispatched but not yet received
         this.pendingTransfers = data.transfers
-          .filter((t: InventoryTransferRequest) => t.status === 'Pending')
+          .filter((t: InventoryTransferRequest) => {
+            const isPendingDelivery = t.status === TransferRequestStatus.InProgress;
+            console.log(`📦 Transfer ${t.requestNumber}: status=${t.status}, dispatchDate=${t.dispatchDate}, deliveryConfirmed=${t.deliveryConfirmedDate}, isPendingDelivery=${isPendingDelivery}`);
+            return isPendingDelivery;
+          })
           .slice(0, 5);
+
+        console.log('📦 DASHBOARD: Pending deliveries found:', this.pendingTransfers.length);
 
         // Filter ready to dispatch
         const readyToDispatch = data.transfers
-          .filter((t: InventoryTransferRequest) => t.status === 'Approved' && !t.dispatchDate);
+          .filter((t: InventoryTransferRequest) =>
+            t.status === TransferRequestStatus.Approved && !t.dispatchDate);
+
+        console.log('📦 DASHBOARD: Ready to dispatch found:', readyToDispatch.length);
 
         // Get recent transfers (last 5 completed)
         this.recentTransfers = data.transfers
-          .filter((t: InventoryTransferRequest) => t.status === 'Completed')
+          .filter((t: InventoryTransferRequest) =>
+            t.status === TransferRequestStatus.Completed)
           .sort((a: InventoryTransferRequest, b: InventoryTransferRequest) =>
             new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime())
           .slice(0, 5);
+
+        console.log('📦 DASHBOARD: Recent completed transfers found:', this.recentTransfers.length);
 
         // Calculate completed this month
         const now = new Date();
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const completedThisMonth = data.transfers.filter((t: InventoryTransferRequest) =>
-          t.status === 'Completed' &&
+          t.status === TransferRequestStatus.Completed &&
           t.requestDate &&
           new Date(t.requestDate) >= firstDayOfMonth
         ).length;
 
         // Update dashboard stats
         this.dashboardStats = {
-          pendingInventoryRequests: this.pendingTransfers.length,
+          pendingDelivery: this.pendingTransfers.length,
           readyToDispatch: readyToDispatch.length,
           completedThisMonth: completedThisMonth,
           totalTransfers: data.transfers.length
         };
+
+        console.log('📦 DASHBOARD: Dashboard stats:', this.dashboardStats);
 
         this.lastRefreshed = new Date();
         this.isLoading = false;

@@ -56,21 +56,37 @@ export class MaintenanceService {
       }
     }
 
-    // Get region ID from user if not provided
-    const effectiveRegionId = regionId || this.getUserRegionId();
-    if (!effectiveRegionId) {
-      console.warn('No region ID found, falling back to mock data');
-      return this.mockService.getMaintenanceStats().pipe(
+    // If regionId is provided, use it directly
+    if (regionId) {
+      return this.http.get<MaintenanceStats>(`${this.jobsApiUrl}/stats/region/${regionId}`).pipe(
+        tap(stats => this.offlineStorage.storeOfflineData({ maintenanceStats: stats })),
+        catchError(error => {
+          console.error('Get maintenance stats API failed:', error);
+          return throwError(() => error);
+        }),
         finalize(() => this.loadingService.stopLoading(operationId))
       );
     }
 
-    // Call real backend API
-    return this.http.get<MaintenanceStats>(`${this.jobsApiUrl}/stats/region/${effectiveRegionId}`).pipe(
+    // Get region name from user and fetch region ID
+    const regionName = this.getUserRegionName();
+    if (!regionName) {
+      this.loadingService.stopLoading(operationId);
+      return throwError(() => new Error('No region name found in user data'));
+    }
+
+    // Fetch region ID from region name, then get stats
+    return this.http.get<any>(`${environment.apiUrl}/api/regions/by-name/${encodeURIComponent(regionName)}`).pipe(
+      switchMap(region => {
+        if (!region || !region.id) {
+          return throwError(() => new Error(`Region not found for name: ${regionName}`));
+        }
+        return this.http.get<MaintenanceStats>(`${this.jobsApiUrl}/stats/region/${region.id}`);
+      }),
       tap(stats => this.offlineStorage.storeOfflineData({ maintenanceStats: stats })),
       catchError(error => {
         console.error('Get maintenance stats API failed:', error);
-        return this.mockService.getMaintenanceStats();
+        return throwError(() => error);
       }),
       finalize(() => this.loadingService.stopLoading(operationId))
     );
@@ -83,12 +99,12 @@ export class MaintenanceService {
       return of(cachedAlerts.serviceDue);
     }
 
-    // Use real API with fallback to mock in dev mode
+    // Use real API only
     return this.http.get<MaintenanceAlert[]>(`${this.apiUrl}/alerts/service-due`).pipe(
       tap(alerts => this.offlineStorage.storeOfflineData({ serviceDueAlerts: alerts })),
       catchError(error => {
-        console.warn('Service due alerts API failed, falling back to mock:', error);
-        return this.mockService.getServiceDueAlerts();
+        console.error('Service due alerts API failed:', error);
+        return of([]);
       })
     );
   }
@@ -100,12 +116,12 @@ export class MaintenanceService {
       return of(cachedAlerts.overdue);
     }
 
-    // Use real API with fallback to mock in dev mode
+    // Use real API only
     return this.http.get<MaintenanceAlert[]>(`${this.jobsApiUrl}/overdue`).pipe(
       tap(alerts => this.offlineStorage.storeOfflineData({ overdueAlerts: alerts })),
       catchError(error => {
-        console.warn('Overdue alerts API failed, falling back to mock:', error);
-        return this.mockService.getOverdueAlerts();
+        console.error('Overdue alerts API failed:', error);
+        return of([]);
       })
     );
   }
@@ -130,15 +146,10 @@ export class MaintenanceService {
     // Get current user ID from auth service
     const userId = this.getCurrentUserId();
     if (!userId) {
-      // Fallback to mock if no user context
-      console.warn('No user ID found, falling back to mock data');
-      return this.mockService.getMaintenanceJobs(filters).pipe(
-        tap(jobs => {
-          this.offlineStorage.storeOfflineData({ maintenanceJobs: jobs });
-          this.performanceService.createSearchIndex('maintenance-jobs', jobs);
-        }),
-        finalize(() => this.loadingService.stopLoading(operationId))
-      );
+      // Return empty array if no user context
+      console.error('No user ID found');
+      this.loadingService.stopLoading(operationId);
+      return of([]);
     }
 
     // Build query params
@@ -168,8 +179,7 @@ export class MaintenanceService {
       }),
       catchError(error => {
         console.error('Get jobs API failed:', error);
-        // Fallback to mock data in development
-        return this.mockService.getMaintenanceJobs(filters);
+        return of([]);
       }),
       finalize(() => this.loadingService.stopLoading(operationId))
     );
@@ -180,7 +190,7 @@ export class MaintenanceService {
       map(job => this.transformJobDates([job])[0]),
       catchError(error => {
         console.error('Get job by ID API failed:', error);
-        return this.mockService.getMaintenanceJob(jobId.toString());
+        return throwError(() => error);
       })
     );
   }
@@ -646,14 +656,14 @@ export class MaintenanceService {
   }
 
   /**
-   * Get user's region ID from local storage or auth service
+   * Get user's region name from local storage or auth service
    */
-  private getUserRegionId(): number | null {
+  private getUserRegionName(): string | null {
     try {
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const user = JSON.parse(userStr);
-        return user.regionId || null;
+        return user.region || null;
       }
       return null;
     } catch {

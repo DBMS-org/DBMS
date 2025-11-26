@@ -1,12 +1,14 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { MachineService } from '../../../../core/services/machine.service';
 import { User } from '../../../../core/models/user.model';
 import { Machine, MachineStatus, MachineType } from '../../../../core/models/machine.model';
 import { MachineServiceConfigService, ServiceDueAlertDto } from '../../../../services/machine-service-config.service';
+import { UsageLogService } from '../../../../services/usage-log.service';
+import { UsageLogDto } from '../../../operator/my-machines/models/usage-log.models';
 
 interface MachineStats {
   totalMachines: number;
@@ -14,9 +16,7 @@ interface MachineStats {
   availableMachines: number;
   maintenanceMachines: number;
   pendingAssignments: number;
-  lowStockAccessories: number;
   scheduledMaintenance: number;
-  accessoriesTotal: number;
 }
 
 interface SystemMetrics {
@@ -58,9 +58,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     availableMachines: 15,
     maintenanceMachines: 3,
     pendingAssignments: 6,
-    lowStockAccessories: 4,
-    scheduledMaintenance: 8,
-    accessoriesTotal: 156
+    scheduledMaintenance: 8
   };
 
   systemMetrics: SystemMetrics = {
@@ -80,6 +78,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private machineService: MachineService,
     private machineServiceConfigService: MachineServiceConfigService,
+    private usageLogService: UsageLogService,
     private router: Router
   ) {}
 
@@ -99,12 +98,13 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
 
   private loadMachineData() {
     this.isLoading = true;
-    
+
     // Load machine statistics
     this.machineSubscription.add(
       this.machineService.getMachineStatistics().subscribe({
         next: (data) => {
           this.updateMachineStats(data);
+          this.loadRecentActivities(); // Load activities after stats
           this.isLoading = false;
         },
         error: (error) => {
@@ -114,7 +114,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Load assignment requests count (using mock data for now)
+    // Load assignment requests count
     this.machineSubscription.add(
       this.machineService.getAllAssignmentRequests().subscribe({
         next: (requests) => {
@@ -163,9 +163,9 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       availableMachines: machines.filter(m => m.status === MachineStatus.AVAILABLE).length,
       maintenanceMachines: machines.filter(m => m.status === MachineStatus.IN_MAINTENANCE).length
     };
-    
-    // Generate recent activities based on real machine data
-    this.generateRecentActivities(machines);
+
+    // Load recent activities from real backend data
+    this.loadRecentActivities();
   }
 
   private calculateServiceAlerts(machines: Machine[]) {
@@ -278,63 +278,208 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     return 'good';
   }
 
-  private generateRecentActivities(machines: Machine[]) {
+  /**
+   * Load recent activities from real backend data
+   * Combines usage logs, assignment requests, and service alerts
+   */
+  private loadRecentActivities() {
     const activities: Activity[] = [];
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Add activities based on recent machines (sorted by creation date)
-    const recentMachines = machines
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 2);
+    // Parallel load all activity sources
+    this.machineSubscription.add(
+      forkJoin({
+        machines: this.machineService.getAllMachines(),
+        assignmentRequests: this.machineService.getAllAssignmentRequests(),
+        activeAssignments: this.machineService.getActiveAssignments()
+      }).subscribe({
+        next: (data) => {
+          // 1. Recent machine additions (last 7 days)
+          const recentMachines = data.machines
+            .filter(m => new Date(m.createdAt).getTime() > sevenDaysAgo.getTime())
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 3);
 
-    recentMachines.forEach((machine, index) => {
-      const timeDiff = Date.now() - new Date(machine.createdAt).getTime();
-      const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
-      const daysAgo = Math.floor(hoursAgo / 24);
+          recentMachines.forEach(machine => {
+            activities.push({
+              icon: 'inventory_2',
+              title: 'Machine Added',
+              description: `${machine.type} ${machine.name} added to inventory`,
+              timestamp: this.formatTimestamp(machine.createdAt),
+              type: 'inventory'
+            });
+          });
 
-      let timeText = '';
-      if (daysAgo > 0) {
-        timeText = `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
-      } else if (hoursAgo > 0) {
-        timeText = `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
-      } else {
-        timeText = 'Recently';
-      }
+          // 2. Recent assignment requests (last 7 days)
+          const recentRequests = data.assignmentRequests
+            .filter(r => new Date(r.requestedDate).getTime() > sevenDaysAgo.getTime())
+            .sort((a, b) => new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime())
+            .slice(0, 3);
 
-      activities.push({
-        icon: 'inventory_2',
-        title: 'Machine Added',
-        description: `${machine.type} ${machine.name} added to inventory`,
-        timestamp: timeText,
-        type: 'inventory'
-      });
-    });
+          recentRequests.forEach(request => {
+            let activityTitle = '';
+            let activityType: 'assignment' | 'inventory' | 'accessories' | 'maintenance' | 'alert' = 'assignment';
 
-    // Add some mock activities for features we don't have APIs for yet
-    activities.push(
-      {
-        icon: 'assignment',
-        title: 'Assignment Request',
-        description: 'Machine assignment request pending review',
-        timestamp: '2 hours ago',
-        type: 'assignment'
-      },
-      {
-        icon: 'warning',
-        title: 'Low Stock Alert',
-        description: 'Some accessories below threshold (mock data)',
-        timestamp: '4 hours ago',
-        type: 'accessories'
-      },
-      {
-        icon: 'engineering',
-        title: 'Maintenance Scheduled',
-        description: 'Preventive maintenance scheduled (mock data)',
-        timestamp: '6 hours ago',
-        type: 'maintenance'
-      }
+            if (request.status === 'Approved') {
+              activityTitle = 'Assignment Approved';
+              activityType = 'inventory';
+            } else if (request.status === 'Rejected') {
+              activityTitle = 'Assignment Rejected';
+              activityType = 'alert';
+            } else {
+              activityTitle = 'Assignment Request';
+            }
+
+            activities.push({
+              icon: request.status === 'Approved' ? 'check_circle' :
+                    request.status === 'Rejected' ? 'cancel' : 'assignment',
+              title: activityTitle,
+              description: `${request.quantity} ${request.machineType} for ${request.requestedBy}`,
+              timestamp: this.formatTimestamp(request.requestedDate),
+              type: activityType
+            });
+          });
+
+          // 3. Recent active assignments (last 7 days)
+          const recentAssignments = data.activeAssignments
+            .filter(a => new Date(a.assignedDate).getTime() > sevenDaysAgo.getTime())
+            .sort((a, b) => new Date(b.assignedDate).getTime() - new Date(a.assignedDate).getTime())
+            .slice(0, 2);
+
+          recentAssignments.forEach(assignment => {
+            activities.push({
+              icon: 'assignment_turned_in',
+              title: 'Machine Assigned',
+              description: `${assignment.machineName} assigned to ${assignment.operatorName}`,
+              timestamp: this.formatTimestamp(assignment.assignedDate),
+              type: 'assignment'
+            });
+          });
+
+          // 4. Load usage logs for assigned machines (recent 5)
+          this.loadUsageLogsActivities(data.machines, sevenDaysAgo, activities);
+
+          // 5. Add service alerts as activities (critical ones)
+          const criticalAlerts = this.serviceDueAlerts
+            .filter(alert => alert.urgency === 'overdue' || alert.urgency === 'critical')
+            .slice(0, 2);
+
+          criticalAlerts.forEach(alert => {
+            activities.push({
+              icon: 'warning',
+              title: alert.urgency === 'overdue' ? 'Service Overdue' : 'Service Due Soon',
+              description: `${alert.machineName} - ${alert.serviceType} service ${alert.urgency === 'overdue' ? 'overdue' : 'critical'}`,
+              timestamp: alert.urgency === 'overdue' ? 'Overdue' : 'Due soon',
+              type: 'alert'
+            });
+          });
+
+          // Sort all activities by timestamp and limit to 10
+          this.recentActivities = activities
+            .sort((a, b) => this.getTimestampValue(b.timestamp) - this.getTimestampValue(a.timestamp))
+            .slice(0, 10);
+        },
+        error: (error) => {
+          console.error('Error loading recent activities:', error);
+          // Fallback to empty activities
+          this.recentActivities = [];
+        }
+      })
+    );
+  }
+
+  /**
+   * Load usage log activities for assigned machines
+   */
+  private loadUsageLogsActivities(machines: Machine[], sevenDaysAgo: Date, activities: Activity[]) {
+    // Get assigned machines to fetch their usage logs
+    const assignedMachines = machines
+      .filter(m => m.status === MachineStatus.ASSIGNED)
+      .slice(0, 5); // Limit to 5 machines to avoid too many API calls
+
+    if (assignedMachines.length === 0) {
+      return;
+    }
+
+    // Fetch usage logs for each assigned machine
+    const usageLogRequests = assignedMachines.map(machine =>
+      this.usageLogService.getUsageLogsByMachine(machine.id, sevenDaysAgo, new Date())
     );
 
-    this.recentActivities = activities.slice(0, 5); // Keep only top 5 activities
+    this.machineSubscription.add(
+      forkJoin(usageLogRequests).subscribe({
+        next: (usageLogsArrays) => {
+          // Flatten all usage logs and filter recent ones
+          const allUsageLogs: UsageLogDto[] = usageLogsArrays.flat();
+
+          const recentUsageLogs = allUsageLogs
+            .filter(log => new Date(log.createdAt).getTime() > sevenDaysAgo.getTime())
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 5);
+
+          recentUsageLogs.forEach(log => {
+            const workingHoursText = log.workingHours > 0 ? `${log.workingHours.toFixed(1)}h worked` : '';
+            const downtimeText = log.hasDowntime && log.downtimeHours ? `, ${log.downtimeHours.toFixed(1)}h downtime` : '';
+
+            activities.push({
+              icon: log.hasDowntime ? 'report_problem' : 'schedule',
+              title: log.hasDowntime ? 'Usage Log (Downtime)' : 'Usage Log Submitted',
+              description: `${log.machineName}: ${workingHoursText}${downtimeText}`,
+              timestamp: this.formatTimestamp(log.createdAt),
+              type: log.hasDowntime ? 'alert' : 'maintenance'
+            });
+          });
+
+          // Re-sort all activities after adding usage logs
+          this.recentActivities = activities
+            .sort((a, b) => this.getTimestampValue(b.timestamp) - this.getTimestampValue(a.timestamp))
+            .slice(0, 10);
+        },
+        error: (error) => {
+          console.error('Error loading usage logs for activities:', error);
+          // Continue without usage logs
+        }
+      })
+    );
+  }
+
+  /**
+   * Format timestamp to human-readable format
+   */
+  private formatTimestamp(date: Date | string): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const timeDiff = Date.now() - dateObj.getTime();
+    const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+    const daysAgo = Math.floor(hoursAgo / 24);
+
+    if (daysAgo > 7) {
+      return dateObj.toLocaleDateString();
+    } else if (daysAgo > 0) {
+      return `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
+    } else if (hoursAgo > 0) {
+      return `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
+    } else {
+      return 'Just now';
+    }
+  }
+
+  /**
+   * Get numeric value for timestamp sorting
+   */
+  private getTimestampValue(timestamp: string): number {
+    if (timestamp === 'Just now') return Date.now();
+    if (timestamp === 'Overdue' || timestamp === 'Due soon') return Date.now();
+
+    const match = timestamp.match(/(\d+)\s+(hour|day)/);
+    if (match) {
+      const value = parseInt(match[1]);
+      const unit = match[2];
+      const milliseconds = unit === 'hour' ? value * 60 * 60 * 1000 : value * 24 * 60 * 60 * 1000;
+      return Date.now() - milliseconds;
+    }
+
+    return 0;
   }
 
   getUserWelcomeMessage(): string {

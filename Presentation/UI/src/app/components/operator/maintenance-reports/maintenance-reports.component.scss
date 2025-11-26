@@ -214,9 +214,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   mat-card-header {
-    background: #f9f9f9;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 1.5rem;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: none;
 
     mat-card-title {
       display: flex;
@@ -225,29 +225,30 @@
       margin: 0 0 0.5rem 0;
       font-size: 1.5rem;
       font-weight: 600;
-      color: #333;
+      color: white;
 
       mat-icon {
-        color: #1976d2;
+        color: white;
       }
     }
 
     mat-card-subtitle {
       margin: 0;
-      color: #666;
+      color: rgba(255, 255, 255, 0.9);
       font-size: 0.9rem;
     }
   }
 
   mat-card-content {
     padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
 
     .search-field {
       width: 100%;
       margin-bottom: 1.5rem;
 
       ::ng-deep .mat-mdc-form-field-flex {
-        background-color: #f9f9f9;
+        background-color: white;
       }
 
       ::ng-deep .mat-mdc-text-field-wrapper {
@@ -300,15 +301,16 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.25rem;
-    background: white;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
     border-radius: 8px;
     border-left: 4px solid;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 
     &:hover {
       transform: translateX(4px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
     }
 
     &.status-pending {

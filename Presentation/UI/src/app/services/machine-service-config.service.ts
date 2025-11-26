@@ -56,7 +56,7 @@ export interface UpdateMachineServiceConfigRequest {
   providedIn: 'root'
 })
 export class MachineServiceConfigService {
-  private readonly apiUrl = `${environment.apiUrl}/machines`;
+  private readonly apiUrl = `${environment.apiUrl}/api/machines`;
 
   constructor(private http: HttpClient) {}
 

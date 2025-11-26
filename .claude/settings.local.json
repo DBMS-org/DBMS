@@ -48,7 +48,9 @@
       "Bash(\"Application\\DTOs\\Reports\\MaintenancePerformanceReportDto.cs\")",
       "Bash(dir:*)",
       "Bash(Select-String -Pattern \"Error|error|Build succeeded|Build FAILED\" -Context 2)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(cmd /c \"dir /s /b Presentation\\UI\\src\\app\\components\\mechanical-engineer\")",
+      "Bash(cmd /c \"dir /s /b Presentation\\UI\\src\\app\\services\")"
     ],
     "deny": [],
     "ask": []

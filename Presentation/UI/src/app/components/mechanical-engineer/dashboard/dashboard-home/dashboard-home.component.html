@@ -1,186 +1,208 @@
-<!-- Dashboard Header -->
-<header class="dashboard-header">
-  <div class="header-content">
-    <h1>Mechanical Engineer Dashboard</h1>
-    <div class="user-info">
-      <div class="user-details" *ngIf="currentUser">
-        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
-        <div class="user-metadata">
-          <span class="user-role">Role: {{ currentUser.role }}</span>
-          <span class="user-location" *ngIf="getUserLocationInfo()">{{ getUserLocationInfo() }}</span>
-          <span class="last-login">{{ getLastLoginInfo() }}</span>
-        </div>
-      </div>
-      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
+<!-- Compact Dashboard Header -->
+<header class="compact-header">
+  <div class="header-flex">
+    <div class="header-left">
+      <h1>Mechanical Engineer Dashboard</h1>
+      <span class="user-welcome" *ngIf="currentUser">{{ getUserWelcomeMessage() }}</span>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="icon-btn" (click)="refreshDashboard()" title="Refresh">
         <i class="material-icons">refresh</i>
-        Refresh
       </button>
-      <button class="logout-btn" (click)="logout()">Logout</button>
+      <button type="button" class="logout-btn-compact" (click)="logout()">
+        <i class="material-icons">logout</i>
+        Logout
+      </button>
     </div>
   </div>
 </header>
 
-<div class="loading-container" *ngIf="isLoading()">
+<div class="loading-overlay" *ngIf="isLoading()">
   <div class="spinner"></div>
-  <p>Loading dashboard...</p>
 </div>
 
-<div class="dashboard-content" *ngIf="!isLoading()">
-  <!-- Quick Summary Cards -->
-  <div class="stats-grid">
-    <div class="stat-card scheduled">
-      <div class="stat-icon"><i class="material-icons">event</i></div>
-      <div class="stat-content">
-        <h3>Total Scheduled</h3>
-        <p class="stat-number">{{ mechanicalStats().underMaintenance }}</p>
+<div class="dashboard-grid" *ngIf="!isLoading()">
+  <!-- Job Statistics Section - Full Width -->
+  <div class="stats-section">
+    <div class="panel">
+      <div class="panel-header">
+        <i class="material-icons">analytics</i>
+        <h3>Job Statistics</h3>
       </div>
-    </div>
-    <div class="stat-card completed">
-      <div class="stat-icon"><i class="material-icons">check_circle</i></div>
-      <div class="stat-content">
-        <h3>Completed</h3>
-        <p class="stat-number">{{ stats().completedThisWeek }}</p>
-      </div>
-    </div>
-    <div class="stat-card pending">
-      <div class="stat-icon"><i class="material-icons">pending</i></div>
-      <div class="stat-content">
-        <h3>Pending</h3>
-        <p class="stat-number">{{ stats().pendingTasks }}</p>
-      </div>
-    </div>
-    <div class="stat-card alerts">
-      <div class="stat-icon"><i class="material-icons">warning</i></div>
-      <div class="stat-content">
-        <h3>Active Alerts</h3>
-        <p class="stat-number">{{ maintenanceAlerts().length }}</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Machines Scheduled for Maintenance -->
-  <div class="maintenance-schedule-panel">
-    <h3>
-      <i class="material-icons">build_circle</i>
-      Machines Scheduled for Maintenance
-    </h3>
-    <div *ngIf="machinesNeedingMaintenance().length > 0; else noScheduled">
-      <div class="maintenance-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Machine Name</th>
-              <th>Type</th>
-              <th>Project</th>
-              <th>Scheduled Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let machine of machinesNeedingMaintenance()">
-              <td>{{ machine.name }}</td>
-              <td>{{ machine.type }}</td>
-              <td>{{ machine.assignedProject || 'N/A' }}</td>
-              <td>{{ machine.nextMaintenanceDate }}</td>
-              <td>
-                <span class="status-badge" [class]="machine.status.toLowerCase()">
-                  {{ machine.status | titlecase }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <ng-template #noScheduled>
-      <p class="empty-message">No machines scheduled for maintenance.</p>
-    </ng-template>
-  </div>
-
-  <!-- Service Alerts -->
-  <div class="alerts-section">
-    <h3>
-      <i class="material-icons">notifications_active</i>
-      Service Alerts
-    </h3>
-    <div *ngIf="maintenanceAlerts().length > 0; else noAlerts">
-      <div class="alert-list">
-        <div class="alert-card" *ngFor="let alert of maintenanceAlerts()" [class]="'alert-' + alert.priority.toLowerCase()">
-          <div class="alert-icon">
-            <i class="material-icons">{{ alert.icon }}</i>
-          </div>
-          <div class="alert-content">
-            <h4>{{ alert.machineName }}</h4>
-            <p>{{ alert.message }}</p>
-            <span class="alert-time">{{ alert.timestamp }}</span>
-          </div>
-          <div class="alert-priority" [class]="'priority-' + alert.priority.toLowerCase()">
-            {{ alert.priority }}
-          </div>
-        </div>
-      </div>
-    </div>
-    <ng-template #noAlerts>
-      <p class="empty-message">No service alerts at this time.</p>
-    </ng-template>
-  </div>
-
-  <!-- Accessory/Spare-Part Alerts -->
-  <div class="inventory-panel">
-    <h3>
-      <i class="material-icons">inventory_2</i>
-      Accessory / Spare-Part Alerts
-    </h3>
-    <div *ngIf="lowStockParts().length > 0; else noLowStock">
-      <div class="parts-grid">
-        <div class="part-card" *ngFor="let part of lowStockParts()" [class]="getStockLevelClass(part)">
-          <div class="part-info">
-            <h4>{{ part.name }}</h4>
-            <span class="part-code">{{ part.partNumber }}</span>
-          </div>
-          <div class="stock-info">
-            <div class="stock-level">
-              <span class="current-stock">{{ part.currentStock }}</span>
-              <span class="stock-separator">/</span>
-              <span class="min-stock">{{ part.minimumStock }}</span>
-            </div>
-            <div class="stock-status" [class]="getStockStatusClass(part)">
-              {{ getStockStatus(part) }}
+      <div class="panel-body">
+        <div class="stats-grid">
+          <!-- Type Statistics -->
+          <div class="stat-group">
+            <h4 class="stat-group-title">Job Statistics</h4>
+            <div class="stat-cards">
+              <div class="stat-card overall-total">
+                <i class="material-icons">assignment</i>
+                <div class="stat-content">
+                  <div class="stat-value">{{ totalJobs() }}</div>
+                  <div class="stat-label">Total Jobs</div>
+                </div>
+              </div>
+              <div class="stat-card type-preventive">
+                <i class="material-icons">schedule</i>
+                <div class="stat-content">
+                  <div class="stat-value">{{ preventiveJobs().length }}</div>
+                  <div class="stat-label">Preventive</div>
+                </div>
+              </div>
+              <div class="stat-card type-corrective">
+                <i class="material-icons">build</i>
+                <div class="stat-content">
+                  <div class="stat-value">{{ correctiveJobs().length }}</div>
+                  <div class="stat-label">Corrective</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        <div class="quick-actions">
+          <button type="button" class="action-btn primary" (click)="navigateToMaintenanceJobs()">
+            <i class="material-icons">visibility</i>
+            View All Jobs
+          </button>
+        </div>
       </div>
     </div>
-    <ng-template #noLowStock>
-      <p class="empty-message">All accessories are adequately stocked.</p>
-    </ng-template>
   </div>
 
-  <!-- Recent Maintenance Logs -->
-  <div class="activities-panel">
-    <h3>
-      <i class="material-icons">history</i>
-      Recent Maintenance Logs
-    </h3>
-    <div *ngIf="recentActivities().length > 0; else noActivities">
-      <div class="activity-list">
-        <div class="activity-item" *ngFor="let activity of recentActivities()">
-          <div class="activity-icon">
-            <i class="material-icons">{{ activity.icon }}</i>
+  <!-- Main Content - 2 Column Layout -->
+  <div class="content-left">
+    <!-- Scheduled Jobs Table - Compact -->
+    <div class="panel">
+      <div class="panel-header">
+        <i class="material-icons">build_circle</i>
+        <h3>Scheduled Jobs</h3>
+      </div>
+      <div class="panel-body">
+        <div *ngIf="scheduledJobs().length > 0; else noScheduled" class="table-responsive">
+          <table class="compact-table">
+            <thead>
+              <tr>
+                <th>Machine</th>
+                <th>Type</th>
+                <th>Project</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let job of scheduledJobs()" (click)="viewJobDetails(job)">
+                <td><strong>{{ job.machineName }}</strong></td>
+                <td>{{ job.type }}</td>
+                <td>{{ job.project || 'N/A' }}</td>
+                <td>{{ formatDate(job.scheduledDate) }}</td>
+                <td>
+                  <button type="button" class="icon-btn-sm" (click)="viewJobDetails(job); $event.stopPropagation()">
+                    <i class="material-icons">visibility</i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noScheduled>
+          <div class="empty-state">No jobs scheduled</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- In Progress & Overdue - Combined -->
+    <div class="panel" *ngIf="inProgressJobs().length > 0 || overdueJobs().length > 0">
+      <div class="panel-header">
+        <i class="material-icons">engineering</i>
+        <h3>Active & Overdue Jobs</h3>
+      </div>
+      <div class="panel-body">
+        <div class="job-list">
+          <!-- Overdue Jobs First -->
+          <div *ngFor="let job of overdueJobs()" class="job-item overdue" (click)="viewJobDetails(job)">
+            <div class="job-item-left">
+              <i class="material-icons job-icon">error</i>
+              <div class="job-info">
+                <strong>{{ job.machineName }}</strong>
+                <span class="job-meta">{{ job.type }} • {{ formatDate(job.scheduledDate) }}</span>
+              </div>
+            </div>
+            <span class="badge badge-overdue">OVERDUE</span>
           </div>
-          <div class="activity-content">
-            <h4>{{ activity.title }}</h4>
-            <p>{{ activity.description }}</p>
-            <span class="activity-time">{{ activity.timestamp }}</span>
-          </div>
-          <div class="activity-status" [class]="'status-' + activity.type">
-            {{ activity.type }}
+          <!-- In Progress Jobs -->
+          <div *ngFor="let job of inProgressJobs()" class="job-item in-progress" (click)="viewJobDetails(job)">
+            <div class="job-item-left">
+              <i class="material-icons job-icon">build</i>
+              <div class="job-info">
+                <strong>{{ job.machineName }}</strong>
+                <span class="job-meta">{{ job.type }} • {{ job.assignedTo?.join(', ') || 'Unassigned' }}</span>
+              </div>
+            </div>
+            <span class="badge badge-in-progress">IN PROGRESS</span>
           </div>
         </div>
       </div>
     </div>
-    <ng-template #noActivities>
-      <p class="empty-message">No recent maintenance activities.</p>
-    </ng-template>
+  </div>
+
+  <div class="content-right">
+    <!-- Service Alerts - Compact -->
+    <div class="panel">
+      <div class="panel-header">
+        <i class="material-icons">notifications_active</i>
+        <h3>Service Alerts</h3>
+      </div>
+      <div class="panel-body">
+        <div *ngIf="maintenanceAlerts().length > 0; else noAlerts" class="alert-list-compact">
+          <div *ngFor="let alert of maintenanceAlerts()"
+               class="alert-item"
+               [ngClass]="getPriorityClass(alert.priority)"
+               (click)="viewAlertDetails(alert)">
+            <i class="material-icons alert-item-icon">{{ getAlertIcon(alert.alertType) }}</i>
+            <div class="alert-item-content">
+              <strong>{{ alert.machineName }}</strong>
+              <span class="alert-message">{{ alert.message }}</span>
+              <span class="alert-timing" *ngIf="alert.daysUntilDue !== undefined && alert.daysUntilDue >= 0">
+                Due in {{ alert.daysUntilDue }}d
+              </span>
+              <span class="alert-timing critical" *ngIf="alert.daysPastDue !== undefined && alert.daysPastDue > 0">
+                Overdue {{ alert.daysPastDue }}d
+              </span>
+            </div>
+            <span class="priority-pill" [ngClass]="getPriorityClass(alert.priority)">
+              {{ alert.priority }}
+            </span>
+          </div>
+        </div>
+        <ng-template #noAlerts>
+          <div class="empty-state">No alerts</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Recent Completed Jobs - Compact -->
+    <div class="panel">
+      <div class="panel-header">
+        <i class="material-icons">history</i>
+        <h3>Recent Completed</h3>
+      </div>
+      <div class="panel-body">
+        <div *ngIf="recentCompletedJobs().length > 0; else noActivities" class="job-list">
+          <div *ngFor="let job of recentCompletedJobs()" class="job-item completed" (click)="viewJobDetails(job)">
+            <div class="job-item-left">
+              <i class="material-icons job-icon">check_circle</i>
+              <div class="job-info">
+                <strong>{{ job.machineName }}</strong>
+                <span class="job-meta">{{ job.type }} • {{ formatDate(job.completedDate) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noActivities>
+          <div class="empty-state">No completed jobs</div>
+        </ng-template>
+      </div>
+    </div>
   </div>
 </div>

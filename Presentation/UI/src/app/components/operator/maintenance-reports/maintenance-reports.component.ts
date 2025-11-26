@@ -56,11 +56,11 @@ export class MaintenanceReportsComponent implements OnInit {
   searchValue = '';
 
   newReport = {
-    affectedPart: 'OTHER' as any,
-    problemCategory: 'OTHER' as any,
+    affectedPart: 'Other' as any,
+    problemCategory: 'Other' as any,
     customDescription: '',
     symptoms: [] as string[],
-    severity: 'MEDIUM' as any
+    severity: 'Medium' as any
   };
 
   private maintenanceReportService = inject(MaintenanceReportService);
@@ -104,31 +104,31 @@ export class MaintenanceReportsComponent implements OnInit {
 
   // Dropdown options
   affectedPartOptions = computed(() => [
-    { label: 'Drill Bit', value: 'DRILL_BIT' },
-    { label: 'Drill Rod', value: 'DRILL_ROD' },
-    { label: 'Shank', value: 'SHANK' },
-    { label: 'Engine', value: 'ENGINE' },
-    { label: 'Hydraulic System', value: 'HYDRAULIC_SYSTEM' },
-    { label: 'Electrical System', value: 'ELECTRICAL_SYSTEM' },
-    { label: 'Mechanical Components', value: 'MECHANICAL_COMPONENTS' },
-    { label: 'Other', value: 'OTHER' }
+    { label: 'Drill Bit', value: 'DrillBit' },
+    { label: 'Drill Rod', value: 'DrillRod' },
+    { label: 'Shank', value: 'Shank' },
+    { label: 'Engine', value: 'Engine' },
+    { label: 'Hydraulic System', value: 'HydraulicSystem' },
+    { label: 'Electrical System', value: 'ElectricalSystem' },
+    { label: 'Mechanical Components', value: 'MechanicalComponents' },
+    { label: 'Other', value: 'Other' }
   ]);
 
   problemCategoryOptions = computed(() => [
-    { label: 'Engine Issues', value: 'ENGINE_ISSUES' },
-    { label: 'Hydraulic Problems', value: 'HYDRAULIC_PROBLEMS' },
-    { label: 'Electrical Faults', value: 'ELECTRICAL_FAULTS' },
-    { label: 'Mechanical Breakdown', value: 'MECHANICAL_BREAKDOWN' },
-    { label: 'Drill Bit Issues', value: 'DRILL_BIT_ISSUES' },
-    { label: 'Drill Rod Problems', value: 'DRILL_ROD_PROBLEMS' },
-    { label: 'Other', value: 'OTHER' }
+    { label: 'Engine Issues', value: 'EngineIssues' },
+    { label: 'Hydraulic Problems', value: 'HydraulicProblems' },
+    { label: 'Electrical Faults', value: 'ElectricalFaults' },
+    { label: 'Mechanical Breakdown', value: 'MechanicalBreakdown' },
+    { label: 'Drill Bit Issues', value: 'DrillBitIssues' },
+    { label: 'Drill Rod Problems', value: 'DrillRodProblems' },
+    { label: 'Other', value: 'Other' }
   ]);
 
   severityOptions = computed(() => [
-    { label: 'Low - Maintenance Needed', value: 'LOW' },
-    { label: 'Medium - Minor Issues', value: 'MEDIUM' },
-    { label: 'High - Performance Issues', value: 'HIGH' },
-    { label: 'Critical - Machine Down', value: 'CRITICAL' }
+    { label: 'Low - Maintenance Needed', value: 'Low' },
+    { label: 'Medium - Minor Issues', value: 'Medium' },
+    { label: 'High - Performance Issues', value: 'High' },
+    { label: 'Critical - Machine Down', value: 'Critical' }
   ]);
 
   ngOnInit() {
@@ -228,24 +228,32 @@ export class MaintenanceReportsComponent implements OnInit {
 
   resetReportForm() {
     this.newReport = {
-      affectedPart: 'OTHER' as any,
-      problemCategory: 'OTHER' as any,
+      affectedPart: 'Other' as any,
+      problemCategory: 'Other' as any,
       customDescription: '',
       symptoms: [] as string[],
-      severity: 'MEDIUM' as any
+      severity: 'Medium' as any
     };
   }
 
   getPartDisplay(part: string): string {
     const partMap: { [key: string]: string } = {
       'DRILL_BIT': 'Drill Bit',
+      'DrillBit': 'Drill Bit',
       'DRILL_ROD': 'Drill Rod',
+      'DrillRod': 'Drill Rod',
       'SHANK': 'Shank',
+      'Shank': 'Shank',
       'ENGINE': 'Engine',
+      'Engine': 'Engine',
       'HYDRAULIC_SYSTEM': 'Hydraulic System',
+      'HydraulicSystem': 'Hydraulic System',
       'ELECTRICAL_SYSTEM': 'Electrical System',
+      'ElectricalSystem': 'Electrical System',
       'MECHANICAL_COMPONENTS': 'Mechanical Components',
-      'OTHER': 'Other'
+      'MechanicalComponents': 'Mechanical Components',
+      'OTHER': 'Other',
+      'Other': 'Other'
     };
     return partMap[part] || part;
   }
@@ -253,9 +261,13 @@ export class MaintenanceReportsComponent implements OnInit {
   getSeverityDisplay(severity: string): string {
     const severityMap: { [key: string]: string } = {
       'LOW': 'Low',
+      'Low': 'Low',
       'MEDIUM': 'Medium',
+      'Medium': 'Medium',
       'HIGH': 'High',
-      'CRITICAL': 'Critical'
+      'High': 'High',
+      'CRITICAL': 'Critical',
+      'Critical': 'Critical'
     };
     return severityMap[severity] || severity;
   }

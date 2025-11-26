@@ -48,19 +48,7 @@
         <span class="stat-detail">Pending review</span>
       </div>
     </div>
-    
-    <div class="stat-card accessories">
-      <div class="stat-icon">
-        <i class="material-icons">build</i>
-      </div>
-      <div class="stat-content">
-        <h3>Accessories</h3>
-        <p class="stat-number">{{ stats.accessoriesTotal }}</p>
-        <span class="stat-detail alert" *ngIf="stats.lowStockAccessories > 0">{{ stats.lowStockAccessories }} low stock</span>
-        <span class="stat-detail" *ngIf="stats.lowStockAccessories === 0">All items stocked</span>
-      </div>
-    </div>
-    
+
     <div class="stat-card maintenance">
       <div class="stat-icon">
         <i class="material-icons">engineering</i>
@@ -97,18 +85,6 @@
         <h4>Assignment Requests</h4>
         <p>Review and approve machine assignment requests from General Managers</p>
         <div class="action-status">{{ stats.pendingAssignments }} pending</div>
-      </div>
-
-      <div class="action-card accessories-action" (click)="navigateToAccessoriesInventory()">
-        <div class="action-icon">
-          <i class="material-icons">build</i>
-        </div>
-        <h4>Drilling Components</h4>
-        <p>Track drilling component items, manage stock levels, and handle low-stock alerts</p>
-        <div class="action-status" [class]="stats.lowStockAccessories > 0 ? 'alert' : ''">
-          {{ stats.accessoriesTotal }} items
-          <span *ngIf="stats.lowStockAccessories > 0"> • {{ stats.lowStockAccessories }} low</span>
-        </div>
       </div>
 
       <div class="action-card maintenance-action" (click)="navigateToMaintenanceManagement()">
@@ -163,6 +139,30 @@
                 }
               </div>
               <i class="material-icons chevron">chevron_right</i>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Recent Activities Panel -->
+  @if (recentActivities.length > 0) {
+    <div class="recent-activities-panel">
+      <h3>
+        <i class="material-icons">history</i>
+        Recent Activities
+      </h3>
+      <div class="activity-list">
+        @for (activity of recentActivities; track $index) {
+          <div class="activity-item" [ngClass]="getActivityTypeClass(activity.type)">
+            <div class="activity-icon">
+              <i class="material-icons">{{ activity.icon }}</i>
+            </div>
+            <div class="activity-content">
+              <h4>{{ activity.title }}</h4>
+              <p>{{ activity.description }}</p>
+              <span class="activity-time">{{ activity.timestamp }}</span>
             </div>
           </div>
         }

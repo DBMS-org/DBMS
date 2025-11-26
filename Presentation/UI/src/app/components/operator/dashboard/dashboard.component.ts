@@ -10,6 +10,14 @@ import { SiteBlastingService } from '../../../core/services/site-blasting.servic
 import { Project } from '../../../core/models/project.model';
 import { User } from '../../../core/models/user.model';
 import { UnifiedDrillDataService } from '../../../core/services/unified-drill-data.service';
+import { MaintenanceReportService } from '../maintenance-reports/services/maintenance-report.service';
+import { OperatorMachine, ProblemReport } from '../maintenance-reports/models/maintenance-report.models';
+import { MaintenanceService } from '../../mechanical-engineer/maintenance/services/maintenance.service';
+import { UsageMetrics } from '../../mechanical-engineer/maintenance/models/maintenance.models';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Notification } from '../../../core/models/notification.model';
+import { UsageLogService } from '../../../services/usage-log.service';
+import { UsageStatisticsDto } from '../my-machines/models/usage-log.models';
 
 @Component({
   selector: 'app-operator-dashboard',
@@ -24,6 +32,17 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   projectSites: ProjectSite[] = [];
   isLoading = true;
   error: string | null = null;
+
+  // Machine & Maintenance data
+  assignedMachine: OperatorMachine | null = null;
+  machineUsageMetrics: UsageMetrics | null = null;
+  machineUsageStatistics: UsageStatisticsDto | null = null;
+  maintenanceReports: ProblemReport[] = [];
+  serviceIntervalHours = 500;
+
+  // Notifications
+  recentNotifications: Notification[] = [];
+  unreadNotificationsCount = 0;
 
   private subscriptions = new Subscription();
 
@@ -48,13 +67,17 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   };
 
   constructor(
-    private authService: AuthService, 
+    private authService: AuthService,
     private projectService: ProjectService,
     private siteService: SiteService,
     private drillHoleService: DrillHoleService,
     private siteBlastingService: SiteBlastingService,
     private router: Router,
-    private unifiedDrillDataService: UnifiedDrillDataService
+    private unifiedDrillDataService: UnifiedDrillDataService,
+    private maintenanceReportService: MaintenanceReportService,
+    private maintenanceService: MaintenanceService,
+    private notificationService: NotificationService,
+    private usageLogService: UsageLogService
   ) {}
 
   ngOnInit(): void {
@@ -96,6 +119,12 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     });
 
     this.subscriptions.add(projectSub);
+
+    // Load machine and maintenance data
+    this.loadMachineData();
+
+    // Load notifications
+    this.loadNotifications();
   }
 
   private loadProjectDetails(projectId: number): void {
@@ -107,8 +136,9 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
           updatedAt: new Date(s.updatedAt)
         }));
 
+        // Update statistics without drill holes first
+        this.updateStatistics(sites);
         this.loadDrillHolesForSites(projectId, sites);
-        this.updateStatistics(sites, []);
         this.loadSiteSpecificData();
         this.updateRecentActivities();
         this.updateSystemMetrics();
@@ -125,19 +155,33 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDrillHolesForSites(projectId: number, sites: ProjectSite[]): void{
-    let totalDrillHoles = 0;
-    
+    let totalCompletedDrillHoles = 0;
+    let sitesProcessed = 0;
+
     sites.forEach(site => {
-      const drillHolesSub = this.drillHoleService.getDrillHolesBySite(projectId, site.id).subscribe({
-        next: (drillHoles) => {
-          totalDrillHoles += drillHoles.length;
-          this.stats.totalDrillHoles = totalDrillHoles;
+      const drillPointsSub = this.unifiedDrillDataService.getDrillPoints(projectId, site.id).subscribe({
+        next: (drillPoints) => {
+          // Count completed drill points for this site
+          const completedCount = drillPoints.filter(dp => dp.isCompleted).length;
+          totalCompletedDrillHoles += completedCount;
+          sitesProcessed++;
+
+          console.log(`Site ${site.id}: ${completedCount} completed drill holes out of ${drillPoints.length}`);
+
+          // Update the total count
+          this.stats.totalDrillHoles = totalCompletedDrillHoles;
+
+          // Log the running total
+          if (sitesProcessed === sites.length) {
+            console.log(`Total completed drill holes across all sites: ${totalCompletedDrillHoles}`);
+          }
         },
         error: (err) => {
-          console.warn('Failed to load drill holes for site', site.id, err);
+          console.warn('Failed to load drill points for site', site.id, err);
+          sitesProcessed++;
         }
       });
-      this.subscriptions.add(drillHolesSub);
+      this.subscriptions.add(drillPointsSub);
     });
   }
 
@@ -157,9 +201,9 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private updateStatistics(sites: ProjectSite[], drillHoles: any[]): void {
+  private updateStatistics(sites: ProjectSite[]): void {
     this.stats.totalSites = sites.length;
-    this.stats.totalDrillHoles = drillHoles.length;
+    // Don't reset totalDrillHoles - it's updated by loadDrillHolesForSites
     this.stats.approvedPatterns = sites.filter(s => s.isPatternApproved).length;
     this.stats.confirmedSimulations = sites.filter(s => s.isSimulationConfirmed).length;
 
@@ -167,7 +211,7 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
       const completedSites = sites.filter(s => s.isPatternApproved && s.isSimulationConfirmed).length;
       this.stats.projectProgress = Math.round((completedSites / sites.length) * 100);
     }
-    
+
     this.stats.activeWorkflows = sites.filter(s => !s.isPatternApproved || !s.isSimulationConfirmed).length;
   }
 
@@ -305,5 +349,275 @@ export class OperatorDashboardComponent implements OnInit, OnDestroy {
   // Track function for Angular's ngFor optimization
   trackActivity(index: number, activity: any): number {
     return activity.id;
+  }
+
+  // Load machine and maintenance data
+  private loadMachineData(): void {
+    if (!this.currentUser?.id) return;
+
+    const machineSub = this.maintenanceReportService.getOperatorMachine(this.currentUser.id).subscribe({
+      next: (machine) => {
+        this.assignedMachine = machine;
+        if (machine?.id) {
+          this.loadMachineUsageMetrics(machine.id);
+          this.loadMachineUsageStatistics(machine.id);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load operator machine:', err);
+        // Don't set error state - machine might not be assigned yet
+      }
+    });
+
+    const reportsSub = this.maintenanceReportService.getOperatorReports(this.currentUser.id).subscribe({
+      next: (reports) => {
+        console.log('🔧 DASHBOARD: Raw maintenance reports received:', reports);
+        console.log('🔧 DASHBOARD: Number of reports:', reports?.length || 0);
+
+        this.maintenanceReports = reports.sort((a, b) =>
+          new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime()
+        );
+
+        console.log('🔧 DASHBOARD: Sorted maintenance reports:', this.maintenanceReports);
+        console.log('🔧 DASHBOARD: Critical count:', this.getCriticalReportsCount());
+        console.log('🔧 DASHBOARD: Active count:', this.getActiveReportsCount());
+        console.log('🔧 DASHBOARD: Completed count:', this.getCompletedReportsCount());
+      },
+      error: (err) => {
+        console.error('❌ DASHBOARD: Failed to load maintenance reports:', err);
+      }
+    });
+
+    this.subscriptions.add(machineSub);
+    this.subscriptions.add(reportsSub);
+  }
+
+  private loadMachineUsageMetrics(machineId: number): void {
+    const metricsSub = this.maintenanceService.getUsageMetrics(machineId).subscribe({
+      next: (metricsArr) => {
+        this.machineUsageMetrics = metricsArr && metricsArr.length ? metricsArr[0] : null;
+      },
+      error: (err) => {
+        console.error('Failed to load usage metrics:', err);
+      }
+    });
+
+    this.subscriptions.add(metricsSub);
+  }
+
+  private loadMachineUsageStatistics(machineId: number): void {
+    const statsSub = this.usageLogService.getUsageStatistics(machineId, 7).subscribe({
+      next: (stats) => {
+        this.machineUsageStatistics = stats;
+      },
+      error: (err) => {
+        console.error('Failed to load usage statistics:', err);
+      }
+    });
+
+    this.subscriptions.add(statsSub);
+  }
+
+  private loadNotifications(): void {
+    const notificationsSub = this.notificationService.fetchNotifications(0, 5).subscribe({
+      next: (notifications) => {
+        console.log('🔔 DASHBOARD: Raw notifications received:', notifications);
+        console.log('🔔 DASHBOARD: Number of notifications:', notifications?.length || 0);
+
+        // Filter notifications relevant to Operator role
+        const operatorNotifications = notifications.filter(n => this.isOperatorRelevantNotification(n.type));
+        console.log('🔔 DASHBOARD: Filtered operator notifications:', operatorNotifications);
+        console.log('🔔 DASHBOARD: Operator notifications count:', operatorNotifications.length);
+
+        this.recentNotifications = operatorNotifications.slice(0, 5);
+        this.unreadNotificationsCount = operatorNotifications.filter(n => !n.isRead).length;
+
+        console.log('🔔 DASHBOARD: Final recentNotifications:', this.recentNotifications);
+        console.log('🔔 DASHBOARD: Unread count:', this.unreadNotificationsCount);
+      },
+      error: (err) => {
+        console.error('❌ DASHBOARD: Failed to load notifications:', err);
+      }
+    });
+
+    this.subscriptions.add(notificationsSub);
+  }
+
+  private isOperatorRelevantNotification(type: any): boolean {
+    // Handle both numeric enum values and string enum names
+    let typeValue: number;
+
+    if (typeof type === 'number') {
+      typeValue = type;
+    } else if (typeof type === 'string') {
+      // Try to parse as number first
+      typeValue = parseInt(type, 10);
+
+      // If that didn't work, the backend might be sending the enum name as string
+      if (isNaN(typeValue)) {
+        console.log('⚠️ DASHBOARD: Non-numeric notification type:', type);
+        // Include by default if we can't parse it - better to show than hide
+        return true;
+      }
+    } else {
+      console.log('⚠️ DASHBOARD: Unknown notification type format:', type);
+      return true; // Include by default
+    }
+
+    console.log('🔍 DASHBOARD: Checking notification type value:', typeValue);
+
+    // Handle unknown/undefined types (type 0 or undefined)
+    if (typeValue === 0 || typeValue === -1 || typeValue === undefined || typeValue === null) {
+      console.log('⚠️ DASHBOARD: Unknown notification type detected, including by default');
+      return true;
+    }
+
+    // Machine Assignments (400-499), Maintenance Reports (500-599), Maintenance Jobs (600-699)
+    if (typeValue >= 400 && typeValue < 700) return true;
+
+    // Generic system notifications (1000+)
+    if (typeValue >= 1000) return true;
+
+    // For now, include ALL notifications to debug what types we're getting
+    console.log('⚠️ DASHBOARD: Notification type', typeValue, 'not in expected ranges, but including anyway');
+    return true;
+  }
+
+  // Machine status helpers
+  getMachineStatusClass(): string {
+    if (!this.assignedMachine) return '';
+
+    switch (this.assignedMachine.status) {
+      case 'OPERATIONAL': return 'status-operational';
+      case 'UNDER_MAINTENANCE': return 'status-under-maintenance';
+      case 'DOWN_FOR_REPAIR': return 'status-down-for-repair';
+      case 'OFFLINE': return 'status-offline';
+      default: return '';
+    }
+  }
+
+  getMachineStatusLabel(): string {
+    if (!this.assignedMachine) return 'N/A';
+
+    switch (this.assignedMachine.status) {
+      case 'OPERATIONAL': return 'Operational';
+      case 'UNDER_MAINTENANCE': return 'Under Maintenance';
+      case 'DOWN_FOR_REPAIR': return 'Down for Repair';
+      case 'OFFLINE': return 'Offline';
+      default: return this.assignedMachine.status;
+    }
+  }
+
+  getServiceProgress(): number {
+    if (!this.machineUsageMetrics) return 0;
+    const current = this.machineUsageMetrics.engineHours % this.serviceIntervalHours;
+    return Math.round((current / this.serviceIntervalHours) * 100);
+  }
+
+  getServiceRemaining(): number {
+    if (!this.machineUsageMetrics) return this.serviceIntervalHours;
+    const current = this.machineUsageMetrics.engineHours % this.serviceIntervalHours;
+    return Math.max(0, this.serviceIntervalHours - current);
+  }
+
+  getServiceUrgencyClass(): string {
+    const progress = this.getServiceProgress();
+    if (progress >= 90) return 'urgent';
+    if (progress >= 75) return 'warning';
+    return 'normal';
+  }
+
+  // Maintenance report helpers
+  getActiveReportsCount(): number {
+    const count = this.maintenanceReports.filter(r => {
+      const status = typeof r.status === 'string' ? r.status.toUpperCase() : r.status;
+      const isActive = status === 'REPORTED' || status === 'ACKNOWLEDGED' || status === 'IN_PROGRESS' ||
+                       status === 'SUBMITTED' || status === 'APPROVED' || status === 'PENDING';
+      console.log(`📊 Report ${r.id} status: ${r.status} -> ${status}, isActive: ${isActive}`);
+      return isActive;
+    }).length;
+    console.log('📊 Total active reports:', count);
+    return count;
+  }
+
+  getCriticalReportsCount(): number {
+    const count = this.maintenanceReports.filter(r => {
+      const status = typeof r.status === 'string' ? r.status.toUpperCase() : r.status;
+      const isActive = status === 'REPORTED' || status === 'ACKNOWLEDGED' || status === 'IN_PROGRESS' ||
+                       status === 'SUBMITTED' || status === 'APPROVED' || status === 'PENDING';
+      // SeverityLevel enum: CRITICAL = 'Critical', HIGH = 'High', MEDIUM = 'Medium', LOW = 'Low'
+      const isCritical = r.severity === 'Critical' || r.severity === 'High';
+      console.log(`🚨 Report ${r.id} severity: ${r.severity}, status: ${r.status}, isCritical: ${isCritical}, isActive: ${isActive}`);
+      return isCritical && isActive;
+    }).length;
+    console.log('🚨 Total critical reports:', count);
+    return count;
+  }
+
+  getCompletedReportsCount(): number {
+    const count = this.maintenanceReports.filter(r => {
+      const status = typeof r.status === 'string' ? r.status.toUpperCase() : r.status;
+      const isCompleted = status === 'RESOLVED' || status === 'CLOSED' || status === 'COMPLETED';
+      console.log(`✅ Report ${r.id} status: ${r.status} -> ${status}, isCompleted: ${isCompleted}`);
+      return isCompleted;
+    }).length;
+    console.log('✅ Total completed reports:', count);
+    return count;
+  }
+
+  // Utilization metrics
+  getUtilizationRate(): number {
+    if (!this.machineUsageStatistics || this.machineUsageStatistics.totalEngineHours === 0) return 0;
+    return Math.round((this.machineUsageStatistics.totalWorkingHours / this.machineUsageStatistics.totalEngineHours) * 100);
+  }
+
+  // Navigation helpers
+  navigateToMachines(): void {
+    this.router.navigate(['/operator/my-machines']);
+  }
+
+  navigateToMaintenance(): void {
+    this.router.navigate(['/operator/maintenance-reports']);
+  }
+
+  navigateToNotifications(): void {
+    this.router.navigate(['/operator/notifications']);
+  }
+
+  navigateToMachineUsage(): void {
+    if (this.assignedMachine?.id) {
+      this.router.navigate(['/operator/machine-usage', this.assignedMachine.id]);
+    }
+  }
+
+  markNotificationAsRead(notification: Notification): void {
+    this.notificationService.markAsRead(notification.id).subscribe({
+      next: () => {
+        this.loadNotifications();
+      },
+      error: (err) => {
+        console.error('Failed to mark notification as read:', err);
+      }
+    });
+  }
+
+  getTimeAgo(date: Date | string): string {
+    const now = new Date();
+    const then = new Date(date);
+    const diffMs = now.getTime() - then.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) return `${diffDays}d ago`;
+    if (diffHours > 0) return `${diffHours}h ago`;
+    if (diffMins > 0) return `${diffMins}m ago`;
+    return 'Just now';
+  }
+
+  getNotificationIcon(notification: Notification): string {
+    // You can expand this based on notification types
+    if (!notification.isRead) return 'notifications_active';
+    return 'notifications';
   }
 }

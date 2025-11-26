@@ -1,13 +1,12 @@
 <header class="dashboard-header">
   <div class="header-content">
     <div class="header-left">
-      <h1>Dashboard</h1>
+      <h1><i class="material-icons">dashboard</i> Blasting Engineer Dashboard</h1>
       <span class="welcome-message" *ngIf="currentUser">{{ getUserWelcomeMessage() }}</span>
     </div>
     <div class="header-actions">
-      <button type="button" class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
+      <button type="button" class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard">
         <i class="material-icons">refresh</i>
-        <span class="btn-text">Refresh</span>
       </button>
     </div>
   </div>
@@ -19,258 +18,178 @@
 </div>
 
 <div class="dashboard-content" *ngIf="!isLoading">
-  <!-- Main Stats Grid -->
-  <div class="stats-grid">
-    <div class="stat-card projects interactive" (click)="navigateToProjects()">
-      <div class="stat-icon">
-        <i class="material-icons">work</i>
+  <!-- Ultra-Compact Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card-mini projects" (click)="navigateToProjects()">
+      <div class="stat-icon"><i class="material-icons">work</i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.totalProjects }}</span>
+        <span class="stat-label">Projects</span>
       </div>
-      <div class="stat-content">
-        <h3>Total Projects</h3>
-        <p class="stat-number">{{ stats.totalProjects }}</p>
-        <div class="stat-trend positive" *ngIf="stats.totalProjects > 0">
-          <i class="material-icons">arrow_upward</i>
-          <span>Active</span>
-        </div>
-      </div>
-      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card active interactive" (click)="navigateToProjects()">
-      <div class="stat-icon">
-        <i class="material-icons">trending_up</i>
+    <div class="stat-card-mini active" (click)="navigateToProjects()">
+      <div class="stat-icon"><i class="material-icons">trending_up</i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.activeProjects }}</span>
+        <span class="stat-label">Active</span>
       </div>
-      <div class="stat-content">
-        <h3>Active Projects</h3>
-        <p class="stat-number">{{ stats.activeProjects }}</p>
-        <div class="progress-bar" *ngIf="stats.totalProjects > 0">
-          <div class="progress-fill" [style.width.%]="(stats.activeProjects / stats.totalProjects) * 100"></div>
-        </div>
-        <p class="stat-subtitle">{{ stats.totalProjects > 0 ? ((stats.activeProjects / stats.totalProjects) * 100).toFixed(0) : 0 }}% of total</p>
-      </div>
-      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card sites interactive" (click)="navigateToSites()">
-      <div class="stat-icon">
-        <i class="material-icons">place</i>
+    <div class="stat-card-mini sites" (click)="navigateToSites()">
+      <div class="stat-icon"><i class="material-icons">place</i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.totalSites }}</span>
+        <span class="stat-label">Sites</span>
       </div>
-      <div class="stat-content">
-        <h3>Total Sites</h3>
-        <p class="stat-number">{{ stats.totalSites }}</p>
-        <div class="stat-trend positive" *ngIf="stats.totalSites > 0">
-          <i class="material-icons">construction</i>
-          <span>Managed</span>
-        </div>
-      </div>
-      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card active-sites interactive" (click)="navigateToSites()">
-      <div class="stat-icon">
-        <i class="material-icons">location_on</i>
+    <div class="stat-card-mini drill-holes" (click)="navigateToDrillVisualization()">
+      <div class="stat-icon"><i class="material-icons">scatter_plot</i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.totalDrillHoles }}</span>
+        <span class="stat-label">Drill Holes</span>
       </div>
-      <div class="stat-content">
-        <h3>Active Sites</h3>
-        <p class="stat-number">{{ stats.activeSites }}</p>
-        <div class="progress-bar" *ngIf="stats.totalSites > 0">
-          <div class="progress-fill" [style.width.%]="(stats.activeSites / stats.totalSites) * 100"></div>
-        </div>
-        <p class="stat-subtitle">{{ stats.totalSites > 0 ? ((stats.activeSites / stats.totalSites) * 100).toFixed(0) : 0 }}% operational</p>
-      </div>
-      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card drill-holes interactive" (click)="navigateToDrillVisualization()">
-      <div class="stat-icon">
-        <i class="material-icons">scatter_plot</i>
+    <div class="stat-card-mini pending" (click)="navigateToNotifications()">
+      <div class="stat-icon"><i class="material-icons">notifications_active</i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ notifications.length }}</span>
+        <span class="stat-label">Notifications</span>
       </div>
-      <div class="stat-content">
-        <h3>Total Drill Holes</h3>
-        <p class="stat-number">{{ stats.totalDrillHoles }}</p>
-        <div class="stat-trend positive" *ngIf="stats.totalDrillHoles > 0">
-          <i class="material-icons">check_circle</i>
-          <span>Mapped</span>
-        </div>
-      </div>
-      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
-    <div class="stat-card patterns interactive" (click)="navigateToDrillVisualization()">
-      <div class="stat-icon">
-        <i class="material-icons">grid_on</i>
+    <div class="stat-card-mini patterns" (click)="navigateToProposalHistory()">
+      <div class="stat-icon"><i class="material-icons">description</i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ recentProposals.length }}</span>
+        <span class="stat-label">Proposals</span>
       </div>
-      <div class="stat-content">
-        <h3>Active Drill Sites</h3>
-        <p class="stat-number">{{ stats.activeDrillSites }}</p>
-        <div class="progress-bar" *ngIf="stats.totalSites > 0">
-          <div class="progress-fill" [style.width.%]="(stats.activeDrillSites / stats.totalSites) * 100"></div>
-        </div>
-        <p class="stat-subtitle">{{ stats.totalSites > 0 ? ((stats.activeDrillSites / stats.totalSites) * 100).toFixed(0) : 0 }}% with data</p>
-      </div>
-      <i class="material-icons card-action-icon">arrow_forward</i>
     </div>
   </div>
 
-  <!-- Recent Database Uploads Section -->
-  <section class="recent-uploads" *ngIf="recentUploads.length > 0">
-    <h2>
-      <i class="material-icons">database</i>
-      Recent Drill Data
-      <span class="section-badge">Live</span>
-    </h2>
-    <div class="uploads-list">
-      <div *ngFor="let upload of recentUploads.slice(0, 5)"
-           class="upload-item clickable"
-           (click)="navigateToDrillVisualization(upload.projectId, upload.siteId)"
-           title="Click to view 3D visualization">
-        <div class="upload-icon">
-          <i class="material-icons">scatter_plot</i>
-        </div>
-        <div class="upload-content">
-          <div class="upload-header">
-            <div class="upload-name">Project {{ upload.projectId }} - Site {{ upload.siteId }}</div>
-            <span class="upload-action-indicator">
-              <i class="material-icons">visibility</i>
-              View
-            </span>
+  <!-- Optimized Main Dashboard Grid -->
+  <div class="dashboard-grid">
+    <!-- Left Column: Notifications -->
+    <div class="grid-column">
+      <!-- Notifications & Alerts -->
+      <section class="section-card">
+        <h3><i class="material-icons">notifications_active</i> Alerts <span class="badge" *ngIf="notifications.length > 0">{{ notifications.length }}</span></h3>
+        <div class="compact-list">
+          <div *ngFor="let notification of notifications.slice(0, 4)" class="list-item" [class.priority-high]="notification.priority === 'high' || notification.priority === 'urgent' || notification.priority === 'critical'" (click)="navigateToProposalHistory()">
+            <i class="material-icons item-icon">{{ getNotificationIcon(notification.type) }}</i>
+            <div class="item-content">
+              <strong>{{ notification.title }}</strong>
+              <span class="item-time">{{ formatDate(notification.timestamp) }}</span>
+            </div>
           </div>
-          <div class="upload-meta">
-            <span class="upload-time">
-              <i class="material-icons">schedule</i>
-              {{ formatDate(upload.uploadDate) }}
-            </span>
-            <span class="upload-count">
-              <i class="material-icons">format_list_numbered</i>
-              {{ upload.recordCount }} holes
-            </span>
-            <span class="upload-status status-{{ upload.status }}">
-              <i class="material-icons">check_circle</i>
-              Ready
-            </span>
+          <div *ngIf="notifications.length === 0" class="empty-state-mini">
+            <i class="material-icons">check_circle</i>
+            <span>All clear</span>
           </div>
         </div>
-        <i class="material-icons chevron">chevron_right</i>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <!-- Quick Actions Section -->
-  <section class="quick-actions">
-    <h2>
-      <i class="material-icons">bolt</i>
-      Quick Actions
-    </h2>
-    <div class="action-cards">
-      <div class="action-card" (click)="navigateToUpload()">
-        <div class="action-icon upload">
-          <i class="material-icons">cloud_upload</i>
-        </div>
-        <h3>Upload Drill Data</h3>
-        <p>Import CSV files with drill hole coordinates and specifications</p>
-        <div class="action-status">{{ stats.uploadedDataSets }} datasets uploaded</div>
-      </div>
-      <div class="action-card" (click)="navigateToProjects()">
-        <div class="action-icon projects">
-          <i class="material-icons">folder</i>
-        </div>
-        <h3>Manage Projects</h3>
-        <p>View and manage your mining projects and sites</p>
-        <div class="action-status">{{ stats.totalProjects }} active projects</div>
-      </div>
-      <div class="action-card patterns" (click)="navigateToPatternDesigner()">
-        <div class="action-icon">
-          <i class="material-icons">grid_on</i>
-        </div>
-        <h3>Pattern Designer</h3>
-        <p>Create and edit drilling patterns for blast sites</p>
-        <div class="action-status">{{ stats.completedPatterns }} patterns created</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Recent Activities Timeline -->
-  <section class="recent-activities" *ngIf="recentActivities.length > 0">
-    <div class="section-header">
-      <h2>
-        <i class="material-icons">history</i>
-        Recent Activities
-      </h2>
-      <span class="filter-info" *ngIf="currentUser && currentUser.region">
-        <i class="material-icons">location_on</i>
-        {{ currentUser.region }}
-      </span>
-    </div>
-    <div class="activity-list">
-      <div *ngFor="let activity of recentActivities.slice(0, 8); trackBy: trackActivity" class="activity-item">
-        <div class="activity-icon">
-          <i class="material-icons">{{ getActivityIcon(activity.action) }}</i>
-        </div>
-        <div class="activity-content">
-          <div class="activity-main">
-            <span class="activity-user">{{ activity.userName || 'User' }}</span>
-            <span class="activity-action">{{ activity.action }}</span>
+      <!-- Project Health -->
+      <section class="section-card">
+        <h3><i class="material-icons">monitor_heart</i> Project Health</h3>
+        <div class="health-compact">
+          <div class="health-item success" *ngIf="userProjects.length > 0">
+            <i class="material-icons">check_circle</i>
+            <div class="health-details">
+              <span class="health-label">Active Projects</span>
+              <span class="health-value">{{ stats.activeProjects }}</span>
+            </div>
           </div>
-          <div class="activity-meta">
-            <span class="activity-time">
-              <i class="material-icons">schedule</i>
-              {{ getTimeFromNow(activity.timestamp) }}
-            </span>
-            <span class="activity-region" *ngIf="activity.region">
-              <i class="material-icons">place</i>
-              {{ activity.region }}
-            </span>
-            <span class="activity-category">
-              <i class="material-icons">label</i>
-              {{ activity.category }}
-            </span>
+          <div class="health-item" [class.warning]="stats.pendingReviews > 0" [class.success]="stats.pendingReviews === 0">
+            <i class="material-icons">{{ stats.pendingReviews > 0 ? 'warning' : 'check_circle' }}</i>
+            <div class="health-details">
+              <span class="health-label">Sites Needing Data</span>
+              <span class="health-value">{{ stats.pendingReviews }}</span>
+            </div>
+          </div>
+          <div class="health-item" [class.success]="stats.activeDrillSites > 0" [class.neutral]="stats.activeDrillSites === 0">
+            <i class="material-icons">scatter_plot</i>
+            <div class="health-details">
+              <span class="health-label">Data Coverage</span>
+              <span class="health-value">{{ stats.totalSites > 0 ? ((stats.activeDrillSites / stats.totalSites) * 100).toFixed(0) : 0 }}%</span>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
-    <div *ngIf="recentActivities.length === 0" class="no-activities">
-      <i class="material-icons">info</i>
-      No recent activities to display
-    </div>
-  </section>
 
-  <!-- Project Health Overview -->
-  <section class="project-health-section">
-    <h2>
-      <i class="material-icons">monitor_heart</i>
-      Project Health Overview
-    </h2>
-    <div class="health-grid">
-      <div class="health-card" *ngIf="userProjects.length > 0">
-        <div class="health-icon success">
-          <i class="material-icons">check_circle</i>
+    <!-- Center Column: Proposals & Drill Data -->
+    <div class="grid-column">
+      <!-- Recent Proposals -->
+      <section class="section-card">
+        <h3><i class="material-icons">description</i> Explosive Approvals</h3>
+        <div class="compact-list">
+          <div *ngFor="let proposal of recentProposals.slice(0, 4)" class="list-item" (click)="navigateToProposalHistory()">
+            <span class="status-dot" [class]="'status-' + proposal.status.toLowerCase().replace(' ', '-')"></span>
+            <div class="item-content">
+              <strong>{{ proposal.title }}</strong>
+              <span class="item-meta">{{ proposal.projectName }} • {{ formatDate(proposal.submittedDate) }}</span>
+            </div>
+            <i class="material-icons chevron">chevron_right</i>
+          </div>
+          <div *ngIf="recentProposals.length === 0" class="empty-state-mini">
+            <i class="material-icons">assignment</i>
+            <span>No proposals</span>
+          </div>
         </div>
-        <div class="health-content">
-          <h4>Active Projects</h4>
-          <p class="health-number">{{ stats.activeProjects }}</p>
-          <p class="health-status success">On Track</p>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon" [class.warning]="stats.pendingReviews > 0" [class.success]="stats.pendingReviews === 0">
-          <i class="material-icons">{{ stats.pendingReviews > 0 ? 'warning' : 'check_circle' }}</i>
-        </div>
-        <div class="health-content">
-          <h4>Pending Reviews</h4>
-          <p class="health-number">{{ stats.pendingReviews }}</p>
-          <p class="health-status" [class.warning]="stats.pendingReviews > 0" [class.success]="stats.pendingReviews === 0">
-            {{ stats.pendingReviews > 0 ? 'Needs Attention' : 'All Clear' }}
-          </p>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon" [class.success]="stats.activeDrillSites > 0" [class.neutral]="stats.activeDrillSites === 0">
-          <i class="material-icons">scatter_plot</i>
-        </div>
-        <div class="health-content">
-          <h4>Data Coverage</h4>
-          <p class="health-number">{{ stats.totalSites > 0 ? ((stats.activeDrillSites / stats.totalSites) * 100).toFixed(0) : 0 }}%</p>
-          <p class="health-status" [class.success]="stats.activeDrillSites > stats.totalSites / 2" [class.warning]="stats.activeDrillSites <= stats.totalSites / 2">
-            {{ stats.activeDrillSites > stats.totalSites / 2 ? 'Good Coverage' : 'Needs More Data' }}
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
+      <!-- Recent Drill Data -->
+      <section class="section-card" *ngIf="recentUploads.length > 0">
+        <h3><i class="material-icons">database</i> Recent Data</h3>
+        <div class="compact-list">
+          <div *ngFor="let upload of recentUploads.slice(0, 3)" class="list-item" (click)="navigateToDrillVisualization(upload.projectId, upload.siteId)">
+            <i class="material-icons item-icon">scatter_plot</i>
+            <div class="item-content">
+              <strong>P{{ upload.projectId }} - S{{ upload.siteId }}</strong>
+              <span class="item-meta">{{ upload.recordCount }} holes • {{ formatDate(upload.uploadDate) }}</span>
+            </div>
+            <i class="material-icons chevron">chevron_right</i>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Column: Drill Stats & Activity -->
+    <div class="grid-column">
+      <!-- Drill Statistics -->
+      <section class="section-card" *ngIf="drillData.length > 0">
+        <h3><i class="material-icons">analytics</i> Drill Statistics</h3>
+        <div class="stats-compact">
+          <div class="stat-compact">
+            <span class="stat-compact-label">Avg Depth</span>
+            <span class="stat-compact-value">{{ quickStats.averageDepth }}m</span>
+          </div>
+          <div class="stat-compact">
+            <span class="stat-compact-label">Max Elevation</span>
+            <span class="stat-compact-value">{{ quickStats.maxElevation }}m</span>
+          </div>
+          <div class="stat-compact">
+            <span class="stat-compact-label">Min Elevation</span>
+            <span class="stat-compact-value">{{ quickStats.minElevation }}m</span>
+          </div>
+          <div class="stat-compact">
+            <span class="stat-compact-label">Total Length</span>
+            <span class="stat-compact-value">{{ quickStats.totalDrillLength }}m</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Activities -->
+      <section class="section-card" *ngIf="recentActivities.length > 0">
+        <h3><i class="material-icons">history</i> Recent Activity</h3>
+        <div class="compact-list">
+          <div *ngFor="let activity of recentActivities.slice(0, 4); trackBy: trackActivity" class="list-item activity-item">
+            <i class="material-icons item-icon">{{ getActivityIcon(activity.action) }}</i>
+            <div class="item-content">
+              <strong>{{ activity.userName || 'User' }}</strong>
+              <span class="item-meta">{{ activity.action }} • {{ getTimeFromNow(activity.timestamp) }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
 </div>

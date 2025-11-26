@@ -185,96 +185,46 @@
       </div>
     </div>
 
-    <!-- Pending approval requests and Store status side by side -->
-    <div class="panel-row">
-
-      <!-- Pending approval requests -->
-      <div class="panel pending-requests-panel">
-        <div class="panel-header">
-          <h3>
-            <i class="material-icons">pending_actions</i>
-            Pending Approvals
-          </h3>
-          <button type="button" class="panel-action-btn" (click)="navigateToRequests()">
-            View All
-            <i class="material-icons">arrow_forward</i>
-          </button>
-        </div>
-        <div class="panel-content">
-          <div class="empty-state" *ngIf="!pendingRequests || pendingRequests.length === 0">
-            <i class="material-icons">check_circle_outline</i>
-            <p>No pending approvals</p>
-          </div>
-
-          <div class="request-list" *ngIf="pendingRequests && pendingRequests.length > 0">
-            <div class="request-item" *ngFor="let request of pendingRequests.slice(0, 3); trackBy: trackById" (click)="navigateToRequest(request.id)">
-              <div class="request-header">
-                <div class="request-info">
-                  <h4>{{ request.projectSite?.name || 'Unknown Project' }}</h4>
-                  <p class="request-meta">
-                    <span class="meta-item">
-                      <i class="material-icons">person</i>
-                      {{ request.requestedByUser?.name || 'Unknown' }}
-                    </span>
-                  </p>
-                </div>
-                <span class="priority-badge" [class]="'priority-' + (request.priority?.toLowerCase() || 'normal')">
-                  {{ request.priority || 'Normal' }}
-                </span>
-              </div>
-              <div class="request-details">
-                <div class="detail-item">
-                  <i class="material-icons">event</i>
-                  <span>{{ formatDate(request.expectedUsageDate) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Pending approval requests -->
+    <div class="panel pending-requests-panel">
+      <div class="panel-header">
+        <h3>
+          <i class="material-icons">pending_actions</i>
+          Pending Approvals
+        </h3>
+        <button type="button" class="panel-action-btn" (click)="navigateToRequests()">
+          View All
+          <i class="material-icons">arrow_forward</i>
+        </button>
       </div>
-
-      <!-- Store status overview -->
-      <div class="panel stores-panel">
-        <div class="panel-header">
-          <h3>
-            <i class="material-icons">store</i>
-            Store Status
-          </h3>
-          <button type="button" class="panel-action-btn" (click)="navigateToStores()">
-            View All
-            <i class="material-icons">arrow_forward</i>
-          </button>
+      <div class="panel-content">
+        <div class="empty-state" *ngIf="!pendingRequests || pendingRequests.length === 0">
+          <i class="material-icons">check_circle_outline</i>
+          <p>No pending approvals</p>
         </div>
-        <div class="panel-content">
-          <div class="store-list" *ngIf="stores && stores.length > 0">
-            <div class="store-item" *ngFor="let store of stores.slice(0, 3); trackBy: trackById">
-              <div class="store-header">
-                <div class="store-info">
-                  <h4>{{ store.storeName }}</h4>
-                  <p class="store-location">
-                    <i class="material-icons">location_on</i>
-                    {{ store.city || 'Unknown Location' }}
-                  </p>
-                </div>
-                <span class="status-badge" [ngClass]="getStatusClass(store.status)">
-                  {{ getStatusDisplayName(store.status) }}
-                </span>
+
+        <div class="request-list" *ngIf="pendingRequests && pendingRequests.length > 0">
+          <div class="request-item" *ngFor="let request of pendingRequests.slice(0, 3); trackBy: trackById" (click)="navigateToRequest(request.id)">
+            <div class="request-header">
+              <div class="request-info">
+                <h4>{{ request.projectSite?.name || 'Unknown Project' }}</h4>
+                <p class="request-meta">
+                  <span class="meta-item">
+                    <i class="material-icons">person</i>
+                    {{ request.requestedByUser?.name || 'Unknown' }}
+                  </span>
+                </p>
               </div>
-              <div class="store-capacity">
-                <div class="capacity-info">
-                  <span>{{ store.currentOccupancy || 0 }} / {{ store.storageCapacity || 0 }}</span>
-                  <span class="capacity-percentage">{{ store.utilizationPercentage || 0 }}%</span>
-                </div>
-                <div class="capacity-bar">
-                  <div class="capacity-fill" [style.width.%]="store.utilizationPercentage || 0"></div>
-                </div>
+              <span class="priority-badge" [class]="'priority-' + (request.priority?.toLowerCase() || 'normal')">
+                {{ request.priority || 'Normal' }}
+              </span>
+            </div>
+            <div class="request-details">
+              <div class="detail-item">
+                <i class="material-icons">event</i>
+                <span>{{ formatDate(request.expectedUsageDate) }}</span>
               </div>
             </div>
-          </div>
-
-          <div class="empty-state" *ngIf="!stores || stores.length === 0">
-            <i class="material-icons">store</i>
-            <p>No stores available</p>
           </div>
         </div>
       </div>

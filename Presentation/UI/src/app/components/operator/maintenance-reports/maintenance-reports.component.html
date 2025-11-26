@@ -20,42 +20,6 @@
 
   <!-- Main Content -->
   <div class="main-content" *ngIf="!isLoading()">
-    <!-- Summary Cards -->
-    <div class="summary-cards">
-      <mat-card class="summary-card pending">
-        <mat-card-content>
-          <div class="card-header">
-            <mat-icon>schedule</mat-icon>
-            <span class="card-count">{{ pendingCount() }}</span>
-          </div>
-          <h3>Pending Requests</h3>
-          <p class="card-subtitle">Awaiting Machine Manager review</p>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="summary-card in-progress">
-        <mat-card-content>
-          <div class="card-header">
-            <mat-icon>engineering</mat-icon>
-            <span class="card-count">{{ inProgressCount() }}</span>
-          </div>
-          <h3>Under Maintenance</h3>
-          <p class="card-subtitle">Machine Manager is scheduling/executing</p>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="summary-card completed">
-        <mat-card-content>
-          <div class="card-header">
-            <mat-icon>check_circle</mat-icon>
-            <span class="card-count">{{ completedCount() }}</span>
-          </div>
-          <h3>Resolved</h3>
-          <p class="card-subtitle">Maintenance completed</p>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
     <!-- Reports Table -->
     <mat-card class="reports-table-card">
       <mat-card-header>

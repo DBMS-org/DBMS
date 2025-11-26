@@ -1,19 +1,12 @@
 <header class="dashboard-header">
   <div class="header-content">
-    <h1>Operator Dashboard</h1>
-    <div class="user-info">
-      <div class="user-details" *ngIf="currentUser">
-        <span class="welcome-message">{{ getUserWelcomeMessage() }}</span>
-        <div class="user-metadata">
-          <span class="user-role">Role: {{ currentUser.role }}</span>
-          <span class="user-location" *ngIf="currentUser.region">Region: {{ currentUser.region }}</span>
-        </div>
-      </div>
-      <button class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard data">
-        <i class="material-icons">refresh</i>
-        Refresh
-      </button>
+    <div class="header-left">
+      <h1>Operator Dashboard</h1>
+      <span class="welcome-text" *ngIf="currentUser">{{ getUserWelcomeMessage() }}</span>
     </div>
+    <button type="button" class="refresh-btn" (click)="refreshDashboard()" title="Refresh dashboard">
+      <i class="material-icons">refresh</i>
+    </button>
   </div>
 </header>
 
@@ -26,13 +19,34 @@
   <div class="error-message">
     <i class="material-icons">error</i>
     <p>{{ error }}</p>
-    <button class="retry-btn" (click)="refreshDashboard()">Retry</button>
+    <button type="button" class="retry-btn" (click)="refreshDashboard()">Retry</button>
   </div>
 </div>
 
 <div class="dashboard-content" *ngIf="!isLoading && !error">
-  <!-- Dashboard Statistics (moved to top) -->
-  <div class="dashboard-stats">
+  <!-- Quick Actions Row -->
+  <div class="quick-actions-row">
+    <button type="button" class="action-btn" (click)="navigateToMachines()">
+      <i class="material-icons">build</i>
+      <span>My Machine</span>
+    </button>
+    <button type="button" class="action-btn" (click)="navigateToMaintenance()">
+      <i class="material-icons">report_problem</i>
+      <span>Report Issue</span>
+    </button>
+    <button type="button" class="action-btn" (click)="navigateToProject()">
+      <i class="material-icons">location_on</i>
+      <span>My Sites</span>
+    </button>
+    <button type="button" class="action-btn" (click)="navigateToNotifications()">
+      <i class="material-icons">notifications</i>
+      <span>Notifications</span>
+      <span class="badge" *ngIf="unreadNotificationsCount > 0">{{ unreadNotificationsCount }}</span>
+    </button>
+  </div>
+
+  <!-- Key Statistics Row -->
+  <div class="stats-row">
     <div class="stat-card">
       <div class="stat-icon">
         <i class="material-icons">location_city</i>
@@ -40,10 +54,10 @@
       <div class="stat-content">
         <h3>Project Sites</h3>
         <p class="stat-value">{{ stats.totalSites }}</p>
-        <p class="stat-change">Total assigned sites</p>
+        <p class="stat-label">Total Sites</p>
       </div>
     </div>
-    
+
     <div class="stat-card">
       <div class="stat-icon">
         <i class="material-icons">construction</i>
@@ -51,177 +65,234 @@
       <div class="stat-content">
         <h3>Drill Holes</h3>
         <p class="stat-value">{{ stats.totalDrillHoles }}</p>
-        <p class="stat-change">Across all sites</p>
+        <p class="stat-label">Completed</p>
       </div>
     </div>
-    
+
     <div class="stat-card">
       <div class="stat-icon">
         <i class="material-icons">check_circle</i>
       </div>
       <div class="stat-content">
-        <h3>Approved Patterns</h3>
+        <h3>Approved</h3>
         <p class="stat-value">{{ stats.approvedPatterns }}</p>
-        <p class="stat-change positive">Ready for execution</p>
+        <p class="stat-label">Patterns Ready</p>
       </div>
     </div>
-    
+
     <div class="stat-card">
       <div class="stat-icon">
         <i class="material-icons">timeline</i>
       </div>
       <div class="stat-content">
-        <h3>Active Workflows</h3>
+        <h3>Active</h3>
         <p class="stat-value">{{ stats.activeWorkflows }}</p>
-        <p class="stat-change">Pending completion</p>
+        <p class="stat-label">Workflows</p>
       </div>
     </div>
   </div>
 
-  <!-- Project Overview Section -->
-  <section class="project-overview" *ngIf="assignedProject; else noProject">
-    <div class="project-header">
-      <h2>My Assigned Project</h2>
-      <button class="view-project-btn" (click)="navigateToProject()">
-        <i class="material-icons">visibility</i>
-        View Details
-      </button>
-    </div>
-    
-    <div class="project-card">
-      <div class="project-info">
-        <h3>{{ assignedProject.name }}</h3>
-        <div class="project-details">
-          <div class="detail-item">
-            <i class="material-icons">location_on</i>
-            <span><strong>Region:</strong> {{ assignedProject.region }}</span>
+  <!-- Main Grid Layout (2 columns) -->
+  <div class="main-grid">
+    <!-- Left Column -->
+    <div class="left-column">
+      <!-- Machine Card -->
+      <div class="card" *ngIf="assignedMachine; else noMachine">
+        <div class="card-header">
+          <h3><i class="material-icons">build</i> My Machine</h3>
+          <button type="button" class="link-btn" (click)="navigateToMachines()">Details →</button>
+        </div>
+        <div class="card-body">
+          <div class="machine-info">
+            <h4>{{ assignedMachine.name }}</h4>
+            <p class="text-muted">{{ assignedMachine.model }}</p>
+            <span class="badge" [class]="getMachineStatusClass()">{{ getMachineStatusLabel() }}</span>
           </div>
-          <div class="detail-item">
-            <i class="material-icons">flag</i>
-            <span><strong>Status:</strong> 
-              <span class="status-badge" [class]="'status-' + assignedProject.status.toLowerCase()">
-                {{ assignedProject.status }}
-              </span>
+          <div class="machine-meta">
+            <div class="meta-item">
+              <i class="material-icons">tag</i>
+              <span>{{ assignedMachine.serialNumber }}</span>
+            </div>
+            <div class="meta-item">
+              <i class="material-icons">location_on</i>
+              <span>{{ assignedMachine.currentLocation || 'N/A' }}</span>
+            </div>
+          </div>
+          <div class="service-info" *ngIf="machineUsageMetrics">
+            <div class="service-header">
+              <span>Service Due</span>
+              <span class="hours-left">{{ getServiceRemaining() }}h</span>
+            </div>
+            <div class="progress-bar-sm">
+              <div class="progress-fill" [class]="getServiceUrgencyClass()" [style.width.%]="getServiceProgress()"></div>
+            </div>
+            <p class="text-xs text-muted">Engine: {{ machineUsageMetrics.engineHours || 0 }}h / {{ serviceIntervalHours }}h</p>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noMachine>
+        <div class="card empty-state">
+          <i class="material-icons">info</i>
+          <p>No machine assigned</p>
+        </div>
+      </ng-template>
+
+      <!-- Project Info -->
+      <div class="card" *ngIf="assignedProject; else noProject">
+        <div class="card-header">
+          <h3><i class="material-icons">work</i> Project</h3>
+          <button type="button" class="link-btn" (click)="navigateToProject()">Details →</button>
+        </div>
+        <div class="card-body">
+          <h4>{{ assignedProject.name }}</h4>
+          <div class="project-meta">
+            <span class="badge" [class]="'status-' + assignedProject.status.toLowerCase()">{{ assignedProject.status }}</span>
+            <span class="text-muted">{{ assignedProject.region }}</span>
+          </div>
+          <div class="progress-info">
+            <div class="progress-header-sm">
+              <span>Progress</span>
+              <span class="progress-percent">{{ stats.projectProgress }}%</span>
+            </div>
+            <div class="progress-bar-sm">
+              <div class="progress-fill" [style.width.%]="stats.projectProgress"></div>
+            </div>
+          </div>
+          <div class="project-stats-sm">
+            <div class="stat-sm">
+              <i class="material-icons">check_circle</i>
+              <span>{{ stats.approvedPatterns }}/{{ stats.totalSites }} Approved</span>
+            </div>
+            <div class="stat-sm">
+              <i class="material-icons">pending</i>
+              <span>{{ stats.activeWorkflows }} Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noProject>
+        <div class="card empty-state">
+          <i class="material-icons">work_off</i>
+          <p>No project assigned</p>
+        </div>
+      </ng-template>
+
+      <!-- Utilization -->
+      <div class="card" *ngIf="machineUsageStatistics && assignedMachine">
+        <div class="card-header">
+          <h3><i class="material-icons">assessment</i> Utilization (7d)</h3>
+          <button type="button" class="link-btn" (click)="navigateToMachineUsage()">Details →</button>
+        </div>
+        <div class="card-body">
+          <div class="utilization-display">
+            <div class="donut-sm">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#e0e0e0" stroke-width="10"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#667eea" stroke-width="10"
+                  [attr.stroke-dasharray]="getUtilizationRate() * 2.51 + ' 251.2'" transform="rotate(-90 50 50)"/>
+              </svg>
+              <div class="donut-center">
+                <span class="donut-value">{{ getUtilizationRate() }}%</span>
+              </div>
+            </div>
+            <div class="utilization-breakdown">
+              <div class="breakdown-item">
+                <span class="breakdown-label">Working</span>
+                <span class="breakdown-value">{{ machineUsageStatistics.totalWorkingHours || 0 }}h</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Idle</span>
+                <span class="breakdown-value">{{ machineUsageStatistics.totalIdleHours || 0 }}h</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Total</span>
+                <span class="breakdown-value">{{ machineUsageStatistics.totalEngineHours || 0 }}h</span>
+              </div>
+              <div class="breakdown-item" *ngIf="machineUsageStatistics.totalFuelConsumed > 0">
+                <span class="breakdown-label">Fuel</span>
+                <span class="breakdown-value">{{ machineUsageStatistics.totalFuelConsumed || 0 }}L</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sites List -->
+      <div class="card" *ngIf="projectSites.length > 0">
+        <div class="card-header">
+          <h3><i class="material-icons">location_city</i> Sites ({{ projectSites.length }})</h3>
+        </div>
+        <div class="card-body sites-list">
+          <div class="site-item" *ngFor="let site of projectSites.slice(0, 3)" (click)="navigateToSite(site.id)">
+            <div class="site-info">
+              <h5>{{ site.name }}</h5>
+              <p class="text-muted text-xs">{{ site.location }}</p>
+            </div>
+            <span class="badge-sm" [class.approved]="site.isPatternApproved" [class.pending]="!site.isPatternApproved">
+              {{ site.isPatternApproved ? 'Approved' : 'Pending' }}
             </span>
           </div>
-          <div class="detail-item">
-            <i class="material-icons">event</i>
-            <span><strong>Duration:</strong> {{ formatDate(assignedProject.startDate) }} - {{ formatDate(assignedProject.endDate) }}</span>
+          <button type="button" class="link-btn-sm" *ngIf="projectSites.length > 3" (click)="navigateToProject()">
+            View all {{ projectSites.length }} sites →
+          </button>
+        </div>
+      </div>
+    </div> <!-- End left-column -->
+
+    <!-- Right Column -->
+    <div class="right-column">
+      <!-- Notifications -->
+      <div class="card">
+        <div class="card-header">
+          <h3>
+            <i class="material-icons">notifications</i> Notifications
+            <span class="badge-count" *ngIf="unreadNotificationsCount > 0">{{ unreadNotificationsCount }}</span>
+          </h3>
+          <button type="button" class="link-btn" (click)="navigateToNotifications()">All →</button>
+        </div>
+        <div class="card-body notifications">
+          <div class="notification" *ngFor="let notification of recentNotifications.slice(0, 4)"
+            [class.unread]="!notification.isRead" (click)="markNotificationAsRead(notification)">
+            <i class="material-icons">{{ getNotificationIcon(notification) }}</i>
+            <div class="notification-body">
+              <h5>{{ notification.title }}</h5>
+              <p class="text-xs text-muted">{{ notification.message }}</p>
+              <span class="time-ago">{{ getTimeAgo(notification.createdAt) }}</span>
+            </div>
           </div>
-          <div class="detail-item">
-            <i class="material-icons">description</i>
-            <span><strong>Description:</strong> {{ assignedProject.description || 'No description available' }}</span>
+          <div class="empty-state-sm" *ngIf="recentNotifications.length === 0">
+            <i class="material-icons">notifications_none</i>
+            <p>No notifications</p>
           </div>
         </div>
       </div>
-      
-      <div class="project-progress">
-        <div class="progress-circle">
-          <div class="progress-value">{{ stats.projectProgress }}%</div>
-          <div class="progress-label">Complete</div>
+
+      <!-- Project Metrics -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="material-icons">analytics</i> Metrics</h3>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- duplicate dashboard-stats removed -->
-
-  <!-- System Metrics Panel -->
-  <div class="system-metrics-panel">
-    <h3>
-      <i class="material-icons">analytics</i>
-      Project Metrics
-    </h3>
-    <div class="metrics-grid">
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">flag</i>
-          Project Status:
-        </span>
-        <span class="metric-value status-badge" [class]="'status-' + systemMetrics.projectStatus.toLowerCase()">
-          {{ systemMetrics.projectStatus }}
-        </span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">update</i>
-          Last Pattern Update:
-        </span>
-        <span class="metric-value">{{ systemMetrics.lastPatternUpdate }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">task_alt</i>
-          Workflow Completion:
-        </span>
-        <span class="metric-value">{{ systemMetrics.workflowCompletion }}</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">
-          <i class="material-icons">trending_up</i>
-          Overall Progress:
-        </span>
-        <span class="metric-value">{{ systemMetrics.totalProgress }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Quick Actions Panel removed -->
-
-  <!-- Project Sites Overview -->
-  <div class="sites-overview" *ngIf="projectSites.length > 0">
-    <h3>
-      <i class="material-icons">location_city</i>
-      Project Sites Overview
-    </h3>
-    <div class="sites-grid">
-      <div class="site-card" *ngFor="let site of projectSites; let i = index" (click)="navigateToSite(site.id)">
-        <div class="site-header">
-          <h4>{{ site.name }}</h4>
-          <div class="site-status">
-            <span class="status-indicator" [class.approved]="site.isPatternApproved" [class.pending]="!site.isPatternApproved"></span>
-            <span class="status-text">{{ site.isPatternApproved ? 'Approved' : 'Pending' }}</span>
+        <div class="card-body metrics">
+          <div class="metric">
+            <span class="metric-label">Status</span>
+            <span class="badge" [class]="'status-' + systemMetrics.projectStatus.toLowerCase()">{{ systemMetrics.projectStatus }}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Last Update</span>
+            <span class="metric-value">{{ systemMetrics.lastPatternUpdate }}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Workflow</span>
+            <span class="metric-value">{{ systemMetrics.workflowCompletion }}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Overall</span>
+            <span class="metric-value">{{ systemMetrics.totalProgress }}</span>
           </div>
         </div>
-        <div class="site-details">
-          <div class="site-info">
-            <i class="material-icons">location_on</i>
-            <span>{{ site.location }}</span>
-          </div>
-          <div class="site-info">
-            <i class="material-icons">description</i>
-            <span>{{ site.description || 'No description' }}</span>
-          </div>
-          <div class="site-info">
-            <i class="material-icons">update</i>
-            <span>Updated {{ formatDate(site.updatedAt) }}</span>
-          </div>
-        </div>
-        <div class="site-actions">
-          <span class="view-pattern-btn">
-            <i class="material-icons">visibility</i>
-            View Pattern
-          </span>
-        </div>
       </div>
-    </div>
-  </div>
-
-  <!-- All sections below Project Sites Overview removed -->
-
-
-
-  <ng-template #noProject>
-    <div class="no-project-card">
-      <div class="no-project-icon">
-        <i class="material-icons">assignment_late</i>
-      </div>
-      <h3>No Project Assigned</h3>
-      <p>You have not been assigned to a project yet. Please contact your administrator for project assignment.</p>
-      <button class="contact-admin-btn" (click)="refreshDashboard()">
-        <i class="material-icons">refresh</i>
-        Check for Updates
-      </button>
-    </div>
-  </ng-template>
-</div>
+    </div> <!-- End right-column -->
+  </div> <!-- End main-grid -->
+</div> <!-- End dashboard-content -->

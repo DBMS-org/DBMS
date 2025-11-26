@@ -11,6 +11,8 @@ import { DrillHoleService, DrillHole } from '../../../core/services/drill-hole.s
 import { DrillLocation } from '../../../core/models/drilling.model';
 import { User } from '../../../core/models/user.model';
 import { Project } from '../../../core/models/project.model';
+import { NotificationService } from '../../../core/services/notification.service';
+import { ProposalHistoryService } from '../../../core/services/proposal-history.service';
 
 // Dashboard component for blasting engineer overview and statistics
 @Component({
@@ -32,8 +34,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     activeSites: 0,
     totalDrillHoles: 0,
     activeDrillSites: 0,
-    uploadedDataSets: 0,
-    completedPatterns: 0,
     pendingReviews: 0
   };
 
@@ -50,6 +50,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     minElevation: 0,
     totalDrillLength: 0
   };
+
+  // Notifications and alerts (from backend)
+  notifications: any[] = [];
+
+  // Recent proposals (from backend)
+  recentProposals: any[] = [];
+
   isLoading = true;
 
   constructor(
@@ -59,6 +66,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private userActivityService: UserActivityService,
     private unifiedDrillDataService: UnifiedDrillDataService,
     private drillHoleService: DrillHoleService,
+    private notificationService: NotificationService,
+    private proposalHistoryService: ProposalHistoryService,
     private router: Router
   ) {}
 
@@ -116,8 +125,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.stats.activeSites = userSites.filter(s => s.status === 'Active').length;
         this.stats.totalDrillHoles = userDrillHoles.length;
         this.stats.activeDrillSites = sitesWithDrillHoles.size;
-        this.stats.uploadedDataSets = sitesWithDrillHoles.size;
-        this.stats.completedPatterns = sitesWithDrillHoles.size;
         this.stats.pendingReviews = Math.max(0, this.stats.activeSites - sitesWithDrillHoles.size);
 
         this.drillData = userDrillHoles;
@@ -125,6 +132,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.loadRecentUploadsFromDatabase(userDrillHoles);
         this.generateSiteActivities(userSites);
         this.loadRecentActivities();
+        this.loadNotifications();
+        this.loadRecentProposals();
         this.isLoading = false;
 
         console.log('📊 Dashboard Statistics:', {
@@ -139,18 +148,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading dashboard data:', error);
-        // Use fallback mock data if database load fails
-        this.stats = {
-          totalProjects: 12,
-          activeProjects: 8,
-          totalSites: 8,
-          activeSites: 6,
-          totalDrillHoles: 0,
-          activeDrillSites: 0,
-          uploadedDataSets: this.drillData.length > 0 ? 5 : 0,
-          completedPatterns: 15,
-          pendingReviews: 3
-        };
+        this.loadNotifications();
+        this.loadRecentProposals();
         this.loadRecentActivities();
         this.isLoading = false;
       }
@@ -179,7 +178,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       updatedAt: (loc.updatedAt instanceof Date ? loc.updatedAt : new Date(loc.updatedAt)).toISOString()
     } as DrillHole));
     this.calculateQuickStats();
-    this.loadRecentUploads();
   }
 
   // Calculate statistics for drill hole data
@@ -204,30 +202,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       minElevation: Math.min(...elevations),
       totalDrillLength: Math.round(lengths.reduce((a, b) => a + b, 0) * 100) / 100
     };
-  }
-
-  // Load sample recent uploads for display
-  private loadRecentUploads() {
-    this.recentUploads = [
-      {
-        filename: 'drill_data_batch_1.csv',
-        uploadDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        recordCount: 150,
-        status: 'processed'
-      },
-      {
-        filename: 'mining_site_alpha.csv',
-        uploadDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        recordCount: 89,
-        status: 'processed'
-      },
-      {
-        filename: 'quarry_beta_holes.csv',
-        uploadDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        recordCount: 234,
-        status: 'processed'
-      }
-    ];
   }
 
   // Load recent uploads from database drill holes
@@ -337,8 +311,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getLastLoginInfo(): string {
-    if (!this.currentUser) return '';
-    return 'Last login: Today at 8:45 AM';
+    // TODO: Track and display actual last login time from backend
+    return '';
   }
 
   trackActivity(index: number, activity: any): number {
@@ -440,8 +414,118 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadUserSpecificData();
   }
 
-  // Navigate to pattern designer
-  navigateToPatternDesigner(): void {
-    this.router.navigate(['/blasting-engineer/drilling-pattern']);
+
+  // Load notifications and alerts from backend
+  private loadNotifications(): void {
+    this.notificationService.fetchNotifications(0, 10).subscribe({
+      next: (notifications) => {
+        // Only show recent unread notifications in dashboard
+        this.notifications = notifications
+          .filter(n => !n.isRead)
+          .slice(0, 5)
+          .map(n => ({
+            id: n.id,
+            type: this.mapNotificationTypeToString(n.type),
+            priority: this.mapNotificationPriorityToString(n.priority),
+            title: n.title,
+            message: n.message,
+            timestamp: n.createdAt,
+            actionUrl: n.actionUrl || '/blasting-engineer/notifications'
+          }));
+      },
+      error: (error) => {
+        console.error('Error loading notifications:', error);
+        this.notifications = [];
+      }
+    });
   }
+
+  // Map notification type enum to string
+  private mapNotificationTypeToString(type: number): string {
+    // Based on NotificationType enum
+    const typeMap: { [key: number]: string } = {
+      0: 'info',
+      1: 'warning',
+      2: 'approval',
+      3: 'safety',
+      100: 'info',
+      200: 'approval',
+      300: 'info',
+      400: 'info',
+      500: 'safety',
+      600: 'info'
+    };
+    return typeMap[type] || 'info';
+  }
+
+  // Map notification priority enum to string
+  private mapNotificationPriorityToString(priority: number): string {
+    // Based on NotificationPriority enum
+    const priorityMap: { [key: number]: string } = {
+      0: 'low',
+      1: 'normal',
+      2: 'high',
+      3: 'urgent',
+      4: 'critical'
+    };
+    return priorityMap[priority] || 'low';
+  }
+
+  // Get notification icon based on type
+  getNotificationIcon(type: string): string {
+    switch (type) {
+      case 'safety': return 'verified_user';
+      case 'approval': return 'rate_review';
+      case 'warning': return 'warning';
+      case 'info': return 'info';
+      default: return 'notifications';
+    }
+  }
+
+  // Navigate to notification action
+  navigateToNotification(notification: any): void {
+    if (notification.actionUrl) {
+      this.router.navigate([notification.actionUrl]);
+    }
+  }
+
+  // Navigate to notifications
+  navigateToNotifications(): void {
+    this.router.navigate(['/blasting-engineer/notifications']);
+  }
+
+
+  // Load recent proposals from backend
+  private loadRecentProposals(): void {
+    this.proposalHistoryService.getUserProposals().subscribe({
+      next: (proposals) => {
+        // Map proposals to dashboard format and show recent 5
+        this.recentProposals = proposals
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5)
+          .map(p => ({
+            id: p.id,
+            title: `Explosive Approval Request - Site ${p.projectSiteId}`,
+            status: this.proposalHistoryService.getStatusText(p.status),
+            submittedDate: p.createdAt,
+            projectName: p.projectSiteName || `Site ${p.projectSiteId}`
+          }));
+      },
+      error: (error) => {
+        console.error('Error loading proposals:', error);
+        this.recentProposals = [];
+      }
+    });
+  }
+
+  // Navigate to proposal
+  navigateToProposal(proposalId: number): void {
+    this.router.navigate(['/blasting-engineer/proposal-details', proposalId]);
+  }
+
+  // Navigate to proposal history
+  navigateToProposalHistory(): void {
+    this.router.navigate(['/blasting-engineer/proposal-history']);
+  }
+
 }

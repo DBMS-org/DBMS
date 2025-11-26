@@ -606,7 +606,8 @@ export class ReportDetailsDialogComponent {
   report: ProblemReport = this.data.report;
 
   getSeverityIcon(severity: string): string {
-    switch (severity) {
+    const sev = severity.toUpperCase();
+    switch (sev) {
       case 'CRITICAL': return 'error';
       case 'HIGH': return 'warning';
       case 'MEDIUM': return 'info';
@@ -616,7 +617,8 @@ export class ReportDetailsDialogComponent {
   }
 
   getSeverityLabel(severity: string): string {
-    switch (severity) {
+    const sev = severity.toUpperCase();
+    switch (sev) {
       case 'CRITICAL': return 'Critical';
       case 'HIGH': return 'High Priority';
       case 'MEDIUM': return 'Medium Priority';
@@ -628,13 +630,21 @@ export class ReportDetailsDialogComponent {
   getMachinePartLabel(part: string): string {
     const labels: { [key: string]: string } = {
       'DRILL_BIT': 'Drill Bit',
+      'DrillBit': 'Drill Bit',
       'DRILL_ROD': 'Drill Rod',
+      'DrillRod': 'Drill Rod',
       'SHANK': 'Shank',
+      'Shank': 'Shank',
       'ENGINE': 'Engine',
+      'Engine': 'Engine',
       'HYDRAULIC_SYSTEM': 'Hydraulic System',
+      'HydraulicSystem': 'Hydraulic System',
       'ELECTRICAL_SYSTEM': 'Electrical System',
+      'ElectricalSystem': 'Electrical System',
       'MECHANICAL_COMPONENTS': 'Mechanical Components',
-      'OTHER': 'Other'
+      'MechanicalComponents': 'Mechanical Components',
+      'OTHER': 'Other',
+      'Other': 'Other'
     };
     return labels[part] || part;
   }
@@ -642,12 +652,19 @@ export class ReportDetailsDialogComponent {
   getProblemCategoryLabel(category: string): string {
     const labels: { [key: string]: string } = {
       'ENGINE_ISSUES': 'Engine Issues',
+      'EngineIssues': 'Engine Issues',
       'HYDRAULIC_PROBLEMS': 'Hydraulic Problems',
+      'HydraulicProblems': 'Hydraulic Problems',
       'ELECTRICAL_FAULTS': 'Electrical Faults',
+      'ElectricalFaults': 'Electrical Faults',
       'MECHANICAL_BREAKDOWN': 'Mechanical Breakdown',
+      'MechanicalBreakdown': 'Mechanical Breakdown',
       'DRILL_BIT_ISSUES': 'Drill Bit Issues',
+      'DrillBitIssues': 'Drill Bit Issues',
       'DRILL_ROD_PROBLEMS': 'Drill Rod Problems',
-      'OTHER': 'Other'
+      'DrillRodProblems': 'Drill Rod Problems',
+      'OTHER': 'Other',
+      'Other': 'Other'
     };
     return labels[category] || category;
   }

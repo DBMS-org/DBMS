@@ -7,7 +7,6 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "RequireAdminRole")]
     public class RegionsController : BaseApiController
     {
         private readonly IRegionService _regionService;
@@ -18,6 +17,7 @@ namespace API.Controllers
         }
 
         [HttpGet]
+        [Authorize] // Allow all authenticated users to read regions
         public async Task<IActionResult> GetRegions()
         {
             var regions = await _regionService.GetAllRegionsAsync();
@@ -25,6 +25,7 @@ namespace API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize] // Allow all authenticated users to read region by ID
         public async Task<IActionResult> GetRegion(int id)
         {
             var region = await _regionService.GetRegionByIdAsync(id);
@@ -36,6 +37,7 @@ namespace API.Controllers
         }
 
         [HttpGet("by-name/{name}")]
+        [Authorize] // Allow all authenticated users to read region by name
         public async Task<IActionResult> GetRegionByName(string name)
         {
             var region = await _regionService.GetRegionByNameAsync(name);

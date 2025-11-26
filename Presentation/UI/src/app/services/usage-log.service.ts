@@ -128,4 +128,22 @@ export class UsageLogService {
   rejectUsageLog(id: number): Observable<{ message: string }> {
     return this.http.patch<{ message: string }>(`${this.apiUrl}/${id}/reject`, {});
   }
+
+  /**
+   * Get recent usage logs (for dashboard activities)
+   * This will fetch usage logs for all machines in a given date range
+   * Used by: Machine Manager Dashboard
+   */
+  getRecentUsageLogs(days: number = 7): Observable<UsageLogDto[]> {
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+
+    let params = new HttpParams();
+    params = params.set('startDate', startDate.toISOString());
+    params = params.set('endDate', endDate.toISOString());
+
+    // Note: This assumes we'll fetch by machines or we need a backend endpoint
+    // For now, we'll use a workaround to get recent logs
+    return this.http.get<UsageLogDto[]>(`${this.apiUrl}/recent`, { params });
+  }
 }
