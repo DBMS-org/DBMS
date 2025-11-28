@@ -21,7 +21,7 @@ export interface PatternState {
 const initialState: PatternState = {
   drillPoints: [],
   selectedPoint: null,
-  settings: { spacing: 3.0, burden: 2.5, depth: 10.0 },
+  settings: { spacing: 3.0, burden: 2.5, depth: 10.0, diameter: 115, stemming: 3, subDrill: 0.5 },
   isHolePlacementMode: false,
   isPreciseMode: false,
   showInstructions: false,
@@ -189,3 +189,4 @@ export class PatternStateService {
     this._state$.next({ ...this.currentState, ...updates });
   }
 }
+

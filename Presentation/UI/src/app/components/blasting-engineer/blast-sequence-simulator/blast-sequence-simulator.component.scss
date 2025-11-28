@@ -458,12 +458,13 @@
   margin: 1rem;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-height: 500px; // Ensure minimum height for visibility
 
   .simulation-canvas {
     display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    width: 100% !important; // Force full width
+    height: 100% !important; // Force full height
+    min-height: 500px;
   }
 
   .loading-overlay {

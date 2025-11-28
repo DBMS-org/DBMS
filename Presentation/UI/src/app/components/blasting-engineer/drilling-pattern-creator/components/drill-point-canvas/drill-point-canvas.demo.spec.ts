@@ -14,11 +14,9 @@ describe('DrillPointCanvasComponent - Demo Usage', () => {
   let mockLayer: Konva.Layer;
   let mockStage: Konva.Stage;
 
-  const demoSettings: PatternSettings = {
-    spacing: 4,
+  const demoSettings: PatternSettings = { spacing: 4,
     burden: 3,
-    depth: 12
-  };
+    depth: 12, diameter: 115, stemming: 3, subDrill: 0.5 };
 
   const demoCanvasState = {
     scale: 1.5,
@@ -105,11 +103,11 @@ describe('DrillPointCanvasComponent - Demo Usage', () => {
       component.ngOnInit();
       
       const mixedDepthPoints: DrillPoint[] = [
-        { id: 'standard-1', x: 5, y: 5, depth: 12, spacing: 4, burden: 3 },
-        { id: 'shallow-1', x: 9, y: 5, depth: 8, spacing: 4, burden: 3 }, // Custom depth
-        { id: 'deep-1', x: 13, y: 5, depth: 15, spacing: 4, burden: 3 }, // Custom depth
-        { id: 'standard-2', x: 5, y: 8, depth: 12, spacing: 4, burden: 3 },
-        { id: 'custom-1', x: 9, y: 8, depth: 10, spacing: 4, burden: 3 } // Custom depth
+        { id: 'standard-1', x: 5, y: 5, depth: 12, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 },
+        { id: 'shallow-1', x: 9, y: 5, depth: 8, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 }, // Custom depth
+        { id: 'deep-1', x: 13, y: 5, depth: 15, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 }, // Custom depth
+        { id: 'standard-2', x: 5, y: 8, depth: 12, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 },
+        { id: 'custom-1', x: 9, y: 8, depth: 10, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 } // Custom depth
       ];
 
       component.drillPoints = mixedDepthPoints;
@@ -174,9 +172,9 @@ describe('DrillPointCanvasComponent - Demo Usage', () => {
 
     it('should demonstrate point selection and highlighting', async () => {
       const testPoints: DrillPoint[] = [
-        { id: 'select-1', x: 5, y: 5, depth: 12, spacing: 4, burden: 3 },
-        { id: 'select-2', x: 9, y: 5, depth: 12, spacing: 4, burden: 3 },
-        { id: 'select-3', x: 13, y: 5, depth: 12, spacing: 4, burden: 3 }
+        { id: 'select-1', x: 5, y: 5, depth: 12, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 },
+        { id: 'select-2', x: 9, y: 5, depth: 12, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 },
+        { id: 'select-3', x: 13, y: 5, depth: 12, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 }
       ];
 
       component.drillPoints = testPoints;
@@ -292,7 +290,7 @@ describe('DrillPointCanvasComponent - Demo Usage', () => {
 
     it('should demonstrate validation error handling', async () => {
       const existingPoints: DrillPoint[] = [
-        { id: 'existing-1', x: 10, y: 10, depth: 12, spacing: 4, burden: 3 }
+        { id: 'existing-1', x: 10, y: 10, depth: 12, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 }
       ];
 
       component.drillPoints = existingPoints;
@@ -361,8 +359,8 @@ describe('DrillPointCanvasComponent - Demo Usage', () => {
 
     it('should demonstrate zoom and pan effects on point rendering', async () => {
       const basePoints: DrillPoint[] = [
-        { id: 'zoom-1', x: 5, y: 5, depth: 12, spacing: 4, burden: 3 },
-        { id: 'zoom-2', x: 10, y: 5, depth: 12, spacing: 4, burden: 3 }
+        { id: 'zoom-1', x: 5, y: 5, depth: 12, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 },
+        { id: 'zoom-2', x: 10, y: 5, depth: 12, spacing: 4, burden: 3, stemming: 3, subDrill: 0.5 }
       ];
 
       component.drillPoints = basePoints;
@@ -398,7 +396,7 @@ describe('DrillPointCanvasComponent - Demo Usage', () => {
         y: 10,
         depth: 12,
         spacing: 4,
-        burden: 3
+        burden: 3, stemming: 3, subDrill: 0.5
       };
 
       component.drillPoints = [testPoint];

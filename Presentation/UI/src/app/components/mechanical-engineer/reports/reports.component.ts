@@ -27,13 +27,6 @@ interface MaintenanceSummaryData {
   onTimeCompletion: number;
 }
 
-interface PartsUsageData {
-  partName: string;
-  quantity: number;
-  machines: string[];
-  trend: 'up' | 'down' | 'stable';
-}
-
 interface MachinePerformanceData {
   machineId: string;
   machineName: string;
@@ -55,7 +48,7 @@ export class ReportsComponent implements OnInit {
   // State signals
   isLoading = signal(false);
   error = signal<string | null>(null);
-  activeTab = signal<'summary' | 'performance' | 'parts'>('summary');
+  activeTab = signal<'summary' | 'performance'>('summary');
 
   // Data signals
   maintenanceJobs = signal<MaintenanceJob[]>([]);
@@ -150,34 +143,6 @@ export class ReportsComponent implements OnInit {
     return Array.from(machineMap.values());
   });
 
-  // Computed: Parts Usage Data
-  partsUsageData = computed<PartsUsageData[]>(() => {
-    const jobs = this.maintenanceJobs();
-    const partsMap = new Map<string, PartsUsageData>();
-
-    jobs.forEach(job => {
-      if (job.partsReplaced && job.partsReplaced.length > 0) {
-        job.partsReplaced.forEach(part => {
-          if (!partsMap.has(part)) {
-            partsMap.set(part, {
-              partName: part,
-              quantity: 0,
-              machines: [],
-              trend: 'stable' as 'up' | 'down' | 'stable'
-            });
-          }
-
-          const partData = partsMap.get(part)!;
-          partData.quantity += 1;
-          if (!partData.machines.includes(job.machineName)) {
-            partData.machines.push(job.machineName);
-          }
-        });
-      }
-    });
-
-    return Array.from(partsMap.values()).slice(0, 10); // Top 10 parts
-  });
 
   constructor(private maintenanceService: MaintenanceService) {}
 
@@ -277,21 +242,11 @@ export class ReportsComponent implements OnInit {
     this.maintenanceJobs.set(mockJobs);
   }
 
-  exportAllReports() {
-    console.log('Exporting all maintenance reports...');
-    alert('Export functionality will be implemented in the next phase.\n\nThis will generate a comprehensive PDF/Excel report with:\n- Maintenance Summary\n- Machine Performance Metrics\n- Parts Usage Analysis\n- Cost Breakdown\n- Compliance Data\n- Downtime Analysis');
-  }
-
-  printAllReports() {
-    console.log('Printing all maintenance reports...');
-    window.print();
-  }
-
   refreshReports() {
     this.loadMaintenanceData();
   }
 
-  switchTab(tab: 'summary' | 'performance' | 'parts') {
+  switchTab(tab: 'summary' | 'performance') {
     this.activeTab.set(tab);
   }
 

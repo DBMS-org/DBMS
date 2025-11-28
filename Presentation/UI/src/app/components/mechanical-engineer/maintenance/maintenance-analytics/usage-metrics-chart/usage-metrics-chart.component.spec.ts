@@ -34,14 +34,14 @@ describe('UsageMetricsChartComponent', () => {
   it('should create chart with valid data', () => {
     const mockData: UsageMetrics[] = [
       {
-        machineId: 'machine-1',
+        machineId: 1,
         engineHours: 1200,
         idleHours: 300,
         serviceHours: 50,
         lastUpdated: new Date()
       },
       {
-        machineId: 'machine-2',
+        machineId: 2,
         engineHours: 800,
         idleHours: 200,
         serviceHours: 30,
@@ -58,7 +58,7 @@ describe('UsageMetricsChartComponent', () => {
   it('should destroy chart on component destroy', () => {
     const mockData: UsageMetrics[] = [
       {
-        machineId: 'machine-1',
+        machineId: 1,
         engineHours: 1200,
         idleHours: 300,
         serviceHours: 50,

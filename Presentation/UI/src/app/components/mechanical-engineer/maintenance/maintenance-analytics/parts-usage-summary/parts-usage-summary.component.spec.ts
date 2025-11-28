@@ -12,14 +12,14 @@ describe('PartsUsageSummaryComponent', () => {
 
   const mockUsageMetrics: UsageMetrics[] = [
     {
-      machineId: 'M001',
+      machineId: 1,
       engineHours: 1200,
       idleHours: 300,
       serviceHours: 50,
       lastUpdated: new Date()
     },
     {
-      machineId: 'M002',
+      machineId: 2,
       engineHours: 800,
       idleHours: 200,
       serviceHours: 30,

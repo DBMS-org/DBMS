@@ -3,31 +3,11 @@
   <div class="dashboard-header">
     <div class="header-content">
       <div class="header-title">
-        <h1>Maintenance Reports</h1>
-        <p>Track maintenance jobs, machine performance, and parts usage</p>
+        <h1>Machine Information</h1>
+        <p>Track maintenance jobs and machine performance</p>
       </div>
 
       <div class="header-actions">
-        <button
-          type="button"
-          class="action-btn export-btn"
-          (click)="exportAllReports()"
-          [disabled]="isLoading()"
-          title="Export report"
-        >
-          <i class="material-icons">file_download</i>
-          Export
-        </button>
-        <button
-          type="button"
-          class="action-btn print-btn"
-          (click)="printAllReports()"
-          [disabled]="isLoading()"
-          title="Print report"
-        >
-          <i class="material-icons">print</i>
-          Print
-        </button>
         <button
           type="button"
           class="refresh-btn"
@@ -122,14 +102,6 @@
           >
             <i class="material-icons">speed</i>
             Machine Performance
-          </button>
-          <button
-            class="tab-btn"
-            [class.active]="activeTab() === 'parts'"
-            (click)="switchTab('parts')"
-          >
-            <i class="material-icons">build</i>
-            Parts Usage
           </button>
         </div>
 
@@ -280,49 +252,6 @@
                               {{ machine.efficiency }}%
                             </span>
                           </td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          }
-
-          <!-- Parts Usage Tab -->
-          @if (activeTab() === 'parts') {
-            <div class="tab-panel">
-              <div class="parts-summary">
-                <div class="summary-card-inline">
-                  <i class="material-icons">inventory_2</i>
-                  <div>
-                    <div class="summary-value">{{ partsUsageData().length }}</div>
-                    <div class="summary-label">Different Parts Used</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="table-section">
-                <div class="table-responsive">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        <th>Part Name</th>
-                        <th>Quantity Used</th>
-                        <th>Machines</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @if (partsUsageData().length === 0) {
-                        <tr>
-                          <td colspan="3" class="no-data">No parts usage data available</td>
-                        </tr>
-                      }
-                      @for (part of partsUsageData(); track part.partName) {
-                        <tr>
-                          <td class="font-semibold">{{ part.partName }}</td>
-                          <td>{{ part.quantity }}</td>
-                          <td class="machines-cell">{{ part.machines.join(', ') }}</td>
                         </tr>
                       }
                     </tbody>

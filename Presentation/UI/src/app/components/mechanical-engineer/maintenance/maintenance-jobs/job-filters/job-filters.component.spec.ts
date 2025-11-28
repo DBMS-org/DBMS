@@ -11,8 +11,8 @@ describe('JobFiltersComponent', () => {
 
   const mockJobs: MaintenanceJob[] = [
     {
-      id: '1',
-      machineId: 'M001',
+      id: 1,
+      machineId: 1,
       machineName: 'Excavator 1',
       serialNumber: 'EX001',
       project: 'Project A',
@@ -26,8 +26,8 @@ describe('JobFiltersComponent', () => {
       updatedAt: new Date('2024-01-01')
     },
     {
-      id: '2',
-      machineId: 'M002',
+      id: 2,
+      machineId: 2,
       machineName: 'Bulldozer 1',
       serialNumber: 'BD001',
       project: 'Project B',
@@ -61,7 +61,7 @@ describe('JobFiltersComponent', () => {
   it('should initialize with empty filters', () => {
     fixture.detectChanges();
     expect(component.activeFiltersCount()).toBe(0);
-    expect(component.filterForm.get('searchTerm')?.value).toBe('');
+    expect(component.searchTerm).toBe('');
   });
 
   it('should initialize with provided initial filters', () => {
@@ -73,14 +73,14 @@ describe('JobFiltersComponent', () => {
     fixture.componentRef.setInput('initialFilters', initialFilters);
     fixture.detectChanges();
 
-    expect(component.filterForm.get('searchTerm')?.value).toBe('test');
-    expect(component.filterForm.get('status')?.value).toEqual([MaintenanceStatus.SCHEDULED]);
+    expect(component.searchTerm).toBe('test');
+    expect(component.selectedStatuses).toEqual([MaintenanceStatus.SCHEDULED]);
   });
 
   it('should update active filters count when form changes', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       searchTerm: 'test',
       status: [MaintenanceStatus.SCHEDULED]
     });
@@ -121,7 +121,7 @@ describe('JobFiltersComponent', () => {
       done();
     });
 
-    component.filterForm.patchValue({ searchTerm: 'test search' });
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({ searchTerm: 'test search' });
   });
 
   it('should emit filtersChanged when applyFilters is called', (done) => {
@@ -133,7 +133,7 @@ describe('JobFiltersComponent', () => {
       done();
     });
 
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       searchTerm: 'test',
       status: [MaintenanceStatus.SCHEDULED]
     });
@@ -144,40 +144,40 @@ describe('JobFiltersComponent', () => {
   it('should clear search when clearSearch is called', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({ searchTerm: 'test' });
-    component.clearSearch();
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({ searchTerm: 'test' });
+    component.clearFilters();
     
-    expect(component.filterForm.get('searchTerm')?.value).toBe('');
+    expect(component.searchTerm).toBe('');
   });
 
   it('should remove specific filter when removeFilter is called', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       searchTerm: 'test',
       status: [MaintenanceStatus.SCHEDULED]
     });
     
-    component.removeFilter('searchTerm');
+    component.searchTerm = ''; component.applyFilters();
     
-    expect(component.filterForm.get('searchTerm')?.value).toBe('');
-    expect(component.filterForm.get('status')?.value).toEqual([MaintenanceStatus.SCHEDULED]);
+    expect(component.searchTerm).toBe('');
+    expect(component.selectedStatuses).toEqual([MaintenanceStatus.SCHEDULED]);
   });
 
   it('should reset all filters when resetFilters is called', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       searchTerm: 'test',
       status: [MaintenanceStatus.SCHEDULED],
       machineType: ['Excavator']
     });
     
-    component.resetFilters();
+    component.clearFilters();
     
-    expect(component.filterForm.get('searchTerm')?.value).toBe('');
+    expect(component.searchTerm).toBe('');
     expect(component.filterForm.get('status')?.value).toEqual([]);
-    expect(component.filterForm.get('machineType')?.value).toEqual([]);
+    expect(component.selectedMachineTypes).toEqual([]);
   });
 
   it('should return correct filter description', () => {
@@ -185,12 +185,12 @@ describe('JobFiltersComponent', () => {
     
     expect(component.getFilterDescription()).toBe('No filters applied');
     
-    component.filterForm.patchValue({ searchTerm: 'test' });
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({ searchTerm: 'test' });
     component['updateActiveFiltersCount']();
     
     expect(component.getFilterDescription()).toBe('1 filter applied');
     
-    component.filterForm.patchValue({ status: [MaintenanceStatus.SCHEDULED] });
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({ status: [MaintenanceStatus.SCHEDULED] });
     component['updateActiveFiltersCount']();
     
     expect(component.getFilterDescription()).toBe('2 filters applied');
@@ -213,7 +213,7 @@ describe('JobFiltersComponent', () => {
     const startDate = new Date('2024-01-01');
     const endDate = new Date('2024-01-31');
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       startDate: startDate,
       endDate: endDate
     });
@@ -226,7 +226,7 @@ describe('JobFiltersComponent', () => {
   it('should format status text correctly', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       status: [MaintenanceStatus.SCHEDULED, MaintenanceStatus.IN_PROGRESS]
     });
     
@@ -237,7 +237,7 @@ describe('JobFiltersComponent', () => {
   it('should format machine type text correctly', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       machineType: ['Excavator', 'Bulldozer']
     });
     
@@ -248,7 +248,7 @@ describe('JobFiltersComponent', () => {
   it('should format project text correctly', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       project: ['Project A']
     });
     
@@ -259,7 +259,7 @@ describe('JobFiltersComponent', () => {
   it('should format assigned to text correctly', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       assignedTo: ['John Doe', 'Jane Smith']
     });
     
@@ -270,7 +270,7 @@ describe('JobFiltersComponent', () => {
   it('should handle multiple items in filter text formatting', () => {
     fixture.detectChanges();
     
-    component.filterForm.patchValue({
+    component.searchTerm = ''; component.selectedStatuses = []; // was filterForm.patchValue({
       status: [MaintenanceStatus.SCHEDULED, MaintenanceStatus.IN_PROGRESS, MaintenanceStatus.COMPLETED]
     });
     

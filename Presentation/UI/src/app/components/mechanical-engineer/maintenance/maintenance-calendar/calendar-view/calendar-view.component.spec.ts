@@ -9,8 +9,8 @@ describe('CalendarViewComponent', () => {
 
   const mockJobs: MaintenanceJob[] = [
     {
-      id: '1',
-      machineId: 'M001',
+      id: 1,
+      machineId: 1,
       machineName: 'Excavator CAT 320',
       serialNumber: 'CAT320-2023-001',
       project: 'Mining Project Alpha',
@@ -24,8 +24,8 @@ describe('CalendarViewComponent', () => {
       updatedAt: new Date()
     },
     {
-      id: '2',
-      machineId: 'M002',
+      id: 2,
+      machineId: 2,
       machineName: 'Bulldozer Komatsu D65',
       serialNumber: 'KOMD65-2022-045',
       project: 'Construction Site Beta',

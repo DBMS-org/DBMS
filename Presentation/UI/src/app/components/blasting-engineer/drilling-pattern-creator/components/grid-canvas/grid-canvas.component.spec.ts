@@ -11,11 +11,9 @@ describe('GridCanvasComponent', () => {
   let mockLayer: jasmine.SpyObj<Konva.Layer>;
   let mockStage: jasmine.SpyObj<Konva.Stage>;
 
-  const defaultSettings: PatternSettings = {
-    spacing: 3,
+  const defaultSettings: PatternSettings = { spacing: 3,
     burden: 2.5,
-    depth: 10
-  };
+    depth: 10, diameter: 115, stemming: 3, subDrill: 0.5 };
 
   const defaultCanvasState = {
     scale: 1,

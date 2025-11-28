@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, ViewChild, ElementRef, OnChanges, SimpleChanges, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import Konva from 'konva';
 import { PatternData, DrillPoint, BlastConnection } from '../../../drilling-pattern-creator/models/drill-point.model';
@@ -14,12 +14,13 @@ import { SimulationSettings, ViewSettings, HoleAnimationState, ConnectionAnimati
   styles: [`
     .pattern-container {
       width: 100%;
-      height: 600px;
+      height: 100%;
+      min-height: 500px;
       background: #f8f9fa;
     }
   `]
 })
-export class PatternRendererComponent implements OnChanges {
+export class PatternRendererComponent implements OnChanges, AfterViewInit, OnDestroy {
   @ViewChild('patternContainer') containerRef!: ElementRef<HTMLDivElement>;
   @Input() patternData: PatternData | null = null;
   @Input() connections: BlastConnection[] = [];
@@ -57,13 +58,62 @@ export class PatternRendererComponent implements OnChanges {
     }
   }
 
+  ngAfterViewInit(): void {
+    if (!this.stage) {
+      this.initializeCanvas();
+    }
+
+    // Add resize listener for responsive canvas
+    window.addEventListener('resize', this.handleResize.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    // Clean up resize listener
+    window.removeEventListener('resize', this.handleResize.bind(this));
+
+    // Clean up Konva stage
+    if (this.stage) {
+      this.stage.destroy();
+    }
+  }
+
+  private handleResize(): void {
+    if (!this.stage || !this.containerRef) return;
+
+    const container = this.containerRef.nativeElement;
+    const newWidth = container.clientWidth;
+    const newHeight = container.clientHeight;
+
+    if (newWidth > 0 && newHeight > 0) {
+      this.stage.width(newWidth);
+      this.stage.height(newHeight);
+      this.canvasConfig.width = newWidth;
+      this.canvasConfig.height = newHeight;
+
+      // Re-render grid with new dimensions
+      this.gridLayer.destroyChildren();
+      this.renderGrid();
+
+      // Redraw all layers
+      this.stage.getLayers().forEach(layer => layer.batchDraw());
+    }
+  }
+
   private initializeCanvas(): void {
     const container = this.containerRef.nativeElement;
-    
+
+    // Get actual container dimensions
+    const containerWidth = container.clientWidth || 800;
+    const containerHeight = container.clientHeight || 600;
+
+    // Update canvasConfig with actual dimensions
+    this.canvasConfig.width = containerWidth;
+    this.canvasConfig.height = containerHeight;
+
     this.stage = new Konva.Stage({
       container: container,
-      width: this.canvasConfig.width,
-      height: this.canvasConfig.height
+      width: containerWidth,
+      height: containerHeight
     });
 
     // Create separate layers for different types of content

@@ -3,16 +3,16 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 
 import { DepthEditorTableComponent, FilterEvent } from './depth-editor-table.component';
-import { DrillPoint } from '../models/drill-point.model';
+import { DrillPoint } from '../../models/drill-point.model';
 
 describe('DepthEditorTableComponent', () => {
   let component: DepthEditorTableComponent;
   let fixture: ComponentFixture<DepthEditorTableComponent>;
 
   const mockDrillPoints: DrillPoint[] = [
-    { id: 'DH001', x: 10.5, y: 20.3, depth: 10.0, spacing: 5.0, burden: 4.0 },
-    { id: 'DH002', x: 15.5, y: 20.3, depth: 12.5, spacing: 5.0, burden: 4.0 },
-    { id: 'DH003', x: 20.5, y: 20.3, depth: 10.0, spacing: 5.0, burden: 4.0 }
+    { id: 'DH001', x: 10.5, y: 20.3, depth: 10.0, spacing: 5.0, burden: 4.0, stemming: 3, subDrill: 0.5 },
+    { id: 'DH002', x: 15.5, y: 20.3, depth: 12.5, spacing: 5.0, burden: 4.0, stemming: 3, subDrill: 0.5 },
+    { id: 'DH003', x: 20.5, y: 20.3, depth: 10.0, spacing: 5.0, burden: 4.0, stemming: 3, subDrill: 0.5 }
   ];
 
   beforeEach(async () => {
@@ -173,7 +173,7 @@ describe('DepthEditorTableComponent', () => {
       y: 20.987654,
       depth: 15.123456,
       spacing: 5.0,
-      burden: 4.0
+      burden: 4.0, stemming: 3, subDrill: 0.5
     };
     
     component.drillPoints = [pointWithPrecision];

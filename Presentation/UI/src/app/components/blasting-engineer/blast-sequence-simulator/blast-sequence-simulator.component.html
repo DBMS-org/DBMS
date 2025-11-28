@@ -293,10 +293,9 @@
       
       <!-- Canvas Container -->
       <div class="canvas-container">
-        <div 
+        <div
           #simulationCanvas
-          class="simulation-canvas"
-          style="width: 800px; height: 600px;">
+          class="simulation-canvas">
         </div>
         
         <!-- Loading Overlay -->
@@ -314,11 +313,10 @@
       <!-- Timeline Container -->
       <div class="timeline-container">
         <h4>Blast Timeline</h4>
-        <canvas 
+        <canvas
           #timelineCanvas
           class="timeline-canvas"
           (click)="onTimelineClick($event)"
-          [width]="800"
           [height]="100">
         </canvas>
         

@@ -76,7 +76,9 @@ describe('PatternStateService', () => {
       y: 20,
       depth: 15,
       spacing: 3,
-      burden: 2.5
+      burden: 2.5,
+      stemming: 3,
+      subDrill: 0.5
     };
 
     it('should add drill point', (done) => {
@@ -149,7 +151,9 @@ describe('PatternStateService', () => {
       y: 20,
       depth: 15,
       spacing: 3,
-      burden: 2.5
+      burden: 2.5,
+      stemming: 3,
+      subDrill: 0.5
     };
 
     it('should select drill point', (done) => {
@@ -293,7 +297,9 @@ describe('PatternStateService', () => {
         y: 20,
         depth: 15,
         spacing: 3,
-        burden: 2.5
+        burden: 2.5,
+        stemming: 3,
+        subDrill: 0.5
       });
       service.updateSettings({ spacing: 5 });
 
@@ -377,7 +383,9 @@ describe('PatternStateService', () => {
         y: 20,
         depth: 15,
         spacing: 3,
-        burden: 2.5
+        burden: 2.5,
+        stemming: 3,
+        subDrill: 0.5
       });
 
       service.getValidationStatus$().pipe(take(1)).subscribe(validation => {
@@ -399,7 +407,9 @@ describe('PatternStateService', () => {
         y: 20,
         depth: 15,
         spacing: 3,
-        burden: 2.5
+        burden: 2.5,
+        stemming: 3,
+        subDrill: 0.5
       });
 
       // Original state should remain unchanged
@@ -413,3 +423,4 @@ describe('PatternStateService', () => {
     });
   });
 });
+

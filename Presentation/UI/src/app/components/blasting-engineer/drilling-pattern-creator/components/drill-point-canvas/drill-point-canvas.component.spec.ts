@@ -10,11 +10,9 @@ describe('DrillPointCanvasComponent', () => {
   let mockLayer: jasmine.SpyObj<Konva.Layer>;
   let mockStage: jasmine.SpyObj<Konva.Stage>;
 
-  const mockSettings: PatternSettings = {
-    spacing: 3,
+  const mockSettings: PatternSettings = { spacing: 3,
     burden: 2.5,
-    depth: 10
-  };
+    depth: 10, diameter: 115, stemming: 3, subDrill: 0.5 };
 
   const mockCanvasState = {
     scale: 1,
@@ -27,9 +25,9 @@ describe('DrillPointCanvasComponent', () => {
   };
 
   const mockDrillPoints: DrillPoint[] = [
-    { id: 'point-1', x: 5, y: 5, depth: 10, spacing: 3, burden: 2.5 },
-    { id: 'point-2', x: 8, y: 5, depth: 12, spacing: 3, burden: 2.5 }, // Custom depth
-    { id: 'point-3', x: 5, y: 7.5, depth: 10, spacing: 3, burden: 2.5 }
+    { id: 'point-1', x: 5, y: 5, depth: 10, spacing: 3, burden: 2.5, stemming: 3, subDrill: 0.5 },
+    { id: 'point-2', x: 8, y: 5, depth: 12, spacing: 3, burden: 2.5, stemming: 3, subDrill: 0.5 }, // Custom depth
+    { id: 'point-3', x: 5, y: 7.5, depth: 10, spacing: 3, burden: 2.5, stemming: 3, subDrill: 0.5 }
   ];
 
   beforeEach(async () => {
