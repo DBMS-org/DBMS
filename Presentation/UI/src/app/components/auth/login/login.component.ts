@@ -32,6 +32,7 @@ export class LoginComponent {
   loginForm: FormGroup;
   errorMessage: string = '';
   isLoading: boolean = false;
+  showPassword: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -42,6 +43,10 @@ export class LoginComponent {
       username: ['', [Validators.required]],
       password: ['', [Validators.required]]
     });
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 
   onSubmit() {

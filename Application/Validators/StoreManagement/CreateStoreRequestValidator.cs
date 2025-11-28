@@ -15,7 +15,7 @@ namespace Application.Validators.StoreManagement
 
             RuleFor(x => x.StorageCapacity)
                 .GreaterThan(0)
-                .WithMessage("Storage capacity must be greater than 0");
+                .WithMessage("Storage capacity must be greater than 0. Please enter a valid capacity.");
 
             RuleFor(x => x.City)
                 .RequiredString("City", 1, 50);
@@ -25,7 +25,7 @@ namespace Application.Validators.StoreManagement
 
             RuleFor(x => x.ManagerUserId)
                 .GreaterThan(0)
-                .WithMessage("Manager User ID must be greater than 0")
+                .WithMessage("Please select a valid manager for this store.")
                 .When(x => x.ManagerUserId.HasValue);
         }
     }

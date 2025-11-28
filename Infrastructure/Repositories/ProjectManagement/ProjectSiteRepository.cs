@@ -379,6 +379,25 @@ namespace Infrastructure.Repositories.ProjectManagement
             }
         }
 
+        /// <summary>
+        /// UC-9: Checks if a site name already exists under a specific project.
+        /// </summary>
+        public async Task<bool> SiteNameExistsInProjectAsync(int projectId, string siteName)
+        {
+            try
+            {
+                return await _context.ProjectSites
+                    .AnyAsync(ps => ps.ProjectId == projectId &&
+                                   ps.Name.ToLower() == siteName.ToLower() &&
+                                   ps.IsActive);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if site name '{SiteName}' exists in project {ProjectId}", siteName, projectId);
+                throw;
+            }
+        }
+
         // Note: Explosive approval methods have been moved to ExplosiveApprovalRequestRepository
         // as part of the new ExplosiveApprovalRequest entity implementation
     }

@@ -78,8 +78,8 @@ export class UserService {
   }
 
   // Delete user
-  deleteUser(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+  deleteUser(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
@@ -98,37 +98,62 @@ export class UserService {
   // Error handling
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An unknown error occurred!';
-    
+    let errorDetails: string[] = [];
+
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `Client Error: ${error.error.message}`;
     } else {
       // Server-side error
       console.error('Full error response:', error);
-      
+
       if (error.status === 404) {
-        errorMessage = 'User not found';
+        errorMessage = error.error?.message || 'User not found';
+        errorDetails = error.error?.errors || [];
+      } else if (error.status === 409) {
+        // Conflict - duplicate email
+        errorMessage = error.error?.message || 'Email already in use';
+        errorDetails = error.error?.errors || [error.error?.detail || 'The email address you entered is already registered.'];
       } else if (error.status === 400) {
-        // Try to get specific validation errors from the response
+        // Validation errors
         if (typeof error.error === 'string') {
-          errorMessage = `Validation Error: ${error.error}`;
-        } else if (error.error && error.error.errors) {
-          // Handle model validation errors
-          const validationErrors = Object.values(error.error.errors).flat();
-          errorMessage = `Validation Errors: ${validationErrors.join(', ')}`;
-        } else if (error.error && error.error.message) {
-          errorMessage = `Validation Error: ${error.error.message}`;
+          errorMessage = error.error;
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+
+          // Extract validation errors from the structured response
+          if (error.error.errors && Array.isArray(error.error.errors)) {
+            errorDetails = error.error.errors;
+          } else if (error.error.errors && typeof error.error.errors === 'object') {
+            // Handle model validation errors (object format)
+            errorDetails = Object.values(error.error.errors).flat() as string[];
+          }
+
+          // Add detail if available
+          if (error.error.detail && errorDetails.length === 0) {
+            errorDetails = [error.error.detail];
+          }
         } else {
           errorMessage = 'Invalid request data - please check all required fields';
         }
       } else if (error.status === 500) {
         errorMessage = 'Server error occurred';
+        errorDetails = ['An internal server error occurred. Please try again later.'];
       } else {
-        errorMessage = `Server Error Code: ${error.status}\nMessage: ${error.message}`;
+        errorMessage = `Server Error Code: ${error.status}`;
+        errorDetails = [error.message];
       }
     }
-    
-    console.error('UserService Error:', errorMessage);
-    return throwError(() => error);
+
+    console.error('UserService Error:', { message: errorMessage, details: errorDetails });
+
+    // Return error with both message and details
+    const enhancedError = {
+      ...error,
+      message: errorMessage,
+      details: errorDetails
+    };
+
+    return throwError(() => enhancedError);
   }
 } 

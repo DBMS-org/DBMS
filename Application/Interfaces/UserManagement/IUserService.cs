@@ -9,6 +9,7 @@ namespace Application.Interfaces.UserManagement
         Task<Result<UserDto>> GetUserByIdAsync(int id);
         Task<Result<UserDto>> CreateUserAsync(CreateUserRequest request);
         Task<Result> UpdateUserAsync(int id, UpdateUserRequest request);
+        Task<Result> DeactivateUserAsync(int id);
         Task<Result> DeleteUserAsync(int id);
         Task<Result> TestConnectionAsync();
     }

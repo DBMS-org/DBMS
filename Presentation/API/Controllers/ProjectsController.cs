@@ -17,7 +17,9 @@ namespace API.Controllers
         private readonly IProjectService _projectService;
         private readonly ILogger<ProjectsController> _logger;
 
-        public ProjectsController(IProjectService projectService, ILogger<ProjectsController> logger)
+        public ProjectsController(
+            IProjectService projectService,
+            ILogger<ProjectsController> logger)
         {
             _projectService = projectService;
             _logger = logger;

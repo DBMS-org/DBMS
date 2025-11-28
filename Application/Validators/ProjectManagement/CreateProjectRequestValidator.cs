@@ -18,22 +18,22 @@ namespace Application.Validators.ProjectManagement
 
             RuleFor(x => x.Description)
                 .MaximumLength(1000)
-                .WithMessage("Description cannot exceed 1000 characters")
+                .WithMessage("Description cannot exceed 1000 characters.")
                 .When(x => !string.IsNullOrEmpty(x.Description));
 
             RuleFor(x => x.StartDate)
                 .LessThanOrEqualTo(x => x.EndDate)
-                .WithMessage("Start date must be before or equal to end date")
+                .WithMessage("Start date must be before or on the same day as the end date.")
                 .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
 
             RuleFor(x => x.EndDate)
                 .GreaterThanOrEqualTo(x => x.StartDate)
-                .WithMessage("End date must be after or equal to start date")
+                .WithMessage("End date must be after or on the same day as the start date.")
                 .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
 
             RuleFor(x => x.AssignedUserId)
                 .GreaterThan(0)
-                .WithMessage("Assigned User ID must be greater than 0")
+                .WithMessage("Please select a valid user to assign to this project.")
                 .When(x => x.AssignedUserId.HasValue);
         }
     }

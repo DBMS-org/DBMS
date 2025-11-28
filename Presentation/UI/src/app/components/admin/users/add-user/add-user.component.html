@@ -11,7 +11,16 @@
     @if (error) {
       <div class="error-alert">
         <i class="material-icons">error</i>
-        <span>{{error}}</span>
+        <div class="error-content">
+          <span class="error-title">{{error}}</span>
+          @if (errorDetails && errorDetails.length > 0) {
+            <ul class="error-list">
+              @for (detail of errorDetails; track detail) {
+                <li>{{detail}}</li>
+              }
+            </ul>
+          }
+        </div>
       </div>
     }
 
@@ -78,8 +87,14 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" class="cancel-btn" (click)="onClose()">Cancel</button>
-        <button type="submit" class="save-btn">Save User</button>
+        <button type="button" class="cancel-btn" (click)="onClose()" [disabled]="isSubmitting">Cancel</button>
+        <button type="submit" class="save-btn" [disabled]="isSubmitting">
+          @if (isSubmitting) {
+            <span>Creating User...</span>
+          } @else {
+            <span>Save User</span>
+          }
+        </button>
       </div>
     </form>
   </div>

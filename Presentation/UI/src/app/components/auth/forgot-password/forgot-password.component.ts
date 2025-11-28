@@ -8,7 +8,6 @@ import { AuthService } from '../../../core/services/auth.service';
 // PrimeNG Components
 import { InputTextModule } from 'primeng/inputtext';
 import { Button } from 'primeng/button';
-import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-forgot-password',
@@ -18,8 +17,7 @@ import { MessageModule } from 'primeng/message';
     FormsModule,
     ReactiveFormsModule,
     InputTextModule,
-    Button,
-    MessageModule
+    Button
   ],
   templateUrl: './forgot-password.component.html',
   styleUrls: ['./forgot-password.component.scss']

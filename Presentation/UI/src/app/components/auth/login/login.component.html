@@ -28,11 +28,6 @@
         <p class="text-gray-600 text-sm font-medium">
           Drilling & Blasting Management System
         </p>
-        <div class="mt-3 flex items-center justify-center gap-2">
-          <span class="h-px w-8 bg-gradient-to-r from-transparent to-purple-300"></span>
-          <span class="text-xs text-purple-600 font-semibold uppercase tracking-wider">Secure Login</span>
-          <span class="h-px w-8 bg-gradient-to-l from-transparent to-purple-300"></span>
-        </div>
       </div>
 
       <!-- Login Form -->
@@ -67,16 +62,24 @@
             <i class="pi pi-lock text-purple-600"></i>
             Password
           </label>
-          <div class="password-wrapper">
-            <p-password
+          <div class="relative">
+            <input
+              pInputText
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
               formControlName="password"
               placeholder="Enter your password"
-              [toggleMask]="true"
-              [feedback]="false"
-              styleClass="w-full"
-              inputStyleClass="w-full"
+              class="w-full pr-12"
               [ngClass]="{'ng-invalid ng-dirty': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
-            ></p-password>
+            />
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-purple-600 transition-colors p-2 rounded"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            >
+              <i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+            </button>
           </div>
           <small
             class="text-red-500 text-xs font-medium flex items-center gap-1"
@@ -102,7 +105,9 @@
           icon="pi pi-sign-in"
           [loading]="isLoading"
           [disabled]="!loginForm.valid || isLoading"
-          styleClass="w-full mt-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+          styleClass="w-full mt-6"
+          severity="primary"
+          [raised]="true"
           [attr.aria-label]="'Sign in to your account'"
           [title]="'Sign in to your account'"
         ></p-button>
@@ -121,7 +126,7 @@
 
       <!-- Footer -->
       <div class="mt-8 pt-4 border-t border-gray-200 text-center">
-        <p class="text-gray-400 text-xs m-0">&copy; 2024 DBMS Portal. All rights reserved.</p>
+        <p class="text-gray-400 text-xs m-0">&copy; 2025 DBMS Portal. All rights reserved.</p>
       </div>
     </div>
   </div>

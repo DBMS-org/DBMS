@@ -12,9 +12,9 @@ namespace Application.Validators.UserManagement
 
             RuleFor(x => x.Password)
                 .NotEmpty()
-                .WithMessage("Password is required")
+                .WithMessage("Password is required. Please enter your password.")
                 .MinimumLength(8)
-                .WithMessage("Password must be at least 8 characters long");
+                .WithMessage("Password must be at least 8 characters long.");
         }
     }
 } 

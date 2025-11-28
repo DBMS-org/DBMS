@@ -147,6 +147,14 @@ namespace Application.Services.ProjectManagement
                     throw new InvalidOperationException($"Project with ID {request.ProjectId} not found");
                 }
 
+                // UC-9 Exceptional Flow: Check if site name already exists in the project
+                var siteNameExists = await _projectSiteRepository.SiteNameExistsInProjectAsync(request.ProjectId, request.Name);
+                if (siteNameExists)
+                {
+                    _logger.LogWarning("Attempt to create site with duplicate name '{SiteName}' in project {ProjectId}", request.Name, request.ProjectId);
+                    throw new InvalidOperationException("Site name already in use.");
+                }
+
                 var projectSite = new ProjectSite
                 {
                     ProjectId = request.ProjectId,

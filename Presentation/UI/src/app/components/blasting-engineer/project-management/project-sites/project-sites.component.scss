@@ -795,3 +795,100 @@
     }
   }
 }
+
+// Delete Confirmation Modal Styling
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+
+  .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    animation: slideDown 0.3s ease;
+    position: relative;
+    z-index: 10001;
+
+    p {
+      margin: 0 0 2rem 0;
+      font-size: 1.1rem;
+      color: #2d3748;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+
+      .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        min-width: 120px;
+
+        &.btn-danger {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          color: white;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+
+          &:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+          }
+        }
+
+        &.btn-secondary {
+          background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+          color: white;
+          box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+
+          &:hover {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(107, 114, 128, 0.4);
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -63,8 +63,13 @@ namespace Application.Services.UserManagement
                 if (user.Status != UserStatus.Active)
                 {
                     _logger.LogBusinessWarning("Login attempt with inactive account", new { Username = request.Username, Status = user.Status });
-                    return Result.Failure<AuthenticationResult>(
-                        $"Your account is {SafeDataConverter.SafeToLower(user.Status.ToString())}. Please contact your administrator.");
+
+                    // Provide specific message based on status
+                    string errorMessage = user.Status == UserStatus.Inactive
+                        ? "Your account has been deactivated and you cannot log in. Please contact your administrator for assistance."
+                        : $"Your account is {SafeDataConverter.SafeToLower(user.Status.ToString())}. Please contact your administrator.";
+
+                    return Result.Failure<AuthenticationResult>(errorMessage);
                 }
 
                 // Verify password
@@ -194,11 +199,18 @@ namespace Application.Services.UserManagement
                 // Find user by email
                 var user = await _userRepository.GetByEmailAsync(request.Email);
 
-                if (user == null || user.Status != UserStatus.Active)
+                // Exceptional Flow: Email not found
+                if (user == null)
                 {
-                    _logger.LogBusinessWarning("Password reset requested for non-existent or inactive user", new { Email = request.Email });
-                    // For security, don't reveal if email exists or not
-                    return Result.Success();
+                    _logger.LogBusinessWarning("Password reset requested for non-existent email", new { Email = request.Email });
+                    return Result.Failure("Email not found.");
+                }
+
+                // Check if user is inactive
+                if (user.Status != UserStatus.Active)
+                {
+                    _logger.LogBusinessWarning("Password reset requested for inactive user", new { Email = request.Email });
+                    return Result.Failure("This account is not active. Please contact your administrator.");
                 }
 
                 // Generate secure reset code
